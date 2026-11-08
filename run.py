@@ -224,9 +224,20 @@ if __name__ == "__main__":  # 直接运行本文件时
     # 启动机器人（先运行主程序，上线消息发出10分钟后再追溯日记）
     async def _start():
         main_task = asyncio.create_task(main())  # 启动主程序（异步，不阻塞后续延迟任务）
-        # 延迟10分钟再追溯日记：确保 API key 已从数据库加载、上线消息已发出、CLIP模型已就绪
-        # 平时日记只在凌晨3点由 schedule.py 的定时任务生成，这里仅做历史补录
-        await asyncio.sleep(600)  # 600秒=10分钟
-        await check_diary()       # 日记追溯：若 diaries 表为空则补录最近7天有事件记录的日期
-        await main_task           # 等待主程序退出
-    asyncio.run(_start())
+        try:
+            # 延迟10分钟再追溯日记：确保 API key 已从数据库加载、上线消息已发出、CLIP模型已就绪
+            # 平时日记只在凌晨3点由 schedule.py 的定时任务生成，这里仅做历史补录
+            await asyncio.sleep(600)  # 600秒=10分钟
+            await check_diary()       # 日记追溯：若 diaries 表为空则补录最近7天有事件记录的日期
+            await main_task           # 等待主程序退出
+        finally:
+            # 退出时确保主程序被取消，避免留下悬挂的 WebSocket 连接
+            if not main_task.done():
+                main_task.cancel()
+
+    try:
+        asyncio.run(_start())
+    except KeyboardInterrupt:
+        # 第一次 Ctrl-C 走到这里：干净退出，不打印调用栈
+        print("\n[已中断] 收到 Ctrl-C，程序退出。")
+        sys.exit(130)
