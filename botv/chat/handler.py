@@ -5,7 +5,9 @@
 import asyncio
 import json
 import os
+import random
 import time as _time
+from collections import deque
 
 from ..config import MASTER_QQ, LOCK_RELEASE_DELAY
 from botv.core import state as cfg
@@ -18,7 +20,47 @@ from ..utils import make_image_msg
 from ..ai.parse import parse_ai_reply
 from ..core.types import Fallback  # 兜底文案标记（v5-F2）
 from .send import send_short_reply, send_private_msg, send_sticker_private, send_sticker_group, flush_outbox
-from .inbound import parse_message_content, contains_sticker_key
+from .inbound import parse_message_content, contains_sticker_key, is_at_me
+
+# ===================== 群聊节奏（v6-E29） =====================
+GROUP_COOLDOWN = 20        # 同一个群两条回复的最小间隔（秒）
+GROUP_WINDOW = 60          # 统计窗口（秒）
+GROUP_WINDOW_MAX = 6       # 窗口内最多回几条
+GROUP_REPLY_PROB = 1 / 3   # 没被 @ 时的接话概率
+GROUP_AT_MIN_GAP = 3       # 被 @ 时也至少隔 3 秒，防连点
+
+
+def should_answer_group(gid, addressed):
+    """这次该不该在群里接话，返回 (bool, 原因)
+
+    用「这个群最近 60 秒收过几条」当社交频率，不做每轮配额。
+    """
+    now = _time.time()
+    win = cfg.group_msg_window.setdefault(gid, deque(maxlen=30))
+    while win and now - win[0] > GROUP_WINDOW:
+        win.popleft()
+
+    if len(win) >= GROUP_WINDOW_MAX:
+        return False, f"{GROUP_WINDOW}秒内已回{len(win)}条"
+
+    last = cfg.group_last_reply_ts.get(gid, 0)
+    if addressed:
+        if now - last < GROUP_AT_MIN_GAP:
+            return False, "刚回过"
+        return True, "被@"
+
+    if now - last < GROUP_COOLDOWN:
+        return False, f"冷却中({int(GROUP_COOLDOWN - (now - last))}秒)"
+    if random.random() > GROUP_REPLY_PROB:
+        return False, "没命中接话概率"
+    return True, "随机接话"
+
+
+def note_group_reply(gid):
+    """记录一次群回复，供下次判断"""
+    now = _time.time()
+    cfg.group_last_reply_ts[gid] = now
+    cfg.group_msg_window.setdefault(gid, deque(maxlen=30)).append(now)
 
 # v5-F5：上线通知的冷却时间（秒）——重连太频繁时不重复打扰
 ONLINE_NOTICE_COOLDOWN = 60
@@ -76,6 +118,11 @@ async def websocket_handle_qq(ws):
                 continue  # 跳过
             uid = str(d.get("user_id"))  # 用户QQ号
             gid = d.get("group_id", 0)  # 群号（私聊为0）
+            # v6-E29：记录机器人自己的QQ号，用于判断是否被 @
+            self_qq = d.get("self_id")
+            if self_qq:
+                cfg.self_qq = self_qq
+            addressed = is_at_me(d.get("message", ""), cfg.self_qq)
             text = await parse_message_content(d.get("message", ""), uid)  # 解析消息内容
             if not text:  # 解析后文本为空
                 continue  # 跳过
@@ -89,6 +136,15 @@ async def websocket_handle_qq(ws):
                 log_recv(f"[QQ]{uid}:{text}")  # 日志记录接收
                 tid = uid if mt == "private" else str(gid)  # 目标ID：私聊用QQ号，群聊用群号
                 ck = extract_keywords(text)  # 提取关键词
+
+                # v6-E29：群聊先过节奏闸门（命令不受限，主人私聊也不受限）
+                if mt == "group" and not text.startswith("!"):
+                    ok, why = should_answer_group(gid, addressed)
+                    if not ok:
+                        log_api(f"[群聊] 跳过 {gid}: {why}")
+                        await asyncio.sleep(LOCK_RELEASE_DELAY)
+                        continue
+                    log_api(f"[群聊] 接话 {gid}: {why}")
 
                 # 先检查是否是命令（仅主人有效）
                 if await handle_command(text, uid, ws, mt == "group", gid):  # 是命令
@@ -109,6 +165,8 @@ async def websocket_handle_qq(ws):
                         dialog, action, img_kw, event, refined_kw = parse_ai_reply(ans)  # 解析AI回复
                         add_target_memory(tid, text, ans, img_kw, refined_kw, event)  # 保存记忆
                         await send_short_reply(target, ans, ws, uid, mt == "group", ck)  # 发送回复
+                    if mt == "group":  # v6-E29：记录这次群回复，供节奏判断
+                        note_group_reply(gid)
 
                 await asyncio.sleep(LOCK_RELEASE_DELAY)  # 锁释放延迟，防止消息处理过快
     except Exception as e:  # 捕获异常

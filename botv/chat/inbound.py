@@ -16,6 +16,17 @@ def contains_sticker_key(text):
     return False  # 不包含任何关键词
 
 
+def is_at_me(raw_content, self_qq):
+    """消息里是否 @ 了机器人自己（v6-E29）"""
+    if not self_qq or not isinstance(raw_content, list):
+        return False
+    for item in raw_content:
+        if item.get("type") == "at":
+            if str(item.get("data", {}).get("qq")) == str(self_qq):
+                return True
+    return False
+
+
 async def parse_message_content(raw_content, user_id):
     """解析消息内容：提取文本、处理图片（下载+CLIP打标）、记录表情"""
     input_text = ""  # 最终文本

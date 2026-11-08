@@ -133,12 +133,17 @@ class TestReplyAssembly(unittest.TestCase):
         texts = self._build("第一句\n（笑）")
         self.assertEqual(texts, ["第一句", "（笑）"])
 
-    def test_multiline_dialog_keeps_all_lines(self):
-        """F3：多行对话不再被吞，合成一条气泡"""
+    def test_multiline_dialog_one_bubble_per_line(self):
+        """v6-A12：一行一个气泡，行数由模型决定"""
         texts = self._build("第一句\n第二句\n第三句")
-        self.assertEqual(len(texts), 1)
-        for s in ("第一句", "第二句", "第三句"):
-            self.assertIn(s, texts[0])
+        self.assertEqual(texts, ["第一句", "第二句", "第三句"])
+
+    def test_too_many_lines_merged(self):
+        """异常保护：只有超过 10 行才合并尾部"""
+        text = "\n".join(f"第{i}行" for i in range(1, 16))
+        texts = self._build(text)
+        self.assertEqual(len(texts), 10)
+        self.assertIn("第15行", texts[-1])
 
     def test_no_action_sends_no_bubble(self):
         """F1：无动作时不该补一条「（无）」"""
@@ -487,6 +492,92 @@ class TestFewShot(unittest.TestCase):
         block = p.split("【她说话的样子】")[1].split("回复必须")[0]
         lines = [l for l in block.split("\n") if l.startswith("奈绪：")]
         self.assertTrue(any("（" not in l for l in lines), "至少要有一条没动作的示例")
+
+
+class TestBubbleDelay(unittest.TestCase):
+    """v6-A12：气泡间隔随机，不是固定值"""
+
+    def test_range(self):
+        from botv.chat.send import bubble_delay, BUBBLE_DELAY_RANGE
+        lo, hi = BUBBLE_DELAY_RANGE
+        samples = [bubble_delay() for _ in range(200)]
+        self.assertTrue(all(lo <= d <= hi for d in samples))
+        self.assertGreater(len(set(samples)), 1, "应该是随机的")
+
+
+class TestAtDetection(unittest.TestCase):
+    """v6-E29：@ 判断"""
+
+    def test_at_me(self):
+        from botv.chat.inbound import is_at_me
+        msg = [{"type": "text", "data": {"text": "hi"}},
+               {"type": "at", "data": {"qq": "12345"}}]
+        self.assertTrue(is_at_me(msg, 12345))
+        self.assertFalse(is_at_me(msg, 999))
+        self.assertFalse(is_at_me("plain text", 12345))
+
+    def test_no_self_qq(self):
+        from botv.chat.inbound import is_at_me
+        msg = [{"type": "at", "data": {"qq": "12345"}}]
+        self.assertFalse(is_at_me(msg, 0))
+
+
+class _FakeRandom:
+    def __init__(self, value):
+        self.value = value
+
+    def random(self):
+        return self.value
+
+
+class TestGroupGate(unittest.TestCase):
+    """v6-E29：群聊节奏闸门"""
+
+    def setUp(self):
+        cfg.group_last_reply_ts.clear()
+        cfg.group_msg_window.clear()
+
+    def tearDown(self):
+        cfg.group_last_reply_ts.clear()
+        cfg.group_msg_window.clear()
+
+    def test_addressed_passes(self):
+        from botv.chat.handler import should_answer_group
+        ok, why = should_answer_group(111, True)
+        self.assertTrue(ok)
+        self.assertEqual(why, "被@")
+
+    def test_cooldown_blocks_unaddressed(self):
+        from botv.chat.handler import should_answer_group, note_group_reply
+        note_group_reply(111)
+        ok, why = should_answer_group(111, False)
+        self.assertFalse(ok)
+        self.assertIn("冷却", why)
+
+    def test_window_full_blocks_even_addressed(self):
+        from botv.chat import handler as h
+        for _ in range(h.GROUP_WINDOW_MAX):
+            h.note_group_reply(222)
+        ok, why = h.should_answer_group(222, True)
+        self.assertFalse(ok)
+        self.assertIn("60秒内", why)
+
+    def test_probability_gate(self):
+        from botv.chat import handler as h
+        orig = h.random
+        try:
+            h.random = _FakeRandom(0.0)  # 一定命中
+            ok, why = h.should_answer_group(333, False)
+            self.assertTrue(ok)
+            self.assertEqual(why, "随机接话")
+
+            h.cfg.group_last_reply_ts.clear()
+            h.random = _FakeRandom(0.99)  # 一定不中
+            ok, why = h.should_answer_group(333, False)
+            self.assertFalse(ok)
+            self.assertIn("概率", why)
+        finally:
+            h.random = orig
 
 
 if __name__ == "__main__":

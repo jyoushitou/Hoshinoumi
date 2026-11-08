@@ -14,6 +14,11 @@ active_ws_qq = None  # 当前活跃的QQ WebSocket连接
 active_ws_lock = asyncio.Lock()  # WebSocket连接锁（防止多连接冲突）
 send_lock = asyncio.Lock()  # 消息发送锁（防止WebSocket发送冲突）
 last_online_notice_ts = 0.0  # 上次发送「上线通知」的时间戳（v5-F5 防重发）
+self_qq = 0  # 机器人自己的QQ号（从 OneBot 事件的 self_id 取，v6-E29 判断被@）
+
+# ===================== 群聊节奏（v6-E29） =====================
+group_last_reply_ts = {}  # {群号: 上次回复时间戳}
+group_msg_window = {}  # {群号: deque[时间戳]} 最近发言时间窗
 
 # ===================== 消息处理 =====================
 PROCESSED_MSG_IDS = deque(maxlen=80)  # 已处理消息ID缓存（去重，最多80条）

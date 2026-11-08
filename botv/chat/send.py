@@ -127,6 +127,15 @@ async def send_group_msg(gid, msg, ws):
     return await _send_or_queue("send_group_msg", {"group_id": gid, "message": msg}, ws, "群聊")
 
 
+# 气泡之间的间隔（秒）：随机，避免机械节奏（v6-A12）
+BUBBLE_DELAY_RANGE = (1.5, 3.0)
+
+
+def bubble_delay():
+    """返回下一条气泡前的等待秒数"""
+    return random.uniform(*BUBBLE_DELAY_RANGE)
+
+
 async def send_short_reply(tid, text, ws, uid, is_group=False, kws=None):
     """发送完整回复：构建消息→逐条发送（文本+图片）"""
     parts = await build_reply_message(text, uid, kws)  # 构建回复消息列表
@@ -137,7 +146,7 @@ async def send_short_reply(tid, text, ws, uid, is_group=False, kws=None):
             await send_group_msg(tid, msg, ws)  # 发送群消息
         else:  # 私聊
             await send_private_msg(tid, msg, ws)  # 发送私聊消息
-        await asyncio.sleep(2.0)  # 每条间隔2秒，确保QQ识别为独立消息，一条一条发
+        await asyncio.sleep(bubble_delay())  # 每条间隔随机 1.5~3 秒，像真人打字
     log_send(f"回复:{text[:40]}")  # 日志记录发送
 
 

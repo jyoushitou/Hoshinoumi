@@ -18,6 +18,9 @@ from ..memory import extract_keywords  # 关键词提取
 # 出现这些标记的行，以及它之后的所有行，都算内部元数据
 META_MARKERS = ("关键词搜索图片用", "事件摘要", "关键词提炼", "标签：", "标签:")
 
+# 单轮最多几条气泡：不是风格上限，只是模型格式崩了时的兜底（v6-A12）
+MAX_REPLY_LINES = 10
+
 
 def _strip_line_prefix(line):
     """剥离 AI 偶尔输出的「第一行：」「第二行：」前缀"""
@@ -76,13 +79,20 @@ async def build_reply_message(txt, uid, kws=None):
             log_api(f"[构建回复] 代码模式整段发送（{len(text)}字）")
         return parts
 
-    # ---- 普通模式：对话一条气泡，动作（若有）单独一条 ----
-    if dialog_lines:
-        parts.append(("text", [{"type": "text", "data": {"text": dialog}}]))
-        log_api(f"[构建回复] 气泡1(对话): {dialog[:30]}")
+    # ---- 普通模式：一行一个气泡，行数由模型决定（v6-A12）----
+    lines = list(dialog_lines)
     if action:
-        parts.append(("text", [{"type": "text", "data": {"text": action}}]))
-        log_api(f"[构建回复] 气泡2(动作): {action[:30]}")
+        lines.append(action)  # 动作也单独一条
+
+    if len(lines) > MAX_REPLY_LINES:  # 异常保护：不是常规上限，只在模型失控时兜一下
+        log_api(f"[构建回复] 回复行数异常({len(lines)})，尾部合并为一条")
+        head = lines[:MAX_REPLY_LINES - 1]
+        tail = "\n".join(lines[MAX_REPLY_LINES - 1:])
+        lines = head + [tail]
+
+    for i, line in enumerate(lines, 1):
+        parts.append(("text", [{"type": "text", "data": {"text": line}}]))
+        log_api(f"[构建回复] 气泡{i}: {line[:30]}")
 
     # ---- 选图：AI 给的关键词优先，否则 jieba 兜底 ----
     parsed = parse_ai_reply(txt)
