@@ -108,6 +108,37 @@ def step_tables():
     return f"{len(expected)} 张表齐全"
 
 
+def step_memory_schema():
+    """v7：events 是否已扩成记忆主表"""
+    from botv.infra.conn import get_cursor
+    need_cols = ["kind", "dedupe_key", "importance", "due_date",
+                 "last_seen", "hit_count", "embedding"]
+    need_idx = ["idx_kind", "idx_dedupe"]
+
+    c = get_cursor()
+    c.execute("SHOW COLUMNS FROM events")
+    cols = {r["Field"] for r in c.fetchall()}
+    missing = [x for x in need_cols if x not in cols]
+    if missing:
+        raise RuntimeError("events 缺列: " + ", ".join(missing) + "（跑 scripts/migrate_v7.py --apply）")
+
+    c.execute("SHOW INDEX FROM events")
+    idx = {r["Key_name"] for r in c.fetchall()}
+    missing_idx = [x for x in need_idx if x not in idx]
+    if missing_idx:
+        raise RuntimeError("events 缺索引: " + ", ".join(missing_idx))
+
+    c.execute("SELECT COUNT(*) AS n FROM events WHERE dedupe_key IS NULL")
+    nulls = c.fetchone()["n"] or 0
+    if nulls:
+        raise RuntimeError(f"{nulls} 行 dedupe_key 为空（重跑迁移脚本）")
+
+    c.execute("SELECT kind, COUNT(*) AS n FROM events GROUP BY kind")
+    rows = c.fetchall()
+    dist = ", ".join(f"{r['kind']}={r['n']}" for r in rows) if rows else "空表"
+    return f"7 列 + 2 索引齐全 · {dist}"
+
+
 def step_keys():
     from botv.infra.repo_key import get_api_key_from_db
     keys = {name: bool(get_api_key_from_db(name)) for name in ("DS_API_KEY", "ARK_API_KEY", "ALAPI_TOKEN")}
@@ -138,6 +169,7 @@ def main():
     if ok_deps and ok_import:
         check("数据库连接", step_db)
         check("表结构", step_tables)
+        check("记忆表结构", step_memory_schema)
         check("API 密钥", step_keys)
         check("人设提示词", step_prompt)
     else:
