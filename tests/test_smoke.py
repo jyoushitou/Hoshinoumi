@@ -467,5 +467,27 @@ class TestAntiAIStyle(unittest.TestCase):
         self.assertIn("总而言之", p)
 
 
+class TestFewShot(unittest.TestCase):
+    """v6-A22：示例对话要进 prompt，且不带 AI 腔"""
+
+    def setUp(self):
+        cfg.CODE_MODE = False
+
+    def test_prompt_has_examples(self):
+        from botv.ai.prompt import get_system_prompt
+        p = get_system_prompt()
+        self.assertIn("她说话的样子", p)
+        self.assertIn("主人：", p)
+        self.assertIn("奈绪：", p)
+
+    def test_examples_show_optional_action(self):
+        """示例里要有一条没有动作的，告诉模型动作可省"""
+        from botv.ai.prompt import get_system_prompt
+        p = get_system_prompt()
+        block = p.split("【她说话的样子】")[1].split("回复必须")[0]
+        lines = [l for l in block.split("\n") if l.startswith("奈绪：")]
+        self.assertTrue(any("（" not in l for l in lines), "至少要有一条没动作的示例")
+
+
 if __name__ == "__main__":
     unittest.main()
