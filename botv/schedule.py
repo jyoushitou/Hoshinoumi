@@ -15,7 +15,8 @@ from .api import get_character_reply  # AI 回复
 from .memory import add_target_memory  # 记忆管理
 from .send import send_short_reply, send_private_msg  # 消息发送
 from .image import fetch_and_save_acg_image, search_local_image_by_tags, get_best_image  # 图片处理
-from .utils import encode_image_base64, make_image_msg, parse_ai_reply  # 工具函数
+from .utils import encode_image_base64, make_image_msg  # 工具函数
+from .ai.parse import parse_ai_reply  # 解析AI回复
 from .diary import generate_diary  # 日记生成
 
 # 工作日判断（chinesecalendar 可选）

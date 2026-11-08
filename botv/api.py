@@ -6,7 +6,7 @@ import random  # 随机选择兜底回复
 
 from .config import DS_API_URL, DS_MODEL, DS_TIMEOUT, DOUBAO_API_URL, DOUBAO_MODEL, DOUBAO_TIMEOUT, API_RETRY_DELAY, MAX_RETRY_TIMES  # API配置
 from .log import log_api, log_err, log_system  # 日志
-from .utils import create_http_session  # HTTP会话
+from .core.http import create_http_session  # HTTP会话
 from .db import save_ai_raw_response  # 保存AI原始返回数据
 import botv.config as cfg  # 全局运行时变量
 
@@ -144,7 +144,7 @@ async def call_doubao(msgs, max_tokens=None, target_id=None):
 
 from .memory import build_memory_context  # 构建对话上下文
 from .personality import get_system_prompt  # 获取系统提示词
-from .utils import parse_ai_reply  # 解析AI回复
+from .ai.parse import parse_ai_reply  # 解析AI回复
 
 
 async def get_character_reply(txt, tid, current_kws=None):

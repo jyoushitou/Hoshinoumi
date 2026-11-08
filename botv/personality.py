@@ -4,7 +4,7 @@
 import asyncio  # 异步IO
 from .config import CST  # 东八区时区
 from .log import log_system, log_api  # 日志
-from .utils import create_http_session  # HTTP会话
+from .core.http import create_http_session  # HTTP会话
 
 # ===================== 本地基础人设 =====================
 LOCAL_SYSTEM_PROMPT = """你是友利奈绪(Charlotte)，15岁傲娇毒舌学生会会长。

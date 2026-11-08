@@ -11,7 +11,8 @@ import botv.config as cfg  # 全局运行时变量
 from .db import get_cursor  # 数据库游标
 from .log import log_system, log_api, log_err  # 日志
 from .clip import analyze_image_with_clip  # CLIP图片分析
-from .utils import download_url, create_http_session, encode_image_base64, DEFAULT_HEADERS  # 工具函数
+from .utils import download_url, encode_image_base64, DEFAULT_HEADERS  # 工具函数
+from .core.http import create_http_session  # HTTP会话
 
 
 def image_local_path(md5_hash, ext="jpg"):

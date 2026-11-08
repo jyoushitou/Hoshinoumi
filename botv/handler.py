@@ -14,7 +14,8 @@ from .memory import extract_keywords, add_target_memory  # 记忆管理
 from .api import get_character_reply  # AI回复
 from .send import send_short_reply, send_private_msg, send_sticker_private, send_sticker_group, select_best_sticker  # 发送消息
 from .commands import handle_command  # 命令处理
-from .utils import download_url, encode_image_base64, make_image_msg, parse_ai_reply  # 工具函数
+from .utils import download_url, encode_image_base64, make_image_msg  # 工具函数
+from .ai.parse import parse_ai_reply  # 解析AI回复
 
 
 def contains_sticker_key(text):

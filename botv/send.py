@@ -11,7 +11,8 @@ import botv.config as cfg  # 全局运行时变量
 from .log import log_send, log_err, log_system, log_api  # 日志
 from .image import search_local_image_by_tags, get_best_image  # 图片搜索
 from .memory import extract_keywords  # 关键词提取
-from .utils import encode_image_base64, make_image_msg, parse_ai_reply  # 工具函数
+from .utils import encode_image_base64, make_image_msg  # 工具函数
+from .ai.parse import parse_ai_reply  # 解析AI回复
 from .db import get_cursor  # 数据库游标
 
 

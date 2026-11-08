@@ -1,21 +1,13 @@
-﻿# ===================== 配置模块 =====================
+# ===================== 配置模块 =====================
 # 所有常量、API地址、TOKEN、CLIP标签、全局运行时变量集中管理
 
 import os, random, asyncio  # 标准库
 from collections import deque, defaultdict  # 双端队列（消息去重）、默认字典
-from requests.adapters import HTTPAdapter  # requests 连接适配器
-import requests, urllib3  # HTTP请求库、SSL警告抑制
+import urllib3  # SSL 警告抑制（HTTP 会话工厂已迁至 botv/core/http.py）
 from datetime import timedelta, timezone, date  # 时区、日期处理
 
 CST = timezone(timedelta(hours=8))  # 东八区（北京时间）
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)  # 禁用SSL警告
-
-def create_http_session():
-    """创建带连接池的HTTP会话，不重试"""
-    s=requests.Session()  # 创建会话
-    s.mount("https://",HTTPAdapter(max_retries=0))  # HTTPS挂载适配器，不重试
-    s.mount("http://",HTTPAdapter(max_retries=0))  # HTTP挂载适配器，不重试
-    return s
 
 # ===================== 配置常量 =====================
 MASTER_QQ=822891053  # 主人QQ号（只有此QQ能使用!命令）
