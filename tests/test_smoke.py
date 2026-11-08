@@ -282,5 +282,32 @@ class TestFallback(unittest.TestCase):
         self.assertEqual(calls[0][2], "正常回复")
 
 
+class TestImagePath(unittest.TestCase):
+    """F4：图片路径解析不依赖当前工作目录"""
+
+    def test_empty(self):
+        from botv.utils import resolve_image_path
+        self.assertIsNone(resolve_image_path(""))
+        self.assertIsNone(resolve_image_path(None))
+
+    def test_relative_resolved_from_project_root(self):
+        import os
+        from botv.utils import resolve_image_path
+        p = resolve_image_path("README.md")  # 项目根下确定存在的文件
+        self.assertIsNotNone(p)
+        self.assertTrue(os.path.isabs(p))
+        self.assertTrue(os.path.exists(p))
+
+    def test_missing_returns_none(self):
+        from botv.utils import resolve_image_path
+        self.assertIsNone(resolve_image_path("no/such/file.jpg"))
+
+    def test_absolute_existing(self):
+        import os
+        from botv.utils import resolve_image_path
+        p = resolve_image_path(os.path.abspath("README.md"))
+        self.assertIsNotNone(p)
+
+
 if __name__ == "__main__":
     unittest.main()

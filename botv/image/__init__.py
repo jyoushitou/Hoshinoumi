@@ -13,3 +13,4 @@ from .store import (  # noqa: F401
 )
 from .fetch import fetch_and_save_acg_image, search_alapi_and_save  # noqa: F401
 from .pick import get_best_image  # noqa: F401
+from .store import materialize_image  # noqa: F401

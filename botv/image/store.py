@@ -9,6 +9,7 @@ from ..config import IMAGE_DIR, CLIP_IMAGE_TAGS
 from ..infra.conn import get_cursor
 from ..log import log_api, log_err
 from ..clip import analyze_image_with_clip
+from ..utils import resolve_image_path
 
 
 def image_local_path(md5_hash, ext="jpg"):
@@ -53,9 +54,9 @@ def image_already_exists(md5_hash):
         c.execute("SELECT id, tags, file_path, ext FROM images WHERE md5_hash=%s", (md5_hash,))
         r = c.fetchone()
         if r:
-            fp = r["file_path"]
-            if fp and os.path.exists(fp):  # 文件已存在磁盘上
-                return True, r["tags"], fp
+            real = resolve_image_path(r["file_path"])
+            if real:  # 文件已存在磁盘上（相对路径已按项目根解析）
+                return True, r["tags"], real
             img_data, ext = load_image_from_db(md5_hash)  # 从数据库加载二进制数据
             if img_data:
                 fp = image_local_path(md5_hash, ext)
@@ -100,9 +101,9 @@ def search_local_image_by_tags(keywords, limit=5):
         c.execute(sql, params)
         results = []
         for r in c.fetchall():
-            fp = r["file_path"]
-            if fp and os.path.exists(fp):
-                results.append((r["md5_hash"], r["tags"], fp))
+            real = resolve_image_path(r["file_path"])
+            if real:
+                results.append((r["md5_hash"], r["tags"], real))
         return results
     except Exception as e:
         log_err(f"搜索图片失败: {e}")
@@ -115,8 +116,29 @@ def get_random_local_image():
         c = get_cursor()
         c.execute("SELECT md5_hash, tags, file_path FROM images ORDER BY RAND() LIMIT 1")
         r = c.fetchone()
-        if r and r["file_path"] and os.path.exists(r["file_path"]):
-            return (r["md5_hash"], r["tags"], r["file_path"])
+        real = resolve_image_path(r["file_path"]) if r else None
+        if real:
+            return (r["md5_hash"], r["tags"], real)
     except Exception:
         pass
+    return None
+
+
+def materialize_image(fp):
+    """把图片路径变成真实存在的绝对路径（v5-F4）
+
+    - 相对路径按项目根解析
+    - 文件丢了就按文件名里的 md5 从数据库 blob 恢复
+    - 实在找不回来返回 None（调用方跳过发图，不要发坏路径）
+    """
+    p = resolve_image_path(fp)
+    if p:
+        return p
+    md5 = os.path.splitext(os.path.basename(fp or ""))[0]
+    if len(md5) == 32:
+        exists, _tags, restored = image_already_exists(md5)
+        if exists and restored:
+            log_err(f"图片文件缺失，已从数据库恢复: {md5[:12]}")
+            return restored
+    log_err(f"图片路径无法解析: {fp}")
     return None

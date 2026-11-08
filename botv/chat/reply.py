@@ -12,7 +12,7 @@ import os  # 路径处理
 from botv.core import state as cfg  # 运行时状态（CODE_MODE）
 from ..log import log_api  # 日志
 from ..ai.parse import parse_ai_reply  # 解析AI回复（取图片关键词）
-from ..image import get_best_image  # 图片搜索
+from ..image import get_best_image, materialize_image  # 图片搜索 / 路径解析
 from ..memory import extract_keywords  # 关键词提取
 
 # 出现这些标记的行，以及它之后的所有行，都算内部元数据
@@ -88,18 +88,27 @@ async def build_reply_message(txt, uid, kws=None):
     parsed = parse_ai_reply(txt)
     img_kw = parsed[2] if parsed else []
 
+    def _image_part(path):
+        """把路径变成消息段；解析不到（文件缺失）就返回 None，不发坏路径"""
+        real = materialize_image(path)
+        if not real:
+            return None
+        return ("image", [{"type": "image", "data": {"file": real}}])
+
     if img_kw:
         fp = await get_best_image(img_kw, uid)
-        if fp:
-            parts.append(("image", [{"type": "image", "data": {"file": os.path.abspath(fp)}}]))
+        part = _image_part(fp) if fp else None
+        if part:
+            parts.append(part)
             return parts
         log_api("[构建回复] AI 关键词未搜到图，改用 jieba 兜底")
 
     search_kws = extract_keywords(f"{dialog} {action}")
     if search_kws:
         fp = await get_best_image(search_kws, uid)
-        if fp:
-            parts.append(("image", [{"type": "image", "data": {"file": os.path.abspath(fp)}}]))
+        part = _image_part(fp) if fp else None
+        if part:
+            parts.append(part)
         else:
             log_api("[构建回复] jieba 兜底也没搜到图")
     else:

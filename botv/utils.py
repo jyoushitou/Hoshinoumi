@@ -39,10 +39,32 @@ def encode_image_base64(d):
     except:
         return ""
 
+# 项目根目录（botv 的上一级），用于把相对路径固定下来
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def resolve_image_path(filepath):
+    """把图片路径解析成真实存在的绝对路径；找不到返回 None（v5-F4）
+
+    库里历史数据存的是 `images/xxx.jpg` 这种相对路径，
+    以前直接用 os.path.exists 判断，换个工作目录启动就全查不到。
+    """
+    if not filepath:
+        return None
+    if os.path.isabs(filepath):
+        return os.path.abspath(filepath) if os.path.exists(filepath) else None
+    # 相对路径：先按项目根找，再按当前目录找
+    for base in (_PROJECT_ROOT, os.getcwd()):
+        candidate = os.path.abspath(os.path.join(base, filepath))
+        if os.path.exists(candidate):
+            return candidate
+    return None
+
+
 def make_image_msg(filepath):
     """统一将本地图片路径转为 NapCat 图片消息体
     返回 [{"type":"image","data":{"file":"绝对路径"}}] 或 None"""
-    if not filepath or not os.path.exists(filepath):
+    abs_path = resolve_image_path(filepath)
+    if not abs_path:
         return None
-    abs_path = os.path.abspath(filepath)  # 转为绝对路径
     return [{"type":"image","data":{"file":abs_path}}]
