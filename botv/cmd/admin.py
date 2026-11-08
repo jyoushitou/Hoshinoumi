@@ -5,7 +5,7 @@
 import asyncio
 import time as _time
 
-import botv.config as cfg
+from botv.core import state as cfg
 from ..config import MASTER_QQ, HEARTBEAT_INTERVAL
 from ..db import reload_api_keys
 from ..log import log_system

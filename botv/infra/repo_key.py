@@ -1,7 +1,7 @@
 # ===================== 密钥仓储 =====================
 # 迁移自 db.py（v5-R6）
 
-import botv.config as cfg
+from botv.core import state as cfg
 from ..log import log_system
 from .conn import get_cursor
 

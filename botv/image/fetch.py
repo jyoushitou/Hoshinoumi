@@ -4,7 +4,7 @@
 
 import random
 
-import botv.config as cfg
+from botv.core import state as cfg
 from ..log import log_api
 from ..utils import download_url, DEFAULT_HEADERS
 from ..core.http import create_http_session

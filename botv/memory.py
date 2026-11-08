@@ -7,7 +7,7 @@ from collections import deque  # 双端队列（用于对话记忆池）
 from .config import MAX_USER_ROUND  # 每个用户最大对话轮数
 from .db import load_user_memories_from_db, load_global_keywords_from_db, add_user_memory_to_db, add_global_keywords_to_db, load_events_from_db, add_event_to_db  # 数据库操作
 from .log import log_system  # 日志
-import botv.config as cfg  # 全局运行时变量
+from botv.core import state as cfg  # 全局运行时变量
 
 
 def extract_keywords(text):

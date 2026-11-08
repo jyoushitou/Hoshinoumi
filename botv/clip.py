@@ -6,7 +6,7 @@ from io import BytesIO  # 字节流：将图片二进制数据转为 PIL Image
 import asyncio  # 异步 IO：在子线程中运行 CLIP 推理，避免阻塞事件循环
 from .config import CLIP_IMAGE_TAGS  # 候选标签列表（约200个）
 from .log import log_system, log_api, log_err  # 日志
-import botv.config as cfg  # 全局运行时变量
+from botv.core import state as cfg  # 全局运行时变量
 
 clip_model = None  # CLIP 模型实例（全局单例）
 clip_processor = None  # CLIP 图片处理器（全局单例）

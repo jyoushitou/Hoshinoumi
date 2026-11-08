@@ -8,7 +8,7 @@ import time as _time
 from datetime import datetime, timedelta
 
 from ..config import MASTER_QQ, CST
-import botv.config as cfg
+from botv.core import state as cfg
 from ..log import log_system, log_err
 from ..ai.client import get_character_reply
 from ..memory import add_target_memory

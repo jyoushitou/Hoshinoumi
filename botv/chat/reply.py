@@ -5,7 +5,7 @@
 
 import os  # 路径处理
 
-import botv.config as cfg  # 全局运行时变量（CODE_MODE）
+from botv.core import state as cfg  # 全局运行时变量（CODE_MODE）
 from ..log import log_api  # 日志
 from ..ai.parse import parse_ai_reply  # 解析AI回复
 from ..image import get_best_image  # 图片搜索

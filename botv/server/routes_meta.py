@@ -4,7 +4,7 @@
 
 from datetime import datetime
 
-import botv.config as cfg
+from botv.core import state as cfg
 from ..config import CST, MASTER_QQ
 from ..infra.conn import get_cursor
 from ..infra.repo_ai import get_recent_usage

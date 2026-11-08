@@ -5,7 +5,7 @@
 import time as _time
 from datetime import date
 
-import botv.config as cfg  # 全局运行时变量
+from botv.core import state as cfg  # 全局运行时变量
 from ..config import (
     MASTER_QQ, LISTEN_HOST, LISTEN_PORT_QQ, HEARTBEAT_INTERVAL,
     DS_MODEL, STICKER_ARCHIVE_DIR, CLIP_IMAGE_TAGS,

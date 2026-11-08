@@ -2,7 +2,7 @@
 # 把 NapCat 的消息段（text / image / face）转成文本
 # 迁移自 handler.py（v5-R5），逻辑逐字未改
 
-import botv.config as cfg
+from botv.core import state as cfg
 from ..log import log_api
 from ..image import process_and_save_image
 from ..utils import download_url

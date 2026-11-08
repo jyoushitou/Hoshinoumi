@@ -17,7 +17,7 @@ from ..db import save_ai_raw_response  # 保存AI原始返回数据
 from ..memory import build_memory_context, extract_keywords  # 记忆上下文与关键词
 from ..personality import get_system_prompt  # 系统提示词
 from .parse import parse_ai_reply  # 解析AI回复
-import botv.config as cfg  # 全局运行时变量
+from botv.core import state as cfg  # 全局运行时变量
 
 
 def _extract_user_msg(msgs):

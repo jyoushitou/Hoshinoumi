@@ -8,7 +8,7 @@ import os
 import random
 
 from ..config import STICKER_FACE_IDS, STICKER_ARCHIVE_DIR
-import botv.config as cfg
+from botv.core import state as cfg
 from ..log import log_send, log_err, log_api
 from ..image import search_local_image_by_tags, get_best_image
 from ..memory import extract_keywords

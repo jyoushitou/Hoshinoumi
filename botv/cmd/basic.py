@@ -2,7 +2,7 @@
 # 纯文本类命令：只读运行时状态，返回一段文本
 # 迁移自 commands.py（v5-R5 第一批），逻辑逐字未改
 
-import botv.config as cfg  # 全局运行时变量
+from botv.core import state as cfg  # 全局运行时变量
 from ..schedule import is_workday_today  # 工作日判断
 from .registry import command
 from .formatters import (

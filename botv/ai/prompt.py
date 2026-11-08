@@ -4,7 +4,7 @@
 
 import os
 
-import botv.config as cfg
+from botv.core import state as cfg
 from ..log import log_system, log_api
 from ..core.http import create_http_session
 from .persona import LOCAL_SYSTEM_PROMPT, CODE_MODE_SYSTEM_PROMPT, build_available_tags

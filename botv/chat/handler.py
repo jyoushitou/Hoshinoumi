@@ -8,7 +8,7 @@ import os
 import time as _time
 
 from ..config import MASTER_QQ, LOCK_RELEASE_DELAY
-import botv.config as cfg
+from botv.core import state as cfg
 from ..log import log_recv, log_err, log_system, log_api
 from ..image import fetch_and_save_acg_image
 from ..memory import extract_keywords, add_target_memory

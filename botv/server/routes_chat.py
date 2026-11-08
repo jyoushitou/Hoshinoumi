@@ -2,7 +2,7 @@
 # POST /api/chat、POST /api/command
 # 迁移自 api_server.py（v5-R5），逻辑逐字未改
 
-import botv.config as cfg
+from botv.core import state as cfg
 from ..ai.client import get_character_reply
 from ..cmd import formatters as fmt
 from ..infra.repo_ai import get_recent_usage

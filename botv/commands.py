@@ -2,7 +2,7 @@
 # v5-R5：26 个命令已全部拆到 botv/cmd/*，本文件只负责鉴权与分发
 # 旧版 426 行的 if/elif 长链已删除
 
-import botv.config as cfg
+from botv.core import state as cfg
 from .config import MASTER_QQ
 from .log import log_send
 from .send import send_private_msg, send_group_msg

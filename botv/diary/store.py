@@ -2,7 +2,7 @@
 # diaries / events / ai_raw_responses 的读取与写入
 # 迁移自 diary.py（v5-R5）
 
-import botv.config as cfg  # noqa: F401  保持与原模块的副作用一致
+from botv.core import state as cfg  # noqa: F401  保持与原模块的副作用一致
 from ..infra.conn import get_cursor
 from ..log import log_err
 

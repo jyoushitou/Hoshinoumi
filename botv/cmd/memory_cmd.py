@@ -2,7 +2,7 @@
 # event / clear：查看与清除某个对象的记忆
 # 迁移自 commands.py（v5-R5）
 
-import botv.config as cfg
+from botv.core import state as cfg
 from ..config import MASTER_QQ
 from ..db import get_cursor, load_events_from_db
 from .registry import command
