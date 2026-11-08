@@ -334,5 +334,51 @@ class TestOnlineNotice(unittest.TestCase):
         self.assertTrue(claim_online_notice())
 
 
+class TestTimePerception(unittest.TestCase):
+    """F7：prompt 里必须带当前时间"""
+
+    def setUp(self):
+        cfg.CODE_MODE = False
+
+    def test_now_text_format(self):
+        from datetime import datetime
+        from botv.ai.prompt import now_text
+        from botv.config import CST
+        s = now_text(datetime(2026, 11, 8, 23, 30, tzinfo=CST))
+        self.assertIn("2026年11月8日", s)
+        self.assertIn("23:30", s)
+        self.assertIn("深夜", s)
+
+    def test_morning_period(self):
+        from datetime import datetime
+        from botv.ai.prompt import now_text
+        from botv.config import CST
+        s = now_text(datetime(2026, 11, 9, 7, 15, tzinfo=CST))
+        self.assertIn("早上", s)
+
+    def test_prompt_contains_now(self):
+        import botv.ai.client as client
+        import botv.memory as mem
+
+        captured = {}
+
+        async def fake_ds(msgs, max_tokens=None, target_id=None):
+            captured["sys"] = msgs[0]["content"]
+            return "好"
+
+        orig_ds, orig_ev = client.call_deepseek, mem.load_events_from_db
+        client.call_deepseek = fake_ds
+        mem.load_events_from_db = lambda *a, **k: []
+        try:
+            asyncio.run(client.get_character_reply("hi", "1"))
+        finally:
+            client.call_deepseek = orig_ds
+            mem.load_events_from_db = orig_ev
+
+        self.assertIn("现在的时间", captured["sys"])
+        self.assertNotIn("{now}", captured["sys"])
+        self.assertRegex(captured["sys"], r"\d{4}年\d{1,2}月\d{1,2}日 周")
+
+
 if __name__ == "__main__":
     unittest.main()

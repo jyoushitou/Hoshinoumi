@@ -17,6 +17,7 @@ from ..core.types import Fallback  # 兜底文案标记（v5-F2）
 from ..db import save_ai_raw_response  # 保存AI原始返回数据
 from ..memory import build_memory_context, extract_keywords  # 记忆上下文与关键词
 from ..personality import get_system_prompt  # 系统提示词
+from .prompt import now_text  # 当前时间描述（v5-F7）
 from .parse import parse_ai_reply  # 解析AI回复
 from botv.core import state as cfg  # 全局运行时变量
 
@@ -158,7 +159,13 @@ async def get_character_reply(txt, tid, current_kws=None):
     kw, dia, events = build_memory_context(tid, current_kws)  # 构建对话上下文（关键词、对话历史、事件）
     log_api(f"[get_character_reply] 记忆: kw_len={len(kw)}, dia_len={len(dia)}, events={events[:40]}")  # 日志记录上下文信息
     cur_kw_str = "、".join(current_kws) if current_kws else "无"  # 当前话题关键词（顿号分隔）
-    sys_p = get_system_prompt().format(global_keywords=kw, current_dialogue=dia, events=events, master_qq=MASTER_QQ)  # 格式化系统提示词
+    sys_p = get_system_prompt().format(
+        global_keywords=kw,
+        current_dialogue=dia,
+        events=events,
+        master_qq=MASTER_QQ,
+        now=now_text(),  # v5-F7：让她知道现在几点
+    )  # 格式化系统提示词
     log_api(f"[get_character_reply] system_prompt长度: {len(sys_p)}")  # 日志记录提示词长度
     user_content = f"{txt}\n(当前话题关键词:{cur_kw_str})"  # 构建用户消息（追加当前话题关键词）
     msgs = [{"role":"system","content":sys_p}, {"role":"user","content":user_content}]  # 构建消息列表

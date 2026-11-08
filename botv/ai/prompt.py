@@ -3,11 +3,39 @@
 # 迁移自 personality.py（v5-R5）
 
 import os
+from datetime import datetime
 
 from botv.core import state as cfg
+from ..config import CST  # 东八区
 from ..log import log_system, log_api
 from ..core.http import create_http_session
 from .persona import LOCAL_SYSTEM_PROMPT, CODE_MODE_SYSTEM_PROMPT, build_available_tags
+
+_WEEKDAY = "一二三四五六日"
+
+
+def now_text(now=None):
+    """当前时间的人话描述（v5-F7）
+
+    例：2026年11月8日 周六 21:30（晚上）
+    """
+    now = now or datetime.now(CST)
+    h = now.hour
+    if h < 6:
+        period = "凌晨"
+    elif h < 9:
+        period = "早上"
+    elif h < 12:
+        period = "上午"
+    elif h < 14:
+        period = "中午"
+    elif h < 18:
+        period = "下午"
+    elif h < 23:
+        period = "晚上"
+    else:
+        period = "深夜"
+    return f"{now.year}年{now.month}月{now.day}日 周{_WEEKDAY[now.weekday()]} {now.strftime('%H:%M')}（{period}）"
 
 # 本地人设补充文件路径（botv/personality_supplement.txt）
 LOCAL_SUPPLEMENT_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "personality_supplement.txt")
