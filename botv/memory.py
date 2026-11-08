@@ -24,7 +24,14 @@ def load_memories():
 
 
 def add_target_memory(tid, user_msg, bot_msg, img_keywords=None, refined_keywords=None, event_summary=None):
-    """添加一条对话记忆：入库+内存更新+事件存储+关键词更新"""
+    """添加一条对话记忆：入库+内存更新+事件存储+关键词更新
+
+    v5-F2：兜底文案（Fallback）一律不入库——它是系统噪声，不是她说的话。
+    """
+    from .core.types import Fallback
+    if isinstance(bot_msg, Fallback):
+        log_system(f"记忆: 跳过兜底文案，不入库 (tid={tid})")
+        return
     add_user_memory_to_db(tid, user_msg, bot_msg)  # 写入数据库
     cfg.user_memory_pool.setdefault(tid, deque(maxlen=MAX_USER_ROUND)).append([user_msg, bot_msg])  # 更新内存池
     

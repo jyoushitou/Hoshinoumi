@@ -16,6 +16,7 @@ from ..ai.client import get_character_reply
 from ..commands import handle_command
 from ..utils import make_image_msg
 from ..ai.parse import parse_ai_reply
+from ..core.types import Fallback  # 兜底文案标记（v5-F2）
 from .send import send_short_reply, send_private_msg, send_sticker_private, send_sticker_group
 from .inbound import parse_message_content, contains_sticker_key
 
@@ -78,12 +79,15 @@ async def websocket_handle_qq(ws):
                         await send_sticker_private(uid, ws, uid)  # 发送私聊表情包
                 else:  # 普通对话
                     ans = await get_character_reply(text, tid, ck)  # 获取AI回复
-                    if not ans:  # 两个模型都失败，使用兜底回复
-                        ans = "嗯嗯(点头)\n关键词搜索图片用：点头、嗯"
-                        log_api("[handler] 两个模型均无回复，使用兜底回复")
-                    dialog, action, img_kw, event, refined_kw = parse_ai_reply(ans)  # 解析AI回复
-                    add_target_memory(tid, text, ans, img_kw, refined_kw, event)  # 保存记忆
-                    await send_short_reply(gid if mt == "group" else uid, ans, ws, uid, mt == "group", ck)  # 发送回复
+                    target = gid if mt == "group" else uid  # 回复目标
+                    if not ans or isinstance(ans, Fallback):
+                        # v5-F2：兜底文案不是她的话——不进记忆、不进事件，只回一条中性的
+                        log_api("[handler] 模型无回复或返回兜底，静默处理（不入库）")
+                        await send_short_reply(target, "……", ws, uid, mt == "group", ck)
+                    else:
+                        dialog, action, img_kw, event, refined_kw = parse_ai_reply(ans)  # 解析AI回复
+                        add_target_memory(tid, text, ans, img_kw, refined_kw, event)  # 保存记忆
+                        await send_short_reply(target, ans, ws, uid, mt == "group", ck)  # 发送回复
 
                 await asyncio.sleep(LOCK_RELEASE_DELAY)  # 锁释放延迟，防止消息处理过快
     except Exception as e:  # 捕获异常

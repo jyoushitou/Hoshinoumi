@@ -232,5 +232,55 @@ class TestStructure(unittest.TestCase):
         session.close()
 
 
+class TestFallback(unittest.TestCase):
+    """F2：兜底文案不得入库、不得污染关键词"""
+
+    def test_fallback_is_str(self):
+        from botv.core.types import Fallback
+        f = Fallback("哼")
+        self.assertIsInstance(f, str)
+        self.assertEqual(f, "哼")
+
+    def test_get_character_reply_marks_fallback(self):
+        import botv.ai.client as client
+        import botv.memory as mem
+        from botv.core.types import Fallback
+
+        async def no_ds(*a, **k):
+            return None
+
+        async def fb_doubao(*a, **k):
+            return Fallback("哼(扭头)")
+
+        orig_ds, orig_db = client.call_deepseek, client.call_doubao
+        orig_ev = mem.load_events_from_db
+        client.call_deepseek, client.call_doubao = no_ds, fb_doubao
+        mem.load_events_from_db = lambda *a, **k: []  # 测试环境不连库
+        try:
+            r = asyncio.run(client.get_character_reply("hi", "1"))
+        finally:
+            client.call_deepseek, client.call_doubao = orig_ds, orig_db
+            mem.load_events_from_db = orig_ev
+        self.assertIsInstance(r, Fallback)
+
+    def test_add_memory_skips_fallback(self):
+        import botv.memory as mem
+        from botv.core.types import Fallback
+
+        calls = []
+        orig = mem.add_user_memory_to_db
+        orig_kw = mem.add_global_keywords_to_db
+        mem.add_user_memory_to_db = lambda *a, **k: calls.append(a)
+        mem.add_global_keywords_to_db = lambda *a, **k: None  # 测试环境不连库
+        try:
+            mem.add_target_memory("1", "hi", Fallback("哼"))
+            mem.add_target_memory("1", "hi", "正常回复")
+        finally:
+            mem.add_user_memory_to_db = orig
+            mem.add_global_keywords_to_db = orig_kw
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(calls[0][2], "正常回复")
+
+
 if __name__ == "__main__":
     unittest.main()

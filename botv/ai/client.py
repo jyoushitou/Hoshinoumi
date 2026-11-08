@@ -13,6 +13,7 @@ from ..config import (  # API 配置
 )
 from ..log import log_api, log_err, log_system  # 日志
 from ..core.http import create_http_session  # HTTP会话
+from ..core.types import Fallback  # 兜底文案标记（v5-F2）
 from ..db import save_ai_raw_response  # 保存AI原始返回数据
 from ..memory import build_memory_context, extract_keywords  # 记忆上下文与关键词
 from ..personality import get_system_prompt  # 系统提示词
@@ -102,7 +103,7 @@ async def call_doubao(msgs, max_tokens=None, target_id=None):
         log_api("[豆包] 无API key，返回默认回复")  # 日志记录
         fallback = random.choice(["哼(扭头)","才不理你(抱手)","切(翻白眼)"])  # 随机选择兜底回复
         save_ai_raw_response("豆包(无key)", user_msg, {}, fallback, target_id, "no_api_key")  # 保存无key记录
-        return fallback  # 返回兜底回复
+        return Fallback(fallback)  # 标记为兜底，调用方不得入库
     h={"Authorization":f"Bearer {cfg.DOUBAO_API_KEY}","Content-Type":"application/json"}  # 请求头：Bearer认证
     temp = 0.2 if cfg.CODE_MODE else 0.7  # 代码模式降低温度以提高准确性
     # 输出长度：调用方显式指定 max_tokens 时优先使用（日记等长文场景），否则走默认（代码模式2000/聊天300）
@@ -148,7 +149,7 @@ async def call_doubao(msgs, max_tokens=None, target_id=None):
         await asyncio.sleep(API_RETRY_DELAY*(a+1))  # 指数退避等待
     fallback = random.choice(["哼(扭头)","才不理你(抱手)","切(翻白眼)"])  # 所有重试失败，随机选择兜底回复
     log_api(f"[豆包] 全部重试失败，返回兜底: {fallback}")  # 日志记录
-    return fallback  # 返回兜底回复
+    return Fallback(fallback)  # 标记为兜底，调用方不得入库
 
 
 async def get_character_reply(txt, tid, current_kws=None):
@@ -165,6 +166,11 @@ async def get_character_reply(txt, tid, current_kws=None):
     if not r:  # DeepSeek无回复
         log_api("[get_character_reply] DeepSeek无回复，转豆包")  # 日志记录降级
         r = await call_doubao(msgs)  # 降级到豆包
+
+    # v5-F2：兜底文案不是她的回复，不做关键词补全，交给调用方按「失败」处理
+    if isinstance(r, Fallback):
+        log_api("[get_character_reply] 两个模型均失败，返回兜底标记")
+        return r
 
     # ===== 修复：AI回复缺少图片关键词行时，自动从对话内容提取关键词兜底 =====
     if r:
