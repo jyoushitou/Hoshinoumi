@@ -158,7 +158,7 @@ async def call_doubao(msgs, max_tokens=None, target_id=None):
 async def get_character_reply(txt, tid, current_kws=None):
     """核心函数：获取角色回复，优先DeepSeek，失败时降级到豆包"""
     log_api(f"[get_character_reply] 收到消息: {txt[:40]}, tid={tid}, kws={current_kws}")  # 日志记录输入
-    kw, dia, events = build_memory_context(tid, current_kws)  # 构建对话上下文（关键词、对话历史、事件）
+    kw, dia, events = build_memory_context(tid, current_kws, query=txt)  # 上下文（关键词、对话历史、检索到的记忆）
     log_api(f"[get_character_reply] 记忆: kw_len={len(kw)}, dia_len={len(dia)}, events={events[:40]}")  # 日志记录上下文信息
     cur_kw_str = "、".join(current_kws) if current_kws else "无"  # 当前话题关键词（顿号分隔）
     sys_p = get_system_prompt().format(

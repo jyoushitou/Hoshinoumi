@@ -10,10 +10,9 @@ from ..log import log_system  # 日志
 from botv.core import state as cfg  # 全局运行时变量
 
 
-def extract_keywords(text):
-    """使用jieba分词从文本中提取关键词（过滤停用词和单字词）"""
-    sw={"的","了","是","我","你","在","有","就","不","都","吗","吧","啊","哦","呀","呢","呗","啦"}  # 停用词集合
-    return [w for w in jieba.lcut(text) if len(w)>1 and w not in sw]  # 分词后过滤：长度>1且不是停用词
+from .text import extract_keywords  # noqa: E402  分词工具（v8 挪出去避免循环导入）
+from .retrieval import retrieve  # noqa: E402  双路召回（v8-B11）
+from ..infra.repo_memory import load_memories_for_search  # noqa: E402
 
 
 def load_memories():
@@ -55,20 +54,45 @@ def add_target_memory(tid, user_msg, bot_msg, img_keywords=None, refined_keyword
             cfg.global_keyword_set.add(k)  # 更新内存集合
 
 
-def build_memory_context(tid, current_kws=None):
-    """构建对话上下文：全局关键词 + 最近对话历史 + 相关事件记忆"""
+def build_memory_context(tid, current_kws=None, query=None):
+    """构建对话上下文：全局关键词 + 最近对话 + 检索到的相关记忆
+
+    v8-B11：记忆不再用 LIKE 硬匹配，改为 BM25 + 关键词双路召回。
+    """
     kw = "、".join(cfg.global_keyword_set) if cfg.global_keyword_set else "无"  # 全局关键词（顿号分隔）
-    
+
     dia = ""  # 对话历史字符串
     if tid in cfg.user_memory_pool:  # 该用户有记忆
         for u, b in list(cfg.user_memory_pool[tid])[-6:]:  # 取最近6轮对话
             dia += f"用户:{u}\n奈绪:{b}\n"  # 格式化：用户:xxx\n奈绪:xxx\n
     else:
         dia = "无"  # 无对话历史
-    
-    # 按当前对话关键词过滤事件，只传匹配的
-    events = load_events_from_db(tid, tag_keywords=current_kws, limit=3)  # 加载相关事件（最多3条）
-    events_str = "\n".join(f"· {e[0]}" for e in events) if events else "无"  # 格式化事件列表
-    
-    return kw, dia, events_str  # 返回(全局关键词, 对话历史, 事件记忆)
+
+    q = query or " ".join(current_kws or [])  # 检索用的查询串
+    events_str = _recall_memories(tid, q)  # 双路召回
+    return kw, dia, events_str  # 返回(全局关键词, 对话历史, 相关记忆)
+
+
+def _recall_memories(tid, query, top_k=5):
+    """检索相关记忆；检索不到就退回最近几条，绝不给空"""
+    cands = []
+    try:
+        cands = load_memories_for_search(tid, limit=300)
+    except Exception:
+        cands = []
+
+    if cands and query:
+        try:
+            hits = retrieve(query, cands, top_k=top_k)
+        except Exception:
+            hits = []
+        if hits:
+            return "\n".join(f"· {m.get('summary', '')}" for m, _ in hits)
+
+    # 兜底：最近几条（老逻辑）
+    try:
+        recent = load_events_from_db(tid, tag_keywords=None, limit=3)
+        return "\n".join(f"· {e[0]}" for e in recent) if recent else "无"
+    except Exception:
+        return "无"
 

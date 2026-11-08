@@ -974,5 +974,47 @@ class TestRetrieval(unittest.TestCase):
         self.assertEqual(fused[0][0], 0)
 
 
+class TestRecallMemories(unittest.TestCase):
+    """v8-B11：检索接入上下文，命中优先、未命中兜底"""
+
+    def test_uses_retrieval_when_hit(self):
+        import botv.memory.context as ctx
+        cands = [{"summary": "主人要答辩"}, {"summary": "加班"}]
+        orig_l, orig_r = ctx.load_memories_for_search, ctx.retrieve
+        ctx.load_memories_for_search = lambda tid, limit=300: cands
+        ctx.retrieve = lambda q, ms, top_k=5: [(ms[0], 0.9)]
+        try:
+            s = ctx._recall_memories("1", "答辩")
+        finally:
+            ctx.load_memories_for_search, ctx.retrieve = orig_l, orig_r
+        self.assertIn("答辩", s)
+        self.assertNotIn("加班", s)
+
+    def test_falls_back_when_no_hit(self):
+        import botv.memory.context as ctx
+        orig_l, orig_r, orig_e = ctx.load_memories_for_search, ctx.retrieve, ctx.load_events_from_db
+        ctx.load_memories_for_search = lambda tid, limit=300: [{"summary": "x"}]
+        ctx.retrieve = lambda q, ms, top_k=5: []
+        ctx.load_events_from_db = lambda tid, tag_keywords=None, limit=3: [("最近的旧事", "")]
+        try:
+            s = ctx._recall_memories("1", "无关的查询")
+        finally:
+            ctx.load_memories_for_search, ctx.retrieve, ctx.load_events_from_db = orig_l, orig_r, orig_e
+        self.assertIn("最近的旧事", s)
+
+    def test_db_error_returns_placeholder(self):
+        import botv.memory.context as ctx
+        orig_l = ctx.load_memories_for_search
+        def boom(tid, limit=300):
+            raise RuntimeError("db down")
+        ctx.load_memories_for_search = boom
+        orig_e = ctx.load_events_from_db
+        ctx.load_events_from_db = lambda tid, tag_keywords=None, limit=3: []
+        try:
+            self.assertEqual(ctx._recall_memories("1", "任何"), "无")
+        finally:
+            ctx.load_memories_for_search, ctx.load_events_from_db = orig_l, orig_e
+
+
 if __name__ == "__main__":
     unittest.main()
