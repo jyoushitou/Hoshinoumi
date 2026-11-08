@@ -875,5 +875,37 @@ class TestProfile(unittest.TestCase):
         self.assertFalse(rp.set_profile("1", "昵称", "   "))
 
 
+class TestSingleInstance(unittest.TestCase):
+    """v7-E32：单实例锁"""
+
+    def setUp(self):
+        import os
+        # 放在仓库目录里：系统临时目录在沙箱下不可写
+        root = os.path.dirname(os.path.dirname(__file__))
+        self.path = os.path.join(root, f".test-lock-{os.getpid()}")
+
+    def tearDown(self):
+        import os
+        from botv.core import single_instance as si
+        si.release()
+        try:
+            os.remove(self.path)
+        except OSError:
+            pass
+
+    def test_second_acquire_fails_then_release_works(self):
+        from botv.core import single_instance as si
+        self.assertTrue(si.acquire(self.path))
+        self.assertFalse(si.acquire(self.path), "同一文件第二次必须拿不到")
+        si.release()
+        self.assertTrue(si.acquire(self.path), "释放后应该能重新拿到")
+
+    def test_holder_pid_written(self):
+        import os
+        from botv.core import single_instance as si
+        self.assertTrue(si.acquire(self.path))
+        self.assertEqual(si.holder_pid(self.path), str(os.getpid()))
+
+
 if __name__ == "__main__":
     unittest.main()

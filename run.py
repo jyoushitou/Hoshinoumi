@@ -219,6 +219,12 @@ if __name__ == "__main__":  # 直接运行本文件时
     # 先检查依赖
     if not check_all_dependencies():
         sys.exit(1)  # 依赖缺失 → 退出
+    # v7-E32：单实例锁——同一时刻只允许一个进程连 NapCat
+    from botv.core.single_instance import acquire, release, holder_pid
+    if not acquire():
+        print(f"❌ 已有实例在运行（PID {holder_pid()}），本次退出")
+        sys.exit(1)
+
     # 依赖检查通过后再导入主模块（延迟导入，避免依赖缺失时崩溃）
     from botv.main import main
     # 启动机器人（先运行主程序，上线消息发出10分钟后再追溯日记）
@@ -241,3 +247,9 @@ if __name__ == "__main__":  # 直接运行本文件时
         # 第一次 Ctrl-C 走到这里：干净退出，不打印调用栈
         print("\n[已中断] 收到 Ctrl-C，程序退出。")
         sys.exit(130)
+    except Exception as e:  # v7-E33：启动失败给人话，不给栈
+        print(f"\n❌ 启动失败：{type(e).__name__}: {e}")
+        print("   建议先跑：python3 scripts/preflight.py")
+        sys.exit(1)
+    finally:
+        release()

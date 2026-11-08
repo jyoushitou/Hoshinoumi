@@ -1,0 +1,22 @@
+[Unit]
+Description=TomoriNao QQ Bot (NapCat + Python)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=jyoushitou
+WorkingDirectory=/home/jyoushitou/NapCat-Pyhon
+Environment=PYTHONIOENCODING=utf-8
+ExecStart=/usr/bin/python3 /home/jyoushitou/NapCat-Pyhon/run.py
+Restart=always
+RestartSec=5
+# 给足时间优雅退出
+TimeoutStopSec=20
+KillSignal=SIGINT
+# 日志走 journald，方便 journalctl -u nao-bot -f
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
