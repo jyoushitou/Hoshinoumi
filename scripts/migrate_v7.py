@@ -96,22 +96,27 @@ def main():
         print(f"待回填 dedupe_key：{pending} 行")
 
     # ---------- 3. 统计重复 ----------
-    c.execute("""
-        SELECT COUNT(*) AS n FROM (
-            SELECT target_id, kind, dedupe_key
-            FROM events WHERE dedupe_key IS NOT NULL
-            GROUP BY target_id, kind, dedupe_key HAVING COUNT(*) > 1
-        ) t
-    """)
-    dup_groups = c.fetchone()["n"] or 0
-    c.execute("""
-        SELECT COALESCE(SUM(c - 1), 0) AS n FROM (
-            SELECT COUNT(*) AS c FROM events WHERE dedupe_key IS NOT NULL
-            GROUP BY target_id, kind, dedupe_key HAVING COUNT(*) > 1
-        ) t
-    """)
-    dup_rows = c.fetchone()["n"] or 0
-    print(f"重复组：{dup_groups} 组，可合并掉 {dup_rows} 行")
+    # 注意：列还不存在时不能查，否则会报 Unknown column
+    if "kind" in missing_cols or "dedupe_key" in missing_cols:
+        dup_groups, dup_rows = 0, 0
+        print("重复组：待列建好后才能统计（新库/首次迁移属正常）")
+    else:
+        c.execute("""
+            SELECT COUNT(*) AS n FROM (
+                SELECT target_id, kind, dedupe_key
+                FROM events WHERE dedupe_key IS NOT NULL
+                GROUP BY target_id, kind, dedupe_key HAVING COUNT(*) > 1
+            ) t
+        """)
+        dup_groups = c.fetchone()["n"] or 0
+        c.execute("""
+            SELECT COALESCE(SUM(c - 1), 0) AS n FROM (
+                SELECT COUNT(*) AS c FROM events WHERE dedupe_key IS NOT NULL
+                GROUP BY target_id, kind, dedupe_key HAVING COUNT(*) > 1
+            ) t
+        """)
+        dup_rows = c.fetchone()["n"] or 0
+        print(f"重复组：{dup_groups} 组，可合并掉 {dup_rows} 行")
 
     if not (missing_cols or missing_idx or pending or dup_groups):
         print("\n✅ 已经是最新状态，无需迁移")
