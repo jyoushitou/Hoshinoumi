@@ -1,0 +1,70 @@
+# ===================== 提示词组装 =====================
+# 人设补充加载（远程/本地）+ 系统提示词渲染
+# 迁移自 personality.py（v5-R5）
+
+import os
+
+import botv.config as cfg
+from ..log import log_system, log_api
+from ..core.http import create_http_session
+from .persona import LOCAL_SYSTEM_PROMPT, CODE_MODE_SYSTEM_PROMPT, build_available_tags
+
+# 本地人设补充文件路径（botv/personality_supplement.txt）
+LOCAL_SUPPLEMENT_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "personality_supplement.txt")
+
+# 远程人设补充URL列表（可选，按需配置）
+PERSONALITY_SUPPLEMENT_URLS = [
+    # "https://raw.githubusercontent.com/your-repo/nao_personality/main/base.txt",
+]
+
+PERSONALITY_SUPPLEMENT = ""  # 缓存远程拉取的人设补充文本
+
+
+def load_personality_supplement():
+    """加载人设补充文本，优先级：远程URL > 本地文件"""
+    global PERSONALITY_SUPPLEMENT
+
+    # 1. 尝试从远程URL加载
+    for url in PERSONALITY_SUPPLEMENT_URLS:
+        try:
+            s = create_http_session()
+            r = s.get(url, timeout=(5, 10), verify=False)  # 5秒连接超时，10秒读取超时
+            if r.status_code == 200 and r.text.strip():
+                PERSONALITY_SUPPLEMENT = r.text.strip()
+                log_system(f"人设补充加载成功（远程）: {url}")
+                return
+        except Exception as e:
+            log_api(f"人设补充加载失败（远程） {url}: {e}")
+        finally:
+            try:
+                s.close()
+            except Exception:
+                pass
+
+    # 2. 尝试从本地文件加载
+    try:
+        if os.path.exists(LOCAL_SUPPLEMENT_FILE):
+            with open(LOCAL_SUPPLEMENT_FILE, "r", encoding="utf-8") as f:
+                content = f.read().strip()
+            if content:
+                PERSONALITY_SUPPLEMENT = content
+                log_system(f"人设补充加载成功（本地）: {LOCAL_SUPPLEMENT_FILE}")
+                return
+    except Exception as e:
+        log_api(f"人设补充加载失败（本地）: {e}")
+
+    log_system("人设补充未加载，使用基础人设")
+
+
+def get_system_prompt():
+    """生成完整的系统提示词，包含20个纬度×30个标签的可用图片标签列表"""
+    available_tags = build_available_tags()
+
+    # 代码模式下：使用代码模式提示词（知识正确性优先）
+    if cfg.CODE_MODE:
+        prompt = CODE_MODE_SYSTEM_PROMPT
+    else:
+        prompt = LOCAL_SYSTEM_PROMPT
+    if PERSONALITY_SUPPLEMENT:
+        prompt = PERSONALITY_SUPPLEMENT + "\n\n" + prompt  # 补充文本放在前面
+    return prompt.replace("{available_tags}", available_tags)
