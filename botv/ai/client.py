@@ -21,6 +21,7 @@ from .prompt import now_text  # 当前时间描述（v5-F7）
 from ..chat.timing import tone_hint  # 时段语气提示（v6-A20）
 from ..infra.repo_profile import build_profile_text  # 对象画像（v7-B9）
 from ..memory.inject import trim, BUDGET  # 分层预算（v8-B13）
+from ..memory.timeline import build_timeline_text  # 时间线注入（v8-B16）
 from .parse import parse_ai_reply  # 解析AI回复
 from botv.core import state as cfg  # 全局运行时变量
 
@@ -167,6 +168,7 @@ async def get_character_reply(txt, tid, current_kws=None):
         current_dialogue=dia,
         events=events,
         profile=trim(build_profile_text(tid), BUDGET["profile"]),  # v7-B9 画像，v8 按预算裁剪
+        timeline=build_timeline_text(tid),  # v8-B16：最近 7 天
         master_qq=MASTER_QQ,
         now=now_text(),  # v5-F7：让她知道现在几点
         tone=tone_hint(),  # v6-A20：按时段给语气

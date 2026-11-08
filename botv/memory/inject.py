@@ -7,6 +7,7 @@ BUDGET = {
     "dialogue": 500,    # 最近对话
     "memories": 250,    # 检索到的记忆
     "keywords": 120,    # 全局关键词
+    "timeline": 200,    # 最近 7 天时间线
 }
 TOTAL = 1800  # 这几层加起来的上限（不含人设与标签表）
 

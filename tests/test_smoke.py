@@ -1058,5 +1058,32 @@ class TestBudget(unittest.TestCase):
         self.assertEqual(dia.count("用户:"), 1, "10 轮长对话应被预算砍到 1 轮")
 
 
+class TestTimeline(unittest.TestCase):
+    """v8-B16：时间线格式"""
+
+    def test_format(self):
+        from datetime import date
+        from botv.memory.timeline import format_timeline
+        rows = [{"day": date(2026, 11, 7), "summary": "答辩"},
+                {"day": date(2026, 11, 6), "summary": "加班"}]
+        self.assertEqual(format_timeline(rows), "11-07 答辩\n11-06 加班")
+
+    def test_empty(self):
+        from botv.memory.timeline import format_timeline
+        self.assertEqual(format_timeline([]), "无")
+
+    def test_skip_empty_summary(self):
+        from botv.memory.timeline import format_timeline
+        rows = [{"day": None, "summary": ""}, {"day": "2026-11-05", "summary": "开会"}]
+        s = format_timeline(rows)
+        self.assertIn("11-05 开会", s)
+        self.assertNotIn("??-??", s)
+
+    def test_trimmed_to_budget(self):
+        from botv.memory.timeline import format_timeline
+        rows = [{"day": "2026-11-05", "summary": "很长的记忆" * 50}]
+        self.assertLessEqual(len(format_timeline(rows)), 200)
+
+
 if __name__ == "__main__":
     unittest.main()

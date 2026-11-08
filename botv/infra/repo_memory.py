@@ -88,6 +88,21 @@ def load_events_from_db(tid, tag_keywords=None, limit=5, kinds=None):
     return [(r["event_summary"], r["tags"]) for r in c.fetchall()]
 
 
+def load_timeline(tid, days=7, limit=12):
+    """最近 N 天的记忆，按时间倒序（v8-B16）"""
+    c = get_cursor()
+    c.execute("""
+        SELECT DATE(COALESCE(last_seen, created_at)) AS day,
+               event_summary AS summary
+        FROM events
+        WHERE target_id=%s AND kind IN ('event', 'life')
+          AND COALESCE(last_seen, created_at) >= NOW() - INTERVAL %s DAY
+        ORDER BY COALESCE(last_seen, created_at) DESC
+        LIMIT %s
+    """, (tid, days, limit))
+    return list(c.fetchall())
+
+
 def load_memories_for_search(tid, limit=300):
     """取一批候选记忆喂给检索器（v8-B11）"""
     c = get_cursor()

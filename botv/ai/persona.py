@@ -54,6 +54,7 @@ LOCAL_SYSTEM_PROMPT = """你是友利奈绪(Charlotte)，15岁傲娇毒舌学生
 【关于他】：{profile}
 【与你最近的对话】：{current_dialogue}
 【事件记忆】：{events}
+【最近这几天】：{timeline}
 """  # AI系统提示词模板，包含格式约束和动态变量
 
 
@@ -89,6 +90,7 @@ CODE_MODE_SYSTEM_PROMPT = """你是友利奈绪的技术助手模式（代码模
 【全局长期记忆】：{global_keywords}
 【与你最近的对话】：{current_dialogue}
 【事件记忆】：{events}
+【最近这几天】：{timeline}
 """
 
 
