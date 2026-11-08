@@ -133,17 +133,30 @@ class TestReplyAssembly(unittest.TestCase):
         texts = self._build("第一句\n（笑）")
         self.assertEqual(texts, ["第一句", "（笑）"])
 
-    @unittest.expectedFailure
     def test_multiline_dialog_keeps_all_lines(self):
-        """F3：吞字——第 3 行起被当成元数据丢掉了"""
+        """F3：多行对话不再被吞，合成一条气泡"""
         texts = self._build("第一句\n第二句\n第三句")
-        self.assertEqual(texts, ["第一句", "第二句", "第三句"])
+        self.assertEqual(len(texts), 1)
+        for s in ("第一句", "第二句", "第三句"):
+            self.assertIn(s, texts[0])
 
-    @unittest.expectedFailure
     def test_no_action_sends_no_bubble(self):
         """F1：无动作时不该补一条「（无）」"""
         texts = self._build("只有对话")
-        self.assertNotIn("（无）", texts)
+        self.assertEqual(texts, ["只有对话"])
+
+    def test_meta_lines_not_sent(self):
+        """元数据按标记识别，不进对话"""
+        texts = self._build("正文\n关键词搜索图片用：猫\n事件摘要：x\n关键词提炼：a")
+        self.assertEqual(texts, ["正文"])
+
+    def test_code_mode_single_message(self):
+        """F3：代码模式整段发一条，代码块不被拆散"""
+        cfg.CODE_MODE = True
+        texts = self._build("答案开头\n```python\nprint(1)\n```\n答案结尾")
+        self.assertEqual(len(texts), 1)
+        self.assertIn("print(1)", texts[0])
+        self.assertIn("答案结尾", texts[0])
 
 
 class TestCommandRegistry(unittest.TestCase):
