@@ -12,6 +12,7 @@ from botv.core import state as cfg  # 全局运行时变量
 
 from .text import extract_keywords  # noqa: E402  分词工具（v8 挪出去避免循环导入）
 from .retrieval import retrieve  # noqa: E402  双路召回（v8-B11）
+from .inject import BUDGET, trim, cap_lines  # noqa: E402  分层预算（v8-B13）
 from ..infra.repo_memory import load_memories_for_search  # noqa: E402
 
 
@@ -58,18 +59,21 @@ def build_memory_context(tid, current_kws=None, query=None):
     """构建对话上下文：全局关键词 + 最近对话 + 检索到的相关记忆
 
     v8-B11：记忆不再用 LIKE 硬匹配，改为 BM25 + 关键词双路召回。
+    v8-B13：每层按预算裁剪，总长可控。
     """
     kw = "、".join(cfg.global_keyword_set) if cfg.global_keyword_set else "无"  # 全局关键词（顿号分隔）
 
-    dia = ""  # 对话历史字符串
+    rounds = []
     if tid in cfg.user_memory_pool:  # 该用户有记忆
-        for u, b in list(cfg.user_memory_pool[tid])[-6:]:  # 取最近6轮对话
-            dia += f"用户:{u}\n奈绪:{b}\n"  # 格式化：用户:xxx\n奈绪:xxx\n
-    else:
-        dia = "无"  # 无对话历史
+        for u, b in list(cfg.user_memory_pool[tid])[-12:]:  # 最多取 12 轮，按预算再砍
+            rounds.append(f"用户:{u}\n奈绪:{b}")
+    dia, _ = cap_lines(rounds, BUDGET["dialogue"]) if rounds else ("无", 0)
 
     q = query or " ".join(current_kws or [])  # 检索用的查询串
     events_str = _recall_memories(tid, q)  # 双路召回
+
+    kw = trim(kw, BUDGET["keywords"])
+    events_str = trim(events_str, BUDGET["memories"])
     return kw, dia, events_str  # 返回(全局关键词, 对话历史, 相关记忆)
 
 

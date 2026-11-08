@@ -1016,5 +1016,47 @@ class TestRecallMemories(unittest.TestCase):
             ctx.load_memories_for_search, ctx.load_events_from_db = orig_l, orig_e
 
 
+class TestBudget(unittest.TestCase):
+    """v8-B13：分层预算"""
+
+    def test_trim(self):
+        from botv.memory.inject import trim
+        self.assertEqual(trim("abc", 10), "abc")
+        self.assertEqual(len(trim("x" * 100, 10)), 10)
+        self.assertTrue(trim("x" * 100, 10).endswith("…"))
+
+    def test_cap_lines_keeps_recent(self):
+        from botv.memory.inject import cap_lines
+        lines = [f"第{i}轮" for i in range(1, 21)]
+        text, used = cap_lines(lines, 30)
+        self.assertLessEqual(used, 30)
+        self.assertIn("第20轮", text)
+        self.assertNotIn("第1轮", text)
+
+    def test_cap_lines_all_fit(self):
+        from botv.memory.inject import cap_lines
+        text, used = cap_lines(["a", "b"], 100)
+        self.assertEqual(text, "a\nb")
+
+    def test_report_flag(self):
+        from botv.memory.inject import report
+        self.assertIn("✅", report(a="x" * 10))
+
+    def test_context_trims_dialogue(self):
+        from collections import deque
+        import botv.memory.context as ctx
+        from botv.memory.inject import BUDGET
+        cfg.user_memory_pool["9"] = deque([("长" * 200, "回" * 200)] * 10, maxlen=15)
+        orig_l, orig_e = ctx.load_memories_for_search, ctx.load_events_from_db
+        ctx.load_memories_for_search = lambda tid, limit=300: []
+        ctx.load_events_from_db = lambda tid, tag_keywords=None, limit=3: []
+        try:
+            _kw, dia, _ev = ctx.build_memory_context("9", None, query="hi")
+        finally:
+            ctx.load_memories_for_search, ctx.load_events_from_db = orig_l, orig_e
+            cfg.user_memory_pool.pop("9", None)
+        self.assertEqual(dia.count("用户:"), 1, "10 轮长对话应被预算砍到 1 轮")
+
+
 if __name__ == "__main__":
     unittest.main()
