@@ -13,6 +13,7 @@ from .constants import *  # noqa: F401,F403  让 state 也能读到常量（cfg.
 active_ws_qq = None  # 当前活跃的QQ WebSocket连接
 active_ws_lock = asyncio.Lock()  # WebSocket连接锁（防止多连接冲突）
 send_lock = asyncio.Lock()  # 消息发送锁（防止WebSocket发送冲突）
+last_online_notice_ts = 0.0  # 上次发送「上线通知」的时间戳（v5-F5 防重发）
 
 # ===================== 消息处理 =====================
 PROCESSED_MSG_IDS = deque(maxlen=80)  # 已处理消息ID缓存（去重，最多80条）

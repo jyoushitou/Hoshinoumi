@@ -20,6 +20,18 @@ from ..core.types import Fallback  # 兜底文案标记（v5-F2）
 from .send import send_short_reply, send_private_msg, send_sticker_private, send_sticker_group
 from .inbound import parse_message_content, contains_sticker_key
 
+# v5-F5：上线通知的冷却时间（秒）——重连太频繁时不重复打扰
+ONLINE_NOTICE_COOLDOWN = 60
+
+
+def claim_online_notice():
+    """决定这次连接要不要发上线通知（60 秒内只发一次）"""
+    now = _time.time()
+    if now - cfg.last_online_notice_ts < ONLINE_NOTICE_COOLDOWN:
+        return False
+    cfg.last_online_notice_ts = now
+    return True
+
 
 async def websocket_handle_qq(ws):
     """WebSocket消息处理主函数：接收→解析→处理→回复"""
@@ -30,19 +42,22 @@ async def websocket_handle_qq(ws):
         cfg.active_ws_qq = ws  # 设置当前活跃连接
     log_system("QQ上线(CLIP版)")  # 日志记录上线
 
-    # 上线发文字 + ACG图片 检验连通性
-    await send_short_reply(MASTER_QQ, "哼,上线了(叉腰)", ws, MASTER_QQ)  # 发送上线通知
-
-    img_fp = await fetch_and_save_acg_image()  # 获取ACG图片
-    if img_fp:
-        img_fp = os.path.abspath(img_fp)  # 转为绝对路径
-        log_api(f"[上线] ACG图片绝对路径: {img_fp}")  # 日志记录
-        img_msg = make_image_msg(img_fp)  # 构建图片消息
-        if img_msg and not getattr(ws, "closed", False):  # 图片有效且连接未关闭
-            await send_private_msg(MASTER_QQ, img_msg, ws)  # 发送图片给主人
-            log_system("上线ACG图片已发送")  # 日志记录
+    # v5-F5：60 秒内只发一次上线通知，避免重连刷屏
+    if not claim_online_notice():
+        log_system("QQ重连（60秒内已发过上线通知，跳过通知与配图）")
     else:
-        log_api("[上线] ACG图片获取失败")  # 日志记录
+        # 上线发文字 + ACG图片 检验连通性
+        await send_short_reply(MASTER_QQ, "哼,上线了(叉腰)", ws, MASTER_QQ)  # 发送上线通知
+
+        img_fp = await fetch_and_save_acg_image()  # 获取ACG图片
+        if img_fp:
+            log_api(f"[上线] ACG图片: {img_fp}")  # 日志记录
+            img_msg = make_image_msg(img_fp)  # 构建图片消息（内部已解析路径）
+            if img_msg and not getattr(ws, "closed", False):  # 图片有效且连接未关闭
+                await send_private_msg(MASTER_QQ, img_msg, ws)  # 发送图片给主人
+                log_system("上线ACG图片已发送")  # 日志记录
+        else:
+            log_api("[上线] ACG图片获取失败")  # 日志记录
 
     try:
         while True:  # 消息接收循环

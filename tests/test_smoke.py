@@ -55,7 +55,7 @@ def _stub_missing_deps():
 
 _stub_missing_deps()
 
-import botv.config as cfg                      # noqa: E402
+from botv.core import state as cfg             # noqa: E402  运行时状态（常量也在里面）
 import botv.commands as commands               # noqa: E402
 import botv.chat.reply as reply_mod            # noqa: E402
 from botv.ai.parse import parse_ai_reply       # noqa: E402
@@ -307,6 +307,31 @@ class TestImagePath(unittest.TestCase):
         from botv.utils import resolve_image_path
         p = resolve_image_path(os.path.abspath("README.md"))
         self.assertIsNotNone(p)
+
+
+class TestOnlineNotice(unittest.TestCase):
+    """F5：重连时上线通知不能重复刷"""
+
+    def setUp(self):
+        cfg.last_online_notice_ts = 0.0
+
+    def tearDown(self):
+        cfg.last_online_notice_ts = 0.0
+
+    def test_first_call_claims(self):
+        from botv.chat.handler import claim_online_notice
+        self.assertTrue(claim_online_notice())
+
+    def test_second_call_blocked(self):
+        from botv.chat.handler import claim_online_notice
+        self.assertTrue(claim_online_notice())
+        self.assertFalse(claim_online_notice())
+
+    def test_after_cooldown_allowed(self):
+        from botv.chat.handler import claim_online_notice
+        self.assertTrue(claim_online_notice())
+        cfg.last_online_notice_ts -= 61  # 模拟 61 秒前
+        self.assertTrue(claim_online_notice())
 
 
 if __name__ == "__main__":
