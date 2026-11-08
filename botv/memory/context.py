@@ -1,12 +1,12 @@
-# ===================== 对话记忆与关键词模块 =====================
+# ===================== 对话记忆上下文（v8 拆包） =====================
 # 管理用户对话记忆、全局关键词、事件记忆的存储和检索
 
 import jieba  # 中文分词库
 from collections import deque  # 双端队列（用于对话记忆池）
 
-from .config import MAX_USER_ROUND  # 每个用户最大对话轮数
-from .db import load_user_memories_from_db, load_global_keywords_from_db, add_user_memory_to_db, add_global_keywords_to_db, load_events_from_db, add_event_to_db  # 数据库操作
-from .log import log_system  # 日志
+from ..config import MAX_USER_ROUND  # 每个用户最大对话轮数
+from ..db import load_user_memories_from_db, load_global_keywords_from_db, add_user_memory_to_db, add_global_keywords_to_db, load_events_from_db, add_event_to_db  # 数据库操作
+from ..log import log_system  # 日志
 from botv.core import state as cfg  # 全局运行时变量
 
 
@@ -28,7 +28,7 @@ def add_target_memory(tid, user_msg, bot_msg, img_keywords=None, refined_keyword
 
     v5-F2：兜底文案（Fallback）一律不入库——它是系统噪声，不是她说的话。
     """
-    from .core.types import Fallback
+    from ..core.types import Fallback
     if isinstance(bot_msg, Fallback):
         log_system(f"记忆: 跳过兜底文案，不入库 (tid={tid})")
         return

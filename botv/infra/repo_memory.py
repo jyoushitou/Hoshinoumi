@@ -88,6 +88,19 @@ def load_events_from_db(tid, tag_keywords=None, limit=5, kinds=None):
     return [(r["event_summary"], r["tags"]) for r in c.fetchall()]
 
 
+def load_memories_for_search(tid, limit=300):
+    """取一批候选记忆喂给检索器（v8-B11）"""
+    c = get_cursor()
+    c.execute("""
+        SELECT id, kind, event_summary AS summary, tags, importance, hit_count,
+               created_at, last_seen
+        FROM events
+        WHERE target_id=%s AND kind IN ('event','life','promise')
+        ORDER BY id DESC LIMIT %s
+    """, (tid, limit))
+    return list(c.fetchall())
+
+
 def add_event_to_db(tid, event_summary, tags="", kind="event", importance=3, due_date=None):
     """写入一条记忆（v7-B15）
 

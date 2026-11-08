@@ -248,7 +248,7 @@ class TestFallback(unittest.TestCase):
 
     def test_get_character_reply_marks_fallback(self):
         import botv.ai.client as client
-        import botv.memory as mem
+        import botv.memory.context as mem
         from botv.core.types import Fallback
 
         async def no_ds(*a, **k):
@@ -269,7 +269,7 @@ class TestFallback(unittest.TestCase):
         self.assertIsInstance(r, Fallback)
 
     def test_add_memory_skips_fallback(self):
-        import botv.memory as mem
+        import botv.memory.context as mem
         from botv.core.types import Fallback
 
         calls = []
@@ -363,7 +363,7 @@ class TestTimePerception(unittest.TestCase):
 
     def test_prompt_contains_now(self):
         import botv.ai.client as client
-        import botv.memory as mem
+        import botv.memory.context as mem
 
         captured = {}
 
@@ -702,7 +702,7 @@ class TestTone(unittest.TestCase):
 
     def test_prompt_has_tone(self):
         import botv.ai.client as client
-        import botv.memory as mem
+        import botv.memory.context as mem
         from botv.core import locks
         captured = {}
 
@@ -938,6 +938,40 @@ class TestBackupSqlLiteral(unittest.TestCase):
         import backup_table as b
         self.assertEqual(b.sql_literal(date(2026, 11, 8)), "'2026-11-08'")
         self.assertIn("2026-11-08 21:30", b.sql_literal(datetime(2026, 11, 8, 21, 30)))
+
+
+class TestRetrieval(unittest.TestCase):
+    """v8-B11/B17：BM25 + 关键词 + RRF"""
+
+    MEMS = [
+        {"summary": "defense tomorrow at school", "tags": "school", "importance": 4, "hit_count": 0},
+        {"summary": "overtime until ten tonight", "tags": "work", "importance": 3, "hit_count": 2},
+        {"summary": "cat broke a cup", "tags": "life", "importance": 2, "hit_count": 0},
+    ]
+
+    @staticmethod
+    def tok(s):
+        return [w for w in str(s).lower().split() if len(w) > 1]
+
+    def test_hit_first(self):
+        from botv.memory.retrieval import retrieve
+        r = retrieve("defense", self.MEMS, top_k=2, tokenizer=self.tok)
+        self.assertTrue(r)
+        self.assertIn("defense", r[0][0]["summary"])
+
+    def test_no_match_returns_empty(self):
+        from botv.memory.retrieval import retrieve
+        self.assertEqual(retrieve("quantum", self.MEMS, top_k=2, tokenizer=self.tok), [])
+
+    def test_bm25_orders_correctly(self):
+        from botv.memory.retrieval import BM25
+        bm = BM25([m["summary"] for m in self.MEMS], tokenizer=self.tok)
+        self.assertGreater(bm.score(["overtime"], 1), bm.score(["overtime"], 0))
+
+    def test_rrf_prefers_common_head(self):
+        from botv.memory.retrieval import rrf
+        fused = rrf([[0, 1, 2], [2, 0, 1]])
+        self.assertEqual(fused[0][0], 0)
 
 
 if __name__ == "__main__":
