@@ -18,7 +18,9 @@ MAX_RETRY_TIMES = 3  # API最大重试次数
 LOCK_RELEASE_DELAY = 0.8  # 锁释放延迟（秒）
 DS_API_URL = "https://api.deepseek.com/v1/chat/completions"  # DeepSeek API地址
 DS_MODEL = "deepseek-v4-flash"  # DeepSeek模型名
-DS_TIMEOUT = 60  # DeepSeek超时（秒）
+CHAT_TIMEOUT = 20  # 普通聊天超时（秒）——v8-E28
+LONG_TIMEOUT = 40  # 长文（日记等 max_tokens>=1000）超时（秒）
+DS_TIMEOUT = 60  # 兼容旧配置，实际不再使用
 DOUBAO_API_URL = "https://ark.cn-beijing.volces.com/api/v3/chat/completions"  # 豆包API地址
 DOUBAO_MODEL = "ep-20260524110944-g7vqr"  # 豆包模型名
 DOUBAO_TIMEOUT = 60  # 豆包超时（秒）

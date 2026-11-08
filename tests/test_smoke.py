@@ -1085,5 +1085,40 @@ class TestTimeline(unittest.TestCase):
         self.assertLessEqual(len(format_timeline(rows)), 200)
 
 
+class TestTimeoutTiers(unittest.TestCase):
+    """v8-E28：超时分级"""
+
+    def test_chat_vs_long(self):
+        from botv.ai.client import _timeout_for
+        from botv.core.constants import CHAT_TIMEOUT, LONG_TIMEOUT
+        self.assertEqual(_timeout_for(200), CHAT_TIMEOUT)
+        self.assertEqual(_timeout_for(1500), LONG_TIMEOUT)
+        self.assertEqual(_timeout_for(None), CHAT_TIMEOUT)
+
+
+class TestSessionReuse(unittest.TestCase):
+    """v8-E27：线程本地会话复用"""
+
+    def test_same_thread_same_session(self):
+        from botv.core.http import get_http_session
+        a = get_http_session()
+        b = get_http_session()
+        self.assertIs(a, b)
+
+    def test_different_thread_different_session(self):
+        import threading
+        from botv.core.http import get_http_session
+        main_session = get_http_session()
+        box = {}
+
+        def worker():
+            box["s"] = get_http_session()
+
+        t = threading.Thread(target=worker)
+        t.start()
+        t.join()
+        self.assertIsNot(box["s"], main_session)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -10,9 +10,10 @@ from ..config import (  # API 配置
     DS_API_URL, DS_MODEL, DS_TIMEOUT,
     DOUBAO_API_URL, DOUBAO_MODEL, DOUBAO_TIMEOUT,
     API_RETRY_DELAY, MAX_RETRY_TIMES, MASTER_QQ,
+    CHAT_TIMEOUT, LONG_TIMEOUT,
 )
 from ..log import log_api, log_err, log_system  # 日志
-from ..core.http import create_http_session  # HTTP会话
+from ..core.http import get_http_session  # 线程本地会话（v8-E27）
 from ..core.types import Fallback  # 兜底文案标记（v5-F2）
 from ..db import save_ai_raw_response  # 保存AI原始返回数据
 from ..memory import build_memory_context, extract_keywords  # 记忆上下文与关键词
@@ -24,6 +25,11 @@ from ..memory.inject import trim, BUDGET  # 分层预算（v8-B13）
 from ..memory.timeline import build_timeline_text  # 时间线注入（v8-B16）
 from .parse import parse_ai_reply  # 解析AI回复
 from botv.core import state as cfg  # 全局运行时变量
+
+
+def _timeout_for(out_tokens):
+    """按输出长度选超时：长文（日记/代码）给 40 秒，普通聊天 20 秒（v8-E28）"""
+    return LONG_TIMEOUT if (out_tokens or 0) >= 1000 else CHAT_TIMEOUT
 
 
 def _extract_user_msg(msgs):
@@ -62,8 +68,8 @@ async def call_deepseek(msgs, retry=2, max_tokens=None, target_id=None):
             log_api(f"[DS] 第{a+1}次请求...")  # 日志记录重试次数
             def req():
                 """同步HTTP请求函数（在子线程中运行）"""
-                s=create_http_session()  # 创建HTTP会话
-                return s.post(DS_API_URL, headers=h, json=d, timeout=DS_TIMEOUT, verify=False)  # POST请求
+                s=get_http_session()  # 复用线程本地会话（v8-E27）
+                return s.post(DS_API_URL, headers=h, json=d, timeout=_timeout_for(out_tokens), verify=False)  # POST请求
             r=await asyncio.to_thread(req)  # 在子线程中执行，避免阻塞事件循环
             log_api(f"[DS] 响应状态码: {r.status_code}")  # 日志记录状态码
             if r.status_code==200:  # 请求成功
@@ -119,8 +125,8 @@ async def call_doubao(msgs, max_tokens=None, target_id=None):
             log_api(f"[豆包] 第{a+1}次请求...")  # 日志记录重试次数
             def req():
                 """同步HTTP请求函数（在子线程中运行）"""
-                s=create_http_session()  # 创建HTTP会话
-                return s.post(DOUBAO_API_URL, headers=h, json=d, timeout=DOUBAO_TIMEOUT, verify=False)  # POST请求
+                s=get_http_session()  # 复用线程本地会话（v8-E27）
+                return s.post(DOUBAO_API_URL, headers=h, json=d, timeout=_timeout_for(out_tokens), verify=False)  # POST请求
             r=await asyncio.to_thread(req)  # 在子线程中执行
             log_api(f"[豆包] 响应状态码: {r.status_code}")  # 日志记录状态码
             if r.status_code==200:  # 请求成功
