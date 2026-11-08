@@ -171,7 +171,7 @@ class TestCommandRegistry(unittest.TestCase):
         "acg", "apikeys", "clear", "clip", "code", "db", "diary", "event",
         "exit", "help", "img", "keywords", "log", "memory", "ping", "quit",
         "reload", "say", "sayg", "set", "status", "sticker", "task",
-        "uptime", "usage",
+        "uptime", "usage", "profile",
     }
 
     def setUp(self):
@@ -818,6 +818,61 @@ class TestMemoryWriteDedupe(unittest.TestCase):
         finally:
             rm.get_cursor = orig
         self.assertEqual(cur.statements, [])
+
+
+class TestProfile(unittest.TestCase):
+    """v7-B9：画像解析与写入"""
+
+    def test_get_profile_parses(self):
+        import botv.infra.repo_profile as rp
+        cur = _FakeCursor()
+        cur.fetchall = lambda: [{"event_summary": "昵称：小奈"},
+                                {"event_summary": "喜好：甜"},
+                                {"event_summary": "没有冒号的坏数据"}]
+        orig = rp.get_cursor
+        rp.get_cursor = lambda: cur
+        try:
+            p = rp.get_profile("1")
+        finally:
+            rp.get_cursor = orig
+        self.assertEqual(p, {"昵称": "小奈", "喜好": "甜"})
+
+    def test_build_text(self):
+        import botv.infra.repo_profile as rp
+        orig = rp.get_profile
+        rp.get_profile = lambda tid: {"昵称": "小奈", "禁忌": "别熬夜"}
+        try:
+            s = rp.build_profile_text("1")
+        finally:
+            rp.get_profile = orig
+        self.assertIn("昵称=小奈", s)
+        self.assertIn("禁忌=别熬夜", s)
+
+    def test_empty_profile(self):
+        import botv.infra.repo_profile as rp
+        orig = rp.get_profile
+        rp.get_profile = lambda tid: {}
+        try:
+            self.assertEqual(rp.build_profile_text("1"), "无")
+        finally:
+            rp.get_profile = orig
+
+    def test_set_profile_is_delete_then_insert(self):
+        import botv.infra.repo_profile as rp
+        cur = _FakeCursor()
+        orig = rp.get_cursor
+        rp.get_cursor = lambda: cur
+        try:
+            ok = rp.set_profile("1", "昵称", "小奈")
+        finally:
+            rp.get_cursor = orig
+        self.assertTrue(ok)
+        self.assertEqual(cur.verbs()[:2], ["DELETE", "INSERT"])
+
+    def test_set_profile_rejects_empty(self):
+        import botv.infra.repo_profile as rp
+        self.assertFalse(rp.set_profile("1", "", "x"))
+        self.assertFalse(rp.set_profile("1", "昵称", "   "))
 
 
 if __name__ == "__main__":

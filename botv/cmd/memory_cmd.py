@@ -41,3 +41,19 @@ async def cmd_clear(ctx):
         return f"已清除 {target} 的对话记忆和事件记录"
     except Exception as e:
         return f"清除失败: {e}"
+
+
+@command("profile")
+async def cmd_profile(ctx):
+    """!profile [uid] 查看画像；!profile set <uid> <字段> <值> 写入"""
+    from ..infra.repo_profile import format_profile, set_profile
+
+    parts = ctx.parts
+    if len(parts) >= 5 and parts[1].lower() == "set":
+        target, field, value = parts[2], parts[3], " ".join(parts[4:])
+        ok = set_profile(target, field, value)
+        return f"✅ 已记录：{target} {field}={value}" if ok else "用法: !profile set <uid> <字段> <值>"
+    if len(parts) >= 4 and parts[1].lower() == "set":
+        return "用法: !profile set <uid> <字段> <值>"
+    target = parts[1] if len(parts) > 1 else str(MASTER_QQ)
+    return format_profile(target)
