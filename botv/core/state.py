@@ -22,8 +22,9 @@ group_msg_window = {}  # {群号: deque[时间戳]} 最近发言时间窗
 
 # ===================== 消息处理 =====================
 PROCESSED_MSG_IDS = deque(maxlen=80)  # 已处理消息ID缓存（去重，最多80条）
-PROCESS_LOCK = None  # 消息处理锁（bootstrap 中初始化为 asyncio.Lock()）
+PROCESS_LOCK = None  # 旧的全局锁（bootstrap 中初始化，已不再用于消息处理）
 pending_outbox = deque(maxlen=50)  # 断线期间待补发的消息（v5-F6）
+target_locks = {}  # {target_id: asyncio.Lock} 按对象分片锁（v6-E26）
 
 # ===================== API 密钥（运行时从数据库加载） =====================
 DS_API_KEY = ""

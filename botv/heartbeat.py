@@ -5,6 +5,7 @@
 import asyncio  # 异步 IO：定时器
 from .config import HEARTBEAT_INTERVAL  # 心跳间隔（秒）
 from .log import log_system  # 系统日志
+from .core.locks import cleanup_idle_locks  # 回收闲置的分片锁
 
 # 连续多少次 ping 失败就判定连接已死
 MAX_HEARTBEAT_FAILURES = 2
@@ -26,6 +27,7 @@ async def heartbeat_monitor(label: str, ws_ref):
     failures = 0
     while True:
         await asyncio.sleep(HEARTBEAT_INTERVAL)  # 等待指定间隔
+        cleanup_idle_locks()  # v6-E26：顺手回收闲置的对象锁
         ws = ws_ref  # 重新读取全局变量（可能已被其他协程更新）
         if not ws or getattr(ws, "closed", False):
             failures = 0

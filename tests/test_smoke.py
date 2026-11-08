@@ -580,5 +580,148 @@ class TestGroupGate(unittest.TestCase):
             h.random = orig
 
 
+class TestReplyTiming(unittest.TestCase):
+    """v6-A1：延迟按时段浮动，且偏短"""
+
+    class _R:
+        def __init__(self, v):
+            self.v = v
+
+        def random(self):
+            return self.v
+
+    def test_bands(self):
+        from datetime import datetime
+        from botv.chat.timing import delay_range
+        from botv.config import CST
+        self.assertEqual(delay_range(datetime(2026, 1, 1, 2, tzinfo=CST)), (20, 180))
+        self.assertEqual(delay_range(datetime(2026, 1, 1, 10, tzinfo=CST)), (5, 30))
+        self.assertEqual(delay_range(datetime(2026, 1, 1, 20, tzinfo=CST)), (8, 60))
+        self.assertEqual(delay_range(datetime(2026, 1, 1, 23, 30, tzinfo=CST)), (20, 120))
+
+    def test_within_range(self):
+        from datetime import datetime
+        from botv.chat.timing import reply_delay
+        from botv.config import CST
+        now = datetime(2026, 1, 1, 10, tzinfo=CST)
+        for v in (0.0, 0.5, 0.999):
+            d = reply_delay(now, self._R(v))
+            self.assertGreaterEqual(d, 5)
+            self.assertLessEqual(d, 30)
+
+    def test_biased_short(self):
+        from datetime import datetime
+        from botv.chat.timing import reply_delay
+        from botv.config import CST
+        now = datetime(2026, 1, 1, 10, tzinfo=CST)
+        vals = [reply_delay(now, self._R(i / 100)) for i in range(100)]
+        mean = sum(vals) / len(vals)
+        self.assertLess(mean, 17.5, f"应偏短，实际均值 {mean:.1f}")
+
+
+class TestConcurrency(unittest.TestCase):
+    """v6-E26：按对象分片锁 + 模型调用上限"""
+
+    def setUp(self):
+        cfg.target_locks.clear()
+
+    def tearDown(self):
+        cfg.target_locks.clear()
+
+    def test_same_target_serialized(self):
+        from botv.core.locks import get_target_lock
+        st = {"active": 0, "peak": 0}
+
+        async def run():
+            async def worker():
+                async with get_target_lock("x"):
+                    st["active"] += 1
+                    st["peak"] = max(st["peak"], st["active"])
+                    await asyncio.sleep(0.01)
+                    st["active"] -= 1
+            await asyncio.gather(worker(), worker(), worker())
+
+        asyncio.run(run())
+        self.assertEqual(st["peak"], 1, "同一个人必须串行")
+
+    def test_different_targets_parallel(self):
+        from botv.core.locks import get_target_lock
+        st = {"active": 0, "peak": 0}
+
+        async def run():
+            async def worker(tid):
+                async with get_target_lock(tid):
+                    st["active"] += 1
+                    st["peak"] = max(st["peak"], st["active"])
+                    await asyncio.sleep(0.02)
+                    st["active"] -= 1
+            await asyncio.gather(worker("a"), worker("b"), worker("c"))
+
+        asyncio.run(run())
+        self.assertEqual(st["peak"], 3, "三个人应该能并行")
+
+    def test_cleanup_idle_locks(self):
+        from botv.core import locks
+        locks.get_target_lock("old")
+        locks._last_used["old"] -= 700
+        removed = locks.cleanup_idle_locks()
+        self.assertGreaterEqual(removed, 1)
+        self.assertNotIn("old", cfg.target_locks)
+
+    def test_model_semaphore_limit(self):
+        from botv.core import locks
+        locks._model_sem = None  # 每个用例用新的信号量，避免跨事件循环
+        st = {"active": 0, "peak": 0}
+
+        async def run():
+            sem = locks.model_semaphore()
+
+            async def call():
+                async with sem:
+                    st["active"] += 1
+                    st["peak"] = max(st["peak"], st["active"])
+                    await asyncio.sleep(0.01)
+                    st["active"] -= 1
+            await asyncio.gather(*[call() for _ in range(12)])
+
+        asyncio.run(run())
+        self.assertEqual(st["peak"], locks.MAX_CONCURRENT_MODEL_CALLS)
+
+
+class TestTone(unittest.TestCase):
+    """v6-A20：按时段给语气提示"""
+
+    def test_bands(self):
+        from datetime import datetime
+        from botv.chat.timing import tone_hint
+        from botv.config import CST
+        self.assertIn("困", tone_hint(datetime(2026, 1, 1, 2, tzinfo=CST)))
+        self.assertIn("刚醒", tone_hint(datetime(2026, 1, 1, 7, tzinfo=CST)))
+        self.assertIn("精神", tone_hint(datetime(2026, 1, 1, 12, tzinfo=CST)))
+        self.assertIn("放松", tone_hint(datetime(2026, 1, 1, 20, tzinfo=CST)))
+
+    def test_prompt_has_tone(self):
+        import botv.ai.client as client
+        import botv.memory as mem
+        from botv.core import locks
+        captured = {}
+
+        async def fake_ds(msgs, max_tokens=None, target_id=None):
+            captured["sys"] = msgs[0]["content"]
+            return "好"
+
+        orig_ds, orig_ev = client.call_deepseek, mem.load_events_from_db
+        client.call_deepseek = fake_ds
+        mem.load_events_from_db = lambda *a, **k: []
+        locks._model_sem = None
+        try:
+            asyncio.run(client.get_character_reply("hi", "1"))
+        finally:
+            client.call_deepseek = orig_ds
+            mem.load_events_from_db = orig_ev
+        self.assertIn("你现在的状态", captured["sys"])
+        self.assertNotIn("{tone}", captured["sys"])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -18,6 +18,7 @@ from ..db import save_ai_raw_response  # 保存AI原始返回数据
 from ..memory import build_memory_context, extract_keywords  # 记忆上下文与关键词
 from ..personality import get_system_prompt  # 系统提示词
 from .prompt import now_text  # 当前时间描述（v5-F7）
+from ..chat.timing import tone_hint  # 时段语气提示（v6-A20）
 from .parse import parse_ai_reply  # 解析AI回复
 from botv.core import state as cfg  # 全局运行时变量
 
@@ -165,14 +166,17 @@ async def get_character_reply(txt, tid, current_kws=None):
         events=events,
         master_qq=MASTER_QQ,
         now=now_text(),  # v5-F7：让她知道现在几点
+        tone=tone_hint(),  # v6-A20：按时段给语气
     )  # 格式化系统提示词
     log_api(f"[get_character_reply] system_prompt长度: {len(sys_p)}")  # 日志记录提示词长度
     user_content = f"{txt}\n(当前话题关键词:{cur_kw_str})"  # 构建用户消息（追加当前话题关键词）
     msgs = [{"role":"system","content":sys_p}, {"role":"user","content":user_content}]  # 构建消息列表
-    r = await call_deepseek(msgs)  # 优先调用DeepSeek
-    if not r:  # DeepSeek无回复
-        log_api("[get_character_reply] DeepSeek无回复，转豆包")  # 日志记录降级
-        r = await call_doubao(msgs)  # 降级到豆包
+    from ..core.locks import model_semaphore
+    async with model_semaphore():  # v6-E26：最多 5 个模型请求同时在飞
+        r = await call_deepseek(msgs)  # 优先调用DeepSeek
+        if not r:  # DeepSeek无回复
+            log_api("[get_character_reply] DeepSeek无回复，转豆包")  # 日志记录降级
+            r = await call_doubao(msgs)  # 降级到豆包
 
     # v5-F2：兜底文案不是她的回复，不做关键词补全，交给调用方按「失败」处理
     if isinstance(r, Fallback):

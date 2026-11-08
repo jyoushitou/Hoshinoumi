@@ -21,6 +21,8 @@ from ..ai.parse import parse_ai_reply
 from ..core.types import Fallback  # 兜底文案标记（v5-F2）
 from .send import send_short_reply, send_private_msg, send_sticker_private, send_sticker_group, flush_outbox
 from .inbound import parse_message_content, contains_sticker_key, is_at_me
+from .timing import reply_delay
+from ..core.locks import get_target_lock
 
 # ===================== 群聊节奏（v6-E29） =====================
 GROUP_COOLDOWN = 20        # 同一个群两条回复的最小间隔（秒）
@@ -28,6 +30,7 @@ GROUP_WINDOW = 60          # 统计窗口（秒）
 GROUP_WINDOW_MAX = 6       # 窗口内最多回几条
 GROUP_REPLY_PROB = 1 / 3   # 没被 @ 时的接话概率
 GROUP_AT_MIN_GAP = 3       # 被 @ 时也至少隔 3 秒，防连点
+GROUP_SILENCE_PROB = 0.05  # 闸门放行后，仍有概率选择沉默（v6-A19）
 
 
 def should_answer_group(gid, addressed):
@@ -131,13 +134,15 @@ async def websocket_handle_qq(ws):
             if cfg.CODE_MODE:
                 cfg.CODE_MODE_LAST_MSG_TIME = _time.time()
 
-            async with cfg.PROCESS_LOCK:  # 加消息处理锁
+            tid = uid if mt == "private" else str(gid)  # 目标ID：私聊用QQ号，群聊用群号
+            # v6-E26：按对象加锁——同一个人串行，不同的人可以并行（5 路对话）
+            async with get_target_lock(tid):
                 cfg.PROCESSED_MSG_IDS.append(mid)  # 记录已处理的消息ID
                 log_recv(f"[QQ]{uid}:{text}")  # 日志记录接收
-                tid = uid if mt == "private" else str(gid)  # 目标ID：私聊用QQ号，群聊用群号
                 ck = extract_keywords(text)  # 提取关键词
+                pending = None  # 待发送内容（锁外延迟发送，v6-A1）
 
-                # v6-E29：群聊先过节奏闸门（命令不受限，主人私聊也不受限）
+                # v6-E29：群聊先过节奏闸门（命令不受限）
                 if mt == "group" and not text.startswith("!"):
                     ok, why = should_answer_group(gid, addressed)
                     if not ok:
@@ -145,30 +150,44 @@ async def websocket_handle_qq(ws):
                         await asyncio.sleep(LOCK_RELEASE_DELAY)
                         continue
                     log_api(f"[群聊] 接话 {gid}: {why}")
+                    if not addressed and random.random() < GROUP_SILENCE_PROB:  # v6-A19：偶尔选择沉默
+                        log_api(f"[群聊] 这次选择沉默 {gid}")
+                        await asyncio.sleep(LOCK_RELEASE_DELAY)
+                        continue
 
-                # 先检查是否是命令（仅主人有效）
+                # 先检查是否是命令（仅主人有效，立即回复不走延迟）
                 if await handle_command(text, uid, ws, mt == "group", gid):  # 是命令
                     pass  # 命令已处理，不再走AI回复
                 elif contains_sticker_key(text):  # 包含表情包关键词
-                    if mt == "group":  # 群聊
-                        await send_sticker_group(gid, ws, uid)  # 发送群表情包
-                    else:  # 私聊
-                        await send_sticker_private(uid, ws, uid)  # 发送私聊表情包
+                    pending = ("sticker",)
                 else:  # 普通对话
                     ans = await get_character_reply(text, tid, ck)  # 获取AI回复
                     target = gid if mt == "group" else uid  # 回复目标
                     if not ans or isinstance(ans, Fallback):
                         # v5-F2：兜底文案不是她的话——不进记忆、不进事件，只回一条中性的
                         log_api("[handler] 模型无回复或返回兜底，静默处理（不入库）")
-                        await send_short_reply(target, "……", ws, uid, mt == "group", ck)
+                        pending = ("reply", target, "……", mt == "group")
                     else:
                         dialog, action, img_kw, event, refined_kw = parse_ai_reply(ans)  # 解析AI回复
                         add_target_memory(tid, text, ans, img_kw, refined_kw, event)  # 保存记忆
-                        await send_short_reply(target, ans, ws, uid, mt == "group", ck)  # 发送回复
-                    if mt == "group":  # v6-E29：记录这次群回复，供节奏判断
-                        note_group_reply(gid)
+                        pending = ("reply", target, ans, mt == "group")
 
                 await asyncio.sleep(LOCK_RELEASE_DELAY)  # 锁释放延迟，防止消息处理过快
+
+            # ===================== 锁外：延迟 + 发送（v6-A1） =====================
+            if pending and pending[0] == "sticker":
+                if mt == "group":
+                    await send_sticker_group(gid, ws, uid)
+                else:
+                    await send_sticker_private(uid, ws, uid)
+            elif pending:
+                _, target, reply_text, is_group = pending
+                delay = reply_delay()  # 按时段 + 随机
+                log_api(f"[延迟] {delay:.1f} 秒后回复 {target}")
+                await asyncio.sleep(delay)
+                await send_short_reply(target, reply_text, ws, uid, is_group, ck)
+                if is_group:  # v6-E29：记录这次群回复
+                    note_group_reply(gid)
     except Exception as e:  # 捕获异常
         log_err(f"QQ异常:{e}")  # 日志记录异常
     finally:  # 清理
