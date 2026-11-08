@@ -19,11 +19,10 @@ REQUIRED_PACKAGES = [
     "aiohttp",          # HTTP API 服务器：提供外部接口
 ]
 
-# 可选依赖（安装失败不影响主流程）
+# 可选依赖（缺失只降级，绝不自动安装——没网会卡死）
 OPTIONAL_PACKAGES = [
     "chinesecalendar",  # 中国节假日判断（可选，降级为 weekday）
     "torch",            # PyTorch：CLIP 模型需要
-    "transformers",     # HuggingFace：CLIP 处理器需要
 ]
 
 # ===================== 函数定义 =====================
@@ -64,6 +63,10 @@ def check_and_install(package_name, optional=False):
     
     # 未安装，尝试自动安装
     tag = "[可选]" if optional else "[必需]"
+    # 可选依赖只检查，不自动安装：服务器常常没有外网，pip 会挂很久
+    if optional:
+        print(f"{tag} 未安装 {package_name}（可选，跳过安装，功能降级）")
+        return False
     print(f"{tag} 正在安装 {package_name}...")
     apt_pkg = APT_MAP.get(package_name)
     
