@@ -444,5 +444,28 @@ class TestHeartbeatWatchdog(unittest.TestCase):
         self.assertGreaterEqual(ws.closed_count, 1)
 
 
+class TestAntiAIStyle(unittest.TestCase):
+    """v6-A23：反 AI 腔清单必须进 prompt"""
+
+    def setUp(self):
+        cfg.CODE_MODE = False
+
+    def test_prompt_has_style_block(self):
+        from botv.ai.prompt import get_system_prompt
+        p = get_system_prompt()
+        self.assertIn("别像 AI", p)
+        self.assertIn("总而言之", p)
+        self.assertIn("我理解你的感受", p)
+
+    def test_code_mode_has_hint(self):
+        from botv.ai.prompt import get_system_prompt
+        cfg.CODE_MODE = True
+        try:
+            p = get_system_prompt()
+        finally:
+            cfg.CODE_MODE = False
+        self.assertIn("总而言之", p)
+
+
 if __name__ == "__main__":
     unittest.main()
