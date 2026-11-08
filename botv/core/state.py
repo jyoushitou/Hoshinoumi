@@ -18,6 +18,7 @@ last_online_notice_ts = 0.0  # 上次发送「上线通知」的时间戳（v5-F
 # ===================== 消息处理 =====================
 PROCESSED_MSG_IDS = deque(maxlen=80)  # 已处理消息ID缓存（去重，最多80条）
 PROCESS_LOCK = None  # 消息处理锁（bootstrap 中初始化为 asyncio.Lock()）
+pending_outbox = deque(maxlen=50)  # 断线期间待补发的消息（v5-F6）
 
 # ===================== API 密钥（运行时从数据库加载） =====================
 DS_API_KEY = ""

@@ -9,7 +9,7 @@ import random
 
 from ..config import STICKER_FACE_IDS, STICKER_ARCHIVE_DIR
 from botv.core import state as cfg
-from ..log import log_send, log_err, log_api
+from ..log import log_send, log_err, log_api, log_system
 from ..image import search_local_image_by_tags, get_best_image
 from ..memory import extract_keywords
 from ..utils import encode_image_base64, make_image_msg
@@ -70,22 +70,61 @@ async def _delayed_jieba_fallback(dialog, action, uid):
             log_api(f"[构建回复] jieba兜底搜图无结果(延迟1min)")
 
 
-async def send_private_msg(qq, msg, ws):
-    """通过WebSocket发送私聊消息"""
+def _alive(ws):
+    """连接是否可用"""
+    return bool(ws) and not getattr(ws, "closed", False)
+
+
+def _enqueue(payload, label):
+    """连接不可用时把消息放进待补发队列（v5-F6）"""
+    cfg.pending_outbox.append(payload)
+    log_err(f"{label}: 连接不可用，消息已入队（队列 {len(cfg.pending_outbox)} 条）")
+
+
+async def _send_or_queue(action, params, ws, label):
+    """发送一条消息；连接断了就入队，等重连补发"""
+    payload = json.dumps({"action": action, "params": params}, ensure_ascii=False)
+    if not _alive(ws):
+        _enqueue(payload, label)
+        return False
     async with cfg.send_lock:  # 加发送锁，防止并发发送
         try:
-            await ws.send(json.dumps({"action":"send_private_msg","params":{"user_id":qq,"message":msg}}, ensure_ascii=False))  # 发送私聊消息
+            await ws.send(payload)
+            return True
         except Exception as e:
-            log_err(f"私聊失败:{e}")  # 发送失败记录错误
+            log_err(f"{label}失败:{e}")
+            _enqueue(payload, label)
+            return False
+
+
+async def flush_outbox(ws):
+    """重连后补发断线期间积压的消息，返回补发条数"""
+    if not _alive(ws) or not cfg.pending_outbox:
+        return 0
+    sent = 0
+    while cfg.pending_outbox:
+        payload = cfg.pending_outbox[0]
+        try:
+            async with cfg.send_lock:
+                await ws.send(payload)
+            cfg.pending_outbox.popleft()
+            sent += 1
+        except Exception as e:
+            log_err(f"补发失败，保留队列: {e}")
+            break
+    if sent:
+        log_system(f"断线消息补发完成: {sent} 条")
+    return sent
+
+
+async def send_private_msg(qq, msg, ws):
+    """通过WebSocket发送私聊消息（断线自动入队）"""
+    return await _send_or_queue("send_private_msg", {"user_id": qq, "message": msg}, ws, "私聊")
 
 
 async def send_group_msg(gid, msg, ws):
-    """通过WebSocket发送群聊消息"""
-    async with cfg.send_lock:  # 加发送锁
-        try:
-            await ws.send(json.dumps({"action":"send_group_msg","params":{"group_id":gid,"message":msg}}, ensure_ascii=False))  # 发送群聊消息
-        except Exception as e:
-            log_err(f"群聊失败:{e}")  # 发送失败记录错误
+    """通过WebSocket发送群聊消息（断线自动入队）"""
+    return await _send_or_queue("send_group_msg", {"group_id": gid, "message": msg}, ws, "群聊")
 
 
 async def send_short_reply(tid, text, ws, uid, is_group=False, kws=None):

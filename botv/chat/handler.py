@@ -17,7 +17,7 @@ from ..commands import handle_command
 from ..utils import make_image_msg
 from ..ai.parse import parse_ai_reply
 from ..core.types import Fallback  # 兜底文案标记（v5-F2）
-from .send import send_short_reply, send_private_msg, send_sticker_private, send_sticker_group
+from .send import send_short_reply, send_private_msg, send_sticker_private, send_sticker_group, flush_outbox
 from .inbound import parse_message_content, contains_sticker_key
 
 # v5-F5：上线通知的冷却时间（秒）——重连太频繁时不重复打扰
@@ -41,6 +41,12 @@ async def websocket_handle_qq(ws):
             return  # 返回
         cfg.active_ws_qq = ws  # 设置当前活跃连接
     log_system("QQ上线(CLIP版)")  # 日志记录上线
+
+    # v5-F6：先把断线期间积压的消息补发出去
+    try:
+        await flush_outbox(ws)
+    except Exception as e:
+        log_err(f"补发队列异常: {e}")
 
     # v5-F5：60 秒内只发一次上线通知，避免重连刷屏
     if not claim_online_notice():

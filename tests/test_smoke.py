@@ -380,5 +380,69 @@ class TestTimePerception(unittest.TestCase):
         self.assertRegex(captured["sys"], r"\d{4}年\d{1,2}月\d{1,2}日 周")
 
 
+class TestOutbox(unittest.TestCase):
+    """F6：断线期间的消息入队，重连后补发"""
+
+    def setUp(self):
+        cfg.pending_outbox.clear()
+
+    def tearDown(self):
+        cfg.pending_outbox.clear()
+
+    def test_queue_when_disconnected(self):
+        from botv.chat.send import send_private_msg
+        ok = asyncio.run(send_private_msg(123, [{"type": "text", "data": {"text": "hi"}}], None))
+        self.assertFalse(ok)
+        self.assertEqual(len(cfg.pending_outbox), 1)
+
+    def test_flush_after_reconnect(self):
+        from botv.chat.send import send_private_msg, flush_outbox
+        ws = FakeWS()
+        asyncio.run(send_private_msg(123, [{"type": "text", "data": {"text": "a"}}], None))
+        asyncio.run(send_private_msg(456, [{"type": "text", "data": {"text": "b"}}], None))
+        sent = asyncio.run(flush_outbox(ws))
+        self.assertEqual(sent, 2)
+        self.assertEqual(len(cfg.pending_outbox), 0)
+        self.assertEqual(len(ws.sent), 2)
+
+    def test_flush_noop_when_empty(self):
+        from botv.chat.send import flush_outbox
+        self.assertEqual(asyncio.run(flush_outbox(FakeWS())), 0)
+
+
+class TestHeartbeatWatchdog(unittest.TestCase):
+    """F6：心跳连续失败要主动断开"""
+
+    def test_closes_after_failures(self):
+        from botv import heartbeat as hb
+
+        class BadWS:
+            closed = False
+
+            def __init__(self):
+                self.closed_count = 0
+
+            async def ping(self):
+                raise RuntimeError("dead")
+
+            async def close(self):
+                self.closed = True
+                self.closed_count += 1
+
+        ws = BadWS()
+        orig = hb.HEARTBEAT_INTERVAL
+        hb.HEARTBEAT_INTERVAL = 0.01
+        try:
+            async def run():
+                task = asyncio.create_task(hb.heartbeat_monitor("T", ws))
+                await asyncio.sleep(0.1)
+                task.cancel()
+            asyncio.run(run())
+        finally:
+            hb.HEARTBEAT_INTERVAL = orig
+        self.assertTrue(ws.closed)
+        self.assertGreaterEqual(ws.closed_count, 1)
+
+
 if __name__ == "__main__":
     unittest.main()
