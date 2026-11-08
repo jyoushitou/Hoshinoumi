@@ -1,6 +1,30 @@
-# 友利奈绪 QQ 机器人 v4.0 —— CLIP 视觉识图 + 简短动作回复 + HTTP API 服务 + 代码模式 + AI 日记系统
+# 友利奈绪 QQ 机器人 v5.0 —— 模块化重构 + 缺陷修复（CLIP 识图 / HTTP API / 代码模式 / AI 日记）
+
+> **v5.0 是一次「只重构 + 只修 bug」的迭代**：3100 行单层代码拆成 10 个包、76 个模块，根目录不再有超过 100 行的文件；
+> 同时修掉 7 个线上缺陷（气泡吞字、兜底复读、图片发不出、上线重复、断线丢消息、无时间感）。
+> 功能层面的新东西全部留到 v6。
 
 基于 **NapCat** 的 QQ 收发，**Python** 作为后端，调用 **DeepSeek** 网络 API 为主模型、**豆包** 网络 API 为备用模型，使用 **OpenAI CLIP (ViT-B/32, CPU)** 进行本地图片识别打标存档的 QQ 聊天机器人。
+
+---
+
+## 快速开始
+
+```bash
+# 1. 部署前自检（依赖 / 模块 / 数据库 / 表 / 密钥 / 提示词）
+python3 scripts/preflight.py
+
+# 2. 启动
+python3 run.py
+```
+
+预检脚本会逐项打勾，缺什么直接说，退出码 0 才算通过。
+
+### 停止
+
+- **推荐**：QQ 里发 `!exit`
+- 前台运行：`Ctrl-C` 一次（会打印「[已中断]」，不吐栈）
+- 后台 screen：`screen -S bot -X quit`
 
 ---
 
@@ -30,12 +54,13 @@
 - **人设提示词**：固定为《Charlotte》友利奈绪（傲娇毒舌、外冷内热），动态注入全局关键词 + 当前对话历史 + 当前话题关键词 + 事件记忆。
 - **身份区分**：对主人（配置中的 MASTER_QQ）以亲密的身份亲密对话，对其他用户保持普通朋友距离。
 - **可选的在线人设补充**：支持从 URL 远程拉取人设补充文本（遍历 PERSONALITY_SUPPLEMENT_URLS 列表），也支持本地 `personality_supplement.txt` 文件加载。
-- **AI 回复五行格式**（必须严格按照此格式）：
-  1. 对话内容（100 字以内）
-  2. 动作描写（用括号包裹，如"（扭头）"，无动作写"（无）"）
+- **AI 回复格式**（v5 起「动作」可选）：
+  1. 对话内容（100 字以内，**可以多行**）
+  2. 动作描写（用括号包裹，如"（扭头）"；**没有动作就整行省略，不要写"（无）"**）
   3. 关键词搜索图片用：20 个从可用列表选取的标签（逗号分隔）
   4. 事件摘要：xxx（可带标签 | tag1,tag2,tag3）
   5. 关键词提炼：5 个关键词（逗号分隔）
+  - 解析方式：按**标记**（关键词搜索图片用 / 事件摘要 / 关键词提炼）定位元数据，不再按行号取前两行——多行对话与代码答案都不会被截断
 
 ### 3. CLIP 本地识图打标 & 统一图片系统
 - **OpenAI CLIP (ViT-B/32)** 运行在 CPU 上，使用 **约 200 个候选标签** 对用户发送的图片进行本地识别、多标签分类。
@@ -55,14 +80,14 @@
   无论 AI 是否提供图片关键词（第三行有 img_kw 还是空），始终立即用 jieba 从对话+动作中提取关键词兜底搜图（`get_best_image`），**无需等待 60 秒**。
 - 旧的 `_delayed_jieba_fallback()`（延迟 60 秒后用 jieba 兜底）作为兼容保留，不再被调用。
 - 回复限 **max_tokens=200**，保证回复简短精炼。
-- AI 完整五行格式由 `utils.py` 中的 `parse_ai_reply()` 解析：
+- AI 完整回复格式由 `botv/ai/parse.py` 的 `parse_ai_reply()` 解析（按标记切分，动作行可选）：
   - 第二行以 `（` 或 `(` 开头 → 动作
   - 含"关键词搜索图片用" → 图片关键词列表
   - 含"事件摘要" → 事件描述
   - 含"关键词提炼" → 提炼关键词
   - 不满足以上条件的中间行 → 额外对话内容追加到第一行
 
-### 5. AI 日记系统（v4.0 新增 ⭐ `botv/diary.py`）
+### 5. AI 日记系统（v4.0 新增 · v5 拆为 `botv/diary/` 包）
 - **日记生成**：调用 AI 以奈绪视角写日记（傲娇毒舌 + 温柔），数据源为当天 `events` 表事件记录 + `ai_raw_responses` 表对话片段。
 - **双模型支持**：优先 DeepSeek，失败自动切换豆包，返回文本自动清理格式行并限制 500 字内。
 - **数据库持久化**：日记存入 `diaries` 表（按 target_id + diary_date 唯一），已存在的日记直接读取不重复生成。
@@ -133,16 +158,16 @@
   - `!diary list [天数]` - 最近几天日记概览（默认 7 天，上限 30 天）
   - `!diary raw <日期>` - 查看指定日期的原始事件记录（不调用 AI）
 
-### 8. 消息发送优化（`botv/send.py`）
+### 8. 消息发送优化（`botv/chat/reply.py` + `botv/chat/send.py`）
 - **`build_reply_message()` 核心函数**：
-  1. 解析 AI 回复五行格式 → 分割为 (dialog, action, img_kw, event, refined_kw)
+  1. 解析 AI 回复格式（按标记切分）→ 得到对话行 / 动作 / 元数据
   2. 有对话内容 → 添加文本消息段
   3. 有动作描写 → 添加动作文本段
   4. 用 AI 提供的图片关键词（第三行 20 纬度）搜图 → 找到图则添加图片段
   5. AI 没提供关键词或 20 纬度搜不到 → **立即**用 jieba 从对话+动作提取关键词兜底搜图（不等 60s）
   6. jieba 也搜不到 → 从数据库中随机取一张本地图片
   7. 全部失败 → 不发图
-- **消息逐条发送间隔 0.5 秒**，避免刷屏。
+- **消息逐条发送间隔 2 秒**，避免刷屏。
 - **`send_short_reply()` 入口函数**：接收 AI 回复文本 → 调用 `build_reply_message()` 构建消息列表 → 逐条调用 `send_private_msg()` / `send_group_msg()` 通过 WebSocket 发送。
 - **并发安全**：`send_private_msg()` 和 `send_group_msg()` 内部使用 `cfg.send_lock`（`asyncio.Lock`）避免 WebSocket 发送冲突。
 - **`select_best_sticker()` 旧接口兼容**：查新库 images 表 → 旧存档 STICKER_DATA → QQ 表情 ID 兜底。
@@ -194,38 +219,71 @@
 
 ---
 
-## 项目结构
+## 项目结构（v5.0）
 
 ```
 NapCat+Python/
-
-├── run.py                    # 入口文件，python run.py 启动（上线10分钟后追溯补录日记，平时日记由凌晨3点定时任务生成）
-├── README.md                 # 项目说明文档
-├── botv.py                   # 旧版单文件（v1.x），包含所有函数和运行逻辑，已归档
-├── botv/                     # v2.0 模块化功能包
-│   ├── __init__.py           # 模块入口（导向 config，避免循环依赖）
-│   ├── config.py             # 配置常量 + 全局运行时变量（WebSocket地址、数据库配置、超时、所有状态变量）
-│   ├── db.py                 # 数据库连接池（连接池 5~20 个连接）、9 张表 CRUD 操作（含自动建表）
-│   ├── log.py                # 日志系统：控制台 print() + MySQL logs 表双写，五级日志
-│   ├── utils.py              # 通用工具：图片下载(base64/url)、base64编码、AI回复五行格式解析(parse_ai_reply)
-│   ├── clip.py               # CLIP 模型加载（ViT-B/32 CPU）+ 图片多标签分析（约200候选标签，子线程推理）
-│   ├── image.py              # 统一图片系统：下载→CLIP打标→本地存档→MD5入库→按tag搜索→ALAPI兜底
-│   ├── sticker_archive.py    # 旧表情包存档兼容层：加载旧 JSON 索引 → 迁入新库/acg_images 表
-│   ├── personality.py        # 人设系统：本地基础人设 + 远程/本地人设补充 + 600个候选标签分类（20纬度×30标签）
-│   ├── personality_supplement.txt  # 本地人设补充文件（可选）
-│   ├── memory.py             # 对话记忆与关键词管理：jieba分词、数据库CRUD、上下文构建（15轮+关键词+事件）
-│   ├── api.py                # DeepSeek + 豆包 双模型调用：asyncio.to_thread异步、2~3次重试、原始JSON保存、自动关键词补全
-│   ├── diary.py              # AI 日记系统（v4.0 新增）：收集 events + 对话素材 → AI 生成奈绪视角日记 → diaries 表 + 缓存
-│   ├── send.py               # 消息发送与选图策略：五行解析→文本+动作+图片→WebSocket发送（含0.5秒间隔、并发锁）
-│   ├── commands.py           # ! 命令系统：26个命令（含 4 个日记命令），主人才可调用，解析→执行→发结果
-│   ├── schedule.py           # 定时任务：7个场景+随机闲聊+生日祝福+凌晨3点自动写日记，chinesecalendar工作日判断，跨天自动初始化
-│   ├── heartbeat.py          # WebSocket 心跳保活：通用协程，每 15 秒 ping，只检测日志不处理
-│   ├── handler.py            # QQ 消息处理主循环：消息解析→去重→命令/表情包/AI回复→发送
-│   ├── api_server.py         # HTTP API 服务器：aiohttp 端口 60908，Bearer Token认证，8个REST接口
-│   └── main.py               # async def main() 启动函数：初始化各模块→启动WebSocket+API+心跳+定时
-├── images/                   # 新图片存储目录（自动创建，MD5哈希命名）
-└── sticker_archive/          # 旧表情包存档目录（sticker_index.json + 图片文件）
+├── run.py                     # 入口：依赖自检 → botv.main（Ctrl-C 干净退出）
+├── botv/
+│   ├── core/                  # 基础设施（零业务）
+│   │   ├── constants.py       #   不可变配置：QQ号、端口、模型名、标签表、DB_CONFIG
+│   │   ├── state.py           #   唯一可变全局状态：连接/锁/密钥/记忆池/代码模式/出站队列
+│   │   ├── http.py            #   HTTP 会话工厂
+│   │   └── types.py           #   Fallback 标记（兜底文案，禁止入库）
+│   ├── ai/                    # 模型与提示词
+│   │   ├── client.py          #   DS/豆包调用、降级、原始返回落库
+│   │   ├── models.py          #   ChatModel 适配器（DeepSeek / 豆包）
+│   │   ├── chain.py           #   FallbackChain：依次尝试多个模型
+│   │   ├── parse.py           #   回复解析（五行 → 对话/动作/关键词/事件）
+│   │   ├── persona.py         #   人设文本 + 20 纬度标签表
+│   │   └── prompt.py          #   人设补充加载 + 提示词渲染 + 当前时间
+│   ├── chat/                  # 会话链路
+│   │   ├── handler.py         #   QQ 主循环：连接去重、上线通知、消息分发
+│   │   ├── inbound.py         #   入站解析：文本/图片/表情 → 文本
+│   │   ├── reply.py           #   回复组装：按标记切分 → 气泡 + 图片
+│   │   ├── send.py            #   发送：并发锁、断线入队、重连补发
+│   │   └── transport.py       #   QqTransport（Transport 端口实现）
+│   ├── cmd/                   # 命令（26 个，注册表分发）
+│   │   ├── registry.py        #   @command 装饰器 + 上下文
+│   │   ├── formatters.py      #   8 个纯文本格式化函数
+│   │   ├── basic.py           #   help/status/task/memory/sticker/clip/keywords/apikeys
+│   │   ├── query.py           #   ping/log/db/uptime/usage
+│   │   ├── admin.py           #   reload/set/code/exit/quit
+│   │   ├── media.py           #   say/sayg/img/acg
+│   │   ├── memory_cmd.py      #   event/clear
+│   │   └── diary_cmd.py       #   diary
+│   ├── infra/                 # 数据访问（唯一写 SQL 的地方）
+│   │   ├── conn.py            #   线程本地连接
+│   │   ├── repo_log.py / repo_key.py / repo_memory.py / repo_ai.py
+│   ├── server/                # HTTP API
+│   │   ├── http_api.py        #   鉴权中间件 + 路由注册 + 启动
+│   │   ├── routes_meta.py     #   health/status/usage/memory/logs/token
+│   │   ├── routes_chat.py     #   chat/command
+│   │   └── config.py, common.py
+│   ├── diary/                 # 日记：store（存取）/ generate（生成）/ view（展示）/ cache（缓存）
+│   ├── schedule/              # 定时：config（任务表）/ planner（排期）/ runner（主循环）
+│   ├── image/                 # 图片：store（存取）/ fetch（在线源）/ pick（选图）
+│   ├── ports/                 # 端口定义：ChatModel / Transport / MemoryStore / Embedder / Retriever / Clock
+│   ├── app/                   # 装配：bootstrap（初始化建表）/ loop（WebSocket+心跳+定时）
+│   ├── main.py                # 20 行，只做装配
+│   ├── log.py, memory.py, clip.py, heartbeat.py, utils.py, sticker_archive.py
+│   └── （api.py / send.py / db.py / handler.py / api_server.py / personality.py 为兼容转发层）
+├── scripts/
+│   ├── preflight.py           # 部署预检：依赖/模块/数据库/表/密钥/提示词
+│   └── clean_fallback_data.py # 清理历史兜底数据（默认 dry-run）
+├── tests/
+│   ├── test_smoke.py          # 冒烟测试：解析/组装/命令/结构/时间/队列
+│   └── test_ports.py          # 端口实现测试：模型适配器/模型链/传输
+├── docs/                      # 重构记录、功能清单、索引
+├── images/                    # 图片存储（MD5 命名，不入库）
+└── sticker_archive/           # 旧表情包存档
 ```
+
+**分层规则**：
+- `core/` 只管常量和状态，不 import 任何业务模块
+- `infra/` 是唯一写 SQL 的地方，`domain` 层不出现 `SELECT`
+- `ports/` 只有 Protocol，零依赖、零副作用
+- 根目录的 `api.py` 等只做转发，调用方迁完后可删
 
 ---
 
@@ -339,123 +397,114 @@ pip install git+https://github.com/openai/CLIP.git
 
 ---
 
-## 启动流程
+## 启动流程（v5）
 
 1. **创建 MySQL 数据库** `TomoriNaoBotData` 并执行建表 SQL。
-2. 在 `api_keys` 表中插入你的 DeepSeek、豆包、ALAPI 密钥（`API_SERVER_TOKEN` 由程序自动生成）。
-3. **启动 NapCat** 或兼容的 QQ 客户端。
-4. **运行入口文件**：
+2. 在 `api_keys` 表中插入 DeepSeek、豆包、ALAPI 密钥（`API_SERVER_TOKEN` 启动时自动生成）。
+3. **启动 NapCat**，反向 WebSocket 指向 `ws://127.0.0.1:3001`。
+4. **预检 + 启动**：
+
    ```bash
-   python run.py
+   python3 scripts/preflight.py
+   python3 run.py
    ```
-5. 程序启动时自动执行以下初始化流程（`run.py` 的 `check_diary()` + `main.py` 的 `async def main()`）：
-   - **日志系统初始化**：设置 MySQL 数据库日志表
-   - **加载对话记忆**：从 MySQL 加载所有对话历史到内存 deque
-   - **加载全局关键词**：从 MySQL 加载关键词列表
-   - **初始化图片系统**：创建 `images/` 目录，迁移旧版 JSON 索引到新库
 
-   - **加载 API 密钥**：从 MySQL `api_keys` 表加载所有密钥（先于记忆加载，确保日记生成时 key 可用）
-   - **加载 CLIP 模型**：检查并加载 CLIP ViT-B/32（CPU），约 1~3 秒
-   - **加载人设补充**：远程 URL 拉取 → 失败则加载本地 `personality_supplement.txt`
-   - **日记功能启动追溯**（v4.0 新增）：检查 `diaries` 表是否为空 → 为空则追溯最近 7 天有事件记录的日期 → 调用 AI 生成最多 3 篇测试日记写入数据库 → 验证日志
-   - **启动 HTTP API 服务器**：监听 `0.0.0.0:60908`，自动生成 API Token
-   - **启动 WebSocket 服务**：监听 `0.0.0.0:3001`，等待 QQ 客户端连接
-   - **启动心跳监控**：每 15 秒发送 ping 帧检测连接
-   - **启动定时任务循环**：7 个场景 + 随机闲聊 + 生日祝福 + 凌晨 3 点自动写日记
-   - **启动上线检测**：连接成功后向主人发送上线提示（文字 + ACG 图片）
+5. 启动时的实际顺序：
 
-启动时会看到类似日记自检日志：
-```
-日记自检：未发现历史日记，将生成 3 篇测试日记
-  ✅ 测试日记 2026-07-14: 今天主人和我说了...
-  ✅ 测试日记 2026-07-15: ...
-日记自检通过 ✅ 日记功能正常工作（共 3 篇）
-```
+   | 阶段 | 位置 | 做什么 |
+   |---|---|---|
+   | 依赖自检 | `run.py` | 必需依赖缺失才安装；**可选依赖只检查不安装**（无网不会卡） |
+   | 初始化 | `app/bootstrap.py` | 加载密钥 → 记忆 → 表情包 → CLIP → 人设补充 |
+   | 建表迁移 | `app/bootstrap.py` | 建 `acg_images` / `diaries`，给 `ai_raw_responses` 补 token 字段 |
+   | 状态初始化 | `app/bootstrap.py` | 消息处理锁、退出事件 |
+   | API 服务器 | `server/http_api.py` | 监听 `0.0.0.0:60908`，生成/加载 Token |
+   | 常驻循环 | `app/loop.py` | WebSocket `:3001` + 心跳 + 定时任务，异常 5 秒后重启 |
+   | 上线通知 | `chat/handler.py` | 连接成功发一次（**60 秒内不重复**）+ ACG 图 |
+   | 日记追溯 | `run.py` | 上线 10 分钟后检查 `diaries` 表，空则补录最近 7 天 |
+
+6. 停止：QQ 里发 `!exit`，或前台 `Ctrl-C` 一次（干净退出，不打印栈）。
 
 ---
 
 ## 各模块核心函数一览
 
-| 模块 | 函数 | 说明 |
-|------|------|------|
-| `db.py` | `init_db_pool()` | 初始化数据库连接池（5~20 连接），支持自动重连 |
-| `db.py` | `ensure_tables()` | 自动创建 9 张表，检查并迁移 token 字段 |
-| `db.py` | `get/set_api_key()` | 读取/更新 API 密钥 |
-| `db.py` | `add/load/clear_memory()` | 对话记忆的增删查 |
-| `db.py` | `add/load_keywords()` | 全局关键词的增查（最多 40 个） |
-| `db.py` | `save_image()` | 保存图片信息到数据库 |
-| `db.py` | `get_best_image()` | 按标签搜索最佳图片（LIKE + use_count 排序） |
-| `db.py` | `get_random_image()` | 随机获取一张本地图片 |
-| `db.py` | `add_event_to_db/load_events_from_db()` | 事件记忆的增查 |
-| `db.py` | `save_ai_raw_response()` | 保存 AI 调用原始 JSON |
-| `db.py` | `get_recent_logs/usage()` | 日志和用量查询 |
-| `log.py` | `log_system/receive/send/interface/error()` | 五级日志记录 |
-| `utils.py` | `parse_ai_reply()` | 解析 AI 五行格式回复 |
-| `utils.py` | `download_image_base64/url()` | 图片下载（base64/URL 两种方式） |
-| `clip.py` | `get_clip_instance()` | 懒加载获取 CLIP 模型实例 |
-| `clip.py` | `analyze_image()` | 分析图片返回多标签（子线程异步） |
-| `image.py` | `process_save_image()` | 保存一张新图片（下载→CLIP打标→入库） |
-| `image.py` | `download_image_tags()` | 从 ALAPI 斗图接口搜图并打标入库 |
-| `image.py` | `save_acg_image()` | 从 ALAPI ACG 接口获取二次元图并缓存 |
-| `memory.py` | `save_chat_to_db()` | 保存对话到数据库 + 更新内存 |
-| `memory.py` | `build_memory_context()` | 构建提示词中的对话历史上下文 |
-| `api.py` | `get_character_reply()` | 双模型调用核心函数（DS→豆包→兜底） |
-| `diary.py` | `generate_diary()` | 生成指定日期日记（查库→查缓存→AI生成→保存） |
-| `diary.py` | `get_diary_from_db()` | 从 diaries 表查询已保存的日记 |
-| `diary.py` | `save_diary_to_db()` | 保存日记到 diaries 表（已存在则更新） |
-| `diary.py` | `get_events_by_date()` | 查询指定日期的所有事件记录 |
-| `diary.py` | `get_dialogs_by_date()` | 查询指定日期的 AI 调用记录（对话素材） |
-| `diary.py` | `get_raw_events_text()` | 查看指定日期的原始事件记录文本 |
-| `diary.py` | `get_diary_overview()` | 生成最近几天日记概览（含状态标记） |
-| `send.py` | `send_short_reply()` | 发送 AI 回复（文本+动作+图片） |
-| `send.py` | `send_private_msg/group_msg()` | WebSocket 发送单条消息 |
-| `send.py` | `make_image_msg()` | 构建 NapCat 图片消息格式 |
-| `commands.py` | `handle_command()` | 处理 ! 前缀命令入口（含日记命令） |
-| `schedule.py` | `schedule_loop()` | 定时任务主循环（含凌晨3点自动写日记） |
-| `handler.py` | `handle_qq_message()` | QQ 消息处理入口 |
-| `api_server.py` | `run_api_server()` | 启动 HTTP API 服务器 |
-| `heartbeat.py` | `heartbeat_monitor()` | 通用心跳监控协程 |
-| `run.py` | `check_diary()` | v4.0 新增：日记功能启动追溯自检 |
+| 包 / 模块 | 关键函数 | 说明 |
+|---|---|---|
+| `ai/client` | `call_deepseek` / `call_doubao` / `get_character_reply` | 双模型调用、降级、原始返回落库 |
+| `ai/models` | `DeepSeekModel` / `DoubaoModel` | ChatModel 端口适配器 |
+| `ai/chain` | `FallbackChain` | 模型链：依次尝试 |
+| `ai/parse` | `parse_ai_reply` | 五行解析（按标记切分） |
+| `ai/prompt` | `get_system_prompt` / `now_text` | 提示词渲染 + 当前时间 |
+| `ai/persona` | `LOCAL_SYSTEM_PROMPT` / `build_available_tags` | 人设文本与标签表 |
+| `chat/handler` | `websocket_handle_qq` / `claim_online_notice` | QQ 主循环、上线去重 |
+| `chat/inbound` | `parse_message_content` | 文本 / 图片 / 表情 → 文本 |
+| `chat/reply` | `build_reply_message` / `split_reply_text` | 回复组装（对话 / 动作 / 图片） |
+| `chat/send` | `send_private_msg` / `flush_outbox` | 发送、断线入队、重连补发 |
+| `chat/transport` | `QqTransport` | Transport 端口实现（含戳一戳） |
+| `cmd/registry` | `command` / `run` / `has` | 命令注册表与分发 |
+| `infra/conn` | `get_db` / `get_cursor` | 线程本地连接 |
+| `infra/repo_memory` | `add_user_memory_to_db` / `load_events_from_db` | 记忆仓储 |
+| `infra/repo_log` / `repo_key` / `repo_ai` | 日志 / 密钥 / AI 记录 | 其余仓储 |
+| `server/http_api` | `start_api_server` | HTTP API 启动与鉴权 |
+| `diary/generate` | `generate_diary` | 日记生成（素材 → AI → 落库） |
+| `schedule/runner` | `cycle_task_run` | 定时任务主循环 |
+| `image/pick` | `get_best_image` | 选图：本地 → ALAPI → 随机 |
+| `image/store` | `process_and_save_image` / `materialize_image` | 图片存取、路径解析、blob 恢复 |
+| `memory` | `add_target_memory` / `build_memory_context` | 记忆写入（拒绝兜底）与上下文构建 |
+| `app/bootstrap` | `bootstrap` | 初始化：加载 → 建表 → 状态 |
+| `app/loop` | `serve` | WebSocket + 心跳 + 定时常驻 |
 
----
+## 开发与测试
 
-## 代码注释说明
+```bash
+# 跑测试（不需要数据库，缺失依赖会自动打桩）
+python3 -m unittest discover -s tests -v
 
-所有核心模块均已添加**统一风格**的逐行中文注释，便于理解和二次开发：
+# 部署前预检（需要数据库）
+python3 scripts/preflight.py
 
-| 文件 | 说明 | 注释风格 |
-|------|------|---------|
-| `botv/config.py` | 配置常量 + 全局运行时变量 | ✅ 模块注释 + 行内注释 |
-| `botv/db.py` | 数据库连接池、建表、CRUD 操作（9张表） | ✅ 模块注释 + 函数文档 + 行内注释 |
-| `botv/log.py` | 日志系统（控制台 + MySQL 双写，五级日志） | ✅ 模块注释 + 函数文档 |
-| `botv/utils.py` | 通用工具函数（下载、base64编码、AI回复五行格式解析） | ✅ 模块注释 + 函数文档 + 行内注释 |
-| `botv/clip.py` | CLIP 模型加载（ViT-B/32 CPU）与图片多标签分析 | ✅ 模块注释 + 函数文档 + 行内注释 |
-| `botv/image.py` | 统一图片系统（下载→CLIP打标→本地存档→入库→按tag搜索→复用） | ✅ 模块注释 + 函数文档 + 行内注释 |
-| `botv/sticker_archive.py` | 旧表情包存档兼容层（加载旧JSON索引→迁入新库） | ✅ 模块注释 + 函数文档 + 行内注释 |
-| `botv/personality.py` | 人设系统（本地基础人设 + 远程/本地补充 + 600个候选标签分类） | ✅ 模块注释 + 函数文档 + 行内注释 |
-| `botv/memory.py` | 对话记忆与关键词管理（jieba分词、数据库CRUD、上下文构建） | ✅ 模块注释 + 函数文档 + 行内注释 |
-| `botv/api.py` | DeepSeek + 豆包 双模型调用（异步重试、原始JSON保存、自动关键词补全） | ✅ 模块注释 + 函数文档 + 行内注释 |
-| `botv/diary.py` | AI 日记系统（v4.0 新增：素材收集→AI生成→缓存→数据库持久化） | ✅ 模块注释 + 函数文档 + 行内注释 |
-| `botv/send.py` | 消息发送与选图策略（五行解析→文本+动作+图片→WebSocket发送） | ✅ 模块注释 + 函数文档 + 行内注释 |
-| `botv/commands.py` | ! 命令系统（26个命令：help/status/task/memory/sticker/clip/diary等） | ✅ 模块注释 + 函数文档 + 行内注释 |
-| `botv/schedule.py` | 定时任务 + 工作日判断（7个场景、chinesecalendar、闲聊、生日祝福、自动写日记） | ✅ 模块注释 + 函数文档 + 行内注释 |
-| `botv/heartbeat.py` | WebSocket 心跳保活（通用协程，每15秒ping） | ✅ 模块注释 + 函数文档 + 行内注释 |
-| `botv/handler.py` | QQ 消息处理主循环（消息解析→命令/表情包/AI回复→发送） | ✅ 模块注释 + 函数文档 + 行内注释 |
-| `botv/api_server.py` | HTTP API 服务器（端口60908，Bearer Token认证，8个接口） | ✅ 模块注释 + 函数文档 + 行内注释 |
-| `botv/main.py` | 主程序入口（初始化各模块→启动WebSocket+API+心跳+定时） | ✅ 模块注释 + 函数文档 + 行内注释 |
-| `botv/__init__.py` | 模块入口 | ✅ 模块注释 |
+# 清理历史兜底数据（默认 dry-run）
+python3 scripts/clean_fallback_data.py
+python3 scripts/clean_fallback_data.py --apply
+```
 
-### 统一注释风格规范
+**分层规则**：
 
-所有代码文件遵循以下注释规范：
+- `core/` 只放常量和状态，不 import 业务模块
+- `infra/` 是唯一写 SQL 的地方
+- `ports/` 只有 Protocol，零依赖
+- 根目录的 `api.py` / `send.py` / `db.py` / `handler.py` / `api_server.py` / `personality.py` 是兼容转发层，调用方迁完后可删
 
-| 注释类型 | 格式 | 示例 |
-|---------|------|------|
-| **模块级注释** | `# ===================== 模块名 =====================` + 功能说明 | `# ===================== 日记模块 =====================` |
-| **函数文档字符串** | `"""功能说明"""`（单行）或带参数说明的多行 | `def log_system(m): """系统级日志"""` |
-| **行内注释** | `# 说明`（与代码保持2个空格间隔） | `CST = timezone(timedelta(hours=8))  # 东八区（北京时间）` |
-| **代码块分隔** | `# ===================== 标题 =====================` | `# ===================== 数据库操作 =====================` |
-| **全局变量注释** | `# 说明`（与变量同行） | `_diary_cache = {}  # 日记缓存 {key: (生成时间, 日记内容)}` |
+## v5.0 更新日志（重构 + 修复）
+
+### 🔧 模块化重构
+
+- 3100 行单层代码 → **10 个包、76 个模块**，根目录最大文件 92 行
+- 新增分层：`core`（常量/状态）/ `infra`（仓储）/ `ports`（协议）/ `ai` / `chat` / `cmd` / `server` / `diary` / `schedule` / `image` / `app`
+- 斩断循环依赖：`api.py` 原来把 import 放在文件末尾，现在方向单一（`ai/client → memory/personality/db`）
+- 常量化：`config.py` 从 92 行降到 6 行，可变状态集中到 `core/state.py`
+- 端口化：`ChatModel` / `Transport` / `MemoryStore` / `Embedder` / `Retriever` / `Clock` 六个 Protocol，模型与传输各有适配器
+- 命令系统：26 个命令从 `if/elif` 长链改为注册表，`commands.py` 426 → 45 行
+- 六个兼容转发层保留旧 import 路径，调用方零改动
+
+### 🐞 缺陷修复
+
+| 编号 | 问题 | 修复方式 |
+|---|---|---|
+| F1 | 无动作时硬发「（无）」气泡 | 动作行可选，空则不发送；prompt 同步改口 |
+| F2 | 兜底文案入库导致复读 | `Fallback` 标记 + 记忆层拒收 + 清理脚本 |
+| F3 | 吞字 / 代码答案被截断 | 元数据改为**按标记**识别，多行对话与代码块完整发送 |
+| F4 | 图片发送失败 | 相对路径按项目根解析 + 缺失时从数据库 blob 恢复 |
+| F5 | 上线通知重连时重复 | 60 秒冷却 |
+| F6 | 断线期间消息丢失 | 出站队列（最多 50 条）+ 重连补发 + 心跳看门狗 |
+| F7 | 没有时间感知 | prompt 注入「当前时间/星期/时段」 |
+
+### 🧪 测试与工具
+
+- `tests/`：47 个用例（解析 / 组装 / 命令 / 结构 / 时间 / 队列 / 端口实现），`python3 -m unittest discover -s tests`
+- `scripts/preflight.py`：部署预检（依赖 / 模块 / 数据库 / 表 / 密钥 / 提示词）
+- `scripts/clean_fallback_data.py`：清理历史兜底数据，默认 dry-run
+- `run.py`：可选依赖不再自动安装（无网会卡）；`Ctrl-C` 一次干净退出
 
 ---
 
@@ -487,7 +536,9 @@ pip install git+https://github.com/openai/CLIP.git
 ---
 
 ## 写在最后
-- 目前该程序已在 **联想小新 Air14 2018（Intel 8250U + MX150 + 16G）** 上成功运行，CLIP CPU 推理单张图片约 1~3 秒。因为cpu比较老旧，从拿到消息，到api回复几毫秒，但是对于图片处理，仍需1min左右，由于没有的对照的部署，仍未知其是哪里拖慢了发送解析。
-- 人设、定时任务时间、API 端点、数据库配置等均可按需修改（`botv/config.py`）。
-- 运行文件：**`run.py`**（模块化版，v4.0 含日记追溯自检，上线 10 分钟后执行），旧版单文件 **`botv.py`**（v1.x，包含所有函数和运行逻辑）已归档保留。
-- 所有代码文件均已添加统一风格的逐行中文注释，便于二次开发和维护。
+
+- 部署环境：**7 核 / 12G Linux**，CLIP CPU 推理单张图片约 1~3 秒；纯文字消息从收到到发出，耗时主要在模型 API（1~3 秒），本地处理在毫秒级。
+- 配置入口：`botv/core/constants.py`（不可变）、`botv/core/state.py`（运行时状态）、`botv/ai/persona.py`（人设与标签表）。
+- 启动文件：**`run.py`**；旧版单文件 **`botv.py`**（v1.x）已归档保留，不再使用。
+- 排查问题：先跑 `python3 scripts/preflight.py`，再看 `logs` 表或控制台输出。
+- 自动化测试：`python3 -m unittest discover -s tests -v`（不需要数据库）。
