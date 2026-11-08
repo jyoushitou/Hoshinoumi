@@ -17,10 +17,15 @@ from ..infra.repo_memory import load_memories_for_search, load_keywords_from_db 
 
 
 def load_memories():
-    """从数据库加载所有用户的对话记忆和全局关键词到内存"""
-    cfg.user_memory_pool = load_user_memories_from_db()  # 加载用户对话记忆池
-    cfg.global_keyword_set = load_global_keywords_from_db()  # 加载全局关键词集合
-    log_system(f"记忆: {len(cfg.user_memory_pool)}对象,{len(cfg.global_keyword_set)}关键词")  # 日志统计
+    """从数据库加载对话记忆和关键词（v8-B12：关键词按对象分开）"""
+    cfg.user_memory_pool = load_user_memories_from_db()  # 对话记忆池
+    kw_map = load_keywords_from_db()  # {target_id: set}
+    cfg.global_keyword_set = kw_map.get("", set())  # 公共词库
+    cfg.target_keyword_sets = {k: v for k, v in kw_map.items() if k}  # 每个人自己的词
+    log_system(f"记忆: {len(cfg.user_memory_pool)}对象,"
+               f"公共词{len(cfg.global_keyword_set)},分对象词{len(cfg.target_keyword_sets)}组")
+
+
 
 
 def add_target_memory(tid, user_msg, bot_msg, img_keywords=None, refined_keywords=None, event_summary=None):

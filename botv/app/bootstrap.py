@@ -85,4 +85,4 @@ def bootstrap():
 
     cfg.PROCESS_LOCK = asyncio.Lock()  # 消息处理锁
     cfg.shutdown_event = asyncio.Event()  # 退出事件（!exit 触发）
-    log_system("初始化完成(CLIP识图版)")
+    log_system("初始化完成")

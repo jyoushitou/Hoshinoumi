@@ -6,7 +6,7 @@
 import asyncio
 import random
 
-import botv.config as cfg
+from ..core import state as cfg  # 运行时变量（Token 从数据库加载）
 from ..log import log_api
 from ..utils import download_url, DEFAULT_HEADERS
 from ..core.http import get_http_session

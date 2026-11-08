@@ -159,7 +159,7 @@ def step_prompt():
 
 def main():
     print("=" * 56)
-    print("  友利奈绪 v5 部署预检")
+    print("  友利奈绪 v8 部署预检")
     print("=" * 56)
 
     ok_python = check("Python 版本", step_python)

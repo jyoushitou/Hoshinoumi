@@ -1198,5 +1198,26 @@ class TestImageTagsBackfill(unittest.TestCase):
         self.assertEqual(store.update_image_tags(["abc"], []), 0)
 
 
+class TestLoadMemories(unittest.TestCase):
+    """v8-B12：启动时把关键词按对象拆开加载"""
+
+    def test_splits_public_and_personal(self):
+        from collections import deque
+        import botv.memory.context as ctx
+        orig_u, orig_k = ctx.load_user_memories_from_db, ctx.load_keywords_from_db
+        ctx.load_user_memories_from_db = lambda: {"A": deque([["hi", "yo"]], maxlen=5)}
+        ctx.load_keywords_from_db = lambda: {"": {"公共"}, "A": {"甲"}}
+        try:
+            ctx.load_memories()
+            got_public = set(cfg.global_keyword_set)
+            got_target = dict(cfg.target_keyword_sets)
+        finally:
+            ctx.load_user_memories_from_db, ctx.load_keywords_from_db = orig_u, orig_k
+            cfg.global_keyword_set = set()
+            cfg.target_keyword_sets = {}
+        self.assertEqual(got_public, {"公共"})
+        self.assertEqual(got_target.get("A"), {"甲"})
+
+
 if __name__ == "__main__":
     unittest.main()
