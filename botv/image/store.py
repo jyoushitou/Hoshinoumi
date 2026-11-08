@@ -5,10 +5,9 @@
 import os
 import hashlib
 
-from ..config import IMAGE_DIR, CLIP_IMAGE_TAGS
+from ..config import IMAGE_DIR
 from ..infra.conn import get_cursor
 from ..log import log_api, log_err
-from ..clip import analyze_image_with_clip
 from ..utils import resolve_image_path
 
 
@@ -68,8 +67,11 @@ def image_already_exists(md5_hash):
         return False, "", ""
 
 
-async def process_and_save_image(img_data, source_url="", uid=""):
-    """统一处理一张图片：CLIP打标→存本地→入库，返回(md5, tags_str, file_path)"""
+async def process_and_save_image(img_data, source_url="", uid="", keywords=None):
+    """统一处理一张图片：打标→存本地→入库，返回(md5, tags_str, file_path)
+
+    v8-CLIPCUT：不再用 CLIP 看图，标签直接用调用方给的（AI 生成的关键词）。
+    """
     if not img_data:
         return None, "", ""
     md5 = hashlib.md5(img_data).hexdigest()  # 计算MD5哈希
@@ -77,7 +79,7 @@ async def process_and_save_image(img_data, source_url="", uid=""):
     if exists:  # 命中缓存
         log_api(f"图片命中缓存: {md5[:12]} tags={tags_str}")
         return md5, tags_str, fp
-    tags, desc = await analyze_image_with_clip(img_data, CLIP_IMAGE_TAGS)  # CLIP分析图片
+    tags = [str(k).strip() for k in (keywords or []) if str(k).strip()][:5] or ["图片"]
     tags_str = ",".join(tags)  # 标签列表转逗号分隔字符串
     ext = "gif" if img_data[:6] in (b"GIF89a", b"GIF87a") else "jpg"
     fp = image_local_path(md5, ext)
@@ -87,6 +89,36 @@ async def process_and_save_image(img_data, source_url="", uid=""):
     log_api(f"图片已保存: {md5[:12]}.{ext} tags={tags_str}")
     return md5, tags_str, fp
 
+
+def update_image_tags(md5s, keywords):
+    """把 AI 提炼的关键词补到图片标签上（v8-CLIPCUT：用 AI 代替 CLIP 打标）
+
+    md5s 可以是单个 md5 或列表；标签去重后最多保留 8 个。
+    """
+    kws = [str(k).strip() for k in (keywords or []) if str(k).strip()][:5]
+    if not kws:
+        return 0
+    if isinstance(md5s, str):
+        md5s = [md5s]
+    updated = 0
+    try:
+        c = get_cursor()
+        for md5 in md5s:
+            c.execute("SELECT tags FROM images WHERE md5_hash=%s", (md5,))
+            row = c.fetchone()
+            if not row:
+                continue
+            merged = []
+            for tag in (row["tags"] or "").split(",") + kws:
+                tag = tag.strip()
+                if tag and tag not in merged:
+                    merged.append(tag)
+            c.execute("UPDATE images SET tags=%s WHERE md5_hash=%s", (",".join(merged[:8]), md5))
+            updated += 1
+        c.connection.commit()
+    except Exception:
+        return updated
+    return updated
 
 def search_local_image_by_tags(keywords, limit=5):
     """从数据库按tags关键词搜索图片，返回[(md5, tags, file_path), ...]"""

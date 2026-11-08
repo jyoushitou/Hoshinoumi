@@ -12,6 +12,7 @@ from collections import deque
 from ..config import MASTER_QQ, LOCK_RELEASE_DELAY
 from botv.core import state as cfg
 from ..log import log_recv, log_err, log_system, log_api
+from ..image.store import update_image_tags  # 图片标签回写（v8）
 from ..image import fetch_and_save_acg_image
 from ..memory import extract_keywords, add_target_memory
 from ..ai.client import get_character_reply
@@ -85,11 +86,17 @@ async def websocket_handle_qq(ws):
             await ws.close()  # 关闭新连接
             return  # 返回
         cfg.active_ws_qq = ws  # 设置当前活跃连接
-    log_system("QQ上线(CLIP版)")  # 日志记录上线
+    log_system("QQ上线")  # 日志记录上线
 
     # v5-F6：先把断线期间积压的消息补发出去
+    if cfg.pending_outbox:
+        log_system(f"发现 {len(cfg.pending_outbox)} 条断线消息，开始补发")
     try:
-        await flush_outbox(ws)
+        sent = await flush_outbox(ws)
+        if cfg.pending_outbox:
+            log_err(f"补发后仍有 {len(cfg.pending_outbox)} 条没发出去")
+        elif sent:
+            log_system(f"断线消息已全部补发（{sent} 条）")
     except Exception as e:
         log_err(f"补发队列异常: {e}")
 
@@ -126,7 +133,7 @@ async def websocket_handle_qq(ws):
             if self_qq:
                 cfg.self_qq = self_qq
             addressed = is_at_me(d.get("message", ""), cfg.self_qq)
-            text = await parse_message_content(d.get("message", ""), uid)  # 解析消息内容
+            text, img_md5s = await parse_message_content(d.get("message", ""), uid)  # (文本, 图片md5)
             if not text:  # 解析后文本为空
                 continue  # 跳过
 
@@ -170,6 +177,8 @@ async def websocket_handle_qq(ws):
                     else:
                         dialog, action, img_kw, event, refined_kw = parse_ai_reply(ans)  # 解析AI回复
                         add_target_memory(tid, text, ans, img_kw, refined_kw, event)  # 保存记忆
+                        if img_md5s and refined_kw:  # v8：用 AI 关键词回写图片标签
+                            update_image_tags(img_md5s, refined_kw)
                         pending = ("reply", target, ans, mt == "group")
 
                 await asyncio.sleep(LOCK_RELEASE_DELAY)  # 锁释放延迟，防止消息处理过快

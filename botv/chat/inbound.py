@@ -2,6 +2,8 @@
 # 把 NapCat 的消息段（text / image / face）转成文本
 # 迁移自 handler.py（v5-R5），逻辑逐字未改
 
+import asyncio
+
 from botv.core import state as cfg
 from ..log import log_api
 from ..image import process_and_save_image
@@ -28,9 +30,13 @@ def is_at_me(raw_content, self_qq):
 
 
 async def parse_message_content(raw_content, user_id):
-    """解析消息内容：提取文本、处理图片（下载+CLIP打标）、记录表情"""
+    """解析消息内容：提取文本、处理图片、记录表情
+
+    v8：返回 (文本, 图片 md5 列表)——md5 用来在回复后补标签。
+    """
     input_text = ""  # 最终文本
     img_info = []  # 图片信息列表
+    img_md5s = []  # 本条消息里的图片 md5
     if isinstance(raw_content, list):  # 消息是数组格式（包含多种类型）
         for item in raw_content:  # 遍历消息片段
             t = item.get("type")  # 消息类型
@@ -40,10 +46,12 @@ async def parse_message_content(raw_content, user_id):
             elif t == "image":  # 图片类型
                 url = d.get("url") or d.get("file")  # 获取图片URL
                 log_api(f"[消息解析] 收到图片: {url[:60]}")  # 日志记录
-                img_data = download_url(url)  # 下载图片
+                img_data = await asyncio.to_thread(download_url, url)  # 下载图片（丢线程，别卡事件循环）
                 if img_data:  # 下载成功
-                    md5, tags_str, fp = await process_and_save_image(img_data, url, user_id)  # CLIP打标+保存
+                    md5, tags_str, fp = await process_and_save_image(img_data, url, user_id, keywords=["用户发图"])  # 保存（标签直接用）
                     log_api(f"[消息解析] 图片处理结果: md5={md5}, tags={tags_str}, fp={fp}")  # 日志记录
+                    if md5:
+                        img_md5s.append(md5)  # 记下，回复后用它补标签
                     if tags_str:  # 有标签
                         tag_list = tags_str.split(",")  # 分割标签
                         img_info.append(f"[{tag_list[0]}]")  # 添加第一个标签作为图片标识
@@ -63,4 +71,4 @@ async def parse_message_content(raw_content, user_id):
     if img_info:  # 有图片/表情信息
         input_text = f"{input_text} {' '.join(img_info)}"  # 追加到文本末尾
     log_api(f"[消息解析] 最终文本: {input_text[:60]}")  # 日志记录
-    return input_text.strip()  # 返回处理后的文本
+    return input_text.strip(), img_md5s  # (文本, 图片md5列表)

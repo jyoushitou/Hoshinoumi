@@ -3,6 +3,7 @@
 # 注：AI 回复解析已迁至 botv/ai/parse.py（v5-R2）
 
 import os, base64
+from urllib.parse import urlparse
 from .core.http import create_http_session
 from .log import log_api
 
@@ -14,7 +15,18 @@ DEFAULT_HEADERS = {
     "Referer": "https://www.google.com/"
 }
 
-def download_url(url):
+def referer_for(url):
+    """按图片自身域名生成 Referer（v8-FIX：防盗链站点认自己的域名）"""
+    try:
+        p = urlparse(url)
+        if p.scheme and p.netloc:
+            return f"{p.scheme}://{p.netloc}/"
+    except Exception:
+        pass
+    return "https://www.google.com/"
+
+
+def download_url(url, referer=None):
     """下载URL内容，返回二进制数据，失败返回None"""
     if not url:
         log_api(f"[下载] URL为空")
@@ -22,7 +34,9 @@ def download_url(url):
     s=create_http_session()  # 创建带连接池的会话
     try:
         log_api(f"[下载] 开始下载: {url[:80]}")
-        r=s.get(url,timeout=(5,10),verify=False,headers=DEFAULT_HEADERS)  # 5秒连接超时，10秒读取超时，添加浏览器UA头避免403
+        headers = dict(DEFAULT_HEADERS)
+        headers["Referer"] = referer or referer_for(url)  # 防盗链：用图片自己的域名
+        r=s.get(url,timeout=(5,10),verify=False,headers=headers)  # 5秒连接超时，10秒读取超时
         r.raise_for_status()  # 检查HTTP状态码
         log_api(f"[下载] 成功: {len(r.content)} bytes")
         return r.content

@@ -1163,5 +1163,40 @@ class TestKeywordScoping(unittest.TestCase):
         self.assertEqual(calls[0][1], ["词1"])
 
 
+class TestReferer(unittest.TestCase):
+    """v8-FIX：防盗链 Referer 跟图片域名走"""
+
+    def test_own_domain(self):
+        from botv.utils import referer_for
+        self.assertEqual(referer_for("https://p6.itc.cn/q_70/a.jpg"), "https://p6.itc.cn/")
+        self.assertEqual(referer_for("http://file.alapi.cn/image/x.jpg"), "http://file.alapi.cn/")
+
+    def test_fallback(self):
+        from botv.utils import referer_for
+        self.assertEqual(referer_for(""), "https://www.google.com/")
+        self.assertEqual(referer_for("not-a-url"), "https://www.google.com/")
+
+
+class TestImageTagsBackfill(unittest.TestCase):
+    """v8-CLIPCUT：用 AI 关键词回写图片标签"""
+
+    def test_merge_and_dedup(self):
+        import botv.image.store as store
+        cur = _FakeCursor({"tags": "用户发图,猫"})
+        orig = store.get_cursor
+        store.get_cursor = lambda: cur
+        try:
+            n = store.update_image_tags(["abc"], ["猫", "可爱"])
+        finally:
+            store.get_cursor = orig
+        self.assertEqual(n, 1)
+        upd = [s for s in cur.statements if s[0].startswith("UPDATE")]
+        self.assertEqual(upd[0][1][0], "用户发图,猫,可爱")
+
+    def test_empty_keywords_noop(self):
+        import botv.image.store as store
+        self.assertEqual(store.update_image_tags(["abc"], []), 0)
+
+
 if __name__ == "__main__":
     unittest.main()

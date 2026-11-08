@@ -37,7 +37,10 @@ async def serve(api_runner):
         hb = asyncio.create_task(heartbeat_monitor("QQ", cfg.active_ws_qq))  # 启动心跳监控
         cyc = asyncio.create_task(cycle_task_run())  # 启动定时任务循环
         try:
-            async with websockets.serve(websocket_handle_qq, LISTEN_HOST, LISTEN_PORT_QQ):  # 启动 WebSocket 服务器
+            async with websockets.serve(  # 启动 WebSocket 服务器
+                websocket_handle_qq, LISTEN_HOST, LISTEN_PORT_QQ,
+                ping_interval=20, ping_timeout=60,  # v8-FIX：容忍短暂卡顿，别一卡就断线
+            ):
                 await cfg.shutdown_event.wait()  # 保持运行，等待 !exit 命令触发退出
         except Exception as e:
             log_err(f"重启:{e}")  # 异常时记录日志并自动重启

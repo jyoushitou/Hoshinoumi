@@ -3,6 +3,7 @@
 # 迁移自 main.py（v5-R5），顺序与逻辑逐字未改
 
 import asyncio
+import os
 
 from botv.core import state as cfg
 from ..log import log_system, log_err
@@ -76,7 +77,8 @@ def bootstrap():
     reload_api_keys()  # 必须先于 load_memories（追溯日记需要 API key）
     load_memories()  # 从数据库加载对话记忆和全局关键词
     init_sticker_archive()  # 表情包存档目录，迁移旧版 JSON 索引
-    init_clip_model()  # CLIP 模型（CPU），失败不影响运行
+    if os.getenv("NAO_CLIP") == "1":  # v8-CLIPCUT：默认不加载 CLIP，需要时显式开启
+        init_clip_model()
     load_personality_supplement()  # 人设补充文本（远程 > 本地）
 
     _ensure_tables()
