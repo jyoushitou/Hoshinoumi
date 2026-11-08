@@ -907,5 +907,38 @@ class TestSingleInstance(unittest.TestCase):
         self.assertEqual(si.holder_pid(self.path), str(os.getpid()))
 
 
+class TestBackupSqlLiteral(unittest.TestCase):
+    """v7 备份脚本：SQL 字面量转义"""
+
+    def setUp(self):
+        import os as _os
+        import sys as _sys
+        scripts = _os.path.join(_os.path.dirname(_os.path.dirname(__file__)), "scripts")
+        if scripts not in _sys.path:
+            _sys.path.insert(0, scripts)
+
+    def test_values(self):
+        import backup_table as b
+        self.assertEqual(b.sql_literal(None), "NULL")
+        self.assertEqual(b.sql_literal(3), "3")
+        self.assertEqual(b.sql_literal(1.5), "1.5")
+
+    def test_quote_escaped(self):
+        import backup_table as b
+        s = b.sql_literal("it's ok")
+        self.assertTrue(s.startswith("'") and s.endswith("'"))
+        self.assertIn("\\'", s)
+
+    def test_bytes_hex(self):
+        import backup_table as b
+        self.assertEqual(b.sql_literal(b"\x01\x02"), "X'0102'")
+
+    def test_datetime_and_date(self):
+        from datetime import date, datetime
+        import backup_table as b
+        self.assertEqual(b.sql_literal(date(2026, 11, 8)), "'2026-11-08'")
+        self.assertIn("2026-11-08 21:30", b.sql_literal(datetime(2026, 11, 8, 21, 30)))
+
+
 if __name__ == "__main__":
     unittest.main()
