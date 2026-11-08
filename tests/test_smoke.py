@@ -727,38 +727,97 @@ class TestDedupeKey(unittest.TestCase):
     """v7-B14：记忆去重指纹"""
 
     def setUp(self):
-        import os as _os
-        import sys as _sys
-        scripts = _os.path.join(_os.path.dirname(_os.path.dirname(__file__)), "scripts")
-        if scripts not in _sys.path:
-            _sys.path.insert(0, scripts)
+        pass
 
     def test_punctuation_and_space_ignored(self):
-        import migrate_v7 as m
+        from botv.infra import dedupe as m
         a = m.dedupe_key("1", "event", "主人 明天要答辩！")
         b = m.dedupe_key("1", "event", "主人明天要答辩")
         self.assertEqual(a, b)
 
     def test_target_matters(self):
-        import migrate_v7 as m
+        from botv.infra import dedupe as m
         self.assertNotEqual(
             m.dedupe_key("1", "event", "同一句话"),
             m.dedupe_key("2", "event", "同一句话"),
         )
 
     def test_kind_matters(self):
-        import migrate_v7 as m
+        from botv.infra import dedupe as m
         self.assertNotEqual(
             m.dedupe_key("1", "event", "同一句话"),
             m.dedupe_key("1", "life", "同一句话"),
         )
 
     def test_different_text_differs(self):
-        import migrate_v7 as m
+        from botv.infra import dedupe as m
         self.assertNotEqual(
             m.dedupe_key("1", "event", "今天加班"),
             m.dedupe_key("1", "event", "今天加班到十点"),
         )
+
+
+class _FakeCursor:
+    """够用的假游标：记录执行过哪些语句"""
+
+    def __init__(self, first_row=None):
+        self.first_row = first_row
+        self.statements = []
+
+    def execute(self, sql, params=None):
+        self.statements.append((" ".join(str(sql).split()), params))
+
+    def fetchone(self):
+        return self.first_row
+
+    def fetchall(self):
+        return [self.first_row] if self.first_row else []
+
+    @property
+    def connection(self):
+        return self
+
+    def commit(self):
+        pass
+
+    def verbs(self):
+        return [s[0].split()[0].upper() for s in self.statements]
+
+
+class TestMemoryWriteDedupe(unittest.TestCase):
+    """v7-B15：7 天内同键只累加，不新增"""
+
+    def _run(self, existing):
+        import botv.infra.repo_memory as rm
+        cur = _FakeCursor(existing)
+        orig = rm.get_cursor
+        rm.get_cursor = lambda: cur
+        try:
+            rm.add_event_to_db("1", "今天加班", kind="event")
+        finally:
+            rm.get_cursor = orig
+        return cur
+
+    def test_hit_only_updates(self):
+        cur = self._run({"id": 7})
+        self.assertIn("UPDATE", cur.verbs())
+        self.assertNotIn("INSERT", cur.verbs())
+
+    def test_miss_inserts(self):
+        cur = self._run(None)
+        self.assertIn("INSERT", cur.verbs())
+        self.assertIn("DELETE", cur.verbs())  # 插入后按 kind 裁剪
+
+    def test_empty_summary_skipped(self):
+        import botv.infra.repo_memory as rm
+        cur = _FakeCursor(None)
+        orig = rm.get_cursor
+        rm.get_cursor = lambda: cur
+        try:
+            rm.add_event_to_db("1", "")
+        finally:
+            rm.get_cursor = orig
+        self.assertEqual(cur.statements, [])
 
 
 if __name__ == "__main__":

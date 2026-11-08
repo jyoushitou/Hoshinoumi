@@ -3,9 +3,18 @@
 # 迁移自 db.py（v5-R6），SQL 逐字未改
 
 from collections import deque
+from datetime import datetime, timedelta
 
-from ..config import MAX_USER_ROUND, MAX_GLOBAL_KEY
+from ..config import MAX_USER_ROUND, MAX_GLOBAL_KEY, CST
 from .conn import get_cursor
+from .dedupe import dedupe_key
+
+# v7-B15：去重窗口与按 kind 的保留上限
+DEDUPE_WINDOW_DAYS = 7
+KIND_LIMITS = {"life": 60, "event": 30, "promise": 30, "profile": 20}
+KIND_LIMIT_DEFAULT = 20
+# 旧代码调 load_events_from_db 时默认只看这几类
+DEFAULT_KINDS = ("event", "life", "promise")
 
 
 # ===================== 对话记忆 =====================
@@ -55,25 +64,66 @@ def add_global_keywords_to_db(kws):
 
 # ===================== 事件记忆 =====================
 
-def load_events_from_db(tid, tag_keywords=None, limit=5):
-    """加载事件记忆，可按标签关键词过滤（最多3个标签）"""
+def load_events_from_db(tid, tag_keywords=None, limit=5, kinds=None):
+    """加载记忆，可按标签或 kind 过滤（默认排除 profile）
+
+    v7-B8：多了 kind 维度；旧数据 kind 默认 'event'，兼容。
+    """
     c = get_cursor()
+    kinds = tuple(kinds) if kinds is not None else DEFAULT_KINDS
+    kind_ph = ",".join(["%s"] * len(kinds))
+    params = [tid] + list(kinds)
+
     if tag_keywords:
         conds = " OR ".join(["tags LIKE %s" for _ in tag_keywords[:3]])  # 动态构建LIKE条件
-        params = [f"%{kw}%" for kw in tag_keywords[:3]]
-        sql = f"SELECT event_summary, tags FROM events WHERE target_id=%s AND ({conds}) ORDER BY id DESC LIMIT %s"
-        c.execute(sql, [tid] + params + [limit])
+        sql = (f"SELECT event_summary, tags FROM events "
+               f"WHERE target_id=%s AND kind IN ({kind_ph}) AND ({conds}) "
+               f"ORDER BY id DESC LIMIT %s")
+        c.execute(sql, params + [f"%{kw}%" for kw in tag_keywords[:3]] + [limit])
     else:
-        c.execute("SELECT event_summary, tags FROM events WHERE target_id=%s ORDER BY id DESC LIMIT %s", (tid, limit))
+        sql = (f"SELECT event_summary, tags FROM events "
+               f"WHERE target_id=%s AND kind IN ({kind_ph}) "
+               f"ORDER BY id DESC LIMIT %s")
+        c.execute(sql, params + [limit])
     return [(r["event_summary"], r["tags"]) for r in c.fetchall()]
 
 
-def add_event_to_db(tid, event_summary, tags=""):
-    """添加事件记忆，每个对象最多保留20条"""
+def add_event_to_db(tid, event_summary, tags="", kind="event", importance=3, due_date=None):
+    """写入一条记忆（v7-B15）
+
+    - 7 天窗口内命中同一 dedupe_key → 只累加 hit_count、更新 last_seen
+    - 否则插入新行，并按 kind 的上限裁剪最旧的
+    """
     if not event_summary:
-        return
+        return None
     c = get_cursor()
-    c.execute("INSERT INTO events(target_id, event_summary, tags) VALUES(%s,%s,%s)", (tid, event_summary, tags))
-    # 每个对象最多保留 20 条事件
-    c.execute("DELETE FROM events WHERE id NOT IN(SELECT id FROM(SELECT id FROM events WHERE target_id=%s ORDER BY id DESC LIMIT 20)AS tmp)AND target_id=%s", (tid, tid))
+    key = dedupe_key(tid, kind, event_summary)
+    now = datetime.now(CST)
+
+    c.execute("""
+        SELECT id FROM events
+        WHERE target_id=%s AND kind=%s AND dedupe_key=%s
+          AND COALESCE(last_seen, created_at) >= %s
+        ORDER BY id LIMIT 1
+    """, (tid, kind, key, now - timedelta(days=DEDUPE_WINDOW_DAYS)))
+    hit = c.fetchone()
+    if hit:  # 命中：不新增，只记账
+        c.execute("UPDATE events SET hit_count=hit_count+1, last_seen=%s WHERE id=%s", (now, hit["id"]))
+        c.connection.commit()
+        return hit["id"]
+
+    c.execute(
+        "INSERT INTO events(target_id, event_summary, tags, kind, dedupe_key, importance, due_date, last_seen) "
+        "VALUES(%s,%s,%s,%s,%s,%s,%s,%s)",
+        (tid, event_summary, tags, kind, key, importance, due_date, now),
+    )
+    # 按 kind 分别保留
+    keep = KIND_LIMITS.get(kind, KIND_LIMIT_DEFAULT)
+    c.execute(
+        "DELETE FROM events WHERE id NOT IN("
+        "SELECT id FROM(SELECT id FROM events WHERE target_id=%s AND kind=%s ORDER BY id DESC LIMIT %s)AS tmp"
+        ")AND target_id=%s AND kind=%s",
+        (tid, kind, keep, tid, kind),
+    )
     c.connection.commit()
+    return None

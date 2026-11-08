@@ -39,18 +39,7 @@ NEW_INDEXES = [
     ("idx_dedupe", "dedupe_key"),
 ]
 
-_PUNCT = re.compile(r"[\s，。、,.!?！？：:；;\"'“”‘’（）()【】\[\]…—~～]+")
-
-
-def normalize(text):
-    """归一化：去标点空白、转小写、截断 80 字"""
-    return _PUNCT.sub("", text or "").lower()[:80]
-
-
-def dedupe_key(target_id, kind, text):
-    """同一个人 + 同一类 + 同一句话 → 同一个 key"""
-    raw = f"{target_id}|{kind or 'event'}|{normalize(text)}"
-    return hashlib.md5(raw.encode("utf-8")).hexdigest()
+from botv.infra.dedupe import normalize, dedupe_key  # noqa: E402  共用实现
 
 
 def column_exists(c, table, column):
