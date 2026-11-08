@@ -723,5 +723,43 @@ class TestTone(unittest.TestCase):
         self.assertNotIn("{tone}", captured["sys"])
 
 
+class TestDedupeKey(unittest.TestCase):
+    """v7-B14：记忆去重指纹"""
+
+    def setUp(self):
+        import os as _os
+        import sys as _sys
+        scripts = _os.path.join(_os.path.dirname(_os.path.dirname(__file__)), "scripts")
+        if scripts not in _sys.path:
+            _sys.path.insert(0, scripts)
+
+    def test_punctuation_and_space_ignored(self):
+        import migrate_v7 as m
+        a = m.dedupe_key("1", "event", "主人 明天要答辩！")
+        b = m.dedupe_key("1", "event", "主人明天要答辩")
+        self.assertEqual(a, b)
+
+    def test_target_matters(self):
+        import migrate_v7 as m
+        self.assertNotEqual(
+            m.dedupe_key("1", "event", "同一句话"),
+            m.dedupe_key("2", "event", "同一句话"),
+        )
+
+    def test_kind_matters(self):
+        import migrate_v7 as m
+        self.assertNotEqual(
+            m.dedupe_key("1", "event", "同一句话"),
+            m.dedupe_key("1", "life", "同一句话"),
+        )
+
+    def test_different_text_differs(self):
+        import migrate_v7 as m
+        self.assertNotEqual(
+            m.dedupe_key("1", "event", "今天加班"),
+            m.dedupe_key("1", "event", "今天加班到十点"),
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
