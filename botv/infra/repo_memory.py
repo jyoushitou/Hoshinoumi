@@ -43,22 +43,40 @@ def add_user_memory_to_db(tid, user_msg, bot_msg):
 
 # ===================== 全局关键词 =====================
 
-def load_global_keywords_from_db():
-    """从数据库加载全局关键词集合"""
+def load_keywords_from_db(target_id=None):
+    """加载关键词（v8-B12：按对象分开）
+
+    target_id=None → 返回 {target_id: set}；否则返回该对象的 set
+    """
     c = get_cursor()
-    c.execute("SELECT keyword FROM global_keywords ORDER BY id")
+    if target_id is None:
+        c.execute("SELECT target_id, keyword FROM global_keywords ORDER BY id")
+        out = {}
+        for r in c.fetchall():
+            out.setdefault(r["target_id"], set()).add(r["keyword"])
+        return out
+    c.execute("SELECT keyword FROM global_keywords WHERE target_id=%s ORDER BY id", (target_id,))
     return set(r["keyword"] for r in c.fetchall())
 
 
-def add_global_keywords_to_db(kws):
-    """添加关键词到全局关键词表，超出MAX_GLOBAL_KEY时删除最旧的"""
+def load_global_keywords_from_db(target_id=""):
+    """兼容旧调用：默认取公共库（target_id=""）"""
+    return load_keywords_from_db(target_id)
+
+
+def add_global_keywords_to_db(kws, target_id=""):
+    """按对象加关键词，每个对象最多 MAX_GLOBAL_KEY 个"""
     c = get_cursor()
     for kw in kws:
-        c.execute("INSERT IGNORE INTO global_keywords(keyword)VALUES(%s)", (kw,))  # 忽略重复
-    c.execute("SELECT COUNT(*)as cnt FROM global_keywords")
-    if c.fetchone()["cnt"] > MAX_GLOBAL_KEY:
-        # 只保留最新的MAX_GLOBAL_KEY个
-        c.execute("DELETE FROM global_keywords WHERE id NOT IN(SELECT id FROM(SELECT id FROM global_keywords ORDER BY id DESC LIMIT %s)AS tmp)", (MAX_GLOBAL_KEY,))
+        c.execute("INSERT IGNORE INTO global_keywords(target_id, keyword) VALUES(%s,%s)", (target_id, kw))
+    c.execute("SELECT COUNT(*) AS cnt FROM global_keywords WHERE target_id=%s", (target_id,))
+    if (c.fetchone()["cnt"] or 0) > MAX_GLOBAL_KEY:
+        c.execute("""
+            DELETE FROM global_keywords
+            WHERE target_id=%s AND id NOT IN(
+                SELECT id FROM(SELECT id FROM global_keywords WHERE target_id=%s ORDER BY id DESC LIMIT %s) AS tmp
+            )
+        """, (target_id, target_id, MAX_GLOBAL_KEY))
     c.connection.commit()
 
 

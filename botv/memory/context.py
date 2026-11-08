@@ -13,7 +13,7 @@ from botv.core import state as cfg  # 全局运行时变量
 from .text import extract_keywords  # noqa: E402  分词工具（v8 挪出去避免循环导入）
 from .retrieval import retrieve  # noqa: E402  双路召回（v8-B11）
 from .inject import BUDGET, trim, cap_lines  # noqa: E402  分层预算（v8-B13）
-from ..infra.repo_memory import load_memories_for_search  # noqa: E402
+from ..infra.repo_memory import load_memories_for_search, load_keywords_from_db  # noqa: E402
 
 
 def load_memories():
@@ -40,19 +40,16 @@ def add_target_memory(tid, user_msg, bot_msg, img_keywords=None, refined_keyword
         tag_str = ",".join(refined_keywords[:5]) if refined_keywords else ""  # 取前5个提炼关键词作为标签
         add_event_to_db(tid, event_summary, tag_str)  # 写入数据库
     
-    # AI提炼的关键词合并到长期记忆
-    if refined_keywords:  # AI提供了提炼关键词
-        add_global_keywords_to_db(refined_keywords)  # 写入数据库
-        for k in refined_keywords:
-            cfg.global_keyword_set.add(k)  # 更新内存集合
+    # AI提炼的关键词合并到长期记忆（v8-B12：写到这个对象名下）
+    if refined_keywords:
+        add_global_keywords_to_db(refined_keywords, tid)
+        cfg.target_keyword_sets.setdefault(tid, set()).update(refined_keywords)
     else:
-        # 降级方案：使用jieba分词提取关键词
-        nk = extract_keywords(f"{user_msg} {bot_msg}")  # 从对话中提取关键词
-        if img_keywords:  # 有图片关键词
-            nk.extend(img_keywords)  # 合并图片关键词
-        add_global_keywords_to_db(nk)  # 写入数据库
-        for k in nk:
-            cfg.global_keyword_set.add(k)  # 更新内存集合
+        nk = extract_keywords(f"{user_msg} {bot_msg}")
+        if img_keywords:
+            nk.extend(img_keywords)
+        add_global_keywords_to_db(nk, tid)
+        cfg.target_keyword_sets.setdefault(tid, set()).update(nk)
 
 
 def build_memory_context(tid, current_kws=None, query=None):
@@ -61,7 +58,8 @@ def build_memory_context(tid, current_kws=None, query=None):
     v8-B11：记忆不再用 LIKE 硬匹配，改为 BM25 + 关键词双路召回。
     v8-B13：每层按预算裁剪，总长可控。
     """
-    kw = "、".join(cfg.global_keyword_set) if cfg.global_keyword_set else "无"  # 全局关键词（顿号分隔）
+    words = set(cfg.target_keyword_sets.get(tid, set())) | set(cfg.global_keyword_set)  # 这个人的词 + 公共词
+    kw = "、".join(sorted(words)) if words else "无"  # 顿号分隔
 
     rounds = []
     if tid in cfg.user_memory_pool:  # 该用户有记忆

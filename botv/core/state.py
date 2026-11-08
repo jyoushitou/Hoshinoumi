@@ -40,7 +40,8 @@ task_trigger_minute = {}  # 定时任务触发分钟映射 {key: minute}
 
 # ===================== 记忆与图片 =====================
 user_memory_pool = {}  # 用户对话记忆池 {target_id: deque}
-global_keyword_set = set()  # 全局关键词集合
+global_keyword_set = set()  # 公共关键词（v8-B12：只放公共库）
+target_keyword_sets = {}  # {target_id: set} 每个对象自己的关键词
 USER_STICKER_CACHE = defaultdict(list)  # 用户最近使用的QQ表情缓存
 USER_STICKER_ARCHIVE = defaultdict(list)  # 用户旧表情包存档
 STICKER_DATA = {}  # 表情包数据 {hash: info_dict}

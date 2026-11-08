@@ -1120,5 +1120,48 @@ class TestSessionReuse(unittest.TestCase):
         self.assertIsNot(box["s"], main_session)
 
 
+class TestKeywordScoping(unittest.TestCase):
+    """v8-B12：关键词按对象隔离"""
+
+    def setUp(self):
+        cfg.global_keyword_set = set()
+        cfg.target_keyword_sets = {}
+
+    def tearDown(self):
+        cfg.global_keyword_set = set()
+        cfg.target_keyword_sets = {}
+        cfg.user_memory_pool.pop("A", None)
+
+    def test_context_uses_own_words(self):
+        import botv.memory.context as ctx
+        cfg.global_keyword_set = {"公共词"}
+        cfg.target_keyword_sets = {"A": {"甲的词"}, "B": {"乙的词"}}
+        orig_l, orig_e = ctx.load_memories_for_search, ctx.load_events_from_db
+        ctx.load_memories_for_search = lambda tid, limit=300: []
+        ctx.load_events_from_db = lambda tid, tag_keywords=None, limit=3: []
+        try:
+            kw_a, _d, _e = ctx.build_memory_context("A", None, query="x")
+            kw_b, _d, _e = ctx.build_memory_context("B", None, query="x")
+        finally:
+            ctx.load_memories_for_search, ctx.load_events_from_db = orig_l, orig_e
+        self.assertIn("甲的词", kw_a)
+        self.assertNotIn("乙的词", kw_a)
+        self.assertIn("公共词", kw_a)
+        self.assertIn("乙的词", kw_b)
+
+    def test_write_goes_to_target(self):
+        import botv.memory.context as ctx
+        calls = []
+        orig_kw, orig_u = ctx.add_global_keywords_to_db, ctx.add_user_memory_to_db
+        ctx.add_global_keywords_to_db = lambda kws, tid="": calls.append((tid, list(kws)))
+        ctx.add_user_memory_to_db = lambda *a, **k: None
+        try:
+            ctx.add_target_memory("A", "hi", "回复", refined_keywords=["词1"])
+        finally:
+            ctx.add_global_keywords_to_db, ctx.add_user_memory_to_db = orig_kw, orig_u
+        self.assertEqual(calls[0][0], "A")
+        self.assertEqual(calls[0][1], ["词1"])
+
+
 if __name__ == "__main__":
     unittest.main()
