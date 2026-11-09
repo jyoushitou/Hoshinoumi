@@ -208,6 +208,15 @@ async def get_character_reply(txt, tid, current_kws=None):
     except Exception:
         tone_line = state_line or ""
 
+    # v12-A21：知道外面什么天气（没配 NAO_CITY 就跳过）
+    try:
+        from ..life.weather import current as weather_now, describe as weather_desc
+        _w = await weather_now()
+        if _w:
+            tone_line += weather_desc(_w)
+    except Exception:
+        pass
+
     # v9-U7：她今天过得怎么样——每天第一次对话时生成，之后不再写
     try:
         ensure_daily_life()

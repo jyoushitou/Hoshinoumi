@@ -107,6 +107,43 @@ def note_group_reply(gid):
 ONLINE_NOTICE_COOLDOWN = 60
 
 
+# ===================== 分享欲（v12-A18） =====================
+# 不是每句都为了回应。偶尔多说一句「对了，今天…」。
+
+SHARE_PROB = 0.06        # 每条回复后有 6% 概率多说一句
+SHARE_COOLDOWN = 2400    # 同一个人 40 分钟内最多分享一次
+_last_share_ts = {}
+
+
+async def maybe_share_something(tid, ws):
+    """按概率补一句自己的事；返回是否发了"""
+    if random.random() > SHARE_PROB:
+        return False
+    now = _time.time()
+    if now - _last_share_ts.get(tid, 0.0) < SHARE_COOLDOWN:
+        return False
+    try:
+        from ..infra.repo_memory import load_today_life
+        events = load_today_life()
+    except Exception:
+        events = []
+    if not events:
+        return False
+
+    seed = random.choice(events)
+    try:
+        rep = await get_character_reply(
+            f"（不用说别的。就说一句你今天的事：{seed}。"
+            f"像突然想起来的，别问他问题）", tid)
+    except Exception:
+        return False
+    if not rep:
+        return False
+    await send_short_reply(tid, rep, ws, tid, False, None)
+    _last_share_ts[tid] = now
+    log_system(f"分享欲: {str(seed)[:20]}")
+    return True
+
 def claim_online_notice():
     """决定这次连接要不要发上线通知（60 秒内只发一次）"""
     now = _time.time()
@@ -257,6 +294,10 @@ async def websocket_handle_qq(ws):
                         from ..chat.send import maybe_send_voice
                         first_line = (reply_text or "").split("\n")[0]
                         await maybe_send_voice(first_line, target, ws, False)
+                    except Exception:
+                        pass
+                    try:  # v12-A18：偶尔补一句自己的事
+                        await maybe_share_something(target, ws)
                     except Exception:
                         pass
     except Exception as e:  # 捕获异常

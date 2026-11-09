@@ -92,6 +92,10 @@ async def parse_message_content(raw_content, user_id):
                 else:  # 下载失败
                     img_info.append("[图]")  # 添加通用图片标识
                     log_api(f"[消息解析] 图片下载失败: {url[:60]}")  # 日志记录
+            elif t == "reply":  # 引用某条消息（v12-A16）
+                img_info.append("[引用]")
+                input_text += " （他在引用某条消息）"
+
             elif t == "record":  # 语音条（v11-A14）
                 url = d.get("url") or d.get("file")
                 log_api(f"[消息解析] 收到语音: {str(url)[:60]}")

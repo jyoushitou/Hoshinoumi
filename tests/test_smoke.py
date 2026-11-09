@@ -2098,6 +2098,7 @@ class TestEnvironment(unittest.TestCase):
         "NAO_ASR_URL",
         "NAO_ASR_MODEL",
         "NAO_NO_AUTOINSTALL",
+        "NAO_CITY",
     }
 
     @staticmethod
@@ -2416,6 +2417,99 @@ class TestV12Extras(unittest.TestCase):
         self.assertTrue(ok)
         self.assertIn("旧事", prompts[0])
         self.assertIn("去打疫苗", prompts[0])
+
+
+class TestWeather(unittest.TestCase):
+    """v12-A21：天气（没配城市就完全跳过）"""
+
+    def test_parse(self):
+        from botv.life.weather import parse_j1
+        data = {"current_condition": [{"temp_C": "12", "weatherDesc": [{"value": "小雨"}]}]}
+        info = parse_j1(data)
+        self.assertEqual(info["temp"], 12)
+        self.assertEqual(info["desc"], "小雨")
+
+    def test_parse_bad(self):
+        from botv.life.weather import parse_j1
+        self.assertIsNone(parse_j1({}))
+        self.assertIsNone(parse_j1({"current_condition": []}))
+
+    def test_describe(self):
+        from botv.life.weather import describe
+        self.assertEqual(describe(None), "")
+        self.assertIn("12", describe({"temp": 12, "desc": "小雨"}))
+
+    def test_no_city_returns_none(self):
+        import asyncio
+        from botv.life.weather import current
+        import os
+        old = os.environ.pop("NAO_CITY", None)
+        try:
+            self.assertIsNone(asyncio.run(current()))
+        finally:
+            if old is not None:
+                os.environ["NAO_CITY"] = old
+
+
+class TestShare(unittest.TestCase):
+    """v12-A18：分享欲（偶尔补一句自己的事）"""
+
+    def setUp(self):
+        import botv.chat.handler as h
+        self.h = h
+        self.sent = []
+        self._orig = {}
+        self._patch("get_character_reply", self._fake_reply)
+        self._patch("send_short_reply", self._fake_send)
+        h._last_share_ts.clear()
+
+        import botv.infra.repo_memory as rm
+        self._orig["load_today_life"] = rm.load_today_life
+        rm.load_today_life = lambda: ["小咪把多肉推下去了"]
+
+    def tearDown(self):
+        import botv.infra.repo_memory as rm
+        for name, fn in self._orig.items():
+            setattr(self.h, name, fn) if hasattr(self.h, name) else None
+        if "load_today_life" in self._orig:
+            rm.load_today_life = self._orig["load_today_life"]
+        self.h._last_share_ts.clear()
+
+    def _patch(self, name, fn):
+        self._orig[name] = getattr(self.h, name)
+        setattr(self.h, name, fn)
+
+    async def _fake_reply(self, prompt, tid):
+        return "对了，" + prompt[-20:]
+
+    async def _fake_send(self, *args, **kwargs):
+        self.sent.append(args)
+
+    def _run(self, prob=0.0):
+        import asyncio
+        orig = self.h.random.random
+        self.h.random.random = lambda: prob
+        try:
+            return asyncio.run(self.h.maybe_share_something("1", None))
+        finally:
+            self.h.random.random = orig
+
+    def test_fires(self):
+        self.assertTrue(self._run())
+        self.assertEqual(len(self.sent), 1)
+
+    def test_probability(self):
+        self.assertFalse(self._run(prob=0.99))
+        self.assertEqual(self.sent, [])
+
+    def test_cooldown(self):
+        self.assertTrue(self._run())
+        self.assertFalse(self._run(), "40 分钟内不该再分享")
+
+    def test_no_life_event(self):
+        import botv.infra.repo_memory as rm
+        rm.load_today_life = lambda: []
+        self.assertFalse(self._run())
 
 
 if __name__ == "__main__":
