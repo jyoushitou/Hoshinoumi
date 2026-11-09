@@ -138,17 +138,30 @@ MIN_EVENTS = 1
 MAX_EVENTS = 3
 
 
+def pools():
+    """当前生效的模板表（v14-A2：优先角色卡）"""
+    try:
+        from ..ai.persona_loader import load_life
+        card = load_life()
+        if card:
+            return card
+    except Exception:
+        pass
+    return POOLS
+
+
 def total_templates():
     """模板总数（测试用）"""
-    return sum(len(t) for _w, t in POOLS)
+    return sum(len(t) for _w, t in pools())
 
 
 def _weighted_pick(n, rng):
     """先按类别权重抽一类，再在类内随机取一句；同一天不重复类别"""
+    source = pools()  # 只取一次：每次调用都会重新读盘，id() 会变
     picked = []
     used = set()
     for _ in range(n):
-        avail = [(w, texts) for w, texts in POOLS if id(texts) not in used]
+        avail = [(w, texts) for w, texts in source if id(texts) not in used]
         if not avail:
             break
         total = sum(w for w, _ in avail)

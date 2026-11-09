@@ -11,6 +11,7 @@ from ..log import log_system, log_api
 from ..core.http import create_http_session
 from .persona import LOCAL_SYSTEM_PROMPT, CODE_MODE_SYSTEM_PROMPT, build_available_tags
 from .tools import tool_prompt  # v13-U22
+from .persona_loader import load_text as load_card_text  # v14-A1
 
 _WEEKDAY = "一二三四五六日"
 
@@ -70,6 +71,13 @@ def load_personality_supplement():
             except Exception:
                 pass
 
+    # 1.5 尝试从角色卡加载（v14-A1）
+    card_sup = load_card_text("supplement.txt")
+    if card_sup:
+        PERSONALITY_SUPPLEMENT = card_sup
+        log_system("人设补充加载成功（角色卡）")
+        return
+
     # 2. 尝试从本地文件加载
     try:
         if os.path.exists(LOCAL_SUPPLEMENT_FILE):
@@ -93,7 +101,8 @@ def get_system_prompt():
     if cfg.CODE_MODE:
         prompt = CODE_MODE_SYSTEM_PROMPT
     else:
-        prompt = LOCAL_SYSTEM_PROMPT
+        # v14-A1：优先读角色卡的 prompt.txt，读不到用代码内置
+        prompt = load_card_text("prompt.txt") or LOCAL_SYSTEM_PROMPT
     if PERSONALITY_SUPPLEMENT:
         prompt = PERSONALITY_SUPPLEMENT + "\n\n" + prompt  # 补充文本放在前面
     prompt = prompt.replace("{available_tags}", available_tags)

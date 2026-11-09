@@ -2104,6 +2104,7 @@ class TestEnvironment(unittest.TestCase):
         "NAO_ASR_MODEL",
         "NAO_NO_AUTOINSTALL",
         "NAO_CITY",
+        "NAO_PERSONA",
     }
 
     @staticmethod
@@ -3024,6 +3025,56 @@ class TestV14Parsing(unittest.TestCase):
         cfg.CLIP_ENABLED = False
         text = format_clip_status()
         self.assertIn("停用", text)
+
+
+class TestPersonaCard(unittest.TestCase):
+    """v14-A1/A2：角色卡加载与回退"""
+
+    def test_card_loaded(self):
+        from botv.ai.persona_loader import card_dir, describe
+        self.assertIsNotNone(card_dir())
+        self.assertEqual(describe(), "nao")
+
+    def test_prompt_from_card(self):
+        from botv.ai.persona_loader import load_text
+        text = load_text("prompt.txt")
+        self.assertTrue(text)
+        self.assertIn("{now}", text, "占位符必须保留")
+
+    def test_life_from_card(self):
+        from botv.ai.persona_loader import load_life
+        pools = load_life()
+        self.assertTrue(pools)
+        self.assertGreaterEqual(sum(len(t) for _w, t in pools), 100)
+
+    def test_state_from_card(self):
+        from botv.ai.persona_loader import load_state_base
+        base = load_state_base()
+        self.assertIn("mood", base)
+
+    def test_missing_file_returns_none(self):
+        from botv.ai.persona_loader import load_text
+        self.assertIsNone(load_text("no_such_file.txt"))
+
+    def test_env_selects_card(self):
+        import os
+        from botv.ai import persona_loader as L
+        old = os.environ.get("NAO_PERSONA")
+        os.environ["NAO_PERSONA"] = "not_exist_card"
+        try:
+            self.assertEqual(L.describe(), "nao", "找不到就回退默认卡")
+        finally:
+            if old is None:
+                os.environ.pop("NAO_PERSONA", None)
+            else:
+                os.environ["NAO_PERSONA"] = old
+
+    def test_prompt_uses_card(self):
+        from botv.ai.prompt import get_system_prompt
+        from botv.core import state as cfg
+        cfg.CODE_MODE = False
+        text = get_system_prompt()
+        self.assertIn("友利奈绪", text)
 
 
 if __name__ == "__main__":

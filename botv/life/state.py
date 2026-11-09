@@ -11,6 +11,15 @@ from ..config import CST
 
 BASE = {"mood": 0.10, "energy": 0.70, "lonely": 0.15}  # 基线（每天回到这里）
 CLAMP = {"mood": (-1.0, 1.0), "energy": (0.0, 1.0), "lonely": (0.0, 1.0)}
+# v14-A2：基线可由角色卡覆盖（读不到就用上面的内置值）
+try:
+    from ..ai.persona_loader import load_state_base as _load_base
+    _card_base = _load_base()
+    if _card_base:
+        BASE = {k: float(_card_base.get(k, BASE[k])) for k in BASE}
+except Exception:
+    pass
+
 K = 0.15          # 每小时向基线回归的比例
 ALONE_PER_HOUR = 0.05   # 没人说话，孤独每小时 +5%
 TALK_RELIEF = 0.06      # 每收到一条消息，孤独 -6%
