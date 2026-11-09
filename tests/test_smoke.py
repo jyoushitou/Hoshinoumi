@@ -298,7 +298,7 @@ class TestImagePath(unittest.TestCase):
     def test_relative_resolved_from_project_root(self):
         import os
         from botv.utils import resolve_image_path
-        p = resolve_image_path("README.md")  # 项目根下确定存在的文件
+        p = resolve_image_path("botv/__init__.py")  # 项目根下确定存在的文件（大小写无关）
         self.assertIsNotNone(p)
         self.assertTrue(os.path.isabs(p))
         self.assertTrue(os.path.exists(p))
@@ -310,7 +310,7 @@ class TestImagePath(unittest.TestCase):
     def test_absolute_existing(self):
         import os
         from botv.utils import resolve_image_path
-        p = resolve_image_path(os.path.abspath("README.md"))
+        p = resolve_image_path(os.path.abspath("botv/__init__.py"))
         self.assertIsNotNone(p)
 
 
