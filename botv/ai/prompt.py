@@ -10,6 +10,7 @@ from ..config import CST  # 东八区
 from ..log import log_system, log_api
 from ..core.http import create_http_session
 from .persona import LOCAL_SYSTEM_PROMPT, CODE_MODE_SYSTEM_PROMPT, build_available_tags
+from .tools import tool_prompt  # v13-U22
 
 _WEEKDAY = "一二三四五六日"
 
@@ -95,4 +96,7 @@ def get_system_prompt():
         prompt = LOCAL_SYSTEM_PROMPT
     if PERSONALITY_SUPPLEMENT:
         prompt = PERSONALITY_SUPPLEMENT + "\n\n" + prompt  # 补充文本放在前面
-    return prompt.replace("{available_tags}", available_tags)
+    prompt = prompt.replace("{available_tags}", available_tags)
+    if not cfg.CODE_MODE:  # v13-U22：普通模式才给工具
+        prompt += "\n\n" + tool_prompt()
+    return prompt

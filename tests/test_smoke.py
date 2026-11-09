@@ -171,7 +171,7 @@ class TestCommandRegistry(unittest.TestCase):
         "acg", "apikeys", "clear", "clip", "code", "db", "diary", "event",
         "exit", "help", "img", "keywords", "log", "memory", "ping", "quit",
         "reload", "say", "sayg", "set", "status", "sticker", "task",
-        "uptime", "usage", "profile", "todo", "voice", "memorybook",
+        "uptime", "usage", "profile", "todo", "voice", "memorybook", "growth",
     }
 
     def setUp(self):
@@ -2698,6 +2698,219 @@ class TestRapport(unittest.TestCase):
     def test_tier_text_present(self):
         self.assertIn("亲近", self._describe(0.8))
         self.assertIn("陌生", self._describe(0.05))
+
+
+class TestFriction(unittest.TestCase):
+    """v13-U20：期待 → 失落 → 冷战 → 和好（有上限）"""
+
+    def setUp(self):
+        from botv.core import state as cfg
+        self.cfg = cfg
+        cfg.friction_states.clear()
+        import botv.infra.repo_memory as rm
+        self.rm = rm
+        self._orig = (rm.load_friction, rm.save_friction)
+        self.store = {}
+        rm.load_friction = lambda tid: self.store.get(tid, "")
+        rm.save_friction = lambda tid, p: self.store.__setitem__(tid, p) or True
+
+    def tearDown(self):
+        self.rm.load_friction, self.rm.save_friction = self._orig
+        self.cfg.friction_states.clear()
+
+    def _t(self, n=0):
+        from datetime import datetime, timedelta
+        from botv.config import CST
+        return datetime(2026, 11, 9, 12, tzinfo=CST) + timedelta(hours=n)
+
+    def test_expectation_and_letdown(self):
+        from botv.life import friction as F
+        F.note_expectation("1", "早点睡吧", self._t())
+        self.assertEqual(F.phase("1", self._t()), "waiting")
+        F.refresh("1", now=self._t(9))  # 超过 8 小时
+        self.assertEqual(F.phase("1", self._t(9)), "letdown")
+
+    def test_three_letdowns_start_cold_war(self):
+        from botv.life import friction as F
+        st = F.load("1")
+        st["disappoint"] = 3
+        F.save("1")
+        F.refresh("1", now=self._t())
+        self.assertEqual(F.phase("1", self._t()), "cold")
+
+    def test_cold_war_auto_ends_in_a_day(self):
+        from botv.life import friction as F
+        st = F.load("1")
+        st["disappoint"] = 3
+        st["cold_ts"] = self._t().timestamp()
+        F.save("1")
+        self.assertEqual(F.phase("1", self._t(1)), "cold")
+        F.refresh("1", now=self._t(25))
+        self.assertEqual(F.phase("1", self._t(25)), "calm", "24 小时后必须自动和好")
+
+    def test_apologize_ends_it(self):
+        from botv.life import friction as F
+        st = F.load("1")
+        st["disappoint"] = 3
+        st["cold_ts"] = self._t().timestamp()
+        F.save("1")
+        self.assertTrue(F.apologize("1"))
+        self.assertEqual(F.phase("1"), "calm")
+
+    def test_three_messages_end_cold_war(self):
+        from botv.life import friction as F
+        st = F.load("1")
+        st["disappoint"] = 3
+        st["cold_ts"] = self._t().timestamp()
+        F.save("1")
+        for _ in range(3):
+            F.on_user_message("1", self._t())
+        self.assertEqual(F.phase("1"), "calm")
+
+    def test_grudge_weekly_limit(self):
+        from botv.life import friction as F
+        self.assertTrue(F.grudge_allowed("1", self._t()))
+        self.assertFalse(F.grudge_allowed("1", self._t(24)), "一周只能一次")
+        self.assertTrue(F.grudge_allowed("1", self._t(24 * 8)))
+
+    def test_prompt_line_cold(self):
+        from botv.life import friction as F
+        st = F.load("1")
+        st["cold_ts"] = self._t().timestamp()
+        F.save("1")
+        self.assertIn("生闷气", F.prompt_line("1", self._t()))
+
+    def test_trail_off(self):
+        from botv.life.friction import maybe_trail_off
+
+        class R:
+            def __init__(self, v):
+                self.v = v
+
+            def random(self):
+                return self.v
+
+        text = "今天好累\n不想动\n（趴下）"
+        out = maybe_trail_off(text, R(0.0))
+        self.assertTrue(out.endswith("算了。"))
+        self.assertNotIn("（趴下）", out)
+        self.assertEqual(maybe_trail_off(text, R(0.9)), text)
+        self.assertEqual(maybe_trail_off("只有一句", R(0.0)), "只有一句")
+
+    def test_is_sorry(self):
+        from botv.life.friction import is_sorry
+        self.assertTrue(is_sorry("对不起嘛"))
+        self.assertFalse(is_sorry("在吗"))
+
+
+class TestGrowth(unittest.TestCase):
+    """v13-U21：成长轨迹 / 称呼演化 / 管你 / 惊喜"""
+
+    def test_growth_registered(self):
+        import botv.commands  # noqa: F401
+        from botv.cmd import registry
+        self.assertIn("growth", registry.COMMANDS)
+
+    def test_addressing_changes_with_tier(self):
+        import botv.life.relation as R
+        orig = R.get
+        try:
+            R.get = lambda tid: 0.9
+            close = R.addressing("1")
+            R.get = lambda tid: 0.05
+            stranger = R.addressing("1")
+        finally:
+            R.get = orig
+        self.assertIn("笨蛋", close)
+        self.assertNotIn("笨蛋", stranger)
+
+    def test_surprise_branch(self):
+        import asyncio
+        from datetime import datetime
+        import botv.schedule.runner as R
+        import botv.life.impulse as IMP
+        from botv.core import state as cfg
+        from botv.config import CST
+
+        prompts, sent = [], []
+        orig = {}
+        def patch(name, fn):
+            orig[name] = getattr(R, name)
+            setattr(R, name, fn)
+
+        async def fake_reply(p, tid):
+            prompts.append(p)
+            return "哼"
+
+        async def fake_send(*a, **k):
+            sent.append(a)
+
+        patch("load_today_life", lambda: [])
+        patch("get_character_reply", fake_reply)
+        patch("send_short_reply", fake_send)
+        patch("note_proactive", lambda: None)
+        orig_should = IMP.should_chat
+        IMP.should_chat = lambda **kw: (True, "ok", 0.3)
+        orig_random = R.random.random
+        R.random.random = lambda: 0.0   # 分享生活跳过 -> 惊喜命中
+        cfg.triggered_today.clear()
+        try:
+            ok = asyncio.run(R.maybe_chat(datetime.now(CST).replace(minute=0, second=0)))
+        finally:
+            for name, fn in orig.items():
+                setattr(R, name, fn)
+            IMP.should_chat = orig_should
+            R.random.random = orig_random
+            cfg.triggered_today.clear()
+        self.assertTrue(ok)
+        self.assertTrue(prompts, "应该有提示词")
+        self.assertIn("逗他", prompts[0], "走的是惊喜分支")
+
+
+class TestTools(unittest.TestCase):
+    """v13-U22：工具调用协议"""
+
+    def test_parse_call(self):
+        from botv.ai.tools import parse_call
+        name, arg, body = parse_call("我查一下\n@tool: recall(答辩)\n稍等")
+        self.assertEqual(name, "recall")
+        self.assertEqual(arg, "答辩")
+        self.assertNotIn("@tool", body)
+
+    def test_parse_no_call(self):
+        from botv.ai.tools import parse_call
+        name, arg, body = parse_call("今天天气不错")
+        self.assertIsNone(name)
+        self.assertEqual(body, "今天天气不错")
+
+    def test_parse_unknown(self):
+        from botv.ai.tools import parse_call
+        name, _arg, _body = parse_call("@tool: fly(天空)")
+        self.assertEqual(name, "fly")
+
+    def test_tool_prompt_lists_tools(self):
+        from botv.ai.tools import tool_prompt, TOOLS
+        text = tool_prompt()
+        for name in TOOLS:
+            self.assertIn(name, text)
+
+    def test_unknown_tool(self):
+        import asyncio
+        from botv.ai.tools import run_tool
+        out = asyncio.run(run_tool("fly", "天空", "1"))
+        self.assertIn("没有这个工具", out)
+
+    def test_empty_args(self):
+        import asyncio
+        from botv.ai.tools import run_tool
+        out = asyncio.run(run_tool("remember", "", "1"))
+        self.assertIn("没给内容", out)
+
+    def test_system_prompt_has_tools(self):
+        from botv.ai.prompt import get_system_prompt
+        from botv.core import state as cfg
+        cfg.CODE_MODE = False
+        self.assertIn("@tool:", get_system_prompt())
 
 
 if __name__ == "__main__":

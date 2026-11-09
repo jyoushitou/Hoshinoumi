@@ -28,6 +28,7 @@ from ..life.impulse import note_user_message  # v10-U9
 from ..life import pending as life_pending  # v10-U9b
 from ..life import agenda as life_agenda  # v10-U10
 from ..life import habit as life_habit  # v12-A17
+from ..life import friction as life_friction  # v13-U20
 from .notice import handle_notice  # v12-A16
 
 # ===================== 群聊节奏（v6-E29 / v10） =====================
@@ -231,6 +232,12 @@ async def websocket_handle_qq(ws):
                 life_habit.learn(uid, text)  # v12-A17：学一点他的口头禅
             except Exception:
                 pass
+            try:  # v13：他说软话就哄好，否则只记录和好进度
+                if life_friction.is_sorry(text):
+                    life_friction.apologize(uid)
+                life_friction.on_user_message(uid)
+            except Exception:
+                pass
             try:
                 for it in life_pending.detect(text):  # v10-U9b：记下承诺/时间锚点
                     life_pending.add([it])
@@ -304,6 +311,16 @@ async def websocket_handle_qq(ws):
                 delay = reply_delay()  # 按时段 + 随机
                 log_api(f"[延迟] {delay:.1f} 秒后回复 {target}")
                 await asyncio.sleep(delay)
+                # v13-G47：偶尔欲言又止
+                try:
+                    modified = life_friction.maybe_trail_off(reply_text)
+                    if modified != reply_text:
+                        log_api("[摩擦] 欲言又止")
+                        reply_text = modified
+                        pending = ("reply", target, reply_text, is_group)
+                except Exception:
+                    pass
+
                 # v12-A13：小概率先「手滑」一次
                 if not is_group:
                     try:

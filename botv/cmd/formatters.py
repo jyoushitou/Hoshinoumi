@@ -39,6 +39,7 @@ def build_cmd_help():
         "!todo [文字]   - 查看日程；!todo 周五下午三点 面试 添加\n"
         "!voice <文本>  - 合成一条语音（需要 edge-tts）\n"
         "!memorybook    - 记忆本：认识多久、关系、口头禅\n"
+        "!growth        - 成长轨迹：认识天数、关系进度、一起经历过多少事\n"
         "!event <uid>   - 查看指定对象的事件记忆\n"
         "!clear <uid>   - 清除指定对象的对话记忆\n"
         "!log <行数>     - 查看最近日志（默认20行）\n"

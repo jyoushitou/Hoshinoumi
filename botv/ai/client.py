@@ -22,9 +22,10 @@ from .prompt import now_text  # 当前时间描述（v5-F7）
 from ..chat.timing import tone_hint  # 时段语气提示（v6-A20）
 from ..life.state import current as life_current, describe as describe_state, touch_talk  # v9-U4
 from ..life.events import ensure_daily_life  # v9-U7
-from ..life.relation import describe as relation_desc, bump as relation_bump  # v10-U8
+from ..life.relation import describe as relation_desc, bump as relation_bump, addressing  # v10-U8 / v13-G54
 from ..life.habit import phrases_for, describe as habit_line  # v12-A17
 from ..life.milestone import milestone_text  # v12-G38
+from ..life import friction as life_friction  # v13-U20
 from ..infra.repo_profile import build_profile_text  # 对象画像（v7-B9）
 from ..memory.inject import trim, BUDGET  # 分层预算（v8-B13）
 from ..memory.timeline import build_timeline_text  # 时间线注入（v8-B16）
@@ -208,6 +209,15 @@ async def get_character_reply(txt, tid, current_kws=None):
     except Exception:
         tone_line = state_line or ""
 
+    # v13-U20：她现在在不在闹别扭
+    try:
+        life_friction.refresh(tid)
+        _f = life_friction.prompt_line(tid)
+        if _f:
+            tone_line += " " + _f
+    except Exception:
+        pass
+
     # v12-A21：知道外面什么天气（没配 NAO_CITY 就跳过）
     try:
         from ..life.weather import current as weather_now, describe as weather_desc
@@ -229,7 +239,7 @@ async def get_character_reply(txt, tid, current_kws=None):
         events=events,
         profile=trim(_profile_with_habit(tid), BUDGET["profile"]),  # v7-B9 画像 + v12 口头禅
         timeline=build_timeline_text(tid),  # v8-B16：最近 7 天
-        relation=relation_desc(tid),  # v10-U8：你跟他什么关系
+        relation=(relation_desc(tid) + ("｜" + addressing(tid) if addressing(tid) else "")),  # v10-U8 / v13-G54
         master_qq=MASTER_QQ,
         now=now_text(),  # v5-F7：让她知道现在几点
         tone=tone_line,  # v6-A20 时段 + v9-U4 状态
@@ -240,6 +250,10 @@ async def get_character_reply(txt, tid, current_kws=None):
     if any(w in (txt or "") for w in ("上次", "之前", "记得", "说过", "那天", "当时", "你说过")):
         user_content += "\n（他提到了过去的事。如果你记忆里确实没有，就直说记不太清，别硬编。）"
 
+    # v13-G55：他糟蹋身体的时候，你会管
+    if any(w in (txt or "") for w in ("熬夜", "通宵", "没吃饭", "不吃饭", "不吃早饭", "又没睡", "失眠")):
+        user_content += "\n（他刚说了伤身体的事。你可以管他一句，像真的在意，但别唠叨、别说教。）"
+
     msgs = [{"role":"system","content":sys_p}, {"role":"user","content":user_content}]  # 构建消息列表
     from ..core.locks import model_semaphore
     async with model_semaphore():  # v6-E26：最多 5 个模型请求同时在飞
@@ -247,6 +261,22 @@ async def get_character_reply(txt, tid, current_kws=None):
         if not r:  # DeepSeek无回复
             log_api("[get_character_reply] DeepSeek无回复，转豆包")  # 日志记录降级
             r = await call_doubao(msgs)  # 降级到豆包
+
+    # v13-U22：她自己决定要不要用工具（最多一轮）
+    if r and not isinstance(r, Fallback):
+        try:
+            from .tools import parse_call, run_tool
+            _name, _arg, _body = parse_call(r)
+            if _name:
+                _result = await run_tool(_name, _arg, tid)
+                msgs.append({"role": "assistant", "content": r})
+                msgs.append({"role": "user",
+                             "content": f"（工具 {_name} 返回：{_result}）"
+                                        f"现在用正常的话回他，不要再输出 @tool。"})
+                _r2 = await call_deepseek(msgs) or await call_doubao(msgs)
+                r = _r2 or _body or r
+        except Exception as e:
+            log_api(f"[工具] 调用失败: {e}")
 
     # v9-U4：她真的回话了，算一次"被陪着"——缓解孤独
     if r and not isinstance(r, Fallback):

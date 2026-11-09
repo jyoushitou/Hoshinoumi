@@ -127,3 +127,39 @@ async def cmd_memorybook(ctx):
         lines.append("  记忆读取失败")
 
     return "\n".join(lines)
+@command("growth")
+async def cmd_growth(ctx):
+    """!growth - 成长轨迹：认识多久、关系、口头禅、一起经历过多少事"""
+    from ..config import MASTER_QQ
+    from ..life import milestone, relation, habit
+    from ..infra.repo_memory import load_memories_for_search
+
+    tid = ctx.args[0] if ctx.args else str(MASTER_QQ)
+    lines = ["🌱 成长轨迹"]
+
+    try:
+        lines.append(f"  认识：第 {milestone.days_together(tid)} 天")
+    except Exception:
+        pass
+
+    try:
+        aff = relation.get(tid)
+        name, _desc = relation.tier_of(aff)
+        bar = "█" * int(aff * 10) + "░" * (10 - int(aff * 10))
+        lines.append(f"  关系：{name}  {bar}")
+    except Exception:
+        pass
+
+    try:
+        phrases = habit.phrases_for(tid)
+        lines.append(f"  学到的口头禅：{'、'.join(phrases) if phrases else '还没有'}")
+    except Exception:
+        pass
+
+    try:
+        rows = load_memories_for_search(tid, limit=300)
+        lines.append(f"  一起经历过：{len(rows)} 件事")
+    except Exception:
+        pass
+
+    return "\n".join(lines)

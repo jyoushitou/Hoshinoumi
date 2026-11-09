@@ -123,6 +123,16 @@ async def maybe_chat(now):
             log_system(f"主动闲聊（分享生活: {seed[:20]}）")
             return True
 
+        # v13-G46：低频惊喜——没头没尾地逗他一下
+        if random.random() < 0.05:
+            log_system("主动闲聊（惊喜）")
+            rep = await get_character_reply(
+                "（今天心情不错，突然想逗他一下：说一句没头没尾的怪话，"
+                "或者突然夸他一句。别解释为什么）", str(MASTER_QQ))
+            await send_short_reply(MASTER_QQ, rep, cfg.active_ws_qq, MASTER_QQ)
+            note_proactive()
+            return True
+
         # v12-G52：有时拿一件旧事当由头，像突然想起来
         if random.random() < 0.4:
             try:

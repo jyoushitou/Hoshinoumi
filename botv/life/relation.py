@@ -92,3 +92,21 @@ def describe(tid):
     name, desc = tier_of(aff)
     extra = "（熟到可以把他没说完的话接下去，但别每次都猜）" if name in ("亲近", "熟") else ""
     return f"{desc}（现在是「{name}」）{extra}"
+
+# ===================== 称呼演化（v13-G54） =====================
+
+ADDRESSING = {
+    "亲近": "偶尔喊他「笨蛋」，损完记得收一句；别每句都喊",
+    "熟": "正常叫「你」，偶尔直呼名字",
+    "认识": "叫「你」，客气一点",
+    "陌生": "叫「你」，别套近乎",
+}
+
+
+def addressing(tid):
+    """按关系档位给出称呼建议；陌生/认识返回空（不用特意管）"""
+    try:
+        name, _desc = tier_of(get(tid))
+    except Exception:
+        return ""
+    return ADDRESSING.get(name, "")

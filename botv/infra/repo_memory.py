@@ -166,6 +166,29 @@ def load_old_events(tid, days=7, limit=5):
     return list(c.fetchall())
 
 
+def load_friction(tid):
+    """读摩擦状态（v13-U20）"""
+    c = get_cursor()
+    c.execute(
+        "SELECT event_summary FROM events WHERE target_id=%s AND kind='friction' ORDER BY id DESC LIMIT 1",
+        (str(tid),),
+    )
+    row = c.fetchone()
+    return (row["event_summary"] or "") if row else ""
+
+
+def save_friction(tid, payload):
+    """覆盖写摩擦状态"""
+    c = get_cursor()
+    c.execute("DELETE FROM events WHERE target_id=%s AND kind='friction'", (str(tid),))
+    c.execute(
+        "INSERT INTO events(target_id, event_summary, tags, kind, dedupe_key, last_seen) "
+        "VALUES(%s,%s,'','friction',%s,NOW())",
+        (str(tid), payload, dedupe_key(str(tid), "friction", "friction")),
+    )
+    c.connection.commit()
+
+
 def load_habit(tid):
     """读某人的口头禅计数（v12-A17）"""
     c = get_cursor()
