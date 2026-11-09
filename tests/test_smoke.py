@@ -1324,6 +1324,10 @@ class TestLifeEvents(unittest.TestCase):
             for t in generate():
                 self.assertIn(t, all_texts)
 
+    def test_template_count(self):
+        from botv.life.events import total_templates
+        self.assertGreaterEqual(total_templates(), 100, "模板至少要 100 条")
+
     def test_grief_pool_is_low_weight(self):
         from botv.life.events import POOLS
         weights = [w for w, _pool in POOLS]
