@@ -38,7 +38,17 @@ def add_target_memory(tid, user_msg, bot_msg, img_keywords=None, refined_keyword
         log_system(f"记忆: 跳过兜底文案，不入库 (tid={tid})")
         return
     add_user_memory_to_db(tid, user_msg, bot_msg)  # 写入数据库
-    cfg.user_memory_pool.setdefault(tid, deque(maxlen=MAX_USER_ROUND)).append([user_msg, bot_msg])  # 更新内存池
+    pool = cfg.user_memory_pool.setdefault(tid, deque(maxlen=MAX_USER_ROUND))
+    if len(pool) >= MAX_USER_ROUND:  # v14.1-D3：满了就把最旧一轮挪进待浓缩缓冲
+        try:
+            old = pool.popleft()
+            buf = cfg.digest_pending.setdefault(tid, [])
+            buf.append(old)
+            if len(buf) > 100:  # 防止无限堆积
+                del buf[:50]
+        except Exception:
+            pass
+    pool.append([user_msg, bot_msg])  # 更新内存池
     
     # 存储事件（带标签）
     if event_summary:  # 有事件摘要
@@ -68,7 +78,7 @@ def build_memory_context(tid, current_kws=None, query=None):
 
     rounds = []
     if tid in cfg.user_memory_pool:  # 该用户有记忆
-        for u, b in list(cfg.user_memory_pool[tid])[-12:]:  # 最多取 12 轮，按预算再砍
+        for u, b in list(cfg.user_memory_pool[tid])[-30:]:  # v14.1：最多取 30 轮，按预算再砍
             rounds.append(f"用户:{u}\n奈绪:{b}")
     dia, _ = cap_lines(rounds, BUDGET["dialogue"]) if rounds else ("无", 0)
 

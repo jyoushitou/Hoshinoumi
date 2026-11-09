@@ -279,7 +279,7 @@ mood_target = BASE - 0.6 * lonely + diary_bias
 ## 测试与运维
 
 ```bash
-python3 -m unittest discover -s tests    # 303 条
+python3 -m unittest discover -s tests    # 319 条
 python3 scripts/preflight.py             # 13 项自检
 ```
 

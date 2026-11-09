@@ -55,6 +55,8 @@ friction_states = {}  # {target_id: dict} 摩擦状态（v13-U20）
 proactive_adjust = 1.0   # 主动频率自适应系数（v14-B2，0.5~1.0）
 proactive_pending = False  # 最近一次主动是否还没被回应
 persona_name = ''  # 运行时切换的角色卡（v14-A3）
+bot_states = {}  # {target_id: {"s": state, "ts": ts}} 按人分开的状态（v14.1-D1）
+digest_pending = {}  # {target_id: [[用户, 回复], ...]} 溢出 30 轮的旧对话（v14.1-D3）
 
 # ===================== 主动消息（v10-U9） =====================
 last_user_msg_ts = 0.0      # 最近一次收到消息的时间

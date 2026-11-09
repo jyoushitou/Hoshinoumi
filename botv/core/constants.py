@@ -31,7 +31,7 @@ STICKER_FACE_IDS = [14, 91, 99, 176, 179, 183, 196, 202, 211]  # QQ表情ID列�
 STICKER_ARCHIVE_DIR = "sticker_archive"  # 旧表情包存档目录
 MAX_USER_STICKERS = 30  # 每个用户最大收藏表情包数
 IMAGE_DIR = "images"  # 新图片存储目录
-MAX_USER_ROUND = 15  # 每个用户最大对话记忆轮数
+MAX_USER_ROUND = 30  # 每个用户最大对话记忆轮数
 MAX_GLOBAL_KEY = 40  # 全局关键词最大数量
 
 DB_CONFIG = {"host": "192.168.0.50", "port": 3306, "user": "TomoriNaoBot",  # MySQL数据库配置

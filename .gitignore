@@ -10,3 +10,5 @@ __pycache__/
 .test-lock-*
 .botv.lock.pid
 *.pyc
+data/digests/
+.test-digest*

@@ -151,21 +151,21 @@ def from_json(text, fallback=None):
     return clamp(base)
 
 
-def load():
-    """从数据库读状态；读不到就用默认值"""
+def load(tid=None):
+    """读某个对象的状态；不传就是机器人自己（v14.1-D1：按人分开）"""
     try:
-        from ..infra.repo_memory import load_state_json
-        raw = load_state_json()
+        from ..infra.repo_memory import load_state_json, STATE_TARGET
+        raw = load_state_json(str(tid) if tid else STATE_TARGET)
         return from_json(raw) if raw else default_state()
     except Exception:
         return default_state()
 
 
-def save(state):
-    """写回数据库（失败不影响回复）"""
+def save(state, tid=None):
+    """写回某个对象的状态（失败不影响回复）"""
     try:
-        from ..infra.repo_memory import save_state_json
-        save_state_json(to_json(state))
+        from ..infra.repo_memory import save_state_json, STATE_TARGET
+        save_state_json(to_json(state), str(tid) if tid else STATE_TARGET)
         return True
     except Exception:
         return False
@@ -176,34 +176,46 @@ def save(state):
 TICK_MIN_HOURS = 0.2  # 至少过 12 分钟才推进，避免频繁写库
 
 
-def current(now=None):
-    """取当前状态：按流逝的时间推进，必要时落库"""
+def current(now=None, tid=None):
+    """取某个对象的当前状态（v14.1-D1：按人分开，不传就是机器人自己）"""
     from ..core import state as cfg
     now = now or datetime.now(CST)
-    if not getattr(cfg, "bot_state", None):
-        cfg.bot_state = load()
-        cfg.bot_state_ts = _time.time()
-    elapsed = max(0.0, (_time.time() - getattr(cfg, "bot_state_ts", 0.0)) / 3600.0)
+    key = str(tid) if tid else "__self__"
+    entries = getattr(cfg, "bot_states", None)
+    if entries is None:
+        entries = {}
+        cfg.bot_states = entries
+
+    entry = entries.get(key)
+    if not entry:
+        entry = {"s": load(tid), "ts": _time.time()}
+        entries[key] = entry
+
+    elapsed = max(0.0, (_time.time() - entry["ts"]) / 3600.0)
     if elapsed >= TICK_MIN_HOURS:
-        cfg.bot_state = tick(cfg.bot_state, elapsed, now)
-        cfg.bot_state_ts = _time.time()
-        save(cfg.bot_state)
-    return cfg.bot_state
+        entry["s"] = tick(entry["s"], elapsed, now)
+        entry["ts"] = _time.time()
+        save(entry["s"], tid)
+    return entry["s"]
 
 
-def touch_talk(warmth=1.0):
-    """聊了一句：缓解孤独，并落库"""
-    from ..core import state as cfg
-    s = current()
-    cfg.bot_state = on_talk(s, warmth)
-    save(cfg.bot_state)
-    return cfg.bot_state
+def touch_talk(warmth=1.0, tid=None):
+    """聊了一句：缓解孤独，并落库（同时更新机器人自己的状态）"""
+    s = current(tid=tid)
+    new_s = on_talk(s, warmth)
+    save(new_s, tid)
+    if tid:  # 主动消息用的是「她自己」的状态，也要跟着变
+        g = current(tid=None)
+        save(on_talk(g, warmth), None)
+    return new_s
 
 
-def touch_ignored(hours=1.0):
-    """被晾着：孤独与烦躁上升"""
-    from ..core import state as cfg
-    s = current()
-    cfg.bot_state = on_ignored(s, hours)
-    save(cfg.bot_state)
-    return cfg.bot_state
+def touch_ignored(hours=1.0, tid=None):
+    """被晾着：孤独与烦躁上升（同时更新机器人自己的状态）"""
+    s = current(tid=tid)
+    new_s = on_ignored(s, hours)
+    save(new_s, tid)
+    if tid:
+        g = current(tid=None)
+        save(on_ignored(g, hours), None)
+    return new_s

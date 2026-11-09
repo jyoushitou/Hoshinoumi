@@ -26,6 +26,7 @@ from ..life.relation import describe as relation_desc, bump as relation_bump, ad
 from ..life.habit import phrases_for, describe as habit_line  # v12-A17
 from ..life.milestone import milestone_text  # v12-G38
 from ..life import friction as life_friction  # v13-U20
+from ..life import digest as life_digest  # v14.1-D3
 from ..infra.repo_profile import build_profile_text  # 对象画像（v7-B9）
 from ..memory.inject import trim, BUDGET  # 分层预算（v8-B13）
 from ..memory.timeline import build_timeline_text  # 时间线注入（v8-B16）
@@ -193,6 +194,14 @@ def _profile_with_habit(tid):
     return f"{base}｜{tail}"
 
 
+async def _digest_summary(convo):
+    """把一段对话压成一行事实（v14.1-D3）"""
+    msgs = [{"role": "system",
+             "content": "把下面这段对话浓缩成一行事实，不超过30字，只写发生了什么，"
+                        "不评价、不加引号、不写『他们』。"},
+            {"role": "user", "content": convo}]
+    return await call_deepseek(msgs, max_tokens=60) or await call_doubao(msgs, max_tokens=60)
+
 async def get_character_reply(txt, tid, current_kws=None):
     """核心函数：获取角色回复，优先DeepSeek，失败时降级到豆包"""
     log_api(f"[get_character_reply] 收到消息: {txt[:40]}, tid={tid}, kws={current_kws}")  # 日志记录输入
@@ -201,7 +210,7 @@ async def get_character_reply(txt, tid, current_kws=None):
     cur_kw_str = "、".join(current_kws) if current_kws else "无"  # 当前话题关键词（顿号分隔）
     # v9-U4：她的真实状态 + 当前时段，拼成一句"她现在什么感觉"
     try:
-        state_line = describe_state(life_current())
+        state_line = describe_state(life_current(tid=tid))
     except Exception:
         state_line = ""
     try:
@@ -237,6 +246,7 @@ async def get_character_reply(txt, tid, current_kws=None):
         global_keywords=kw,
         current_dialogue=dia,
         events=events,
+        digest=life_digest.describe(tid),  # v14.1-D3：浓缩记录
         profile=trim(_profile_with_habit(tid), BUDGET["profile"]),  # v7-B9 画像 + v12 口头禅
         timeline=build_timeline_text(tid),  # v8-B16：最近 7 天
         relation=(relation_desc(tid) + ("｜" + addressing(tid) if addressing(tid) else "")),  # v10-U8 / v13-G54
@@ -282,8 +292,12 @@ async def get_character_reply(txt, tid, current_kws=None):
     # v9-U4：她真的回话了，算一次"被陪着"——缓解孤独
     if r and not isinstance(r, Fallback):
         try:
-            touch_talk()
+            touch_talk(tid=tid)
             relation_bump(tid)  # v10-U8：聊一轮，近一点
+        except Exception:
+            pass
+        try:  # v14.1-D3：超过 30 轮后，把溢出的旧对话浓缩成一行
+            await life_digest.maybe_condense(tid, _digest_summary)
         except Exception:
             pass
 

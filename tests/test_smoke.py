@@ -1294,7 +1294,7 @@ class TestStateInPrompt(unittest.TestCase):
                 client.life_current, client.touch_talk)
         client.call_deepseek = fake_ds
         mem.load_events_from_db = lambda *a, **k: []
-        client.life_current = lambda: {"mood": -0.3, "energy": 0.15, "lonely": 0.9}
+        client.life_current = lambda *a, **k: {"mood": -0.3, "energy": 0.15, "lonely": 0.9}
         client.touch_talk = lambda: None
         locks._model_sem = None
         try:
@@ -3118,6 +3118,134 @@ class TestPersonaSwitch(unittest.TestCase):
         import botv.ai.prompt as P
         reload_personality_supplement()
         self.assertTrue(P.PERSONALITY_SUPPLEMENT)
+
+
+class TestDigest(unittest.TestCase):
+    """v14.1-D3：会话浓缩成她自己的记录"""
+
+    def setUp(self):
+        import os
+        import botv.life.digest as D
+        self.D = D
+        self.orig_dir = D.DIGEST_DIR
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        self.tmp = os.path.join(root, ".test-digest")
+        os.makedirs(self.tmp, exist_ok=True)
+        D.DIGEST_DIR = self.tmp
+
+    def tearDown(self):
+        import shutil
+        self.D.DIGEST_DIR = self.orig_dir
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def test_append_and_load(self):
+        self.assertTrue(self.D.append("u1", "聊了加班的烦心事"))
+        text = self.D.load("u1")
+        self.assertIn("加班的烦心事", text)
+
+    def test_line_truncated(self):
+        self.D.append("u1", "啊" * 200)
+        line = self.D.load("u1").splitlines()[-1]
+        self.assertLessEqual(len(line), 6 + self.D.MAX_LINE_CHARS)
+
+    def test_max_lines(self):
+        for i in range(30):
+            self.D.append("u1", f"第{i}件事")
+        lines = self.D.load("u1").splitlines()
+        self.assertEqual(len(lines), self.D.MAX_LINES)
+        self.assertIn("第29件事", lines[-1])
+        self.assertNotIn("第0件事", "\n".join(lines))
+
+    def test_compact_fallback(self):
+        rounds = [["今天加班到十点", "累就早点睡"], ["猫又把杯子打碎了", "它故意的吧"]]
+        line = self.D.compact_from_rounds(rounds)
+        self.assertTrue(line)
+
+    def test_update_without_ai_uses_fallback(self):
+        import asyncio
+        rounds = [["今天加班", "累就别撑"] for _ in range(10)]
+        ok = asyncio.run(self.D.update("u2", rounds, summarize=None))
+        self.assertTrue(ok)
+        self.assertTrue(self.D.load("u2"))
+
+    def test_update_needs_ten_rounds(self):
+        import asyncio
+        ok = asyncio.run(self.D.update("u3", [["a", "b"]] * 3, summarize=None))
+        self.assertFalse(ok)
+
+    def test_empty_descibe(self):
+        self.assertEqual(self.D.describe("nobody"), "")
+
+
+class TestDigestOverflow(unittest.TestCase):
+    """v14.1-D3：超过 30 轮才浓缩"""
+
+    def setUp(self):
+        import os
+        from collections import deque
+        import botv.life.digest as D
+        from botv.core import state as cfg
+        self.D, self.cfg = D, cfg
+        self.orig_dir = D.DIGEST_DIR
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        self.tmp = os.path.join(root, ".test-digest2")
+        os.makedirs(self.tmp, exist_ok=True)
+        D.DIGEST_DIR = self.tmp
+        cfg.digest_pending.clear()
+        cfg.user_memory_pool.clear()
+
+    def tearDown(self):
+        import shutil
+        self.D.DIGEST_DIR = self.orig_dir
+        self.cfg.digest_pending.clear()
+        self.cfg.user_memory_pool.clear()
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def test_overflow_moves_oldest_to_buffer(self):
+        from collections import deque
+        import botv.memory.context as ctx
+        self.cfg.user_memory_pool["t1"] = deque([["u", "b"]] * 30, maxlen=30)
+        orig_u, orig_e = ctx.add_user_memory_to_db, ctx.add_event_to_db
+        orig_k = ctx.add_global_keywords_to_db
+        ctx.add_user_memory_to_db = lambda *a, **k: None
+        ctx.add_event_to_db = lambda *a, **k: None
+        ctx.add_global_keywords_to_db = lambda *a, **k: None
+        try:
+            ctx.add_target_memory("t1", "新消息", "新回复")
+        finally:
+            ctx.add_user_memory_to_db, ctx.add_event_to_db = orig_u, orig_e
+            ctx.add_global_keywords_to_db = orig_k
+        self.assertEqual(len(self.cfg.digest_pending["t1"]), 1, "溢出的一轮要进缓冲")
+        self.assertEqual(len(self.cfg.user_memory_pool["t1"]), 30)
+
+    def test_no_buffer_before_30(self):
+        from collections import deque
+        import botv.memory.context as ctx
+        self.cfg.user_memory_pool["t2"] = deque([["u", "b"]] * 5, maxlen=30)
+        orig_u, orig_e = ctx.add_user_memory_to_db, ctx.add_event_to_db
+        orig_k = ctx.add_global_keywords_to_db
+        ctx.add_user_memory_to_db = lambda *a, **k: None
+        ctx.add_event_to_db = lambda *a, **k: None
+        ctx.add_global_keywords_to_db = lambda *a, **k: None
+        try:
+            ctx.add_target_memory("t2", "新消息", "新回复")
+        finally:
+            ctx.add_user_memory_to_db, ctx.add_event_to_db = orig_u, orig_e
+            ctx.add_global_keywords_to_db = orig_k
+        self.assertNotIn("t2", self.cfg.digest_pending)
+
+    def test_condense_when_buffer_full(self):
+        import asyncio
+        self.cfg.digest_pending["t3"] = [["今天加班", "累就别撑"]] * 10
+        ok = asyncio.run(self.D.maybe_condense("t3", summarize=None))
+        self.assertTrue(ok)
+        self.assertEqual(self.cfg.digest_pending["t3"], [])
+        self.assertTrue(self.D.load("t3"))
+
+    def test_not_enough_buffer(self):
+        import asyncio
+        self.cfg.digest_pending["t4"] = [["a", "b"]] * 5
+        self.assertFalse(asyncio.run(self.D.maybe_condense("t4", summarize=None)))
 
 
 if __name__ == "__main__":

@@ -4,7 +4,7 @@
 
 BUDGET = {
     "profile": 120,     # 画像：一行就够
-    "dialogue": 500,    # 最近对话
+    "dialogue": 700,    # 最近对话（v14.1：轮数延长到 30，预算跟着涨）
     "memories": 250,    # 检索到的记忆
     "keywords": 120,    # 全局关键词
     "timeline": 200,    # 最近 7 天时间线
