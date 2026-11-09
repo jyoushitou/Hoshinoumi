@@ -1706,5 +1706,138 @@ class TestNameCheck(unittest.TestCase):
         self.assertEqual(check_names.check_source("def f():\n    return len([1])\n", "x.py"), [])
 
 
+    def test_use_before_assign(self):
+        import check_names
+        src = "_x = 0\n\n\ndef f():\n    while True:\n        if _x > 3:\n            _x = 1\n"
+        probs = check_names.check_local_order(src, "x.py")
+        self.assertTrue(probs)
+        self.assertEqual(probs[0][2], "_x")
+
+    def test_global_declared_ok(self):
+        import check_names
+        src = "_x = 0\n\n\ndef f():\n    global _x\n    if _x > 3:\n        _x = 1\n"
+        self.assertEqual(check_names.check_local_order(src, "x.py"), [])
+
+
+class TestScheduleTick(unittest.TestCase):
+    """v10.3：定时循环的两段逻辑，用假数据做代码级测试（不连 AI）"""
+
+    def setUp(self):
+        from datetime import datetime
+        from botv.config import CST
+        import botv.schedule.runner as R
+        self.R = R
+        self.now = datetime(2026, 11, 9, 20, 0, tzinfo=CST)
+        self.sent = []
+        self._orig = {}
+        self._patch("get_character_reply", self._fake_reply)
+        self._patch("send_short_reply", self._fake_send)
+        self._patch("note_proactive", lambda: None)
+
+    def tearDown(self):
+        for name, fn in self._orig.items():
+            setattr(self.R, name, fn)
+        from botv.core import state as cfg
+        cfg.daily_chat_trigger_times = []
+        cfg.triggered_today.clear()
+
+    def _patch(self, name, fn):
+        self._orig[name] = getattr(self.R, name)
+        setattr(self.R, name, fn)
+
+    async def _fake_reply(self, prompt, tid):
+        return "假回复"
+
+    async def _fake_send(self, *args, **kwargs):
+        self.sent.append(args)
+
+    def test_module_exports(self):
+        """回归：这几个名字必须在模块里（曾经漏 import 导致 NameError）"""
+        for name in ("pending_due", "agenda_due_soon", "should_reach_out",
+                     "note_proactive", "load_today_life", "describe_pending",
+                     "finish_pending", "agenda_mark"):
+            self.assertTrue(hasattr(self.R, name), f"runner 缺少 {name}")
+
+    def test_throttle_var_is_local(self):
+        """回归：节流变量不能是模块全局，否则函数内赋值会 UnboundLocalError"""
+        self.assertFalse(hasattr(self.R, "_last_due_check"))
+
+    def test_process_due_sends_agenda(self):
+        import asyncio
+        self._patch("agenda_due_soon", lambda m: [{"id": 7, "t": "面试"}])
+        self._patch("pending_due", lambda now: [])
+        self._patch("should_reach_out", lambda **kw: (True, "ok"))
+        self._patch("agenda_mark", lambda i: None)
+        n = asyncio.run(self.R.process_due(self.now))
+        self.assertEqual(n, 1)
+        self.assertEqual(len(self.sent), 1)
+        self.assertEqual(self.sent[0][1], "假回复")
+
+    def test_process_due_blocked_by_gate(self):
+        import asyncio
+        self._patch("agenda_due_soon", lambda m: [{"id": 7, "t": "面试"}])
+        self._patch("pending_due", lambda now: [])
+        self._patch("should_reach_out", lambda **kw: (False, "深夜"))
+        n = asyncio.run(self.R.process_due(self.now))
+        self.assertEqual(n, 0)
+        self.assertEqual(self.sent, [])
+
+    def test_process_due_handles_pending(self):
+        import asyncio
+        self._patch("agenda_due_soon", lambda m: [])
+        self._patch("pending_due", lambda now: [(3, {"k": "anchor", "t": "吃饭"})])
+        self._patch("should_reach_out", lambda **kw: (True, "ok"))
+        self._patch("finish_pending", lambda i: None)
+        n = asyncio.run(self.R.process_due(self.now))
+        self.assertEqual(n, 1)
+
+    def test_maybe_chat_fires(self):
+        import asyncio
+        from botv.core import state as cfg
+        cur = self.now.hour * 60 + self.now.minute
+        cfg.daily_chat_trigger_times = [cur]
+        cfg.triggered_today.clear()
+        self._patch("should_reach_out", lambda **kw: (True, "想说话了"))
+        self._patch("load_today_life", lambda: [])
+        self._patch("load_events_from_db", lambda *a, **k: [])
+        ok = asyncio.run(self.R.maybe_chat(self.now))
+        self.assertTrue(ok)
+        self.assertEqual(len(self.sent), 1)
+
+    def test_maybe_chat_skipped_by_gate(self):
+        import asyncio
+        from botv.core import state as cfg
+        cur = self.now.hour * 60 + self.now.minute
+        cfg.daily_chat_trigger_times = [cur]
+        cfg.triggered_today.clear()
+        self._patch("should_reach_out", lambda **kw: (False, "刚聊过"))
+        ok = asyncio.run(self.R.maybe_chat(self.now))
+        self.assertFalse(ok)
+        self.assertEqual(self.sent, [])
+
+    def test_maybe_chat_ignores_other_minutes(self):
+        import asyncio
+        from botv.core import state as cfg
+        cfg.daily_chat_trigger_times = [0]  # 不是现在
+        cfg.triggered_today.clear()
+        self._patch("should_reach_out", lambda **kw: (True, "ok"))
+        ok = asyncio.run(self.R.maybe_chat(self.now))
+        self.assertFalse(ok)
+
+    def test_maybe_chat_only_once_per_minute(self):
+        import asyncio
+        from botv.core import state as cfg
+        cur = self.now.hour * 60 + self.now.minute
+        cfg.daily_chat_trigger_times = [cur]
+        cfg.triggered_today.clear()
+        self._patch("should_reach_out", lambda **kw: (True, "ok"))
+        self._patch("load_today_life", lambda: [])
+        self._patch("load_events_from_db", lambda *a, **k: [])
+        first = asyncio.run(self.R.maybe_chat(self.now))
+        second = asyncio.run(self.R.maybe_chat(self.now))
+        self.assertTrue(first)
+        self.assertFalse(second, "同一分钟不能触发两次")
+
+
 if __name__ == "__main__":
     unittest.main()

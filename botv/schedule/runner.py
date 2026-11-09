@@ -26,17 +26,119 @@ from .planner import calc_day_tasks
 
 # 每天首次运行的延迟（秒），用于跨天精确触发
 _FIRST_RUN_DELAY = 10
-_last_due_check = 0.0  # 上次检查日程/待办的时间（节流用）
 
 
 class _SkipChat(Exception):
     """这次不主动发（内部信号，不打印任何东西）"""
 
 
+async def process_due(now):
+    """处理到点的日程与待办，返回到点发出去几条
+
+    v10.3：从主循环里抽出来，便于用假数据做代码级测试。
+    """
+    sent = 0
+
+    # 日程提醒（v10-U10）
+    try:
+        for it in agenda_due_soon(60):
+            ok, _why = should_reach_out(now=now, require_lonely=False)
+            if not ok:
+                continue
+            rep = await get_character_reply(
+                f"（提醒他：{it.get('t', '')}。一句话，别说教。）", str(MASTER_QQ))
+            await send_short_reply(MASTER_QQ, rep, cfg.active_ws_qq, MASTER_QQ)
+            note_proactive()
+            agenda_mark(it["id"])
+            sent += 1
+            log_system(f"日程已提醒: {it.get('t', '')[:20]}")
+    except Exception as a_e:
+        log_err(f"日程提醒异常:{a_e}")
+
+    # 待办到点：回访承诺 / 时间锚点（v10-U9b）
+    try:
+        for item_id, item in pending_due(now):
+            ok, why = should_reach_out(now=now, require_lonely=False)
+            if not ok:
+                log_api(f"待办暂缓({why}): {item.get('t')}")
+                continue
+            rep = await get_character_reply(
+                f"（{describe_pending(item)}。就一句话，别解释。）", str(MASTER_QQ))
+            await send_short_reply(MASTER_QQ, rep, cfg.active_ws_qq, MASTER_QQ)
+            note_proactive()
+            finish_pending(item_id)
+            sent += 1
+            log_system(f"待办已回访: {item.get('t')}")
+    except Exception as p_e:
+        log_err(f"待办处理异常:{p_e}")
+
+    return sent
+
+
+async def maybe_chat(now):
+    """到点主动闲聊：先问她想不想说话，再决定说什么。返回是否真的发出"""
+    cur_minute = now.hour * 60 + now.minute
+    if cur_minute not in cfg.daily_chat_trigger_times:
+        return False
+    if cur_minute in cfg.triggered_today:
+        return False
+    cfg.triggered_today.add(cur_minute)  # 先标记，异常也不重复触发
+
+    try:
+        ok, why = should_reach_out(now=now)
+        if not ok:
+            log_system(f"主动闲聊跳过: {why}")
+            return False
+
+        # 心情很差：只说一句，不解释
+        try:
+            from ..life.state import current as life_current
+            mood_now = float(life_current().get("mood", 0.0))
+        except Exception:
+            mood_now = 0.0
+        if mood_now < -0.5:
+            rep = await get_character_reply(
+                "（你现在心情很差，只发一句很短的话，不解释原因）", str(MASTER_QQ))
+            await send_short_reply(MASTER_QQ, rep, cfg.active_ws_qq, MASTER_QQ)
+            note_proactive()
+            log_system(f"主动闲聊（心情差 {mood_now:.2f}，只说一句）")
+            return True
+
+        # 分享今天的生活事件
+        life_today = load_today_life()
+        if life_today and random.random() < 0.5:
+            seed = random.choice(life_today)
+            rep = await get_character_reply(
+                f"（主动找他说话。说说你今天的这件事：{seed}。别问他在不在，直接说事。）",
+                str(MASTER_QQ))
+            await send_short_reply(MASTER_QQ, rep, cfg.active_ws_qq, MASTER_QQ)
+            note_proactive()
+            log_system(f"主动闲聊（分享生活: {seed[:20]}）")
+            return True
+
+        # 基于最近事件
+        recent = load_events_from_db(str(MASTER_QQ), limit=5)
+        if recent:
+            chosen = random.choice(recent)[0]
+            rep = await get_character_reply(f"闲聊（之前{chosen}）", str(MASTER_QQ))
+            log_system(f"主动闲聊触发（基于事件: {chosen}）")
+        else:
+            rep = await get_character_reply("闲聊", str(MASTER_QQ))
+            log_system("主动闲聊触发（无事件）")
+        await send_short_reply(MASTER_QQ, rep, cfg.active_ws_qq, MASTER_QQ)
+        note_proactive()
+        log_system("主动闲聊触发完成")
+        return True
+    except Exception as e:
+        log_err(f"主动闲聊执行异常:{e}")
+        return False
+
+
 async def cycle_task_run():
     await asyncio.sleep(_FIRST_RUN_DELAY)
     _last_today = None  # 记录上一次检查的日期
     _is_workday = True  # 缓存当天是否工作日
+    _last_due_check = 0.0  # 上次检查日程/待办的时间（节流用，函数内局部）
     while True:
         try:
             now = datetime.now(CST)
@@ -238,96 +340,10 @@ async def cycle_task_run():
             # ---------- 日程 / 待办检查（每 30 秒一次，别每秒查库） ----------
             if (_time.time() - _last_due_check) > 30:
                 _last_due_check = _time.time()
+                await process_due(now)
 
-                # 日程提醒（v10-U10）
-                try:
-                    for it in agenda_due_soon(60):
-                        ok, why = should_reach_out(now=now, require_lonely=False)
-                        if not ok:
-                            continue
-                        rep = await get_character_reply(
-                            f"（提醒他：{it.get('t', '')}。一句话，别说教。）",
-                            str(MASTER_QQ))
-                        await send_short_reply(MASTER_QQ, rep, cfg.active_ws_qq, MASTER_QQ)
-                        note_proactive()
-                        agenda_mark(it["id"])
-                        log_system(f"日程已提醒: {it.get('t', '')[:20]}")
-                except Exception as a_e:
-                    log_err(f"日程提醒异常:{a_e}")
-
-                # 待办到点：回访承诺 / 时间锚点（v10-U9b）
-                try:
-                    for item_id, item in pending_due(now):
-                        ok, why = should_reach_out(now=now, require_lonely=False)
-                        if not ok:
-                            log_api(f"待办暂缓({why}): {item.get('t')}")
-                            continue
-                        rep = await get_character_reply(
-                            f"（{describe_pending(item)}。就一句话，别解释，别问他在干嘛。）",
-                            str(MASTER_QQ))
-                        await send_short_reply(MASTER_QQ, rep, cfg.active_ws_qq, MASTER_QQ)
-                        note_proactive()
-                        finish_pending(item_id)
-                        log_system(f"待办已回访: {item.get('t')}")
-                except Exception as p_e:
-                    log_err(f"待办处理异常:{p_e}")
-
-            # ---------- 主动闲聊触发（基于事件记忆，让AI自己发挥） ----------
-            if (cur_minute in cfg.daily_chat_trigger_times and
-                    cur_minute not in cfg.triggered_today):
-                # ★ 修复：先标记已触发，防止异常导致重复触发
-                cfg.triggered_today.add(cur_minute)
-                try:
-                    # v10-U9：先问她想不想说话，不想就跳过
-                    ok, why = should_reach_out(now=now)
-                    if not ok:
-                        log_system(f"主动闲聊跳过: {why}")
-                        raise _SkipChat()
-                    # v10-U9b：心情很差时只说一句，不解释
-                    try:
-                        from ..life.state import current as life_current
-                        mood_now = float(life_current().get("mood", 0.0))
-                    except Exception:
-                        mood_now = 0.0
-                    if mood_now < -0.5:
-                        log_system(f"主动闲聊（心情差 {mood_now:.2f}，只说一句）")
-                        rep = await get_character_reply(
-                            "（你现在心情很差，只发一句很短的话，不解释原因，也别问他在干嘛）",
-                            str(MASTER_QQ))
-                        await send_short_reply(MASTER_QQ, rep, cfg.active_ws_qq, MASTER_QQ)
-                        note_proactive()
-                        raise _SkipChat()
-
-                    # v10-U9b：一半概率分享今天的生活事件
-                    life_today = load_today_life()
-                    if life_today and random.random() < 0.5:
-                        seed = random.choice(life_today)
-                        log_system(f"主动闲聊触发（分享生活: {seed[:20]}）")
-                        rep = await get_character_reply(
-                            f"（主动找他说话。说说你今天的这件事：{seed}。别问他在不在，直接说事。）",
-                            str(MASTER_QQ))
-                        await send_short_reply(MASTER_QQ, rep, cfg.active_ws_qq, MASTER_QQ)
-                        note_proactive()
-                        raise _SkipChat()
-
-                    # 从数据库加载最近的事件作为话题
-                    recent_events = load_events_from_db(str(MASTER_QQ), limit=5)
-                    if recent_events:
-                        # 有事件记忆时，把事件传给AI，让AI自己决定怎么接着聊
-                        chosen_event = random.choice(recent_events)[0]
-                        log_system(f"主动闲聊触发（基于事件: {chosen_event}）")
-                        rep = await get_character_reply(f"闲聊（之前{chosen_event}）", str(MASTER_QQ))
-                    else:
-                        # 没有事件时直接传闲聊
-                        log_system(f"主动闲聊触发（无事件）")
-                        rep = await get_character_reply("闲聊", str(MASTER_QQ))
-                    await send_short_reply(MASTER_QQ, rep, cfg.active_ws_qq, MASTER_QQ)
-                    note_proactive()  # v10-U9：记账，配额和未回应计数
-                    log_system(f"主动闲聊触发完成")
-                except _SkipChat:
-                    pass
-                except Exception as chat_e:
-                    log_err(f"主动闲聊执行异常:{chat_e}")
+            # ---------- 主动闲聊触发 ----------
+            await maybe_chat(now)
 
         except Exception as e:
             log_err(f"定时异常:{e}")

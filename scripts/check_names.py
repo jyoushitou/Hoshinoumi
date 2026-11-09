@@ -38,6 +38,7 @@ def check_source(src, filename):
             walk(child)
 
     walk(st)
+    problems += check_local_order(src, filename)
     return problems
 
 
@@ -74,6 +75,73 @@ def main():
         rel = os.path.relpath(path, root)
         print(f"   {rel}:{line}  {name}  （在 {scope} 里）")
     return 1
+
+
+# ===================== 局部变量先用后赋值（v10.3） =====================
+# 典型写法：模块级定义过同名变量，函数里又赋值，
+# Python 会把它当局部变量，于是第一次读它时炸 UnboundLocalError。
+
+import ast as _ast
+
+
+def _visit(node, assigns, loads, globals_, nonlocals):
+    """处理节点本身，再递归子节点（不进入嵌套作用域）"""
+    if isinstance(node, _ast.Name):
+        if isinstance(node.ctx, _ast.Load):
+            loads.append((node.id, node.lineno))
+        else:
+            assigns.setdefault(node.id, node.lineno)
+    elif isinstance(node, _ast.arg):
+        assigns.setdefault(node.arg, getattr(node, "lineno", 0))
+    elif isinstance(node, _ast.Global):
+        globals_.update(node.names)
+        return
+    elif isinstance(node, _ast.Nonlocal):
+        nonlocals.update(node.names)
+        return
+    elif isinstance(node, (_ast.For, _ast.AsyncFor)) and isinstance(node.target, _ast.Name):
+        assigns.setdefault(node.target.id, node.target.lineno)
+    elif isinstance(node, (_ast.FunctionDef, _ast.AsyncFunctionDef, _ast.ClassDef, _ast.Lambda)):
+        return
+    elif isinstance(node, (_ast.ListComp, _ast.SetComp, _ast.DictComp, _ast.GeneratorExp)):
+        return
+
+    for child in _ast.iter_child_nodes(node):
+        _visit(child, assigns, loads, globals_, nonlocals)
+
+
+def check_local_order(src, filename="<src>"):
+    """找出「函数内先用后赋值」的局部变量"""
+    problems = []
+    try:
+        tree = _ast.parse(src)
+    except SyntaxError:
+        return problems
+
+    for node in _ast.walk(tree):
+        if not isinstance(node, (_ast.FunctionDef, _ast.AsyncFunctionDef)):
+            continue
+        assigns, loads = {}, []
+        globals_, nonlocals = set(), set()
+
+        for a in list(node.args.args) + list(node.args.kwonlyargs) + list(node.args.posonlyargs):
+            assigns.setdefault(a.arg, node.lineno)
+        if node.args.vararg:
+            assigns.setdefault(node.args.vararg.arg, node.lineno)
+        if node.args.kwarg:
+            assigns.setdefault(node.args.kwarg.arg, node.lineno)
+
+        for stmt in node.body:
+            _visit(stmt, assigns, loads, globals_, nonlocals)
+
+        for name, line in loads:
+            if name in globals_ or name in nonlocals:
+                continue
+            first_assign = assigns.get(name)
+            if first_assign is not None and line < first_assign:
+                problems.append((filename, line, name,
+                                 f"{node.name} 里先用后赋值（首次赋值在第 {first_assign} 行）"))
+    return problems
 
 
 if __name__ == "__main__":
