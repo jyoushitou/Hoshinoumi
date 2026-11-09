@@ -27,6 +27,19 @@ def check(label, fn, fatal=True):
         return False
 
 
+def step_names():
+    """静态检查：有没有「用了但没定义」的名字（v10.2）"""
+    sys.path.insert(0, os.path.join(ROOT, "scripts"))
+    import check_names
+    problems = check_names.scan([os.path.join(ROOT, "botv")])
+    if problems:
+        path, line, name, scope = problems[0]
+        raise RuntimeError(
+            f"{len(problems)} 处未定义名字，例如 {os.path.basename(path)}:{line} {name}（在 {scope}）"
+        )
+    return "未定义名字 0 处"
+
+
 def step_python():
     v = sys.version_info
     if v < (3, 9):
@@ -159,11 +172,12 @@ def step_prompt():
 
 def main():
     print("=" * 56)
-    print("  友利奈绪 v8 部署预检")
+    print("  友利奈绪 v10 部署预检")
     print("=" * 56)
 
     ok_python = check("Python 版本", step_python)
     ok_deps = check("必需依赖", step_deps)
+    check("代码静态检查", step_names)
     check("可选依赖", step_optional, fatal=False)
     ok_import = check("全模块导入", step_import_all)
     if ok_deps and ok_import:

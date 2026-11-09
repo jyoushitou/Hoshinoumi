@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 
 from ..config import MASTER_QQ, CST
 from botv.core import state as cfg
-from ..log import log_system, log_err
+from ..log import log_system, log_err, log_api
 from ..ai.client import get_character_reply
 from ..memory import add_target_memory
 from ..chat.send import send_short_reply, send_private_msg
@@ -17,12 +17,16 @@ from ..image import fetch_and_save_acg_image, search_local_image_by_tags, get_be
 from ..utils import make_image_msg
 from ..ai.parse import parse_ai_reply
 from ..diary import generate_diary
-from ..infra.repo_memory import load_events_from_db
+from ..infra.repo_memory import load_events_from_db, load_today_life
+from ..life.impulse import should_reach_out, note_proactive  # v10-U9
+from ..life.pending import due as pending_due, finish as finish_pending, describe as describe_pending  # v10-U9b
+from ..life.agenda import due_soon as agenda_due_soon, mark_reminded as agenda_mark  # v10-U10
 from .config import SCHEDULE_TASKS, is_workday_today
 from .planner import calc_day_tasks
 
 # 每天首次运行的延迟（秒），用于跨天精确触发
 _FIRST_RUN_DELAY = 10
+_last_due_check = 0.0  # 上次检查日程/待办的时间（节流用）
 
 
 class _SkipChat(Exception):
@@ -231,38 +235,42 @@ async def cycle_task_run():
                 except Exception as task_e:
                     log_err(f"定时任务执行异常({task['scene']}):{task_e}")
 
-            # ---------- 日程提醒（v10-U10） ----------
-            try:
-                for it in agenda_due_soon(60):
-                    ok, why = should_reach_out(now=now, require_lonely=False)
-                    if not ok:
-                        continue
-                    rep = await get_character_reply(
-                        f"（提醒他：{it.get('t', '')}。一句话，别说教。）",
-                        str(MASTER_QQ))
-                    await send_short_reply(MASTER_QQ, rep, cfg.active_ws_qq, MASTER_QQ)
-                    note_proactive()
-                    agenda_mark(it["id"])
-                    log_system(f"日程已提醒: {it.get('t', '')[:20]}")
-            except Exception as a_e:
-                log_err(f"日程提醒异常:{a_e}")
+            # ---------- 日程 / 待办检查（每 30 秒一次，别每秒查库） ----------
+            if (_time.time() - _last_due_check) > 30:
+                _last_due_check = _time.time()
 
-            # ---------- 待办到点：回访承诺 / 时间锚点（v10-U9b） ----------
-            try:
-                for item_id, item in pending_due(now):
-                    ok, why = should_reach_out(now=now, require_lonely=False)
-                    if not ok:
-                        log_api(f"待办暂缓({why}): {item.get('t')}")
-                        continue
-                    rep = await get_character_reply(
-                        f"（{describe_pending(item)}。就一句话，别解释，别问他在干嘛。）",
-                        str(MASTER_QQ))
-                    await send_short_reply(MASTER_QQ, rep, cfg.active_ws_qq, MASTER_QQ)
-                    note_proactive()
-                    finish_pending(item_id)
-                    log_system(f"待办已回访: {item.get('t')}")
-            except Exception as p_e:
-                log_err(f"待办处理异常:{p_e}")
+                # 日程提醒（v10-U10）
+                try:
+                    for it in agenda_due_soon(60):
+                        ok, why = should_reach_out(now=now, require_lonely=False)
+                        if not ok:
+                            continue
+                        rep = await get_character_reply(
+                            f"（提醒他：{it.get('t', '')}。一句话，别说教。）",
+                            str(MASTER_QQ))
+                        await send_short_reply(MASTER_QQ, rep, cfg.active_ws_qq, MASTER_QQ)
+                        note_proactive()
+                        agenda_mark(it["id"])
+                        log_system(f"日程已提醒: {it.get('t', '')[:20]}")
+                except Exception as a_e:
+                    log_err(f"日程提醒异常:{a_e}")
+
+                # 待办到点：回访承诺 / 时间锚点（v10-U9b）
+                try:
+                    for item_id, item in pending_due(now):
+                        ok, why = should_reach_out(now=now, require_lonely=False)
+                        if not ok:
+                            log_api(f"待办暂缓({why}): {item.get('t')}")
+                            continue
+                        rep = await get_character_reply(
+                            f"（{describe_pending(item)}。就一句话，别解释，别问他在干嘛。）",
+                            str(MASTER_QQ))
+                        await send_short_reply(MASTER_QQ, rep, cfg.active_ws_qq, MASTER_QQ)
+                        note_proactive()
+                        finish_pending(item_id)
+                        log_system(f"待办已回访: {item.get('t')}")
+                except Exception as p_e:
+                    log_err(f"待办处理异常:{p_e}")
 
             # ---------- 主动闲聊触发（基于事件记忆，让AI自己发挥） ----------
             if (cur_minute in cfg.daily_chat_trigger_times and

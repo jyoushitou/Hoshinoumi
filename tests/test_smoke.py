@@ -1680,5 +1680,31 @@ class TestAgenda(unittest.TestCase):
         self.assertIsNone(extract("今天上午九点开会", self.now), "已经过去的今天不记")
 
 
+class TestNameCheck(unittest.TestCase):
+    """v10.2：静态检查能抓到「用了但没定义」的名字"""
+
+    def setUp(self):
+        import os as _os
+        import sys as _sys
+        scripts = _os.path.join(_os.path.dirname(_os.path.dirname(__file__)), "scripts")
+        if scripts not in _sys.path:
+            _sys.path.insert(0, scripts)
+
+    def test_catches_undefined(self):
+        import check_names
+        probs = check_names.check_source("def f():\n    return missing_thing(1)\n", "x.py")
+        self.assertTrue(probs)
+        self.assertEqual(probs[0][2], "missing_thing")
+
+    def test_clean_source(self):
+        import check_names
+        src = "import os\n\n\ndef f():\n    return os.getcwd()\n"
+        self.assertEqual(check_names.check_source(src, "x.py"), [])
+
+    def test_builtin_ok(self):
+        import check_names
+        self.assertEqual(check_names.check_source("def f():\n    return len([1])\n", "x.py"), [])
+
+
 if __name__ == "__main__":
     unittest.main()
