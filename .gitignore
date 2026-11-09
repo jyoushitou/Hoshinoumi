@@ -9,3 +9,4 @@ __pycache__/
 .botv.lock
 .test-lock-*
 .botv.lock.pid
+*.pyc
