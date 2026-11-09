@@ -48,6 +48,7 @@ target_keyword_sets = {}  # {target_id: set} 每个对象自己的关键词
 bot_state = {}      # mood / energy / lonely
 bot_state_ts = 0.0  # 上次推进的时间戳
 life_last_date = {}  # {target_id: 'YYYY-MM-DD'} 生活事件生成日期（v9-U7）
+habit_counters = {}  # {target_id: Counter} 口头禅计数（v12-A17）
 
 # ===================== 主动消息（v10-U9） =====================
 last_user_msg_ts = 0.0      # 最近一次收到消息的时间

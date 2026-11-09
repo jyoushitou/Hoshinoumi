@@ -153,6 +153,29 @@ def delete_todo_item(item_id):
     c.connection.commit()
 
 
+def load_habit(tid):
+    """读某人的口头禅计数（v12-A17）"""
+    c = get_cursor()
+    c.execute(
+        "SELECT event_summary FROM events WHERE target_id=%s AND kind='habit' ORDER BY id DESC LIMIT 1",
+        (str(tid),),
+    )
+    row = c.fetchone()
+    return (row["event_summary"] or "") if row else ""
+
+
+def save_habit(tid, payload):
+    """覆盖写口头禅计数（一人一行）"""
+    c = get_cursor()
+    c.execute("DELETE FROM events WHERE target_id=%s AND kind='habit'", (str(tid),))
+    c.execute(
+        "INSERT INTO events(target_id, event_summary, tags, kind, dedupe_key, last_seen) "
+        "VALUES(%s,%s,'','habit',%s,NOW())",
+        (str(tid), payload, dedupe_key(str(tid), "habit", "habit")),
+    )
+    c.connection.commit()
+
+
 def load_relation(tid):
     """读某人的亲密度（v10-U8）"""
     c = get_cursor()

@@ -23,6 +23,8 @@ from ..chat.timing import tone_hint  # 时段语气提示（v6-A20）
 from ..life.state import current as life_current, describe as describe_state, touch_talk  # v9-U4
 from ..life.events import ensure_daily_life  # v9-U7
 from ..life.relation import describe as relation_desc, bump as relation_bump  # v10-U8
+from ..life.habit import phrases_for, describe as habit_line  # v12-A17
+from ..life.milestone import milestone_text  # v12-G38
 from ..infra.repo_profile import build_profile_text  # 对象画像（v7-B9）
 from ..memory.inject import trim, BUDGET  # 分层预算（v8-B13）
 from ..memory.timeline import build_timeline_text  # 时间线注入（v8-B16）
@@ -166,6 +168,30 @@ async def call_doubao(msgs, max_tokens=None, target_id=None):
     return Fallback(fallback)  # 标记为兜底，调用方不得入库
 
 
+def _profile_with_habit(tid):
+    """画像 + 他的口头禅 + 关系里程碑（v12）"""
+    base = build_profile_text(tid)
+    extras = []
+    try:
+        line = habit_line(phrases_for(tid))
+        if line:
+            extras.append(line)
+    except Exception:
+        pass
+    try:
+        ms = milestone_text(tid)
+        if ms:
+            extras.append(ms)
+    except Exception:
+        pass
+    if not extras:
+        return base
+    tail = "｜".join(extras)
+    if not base or base == "无":
+        return tail
+    return f"{base}｜{tail}"
+
+
 async def get_character_reply(txt, tid, current_kws=None):
     """核心函数：获取角色回复，优先DeepSeek，失败时降级到豆包"""
     log_api(f"[get_character_reply] 收到消息: {txt[:40]}, tid={tid}, kws={current_kws}")  # 日志记录输入
@@ -192,7 +218,7 @@ async def get_character_reply(txt, tid, current_kws=None):
         global_keywords=kw,
         current_dialogue=dia,
         events=events,
-        profile=trim(build_profile_text(tid), BUDGET["profile"]),  # v7-B9 画像，v8 按预算裁剪
+        profile=trim(_profile_with_habit(tid), BUDGET["profile"]),  # v7-B9 画像 + v12 口头禅
         timeline=build_timeline_text(tid),  # v8-B16：最近 7 天
         relation=relation_desc(tid),  # v10-U8：你跟他什么关系
         master_qq=MASTER_QQ,

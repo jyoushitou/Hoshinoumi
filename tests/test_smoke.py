@@ -2227,5 +2227,137 @@ class TestPreflightSteps(unittest.TestCase):
         self.assertIn("网格", text)
 
 
+class TestHabit(unittest.TestCase):
+    """v12-A17：学口头禅"""
+
+    def setUp(self):
+        from botv.core import state as cfg
+        cfg.habit_counters.clear()
+
+    def tearDown(self):
+        from botv.core import state as cfg
+        cfg.habit_counters.clear()
+
+    def test_ngrams_filters_stopwords(self):
+        from botv.life.habit import ngrams
+        pieces = ngrams("就是这样的")
+        self.assertNotIn("就是", pieces)
+        self.assertNotIn("这样", pieces)
+
+    def test_ngrams_lengths(self):
+        from botv.life.habit import ngrams
+        for piece in ngrams("绝了绝了"):
+            self.assertTrue(2 <= len(piece) <= 4, piece)
+
+    def test_top_needs_three(self):
+        from collections import Counter
+        from botv.life.habit import top
+        c = Counter()
+        c["绝了"] = 2
+        self.assertEqual(top(c), [], "不够 3 次不算")
+
+    def test_top_prefers_short(self):
+        """次数相同时优先短词，避免学出跨词边界的废词"""
+        from collections import Counter
+        from botv.life.habit import top
+        c = Counter({"草了": 5, "草了草了": 5})
+        picked = top(c)
+        self.assertIn("草了", picked)
+        self.assertNotIn("草了草了", picked, "互相包含的只留一个")
+
+    def test_top_limits_three(self):
+        from collections import Counter
+        from botv.life.habit import top
+        c = Counter({"甲甲": 5, "乙乙": 5, "丙丙": 5, "丁丁": 5})
+        self.assertEqual(len(top(c)), 3)
+
+    def test_learn_accumulates(self):
+        import botv.life.habit as H
+        for _ in range(4):
+            H.learn("100", "绝了这也太草了")
+        self.assertIn("绝了", H.phrases_for("100"))
+
+    def test_describe(self):
+        from botv.life.habit import describe
+        self.assertEqual(describe([]), "")
+        self.assertIn("绝了", describe(["绝了"]))
+
+    def test_profile_with_habit(self):
+        import botv.ai.client as client
+        orig_build, orig_phrases = client.build_profile_text, client.phrases_for
+        client.build_profile_text = lambda tid: "昵称：小奈"
+        client.phrases_for = lambda tid: ["绝了"]
+        try:
+            text = client._profile_with_habit("1")
+        finally:
+            client.build_profile_text, client.phrases_for = orig_build, orig_phrases
+        self.assertIn("小奈", text)
+        self.assertIn("绝了", text)
+
+
+class TestMilestone(unittest.TestCase):
+    """v12-G38：认识第几天"""
+
+    def setUp(self):
+        import botv.life.milestone as M
+        import botv.infra.repo_memory as rm
+        self.M = M
+        self.rm = rm
+        self.store = {}
+        self._orig = (rm.load_relation, rm.save_relation)
+        rm.load_relation = lambda tid: self.store.get(tid, "")
+        rm.save_relation = lambda tid, payload: self.store.__setitem__(tid, payload) or True
+
+    def tearDown(self):
+        self.rm.load_relation, self.rm.save_relation = self._orig
+
+    def _day(self, n):
+        from datetime import datetime, timedelta
+        from botv.config import CST
+        base = datetime(2026, 1, 1, tzinfo=CST)
+        return base, base + timedelta(days=n)
+
+    def test_first_call_records_since(self):
+        base, _ = self._day(0)
+        self.M.since_date("u1", base)
+        self.assertIn("2026-01-01", self.store["u1"])
+
+    def test_days_together(self):
+        base, _ = self._day(0)
+        self.M.since_date("u1", base)
+        _, later = self._day(99)
+        self.assertEqual(self.M.days_together("u1", later), 100)
+
+    def test_milestones(self):
+        base, _ = self._day(0)
+        self.M.since_date("u1", base)
+        for n, keyword in ((1, "第一天"), (7, "一周"), (30, "一个月"), (100, "一百天")):
+            _, now = self._day(n - 1)
+            text = self.M.milestone_text("u1", now)
+            self.assertIn(keyword, text, f"第 {n} 天应提到 {keyword}")
+
+    def test_normal_day_no_text(self):
+        base, _ = self._day(0)
+        self.M.since_date("u1", base)
+        _, now = self._day(42)
+        self.assertEqual(self.M.milestone_text("u1", now), "")
+
+    def test_profile_includes_milestone(self):
+        import botv.ai.client as client
+        orig_build = client.build_profile_text
+        orig_habit = client.phrases_for
+        orig_ms = client.milestone_text
+        client.build_profile_text = lambda tid: "昵称：小奈"
+        client.phrases_for = lambda tid: []
+        client.milestone_text = lambda tid, now=None: "今天正好认识一百天（第 100 天）"
+        try:
+            text = client._profile_with_habit("1")
+        finally:
+            client.build_profile_text = orig_build
+            client.phrases_for = orig_habit
+            client.milestone_text = orig_ms
+        self.assertIn("一百天", text)
+
+
 if __name__ == "__main__":
     unittest.main()

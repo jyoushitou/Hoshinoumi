@@ -31,6 +31,9 @@ def check_source(src, filename):
         for sym in table.get_symbols():
             name = sym.get_name()
             # 只看「在函数里当全局用、但模块层没定义」的名字
+            # 注意：3.13 的参数也会 is_global()=True，所以本地变量/参数要排除
+            if sym.is_local() or sym.is_parameter():
+                continue
             if sym.is_global() and not sym.is_assigned() and not sym.is_imported():
                 if name not in module_names and not hasattr(builtins, name):
                     problems.append((filename, table.get_lineno(), name, table.get_name()))
