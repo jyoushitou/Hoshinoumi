@@ -24,6 +24,7 @@ from .send import send_short_reply, send_private_msg, send_sticker_private, send
 from .inbound import parse_message_content, contains_sticker_key, is_at_me
 from .timing import reply_delay
 from ..core.locks import get_target_lock
+from ..core import tunables, metrics
 from ..life.impulse import note_user_message  # v10-U9
 from ..life import pending as life_pending  # v10-U9b
 from ..life import agenda as life_agenda  # v10-U10
@@ -58,7 +59,8 @@ def group_reply_probability(state=None, streak=0):
     lonely = float(state.get("lonely", 0.2))
     mood = float(state.get("mood", 0.1))
 
-    p = GROUP_BASE_PROB + max(0.0, lonely - 0.4) * GROUP_LONELY_SPAN
+    from ..core import tunables
+    p = tunables.get("group_base_prob", GROUP_BASE_PROB) + max(0.0, lonely - 0.4) * GROUP_LONELY_SPAN
     if mood < -0.2:
         p *= 0.7          # 心情差，不想掺和
     elif mood > 0.4:
@@ -87,7 +89,7 @@ def should_answer_group(gid, addressed):
             return False, "刚回过"
         # v14-B4：被 @ 也要掷骰——基础 75%，心情极差时降到 40%
         streak = cfg.group_streak.get(gid, 0)
-        p = max(0.75, group_reply_probability(streak=streak))
+        p = max(tunables.get("group_mention_prob", 0.75), group_reply_probability(streak=streak))
         try:
             from ..life.state import current as life_current
             if float(life_current().get("mood", 0.0)) < -0.6:
@@ -282,9 +284,19 @@ async def websocket_handle_qq(ws):
                     ok, why = should_answer_group(gid, addressed)
                     if not ok:
                         log_api(f"[群聊] 跳过 {gid}: {why}")
+                        try:
+                            from ..core import metrics
+                            metrics.inc("group_skip")
+                        except Exception:
+                            pass
                         await asyncio.sleep(LOCK_RELEASE_DELAY)
                         continue
                     log_api(f"[群聊] 接话 {gid}: {why}")
+                    try:
+                        from ..core import metrics
+                        metrics.inc("group_answer")
+                    except Exception:
+                        pass
                     if not addressed and random.random() < GROUP_SILENCE_PROB:  # v6-A19：偶尔选择沉默
                         log_api(f"[群聊] 这次选择沉默 {gid}")
                         await asyncio.sleep(LOCK_RELEASE_DELAY)
@@ -342,6 +354,11 @@ async def websocket_handle_qq(ws):
                         pass
 
                 await send_short_reply(target, reply_text, ws, uid, is_group, ck)
+                try:
+                    from ..core import metrics
+                    metrics.inc("replies")
+                except Exception:
+                    pass
                 if is_group:  # v6-E29：记录这次群回复
                     note_group_reply(gid)
                 else:  # v11-A10：私聊有概率把第一句念出来

@@ -51,8 +51,10 @@ def should_reach_out(now=None, state=None, rng=None,
     if unanswered is None:
         unanswered = getattr(cfg, "proactive_unanswered", 0)
 
-    threshold = LONELY_THRESHOLD if lonely_threshold is None else lonely_threshold
-    cap = DAILY_CAP if daily_cap is None else daily_cap
+    from ..core import tunables
+    threshold = (tunables.get("lonely_threshold", LONELY_THRESHOLD)
+                 if lonely_threshold is None else lonely_threshold)
+    cap = tunables.get("proactive_cap", DAILY_CAP) if daily_cap is None else daily_cap
 
     # 1) 深夜不打扰
     if _in_quiet_hours(now):
@@ -118,6 +120,11 @@ def note_proactive():
     cfg.proactive_count_today = getattr(cfg, "proactive_count_today", 0) + 1
     cfg.proactive_unanswered = getattr(cfg, "proactive_unanswered", 0) + 1
     cfg.proactive_pending = True  # v14-B2：等回应
+    try:
+        from ..core import metrics
+        metrics.inc("proactive")
+    except Exception:
+        pass
 
 
 def _reset_daily():

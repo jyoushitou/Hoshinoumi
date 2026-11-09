@@ -13,3 +13,5 @@ __pycache__/
 data/digests/
 .test-digest*
 dist/
+data/tunables.json
+.test-tunables.json

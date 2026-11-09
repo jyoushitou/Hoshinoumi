@@ -91,6 +91,11 @@ async def update(tid, rounds, summarize=None):
     ok = append(tid, line)
     if ok:
         log_api(f"[浓缩] {str(tid)[:8]}: {line[:30]}")
+        try:
+            from ..core import metrics
+            metrics.inc("digest")
+        except Exception:
+            pass
     return ok
 
 

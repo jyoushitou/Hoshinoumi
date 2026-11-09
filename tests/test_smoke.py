@@ -171,7 +171,7 @@ class TestCommandRegistry(unittest.TestCase):
         "acg", "apikeys", "clear", "clip", "code", "db", "diary", "event",
         "exit", "help", "img", "keywords", "log", "memory", "ping", "quit",
         "reload", "say", "sayg", "set", "status", "sticker", "task",
-        "uptime", "usage", "profile", "todo", "voice", "memorybook", "growth", "persona",
+        "uptime", "usage", "profile", "todo", "voice", "memorybook", "growth", "persona", "stats", "config",
     }
 
     def setUp(self):
@@ -3291,6 +3291,105 @@ class TestImageGateRegression(unittest.TestCase):
         parts, calls = self._run("今天好累\n（趴下）", allow=False)
         self.assertFalse(any(p[0] == "image" for p in parts))
         self.assertEqual(calls, [])
+
+
+class TestTunables(unittest.TestCase):
+    """v15：运行时参数"""
+
+    def setUp(self):
+        import os
+        from botv.core import tunables as T
+        self.T = T
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        self.orig_store = T.STORE
+        T.STORE = os.path.join(root, ".test-tunables.json")
+        T.load()
+
+    def tearDown(self):
+        import os
+        self.T.STORE = self.orig_store
+        self.T.load()
+        try:
+            os.remove(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                                   ".test-tunables.json"))
+        except OSError:
+            pass
+
+    def test_defaults(self):
+        self.assertAlmostEqual(self.T.get("group_base_prob"), 0.20, places=2)
+
+    def test_set_and_get(self):
+        ok, _msg = self.T.set_value("image_prob", "0.5")
+        self.assertTrue(ok)
+        self.assertAlmostEqual(self.T.get("image_prob"), 0.5, places=3)
+
+    def test_prob_clamped(self):
+        self.T.set_value("image_prob", "5")
+        self.assertLessEqual(self.T.get("image_prob"), 1.0)
+        self.T.set_value("image_prob", "-1")
+        self.assertGreaterEqual(self.T.get("image_prob"), 0.0)
+
+    def test_unknown_key(self):
+        ok, msg = self.T.set_value("no_such", "1")
+        self.assertFalse(ok)
+        self.assertIn("没有这个参数", msg)
+
+    def test_bad_value(self):
+        ok, msg = self.T.set_value("image_prob", "abc")
+        self.assertFalse(ok)
+
+    def test_persisted(self):
+        self.T.set_value("voice_prob", "0.2")
+        self.T.load()  # 重新读盘
+        self.assertAlmostEqual(self.T.get("voice_prob"), 0.2, places=3)
+
+    def test_all_items(self):
+        items = self.T.all_items()
+        self.assertTrue(items)
+        names = [i[0] for i in items]
+        self.assertIn("lonely_threshold", names)
+
+
+class TestMetrics(unittest.TestCase):
+    """v15：今日统计"""
+
+    def setUp(self):
+        from botv.core import metrics
+        self.m = metrics
+        metrics.reset()
+
+    def test_inc_and_snapshot(self):
+        self.m.inc("replies")
+        self.m.inc("images", 2)
+        data, _day = self.m.snapshot()
+        self.assertEqual(data["replies"], 1)
+        self.assertEqual(data["images"], 2)
+
+    def test_describe_rates(self):
+        for _ in range(4):
+            self.m.inc("replies")
+        self.m.inc("images")
+        self.m.inc("group_answer")
+        self.m.inc("group_skip")
+        text = self.m.describe()
+        self.assertIn("配图率", text)
+        self.assertIn("群接话率", text)
+
+    def test_reset(self):
+        self.m.inc("replies")
+        self.m.reset()
+        data, _day = self.m.snapshot()
+        self.assertEqual(data["replies"], 0)
+
+
+class TestOpsCommands(unittest.TestCase):
+    """v15：!stats / !config"""
+
+    def test_registered(self):
+        import botv.commands  # noqa: F401
+        from botv.cmd import registry
+        self.assertIn("stats", registry.COMMANDS)
+        self.assertIn("config", registry.COMMANDS)
 
 
 if __name__ == "__main__":

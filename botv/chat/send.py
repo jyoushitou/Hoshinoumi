@@ -47,7 +47,8 @@ async def maybe_send_voice(text, target, ws, is_group=False):
         return False  # 群里先不发语音，太吵
     if not (VOICE_MIN_LEN <= len(text or "") <= VOICE_MAX_LEN):
         return False
-    if random.random() > VOICE_PROB:
+    from ..core import tunables
+    if random.random() > tunables.get("voice_prob", VOICE_PROB):
         return False
     now = _t.time()
     if now - _last_voice_ts.get(target, 0.0) < VOICE_COOLDOWN:
@@ -57,6 +58,11 @@ async def maybe_send_voice(text, target, ws, is_group=False):
         return False
     await send_voice(target, mp3, ws)
     _last_voice_ts[target] = now
+    try:
+        from ..core import metrics
+        metrics.inc("voices")
+    except Exception:
+        pass
     return True
 
 

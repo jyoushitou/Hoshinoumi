@@ -12,6 +12,7 @@ from ..infra.conn import get_cursor
 from ..memory import load_memories
 from ..sticker_archive import init_sticker_archive
 from ..clip import init_clip_model
+from ..core import tunables  # v15：运行时参数
 from ..ai.prompt import load_personality_supplement
 
 
@@ -78,7 +79,8 @@ def bootstrap():
     load_memories()  # 从数据库加载对话记忆和全局关键词
     init_sticker_archive()  # 表情包存档目录，迁移旧版 JSON 索引
     if os.getenv("NAO_CLIP") == "1":  # v8-CLIPCUT：默认不加载 CLIP，需要时显式开启
-        init_clip_model()
+        tunables.load()  # v15：先加载可调参数
+    init_clip_model()
     load_personality_supplement()  # 人设补充文本（远程 > 本地）
 
     _ensure_tables()
