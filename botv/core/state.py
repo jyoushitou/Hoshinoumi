@@ -42,6 +42,11 @@ task_trigger_minute = {}  # 定时任务触发分钟映射 {key: minute}
 user_memory_pool = {}  # 用户对话记忆池 {target_id: deque}
 global_keyword_set = set()  # 公共关键词（v8-B12：只放公共库）
 target_keyword_sets = {}  # {target_id: set} 每个对象自己的关键词
+
+# ===================== 她的状态（v9-U4） =====================
+bot_state = {}      # mood / energy / lonely
+bot_state_ts = 0.0  # 上次推进的时间戳
+life_last_date = {}  # {target_id: 'YYYY-MM-DD'} 生活事件生成日期（v9-U7）
 USER_STICKER_CACHE = defaultdict(list)  # 用户最近使用的QQ表情缓存
 USER_STICKER_ARCHIVE = defaultdict(list)  # 用户旧表情包存档
 STICKER_DATA = {}  # 表情包数据 {hash: info_dict}

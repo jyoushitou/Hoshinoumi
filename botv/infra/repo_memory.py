@@ -140,11 +140,11 @@ def load_timeline(tid, days=7, limit=12):
         SELECT DATE(COALESCE(last_seen, created_at)) AS day,
                event_summary AS summary
         FROM events
-        WHERE target_id=%s AND kind IN ('event', 'life')
+        WHERE target_id IN (%s, %s) AND kind IN ('event', 'life')
           AND COALESCE(last_seen, created_at) >= NOW() - INTERVAL %s DAY
         ORDER BY COALESCE(last_seen, created_at) DESC
         LIMIT %s
-    """, (tid, days, limit))
+    """, (tid, STATE_TARGET, days, limit))
     return list(c.fetchall())
 
 
@@ -155,9 +155,9 @@ def load_memories_for_search(tid, limit=300):
         SELECT id, kind, event_summary AS summary, tags, importance, hit_count,
                created_at, last_seen
         FROM events
-        WHERE target_id=%s AND kind IN ('event','life','promise')
+        WHERE target_id IN (%s, %s) AND kind IN ('event','life','promise')
         ORDER BY id DESC LIMIT %s
-    """, (tid, limit))
+    """, (tid, STATE_TARGET, limit))
     return list(c.fetchall())
 
 

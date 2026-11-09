@@ -1270,5 +1270,81 @@ class TestLifeState(unittest.TestCase):
         self.assertEqual(from_json(""), BASE)
 
 
+class TestStateInPrompt(unittest.TestCase):
+    """v9-U4：状态渲染进 prompt"""
+
+    def test_prompt_carries_state(self):
+        import botv.ai.client as client
+        import botv.memory.context as mem
+        from botv.core import locks
+        captured = {}
+
+        async def fake_ds(msgs, max_tokens=None, target_id=None):
+            captured["sys"] = msgs[0]["content"]
+            return "好"
+
+        orig = (client.call_deepseek, mem.load_events_from_db,
+                client.life_current, client.touch_talk)
+        client.call_deepseek = fake_ds
+        mem.load_events_from_db = lambda *a, **k: []
+        client.life_current = lambda: {"mood": -0.3, "energy": 0.15, "lonely": 0.9}
+        client.touch_talk = lambda: None
+        locks._model_sem = None
+        try:
+            asyncio.run(client.get_character_reply("hi", "1"))
+        finally:
+            (client.call_deepseek, mem.load_events_from_db,
+             client.life_current, client.touch_talk) = orig
+        self.assertIn("有点烦", captured["sys"])
+        self.assertIn("困得不行", captured["sys"])
+
+
+class TestLifeEvents(unittest.TestCase):
+    """v9-U7：每日生活事件"""
+
+    def test_count_in_range(self):
+        from botv.life.events import generate, MIN_EVENTS, MAX_EVENTS
+        for _ in range(30):
+            n = len(generate())
+            self.assertGreaterEqual(n, MIN_EVENTS)
+            self.assertLessEqual(n, MAX_EVENTS)
+
+    def test_no_dup_within_day(self):
+        from botv.life.events import generate
+        for _ in range(20):
+            items = generate()
+            self.assertEqual(len(items), len(set(items)))
+
+    def test_all_from_pools(self):
+        from botv.life.events import generate, POOLS
+        all_texts = {t for _w, pool in POOLS for t in pool}
+        for _ in range(20):
+            for t in generate():
+                self.assertIn(t, all_texts)
+
+    def test_grief_pool_is_low_weight(self):
+        from botv.life.events import POOLS
+        weights = [w for w, _pool in POOLS]
+        self.assertEqual(POOLS[-1][0], min(weights), "关于他的模板权重应最低")
+
+    def test_ensure_once_per_day(self):
+        import botv.life.events as ev
+        import botv.infra.repo_memory as rm
+        from botv.core import state as cfg
+        calls = []
+        orig = rm.add_event_to_db
+        rm.add_event_to_db = lambda tid, text, **k: calls.append((tid, text, k.get("kind")))
+        try:
+            cfg.life_last_date = {}
+            n1 = ev.ensure_daily_life()
+            n2 = ev.ensure_daily_life()
+        finally:
+            rm.add_event_to_db = orig
+            cfg.life_last_date = {}
+        self.assertGreaterEqual(n1, 1)
+        self.assertEqual(n2, 0, "同一天第二次不应再写")
+        self.assertTrue(all(c[2] == "life" for c in calls))
+
+
 if __name__ == "__main__":
     unittest.main()

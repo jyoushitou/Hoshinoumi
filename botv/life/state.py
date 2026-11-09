@@ -4,6 +4,10 @@
 
 import json
 import random
+import time as _time
+from datetime import datetime
+
+from ..config import CST
 
 BASE = {"mood": 0.10, "energy": 0.70, "lonely": 0.15}  # 基线（每天回到这里）
 CLAMP = {"mood": (-1.0, 1.0), "energy": (0.0, 1.0), "lonely": (0.0, 1.0)}
@@ -146,3 +150,41 @@ def save(state):
         return True
     except Exception:
         return False
+
+
+# ===================== 运行时入口 =====================
+
+TICK_MIN_HOURS = 0.2  # 至少过 12 分钟才推进，避免频繁写库
+
+
+def current(now=None):
+    """取当前状态：按流逝的时间推进，必要时落库"""
+    from ..core import state as cfg
+    now = now or datetime.now(CST)
+    if not getattr(cfg, "bot_state", None):
+        cfg.bot_state = load()
+        cfg.bot_state_ts = _time.time()
+    elapsed = max(0.0, (_time.time() - getattr(cfg, "bot_state_ts", 0.0)) / 3600.0)
+    if elapsed >= TICK_MIN_HOURS:
+        cfg.bot_state = tick(cfg.bot_state, elapsed, now)
+        cfg.bot_state_ts = _time.time()
+        save(cfg.bot_state)
+    return cfg.bot_state
+
+
+def touch_talk(warmth=1.0):
+    """聊了一句：缓解孤独，并落库"""
+    from ..core import state as cfg
+    s = current()
+    cfg.bot_state = on_talk(s, warmth)
+    save(cfg.bot_state)
+    return cfg.bot_state
+
+
+def touch_ignored(hours=1.0):
+    """被晾着：孤独与烦躁上升"""
+    from ..core import state as cfg
+    s = current()
+    cfg.bot_state = on_ignored(s, hours)
+    save(cfg.bot_state)
+    return cfg.bot_state

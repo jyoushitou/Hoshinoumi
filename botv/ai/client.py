@@ -20,6 +20,8 @@ from ..memory import build_memory_context, extract_keywords  # 记忆上下文�
 from ..personality import get_system_prompt  # 系统提示词
 from .prompt import now_text  # 当前时间描述（v5-F7）
 from ..chat.timing import tone_hint  # 时段语气提示（v6-A20）
+from ..life.state import current as life_current, describe as describe_state, touch_talk  # v9-U4
+from ..life.events import ensure_daily_life  # v9-U7
 from ..infra.repo_profile import build_profile_text  # 对象画像（v7-B9）
 from ..memory.inject import trim, BUDGET  # 分层预算（v8-B13）
 from ..memory.timeline import build_timeline_text  # 时间线注入（v8-B16）
@@ -169,6 +171,22 @@ async def get_character_reply(txt, tid, current_kws=None):
     kw, dia, events = build_memory_context(tid, current_kws, query=txt)  # 上下文（关键词、对话历史、检索到的记忆）
     log_api(f"[get_character_reply] 记忆: kw_len={len(kw)}, dia_len={len(dia)}, events={events[:40]}")  # 日志记录上下文信息
     cur_kw_str = "、".join(current_kws) if current_kws else "无"  # 当前话题关键词（顿号分隔）
+    # v9-U4：她的真实状态 + 当前时段，拼成一句"她现在什么感觉"
+    try:
+        state_line = describe_state(life_current())
+    except Exception:
+        state_line = ""
+    try:
+        tone_line = (state_line + tone_hint()) if state_line else tone_hint()
+    except Exception:
+        tone_line = state_line or ""
+
+    # v9-U7：她今天过得怎么样——每天第一次对话时生成，之后不再写
+    try:
+        ensure_daily_life()
+    except Exception:
+        pass
+
     sys_p = get_system_prompt().format(
         global_keywords=kw,
         current_dialogue=dia,
@@ -177,7 +195,7 @@ async def get_character_reply(txt, tid, current_kws=None):
         timeline=build_timeline_text(tid),  # v8-B16：最近 7 天
         master_qq=MASTER_QQ,
         now=now_text(),  # v5-F7：让她知道现在几点
-        tone=tone_hint(),  # v6-A20：按时段给语气
+        tone=tone_line,  # v6-A20 时段 + v9-U4 状态
     )  # 格式化系统提示词
     log_api(f"[get_character_reply] system_prompt长度: {len(sys_p)}")  # 日志记录提示词长度
     user_content = f"{txt}\n(当前话题关键词:{cur_kw_str})"  # 构建用户消息（追加当前话题关键词）
@@ -188,6 +206,13 @@ async def get_character_reply(txt, tid, current_kws=None):
         if not r:  # DeepSeek无回复
             log_api("[get_character_reply] DeepSeek无回复，转豆包")  # 日志记录降级
             r = await call_doubao(msgs)  # 降级到豆包
+
+    # v9-U4：她真的回话了，算一次"被陪着"——缓解孤独
+    if r and not isinstance(r, Fallback):
+        try:
+            touch_talk()
+        except Exception:
+            pass
 
     # v5-F2：兜底文案不是她的回复，不做关键词补全，交给调用方按「失败」处理
     if isinstance(r, Fallback):
