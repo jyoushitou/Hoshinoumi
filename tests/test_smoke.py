@@ -3709,5 +3709,52 @@ class TestReadingFlow(unittest.TestCase):
         self.assertEqual(book["url"], "https://x/page/new")
 
 
+    def test_summarize_with_model(self):
+        import asyncio
+
+        async def fake_model(msgs, max_tokens=0):
+            return "云千珩逃出道观，被追兵盯上。"
+
+        out = asyncio.run(self.R.summarize_chapter("正文" * 200, call_model=fake_model))
+        self.assertEqual(out, "云千珩逃出道观，被追兵盯上。")
+
+    def test_summarize_strips_prefix(self):
+        import asyncio
+
+        async def fake_model(msgs, max_tokens=0):
+            return "摘要：他进了城。"
+
+        out = asyncio.run(self.R.summarize_chapter("正文", call_model=fake_model))
+        self.assertEqual(out, "他进了城。")
+
+    def test_summarize_truncates(self):
+        import asyncio
+
+        async def fake_model(msgs, max_tokens=0):
+            return "啊" * 500
+
+        out = asyncio.run(self.R.summarize_chapter("正文", call_model=fake_model))
+        self.assertLessEqual(len(out), self.R.SUMMARY_MAX)
+
+    def test_summarize_fallback_on_error(self):
+        import asyncio
+
+        async def boom(msgs, max_tokens=0):
+            raise RuntimeError("api down")
+
+        out = asyncio.run(self.R.summarize_chapter("第一句。第二句。第三句。", call_model=boom))
+        self.assertIn("第一句", out)
+
+    def test_summarize_empty(self):
+        import asyncio
+        self.assertEqual(asyncio.run(self.R.summarize_chapter("")), "")
+        self.assertEqual(asyncio.run(self.R.summarize_chapter("   ")), "")
+
+    def test_fallback_summary(self):
+        out = self.R.fallback_summary("他推开门。外面在下雨。远处有人喊他。")
+        self.assertIn("他推开门", out)
+        self.assertNotIn("远处有人喊他", out, "只取前两句")
+
+
 if __name__ == "__main__":
     unittest.main()

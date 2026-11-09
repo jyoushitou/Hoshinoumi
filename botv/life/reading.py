@@ -362,3 +362,56 @@ async def pick_from_rank(tid, fetch_rank=None, fetch_book=None, rng=None, exclud
     if book:
         return book, f"我在看《{book.get('title', title)}》"
     return None, msg
+# ===================== 章节摘要 =====================
+
+SUMMARY_PROMPT = (
+    "把下面这段小说章节压成一两句事实：发生了什么、谁做了什么。"
+    "不超过 80 字。不评价、不加引号、不写「本章」「主角」这种词，直接说人名和事。"
+)
+SUMMARY_SOURCE_CHARS = 3000
+
+
+def _clean_summary(text, limit=SUMMARY_MAX):
+    """去掉模型爱加的前后缀和多余空白"""
+    s = (text or "").strip()
+    s = s.strip("「」“”\"'")
+    for prefix in ("摘要：", "摘要:", "概括：", "概括:"):
+        if s.startswith(prefix):
+            s = s[len(prefix):].strip()
+    s = " ".join(s.split())
+    return s[:limit]
+
+
+def fallback_summary(text, limit=SUMMARY_MAX):
+    """模型不可用时：取开头两句"""
+    body = " ".join((text or "").split())
+    if not body:
+        return ""
+    parts = [p for p in body.replace("！", "。").replace("？", "。").split("。") if p.strip()]
+    return ("。".join(parts[:2]) + "。")[:limit]
+
+
+async def summarize_chapter(text, limit=SUMMARY_MAX, call_model=None):
+    """把一章正文压成一句话；模型失败就退回开头两句"""
+    if not text or not text.strip():
+        return ""
+    snippet = text.strip()[:SUMMARY_SOURCE_CHARS]
+
+    if call_model is None:
+        try:
+            from ..ai.models import call_deepseek as call_model
+        except Exception:
+            call_model = None
+
+    if call_model:
+        try:
+            msgs = [{"role": "system", "content": SUMMARY_PROMPT},
+                    {"role": "user", "content": snippet}]
+            out = await call_model(msgs, max_tokens=120)
+            cleaned = _clean_summary(out, limit)
+            if cleaned:
+                return cleaned
+        except Exception as e:
+            log_api(f"[读书] 摘要模型失败，用兜底: {e}")
+
+    return fallback_summary(snippet, limit)
