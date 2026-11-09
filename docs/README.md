@@ -6,7 +6,8 @@
 | **v6+** | [V6-功能.md](V6-功能.md) | 74 项功能清单（按人味 / 记忆 / 生活 / 关系分组） | 待启动 |
 | **v6 拆解** | [V6-拆解.md](V6-拆解.md) | 74 项 → **22 个可独立交付的功能单元**，含依赖图与推进顺序 | 方案稿 |
 | **v6~v13 路线图** | [路线图-v6-v13.md](路线图-v6-v13.md) | 8 个版本的主题、单元分配、验收与排期 | 方案稿 |
-| **单版计划** | [versions/](versions/) | 每版一个文件：[v6](versions/v6.md) · [v7](versions/v7.md) · [v8](versions/v8.md) · [v9](versions/v9.md) · [v10](versions/v10.md) · [v11](versions/v11.md) · [v12](versions/v12.md) · [v13](versions/v13.md) | 方案稿 |
+| **v14+ 后续** | [V14-后续清单.md](V14-后续清单.md) | 9 项后续需求（H/I/J 编号，接在 v6–v13 的 A~G 之后） | 待排期 |
+| **单版计划** | [versions/](versions/) | 每版一个文件：[v6](versions/v6.md) · [v7](versions/v7.md) · [v8](versions/v8.md) · [v9](versions/v9.md) · [v10](versions/v10.md) · [v11](versions/v11.md) · [v12](versions/v12.md) · [v13](versions/v13.md) · [v14](versions/v14.md) | 方案稿 |
 
 ## 版本约定
 
