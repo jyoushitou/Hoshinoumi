@@ -124,20 +124,51 @@ def _enqueue(payload, label):
     log_err(f"{label}: 连接不可用，消息已入队（队列 {len(cfg.pending_outbox)} 条）")
 
 
-async def _send_or_queue(action, params, ws, label):
-    """发送一条消息；连接断了就入队，等重连补发"""
-    payload = json.dumps({"action": action, "params": params}, ensure_ascii=False)
+async def _send_or_queue(action, params, ws, label, want_response=False, timeout=8):
+    """发送一条消息；连接断了就入队，等重连补发
+
+    want_response=True 时会给消息带一个 echo，并等 NapCat 回包，
+    拿到 data（里面有 message_id），用于「撤回」这类需要 id 的操作（v12-A13）。
+    """
+    echo = None
+    fut = None
+    if want_response:
+        import uuid
+        echo = uuid.uuid4().hex
+        payload_obj = {"action": action, "params": params, "echo": echo}
+        loop = asyncio.get_running_loop()
+        fut = loop.create_future()
+        cfg.pending_echo[echo] = fut
+        payload = json.dumps(payload_obj, ensure_ascii=False)
+    else:
+        payload = json.dumps({"action": action, "params": params}, ensure_ascii=False)
+
     if not _alive(ws):
         _enqueue(payload, label)
-        return False
-    async with cfg.send_lock:  # 加发送锁，防止并发发送
-        try:
+        if fut is not None:
+            cfg.pending_echo.pop(echo, None)
+        return None if want_response else False
+
+    try:
+        async with cfg.send_lock:
             await ws.send(payload)
-            return True
-        except Exception as e:
-            log_err(f"{label}失败:{e}")
-            _enqueue(payload, label)
-            return False
+    except Exception as e:
+        log_err(f"{label}失败:{e}")
+        _enqueue(payload, label)
+        if fut is not None:
+            cfg.pending_echo.pop(echo, None)
+        return None if want_response else False
+
+    if fut is None:
+        return True
+
+    try:
+        resp = await asyncio.wait_for(fut, timeout)
+        return resp
+    except Exception:
+        return None
+    finally:
+        cfg.pending_echo.pop(echo, None)
 
 
 async def flush_outbox(ws):
@@ -160,14 +191,16 @@ async def flush_outbox(ws):
     return sent
 
 
-async def send_private_msg(qq, msg, ws):
+async def send_private_msg(qq, msg, ws, want_response=False):
     """通过WebSocket发送私聊消息（断线自动入队）"""
-    return await _send_or_queue("send_private_msg", {"user_id": qq, "message": msg}, ws, "私聊")
+    return await _send_or_queue("send_private_msg", {"user_id": qq, "message": msg},
+                                ws, "私聊", want_response=want_response)
 
 
-async def send_group_msg(gid, msg, ws):
+async def send_group_msg(gid, msg, ws, want_response=False):
     """通过WebSocket发送群聊消息（断线自动入队）"""
-    return await _send_or_queue("send_group_msg", {"group_id": gid, "message": msg}, ws, "群聊")
+    return await _send_or_queue("send_group_msg", {"group_id": gid, "message": msg},
+                                ws, "群聊", want_response=want_response)
 
 
 # 气泡之间的间隔（秒）：随机，避免机械节奏（v6-A12）
@@ -213,3 +246,62 @@ async def send_sticker_group(gid, ws, uid):
         img_msg = make_image_msg(s)  # 构建图片消息
         if img_msg:  # 构建成功
             await send_group_msg(gid, img_msg, ws)  # 发送图片
+
+
+# ===================== 打错字再撤回（v12-A13） =====================
+# 真人才会这样：发出去发现错了 → 撤回 → 重发对的。低频，一周最多两次。
+
+TYPO_PROB = 0.03
+TYPO_WEEK_LIMIT = 2
+TYPO_MIN_LEN, TYPO_MAX_LEN = 4, 30
+TYPO_WEEK_SECONDS = 7 * 86400
+
+
+def make_typo(text):
+    """造一个「手滑」的版本：交换两个相邻字符"""
+    chars = list(text or "")
+    if len(chars) < TYPO_MIN_LEN:
+        return text
+    for i in range(len(chars) - 1, 0, -1):
+        if chars[i] != chars[i - 1]:
+            chars[i], chars[i - 1] = chars[i - 1], chars[i]
+            return "".join(chars)
+    return "".join(chars[1:]) or text
+
+
+def _typo_quota_ok(now):
+    recent = [t for t in cfg.typo_history if now - t < TYPO_WEEK_SECONDS]
+    cfg.typo_history[:] = recent
+    return len(recent) < TYPO_WEEK_LIMIT
+
+
+async def try_typo_recall(target, text, ws):
+    """有概率先发一条打错的、撤回，再发正确的。返回是否真的演了一次"""
+    if random.random() > TYPO_PROB:
+        return False
+    if not (TYPO_MIN_LEN <= len(text or "") <= TYPO_MAX_LEN):
+        return False
+    import time as _t
+    now = _t.time()
+    if not _typo_quota_ok(now):
+        return False
+
+    typo = make_typo(text)
+    if typo == text:
+        return False
+
+    try:
+        resp = await send_private_msg(target, [{"type": "text", "data": {"text": typo}}],
+                                      ws, want_response=True)
+    except Exception:
+        return False
+    mid = (resp.get("data") or {}).get("message_id") if isinstance(resp, dict) else None
+    if not mid:
+        log_api("[撤回] 没拿到 message_id，跳过")
+        return False
+
+    await asyncio.sleep(1.5)
+    await _send_or_queue("delete_msg", {"message_id": mid}, ws, "撤回")
+    cfg.typo_history.append(now)
+    log_system(f"打错字撤回: {typo[:12]} -> {text[:12]}")
+    return True

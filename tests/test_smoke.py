@@ -2512,5 +2512,80 @@ class TestShare(unittest.TestCase):
         self.assertFalse(self._run())
 
 
+class TestTypoRecall(unittest.TestCase):
+    """v12-A13：打错字 → 撤回 → 重发"""
+
+    def setUp(self):
+        import botv.chat.send as S
+        self.S = S
+        from botv.core import state as cfg
+        self.cfg = cfg
+        cfg.typo_history.clear()
+        self.deleted = []
+        self._orig = {}
+        self._patch("send_private_msg", self._fake_send)
+        self._patch("_send_or_queue", self._fake_action)
+
+    def tearDown(self):
+        for name, fn in self._orig.items():
+            setattr(self.S, name, fn)
+        self.cfg.typo_history.clear()
+
+    def _patch(self, name, fn):
+        self._orig[name] = getattr(self.S, name)
+        setattr(self.S, name, fn)
+
+    async def _fake_send(self, target, msg, ws, want_response=False):
+        return {"status": "ok", "data": {"message_id": 4242}}
+
+    async def _fake_action(self, action, params, ws, label, **kw):
+        self.deleted.append((action, params))
+        return True
+
+    def test_make_typo_differs(self):
+        from botv.chat.send import make_typo
+        text = "明天下午三点面试"
+        typo = make_typo(text)
+        self.assertNotEqual(typo, text)
+        self.assertEqual(len(typo), len(text))
+
+    def test_short_text_no_typo(self):
+        from botv.chat.send import make_typo
+        self.assertEqual(make_typo("在吗"), "在吗")
+
+    def _run(self, text="明天下午三点面试", prob=0.0):
+        import asyncio
+        orig = self.S.random.random
+        self.S.random.random = lambda: prob
+        try:
+            return asyncio.run(self.S.try_typo_recall("1", text, None))
+        finally:
+            self.S.random.random = orig
+
+    def test_full_flow(self):
+        self.assertTrue(self._run())
+        self.assertEqual(len(self.deleted), 1)
+        self.assertEqual(self.deleted[0][0], "delete_msg")
+        self.assertEqual(self.deleted[0][1]["message_id"], 4242)
+        self.assertEqual(len(self.cfg.typo_history), 1)
+
+    def test_probability(self):
+        self.assertFalse(self._run(prob=0.99))
+        self.assertEqual(self.deleted, [])
+
+    def test_weekly_quota(self):
+        import time
+        self.cfg.typo_history.extend([time.time(), time.time()])
+        self.assertFalse(self._run(), "一周最多两次")
+        self.assertEqual(self.deleted, [])
+
+    def test_no_message_id_degrades(self):
+        async def bad_send(target, msg, ws, want_response=False):
+            return {"status": "failed"}
+        self._patch("send_private_msg", bad_send)
+        self.assertFalse(self._run())
+        self.assertEqual(self.deleted, [])
+
+
 if __name__ == "__main__":
     unittest.main()

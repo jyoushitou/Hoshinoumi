@@ -49,6 +49,8 @@ bot_state = {}      # mood / energy / lonely
 bot_state_ts = 0.0  # 上次推进的时间戳
 life_last_date = {}  # {target_id: 'YYYY-MM-DD'} 生活事件生成日期（v9-U7）
 habit_counters = {}  # {target_id: Counter} 口头禅计数（v12-A17）
+pending_echo = {}  # {echo: Future} 等待 NapCat 回包（v12-A13）
+typo_history = []  # 打错字撤回的时间戳（v12-A13，控制频率）
 
 # ===================== 主动消息（v10-U9） =====================
 last_user_msg_ts = 0.0      # 最近一次收到消息的时间

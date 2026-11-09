@@ -196,6 +196,13 @@ async def websocket_handle_qq(ws):
             raw = await ws.recv()  # 接收原始消息
             rs = raw.decode("utf-8", "ignore") if isinstance(raw, bytes) else raw  # 解码字节为字符串
             d = json.loads(rs)  # 解析JSON
+
+            # v12-A13：带 echo 的是 NapCat 的响应包，不是新消息
+            if isinstance(d, dict) and d.get("echo"):
+                _fut = cfg.pending_echo.pop(d["echo"], None)
+                if _fut and not _fut.done():
+                    _fut.set_result(d)
+                continue
             mt = d.get("message_type")  # 消息类型：private/group
             mid = d.get("message_id")  # 消息ID
             if not mid or mid in cfg.PROCESSED_MSG_IDS:  # 消息ID无效或已处理
@@ -286,6 +293,15 @@ async def websocket_handle_qq(ws):
                 delay = reply_delay()  # 按时段 + 随机
                 log_api(f"[延迟] {delay:.1f} 秒后回复 {target}")
                 await asyncio.sleep(delay)
+                # v12-A13：小概率先「手滑」一次
+                if not is_group:
+                    try:
+                        from ..chat.send import try_typo_recall
+                        first_line = (reply_text or "").split("\n")[0]
+                        await try_typo_recall(target, first_line, ws)
+                    except Exception:
+                        pass
+
                 await send_short_reply(target, reply_text, ws, uid, is_group, ck)
                 if is_group:  # v6-E29：记录这次群回复
                     note_group_reply(gid)
