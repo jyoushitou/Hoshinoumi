@@ -231,6 +231,22 @@ async def cycle_task_run():
                 except Exception as task_e:
                     log_err(f"定时任务执行异常({task['scene']}):{task_e}")
 
+            # ---------- 日程提醒（v10-U10） ----------
+            try:
+                for it in agenda_due_soon(60):
+                    ok, why = should_reach_out(now=now, require_lonely=False)
+                    if not ok:
+                        continue
+                    rep = await get_character_reply(
+                        f"（提醒他：{it.get('t', '')}。一句话，别说教。）",
+                        str(MASTER_QQ))
+                    await send_short_reply(MASTER_QQ, rep, cfg.active_ws_qq, MASTER_QQ)
+                    note_proactive()
+                    agenda_mark(it["id"])
+                    log_system(f"日程已提醒: {it.get('t', '')[:20]}")
+            except Exception as a_e:
+                log_err(f"日程提醒异常:{a_e}")
+
             # ---------- 待办到点：回访承诺 / 时间锚点（v10-U9b） ----------
             try:
                 for item_id, item in pending_due(now):

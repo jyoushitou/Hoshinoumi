@@ -26,6 +26,7 @@ from .timing import reply_delay
 from ..core.locks import get_target_lock
 from ..life.impulse import note_user_message  # v10-U9
 from ..life import pending as life_pending  # v10-U9b
+from ..life import agenda as life_agenda  # v10-U10
 
 # ===================== 群聊节奏（v6-E29 / v10） =====================
 GROUP_COOLDOWN = 20        # 同一个群两条回复的最小间隔（秒）
@@ -173,6 +174,12 @@ async def websocket_handle_qq(ws):
             try:
                 for it in life_pending.detect(text):  # v10-U9b：记下承诺/时间锚点
                     life_pending.add([it])
+            except Exception:
+                pass
+            try:
+                ev = life_agenda.extract(text)  # v10-U10：时间 + 事件 → 日程
+                if ev:
+                    life_agenda.add(ev)
             except Exception:
                 pass
             if mt == "group" and addressed:

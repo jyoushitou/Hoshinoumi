@@ -133,6 +133,26 @@ def save_state_json(payload):
     c.connection.commit()
 
 
+def load_todo_items():
+    """所有日程（v10-U10）"""
+    c = get_cursor()
+    c.execute("SELECT id, event_summary FROM events WHERE target_id=%s AND kind='todo' ORDER BY id",
+              (STATE_TARGET,))
+    return list(c.fetchall())
+
+
+def update_todo_item(item_id, payload):
+    c = get_cursor()
+    c.execute("UPDATE events SET event_summary=%s WHERE id=%s AND kind='todo'", (payload, item_id))
+    c.connection.commit()
+
+
+def delete_todo_item(item_id):
+    c = get_cursor()
+    c.execute("DELETE FROM events WHERE id=%s AND kind='todo'", (item_id,))
+    c.connection.commit()
+
+
 def load_relation(tid):
     """读某人的亲密度（v10-U8）"""
     c = get_cursor()

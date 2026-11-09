@@ -57,3 +57,32 @@ async def cmd_profile(ctx):
         return "用法: !profile set <uid> <字段> <值>"
     target = parts[1] if len(parts) > 1 else str(MASTER_QQ)
     return format_profile(target)
+
+@command("todo")
+async def cmd_todo(ctx):
+    """!todo 看日程；!todo <文字> 添加；!todo done <id> 划掉"""
+    from datetime import datetime
+    from ..config import CST
+    from ..life.agenda import list_all, remove, extract, add
+
+    parts = ctx.parts
+    if len(parts) >= 3 and parts[1].lower() == "done":
+        return "✅ 划掉了" if remove(parts[2]) else "没找到这条"
+    if len(parts) >= 2:
+        text = " ".join(parts[1:])
+        item = extract(text)
+        if not item:
+            return "没听出时间。写清楚点：!todo 周五下午三点 面试"
+        add(item)
+        when = datetime.fromtimestamp(item["due"], CST).strftime("%m-%d %H:%M")
+        return f"✅ 记下了：{when} {item['t'][:20]}"
+
+    items = list_all()
+    if not items:
+        return "📅 没有待办"
+    lines = ["📅 待办："]
+    for it in items[:10]:
+        when = datetime.fromtimestamp(it["due"], CST).strftime("%m-%d %H:%M")
+        flag = "（已提醒）" if it.get("d") else ""
+        lines.append(f"  #{it['id']} {when} {it['t'][:24]}{flag}")
+    return "\n".join(lines)

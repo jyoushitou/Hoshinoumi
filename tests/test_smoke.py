@@ -171,7 +171,7 @@ class TestCommandRegistry(unittest.TestCase):
         "acg", "apikeys", "clear", "clip", "code", "db", "diary", "event",
         "exit", "help", "img", "keywords", "log", "memory", "ping", "quit",
         "reload", "say", "sayg", "set", "status", "sticker", "task",
-        "uptime", "usage", "profile",
+        "uptime", "usage", "profile", "todo",
     }
 
     def setUp(self):
@@ -1628,6 +1628,52 @@ class TestRelation(unittest.TestCase):
         lows = [lo for lo, _n, _d in TIERS]
         self.assertEqual(lows, sorted(lows, reverse=True))
         self.assertEqual(lows[-1], 0.0)
+
+
+class TestAgenda(unittest.TestCase):
+    """v10-U10：日程时间解析"""
+
+    NOW = None
+
+    def setUp(self):
+        from datetime import datetime
+        from botv.config import CST
+        self.now = datetime(2026, 11, 9, 10, 30, tzinfo=CST)  # 周一
+
+    def _when(self, text):
+        from botv.life.agenda import parse_when
+        return parse_when(text, self.now)
+
+    def test_tomorrow(self):
+        self.assertEqual(self._when("明天上午交作业").strftime("%m-%d %H:%M"), "11-10 09:00")
+
+    def test_day_after(self):
+        self.assertEqual(self._when("后天晚上八点约会").strftime("%m-%d %H:%M"), "11-11 20:00")
+
+    def test_weekday(self):
+        self.assertEqual(self._when("周五下午三点面试").strftime("%m-%d %H:%M"), "11-13 15:00")
+
+    def test_date(self):
+        self.assertEqual(self._when("11月15日答辩").strftime("%m-%d %H:%M"), "11-15 09:00")
+
+    def test_tonight_chinese_numeral(self):
+        self.assertEqual(self._when("今晚九点开会").strftime("%m-%d %H:%M"), "11-09 21:00")
+
+    def test_no_time(self):
+        self.assertIsNone(self._when("你好呀"))
+
+    def test_extract_needs_event_word(self):
+        from botv.life.agenda import extract
+        self.assertIsNone(extract("明天出去玩", self.now), "没有事件词不该记")
+        self.assertIsNotNone(extract("明天面试", self.now))
+
+    def test_extract_ignores_past(self):
+        from botv.life.agenda import extract
+        self.assertIsNone(extract("昨天面试", self.now))
+
+    def test_past_today_ignored(self):
+        from botv.life.agenda import extract
+        self.assertIsNone(extract("今天上午九点开会", self.now), "已经过去的今天不记")
 
 
 if __name__ == "__main__":
