@@ -11,10 +11,10 @@ from .dedupe import dedupe_key
 
 # v7-B15：去重窗口与按 kind 的保留上限
 DEDUPE_WINDOW_DAYS = 7
-KIND_LIMITS = {"life": 60, "event": 30, "promise": 30, "profile": 20}
+KIND_LIMITS = {"life": 60, "event": 30, "promise": 30, "profile": 20, "photo": 40}
 KIND_LIMIT_DEFAULT = 20
 # 旧代码调 load_events_from_db 时默认只看这几类
-DEFAULT_KINDS = ("event", "life", "promise")
+DEFAULT_KINDS = ("event", "life", "promise", "photo")
 
 
 # ===================== 对话记忆 =====================
@@ -212,7 +212,7 @@ def load_timeline(tid, days=7, limit=12):
         SELECT DATE(COALESCE(last_seen, created_at)) AS day,
                event_summary AS summary
         FROM events
-        WHERE target_id IN (%s, %s) AND kind IN ('event', 'life')
+        WHERE target_id IN (%s, %s) AND kind IN ('event', 'life', 'photo')
           AND COALESCE(last_seen, created_at) >= NOW() - INTERVAL %s DAY
         ORDER BY COALESCE(last_seen, created_at) DESC
         LIMIT %s
@@ -227,7 +227,7 @@ def load_memories_for_search(tid, limit=300):
         SELECT id, kind, event_summary AS summary, tags, importance, hit_count,
                created_at, last_seen
         FROM events
-        WHERE target_id IN (%s, %s) AND kind IN ('event','life','promise')
+        WHERE target_id IN (%s, %s) AND kind IN ('event','life','promise','photo')
         ORDER BY id DESC LIMIT %s
     """, (tid, STATE_TARGET, limit))
     return list(c.fetchall())

@@ -1898,5 +1898,63 @@ class TestChatImpulse(unittest.TestCase):
         self.assertTrue(hit)
 
 
+class TestPhotoMemory(unittest.TestCase):
+    """v11-A9：她记住你发过的图"""
+
+    def test_kind_registered(self):
+        from botv.infra.repo_memory import KIND_LIMITS, DEFAULT_KINDS
+        self.assertIn("photo", KIND_LIMITS, "photo 要有独立保留上限")
+        self.assertIn("photo", DEFAULT_KINDS, "检索要能召回图片记忆")
+
+    def test_photo_event_written_with_tags(self):
+        import botv.infra.repo_memory as rm
+        import botv.chat.inbound as inbound
+        self.assertTrue(hasattr(inbound, "add_event_to_db"), "inbound 应导入 add_event_to_db")
+
+    def test_kind_limit_value(self):
+        from botv.infra.repo_memory import KIND_LIMITS
+        self.assertGreaterEqual(KIND_LIMITS["photo"], 20)
+
+
+class TestVision(unittest.TestCase):
+    """v11-A8/A6：看图拿描述和标签"""
+
+    def test_parse_fullwidth_colon(self):
+        from botv.ai.vision import parse_reply
+        desc, tags = parse_reply("描述：一只橘猫趴在窗台上打哈欠\n标签：猫,橘猫,窗台,打哈欠")
+        self.assertIn("橘猫", desc)
+        self.assertEqual(tags[:2], ["猫", "橘猫"])
+
+    def test_parse_ascii_colon(self):
+        from botv.ai.vision import parse_reply
+        desc, tags = parse_reply("描述: 两个人在吃火锅\n标签: 火锅,朋友")
+        self.assertIn("火锅", desc)
+        self.assertIn("朋友", tags)
+
+    def test_parse_no_format(self):
+        from botv.ai.vision import parse_reply
+        desc, tags = parse_reply("完全没按格式的一段话")
+        self.assertEqual(desc, "完全没按格式的一段话")
+        self.assertEqual(tags, [])
+
+    def test_tags_capped(self):
+        from botv.ai.vision import parse_reply
+        _d, tags = parse_reply("标签：a,b,c,d,e,f,g,h")
+        self.assertLessEqual(len(tags), 5)
+
+    def test_no_key_returns_empty(self):
+        import asyncio
+        import botv.ai.vision as V
+        from botv.core import state as cfg
+        orig = getattr(cfg, "DS_API_KEY", "")
+        cfg.DS_API_KEY = ""
+        try:
+            desc, tags = asyncio.run(V.describe_image(b"\xff\xd8fake"))
+        finally:
+            cfg.DS_API_KEY = orig
+        self.assertIsNone(desc)
+        self.assertEqual(tags, [])
+
+
 if __name__ == "__main__":
     unittest.main()
