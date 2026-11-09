@@ -144,6 +144,75 @@ def describe(tid):
     return line
 
 
+# ===================== 挑书 =====================
+
+# 起步书单：番茄的公开书籍页（可被 NAO_BOOK_URLS 覆盖）
+DEFAULT_BOOKS = [
+    ("天外玉", "https://fanqienovel.com/page/7688347825909812248"),
+    ("莫若凌霄", "https://fanqienovel.com/page/7091150316644600867"),
+    ("惊鸿", "https://fanqienovel.com/page/6883748331202284558"),
+]
+
+
+def book_candidates():
+    """书单：环境变量 NAO_BOOK_URLS（逗号分隔的「名字|url」）优先，否则用内置"""
+    raw = (os.getenv("NAO_BOOK_URLS") or "").strip()
+    if not raw:
+        return list(DEFAULT_BOOKS)
+    items = []
+    for part in raw.split(","):
+        part = part.strip()
+        if not part:
+            continue
+        if "|" in part:
+            name, url = part.split("|", 1)
+        else:
+            name, url = "", part
+        if url.startswith("http"):
+            items.append((name.strip(), url.strip()))
+    return items or list(DEFAULT_BOOKS)
+
+
+async def pick_book(tid, fetch_book=None, rng=None, candidates=None):
+    """没在追书时挑一本开始追；已经在追就返回当前那本
+
+    返回 book dict 或 None
+    """
+    import random as _r
+    rng = rng or _r
+
+    data = load(tid)
+    existing = current_book(data)
+    if existing:
+        return existing
+
+    pool = candidates if candidates is not None else book_candidates()
+    if not pool:
+        return None
+    name, url = rng.choice(pool)
+
+    info = None
+    if fetch_book:
+        try:
+            info = await fetch_book(url)
+        except Exception as e:
+            log_api(f"[读书] 挑书取信息失败: {e}")
+            info = None
+
+    title = (info or {}).get("title") or name or "一本小说"
+    book = {
+        "title": title,
+        "url": url,
+        "last_no": 0,
+        "last_title": "",
+        "intro": ((info or {}).get("intro") or "")[:200],
+    }
+    data.setdefault("books", []).append(book)
+    save(tid, data)
+    log_system(f"开始追书: 《{title}》")
+    return book
+
+
 # ===================== 读一次 =====================
 
 async def read_once(tid, fetch_book=None, fetch_chapter=None, summarize=None, now=None):
@@ -197,3 +266,65 @@ async def read_once(tid, fetch_book=None, fetch_chapter=None, summarize=None, no
     save(tid, data)
     log_system(f"读书: {data['books'][-1]['title']} {chapter_title}（摘要 {len(summary)} 字）")
     return {"ok": True, "chapter": chapter_title, "summary": summary, "reason": "ok"}
+
+
+# ===================== 指定小说（主人点名） =====================
+
+import re as _re
+
+BOOK_URL = _re.compile(
+    r"https?://(?:www\.)?(?:fanqienovel\.com|qidian\.com)/[^\s，。、）)]+"
+)
+BOOK_TITLE = _re.compile(r"《([^》]{1,30})》")
+FOLLOW_HINT = _re.compile(r"(去看|去读|看看|追|读一下|开始看)")
+
+
+def detect_book_request(text):
+    """从他的话里找「让我去看某本书」
+
+    返回 {"url": str, "title": str} | None
+    """
+    text = text or ""
+    m = BOOK_URL.search(text)
+    if m:
+        return {"url": m.group(0).rstrip(".,;!?)"), "title": ""}
+    m = BOOK_TITLE.search(text)
+    if m and FOLLOW_HINT.search(text):
+        return {"url": "", "title": m.group(1).strip()}
+    return None
+
+
+async def follow(tid, url="", title="", fetch_book=None):
+    """把一本书加进追更列表；已在列表里就切回那本
+
+    返回 (book | None, 说明)
+    """
+    data = load(tid)
+    books = data.setdefault("books", [])
+
+    if url:
+        for b in books:
+            if b.get("url") == url:
+                return b, "已经在追这本了"
+        info = None
+        if fetch_book:
+            try:
+                info = await fetch_book(url)
+            except Exception as e:
+                log_api(f"[读书] 指定书取信息失败: {e}")
+                info = None
+        name = (info or {}).get("title") or title or "这本小说"
+        book = {"title": name, "url": url, "last_no": 0, "last_title": "",
+                "intro": ((info or {}).get("intro") or "")[:200]}
+        books.append(book)
+        save(tid, data)
+        log_system(f"主人点名追书: 《{name}》")
+        return book, f"好，我去看《{name}》"
+
+    if title:
+        for b in books:
+            if b.get("title") == title:
+                return b, "已经在追这本了"
+        return None, f"《{title}》——给我个链接吧，我找不到同名的那本"
+
+    return None, "没听出是哪本"

@@ -90,7 +90,8 @@ def strip_tags(html):
         return ""
     text = _SCRIPT.sub("", html)
     text = re.sub(r"<br\s*/?>", "\n", text, flags=re.I)
-    text = re.sub(r"</p>", "\n", text, flags=re.I)
+    # 块级标签结束当作换行，避免「书名+作者」粘在一起
+    text = re.sub(r"</(?:p|div|li|h[1-6]|tr|section|article)>", "\n", text, flags=re.I)
     text = _TAG.sub("", text)
     text = unescape(text)
     text = _SPACE.sub(" ", text)
@@ -170,3 +171,47 @@ async def fetch_book(url):
 async def fetch_chapter(url):
     html = await fetch_html(url)
     return parse_chapter(html) if html else ""
+
+
+# ===================== 热榜（v16） =====================
+
+RANK_URL = "https://fanqienovel.com/"
+_BOOK_ANCHOR = re.compile(r'<a[^>]+href="(/page/[0-9]+)"[^>]*>(.*?)</a>', re.S | re.I)
+
+
+def parse_rank(html, limit=20):
+    """从首页/榜单页解析出 [(书名, url)]"""
+    if not html:
+        return []
+    seen = set()
+    out = []
+    for path, inner in _BOOK_ANCHOR.findall(html):
+        if path in seen:
+            continue
+        text = strip_tags(inner)
+        title = ""
+        for line in text.split("\n"):
+            line = line.strip()
+            if line and not line.startswith("http"):
+                title = line
+                break
+        if not title or len(title) > 40:
+            continue
+        seen.add(path)
+        out.append((title, "https://fanqienovel.com" + path))
+        if len(out) >= limit:
+            break
+    return out
+
+
+async def fetch_rank(limit=20):
+    """拉番茄首页推荐/热榜；失败返回空列表"""
+    html = await fetch_html(RANK_URL)
+    if not html:
+        return []
+    items = parse_rank(html, limit)
+    if items:
+        log_api(f"[小说] 热榜拿到 {len(items)} 本")
+    else:
+        log_api("[小说] 热榜解析为空（页面结构可能变了）")
+    return items

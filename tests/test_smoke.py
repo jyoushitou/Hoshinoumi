@@ -2107,6 +2107,7 @@ class TestEnvironment(unittest.TestCase):
         "NAO_PERSONA",
         "NAO_READ_IDLE_HOURS",
         "NAO_READ_DAILY_CHAPTERS",
+        "NAO_BOOK_URLS",
     }
 
     @staticmethod
@@ -3537,6 +3538,120 @@ class TestReadingFlow(unittest.TestCase):
         chapters = [(f"第{i}章", f"u{i}") for i in range(1, 6)]
         picked = self.R.next_chapters(chapters, 2, limit=2)
         self.assertEqual([t for t, _u in picked], ["第3章", "第4章"])
+
+
+    def test_pick_book(self):
+        import asyncio
+
+        async def fetch_book(url):
+            return {"title": "天外玉", "intro": "修仙", "chapters": [("第1章", "u1")]}
+
+        class Rng:
+            def choice(self, seq):
+                return seq[0]
+
+        book = asyncio.run(self.R.pick_book(
+            "9", fetch_book, Rng(), candidates=[("备用名", "https://x/page/9")]))
+        self.assertEqual(book["title"], "天外玉")
+        self.assertEqual(book["last_no"], 0)
+        self.assertEqual(len(self.R.load("9")["books"]), 1)
+
+    def test_pick_book_keeps_existing(self):
+        import asyncio
+        self._seed_book("8")
+        book = asyncio.run(self.R.pick_book("8", None, None, candidates=[("别的", "https://x/page/2")]))
+        self.assertEqual(book["title"], "天外玉")
+        self.assertEqual(len(self.R.load("8")["books"]), 1)
+
+    def test_pick_book_fetch_failure_uses_name(self):
+        import asyncio
+
+        async def bad(url):
+            raise RuntimeError("boom")
+
+        class Rng:
+            def choice(self, seq):
+                return seq[0]
+
+        book = asyncio.run(self.R.pick_book(
+            "7", bad, Rng(), candidates=[("备胎书名", "https://x/page/7")]))
+        self.assertEqual(book["title"], "备胎书名")
+
+    def test_book_candidates_env(self):
+        import os
+        old = os.environ.get("NAO_BOOK_URLS")
+        os.environ["NAO_BOOK_URLS"] = "我的书|https://x/page/1,https://x/page/2"
+        try:
+            items = self.R.book_candidates()
+        finally:
+            if old is None:
+                os.environ.pop("NAO_BOOK_URLS", None)
+            else:
+                os.environ["NAO_BOOK_URLS"] = old
+        self.assertEqual(items[0], ("我的书", "https://x/page/1"))
+        self.assertEqual(items[1][1], "https://x/page/2")
+
+
+    def test_detect_url(self):
+        got = self.R.detect_book_request("去看 https://fanqienovel.com/page/123 这本")
+        self.assertEqual(got["url"], "https://fanqienovel.com/page/123")
+
+    def test_detect_title(self):
+        got = self.R.detect_book_request("《天外玉》你去看看")
+        self.assertEqual(got["title"], "天外玉")
+
+    def test_detect_none(self):
+        self.assertIsNone(self.R.detect_book_request("今天天气不错"))
+        self.assertIsNone(self.R.detect_book_request("《天外玉》好看吗"))  # 没有「去看」意图
+
+    def test_follow_by_url(self):
+        import asyncio
+
+        async def fetch_book(url):
+            return {"title": "新书", "intro": "简介", "chapters": []}
+
+        book, msg = asyncio.run(self.R.follow("5", url="https://x/page/5", fetch_book=fetch_book))
+        self.assertEqual(book["title"], "新书")
+        self.assertIn("好，我去看", msg)
+        self.assertEqual(len(self.R.load("5")["books"]), 1)
+
+    def test_follow_twice(self):
+        import asyncio
+
+        async def fetch_book(url):
+            return {"title": "新书", "intro": "", "chapters": []}
+
+        asyncio.run(self.R.follow("6", url="https://x/page/6", fetch_book=fetch_book))
+        book, msg = asyncio.run(self.R.follow("6", url="https://x/page/6", fetch_book=fetch_book))
+        self.assertIn("已经在追", msg)
+        self.assertEqual(len(self.R.load("6")["books"]), 1)
+
+    def test_follow_by_title_needs_link(self):
+        import asyncio
+        book, msg = asyncio.run(self.R.follow("4", title="天外玉"))
+        self.assertIsNone(book)
+        self.assertIn("链接", msg)
+
+
+    def test_parse_rank(self):
+        from botv.life.novel import parse_rank
+        html = ('<a href="/page/111"><h3>部族荣光</h3><p>丧狐</p></a>'
+                '<a href="/page/222"><h3>莫若凌霄</h3></a>'
+                '<a href="/page/111"><h3>重复的</h3></a>'
+                '<a href="/writer/zone/article/1"><h3>公告</h3></a>')
+        items = parse_rank(html)
+        self.assertEqual(items[0], ("部族荣光", "https://fanqienovel.com/page/111"))
+        self.assertEqual(len(items), 2, "去重且只收 /page/ 链接")
+
+    def test_parse_rank_limit(self):
+        from botv.life.novel import parse_rank
+        html = "".join(f'<a href="/page/{i}"><h3>书{i}</h3></a>' for i in range(30))
+        self.assertEqual(len(parse_rank(html, limit=5)), 5)
+
+    def test_parse_rank_empty(self):
+        from botv.life.novel import parse_rank
+        self.assertEqual(parse_rank(""), [])
+        self.assertEqual(parse_rank("<div>没有书</div>"), [])
 
 
 if __name__ == "__main__":
