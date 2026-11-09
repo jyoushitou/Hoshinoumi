@@ -163,3 +163,23 @@ async def cmd_growth(ctx):
         pass
 
     return "\n".join(lines)
+@command("persona")
+async def cmd_persona(ctx):
+    """!persona - 看当前角色卡；!persona <名字> 切换（v14-A3）"""
+    from ..ai.persona_loader import available_cards, active_name, save_active
+    from ..ai.prompt import reload_personality_supplement
+    from ..core import state as cfg
+
+    cards = available_cards()
+    if not ctx.args:
+        return ("🎭 当前角色：" + active_name() +
+                "\n可用：" + ("、".join(cards) if cards else "只有内置"))
+
+    name = ctx.args[0].strip()
+    if name not in cards:
+        return f"没有这张卡：{name}\n可用：{'、'.join(cards)}"
+
+    cfg.persona_name = name
+    save_active(name)
+    reload_personality_supplement()
+    return f"✅ 已切换到「{name}」。下一句话就生效。"

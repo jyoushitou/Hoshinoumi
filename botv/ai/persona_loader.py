@@ -20,9 +20,52 @@ DEFAULT_CARD = "nao"
 DEFAULT_WEIGHT = 0.2
 
 
+ACTIVE_FILE = os.path.join(CARD_ROOT, ".active")
+
+
+def available_cards():
+    """列出所有可用的角色卡（目录名）"""
+    try:
+        return sorted(
+            n for n in os.listdir(CARD_ROOT)
+            if os.path.isdir(os.path.join(CARD_ROOT, n)) and not n.startswith(".")
+        )
+    except Exception:
+        return []
+
+
+def _saved_name():
+    try:
+        with open(ACTIVE_FILE, encoding="utf-8") as f:
+            return f.read().strip()
+    except Exception:
+        return ""
+
+
+def save_active(name):
+    """记住切换结果（重启也生效）"""
+    try:
+        with open(ACTIVE_FILE, "w", encoding="utf-8") as f:
+            f.write(name)
+        return True
+    except Exception:
+        return False
+
+
+def active_name():
+    """当前角色名：运行时覆盖 > 持久化 > 环境变量 > 默认"""
+    from ..core import state as cfg
+    for name in (getattr(cfg, "persona_name", ""), _saved_name(),
+                 os.getenv("NAO_PERSONA") or "", DEFAULT_CARD):
+        name = (name or "").strip()
+        if name and os.path.isdir(os.path.join(CARD_ROOT, name)):
+            return name
+    return DEFAULT_CARD
+
+
 def card_dir():
     """当前生效的卡片目录；不存在就返回默认目录"""
-    name = (os.getenv("NAO_PERSONA") or DEFAULT_CARD).strip()
+    name = active_name()
     path = os.path.join(CARD_ROOT, name)
     if os.path.isdir(path):
         return path

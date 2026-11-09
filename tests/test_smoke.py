@@ -171,7 +171,7 @@ class TestCommandRegistry(unittest.TestCase):
         "acg", "apikeys", "clear", "clip", "code", "db", "diary", "event",
         "exit", "help", "img", "keywords", "log", "memory", "ping", "quit",
         "reload", "say", "sayg", "set", "status", "sticker", "task",
-        "uptime", "usage", "profile", "todo", "voice", "memorybook", "growth",
+        "uptime", "usage", "profile", "todo", "voice", "memorybook", "growth", "persona",
     }
 
     def setUp(self):
@@ -3075,6 +3075,49 @@ class TestPersonaCard(unittest.TestCase):
         cfg.CODE_MODE = False
         text = get_system_prompt()
         self.assertIn("友利奈绪", text)
+
+
+class TestPersonaSwitch(unittest.TestCase):
+    """v14-A3：多角色切换"""
+
+    def setUp(self):
+        from botv.core import state as cfg
+        self.cfg = cfg
+        cfg.persona_name = ""
+
+    def tearDown(self):
+        self.cfg.persona_name = ""
+
+    def test_lists_cards(self):
+        from botv.ai.persona_loader import available_cards
+        self.assertIn("nao", available_cards())
+
+    def test_default_active(self):
+        from botv.ai.persona_loader import active_name
+        self.assertEqual(active_name(), "nao")
+
+    def test_runtime_switch(self):
+        import os
+        from botv.ai import persona_loader as L
+        os.makedirs(os.path.join(L.CARD_ROOT, "testcard"), exist_ok=True)
+        try:
+            self.cfg.persona_name = "testcard"
+            self.assertEqual(L.active_name(), "testcard")
+        finally:
+            self.cfg.persona_name = ""
+            import shutil
+            shutil.rmtree(os.path.join(L.CARD_ROOT, "testcard"), ignore_errors=True)
+
+    def test_unknown_falls_back(self):
+        from botv.ai import persona_loader as L
+        self.cfg.persona_name = "根本没有这张卡"
+        self.assertEqual(L.active_name(), "nao")
+
+    def test_reload_supplement(self):
+        from botv.ai.prompt import reload_personality_supplement
+        import botv.ai.prompt as P
+        reload_personality_supplement()
+        self.assertTrue(P.PERSONALITY_SUPPLEMENT)
 
 
 if __name__ == "__main__":

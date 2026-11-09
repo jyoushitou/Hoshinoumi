@@ -93,6 +93,13 @@ def load_personality_supplement():
     log_system("人设补充未加载，使用基础人设")
 
 
+def reload_personality_supplement():
+    """切换角色卡后重新加载补充（v14-A3）"""
+    global PERSONALITY_SUPPLEMENT
+    PERSONALITY_SUPPLEMENT = ""
+    load_personality_supplement()
+
+
 def get_system_prompt():
     """生成完整的系统提示词，包含20个纬度×30个标签的可用图片标签列表"""
     available_tags = build_available_tags()
