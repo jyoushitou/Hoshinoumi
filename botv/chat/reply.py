@@ -105,13 +105,20 @@ async def build_reply_message(txt, uid, kws=None, is_group=False):
             return None
         return ("image", [{"type": "image", "data": {"file": real}}])
 
-    if img_kw and image_allowed(uid, is_group):
+    # v14-B1：整条回复只掷一次骰——AI 关键词和 jieba 兜底共用这个结果
+    allow_image = image_allowed(uid, is_group)
+
+    if img_kw and allow_image:
         fp = await get_best_image(img_kw, uid)
         part = _image_part(fp) if fp else None
         if part:
             parts.append(part)
             return parts
         log_api("[构建回复] AI 关键词未搜到图，改用 jieba 兜底")
+
+    if not allow_image:
+        log_api("[构建回复] 这次不配图（概率/冷却）")
+        return parts
 
     search_kws = extract_keywords(f"{dialog} {action}")
     if search_kws:

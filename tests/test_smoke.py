@@ -3248,5 +3248,50 @@ class TestDigestOverflow(unittest.TestCase):
         self.assertFalse(asyncio.run(self.D.maybe_condense("t4", summarize=None)))
 
 
+class TestImageGateRegression(unittest.TestCase):
+    """回归：发图闸门关闭时，两条发图路径都不能绕过"""
+
+    def _run(self, text, allow):
+        import asyncio
+        import botv.chat.reply as R
+        calls = []
+        orig = (R.get_best_image, R.extract_keywords, R.image_allowed, R.materialize_image)
+
+        async def fake_get(kws, uid):
+            calls.append(kws)
+            return "/tmp/fake.jpg"
+
+        R.get_best_image = fake_get
+        R.extract_keywords = lambda t: ["猫"]
+        R.image_allowed = lambda *a, **k: allow
+        R.materialize_image = lambda p: p
+        try:
+            parts = asyncio.run(R.build_reply_message(text, "1"))
+        finally:
+            (R.get_best_image, R.extract_keywords, R.image_allowed,
+             R.materialize_image) = orig
+        return parts, calls
+
+    def test_gate_closed_no_image(self):
+        parts, calls = self._run("今天好累\n（趴下）\n关键词搜索图片用：猫,狗", allow=False)
+        self.assertFalse(any(p[0] == "image" for p in parts), "闸门关了不能出图")
+        self.assertEqual(calls, [], "闸门关了就不该去搜图")
+
+    def test_gate_open_ai_keywords(self):
+        parts, calls = self._run("今天好累\n（趴下）\n关键词搜索图片用：猫,狗", allow=True)
+        self.assertTrue(any(p[0] == "image" for p in parts))
+        self.assertTrue(calls)
+
+    def test_gate_open_fallback(self):
+        """AI 没给关键词时，兜底那条路也要受闸门控制"""
+        parts, calls = self._run("今天好累\n（趴下）", allow=True)
+        self.assertTrue(any(p[0] == "image" for p in parts))
+
+    def test_gate_closed_fallback(self):
+        parts, calls = self._run("今天好累\n（趴下）", allow=False)
+        self.assertFalse(any(p[0] == "image" for p in parts))
+        self.assertEqual(calls, [])
+
+
 if __name__ == "__main__":
     unittest.main()
