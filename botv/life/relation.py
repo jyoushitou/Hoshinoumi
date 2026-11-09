@@ -87,7 +87,8 @@ def bump(tid):
 
 
 def describe(tid):
-    """给 prompt 用的一句关系描述"""
+    """给 prompt 用的一句关系描述（v12-G51：够熟才允许接半句）"""
     aff = get(tid)
     name, desc = tier_of(aff)
-    return f"{desc}（现在是「{name}」）"
+    extra = "（熟到可以把他没说完的话接下去，但别每次都猜）" if name in ("亲近", "熟") else ""
+    return f"{desc}（现在是「{name}」）{extra}"

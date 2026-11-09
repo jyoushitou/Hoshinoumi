@@ -33,7 +33,7 @@ def is_at_me(raw_content, self_qq):
     return False
 
 
-async def parse_message_content(raw_content, user_id):
+async def parse_message_content(raw_content, user_id, ws=None):
     """解析消息内容：提取文本、处理图片、记录表情
 
     v8：返回 (文本, 图片 md5 列表)——md5 用来在回复后补标签。
@@ -92,9 +92,22 @@ async def parse_message_content(raw_content, user_id):
                 else:  # 下载失败
                     img_info.append("[图]")  # 添加通用图片标识
                     log_api(f"[消息解析] 图片下载失败: {url[:60]}")  # 日志记录
-            elif t == "reply":  # 引用某条消息（v12-A16）
+            elif t == "reply":  # 引用某条消息（v12-A15）
                 img_info.append("[引用]")
-                input_text += " （他在引用某条消息）"
+                quoted = d.get("id")
+                detail = ""
+                if quoted and ws is not None:
+                    try:
+                        from .send import request_action
+                        resp = await request_action("get_msg", {"message_id": quoted}, ws, "取引用")
+                        data = (resp or {}).get("data") or {}
+                        text_q = (data.get("raw_message") or "").strip()
+                        who = ((data.get("sender") or {}).get("nickname") or "").strip()
+                        if text_q:
+                            detail = f"{who}：{text_q[:40]}" if who else text_q[:40]
+                    except Exception:
+                        detail = ""
+                input_text += f" （他在引用{detail}）" if detail else " （他在引用某条消息）"
 
             elif t == "record":  # 语音条（v11-A14）
                 url = d.get("url") or d.get("file")

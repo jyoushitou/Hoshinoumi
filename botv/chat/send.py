@@ -171,6 +171,11 @@ async def _send_or_queue(action, params, ws, label, want_response=False, timeout
         cfg.pending_echo.pop(echo, None)
 
 
+async def request_action(action, params, ws, label="请求", timeout=8):
+    """发一个请求并等回包（get_msg / 撤回 / 回戳都走它，v12）"""
+    return await _send_or_queue(action, params, ws, label, want_response=True, timeout=timeout)
+
+
 async def flush_outbox(ws):
     """重连后补发断线期间积压的消息，返回补发条数"""
     if not _alive(ws) or not cfg.pending_outbox:

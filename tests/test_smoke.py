@@ -2587,5 +2587,118 @@ class TestTypoRecall(unittest.TestCase):
         self.assertEqual(self.deleted, [])
 
 
+class TestPoke(unittest.TestCase):
+    """v12-A16：戳一戳回戳"""
+
+    def test_detect(self):
+        from botv.chat.notice import is_poke
+        self.assertTrue(is_poke({"post_type": "notice", "notice_type": "notify", "sub_type": "poke"}))
+        self.assertFalse(is_poke({"post_type": "message"}))
+        self.assertFalse(is_poke({"post_type": "notice", "notice_type": "notify", "sub_type": "other"}))
+
+    def test_reply_back_in_group(self):
+        import asyncio
+        from botv.chat.notice import handle_notice
+        calls = []
+
+        async def fake(action, params, ws, label):
+            calls.append((action, params))
+
+        d = {"post_type": "notice", "notice_type": "notify", "sub_type": "poke",
+             "target_id": "1001", "user_id": "2002", "group_id": 123}
+        ok = asyncio.run(handle_notice(d, None, 1001, fake))
+        self.assertTrue(ok)
+        self.assertEqual(calls[0][0], "group_poke")
+        self.assertEqual(calls[0][1]["user_id"], "2002")
+
+    def test_reply_back_private(self):
+        import asyncio
+        from botv.chat.notice import handle_notice
+        calls = []
+
+        async def fake(action, params, ws, label):
+            calls.append((action, params))
+
+        d = {"post_type": "notice", "notice_type": "notify", "sub_type": "poke",
+             "target_id": "1001", "user_id": "2002"}
+        asyncio.run(handle_notice(d, None, 1001, fake))
+        self.assertEqual(calls[0][0], "friend_poke")
+
+    def test_ignore_poke_others(self):
+        import asyncio
+        from botv.chat.notice import handle_notice
+        calls = []
+
+        async def fake(action, params, ws, label):
+            calls.append(action)
+
+        d = {"post_type": "notice", "notice_type": "notify", "sub_type": "poke",
+             "target_id": "9999", "user_id": "2002"}
+        ok = asyncio.run(handle_notice(d, None, 1001, fake))
+        self.assertFalse(ok)
+        self.assertEqual(calls, [])
+
+
+class TestQuotedReply(unittest.TestCase):
+    """v12-A15：引用回复标记"""
+
+    def test_marker_without_ws(self):
+        import asyncio
+        from botv.chat.inbound import parse_message_content
+        raw = [{"type": "reply", "data": {"id": 123}},
+               {"type": "text", "data": {"text": "这个咋样"}}]
+        text, _md5 = asyncio.run(parse_message_content(raw, "1", None))
+        self.assertIn("引用", text)
+        self.assertIn("这个咋样", text)
+
+
+class TestInsideJokes(unittest.TestCase):
+    """v12-G37：内部梗（按标签频次）"""
+
+    def test_counts_and_picks(self):
+        from botv.life.inside_jokes import count_tags, pick_jokes
+        rows = [{"tags": "猫,加班"}, {"tags": "猫"}, {"tags": "猫,加班"}, {"tags": "加班"}]
+        jokes = pick_jokes(count_tags(rows))
+        self.assertIn("猫", jokes)
+        self.assertIn("加班", jokes)
+
+    def test_threshold(self):
+        from botv.life.inside_jokes import count_tags, pick_jokes
+        rows = [{"tags": "面试"}, {"tags": "面试"}]
+        self.assertEqual(pick_jokes(count_tags(rows)), [])
+
+    def test_describe(self):
+        from botv.life.inside_jokes import describe
+        self.assertEqual(describe([]), "")
+        self.assertIn("猫", describe(["猫"]))
+
+    def test_bad_rows(self):
+        from botv.life.inside_jokes import count_tags
+        self.assertEqual(len(count_tags([{}, None, {"tags": ""}])), 0)
+
+
+class TestRapport(unittest.TestCase):
+    """v12-G51：够熟才允许接半句"""
+
+    def _describe(self, aff):
+        import botv.life.relation as R
+        orig = R.get
+        R.get = lambda tid: aff
+        try:
+            return R.describe("1")
+        finally:
+            R.get = orig
+
+    def test_close_allows(self):
+        self.assertIn("接下去", self._describe(0.8))
+
+    def test_stranger_not(self):
+        self.assertNotIn("接下去", self._describe(0.1))
+
+    def test_tier_text_present(self):
+        self.assertIn("亲近", self._describe(0.8))
+        self.assertIn("陌生", self._describe(0.05))
+
+
 if __name__ == "__main__":
     unittest.main()

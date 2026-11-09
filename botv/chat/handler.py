@@ -28,6 +28,7 @@ from ..life.impulse import note_user_message  # v10-U9
 from ..life import pending as life_pending  # v10-U9b
 from ..life import agenda as life_agenda  # v10-U10
 from ..life import habit as life_habit  # v12-A17
+from .notice import handle_notice  # v12-A16
 
 # ===================== 群聊节奏（v6-E29 / v10） =====================
 GROUP_COOLDOWN = 20        # 同一个群两条回复的最小间隔（秒）
@@ -203,6 +204,16 @@ async def websocket_handle_qq(ws):
                 if _fut and not _fut.done():
                     _fut.set_result(d)
                 continue
+
+            # v12-A16：通知事件（戳一戳等）
+            if isinstance(d, dict) and d.get("post_type") == "notice":
+                try:
+                    from .send import _send_or_queue
+                    self_qq = d.get("self_id") or cfg.self_qq
+                    await handle_notice(d, ws, self_qq, _send_or_queue)
+                except Exception as e:
+                    log_api(f"[通知] 处理失败: {e}")
+                continue
             mt = d.get("message_type")  # 消息类型：private/group
             mid = d.get("message_id")  # 消息ID
             if not mid or mid in cfg.PROCESSED_MSG_IDS:  # 消息ID无效或已处理
@@ -214,7 +225,7 @@ async def websocket_handle_qq(ws):
             if self_qq:
                 cfg.self_qq = self_qq
             addressed = is_at_me(d.get("message", ""), cfg.self_qq)
-            text, img_md5s = await parse_message_content(d.get("message", ""), uid)  # (文本, 图片md5)
+            text, img_md5s = await parse_message_content(d.get("message", ""), uid, ws)  # (文本, 图片md5)
             note_user_message()  # v10-U9：她在等你，别急着主动找
             try:
                 life_habit.learn(uid, text)  # v12-A17：学一点他的口头禅
