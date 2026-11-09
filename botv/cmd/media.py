@@ -86,3 +86,20 @@ async def cmd_acg(ctx):
         await send_private_msg(ctx.uid, img_msg, ctx.ws)
     log_send(f"[!acg] 已发送ACG图: {abs_fp}")
     return ""
+
+@command("voice")
+async def cmd_voice(ctx):
+    """!voice <文本> - 合成一条语音发给你"""
+    from ..speech.tts import synth, available
+    from ..chat.send import send_voice
+
+    text = " ".join(ctx.args).strip()
+    if not text:
+        return "用法：!voice <文本>"
+    if not available():
+        return "没装 edge-tts，先执行：pip install edge-tts"
+    mp3 = await synth(text)
+    if not mp3:
+        return "合成失败（多半是网络或音色名不对）"
+    await send_voice(ctx.uid, mp3, ctx.ws)
+    return ""  # 空字符串：不再追加文本

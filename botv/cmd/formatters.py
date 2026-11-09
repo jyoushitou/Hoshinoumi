@@ -37,6 +37,7 @@ def build_cmd_help():
         "!acg           - 获取一张ACG二次元图\n"
         "!profile [uid] - 查看对象画像；!profile set <uid> <字段> <值> 写入\n"
         "!todo [文字]   - 查看日程；!todo 周五下午三点 面试 添加\n"
+        "!voice <文本>  - 合成一条语音（需要 edge-tts）\n"
         "!event <uid>   - 查看指定对象的事件记忆\n"
         "!clear <uid>   - 清除指定对象的对话记忆\n"
         "!log <行数>     - 查看最近日志（默认20行）\n"

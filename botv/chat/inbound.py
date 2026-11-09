@@ -9,6 +9,7 @@ from ..log import log_api
 from ..image import process_and_save_image
 from ..infra.repo_memory import add_event_to_db  # v11-A9：图片记忆
 from ..ai.vision import describe_image  # v11-A8：直接看图
+from ..speech.asr import transcribe  # v11-A14：语音转文字
 from ..image.store import update_image_tags
 from ..utils import download_url
 
@@ -88,6 +89,22 @@ async def parse_message_content(raw_content, user_id):
                 else:  # 下载失败
                     img_info.append("[图]")  # 添加通用图片标识
                     log_api(f"[消息解析] 图片下载失败: {url[:60]}")  # 日志记录
+            elif t == "record":  # 语音条（v11-A14）
+                url = d.get("url") or d.get("file")
+                log_api(f"[消息解析] 收到语音: {str(url)[:60]}")
+                audio = None
+                if url:
+                    try:
+                        audio = await asyncio.to_thread(download_url, url)
+                    except Exception:
+                        audio = None
+                text = await transcribe(audio, url or "") if audio else None
+                if text:
+                    img_info.append("[语音]")
+                    input_text += " " + text
+                else:
+                    img_info.append("[语音]")
+
             elif t == "face":  # QQ表情类型
                 fid = str(d.get("id"))  # 获取表情ID
                 if fid:  # 表情ID有效

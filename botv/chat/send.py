@@ -14,7 +14,50 @@ from ..image import search_local_image_by_tags, get_best_image
 from ..memory import extract_keywords
 from ..utils import encode_image_base64, make_image_msg
 from ..db import get_cursor
+from ..speech.tts import synth as tts_synth  # v11-A10：语音合成
 from .reply import build_reply_message
+
+# ===== 语音（v11-A10）=====
+VOICE_PROB = 0.08        # 每条回复变成语音的概率
+VOICE_COOLDOWN = 1200    # 同一个人 20 分钟内最多一条语音
+VOICE_MIN_LEN = 4        # 太短（「嗯」）不合成
+VOICE_MAX_LEN = 60       # 太长不合成
+_last_voice_ts = {}      # {target: ts}
+
+
+def make_record_msg(mp3):
+    """NapCat 的语音消息段（base64 直传，不用落地文件）"""
+    import base64
+    return [{"type": "record", "data": {"file": "base64://" + base64.b64encode(mp3).decode()}}]
+
+
+async def send_voice(target, mp3, ws, is_group=False):
+    """发一条语音"""
+    msg = make_record_msg(mp3)
+    if is_group:
+        await send_group_msg(target, msg, ws)
+    else:
+        await send_private_msg(target, msg, ws)
+
+
+async def maybe_send_voice(text, target, ws, is_group=False):
+    """按概率/冷却决定要不要把这句话念出来。返回是否发了"""
+    import time as _t
+    if is_group:
+        return False  # 群里先不发语音，太吵
+    if not (VOICE_MIN_LEN <= len(text or "") <= VOICE_MAX_LEN):
+        return False
+    if random.random() > VOICE_PROB:
+        return False
+    now = _t.time()
+    if now - _last_voice_ts.get(target, 0.0) < VOICE_COOLDOWN:
+        return False
+    mp3 = await tts_synth(text)
+    if not mp3:
+        return False
+    await send_voice(target, mp3, ws)
+    _last_voice_ts[target] = now
+    return True
 
 
 def select_best_sticker(uid, ctx=""):

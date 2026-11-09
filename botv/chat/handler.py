@@ -247,6 +247,13 @@ async def websocket_handle_qq(ws):
                 await send_short_reply(target, reply_text, ws, uid, is_group, ck)
                 if is_group:  # v6-E29：记录这次群回复
                     note_group_reply(gid)
+                else:  # v11-A10：私聊有概率把第一句念出来
+                    try:
+                        from ..chat.send import maybe_send_voice
+                        first_line = (reply_text or "").split("\n")[0]
+                        await maybe_send_voice(first_line, target, ws, False)
+                    except Exception:
+                        pass
     except Exception as e:  # 捕获异常
         log_err(f"QQ异常:{e}")  # 日志记录异常
     finally:  # 清理

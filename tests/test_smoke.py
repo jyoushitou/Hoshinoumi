@@ -171,7 +171,7 @@ class TestCommandRegistry(unittest.TestCase):
         "acg", "apikeys", "clear", "clip", "code", "db", "diary", "event",
         "exit", "help", "img", "keywords", "log", "memory", "ping", "quit",
         "reload", "say", "sayg", "set", "status", "sticker", "task",
-        "uptime", "usage", "profile", "todo",
+        "uptime", "usage", "profile", "todo", "voice",
     }
 
     def setUp(self):
@@ -1954,6 +1954,112 @@ class TestVision(unittest.TestCase):
             cfg.DS_API_KEY = orig
         self.assertIsNone(desc)
         self.assertEqual(tags, [])
+
+
+class TestVoice(unittest.TestCase):
+    """v11-A10：语音的择时与降级"""
+
+    def setUp(self):
+        import botv.chat.send as S
+        self.S = S
+        self.sent = []
+        self._orig = {}
+        self._patch("tts_synth", self._fake_synth)
+        self._patch("send_voice", self._fake_send)
+        S._last_voice_ts.clear()
+
+    def tearDown(self):
+        for name, fn in self._orig.items():
+            setattr(self.S, name, fn)
+        self.S._last_voice_ts.clear()
+
+    def _patch(self, name, fn):
+        self._orig[name] = getattr(self.S, name)
+        setattr(self.S, name, fn)
+
+    async def _fake_synth(self, text):
+        return b"FAKE_MP3"
+
+    async def _fake_send(self, *args, **kwargs):
+        self.sent.append(args)
+
+    def _run(self, text="今天天气不错啊", target="1", is_group=False, prob=0.0):
+        import asyncio
+        orig_random = self.S.random.random
+        self.S.random.random = lambda: prob
+        try:
+            return asyncio.run(self.S.maybe_send_voice(text, target, None, is_group))
+        finally:
+            self.S.random.random = orig_random
+
+    def test_fires(self):
+        self.assertTrue(self._run())
+        self.assertEqual(len(self.sent), 1)
+
+    def test_group_never(self):
+        self.assertFalse(self._run(is_group=True))
+        self.assertEqual(self.sent, [])
+
+    def test_too_short(self):
+        self.assertFalse(self._run(text="嗯"))
+        self.assertEqual(self.sent, [])
+
+    def test_too_long(self):
+        self.assertFalse(self._run(text="啊" * 200))
+        self.assertEqual(self.sent, [])
+
+    def test_probability(self):
+        self.assertFalse(self._run(prob=0.99))
+        self.assertEqual(self.sent, [])
+
+    def test_cooldown(self):
+        self.assertTrue(self._run())
+        self.assertFalse(self._run(), "20 分钟内不该再发")
+
+    def test_synth_failure_degrades(self):
+        self._patch("tts_synth", lambda text: self._none())
+        self.assertFalse(self._run())
+        self.assertEqual(self.sent, [])
+
+    async def _none(self):
+        return None
+
+
+class TestASR(unittest.TestCase):
+    """v11-A14：语音转文字（不可用时安静降级）"""
+
+    def test_filename_guess(self):
+        from botv.speech.asr import _filename_for
+        self.assertTrue(_filename_for("https://x/a.mp3").endswith(".mp3"))
+        self.assertTrue(_filename_for("https://x/a.amr").endswith(".amr"))
+        self.assertTrue(_filename_for("").endswith(".mp3"))
+
+    def test_no_key_returns_none(self):
+        import asyncio
+        from botv.speech.asr import transcribe
+        from botv.core import state as cfg
+        orig = getattr(cfg, "DS_API_KEY", "")
+        cfg.DS_API_KEY = ""
+        try:
+            self.assertIsNone(asyncio.run(transcribe(b"fake-audio")))
+        finally:
+            cfg.DS_API_KEY = orig
+
+    def test_oversized_returns_none(self):
+        import asyncio
+        from botv.speech.asr import transcribe, MAX_BYTES
+        from botv.core import state as cfg
+        orig = getattr(cfg, "DS_API_KEY", "")
+        cfg.DS_API_KEY = "k"
+        try:
+            self.assertIsNone(asyncio.run(transcribe(b"x" * (MAX_BYTES + 1))))
+        finally:
+            cfg.DS_API_KEY = orig
+
+    def test_empty_returns_none(self):
+        import asyncio
+        from botv.speech.asr import transcribe
+        self.assertIsNone(asyncio.run(transcribe(b"")))
 
 
 if __name__ == "__main__":
