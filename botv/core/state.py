@@ -47,6 +47,12 @@ target_keyword_sets = {}  # {target_id: set} 每个对象自己的关键词
 bot_state = {}      # mood / energy / lonely
 bot_state_ts = 0.0  # 上次推进的时间戳
 life_last_date = {}  # {target_id: 'YYYY-MM-DD'} 生活事件生成日期（v9-U7）
+
+# ===================== 主动消息（v10-U9） =====================
+last_user_msg_ts = 0.0      # 最近一次收到消息的时间
+last_proactive_ts = 0.0     # 最近一次主动发消息的时间
+proactive_count_today = 0   # 今天主动发了几条
+proactive_unanswered = 0    # 连续几条主动没被回应
 USER_STICKER_CACHE = defaultdict(list)  # 用户最近使用的QQ表情缓存
 USER_STICKER_ARCHIVE = defaultdict(list)  # 用户旧表情包存档
 STICKER_DATA = {}  # 表情包数据 {hash: info_dict}

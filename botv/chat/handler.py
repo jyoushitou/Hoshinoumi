@@ -24,6 +24,7 @@ from .send import send_short_reply, send_private_msg, send_sticker_private, send
 from .inbound import parse_message_content, contains_sticker_key, is_at_me
 from .timing import reply_delay
 from ..core.locks import get_target_lock
+from ..life.impulse import note_user_message  # v10-U9
 
 # ===================== 群聊节奏（v6-E29） =====================
 GROUP_COOLDOWN = 20        # 同一个群两条回复的最小间隔（秒）
@@ -134,6 +135,7 @@ async def websocket_handle_qq(ws):
                 cfg.self_qq = self_qq
             addressed = is_at_me(d.get("message", ""), cfg.self_qq)
             text, img_md5s = await parse_message_content(d.get("message", ""), uid)  # (文本, 图片md5)
+            note_user_message()  # v10-U9：她在等你，别急着主动找
             if not text:  # 解析后文本为空
                 continue  # 跳过
 

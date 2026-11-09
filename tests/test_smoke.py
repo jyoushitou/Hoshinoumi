@@ -1391,5 +1391,79 @@ class TestDiaryReflow(unittest.TestCase):
         self.assertTrue(all(c[0] == rm.STATE_TARGET and c[2] == "life" for c in calls))
 
 
+class TestImpulse(unittest.TestCase):
+    """v10-U9：主动消息的六道闸门"""
+
+    class _R:
+        def __init__(self, v):
+            self.v = v
+
+        def random(self):
+            return self.v
+
+    NOW = None
+
+    def setUp(self):
+        from datetime import datetime
+        from botv.config import CST
+        self.now = datetime.now(CST).replace(hour=20, minute=0, second=0)
+        self.cfg = __import__("botv.core.state", fromlist=["x"])
+        self.cfg.last_user_msg_ts = 0.0
+        self.cfg.last_proactive_ts = 0.0
+        self.cfg.proactive_count_today = 0
+        self.cfg.proactive_unanswered = 0
+
+    def test_quiet_hours(self):
+        from botv.life.impulse import should_reach_out
+        ok, why = should_reach_out(now=self.now.replace(hour=2), state={"lonely": 0.9},
+                                   rng=self._R(0.01))
+        self.assertFalse(ok)
+        self.assertEqual(why, "深夜")
+
+    def test_just_talked(self):
+        import time
+        from botv.life.impulse import should_reach_out
+        ok, why = should_reach_out(now=self.now, state={"lonely": 0.9},
+                                   rng=self._R(0.01), last_user_ts=time.time() - 60)
+        self.assertFalse(ok)
+        self.assertEqual(why, "刚聊过")
+
+    def test_not_lonely_enough(self):
+        from botv.life.impulse import should_reach_out
+        ok, _why = should_reach_out(now=self.now, state={"lonely": 0.2}, rng=self._R(0.01))
+        self.assertFalse(ok)
+
+    def test_probability_gate(self):
+        from botv.life.impulse import should_reach_out
+        ok_no, _ = should_reach_out(now=self.now, state={"lonely": 0.9}, rng=self._R(0.99))
+        ok_yes, _ = should_reach_out(now=self.now, state={"lonely": 0.9}, rng=self._R(0.01))
+        self.assertFalse(ok_no)
+        self.assertTrue(ok_yes)
+
+    def test_daily_cap(self):
+        import time
+        from botv.life.impulse import should_reach_out
+        ok, why = should_reach_out(now=self.now, state={"lonely": 0.9}, rng=self._R(0.01),
+                                   last_proactive_ts=time.time() - 3600, proactive_count=3)
+        self.assertFalse(ok)
+        self.assertEqual(why, "今日配额用完")
+
+    def test_unanswered_backoff(self):
+        from botv.life.impulse import should_reach_out
+        ok, why = should_reach_out(now=self.now, state={"lonely": 0.9}, rng=self._R(0.01),
+                                   unanswered=2)
+        self.assertFalse(ok)
+        self.assertEqual(why, "连续没回应")
+
+    def test_note_counters(self):
+        from botv.life.impulse import note_proactive, note_user_message
+        note_proactive()
+        note_proactive()
+        self.assertEqual(self.cfg.proactive_count_today, 2)
+        self.assertEqual(self.cfg.proactive_unanswered, 2)
+        note_user_message()
+        self.assertEqual(self.cfg.proactive_unanswered, 0)
+
+
 if __name__ == "__main__":
     unittest.main()

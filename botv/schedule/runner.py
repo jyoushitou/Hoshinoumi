@@ -25,6 +25,10 @@ from .planner import calc_day_tasks
 _FIRST_RUN_DELAY = 10
 
 
+class _SkipChat(Exception):
+    """这次不主动发（内部信号，不打印任何东西）"""
+
+
 async def cycle_task_run():
     await asyncio.sleep(_FIRST_RUN_DELAY)
     _last_today = None  # 记录上一次检查的日期
@@ -233,6 +237,11 @@ async def cycle_task_run():
                 # ★ 修复：先标记已触发，防止异常导致重复触发
                 cfg.triggered_today.add(cur_minute)
                 try:
+                    # v10-U9：先问她想不想说话，不想就跳过
+                    ok, why = should_reach_out(now=now)
+                    if not ok:
+                        log_system(f"主动闲聊跳过: {why}")
+                        raise _SkipChat()
                     # 从数据库加载最近的事件作为话题
                     recent_events = load_events_from_db(str(MASTER_QQ), limit=5)
                     if recent_events:
@@ -245,7 +254,10 @@ async def cycle_task_run():
                         log_system(f"主动闲聊触发（无事件）")
                         rep = await get_character_reply("闲聊", str(MASTER_QQ))
                     await send_short_reply(MASTER_QQ, rep, cfg.active_ws_qq, MASTER_QQ)
+                    note_proactive()  # v10-U9：记账，配额和未回应计数
                     log_system(f"主动闲聊触发完成")
+                except _SkipChat:
+                    pass
                 except Exception as chat_e:
                     log_err(f"主动闲聊执行异常:{chat_e}")
 
