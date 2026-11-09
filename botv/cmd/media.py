@@ -97,7 +97,7 @@ async def cmd_voice(ctx):
     if not text:
         return "用法：!voice <文本>"
     if not available():
-        return "没装 edge-tts，先执行：pip install edge-tts"
+        return "没装 edge-tts。重启一次会自动尝试安装；也可以手动 pip install edge-tts"
     mp3 = await synth(text)
     if not mp3:
         return "合成失败（多半是网络或音色名不对）"

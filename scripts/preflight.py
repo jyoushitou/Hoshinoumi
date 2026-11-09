@@ -48,7 +48,7 @@ def step_python():
 
 
 REQUIRED = ["websockets", "requests", "urllib3", "pymysql", "jieba", "PIL", "aiohttp"]
-OPTIONAL = ["chinesecalendar", "torch", "clip"]
+OPTIONAL = ["chinesecalendar", "torch", "clip", "edge_tts"]
 # pip 包名 ≠ import 名的映射（否则会误报缺失）
 IMPORT_NAME = {"chinesecalendar": "chinese_calendar", "PIL": "PIL", "clip": "clip"}
 

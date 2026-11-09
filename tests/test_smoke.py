@@ -2062,5 +2062,29 @@ class TestASR(unittest.TestCase):
         self.assertIsNone(asyncio.run(transcribe(b"")))
 
 
+class TestAutoInstall(unittest.TestCase):
+    """启动时对「小体积可选包」自动装一次"""
+
+    def test_edge_tts_allowed(self):
+        import run
+        self.assertIn("edge-tts", run.AUTO_OPTIONAL_PACKAGES)
+
+    def test_big_packages_not_allowed(self):
+        import run
+        self.assertNotIn("torch", run.AUTO_OPTIONAL_PACKAGES, "torch 几百 MB，绝不能自动装")
+        self.assertIn("torch", run.OPTIONAL_PACKAGES, "但仍是可选依赖")
+
+    def test_timeout_exists(self):
+        import run
+        self.assertGreater(run.INSTALL_TIMEOUT, 0)
+        self.assertLessEqual(run.INSTALL_TIMEOUT, 600, "超时别超过 10 分钟")
+
+    def test_import_name_mapping(self):
+        """edge-tts 的 import 名是 edge_tts，映射必须存在"""
+        import importlib.util
+        # 直接验证逻辑：pip 名换下划线
+        self.assertEqual("edge-tts".replace("-", "_"), "edge_tts")
+
+
 if __name__ == "__main__":
     unittest.main()

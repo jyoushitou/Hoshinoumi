@@ -3,6 +3,7 @@
 # 不导入任何模块，避免循环依赖
 # 所有子模块通过 botv.xxx 方式导入
 
+import os               # 环境变量开关
 import sys              # 系统模块：退出程序、获取解释器路径
 import subprocess       # 子进程：执行 pip install
 import importlib.util   # 导入工具：动态检查模块是否已安装
@@ -25,14 +26,24 @@ OPTIONAL_PACKAGES = [
     "torch",            # PyTorch：CLIP 模型需要
 ]
 
+# 体积小、缺了就少一块功能的包：启动时尝试装一次（装不上就降级）
+# 规则：单个包 < 5MB 才放进来，torch 这种几百 MB 的永远不许自动装
+AUTO_OPTIONAL_PACKAGES = [
+    "edge-tts",         # 语音合成（pip 名），import 名是 edge_tts
+]
+
+# 装超时就放弃，别把启动卡死
+INSTALL_TIMEOUT = 120
+
 # ===================== 函数定义 =====================
-def check_and_install(package_name, optional=False):
+def check_and_install(package_name, optional=False, allow_install=False):
     """检查包是否已安装，未安装则优先用 Ubuntu apt 命令自动安装，失败回退 pip"""
     # 特殊处理：某些 pip 包名 ≠ 导入模块名
     IMPORT_NAME_MAP = {
         "Pillow": "PIL",          # Pillow 的 import 名是 PIL
         "PIL": "PIL",
         "chinesecalendar": "chinese_calendar",  # pip 包名是 chinesecalendar，但 import 是 chinese_calendar
+        "edge-tts": "edge_tts",   # 语音合成（pip 名带横线）
         "pyyaml": "yaml",         # 备用
         "beautifulsoup4": "bs4",  # 备用
     }
@@ -63,10 +74,12 @@ def check_and_install(package_name, optional=False):
     
     # 未安装，尝试自动安装
     tag = "[可选]" if optional else "[必需]"
-    # 可选依赖只检查，不自动安装：服务器常常没有外网，pip 会挂很久
-    if optional:
+    # 可选依赖默认只检查；只有 allow_install=True 的小包才尝试安装
+    if optional and not allow_install:
         print(f"{tag} 未安装 {package_name}（可选，跳过安装，功能降级）")
         return False
+    if optional and allow_install:
+        print(f"{tag} 尝试安装 {package_name}（装不上就降级）...")
     print(f"{tag} 正在安装 {package_name}...")
     apt_pkg = APT_MAP.get(package_name)
     
@@ -76,7 +89,8 @@ def check_and_install(package_name, optional=False):
             subprocess.check_call(  # 执行 apt-get install
                 ["sudo", "apt-get", "install", "-y", apt_pkg],
                 stdout=subprocess.DEVNULL,  # 丢弃标准输出
-                stderr=subprocess.DEVNULL   # 丢弃错误输出
+                stderr=subprocess.DEVNULL,  # 丢弃错误输出
+                timeout=INSTALL_TIMEOUT,
             )
             # 安装后验证模块是否可用
             if importlib.util.find_spec(import_name) is not None:
@@ -98,7 +112,8 @@ def check_and_install(package_name, optional=False):
         subprocess.check_call(
             pip_cmd,
             stdout=subprocess.DEVNULL,  # 丢弃标准输出
-            stderr=subprocess.DEVNULL   # 丢弃错误输出
+            stderr=subprocess.DEVNULL,  # 丢弃错误输出
+            timeout=INSTALL_TIMEOUT
         )
         # 安装后再次验证，防止 pip 返回码为 0 但模块实际不可用
 
@@ -141,6 +156,12 @@ def check_all_dependencies():
     print("📦 可选依赖（不影响基础功能）：")
     for pkg in OPTIONAL_PACKAGES:
         check_and_install(pkg, optional=True)  # 可选失败不影响 all_ok
+
+    # 小体积增强包：启动时试着装一次（装了功能更全，装不上就降级）
+    no_auto = os.getenv("NAO_NO_AUTOINSTALL") == "1"
+    print("📦 可选增强（缺失会尝试自动安装，可用 NAO_NO_AUTOINSTALL=1 关闭）：")
+    for pkg in AUTO_OPTIONAL_PACKAGES:
+        check_and_install(pkg, optional=True, allow_install=not no_auto)
     
     print(" ")
     
