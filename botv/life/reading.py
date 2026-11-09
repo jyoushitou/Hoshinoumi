@@ -328,3 +328,37 @@ async def follow(tid, url="", title="", fetch_book=None):
         return None, f"《{title}》——给我个链接吧，我找不到同名的那本"
 
     return None, "没听出是哪本"
+
+# ===================== 从热榜挑书 =====================
+
+async def pick_from_rank(tid, fetch_rank=None, fetch_book=None, rng=None, exclude=None):
+    """从热榜里挑一本开始追；已在追就返回当前那本
+
+    返回 (book | None, 说明)
+    """
+    import random as _r
+    rng = rng or _r
+
+    data = load(tid)
+    existing = current_book(data)
+    if existing:
+        return existing, "已经在追这本了"
+
+    try:
+        items = await fetch_rank() if fetch_rank else []
+    except Exception as e:
+        log_api(f"[读书] 拉热榜失败: {e}")
+        items = []
+    if not items:
+        return None, "热榜没拉到"
+
+    skip = {u for _t, u in (exclude or [])}
+    pool = [(t, u) for t, u in items if u not in skip]
+    if not pool:
+        return None, "热榜都看过了"
+
+    title, url = rng.choice(pool)
+    book, msg = await follow(tid, url=url, title=title, fetch_book=fetch_book)
+    if book:
+        return book, f"我在看《{book.get('title', title)}》"
+    return None, msg

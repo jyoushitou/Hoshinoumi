@@ -3654,5 +3654,60 @@ class TestReadingFlow(unittest.TestCase):
         self.assertEqual(parse_rank("<div>没有书</div>"), [])
 
 
+    def test_pick_from_rank(self):
+        import asyncio
+
+        async def fetch_rank():
+            return [("热书A", "https://x/page/a"), ("热书B", "https://x/page/b")]
+
+        async def fetch_book(url):
+            return {"title": "热书A", "intro": "简介", "chapters": []}
+
+        class Rng:
+            def choice(self, seq):
+                return seq[0]
+
+        book, msg = asyncio.run(self.R.pick_from_rank(
+            "10", fetch_rank, fetch_book, Rng()))
+        self.assertIsNotNone(book)
+        self.assertEqual(book["title"], "热书A")
+        self.assertIn("我在看", msg)
+
+    def test_pick_from_rank_keeps_existing(self):
+        import asyncio
+        self._seed_book("11")
+        book, msg = asyncio.run(self.R.pick_from_rank("11", lambda: None, None, None))
+        self.assertEqual(book["title"], "天外玉")
+        self.assertIn("已经在追", msg)
+
+    def test_pick_from_rank_empty(self):
+        import asyncio
+
+        async def empty():
+            return []
+
+        book, msg = asyncio.run(self.R.pick_from_rank("12", empty, None, None))
+        self.assertIsNone(book)
+        self.assertIn("热榜", msg)
+
+    def test_pick_from_rank_exclude(self):
+        import asyncio
+
+        async def fetch_rank():
+            return [("看过的", "https://x/page/old"), ("新书", "https://x/page/new")]
+
+        async def fetch_book(url):
+            return {"title": "新书", "intro": "", "chapters": []}
+
+        class Rng:
+            def choice(self, seq):
+                return seq[0]
+
+        book, _msg = asyncio.run(self.R.pick_from_rank(
+            "13", fetch_rank, fetch_book, Rng(),
+            exclude=[("看过的", "https://x/page/old")]))
+        self.assertEqual(book["url"], "https://x/page/new")
+
+
 if __name__ == "__main__":
     unittest.main()
