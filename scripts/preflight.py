@@ -27,6 +27,54 @@ def check(label, fn, fatal=True):
         return False
 
 
+def step_network():
+    """能否连上模型 API（3 秒超时，失败只警告不阻塞）"""
+    import socket
+    host, port = "api.deepseek.com", 443
+    try:
+        socket.create_connection((host, port), timeout=3).close()
+    except Exception as e:
+        raise RuntimeError(f"连不上 {host}:{port}（{type(e).__name__}）")
+    return f"{host}:{port} 可达"
+
+
+def step_env():
+    """环境变量一览：只看 NAO_*，值不回显敏感内容"""
+    import os
+    items = []
+    for name in ("NAO_CLIP", "NAO_VOICE", "NAO_VISION_MODEL", "NAO_VISION_URL",
+                 "NAO_ASR_URL", "NAO_ASR_MODEL", "NAO_NO_AUTOINSTALL"):
+        val = os.getenv(name)
+        if val is None:
+            items.append(f"{name}=默认")
+        elif val.strip() == "":
+            items.append(f"{name}=（空，可能有问题）")
+        else:
+            items.append(f"{name}={val[:40]}")
+    return " | ".join(items)
+
+
+def _has_module(name):
+    """模块是否可用（兼容被 stub 进 sys.modules、没有 __spec__ 的情况）"""
+    import importlib.util
+    import sys
+    try:
+        return importlib.util.find_spec(name) is not None
+    except (ValueError, ImportError):
+        return name in sys.modules
+
+
+def step_capabilities():
+    """三块能力现在能不能用（只看依赖，不实际调用）"""
+    tts_ok = _has_module("edge_tts")
+    pil_ok = _has_module("PIL")
+
+    parts = [f"视觉 {'✅可试' if pil_ok else '⚠️缺PIL（有PIL才能压缩）'}"]
+    parts.append(f"语音合成 {'✅' if tts_ok else '⚠️未装 edge-tts（启动会尝试自动装）'}")
+    parts.append("语音识别 ✅可试（需服务支持）")
+    return " | ".join(parts)
+
+
 def step_names():
     """静态检查：有没有「用了但没定义」的名字（v10.2）"""
     sys.path.insert(0, os.path.join(ROOT, "scripts"))
@@ -172,12 +220,15 @@ def step_prompt():
 
 def main():
     print("=" * 56)
-    print("  友利奈绪 v10 部署预检")
+    print("  友利奈绪 v11 部署预检")
     print("=" * 56)
 
     ok_python = check("Python 版本", step_python)
     ok_deps = check("必需依赖", step_deps)
     check("代码静态检查", step_names)
+    check("环境变量", step_env)
+    check("能力自检", step_capabilities)
+    check("网络连通", step_network, fatal=False)
     check("可选依赖", step_optional, fatal=False)
     ok_import = check("全模块导入", step_import_all)
     if ok_deps and ok_import:

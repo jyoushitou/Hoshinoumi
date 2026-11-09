@@ -2158,5 +2158,34 @@ class TestEnvironment(unittest.TestCase):
         self.assertIn("__pycache__", gitignore)
 
 
+class TestPreflightSteps(unittest.TestCase):
+    """预检要覆盖环境相关的新检查"""
+
+    def setUp(self):
+        import os as _os
+        import sys as _sys
+        scripts = _os.path.join(_os.path.dirname(_os.path.dirname(__file__)), "scripts")
+        if scripts not in _sys.path:
+            _sys.path.insert(0, scripts)
+
+    def test_steps_exist(self):
+        import preflight
+        for name in ("step_env", "step_capabilities", "step_network",
+                     "step_names", "step_memory_schema", "step_optional"):
+            self.assertTrue(hasattr(preflight, name), f"预检缺少 {name}")
+
+    def test_env_output_has_no_secrets(self):
+        import preflight
+        out = preflight.step_env()
+        for bad in ("sk-", "Bearer", "nao_"):
+            self.assertNotIn(bad, out, f"环境变量输出里不该出现 {bad}")
+
+    def test_capabilities_mentions_three(self):
+        import preflight
+        out = preflight.step_capabilities()
+        for word in ("视觉", "语音合成", "语音识别"):
+            self.assertIn(word, out)
+
+
 if __name__ == "__main__":
     unittest.main()
