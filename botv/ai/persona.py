@@ -85,6 +85,7 @@ LOCAL_SYSTEM_PROMPT = """你是友利奈绪(Charlotte)，15岁傲娇毒舌学生
 【全局长期记忆】：{global_keywords}
 【关于他】：{profile}
 【你跟他】：{relation}
+【你最近在看】：{reading}
 【你们的记录】：{digest}
 【与你最近的对话】：{current_dialogue}
 【事件记忆】：{events}
@@ -129,6 +130,7 @@ CODE_MODE_SYSTEM_PROMPT = """你是友利奈绪的技术助手模式（代码模
 {available_tags}
 
 【全局长期记忆】：{global_keywords}
+【你最近在看】：{reading}
 【你们的记录】：{digest}
 【与你最近的对话】：{current_dialogue}
 【事件记忆】：{events}

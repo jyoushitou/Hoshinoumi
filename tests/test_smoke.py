@@ -3777,5 +3777,43 @@ class TestReadingFlow(unittest.TestCase):
         self.assertEqual(asyncio.run(self.R.follow_request("22", None)), "")
 
 
+class TestReadingPrompt(unittest.TestCase):
+    """v16：把「她在看什么」注入 prompt"""
+
+    def setUp(self):
+        import botv.infra.repo_memory as rm
+        self.store = {}
+        self._orig = (rm.load_reading, rm.save_reading)
+        rm.load_reading = lambda tid: self.store.get(str(tid), "")
+        rm.save_reading = lambda tid, p: self.store.__setitem__(str(tid), p) or True
+
+    def tearDown(self):
+        import botv.infra.repo_memory as rm
+        rm.load_reading, rm.save_reading = self._orig
+
+    def test_describe_empty(self):
+        from botv.life.reading import describe
+        self.assertEqual(describe("nobody"), "")
+
+    def test_describe_with_book(self):
+        import json
+        from botv.life.reading import describe
+        self.store["1"] = json.dumps({"books": [{"title": "天外玉", "url": "u", "last_no": 12}]})
+        text = describe("1")
+        self.assertIn("天外玉", text)
+        self.assertIn("12", text)
+
+    def test_prompt_has_reading_slot(self):
+        from botv.ai.prompt import get_system_prompt
+        from botv.core import state as cfg
+        cfg.CODE_MODE = False
+        text = get_system_prompt()
+        self.assertIn("你最近在看", text)
+
+    def test_prompt_uses_placeholder(self):
+        from botv.ai.persona import LOCAL_SYSTEM_PROMPT
+        self.assertIn("{reading}", LOCAL_SYSTEM_PROMPT)
+
+
 if __name__ == "__main__":
     unittest.main()

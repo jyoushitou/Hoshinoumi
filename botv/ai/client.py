@@ -27,6 +27,7 @@ from ..life.habit import phrases_for, describe as habit_line  # v12-A17
 from ..life.milestone import milestone_text  # v12-G38
 from ..life import friction as life_friction  # v13-U20
 from ..life import digest as life_digest  # v14.1-D3
+from ..life import reading as life_reading  # v16：她在看什么
 from ..infra.repo_profile import build_profile_text  # 对象画像（v7-B9）
 from ..memory.inject import trim, BUDGET  # 分层预算（v8-B13）
 from ..memory.timeline import build_timeline_text  # 时间线注入（v8-B16）
@@ -247,6 +248,7 @@ async def get_character_reply(txt, tid, current_kws=None):
         current_dialogue=dia,
         events=events,
         digest=life_digest.describe(tid),  # v14.1-D3：浓缩记录
+        reading=life_reading.describe(tid) or "最近没在看书",  # v16：在追的小说
         profile=trim(_profile_with_habit(tid), BUDGET["profile"]),  # v7-B9 画像 + v12 口头禅
         timeline=build_timeline_text(tid),  # v8-B16：最近 7 天
         relation=(relation_desc(tid) + ("｜" + addressing(tid) if addressing(tid) else "")),  # v10-U8 / v13-G54
