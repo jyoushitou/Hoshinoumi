@@ -19,6 +19,7 @@ self_qq = 0  # 机器人自己的QQ号（从 OneBot 事件的 self_id 取，v6-E
 # ===================== 群聊节奏（v6-E29） =====================
 group_last_reply_ts = {}  # {群号: 上次回复时间戳}
 group_msg_window = {}  # {群号: deque[时间戳]} 最近发言时间窗
+group_streak = {}  # {群号: 连续说了几句没人接}（v10）
 
 # ===================== 消息处理 =====================
 PROCESSED_MSG_IDS = deque(maxlen=80)  # 已处理消息ID缓存（去重，最多80条）

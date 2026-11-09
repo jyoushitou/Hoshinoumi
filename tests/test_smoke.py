@@ -569,7 +569,7 @@ class TestGroupGate(unittest.TestCase):
             h.random = _FakeRandom(0.0)  # 一定命中
             ok, why = h.should_answer_group(333, False)
             self.assertTrue(ok)
-            self.assertEqual(why, "随机接话")
+            self.assertTrue(why.startswith("随机接话"), why)
 
             h.cfg.group_last_reply_ts.clear()
             h.random = _FakeRandom(0.99)  # 一定不中
@@ -1463,6 +1463,50 @@ class TestImpulse(unittest.TestCase):
         self.assertEqual(self.cfg.proactive_unanswered, 2)
         note_user_message()
         self.assertEqual(self.cfg.proactive_unanswered, 0)
+
+
+class TestGroupProbability(unittest.TestCase):
+    """v10：群聊回话概率随状态浮动"""
+
+    def test_base(self):
+        from botv.chat.handler import group_reply_probability, GROUP_BASE_PROB
+        p = group_reply_probability({"lonely": 0.2, "mood": 0.1}, 0)
+        self.assertAlmostEqual(p, GROUP_BASE_PROB, places=3)
+
+    def test_lonely_raises(self):
+        from botv.chat.handler import group_reply_probability
+        quiet = group_reply_probability({"lonely": 0.2, "mood": 0.0}, 0)
+        lonely = group_reply_probability({"lonely": 0.9, "mood": 0.0}, 0)
+        self.assertGreater(lonely, quiet)
+
+    def test_bad_mood_lowers(self):
+        from botv.chat.handler import group_reply_probability
+        good = group_reply_probability({"lonely": 0.9, "mood": 0.5}, 0)
+        bad = group_reply_probability({"lonely": 0.9, "mood": -0.5}, 0)
+        self.assertLess(bad, good)
+
+    def test_unanswered_halves(self):
+        from botv.chat.handler import (group_reply_probability,
+                                       GROUP_UNANSWERED_LIMIT, GROUP_UNANSWERED_DECAY)
+        normal = group_reply_probability({"lonely": 0.9, "mood": 0.0}, 0)
+        quiet = group_reply_probability({"lonely": 0.9, "mood": 0.0}, GROUP_UNANSWERED_LIMIT)
+        self.assertAlmostEqual(quiet, normal * GROUP_UNANSWERED_DECAY, places=3)
+
+    def test_clamped(self):
+        from botv.chat.handler import (group_reply_probability, GROUP_PROB_MIN, GROUP_PROB_MAX)
+        for lonely in (0.0, 0.5, 1.0):
+            for mood in (-1.0, 0.0, 1.0):
+                p = group_reply_probability({"lonely": lonely, "mood": mood}, 0)
+                self.assertGreaterEqual(p, GROUP_PROB_MIN)
+                self.assertLessEqual(p, GROUP_PROB_MAX)
+
+    def test_streak_increments_and_resets(self):
+        from botv.chat import handler as h
+        cfg.group_streak.clear()
+        h.note_group_reply(555)
+        h.note_group_reply(555)
+        self.assertEqual(cfg.group_streak[555], 2)
+        cfg.group_streak.clear()
 
 
 if __name__ == "__main__":

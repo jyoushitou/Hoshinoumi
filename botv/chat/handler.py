@@ -26,13 +26,41 @@ from .timing import reply_delay
 from ..core.locks import get_target_lock
 from ..life.impulse import note_user_message  # v10-U9
 
-# ===================== 群聊节奏（v6-E29） =====================
+# ===================== 群聊节奏（v6-E29 / v10） =====================
 GROUP_COOLDOWN = 20        # 同一个群两条回复的最小间隔（秒）
 GROUP_WINDOW = 60          # 统计窗口（秒）
 GROUP_WINDOW_MAX = 6       # 窗口内最多回几条
-GROUP_REPLY_PROB = 1 / 3   # 没被 @ 时的接话概率
 GROUP_AT_MIN_GAP = 3       # 被 @ 时也至少隔 3 秒，防连点
 GROUP_SILENCE_PROB = 0.05  # 闸门放行后，仍有概率选择沉默（v6-A19）
+
+# v10：群聊回话概率受全局状态影响（她是一个人，状态不分群）
+GROUP_BASE_PROB = 0.20     # 基础概率：1/5
+GROUP_PROB_MIN = 0.05
+GROUP_PROB_MAX = 0.45
+GROUP_LONELY_SPAN = 0.30   # 孤独每高出 0.3，概率 +0.09
+GROUP_UNANSWERED_LIMIT = 3  # 连着说 3 句没人接
+GROUP_UNANSWERED_DECAY = 0.5  # 概率减半
+
+
+def group_reply_probability(state=None, streak=0):
+    """群聊回话概率：孤独越高越想聊，心情差就少说，连着没人接再减半"""
+    if state is None:
+        try:
+            from ..life.state import current as life_current
+            state = life_current()
+        except Exception:
+            state = {}
+    lonely = float(state.get("lonely", 0.2))
+    mood = float(state.get("mood", 0.1))
+
+    p = GROUP_BASE_PROB + max(0.0, lonely - 0.4) * GROUP_LONELY_SPAN
+    if mood < -0.2:
+        p *= 0.7          # 心情差，不想掺和
+    elif mood > 0.4:
+        p *= 1.1          # 心情好，愿意搭话
+    if streak >= GROUP_UNANSWERED_LIMIT:
+        p *= GROUP_UNANSWERED_DECAY
+    return max(GROUP_PROB_MIN, min(GROUP_PROB_MAX, p))
 
 
 def should_answer_group(gid, addressed):
@@ -56,9 +84,13 @@ def should_answer_group(gid, addressed):
 
     if now - last < GROUP_COOLDOWN:
         return False, f"冷却中({int(GROUP_COOLDOWN - (now - last))}秒)"
-    if random.random() > GROUP_REPLY_PROB:
-        return False, "没命中接话概率"
-    return True, "随机接话"
+
+    # v10：概率由全局状态决定，连着没人接再打折
+    streak = cfg.group_streak.get(gid, 0)
+    p = group_reply_probability(streak=streak)
+    if random.random() > p:
+        return False, f"没命中接话概率(p={p:.0%})"
+    return True, f"随机接话(p={p:.0%})"
 
 
 def note_group_reply(gid):
@@ -66,6 +98,7 @@ def note_group_reply(gid):
     now = _time.time()
     cfg.group_last_reply_ts[gid] = now
     cfg.group_msg_window.setdefault(gid, deque(maxlen=30)).append(now)
+    cfg.group_streak[gid] = cfg.group_streak.get(gid, 0) + 1  # 连着说了几句
 
 # v5-F5：上线通知的冷却时间（秒）——重连太频繁时不重复打扰
 ONLINE_NOTICE_COOLDOWN = 60
@@ -136,6 +169,8 @@ async def websocket_handle_qq(ws):
             addressed = is_at_me(d.get("message", ""), cfg.self_qq)
             text, img_md5s = await parse_message_content(d.get("message", ""), uid)  # (文本, 图片md5)
             note_user_message()  # v10-U9：她在等你，别急着主动找
+            if mt == "group" and addressed:
+                cfg.group_streak[gid] = 0  # v10：有人点她名，连说计数清零
             if not text:  # 解析后文本为空
                 continue  # 跳过
 
