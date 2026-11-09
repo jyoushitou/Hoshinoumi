@@ -30,6 +30,7 @@ from ..life import pending as life_pending  # v10-U9b
 from ..life import agenda as life_agenda  # v10-U10
 from ..life import habit as life_habit  # v12-A17
 from ..life import friction as life_friction  # v13-U20
+from ..life import reading as life_reading  # v16：点名看书
 from .notice import handle_notice  # v12-A16
 
 # ===================== 群聊节奏（v6-E29 / v10） =====================
@@ -308,9 +309,26 @@ async def websocket_handle_qq(ws):
                 elif contains_sticker_key(text):  # 包含表情包关键词
                     pending = ("sticker",)
                 else:  # 普通对话
-                    ans = await get_character_reply(text, tid, ck)  # 获取AI回复
                     target = gid if mt == "group" else uid  # 回复目标
-                    if not ans or isinstance(ans, Fallback):
+                    # v16：主人点名要她去看某本书 → 不走模型，直接应下
+                    _req = None
+                    try:
+                        _req = life_reading.detect_book_request(text)
+                    except Exception:
+                        _req = None
+                    ans = None
+                    if _req:
+                        try:
+                            _reply = await life_reading.follow_request(uid, _req)
+                        except Exception as _e:
+                            log_api(f"[读书] 点名处理失败: {_e}")
+                            _reply = "我记下了，等会儿去翻"
+                        pending = ("reply", target, _reply, mt == "group")
+                    else:
+                        ans = await get_character_reply(text, tid, ck)  # 获取AI回复
+                    if _req:
+                        pass  # v16：点名已处理，不再走模型分支
+                    elif not ans or isinstance(ans, Fallback):
                         # v5-F2：兜底文案不是她的话——不进记忆、不进事件，只回一条中性的
                         log_api("[handler] 模型无回复或返回兜底，静默处理（不入库）")
                         pending = ("reply", target, "……", mt == "group")

@@ -415,3 +415,13 @@ async def summarize_chapter(text, limit=SUMMARY_MAX, call_model=None):
             log_api(f"[读书] 摘要模型失败，用兜底: {e}")
 
     return fallback_summary(snippet, limit)
+async def follow_request(tid, req, fetch_book=None):
+    """处理「主人点名一本书」：立刻给回应，不等抓取
+
+    返回要发出去的那句话
+    """
+    if not req:
+        return ""
+    book, msg = await follow(tid, url=req.get("url", ""), title=req.get("title", ""),
+                             fetch_book=fetch_book)
+    return msg

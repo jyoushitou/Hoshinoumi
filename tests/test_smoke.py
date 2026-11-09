@@ -3756,5 +3756,26 @@ class TestReadingFlow(unittest.TestCase):
         self.assertNotIn("远处有人喊他", out, "只取前两句")
 
 
+    def test_follow_request_ack(self):
+        import asyncio
+
+        async def fetch_book(url):
+            return {"title": "天外玉", "intro": "", "chapters": []}
+
+        msg = asyncio.run(self.R.follow_request(
+            "20", {"url": "https://x/page/1", "title": ""}, fetch_book=fetch_book))
+        self.assertIn("好，我去看", msg)
+        self.assertEqual(self.R.load("20")["books"][0]["url"], "https://x/page/1")
+
+    def test_follow_request_title_only(self):
+        import asyncio
+        msg = asyncio.run(self.R.follow_request("21", {"url": "", "title": "没有的书"}))
+        self.assertIn("链接", msg)
+
+    def test_follow_request_empty(self):
+        import asyncio
+        self.assertEqual(asyncio.run(self.R.follow_request("22", None)), "")
+
+
 if __name__ == "__main__":
     unittest.main()
