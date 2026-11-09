@@ -2086,5 +2086,77 @@ class TestAutoInstall(unittest.TestCase):
         self.assertEqual("edge-tts".replace("-", "_"), "edge_tts")
 
 
+class TestEnvironment(unittest.TestCase):
+    """环境相关：依赖表、环境变量、路径必须一致（每版都要过）"""
+
+    # 代码里允许出现的环境变量白名单；新增时必须同步 docs/发布检查清单.md
+    EXPECTED_ENV = {
+        "NAO_CLIP",
+        "NAO_VOICE",
+        "NAO_VISION_MODEL",
+        "NAO_VISION_URL",
+        "NAO_ASR_URL",
+        "NAO_ASR_MODEL",
+        "NAO_NO_AUTOINSTALL",
+    }
+
+    @staticmethod
+    def _root():
+        import pathlib
+        return pathlib.Path(__file__).resolve().parent.parent
+
+    def test_env_vars_registered(self):
+        """新加的环境变量必须登记，否则换机器时调不动"""
+        import re
+        root = self._root()
+        pattern = re.compile(r"os\.getenv\(\s*[\"']([A-Za-z0-9_]+)")
+        found = set()
+        for p in list((root / "botv").rglob("*.py")) + [root / "run.py"]:
+            found |= set(pattern.findall(p.read_text(encoding="utf-8")))
+        unknown = found - self.EXPECTED_ENV
+        self.assertFalse(unknown, f"未登记的环境变量: {sorted(unknown)}")
+
+    def test_env_documented(self):
+        """白名单里的变量都得写进发布检查清单"""
+        doc = (self._root() / "docs" / "发布检查清单.md").read_text(encoding="utf-8")
+        for name in self.EXPECTED_ENV:
+            self.assertIn(name, doc, f"{name} 没写进发布检查清单")
+
+    def test_dependency_lists_consistent(self):
+        """run.py 与 preflight 的依赖表要能对上（pip 名 vs import 名做归一化）"""
+        import sys
+        import run
+        sys.path.insert(0, str(self._root() / "scripts"))
+        import preflight
+
+        # pip 包名 → import 名
+        alias = {"Pillow": "PIL", "edge-tts": "edge_tts"}
+        run_required = {alias.get(p, p) for p in run.REQUIRED_PACKAGES}
+        pre_required = {alias.get(p, p) for p in preflight.REQUIRED}
+        missing = run_required - pre_required
+        self.assertFalse(missing, f"必需依赖没进预检: {sorted(missing)}")
+
+        for pkg in run.AUTO_OPTIONAL_PACKAGES:
+            name = alias.get(pkg, pkg)
+            self.assertIn(name, preflight.OPTIONAL, f"自动安装的 {pkg} 不在预检可选依赖里")
+
+    def test_no_absolute_paths_in_botv(self):
+        """botv 里不该出现硬编码的绝对路径"""
+        import re
+        root = self._root()
+        bad = []
+        for p in (root / "botv").rglob("*.py"):
+            text = p.read_text(encoding="utf-8")
+            for m in re.finditer(r"[\"'](/home/|/root/|C:\\\\Users)", text):
+                bad.append(f"{p.name}: {m.group(0)}")
+        self.assertFalse(bad, f"发现硬编码绝对路径: {bad[:5]}")
+
+    def test_bundle_ignores_artifacts(self):
+        """打包不该带 .pyc / bundle 文件"""
+        gitignore = (self._root() / ".gitignore").read_text(encoding="utf-8")
+        self.assertIn("*.pyc", gitignore)
+        self.assertIn("__pycache__", gitignore)
+
+
 if __name__ == "__main__":
     unittest.main()
