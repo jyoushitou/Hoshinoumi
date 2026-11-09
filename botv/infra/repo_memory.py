@@ -106,6 +106,33 @@ def load_events_from_db(tid, tag_keywords=None, limit=5, kinds=None):
     return [(r["event_summary"], r["tags"]) for r in c.fetchall()]
 
 
+# ===================== 机器人自身状态（v9-U4） =====================
+STATE_TARGET = "__self__"  # 状态行用固定 target，不占任何人的记忆
+
+
+def load_state_json():
+    """读她自己的状态（JSON 字符串），没有返回空串"""
+    c = get_cursor()
+    c.execute(
+        "SELECT event_summary FROM events WHERE target_id=%s AND kind='state' ORDER BY id DESC LIMIT 1",
+        (STATE_TARGET,),
+    )
+    row = c.fetchone()
+    return (row["event_summary"] or "") if row else ""
+
+
+def save_state_json(payload):
+    """覆盖写她的状态（永远只有一行）"""
+    c = get_cursor()
+    c.execute("DELETE FROM events WHERE target_id=%s AND kind='state'", (STATE_TARGET,))
+    c.execute(
+        "INSERT INTO events(target_id, event_summary, tags, kind, dedupe_key, last_seen) "
+        "VALUES(%s,%s,'','state',%s,NOW())",
+        (STATE_TARGET, payload, dedupe_key(STATE_TARGET, "state", "bot_state")),
+    )
+    c.connection.commit()
+
+
 def load_timeline(tid, days=7, limit=12):
     """最近 N 天的记忆，按时间倒序（v8-B16）"""
     c = get_cursor()

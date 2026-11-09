@@ -1219,5 +1219,56 @@ class TestLoadMemories(unittest.TestCase):
         self.assertEqual(got_target.get("A"), {"甲"})
 
 
+class TestLifeState(unittest.TestCase):
+    """v9-U4：状态向量"""
+
+    def test_default_in_range(self):
+        from botv.life.state import default_state, CLAMP
+        s = default_state()
+        for k, (lo, hi) in CLAMP.items():
+            self.assertGreaterEqual(s[k], lo)
+            self.assertLessEqual(s[k], hi)
+
+    def test_tick_moves_toward_base(self):
+        from botv.life.state import tick, BASE
+        s = {"mood": 0.9, "energy": 0.1, "lonely": 0.1}
+        out = tick(s, 1)
+        self.assertLess(out["mood"], 0.9)          # 高情绪向基线回落
+        self.assertGreater(out["energy"], 0.1)     # 低精力向基线回升
+
+    def test_tick_alone_increases_lonely(self):
+        from botv.life.state import tick
+        out = tick({"mood": 0.1, "energy": 0.7, "lonely": 0.2}, 5)
+        self.assertGreater(out["lonely"], 0.2)
+
+    def test_clamp_bounds(self):
+        from botv.life.state import clamp
+        s = clamp({"mood": 5, "energy": -3, "lonely": 99})
+        self.assertLessEqual(s["mood"], 1.0)
+        self.assertGreaterEqual(s["energy"], 0.0)
+        self.assertLessEqual(s["lonely"], 1.0)
+
+    def test_talk_relieves_lonely(self):
+        from botv.life.state import on_talk
+        s = {"mood": 0.0, "energy": 0.5, "lonely": 0.8}
+        self.assertLess(on_talk(s)["lonely"], 0.8)
+
+    def test_describe_has_no_numbers(self):
+        from botv.life.state import describe
+        text = describe({"mood": -0.7, "energy": 0.1, "lonely": 0.9})
+        self.assertTrue(text.endswith("。"))
+        self.assertFalse(any(ch.isdigit() for ch in text), f"不该出现数字: {text}")
+
+    def test_json_roundtrip(self):
+        from botv.life.state import to_json, from_json
+        s = {"mood": 0.3, "energy": 0.6, "lonely": 0.2}
+        self.assertEqual(from_json(to_json(s)), s)
+
+    def test_from_json_garbage(self):
+        from botv.life.state import from_json, BASE
+        self.assertEqual(from_json("not json"), BASE)
+        self.assertEqual(from_json(""), BASE)
+
+
 if __name__ == "__main__":
     unittest.main()
