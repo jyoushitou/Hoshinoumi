@@ -19,7 +19,9 @@ _rng = random.Random()
 
 
 def default_state():
-    return dict(BASE)
+    s = dict(BASE)
+    s["diary_bias"] = 0.0  # 昨天日记带来的情绪余韵（v9-U11）
+    return s
 
 
 def clamp(state):
@@ -27,6 +29,8 @@ def clamp(state):
     out = {}
     for key, (lo, hi) in CLAMP.items():
         out[key] = max(lo, min(hi, float(state.get(key, BASE[key]))))
+    if "diary_bias" in state:  # 只在有时才保留，避免污染只含三键的旧数据
+        out["diary_bias"] = max(-0.15, min(0.15, float(state.get("diary_bias") or 0.0)))
     return out
 
 
@@ -45,9 +49,11 @@ def tick(state, hours, now=None):
     # 这样无论一次补 72 小时还是逐小时推进，稳定点都一样。
     lonely_after = min(1.0, s["lonely"] + ALONE_PER_HOUR * hours)
     lonely_avg = (s["lonely"] + lonely_after) / 2
-    mood_target = BASE["mood"] - 0.6 * lonely_avg
+    mood_target = BASE["mood"] - 0.6 * lonely_avg + s.get("diary_bias", 0.0)
 
     s["mood"] += factor * (mood_target - s["mood"])
+    if s.get("diary_bias"):
+        s["diary_bias"] = round(s["diary_bias"] * (1 - factor), 4)  # 余韵随时间淡去
     s["energy"] += factor * (BASE["energy"] - s["energy"])
     s["lonely"] = lonely_after
 
@@ -123,13 +129,17 @@ def to_json(state):
 
 
 def from_json(text, fallback=None):
+    """解析状态；缺的字段用默认值补齐（兼容旧的三键数据）"""
+    base = dict(fallback or default_state())
     try:
         data = json.loads(text or "{}")
-        if not isinstance(data, dict):
-            return fallback or default_state()
-        return clamp(data)
+        if isinstance(data, dict):
+            for k in list(base.keys()):
+                if k in data:
+                    base[k] = data[k]
     except Exception:
-        return fallback or default_state()
+        pass
+    return clamp(base)
 
 
 def load():

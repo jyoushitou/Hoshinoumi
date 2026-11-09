@@ -1262,12 +1262,14 @@ class TestLifeState(unittest.TestCase):
     def test_json_roundtrip(self):
         from botv.life.state import to_json, from_json
         s = {"mood": 0.3, "energy": 0.6, "lonely": 0.2}
-        self.assertEqual(from_json(to_json(s)), s)
+        back = from_json(to_json(s))
+        for k, v in s.items():
+            self.assertEqual(back[k], v)
 
     def test_from_json_garbage(self):
-        from botv.life.state import from_json, BASE
-        self.assertEqual(from_json("not json"), BASE)
-        self.assertEqual(from_json(""), BASE)
+        from botv.life.state import from_json, default_state
+        self.assertEqual(from_json("not json"), default_state())
+        self.assertEqual(from_json(""), default_state())
 
 
 class TestStateInPrompt(unittest.TestCase):
@@ -1344,6 +1346,49 @@ class TestLifeEvents(unittest.TestCase):
         self.assertGreaterEqual(n1, 1)
         self.assertEqual(n2, 0, "同一天第二次不应再写")
         self.assertTrue(all(c[2] == "life" for c in calls))
+
+
+class TestDiaryReflow(unittest.TestCase):
+    """v9-U11：日记压成记忆 + 情绪余韵"""
+
+    DIARY = ("今天学生会开到很晚，散会时天都黑了。新来的干事又写错记录，我改到眼睛发酸。"
+             "回家路上买了关东煮，小咪在门口等我。其实有点累，但还行。")
+
+    def test_split_count(self):
+        from botv.life.reflow import split_memories
+        items = split_memories(self.DIARY)
+        self.assertGreaterEqual(len(items), 2)
+        self.assertLessEqual(len(items), 3)
+
+    def test_split_truncates_long(self):
+        from botv.life.reflow import split_memories
+        items = split_memories("啊" * 200 + "。")
+        self.assertTrue(items)
+        self.assertTrue(all(len(i) <= 61 for i in items))
+
+    def test_sentiment_signs(self):
+        from botv.life.reflow import sentiment_bias
+        self.assertLess(sentiment_bias("很累，很烦，什么都做错"), 0)
+        self.assertGreater(sentiment_bias("很开心，顺利完成"), 0)
+
+    def test_sentiment_capped(self):
+        from botv.life.reflow import sentiment_bias
+        self.assertLessEqual(abs(sentiment_bias("累烦难过冷" * 100)), 0.15)
+
+    def test_reflow_writes_to_self(self):
+        import botv.life.reflow as R
+        import botv.infra.repo_memory as rm
+        calls = []
+        orig_add, orig_apply = rm.add_event_to_db, R._apply_bias
+        rm.add_event_to_db = lambda tid, text, **k: calls.append((tid, text, k.get("kind")))
+        R._apply_bias = lambda b: None
+        try:
+            n, _bias = R.reflow("2026-11-08", self.DIARY)
+        finally:
+            rm.add_event_to_db, R._apply_bias = orig_add, orig_apply
+        self.assertGreaterEqual(n, 1)
+        self.assertTrue(calls)
+        self.assertTrue(all(c[0] == rm.STATE_TARGET and c[2] == "life" for c in calls))
 
 
 if __name__ == "__main__":

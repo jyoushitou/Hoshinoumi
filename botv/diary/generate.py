@@ -135,6 +135,13 @@ async def generate_diary(target_id: str, date_str: str, force: bool = False):
     # ---- 9. 保存到数据库 ----
     save_diary_to_db(target_id, date_str, diary_text)
 
+    # ---- 9.5 v9-U11：日记回流成记忆，并留下一点情绪余韵 ----
+    try:
+        from ..life.reflow import reflow
+        reflow(date_str, diary_text)
+    except Exception as e:
+        log_api(f"日记回流失败: {e}")
+
     # ---- 10. 更新缓存 ----
     cache.put(cache_key, diary_text)
 
