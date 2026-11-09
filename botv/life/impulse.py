@@ -9,6 +9,7 @@ import time as _time
 from datetime import datetime
 
 from ..config import CST
+from ..log import log_api
 from .state import current as life_current
 
 DAILY_CAP = 3            # 每天主动消息上限（所有由头共享）
@@ -96,6 +97,10 @@ def note_user_message():
     from ..core import state as cfg
     cfg.last_user_msg_ts = _time.time()
     cfg.proactive_unanswered = 0
+    # v14-B2：上一次主动被回应了 → 频率慢慢回升
+    if getattr(cfg, "proactive_pending", False):
+        cfg.proactive_adjust = min(1.0, float(getattr(cfg, "proactive_adjust", 1.0)) * 1.1)
+        cfg.proactive_pending = False
 
 
 def note_proactive():
@@ -112,6 +117,7 @@ def note_proactive():
     cfg.last_proactive_ts = now
     cfg.proactive_count_today = getattr(cfg, "proactive_count_today", 0) + 1
     cfg.proactive_unanswered = getattr(cfg, "proactive_unanswered", 0) + 1
+    cfg.proactive_pending = True  # v14-B2：等回应
 
 
 def _reset_daily():
@@ -214,7 +220,15 @@ def should_chat(now=None, rng=None, state=None, silent_hours=None,
     if silent_hours is None:
         silent_hours = ((now_ts - last_user_ts) / 3600.0) if last_user_ts else 24.0
 
+    # v14-B2：上次主动过了 30 分钟还没回应 → 降频（最多降到 0.5）
+    if getattr(cfg, "proactive_pending", False) and last_proactive_ts:
+        if (now_ts - last_proactive_ts) > 1800:
+            cfg.proactive_adjust = max(0.5, float(getattr(cfg, "proactive_adjust", 1.0)) * 0.5)
+            cfg.proactive_pending = False
+            log_api(f"[主动] 上次没回应，频率降到 {cfg.proactive_adjust:.2f}")
+
     p = chat_probability(now, silent_hours, state, has_life_event)
+    p *= float(getattr(cfg, "proactive_adjust", 1.0))
     if p <= 0:
         return False, "时段不合适", 0.0
     if rng.random() > p:

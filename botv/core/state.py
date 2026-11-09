@@ -52,6 +52,8 @@ habit_counters = {}  # {target_id: Counter} 口头禅计数（v12-A17）
 pending_echo = {}  # {echo: Future} 等待 NapCat 回包（v12-A13）
 typo_history = []  # 打错字撤回的时间戳（v12-A13，控制频率）
 friction_states = {}  # {target_id: dict} 摩擦状态（v13-U20）
+proactive_adjust = 1.0   # 主动频率自适应系数（v14-B2，0.5~1.0）
+proactive_pending = False  # 最近一次主动是否还没被回应
 
 # ===================== 主动消息（v10-U9） =====================
 last_user_msg_ts = 0.0      # 最近一次收到消息的时间

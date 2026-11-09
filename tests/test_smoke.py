@@ -542,10 +542,15 @@ class TestGroupGate(unittest.TestCase):
         cfg.group_msg_window.clear()
 
     def test_addressed_passes(self):
-        from botv.chat.handler import should_answer_group
-        ok, why = should_answer_group(111, True)
+        from botv.chat import handler as h
+        orig = h.random.random
+        h.random.random = lambda: 0.0  # v14-B4：被@ 也要掷骰，测试要压到必中
+        try:
+            ok, why = h.should_answer_group(111, True)
+        finally:
+            h.random.random = orig
         self.assertTrue(ok)
-        self.assertEqual(why, "被@")
+        self.assertTrue(why.startswith("被@"), why)
 
     def test_cooldown_blocks_unaddressed(self):
         from botv.chat.handler import should_answer_group, note_group_reply
@@ -2911,6 +2916,114 @@ class TestTools(unittest.TestCase):
         from botv.core import state as cfg
         cfg.CODE_MODE = False
         self.assertIn("@tool:", get_system_prompt())
+
+
+class TestV14Frequency(unittest.TestCase):
+    """v14：发图择时 / @ 判断 / 主动频率自适应"""
+
+    def setUp(self):
+        from botv.core import state as cfg
+        self.cfg = cfg
+        cfg.proactive_adjust = 1.0
+        cfg.proactive_pending = False
+        import botv.chat.reply as R
+        R._last_image_ts.clear()
+        self.R = R
+
+    def tearDown(self):
+        self.cfg.proactive_adjust = 1.0
+        self.cfg.proactive_pending = False
+        self.R._last_image_ts.clear()
+
+    # ---- B1 发图择时 ----
+    def test_image_probability(self):
+        class R:
+            def __init__(self, v):
+                self.v = v
+
+            def random(self):
+                return self.v
+
+        self.assertFalse(self.R.image_allowed("1", False, R(0.99)))
+        self.assertTrue(self.R.image_allowed("2", False, R(0.01)))
+
+    def test_image_cooldown(self):
+        class R:
+            def __init__(self, v):
+                self.v = v
+
+            def random(self):
+                return self.v
+
+        self.assertTrue(self.R.image_allowed("3", False, R(0.0)))
+        self.assertFalse(self.R.image_allowed("3", False, R(0.0)), "10 分钟内同一人只一张")
+
+    def test_group_more_conservative(self):
+        from botv.chat.reply import IMAGE_PROB, IMAGE_PROB_GROUP
+        self.assertLess(IMAGE_PROB_GROUP, IMAGE_PROB)
+
+    # ---- B2 主动频率自适应 ----
+    def test_no_reply_lowers_frequency(self):
+        import time
+        from botv.life import impulse as I
+        self.cfg.proactive_adjust = 1.0
+        self.cfg.proactive_pending = True
+        I.should_chat(now=None, state={"lonely": 0.3, "mood": 0.0},
+                      last_user_ts=0.0, last_proactive_ts=time.time() - 3600,
+                      proactive_count=0, unanswered=0)
+        self.assertLess(self.cfg.proactive_adjust, 1.0)
+        self.assertEqual(self.cfg.proactive_pending, False)
+
+    def test_reply_raises_frequency_back(self):
+        from botv.life import impulse as I
+        self.cfg.proactive_adjust = 0.5
+        self.cfg.proactive_pending = True
+        I.note_user_message()
+        self.assertGreater(self.cfg.proactive_adjust, 0.5)
+        self.assertLessEqual(self.cfg.proactive_adjust, 1.0)
+
+    def test_adjust_floor(self):
+        import time
+        from botv.life import impulse as I
+        self.cfg.proactive_adjust = 0.5
+        for _ in range(5):
+            self.cfg.proactive_pending = True
+            I.should_chat(state={"lonely": 0.3}, last_user_ts=0.0,
+                          last_proactive_ts=time.time() - 3600,
+                          proactive_count=0, unanswered=0)
+        self.assertGreaterEqual(self.cfg.proactive_adjust, 0.5)
+
+
+class TestV14Parsing(unittest.TestCase):
+    """v14：日程模糊说法 / 指代词误伤 / CLIP 停用"""
+
+    def setUp(self):
+        from datetime import datetime
+        from botv.config import CST
+        self.now = datetime(2026, 11, 9, 10, 30, tzinfo=CST)  # 周一
+
+    def _when(self, text):
+        from botv.life.agenda import parse_when
+        return parse_when(text, self.now)
+
+    def test_month_end(self):
+        self.assertEqual(self._when("月底交报告").strftime("%m-%d"), "11-30")
+
+    def test_next_month(self):
+        self.assertEqual(self._when("下个月面试").strftime("%m-%d"), "12-01")
+
+    def test_weekend(self):
+        self.assertEqual(self._when("这周末出去玩").strftime("%m-%d"), "11-14")
+
+    def test_next_weekend(self):
+        self.assertEqual(self._when("下周末考试").strftime("%m-%d"), "11-21")
+
+    def test_clip_disabled_text(self):
+        from botv.cmd.formatters import format_clip_status
+        from botv.core import state as cfg
+        cfg.CLIP_ENABLED = False
+        text = format_clip_status()
+        self.assertIn("停用", text)
 
 
 if __name__ == "__main__":

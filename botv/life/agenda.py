@@ -3,6 +3,7 @@
 #
 # 解析原则：宁可少认，不可乱认——认错了她会提醒你一件没发生的事。
 
+import calendar
 import json
 import re
 from datetime import datetime, timedelta
@@ -45,6 +46,22 @@ def parse_when(text, now=None):
     elif "今天" in text or "今晚" in text:
         day = _base(now)
     else:
+        # v14-C1：模糊说法
+        if "月底" in text:
+            last_day = calendar.monthrange(now.year, now.month)[1]
+            day = _base(now).replace(day=last_day)
+        elif "下个月" in text:
+            y, m = (now.year + 1, 1) if now.month == 12 else (now.year, now.month + 1)
+            day = datetime(y, m, 1, tzinfo=CST)
+        elif "周末" in text:
+            wd = now.weekday()
+            if "下周末" in text:
+                delta = (5 - wd) % 7 or 7
+                delta += 7
+            else:
+                delta = 0 if wd >= 5 else (5 - wd)
+            day = _base(now) + timedelta(days=delta)
+
         m = re.search(r"下?(?:周|星期|礼拜)([一二三四五六日天])", text)
         if m:
             target = WEEKDAYS[m.group(1)]

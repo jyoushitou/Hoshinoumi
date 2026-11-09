@@ -63,7 +63,7 @@ def split_reply_text(txt):
     return dialog_lines, action, meta
 
 
-async def build_reply_message(txt, uid, kws=None):
+async def build_reply_message(txt, uid, kws=None, is_group=False):
     """构建回复消息列表，返回 [(类型, 消息段列表), ...]"""
     dialog_lines, action, meta = split_reply_text(txt)
     dialog = "\n".join(dialog_lines)
@@ -105,7 +105,7 @@ async def build_reply_message(txt, uid, kws=None):
             return None
         return ("image", [{"type": "image", "data": {"file": real}}])
 
-    if img_kw:
+    if img_kw and image_allowed(uid, is_group):
         fp = await get_best_image(img_kw, uid)
         part = _image_part(fp) if fp else None
         if part:
@@ -125,3 +125,34 @@ async def build_reply_message(txt, uid, kws=None):
         log_api("[构建回复] jieba 兜底无关键词")
 
     return parts
+
+# ===================== 发图择时（v14-B1） =====================
+# 不是每条回复都配图。AI 给了关键词、也搜到了图，还要过一道概率。
+
+IMAGE_PROB = 0.30           # 私聊基础概率
+IMAGE_PROB_GROUP = 0.20     # 群里更保守
+IMAGE_COOLDOWN = 600        # 同一个人 10 分钟最多一张
+_last_image_ts = {}
+
+
+def image_allowed(target, is_group=False, rng=None):
+    """这次要不要配图（会记账）"""
+    import random as _r
+    import time as _t
+    rng = rng or _r
+    now = _t.time()
+    if now - _last_image_ts.get(str(target), 0.0) < IMAGE_COOLDOWN:
+        return False
+
+    prob = IMAGE_PROB_GROUP if is_group else IMAGE_PROB
+    try:
+        from ..life.state import current as life_current
+        if float(life_current().get("mood", 0.0)) < -0.2:
+            prob *= 0.5  # 心情差时几乎不配图
+    except Exception:
+        pass
+
+    if rng.random() > prob:
+        return False
+    _last_image_ts[str(target)] = now
+    return True

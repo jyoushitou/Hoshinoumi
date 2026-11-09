@@ -219,7 +219,7 @@ def bubble_delay():
 
 async def send_short_reply(tid, text, ws, uid, is_group=False, kws=None):
     """发送完整回复：构建消息→逐条发送（文本+图片）"""
-    parts = await build_reply_message(text, uid, kws)  # 构建回复消息列表
+    parts = await build_reply_message(text, uid, kws, is_group)  # 构建回复消息列表（带发图择时）
     log_api(f"[发送] 共{len(parts)}条消息: {[p[0] for p in parts]}")  # 日志记录消息数量
     for ptype, msg in parts:  # 遍历每条消息
         log_api(f"[发送] 类型={ptype}, 内容预览={str(msg)[:60]}")  # 日志记录

@@ -85,7 +85,18 @@ def should_answer_group(gid, addressed):
     if addressed:
         if now - last < GROUP_AT_MIN_GAP:
             return False, "刚回过"
-        return True, "被@"
+        # v14-B4：被 @ 也要掷骰——基础 75%，心情极差时降到 40%
+        streak = cfg.group_streak.get(gid, 0)
+        p = max(0.75, group_reply_probability(streak=streak))
+        try:
+            from ..life.state import current as life_current
+            if float(life_current().get("mood", 0.0)) < -0.6:
+                p = 0.40
+        except Exception:
+            pass
+        if random.random() > p:
+            return False, f"被@{p:.0%}没回"
+        return True, f"被@(p={p:.0%})"
 
     if now - last < GROUP_COOLDOWN:
         return False, f"冷却中({int(GROUP_COOLDOWN - (now - last))}秒)"

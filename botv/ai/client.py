@@ -247,8 +247,9 @@ async def get_character_reply(txt, tid, current_kws=None):
     log_api(f"[get_character_reply] system_prompt长度: {len(sys_p)}")  # 日志记录提示词长度
     user_content = f"{txt}\n(当前话题关键词:{cur_kw_str})"  # 构建用户消息（追加当前话题关键词）
     # v10-U8：他提到过去的事，但记忆里可能真没有
-    if any(w in (txt or "") for w in ("上次", "之前", "记得", "说过", "那天", "当时", "你说过")):
-        user_content += "\n（他提到了过去的事。如果你记忆里确实没有，就直说记不太清，别硬编。）"
+    # v14-C2：只有检索确实没命中时才提示「记不清」，免得误伤正常叙述
+    if events == "无" and any(w in (txt or "") for w in ("上次", "之前", "记得", "说过", "那天", "当时", "你说过")):
+        user_content += "\n（他提到了过去的事，但你记忆里确实没有。直说记不太清，别硬编。）"
 
     # v13-G55：他糟蹋身体的时候，你会管
     if any(w in (txt or "") for w in ("熬夜", "通宵", "没吃饭", "不吃饭", "不吃早饭", "又没睡", "失眠")):

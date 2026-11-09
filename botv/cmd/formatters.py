@@ -129,10 +129,13 @@ def format_sticker_stats():
 
 
 def format_clip_status():
+    """CLIP 自 v8 起停用，图片改由多模态模型直接看（v14-C3）"""
     if cfg.CLIP_ENABLED:
-        return f"🖼️ CLIP状态: ✅ 已加载 (ViT-B/32, CPU)\n  候选标签数: {len(CLIP_IMAGE_TAGS)}"
-    else:
-        return "🖼️ CLIP状态: ❌ 未加载（未安装torch/CLIP或加载失败）"
+        return (f"🖼️ CLIP: ✅ 已手动启用（NAO_CLIP=1）\n"
+                f"  候选标签数: {len(CLIP_IMAGE_TAGS)}\n"
+                f"  注意：v8 起默认不再使用 CLIP")
+    return ("🖼️ CLIP: ⏹ 已停用（v8 起改用多模态模型看图）\n"
+            "  想临时启用：NAO_CLIP=1 python3 run.py")
 
 
 def format_keywords():
