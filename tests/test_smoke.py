@@ -1736,7 +1736,11 @@ class TestScheduleTick(unittest.TestCase):
 
     def tearDown(self):
         for name, fn in self._orig.items():
-            setattr(self.R, name, fn)
+            if name.startswith("impulse."):
+                import botv.life.impulse as IMP
+                IMP.should_chat = fn
+            else:
+                setattr(self.R, name, fn)
         from botv.core import state as cfg
         cfg.daily_chat_trigger_times = []
         cfg.triggered_today.clear()
@@ -1791,15 +1795,18 @@ class TestScheduleTick(unittest.TestCase):
         n = asyncio.run(self.R.process_due(self.now))
         self.assertEqual(n, 1)
 
+    def _patch_should_chat(self, result):
+        import botv.life.impulse as IMP
+        self._orig["impulse.should_chat"] = IMP.should_chat
+        IMP.should_chat = lambda **kw: result
+        self._patch("load_today_life", lambda: [])
+        self._patch("load_events_from_db", lambda *a, **k: [])
+
     def test_maybe_chat_fires(self):
         import asyncio
         from botv.core import state as cfg
-        cur = self.now.hour * 60 + self.now.minute
-        cfg.daily_chat_trigger_times = [cur]
         cfg.triggered_today.clear()
-        self._patch("should_reach_out", lambda **kw: (True, "想说话了"))
-        self._patch("load_today_life", lambda: [])
-        self._patch("load_events_from_db", lambda *a, **k: [])
+        self._patch_should_chat((True, "想说话了", 0.1))
         ok = asyncio.run(self.R.maybe_chat(self.now))
         self.assertTrue(ok)
         self.assertEqual(len(self.sent), 1)
@@ -1807,10 +1814,8 @@ class TestScheduleTick(unittest.TestCase):
     def test_maybe_chat_skipped_by_gate(self):
         import asyncio
         from botv.core import state as cfg
-        cur = self.now.hour * 60 + self.now.minute
-        cfg.daily_chat_trigger_times = [cur]
         cfg.triggered_today.clear()
-        self._patch("should_reach_out", lambda **kw: (False, "刚聊过"))
+        self._patch_should_chat((False, "刚聊过", 0.0))
         ok = asyncio.run(self.R.maybe_chat(self.now))
         self.assertFalse(ok)
         self.assertEqual(self.sent, [])
@@ -1818,25 +1823,79 @@ class TestScheduleTick(unittest.TestCase):
     def test_maybe_chat_ignores_other_minutes(self):
         import asyncio
         from botv.core import state as cfg
-        cfg.daily_chat_trigger_times = [0]  # 不是现在
         cfg.triggered_today.clear()
-        self._patch("should_reach_out", lambda **kw: (True, "ok"))
-        ok = asyncio.run(self.R.maybe_chat(self.now))
+        self._patch_should_chat((True, "ok", 0.5))
+        odd = self.now.replace(minute=17)  # 不在整半点
+        ok = asyncio.run(self.R.maybe_chat(odd))
         self.assertFalse(ok)
 
-    def test_maybe_chat_only_once_per_minute(self):
+    def test_maybe_chat_only_once_per_window(self):
         import asyncio
         from botv.core import state as cfg
-        cur = self.now.hour * 60 + self.now.minute
-        cfg.daily_chat_trigger_times = [cur]
         cfg.triggered_today.clear()
-        self._patch("should_reach_out", lambda **kw: (True, "ok"))
-        self._patch("load_today_life", lambda: [])
-        self._patch("load_events_from_db", lambda *a, **k: [])
+        self._patch_should_chat((True, "ok", 0.5))
         first = asyncio.run(self.R.maybe_chat(self.now))
         second = asyncio.run(self.R.maybe_chat(self.now))
         self.assertTrue(first)
-        self.assertFalse(second, "同一分钟不能触发两次")
+        self.assertFalse(second, "同一个 30 分钟窗口不能触发两次")
+
+
+class TestChatImpulse(unittest.TestCase):
+    """v10.4：30 分钟一次的主动闲聊掷骰"""
+
+    class _R:
+        def __init__(self, v=0.0):
+            self.v = v
+
+        def random(self):
+            return self.v
+
+    def _now(self, hour, minute=0):
+        from datetime import datetime
+        from botv.config import CST
+        return datetime(2026, 11, 9, hour, minute, tzinfo=CST)
+
+    def test_night_is_zero(self):
+        from botv.life.impulse import chat_probability
+        self.assertEqual(chat_probability(self._now(3), 5, {"lonely": 1, "mood": 1}), 0.0)
+
+    def test_silence_raises(self):
+        from botv.life.impulse import chat_probability
+        st = {"lonely": 0.3, "mood": 0.0}
+        short = chat_probability(self._now(19), 0.5, st)
+        long = chat_probability(self._now(19), 4, st)
+        self.assertGreater(long, short)
+
+    def test_life_event_boosts(self):
+        from botv.life.impulse import chat_probability
+        st = {"lonely": 0.3, "mood": 0.0}
+        plain = chat_probability(self._now(19), 3, st, has_life_event=False)
+        boosted = chat_probability(self._now(19), 3, st, has_life_event=True)
+        self.assertGreater(boosted, plain)
+        self.assertAlmostEqual(boosted / plain, 1.8, places=2)
+
+    def test_probability_capped(self):
+        from botv.life.impulse import chat_probability, CHAT_MAX_P
+        st = {"lonely": 1.0, "mood": 1.0}
+        self.assertLessEqual(chat_probability(self._now(19), 99, st, True), CHAT_MAX_P)
+
+    def test_should_chat_blocks(self):
+        from botv.life.impulse import should_chat
+        ok, why, _p = should_chat(now=self._now(3), state={"lonely": 1}, rng=self._R(0.0))
+        self.assertFalse(ok)
+        self.assertEqual(why, "深夜")
+
+    def test_should_chat_roll(self):
+        from botv.life.impulse import should_chat
+        st = {"lonely": 0.3, "mood": 0.0}
+        miss, _w, _p = should_chat(now=self._now(19), state=st, rng=self._R(0.99),
+                                   silent_hours=4, last_user_ts=0.0,
+                                   proactive_count=0, unanswered=0, last_proactive_ts=0.0)
+        hit, _w2, _p2 = should_chat(now=self._now(19), state=st, rng=self._R(0.0),
+                                    silent_hours=4, last_user_ts=0.0,
+                                    proactive_count=0, unanswered=0, last_proactive_ts=0.0)
+        self.assertFalse(miss)
+        self.assertTrue(hit)
 
 
 if __name__ == "__main__":

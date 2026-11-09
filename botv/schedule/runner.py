@@ -77,15 +77,22 @@ async def process_due(now):
 
 async def maybe_chat(now):
     """到点主动闲聊：先问她想不想说话，再决定说什么。返回是否真的发出"""
-    cur_minute = now.hour * 60 + now.minute
-    if cur_minute not in cfg.daily_chat_trigger_times:
+    # v10.4：每 30 分钟掷一次骰子，不再依赖预设时刻
+    if now.minute % 30 != 0 or now.second > 10:
         return False
-    if cur_minute in cfg.triggered_today:
+    window = now.strftime("%Y-%m-%d %H:%M")
+    if window in cfg.triggered_today:
         return False
-    cfg.triggered_today.add(cur_minute)  # 先标记，异常也不重复触发
+    cfg.triggered_today.add(window)  # 先标记，异常也不重复触发
 
     try:
-        ok, why = should_reach_out(now=now)
+        from ..life.impulse import should_chat
+        has_life = False
+        try:
+            has_life = bool(load_today_life())
+        except Exception:
+            has_life = False
+        ok, why, p = should_chat(now=now, has_life_event=has_life)
         if not ok:
             log_system(f"主动闲聊跳过: {why}")
             return False
@@ -158,41 +165,10 @@ async def cycle_task_run():
                 # 先计算当日所有任务触发时刻（后面闲聊要避开这些时间）
                 cfg.task_trigger_minute.update(calc_day_tasks(today, _is_workday))
 
-                # ===== 所有主动消息（定时任务+闲聊）合并排序，确保间隔至少1小时 =====
-                # 1. 先收集所有定时任务的触发分钟
-                all_active_minutes = set()
-                for key, tm in cfg.task_trigger_minute.items():
-                    if 480 <= tm <= 1380:  # 只保留你醒着的时间段 8:00~23:00
-                        all_active_minutes.add(tm)
-
-                # 2. 生成随机闲聊触发时间点（2~4次），确保与定时任务间隔 >= 60分钟
-                chat_count = random.randint(2, 4)
-                available_minutes = list(range(480, 1381))  # 8:00~23:00
-                # 移除定时任务前后60分钟的时间点
-                for tm in all_active_minutes:
-                    remove_start = max(480, tm - 60)
-                    remove_end = min(1380, tm + 60)
-                    available_minutes = [m for m in available_minutes if m < remove_start or m > remove_end]
-
-                chat_times = []
-                for _ in range(chat_count):
-                    if not available_minutes:
-                        break
-                    chosen = random.choice(available_minutes)
-                    chat_times.append(chosen)
-                    # 移除 chosen 前后60分钟内的所有时间点，确保闲聊之间也间隔
-                    remove_start = max(480, chosen - 60)
-                    remove_end = min(1380, chosen + 60)
-                    available_minutes = [m for m in available_minutes if m < remove_start or m > remove_end]
-
-                cfg.daily_chat_trigger_times = sorted(chat_times)
-
-                # 3. 合并所有主动消息时间点并排序，用于间隔检查
-                all_active = sorted(set(list(all_active_minutes) + cfg.daily_chat_trigger_times))
-                log_system(f"所有主动消息时间点: {[f'{m//60:02d}:{m%60:02d}' for m in all_active]}")
-                log_system(f"其中主动闲聊: {[f'{m//60:02d}:{m%60:02d}' for m in cfg.daily_chat_trigger_times]}")
+                # v10.4：主动闲聊不再预设时刻，改成每 30 分钟掷一次骰子
                 _last_today = today
-                log_system(f"定时任务初始化完成，共 {len(cfg.task_trigger_minute)} 个任务点")
+                log_system(f"定时任务初始化完成，共 {len(cfg.task_trigger_minute)} 个任务点"
+                           f"（主动闲聊改为每 30 分钟掷骰）")
 
             # ---------- 凌晨3点自动生成昨天日记并存入数据库 ----------
             # 3点时昨天的数据已完整，AI生成日记后保存到 diaries 表（不推送）

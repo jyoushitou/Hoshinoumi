@@ -118,3 +118,105 @@ def _reset_daily():
     """跨天重置计数（由定时任务在切日时调用）"""
     from ..core import state as cfg
     cfg.proactive_count_today = 0
+
+
+# ===================== 主动闲聊：30 分钟一次的冲动（v10.4） =====================
+# 不再预设「今天 2~4 个时刻」，改成每 30 分钟问一次「现在想不想说话」。
+# 概率随时间爬升——像人憋久了会忍不住，而不是到点打卡。
+
+HOUR_WEIGHTS = [  # (起始小时, 结束小时, 权重)
+    (0, 7, 0.0),     # 睡觉
+    (7, 8, 0.02),
+    (8, 9, 0.05),    # 刚起床
+    (9, 12, 0.03),   # 上午在忙
+    (12, 14, 0.10),  # 午休
+    (14, 18, 0.03),  # 下午
+    (18, 20, 0.12),  # 傍晚
+    (20, 22, 0.08),
+    (22, 23, 0.08),  # 睡前
+    (23, 24, 0.0),
+]
+
+CHAT_MAX_P = 0.35          # 单次掷骰的上限
+SILENCE_FULL_HOURS = 3.0   # 静默到这个时长，因子到 1
+LIFE_EVENT_BOOST = 1.8     # 今天有事想分享
+
+
+def hour_weight(hour):
+    for start, end, w in HOUR_WEIGHTS:
+        if start <= hour < end:
+            return w
+    return 0.0
+
+
+def chat_probability(now=None, silent_hours=0.0, state=None, has_life_event=False):
+    """这一次（30 分钟窗口）她开口的概率"""
+    now = now or datetime.now(CST)
+    weight = hour_weight(now.hour)
+    if weight <= 0:
+        return 0.0
+
+    silence = min(1.0, max(0.0, silent_hours) / SILENCE_FULL_HOURS)
+    state = state or {}
+    lonely = float(state.get("lonely", 0.2))
+    mood = float(state.get("mood", 0.1))
+    mood_f = 1.1 if mood > 0.4 else (0.7 if mood < -0.2 else 1.0)
+
+    p = weight * silence * (0.5 + lonely) * mood_f
+    if has_life_event:
+        p *= LIFE_EVENT_BOOST
+    return min(CHAT_MAX_P, p)
+
+
+def should_chat(now=None, rng=None, state=None, silent_hours=None,
+                has_life_event=False, last_user_ts=None, last_proactive_ts=None,
+                proactive_count=None, unanswered=None, daily_cap=None):
+    """每 30 分钟问一次：现在主动说话吗？返回 (要不要, 原因, 概率)"""
+    now = now or datetime.now(CST)
+    rng = rng or random
+    from ..core import state as cfg
+
+    if state is None:
+        state = life_current(now)
+    if last_user_ts is None:
+        last_user_ts = getattr(cfg, "last_user_msg_ts", 0.0)
+    if proactive_count is None:
+        proactive_count = getattr(cfg, "proactive_count_today", 0)
+    if unanswered is None:
+        unanswered = getattr(cfg, "proactive_unanswered", 0)
+    if last_proactive_ts is None:
+        last_proactive_ts = getattr(cfg, "last_proactive_ts", 0.0)
+    cap = DAILY_CAP if daily_cap is None else daily_cap
+
+    now_ts = _time.time()
+
+    # 深夜不打扰（权重为 0 兜底）
+    if hour_weight(now.hour) <= 0:
+        return False, "深夜", 0.0
+
+    # 刚聊过
+    if last_user_ts and (now_ts - last_user_ts) < QUIET_AFTER_TALK_MIN * 60:
+        return False, "刚聊过", 0.0
+
+    # 今日配额
+    if last_proactive_ts:
+        try:
+            same_day = datetime.fromtimestamp(last_proactive_ts, CST).date() == now.date()
+        except (OSError, ValueError, OverflowError):
+            same_day = False
+        if same_day and proactive_count >= cap:
+            return False, "今日配额用完", 0.0
+
+    # 连续没回应
+    if unanswered >= UNANSWERED_LIMIT:
+        return False, "连续没回应", 0.0
+
+    if silent_hours is None:
+        silent_hours = ((now_ts - last_user_ts) / 3600.0) if last_user_ts else 24.0
+
+    p = chat_probability(now, silent_hours, state, has_life_event)
+    if p <= 0:
+        return False, "时段不合适", 0.0
+    if rng.random() > p:
+        return False, f"没掷中(p={p:.1%})", p
+    return True, f"想说话了(p={p:.1%})", p
