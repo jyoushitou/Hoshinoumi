@@ -3815,5 +3815,186 @@ class TestReadingPrompt(unittest.TestCase):
         self.assertIn("{reading}", LOCAL_SYSTEM_PROMPT)
 
 
+class TestMaybeRead(unittest.TestCase):
+    """v16：runner 里的空闲读书入口"""
+
+    def setUp(self):
+        import botv.infra.repo_memory as rm
+        import botv.schedule.runner as R
+        import botv.life.novel as N
+        self.R, self.N = R, N
+        self.store = {}
+        self._orig = (rm.load_reading, rm.save_reading)
+        rm.load_reading = lambda tid: self.store.get(str(tid), "")
+        rm.save_reading = lambda tid, p: self.store.__setitem__(str(tid), p) or True
+        self._orig_cfg = (R.cfg.last_user_msg_ts,)
+        R.cfg.last_user_msg_ts = 0.0
+        R._last_read_check = 0.0
+
+    def tearDown(self):
+        import botv.infra.repo_memory as rm
+        rm.load_reading, rm.save_reading = self._orig
+        self.R.cfg.last_user_msg_ts = self._orig_cfg[0]
+        self.R._last_read_check = 0.0
+
+    def _patch_novel(self):
+        async def fetch_rank():
+            return [("热书", "https://x/page/1")]
+
+        async def fetch_book(url):
+            return {"title": "热书", "intro": "", "chapters": [("第1章 开始", "https://x/reader/1")]}
+
+        async def fetch_chapter(url):
+            return "正文内容" * 50
+
+        self.N.fetch_rank, self.N.fetch_book, self.N.fetch_chapter = fetch_rank, fetch_book, fetch_chapter
+
+    def test_reads_when_idle(self):
+        import asyncio
+        from datetime import datetime
+        from botv.config import CST
+        self._patch_novel()
+        now = datetime(2026, 11, 9, 15, 0, tzinfo=CST)
+        out = asyncio.run(self.R.maybe_read(now, force=True))
+        self.assertTrue(out)
+        data = self.store.get(str(self.R.MASTER_QQ), "")
+        self.assertIn("热书", data)
+
+    def test_night_skips(self):
+        import asyncio
+        from datetime import datetime
+        from botv.config import CST
+        self._patch_novel()
+        now = datetime(2026, 11, 9, 3, 0, tzinfo=CST)
+        self.assertFalse(asyncio.run(self.R.maybe_read(now, force=True)))
+
+    def test_throttle(self):
+        import asyncio
+        from datetime import datetime
+        from botv.config import CST
+        self._patch_novel()
+        now = datetime(2026, 11, 9, 15, 0, tzinfo=CST)
+        self.assertTrue(asyncio.run(self.R.maybe_read(now, force=True)))
+        # 第二次（不强制）应被节流挡掉
+        self.assertFalse(asyncio.run(self.R.maybe_read(now, force=False)))
+
+
+class TestSharePoints(unittest.TestCase):
+    """v16-E8：攒够几个点再分享"""
+
+    def setUp(self):
+        self.data = {"books": [{"title": "天外玉", "url": "u", "last_no": 5}],
+                     "pending": [], "day": "", "chapters": 0}
+
+    def test_not_ready_before_three(self):
+        self.R = __import__("botv.life.reading", fromlist=["x"])
+        for i in range(2):
+            self.R.note_summary(self.data, f"第{i}个点")
+        self.assertFalse(self.R.share_ready(self.data))
+
+    def test_ready_after_three(self):
+        from botv.life.reading import note_summary, share_ready
+        for i in range(3):
+            note_summary(self.data, f"第{i}个点")
+        self.assertTrue(share_ready(self.data))
+
+    def test_build_share_has_title(self):
+        from botv.life.reading import note_summary, build_share
+        for i in range(3):
+            note_summary(self.data, f"第{i}个点")
+        text = build_share(self.data)
+        self.assertIn("天外玉", text)
+        self.assertIn("第0个点", text)
+
+    def test_mark_shared_clears(self):
+        from botv.life.reading import note_summary, mark_shared
+        for i in range(4):
+            note_summary(self.data, f"第{i}个点")
+        mark_shared(self.data)
+        self.assertEqual(len(self.data["pending"]), 1, "用掉 3 个，剩 1 个")
+        self.assertGreater(self.data["last_share_ts"], 0)
+
+    def test_cooldown(self):
+        import time
+        from botv.life.reading import note_summary, share_ready
+        for i in range(3):
+            note_summary(self.data, f"点{i}")
+        self.data["last_share_ts"] = time.time() - 60
+        self.assertFalse(share_ready(self.data), "3 小时内不重复分享")
+
+    def test_summary_capped(self):
+        from botv.life.reading import note_summary
+        note_summary(self.data, "长" * 500)
+        self.assertLessEqual(len(self.data["pending"][0]), 100)
+
+
+class TestShareReading(unittest.TestCase):
+    """v16-E8：攒够点后主动分享"""
+
+    def setUp(self):
+        import botv.infra.repo_memory as rm
+        import botv.schedule.runner as R
+        self.R = R
+        self.sent, self.prompts = [], []
+        self.store = {}
+        self._orig = (rm.load_reading, rm.save_reading)
+        rm.load_reading = lambda tid: self.store.get(str(tid), "")
+        rm.save_reading = lambda tid, p: self.store.__setitem__(str(tid), p) or True
+        self._orig_fn = (R.get_character_reply, R.send_short_reply)
+        self._seed()
+
+    def tearDown(self):
+        import botv.infra.repo_memory as rm
+        rm.load_reading, rm.save_reading = self._orig
+        self.R.get_character_reply, self.R.send_short_reply = self._orig_fn
+
+    def _seed(self, pending=3):
+        import json
+        data = {"books": [{"title": "天外玉", "url": "u", "last_no": 5}],
+                "pending": [f"第{i}个点" for i in range(pending)],
+                "day": "", "chapters": 0, "last_share_ts": 0}
+        self.store[str(self.R.MASTER_QQ)] = json.dumps(data)
+
+    def _patch(self, ret="她还记得那章，随口提了一句"):
+        async def fake_reply(prompt, tid):
+            self.prompts.append(prompt)
+            return ret
+
+        async def fake_send(*a, **k):
+            self.sent.append(a)
+
+        self.R.get_character_reply = fake_reply
+        self.R.send_short_reply = fake_send
+
+    def test_share_sends(self):
+        import asyncio
+        self._patch()
+        self.assertTrue(asyncio.run(self.R.maybe_share_reading()))
+        self.assertEqual(len(self.sent), 1)
+        self.assertIn("天外玉", self.prompts[0])
+
+    def test_share_needs_three_points(self):
+        import asyncio
+        self._seed(pending=2)
+        self._patch()
+        self.assertFalse(asyncio.run(self.R.maybe_share_reading()))
+        self.assertEqual(self.sent, [])
+
+    def test_share_clears_points(self):
+        import asyncio, json
+        self._patch()
+        asyncio.run(self.R.maybe_share_reading())
+        data = json.loads(self.store[str(self.R.MASTER_QQ)])
+        self.assertEqual(len(data["pending"]), 0)
+        self.assertGreater(data["last_share_ts"], 0)
+
+    def test_share_skips_fallback(self):
+        import asyncio
+        from botv.core.types import Fallback
+        self._patch(ret=Fallback("挂了"))
+        self.assertFalse(asyncio.run(self.R.maybe_share_reading()))
+        self.assertEqual(self.sent, [])
+
+
 if __name__ == "__main__":
     unittest.main()

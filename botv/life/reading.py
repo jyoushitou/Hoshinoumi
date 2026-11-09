@@ -260,6 +260,7 @@ async def read_once(tid, fetch_book=None, fetch_chapter=None, summarize=None, no
             log_api(f"[读书] 摘要失败: {e}")
     summary = (summary or "").strip()[:SUMMARY_MAX]
 
+    note_summary(data, summary)  # v16：攒着，几个点后一起说
     update_progress(data, info.get("title") or book.get("title", ""),
                     book["url"], chapter_title, info.get("intro", ""))
     mark_read(data, 1, now)
@@ -425,3 +426,48 @@ async def follow_request(tid, req, fetch_book=None):
     book, msg = await follow(tid, url=req.get("url", ""), title=req.get("title", ""),
                              fetch_book=fetch_book)
     return msg
+# ===================== 攒够几个点再分享（v16-E8） =====================
+
+SHARE_AFTER = 3              # 连读 3 章的摘要攒起来
+SHARE_COOLDOWN = 3 * 3600    # 两次分享至少隔 3 小时
+SHARE_MAX_CHARS = 120
+
+
+def note_summary(data, summary):
+    """把这一章的摘要挂到待分享列表"""
+    if not summary:
+        return data
+    pending = data.setdefault("pending", [])
+    pending.append(str(summary)[:SUMMARY_MAX])
+    if len(pending) > 10:
+        del pending[:-10]
+    return data
+
+
+def share_ready(data, now=None):
+    """攒够几个点了吗（且不在冷却里）"""
+    pending = data.get("pending") or []
+    if len(pending) < SHARE_AFTER:
+        return False
+    last = float(data.get("last_share_ts") or 0.0)
+    return (_now(now).timestamp() - last) >= SHARE_COOLDOWN
+
+
+def build_share(data):
+    """把这几个点拼成一句话的素材"""
+    pending = (data.get("pending") or [])[:SHARE_AFTER]
+    if not pending:
+        return ""
+    book = current_book(data) or {}
+    title = book.get("title") or ""
+    body = "；".join(pending)
+    text = f"《{title}》这几章：{body}" if title else f"这几章：{body}"
+    return text[:SHARE_MAX_CHARS]
+
+
+def mark_shared(data, now=None):
+    """分享过了：清掉用掉的点，记时间"""
+    pending = data.get("pending") or []
+    data["pending"] = pending[SHARE_AFTER:]
+    data["last_share_ts"] = _now(now).timestamp()
+    return data
