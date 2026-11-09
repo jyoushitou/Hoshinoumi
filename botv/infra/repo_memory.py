@@ -133,6 +133,35 @@ def save_state_json(payload):
     c.connection.commit()
 
 
+def load_today_life():
+    """取今天的生活事件（v10-U9b 分享生活用）"""
+    c = get_cursor()
+    c.execute(
+        "SELECT event_summary FROM events "
+        "WHERE target_id=%s AND kind='life' AND tags='生活' AND DATE(created_at)=CURDATE() "
+        "ORDER BY id DESC LIMIT 5",
+        (STATE_TARGET,),
+    )
+    return [r["event_summary"] for r in c.fetchall()]
+
+
+def load_agenda_items():
+    """取出她的待办（v10-U9b）"""
+    c = get_cursor()
+    c.execute(
+        "SELECT id, event_summary FROM events WHERE target_id=%s AND kind='agenda' ORDER BY id",
+        (STATE_TARGET,),
+    )
+    return list(c.fetchall())
+
+
+def delete_agenda_item(item_id):
+    """删掉一条待办"""
+    c = get_cursor()
+    c.execute("DELETE FROM events WHERE id=%s AND kind='agenda'", (item_id,))
+    c.connection.commit()
+
+
 def load_timeline(tid, days=7, limit=12):
     """最近 N 天的记忆，按时间倒序（v8-B16）"""
     c = get_cursor()

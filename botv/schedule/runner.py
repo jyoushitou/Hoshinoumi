@@ -231,6 +231,23 @@ async def cycle_task_run():
                 except Exception as task_e:
                     log_err(f"定时任务执行异常({task['scene']}):{task_e}")
 
+            # ---------- 待办到点：回访承诺 / 时间锚点（v10-U9b） ----------
+            try:
+                for item_id, item in pending_due(now):
+                    ok, why = should_reach_out(now=now, require_lonely=False)
+                    if not ok:
+                        log_api(f"待办暂缓({why}): {item.get('t')}")
+                        continue
+                    rep = await get_character_reply(
+                        f"（{describe_pending(item)}。就一句话，别解释，别问他在干嘛。）",
+                        str(MASTER_QQ))
+                    await send_short_reply(MASTER_QQ, rep, cfg.active_ws_qq, MASTER_QQ)
+                    note_proactive()
+                    finish_pending(item_id)
+                    log_system(f"待办已回访: {item.get('t')}")
+            except Exception as p_e:
+                log_err(f"待办处理异常:{p_e}")
+
             # ---------- 主动闲聊触发（基于事件记忆，让AI自己发挥） ----------
             if (cur_minute in cfg.daily_chat_trigger_times and
                     cur_minute not in cfg.triggered_today):
@@ -242,6 +259,33 @@ async def cycle_task_run():
                     if not ok:
                         log_system(f"主动闲聊跳过: {why}")
                         raise _SkipChat()
+                    # v10-U9b：心情很差时只说一句，不解释
+                    try:
+                        from ..life.state import current as life_current
+                        mood_now = float(life_current().get("mood", 0.0))
+                    except Exception:
+                        mood_now = 0.0
+                    if mood_now < -0.5:
+                        log_system(f"主动闲聊（心情差 {mood_now:.2f}，只说一句）")
+                        rep = await get_character_reply(
+                            "（你现在心情很差，只发一句很短的话，不解释原因，也别问他在干嘛）",
+                            str(MASTER_QQ))
+                        await send_short_reply(MASTER_QQ, rep, cfg.active_ws_qq, MASTER_QQ)
+                        note_proactive()
+                        raise _SkipChat()
+
+                    # v10-U9b：一半概率分享今天的生活事件
+                    life_today = load_today_life()
+                    if life_today and random.random() < 0.5:
+                        seed = random.choice(life_today)
+                        log_system(f"主动闲聊触发（分享生活: {seed[:20]}）")
+                        rep = await get_character_reply(
+                            f"（主动找他说话。说说你今天的这件事：{seed}。别问他在不在，直接说事。）",
+                            str(MASTER_QQ))
+                        await send_short_reply(MASTER_QQ, rep, cfg.active_ws_qq, MASTER_QQ)
+                        note_proactive()
+                        raise _SkipChat()
+
                     # 从数据库加载最近的事件作为话题
                     recent_events = load_events_from_db(str(MASTER_QQ), limit=5)
                     if recent_events:

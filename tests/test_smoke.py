@@ -1509,5 +1509,85 @@ class TestGroupProbability(unittest.TestCase):
         cfg.group_streak.clear()
 
 
+class TestPending(unittest.TestCase):
+    """v10-U9b：承诺与时间锚点识别"""
+
+    def test_promise(self):
+        from botv.life.pending import detect
+        items = detect("今天有点累，回头再说吧")
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["k"], "promise")
+
+    def test_anchor(self):
+        from botv.life.pending import detect
+        items = detect("我先去吃饭了，等下聊")
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["k"], "anchor")
+        self.assertEqual(items[0]["t"], "吃饭")
+
+    def test_anchor_delay(self):
+        from botv.life.pending import detect
+        from datetime import datetime
+        from botv.config import CST
+        now = datetime(2026, 11, 9, 12, 0, tzinfo=CST)
+        it = detect("去洗澡", now)[0]
+        self.assertAlmostEqual(it["due"] - now.timestamp(), 25 * 60, delta=5)
+
+    def test_promise_delay(self):
+        from botv.life.pending import detect
+        from datetime import datetime
+        from botv.config import CST
+        now = datetime(2026, 11, 9, 22, 0, tzinfo=CST)
+        it = detect("改天聊", now)[0]
+        self.assertAlmostEqual((it["due"] - now.timestamp()) / 3600, 20, delta=0.1)
+
+    def test_plain_text_no_item(self):
+        from botv.life.pending import detect
+        self.assertEqual(detect("你好呀，在干嘛"), [])
+
+    def test_not_both(self):
+        """同一句话不该既记承诺又记锚点"""
+        from botv.life.pending import detect
+        items = detect("我去吃饭了，回头再说")
+        self.assertLessEqual(len(items), 2)
+
+    def test_describe(self):
+        from botv.life.pending import describe
+        self.assertIn("答应过", describe({"k": "promise", "s": "回头再说"}))
+        self.assertIn("吃饭", describe({"k": "anchor", "t": "吃饭", "s": "去吃饭"}))
+
+
+class TestGateBypass(unittest.TestCase):
+    """v10-U9b：承诺/锚点不受孤独门槛限制"""
+
+    def test_bypass_lonely(self):
+        from datetime import datetime
+        from botv.config import CST
+        from botv.life.impulse import should_reach_out
+
+        class R:
+            def random(self):
+                return 0.0
+        now = datetime.now(CST).replace(hour=20)
+        ok, why = should_reach_out(now=now, state={"lonely": 0.0, "mood": 0.0},
+                                   rng=R(), require_lonely=False,
+                                   last_user_ts=0.0, proactive_count=0, unanswered=0)
+        self.assertTrue(ok, why)
+
+    def test_still_blocked_at_night(self):
+        from datetime import datetime
+        from botv.config import CST
+        from botv.life.impulse import should_reach_out
+
+        class R:
+            def random(self):
+                return 0.0
+        now = datetime.now(CST).replace(hour=2)
+        ok, why = should_reach_out(now=now, state={"lonely": 0.9},
+                                   rng=R(), require_lonely=False)
+        self.assertFalse(ok)
+        self.assertEqual(why, "深夜")
+
+
 if __name__ == "__main__":
     unittest.main()

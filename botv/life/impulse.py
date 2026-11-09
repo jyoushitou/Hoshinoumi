@@ -30,7 +30,7 @@ def _in_quiet_hours(now):
 def should_reach_out(now=None, state=None, rng=None,
                      last_user_ts=None, last_proactive_ts=None,
                      proactive_count=None, unanswered=None,
-                     lonely_threshold=None, daily_cap=None):
+                     lonely_threshold=None, daily_cap=None, require_lonely=True):
     """返回 (要不要发, 原因)
 
     参数都可注入，方便测试；不传就从全局状态里读。
@@ -57,9 +57,9 @@ def should_reach_out(now=None, state=None, rng=None,
     if _in_quiet_hours(now):
         return False, "深夜"
 
-    # 2) 刚聊过
+    # 2) 刚聊过（承诺回访/时间锚点不受这条限制——本来就是约好的）
     now_ts = _time.time()
-    if last_user_ts and (now_ts - last_user_ts) < QUIET_AFTER_TALK_MIN * 60:
+    if require_lonely and last_user_ts and (now_ts - last_user_ts) < QUIET_AFTER_TALK_MIN * 60:
         return False, "刚聊过"
 
     # 3) 今日配额
@@ -75,7 +75,10 @@ def should_reach_out(now=None, state=None, rng=None,
     if unanswered >= UNANSWERED_LIMIT:
         return False, "连续没回应"
 
-    # 5) 孤独不够
+    # 5) 孤独不够（只有"想念"这一类才看孤独）
+    if not require_lonely:
+        return True, "按约定主动"
+
     lonely = float(state.get("lonely", 0.0))
     if lonely < threshold:
         return False, f"不想说话(孤独{lonely:.2f})"
