@@ -191,6 +191,29 @@ def save_friction(tid, payload):
     c.connection.commit()
 
 
+def load_reading(tid):
+    """读小说进度（v16）"""
+    c = get_cursor()
+    c.execute(
+        "SELECT event_summary FROM events WHERE target_id=%s AND kind='reading' ORDER BY id DESC LIMIT 1",
+        (str(tid),),
+    )
+    row = c.fetchone()
+    return (row["event_summary"] or "") if row else ""
+
+
+def save_reading(tid, payload):
+    """覆盖写小说进度"""
+    c = get_cursor()
+    c.execute("DELETE FROM events WHERE target_id=%s AND kind='reading'", (str(tid),))
+    c.execute(
+        "INSERT INTO events(target_id, event_summary, tags, kind, dedupe_key, last_seen) "
+        "VALUES(%s,%s,'','reading',%s,NOW())",
+        (str(tid), payload, dedupe_key(str(tid), "reading", "reading")),
+    )
+    c.connection.commit()
+
+
 def load_habit(tid):
     """读某人的口头禅计数（v12-A17）"""
     c = get_cursor()

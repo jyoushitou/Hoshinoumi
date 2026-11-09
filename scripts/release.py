@@ -159,8 +159,14 @@ def main():
     run(["git", "tag", "-a", version, "-m", f"{version} 正式发布"])
     print(f"   ✅ {version}")
     if args.move_stable:
-        run(["git", "tag", "-f", "-a", "正式版", "-m", f"正式版：{version}"])
-        print("   ✅ 正式版 → " + version)
+        # 显式指定目标提交，并**验证真的挪了**（之前这步静默失败过）
+        _, head = run(["git", "rev-parse", "HEAD"])
+        run(["git", "tag", "-f", "-a", "正式版", head, "-m", f"正式版：{version}"])
+        _, stable = run(["git", "rev-parse", "正式版^{commit}"])
+        if not stable.startswith(head[:7]):
+            print(f"   ❌ 正式版没挪成功：{stable[:7]} != {head[:7]}")
+            sys.exit(1)
+        print(f"   ✅ 正式版 → {version}（{head[:7]}）")
 
     # 打包（带 tag）
     os.makedirs(DIST, exist_ok=True)

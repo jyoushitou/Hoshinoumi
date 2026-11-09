@@ -2105,6 +2105,8 @@ class TestEnvironment(unittest.TestCase):
         "NAO_NO_AUTOINSTALL",
         "NAO_CITY",
         "NAO_PERSONA",
+        "NAO_READ_IDLE_HOURS",
+        "NAO_READ_DAILY_CHAPTERS",
     }
 
     @staticmethod
@@ -3390,6 +3392,151 @@ class TestOpsCommands(unittest.TestCase):
         from botv.cmd import registry
         self.assertIn("stats", registry.COMMANDS)
         self.assertIn("config", registry.COMMANDS)
+
+
+class TestNovelParse(unittest.TestCase):
+    """v16：小说页解析（不联网，用合成 HTML）"""
+
+    BOOK_HTML = """
+    <h1>天外玉</h1>
+    <div>作者：世沄玊靑</div>
+    <div>作品简介 来自蓝星的天外之魔，不在天道管辖之内。</div>
+    <a href="/reader/111">第1章 降世</a>
+    <a href="/reader/222">第2章 身世</a>
+    <a href="/reader/333">第3章 规则</a>
+    """
+
+    def test_parse_book(self):
+        from botv.life.novel import parse_book
+        info = parse_book(self.BOOK_HTML)
+        self.assertEqual(info["title"], "天外玉")
+        self.assertEqual(info["author"], "世沄玊靑")
+        self.assertEqual(len(info["chapters"]), 3)
+
+    def test_parse_chapter_content(self):
+        from botv.life.novel import parse_chapter
+        html = '<div class="muye-reader-content">' + ("正文一行\n" * 40) + "</div>"
+        text = parse_chapter(html)
+        self.assertGreater(len(text), 100)
+        self.assertNotIn("<", text)
+
+    def test_parse_chapter_fallback(self):
+        from botv.life.novel import parse_chapter
+        html = "<html><body><p>" + ("很长的一段正文内容。" * 30) + "</p></body></html>"
+        self.assertGreater(len(parse_chapter(html)), 100)
+
+    def test_parse_empty(self):
+        from botv.life.novel import parse_book, parse_chapter
+        self.assertIsNone(parse_book(""))
+        self.assertEqual(parse_chapter(""), "")
+
+    def test_chapter_no(self):
+        from botv.life.novel import chapter_no
+        self.assertEqual(chapter_no("第12章 测试"), 12)
+        self.assertEqual(chapter_no("没有章号"), 0)
+
+    def test_strip_tags(self):
+        from botv.life.novel import strip_tags
+        self.assertEqual(strip_tags("<p>你好<br>世界</p>"), "你好\n世界")
+
+
+class TestReadingFlow(unittest.TestCase):
+    """v16：读书流程（注入假抓取器，不联网）"""
+
+    def setUp(self):
+        import botv.life.reading as R
+        import botv.infra.repo_memory as rm
+        self.R = R
+        self.store = {}
+        self._orig = (rm.load_reading, rm.save_reading)
+        rm.load_reading = lambda tid: self.store.get(str(tid), "")
+        rm.save_reading = lambda tid, p: self.store.__setitem__(str(tid), p) or True
+
+    def tearDown(self):
+        import botv.infra.repo_memory as rm
+        rm.load_reading, rm.save_reading = self._orig
+
+    def _seed_book(self, tid="1"):
+        data = self.R.load(tid)
+        data["books"] = [{"title": "天外玉", "url": "https://x/page/1",
+                          "last_no": 1, "last_title": "第1章", "intro": "修仙"}]
+        self.R.save(tid, data)
+
+    def _fetchers(self, chapters=3):
+        async def fetch_book(url):
+            return {"title": "天外玉", "intro": "修仙",
+                    "chapters": [(f"第{i}章 标题", f"https://x/reader/{i}") for i in range(1, chapters + 1)]}
+
+        async def fetch_chapter(url):
+            return "正文内容" * 50
+
+        async def summarize(text):
+            return "主角逃出道观"
+
+        return fetch_book, fetch_chapter, summarize
+
+    def test_read_advances_progress(self):
+        import asyncio
+        self._seed_book()
+        fb, fc, sm = self._fetchers()
+        out = asyncio.run(self.R.read_once("1", fb, fc, sm))
+        self.assertTrue(out["ok"], out)
+        self.assertEqual(out["chapter"], "第2章 标题")
+        self.assertEqual(out["summary"], "主角逃出道观")
+        data = self.R.load("1")
+        self.assertEqual(data["books"][-1]["last_no"], 2)
+        self.assertEqual(data["chapters"], 1)
+
+    def test_daily_quota(self):
+        import asyncio
+        self._seed_book()
+        data = self.R.load("1")
+        self.R.mark_read(data, self.R.DAILY_CHAPTERS)
+        self.R.save("1", data)
+        fb, fc, sm = self._fetchers()
+        out = asyncio.run(self.R.read_once("1", fb, fc, sm))
+        self.assertFalse(out["ok"])
+        self.assertIn("读够", out["reason"])
+
+    def test_night_blocks(self):
+        from datetime import datetime
+        from botv.config import CST
+        ok, why = self.R.should_read(None, datetime(2026, 11, 9, 3, 0, tzinfo=CST))
+        self.assertFalse(ok)
+        self.assertEqual(why, "深夜")
+
+    def test_idle_gate(self):
+        from datetime import datetime
+        from botv.config import CST
+        now = datetime(2026, 11, 9, 15, 0, tzinfo=CST)
+        recent = now.timestamp() - 600
+        ok, why = self.R.should_read(recent, now)
+        self.assertFalse(ok, "刚聊过不读")
+        old = now.timestamp() - 3 * 3600
+        ok, _why = self.R.should_read(old, now)
+        self.assertTrue(ok)
+
+    def test_no_new_chapter(self):
+        import asyncio
+        self._seed_book()
+        data = self.R.load("1")
+        data["books"][-1]["last_no"] = 99
+        self.R.save("1", data)
+        fb, fc, sm = self._fetchers()
+        out = asyncio.run(self.R.read_once("1", fb, fc, sm))
+        self.assertFalse(out["ok"])
+        self.assertIn("新章节", out["reason"])
+
+    def test_describe(self):
+        self._seed_book()
+        text = self.R.describe("1")
+        self.assertIn("天外玉", text)
+        self.assertIn("第 1 章", text)
+
+    def test_next_chapters(self):
+        chapters = [(f"第{i}章", f"u{i}") for i in range(1, 6)]
+        picked = self.R.next_chapters(chapters, 2, limit=2)
+        self.assertEqual([t for t, _u in picked], ["第3章", "第4章"])
 
 
 if __name__ == "__main__":
