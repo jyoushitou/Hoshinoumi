@@ -2187,5 +2187,45 @@ class TestPreflightSteps(unittest.TestCase):
             self.assertIn(word, out)
 
 
+    def test_animated_hint(self):
+        """动图要让模型知道「你只看到一帧」"""
+        from botv.ai.vision import prompt_with_hint, PROMPT
+        self.assertEqual(prompt_with_hint(False), PROMPT)
+        self.assertIn("动图", prompt_with_hint(True))
+
+    def test_gif_magic_detection(self):
+        """GIF 魔数识别（inbound 里判断是不是动图）"""
+        for head in (b"GIF89a....", b"GIF87a...."):
+            self.assertTrue(head[:6] in (b"GIF89a", b"GIF87a"))
+        self.assertFalse(b"\xff\xd8\xff\xe0" [:6] in (b"GIF89a", b"GIF87a"))
+
+
+    def test_frame_indices_even(self):
+        """抽帧要均匀且含首尾"""
+        from botv.ai.vision import frame_indices, MAX_FRAMES
+        idx = frame_indices(60)
+        self.assertEqual(len(idx), MAX_FRAMES)
+        self.assertEqual(idx[0], 0)
+        self.assertEqual(idx[-1], 59)
+        self.assertEqual(idx, sorted(idx))
+        self.assertEqual(len(set(idx)), len(idx), "不能重复")
+
+    def test_frame_indices_short_gif(self):
+        """帧数不够就全要"""
+        from botv.ai.vision import frame_indices
+        self.assertEqual(frame_indices(5), [0, 1, 2, 3, 4])
+
+    def test_frame_indices_edge(self):
+        from botv.ai.vision import frame_indices
+        self.assertEqual(frame_indices(0), [])
+        self.assertEqual(frame_indices(1), [0])
+
+    def test_prompt_mentions_frame_count(self):
+        from botv.ai.vision import prompt_with_hint
+        text = prompt_with_hint(True, 24)
+        self.assertIn("24 帧", text)
+        self.assertIn("网格", text)
+
+
 if __name__ == "__main__":
     unittest.main()

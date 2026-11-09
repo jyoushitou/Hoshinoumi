@@ -26,21 +26,107 @@ PROMPT = (
 )
 
 
-def compress_b64(img_bytes, max_side=MAX_SIDE, quality=JPEG_QUALITY):
-    """压缩成 base64；PIL 不可用就原样编码"""
+def _flatten(im):
+    """把带透明通道的图铺到白底上
+
+    GIF/PNG 常有透明背景，直接 convert("RGB") 会变成黑块或雪花，
+    模型看到的就是「一张花图」——这是动图被说「看不清」的主因之一。
+    """
+    try:
+        from PIL import Image
+        if im.mode in ("RGBA", "LA") or (im.mode == "P" and "transparency" in im.info):
+            rgba = im.convert("RGBA")
+            bg = Image.new("RGB", rgba.size, (255, 255, 255))
+            bg.paste(rgba, mask=rgba.split()[-1])
+            return bg
+    except Exception:
+        pass
+    return im.convert("RGB")
+
+
+MAX_FRAMES = 24     # 动图最多抽这么多帧
+GRID_COLS = 4       # 网格列数（24 帧 → 4×6）
+FRAME_SIDE = 256    # 单帧缩到这么小再拼
+
+
+def frame_indices(total, want=MAX_FRAMES):
+    """均匀抽帧的序号（含首尾），纯函数便于测试"""
+    if total <= 0:
+        return []
+    if total <= want:
+        return list(range(total))
+    if want <= 1:
+        return [0]
+    step = (total - 1) / float(want - 1)
+    return sorted({int(round(i * step)) for i in range(want)})
+
+
+def _tile(frames, cols=GRID_COLS):
+    """把多帧拼成一张网格图，按从左到右、从上到下排"""
+    from PIL import Image
+    if not frames:
+        return None
+    cell = max(max(f.size) for f in frames)
+    rows = (len(frames) + cols - 1) // cols
+    canvas = Image.new("RGB", (cols * cell, rows * cell), (255, 255, 255))
+    for i, frame in enumerate(frames):
+        r, c = divmod(i, cols)
+        x = c * cell + (cell - frame.size[0]) // 2
+        y = r * cell + (cell - frame.size[1]) // 2
+        canvas.paste(frame, (x, y))
+    return canvas
+
+
+def prepare(img_bytes, max_side=MAX_SIDE, quality=JPEG_QUALITY):
+    """压缩并返回 (base64, 是否动图, 帧数)；PIL 不可用就原样编码"""
     try:
         from PIL import Image
         im = Image.open(io.BytesIO(img_bytes))
-        im = im.convert("RGB")
+        animated = bool(getattr(im, "is_animated", False))
+        total = int(getattr(im, "n_frames", 1) or 1)
+
+        if animated and total > 1:
+            # 动图：抽帧 → 缩到小图 → 拼网格
+            frames = []
+            for idx in frame_indices(total):
+                try:
+                    im.seek(idx)
+                    frame = _flatten(im).copy()
+                    frame.thumbnail((FRAME_SIDE, FRAME_SIDE))
+                    frames.append(frame)
+                except Exception:
+                    continue
+            canvas = _tile(frames)
+            if canvas is not None:
+                im = canvas
+                total = len(frames)
+            else:
+                im = _flatten(im)
+        else:
+            im = _flatten(im)
+
         w, h = im.size
         if max(w, h) > max_side:
             ratio = max_side / float(max(w, h))
             im = im.resize((int(w * ratio), int(h * ratio)))
         buf = io.BytesIO()
         im.save(buf, format="JPEG", quality=quality)
-        return base64.b64encode(buf.getvalue()).decode()
+        return base64.b64encode(buf.getvalue()).decode(), animated, total
     except Exception:
-        return base64.b64encode(img_bytes).decode()
+        return base64.b64encode(img_bytes).decode(), False, 1
+
+
+def compress_b64(img_bytes, max_side=MAX_SIDE, quality=JPEG_QUALITY):
+    """只要 base64（兼容旧调用）"""
+    return prepare(img_bytes, max_side, quality)[0]
+
+
+def prompt_with_hint(animated, frames=1):
+    """动图要提前告诉模型，不然她会把「一帧」当成整张图"""
+    if animated:
+        return (PROMPT + f"\n注意：这是一张动图，被抽成 {frames} 帧拼成网格图，"
+                         f"按从左到右、从上到下的顺序。请描述画面里发生了什么变化。")
+    return PROMPT
 
 
 def parse_reply(text):
@@ -71,14 +157,15 @@ async def describe_image(img_bytes):
 
         url = DEFAULT_VISION_URL
         model = DEFAULT_VISION_MODEL
+        b64, animated, frames = prepare(img_bytes)
         payload = {
             "model": model,
             "messages": [{
                 "role": "user",
                 "content": [
-                    {"type": "text", "text": PROMPT},
+                    {"type": "text", "text": prompt_with_hint(animated, frames)},
                     {"type": "image_url",
-                     "image_url": {"url": f"data:image/jpeg;base64,{compress_b64(img_bytes)}"}},
+                     "image_url": {"url": f"data:image/jpeg;base64,{b64}"}},
                 ],
             }],
             "max_tokens": 200,

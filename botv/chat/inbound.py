@@ -52,6 +52,7 @@ async def parse_message_content(raw_content, user_id):
                 log_api(f"[消息解析] 收到图片: {url[:60]}")  # 日志记录
                 img_data = await asyncio.to_thread(download_url, url)  # 下载图片（丢线程，别卡事件循环）
                 if img_data:  # 下载成功
+                    is_gif = img_data[:6] in (b"GIF89a", b"GIF87a")  # v11：动图只能看到一帧
                     md5, tags_str, fp = await process_and_save_image(img_data, url, user_id, keywords=["用户发图"])  # 先存下来
                     log_api(f"[消息解析] 图片处理结果: md5={md5}, tags={tags_str}, fp={fp}")
 
@@ -81,11 +82,13 @@ async def parse_message_content(raw_content, user_id):
 
                     if desc:  # 有描述就直接给模型「看到了什么」
                         img_info.append("[图]")
-                        input_text += " " + desc
-                    elif tags_str:
-                        tag_list = tags_str.split(",")
-                        img_info.append(f"[{tag_list[0]}]")
-                        input_text += " " + " ".join(tag_list[:5])
+                        input_text += " " + desc + ("（这是一张动图，你只看到其中一帧）" if is_gif else "")
+                    elif vt:  # 只有标签
+                        img_info.append(f"[{vt[0]}]")
+                        input_text += " " + " ".join(vt[:5])
+                    else:  # v11：视觉没拿到东西，明确告诉模型「图没看清」
+                        img_info.append("[图]")
+                        input_text += " （他发来一张图，但图没加载出来/看不清内容）"
                 else:  # 下载失败
                     img_info.append("[图]")  # 添加通用图片标识
                     log_api(f"[消息解析] 图片下载失败: {url[:60]}")  # 日志记录
