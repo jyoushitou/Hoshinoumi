@@ -153,6 +153,19 @@ def delete_todo_item(item_id):
     c.connection.commit()
 
 
+def load_old_events(tid, days=7, limit=5):
+    """取一周以前的旧事（v12-G52 旧事重提）"""
+    c = get_cursor()
+    c.execute("""
+        SELECT event_summary AS summary, DATE(COALESCE(last_seen, created_at)) AS day
+        FROM events
+        WHERE target_id IN (%s, %s) AND kind IN ('event','life')
+          AND COALESCE(last_seen, created_at) < NOW() - INTERVAL %s DAY
+        ORDER BY RAND() LIMIT %s
+    """, (str(tid), STATE_TARGET, days, limit))
+    return list(c.fetchall())
+
+
 def load_habit(tid):
     """读某人的口头禅计数（v12-A17）"""
     c = get_cursor()

@@ -86,3 +86,44 @@ async def cmd_todo(ctx):
         flag = "（已提醒）" if it.get("d") else ""
         lines.append(f"  #{it['id']} {when} {it['t'][:24]}{flag}")
     return "\n".join(lines)
+@command("memorybook")
+async def cmd_memorybook(ctx):
+    """!memorybook [uid] - 记忆本：认识多久、关系、口头禅、最近记得的事"""
+    from ..config import MASTER_QQ
+    from ..life import milestone, relation, habit
+    from ..infra.repo_memory import load_timeline
+
+    tid = ctx.args[0] if ctx.args else str(MASTER_QQ)
+    lines = [f"📖 我和 {tid} 的记忆本"]
+
+    try:
+        lines.append(f"  认识：第 {milestone.days_together(tid)} 天")
+    except Exception:
+        lines.append("  认识：不知道（记不起来是哪天了）")
+
+    try:
+        aff = relation.get(tid)
+        name, _desc = relation.tier_of(aff)
+        lines.append(f"  关系：{name}")
+    except Exception:
+        pass
+
+    try:
+        phrases = habit.phrases_for(tid)
+        if phrases:
+            lines.append(f"  他常说的：{'、'.join(phrases)}")
+    except Exception:
+        pass
+
+    try:
+        rows = load_timeline(tid, days=30, limit=8)
+        if rows:
+            lines.append("  最近记得的事：")
+            for r in rows[:8]:
+                lines.append(f"    {r['day']}  {str(r['summary'])[:30]}")
+        else:
+            lines.append("  最近还没记住什么事")
+    except Exception:
+        lines.append("  记忆读取失败")
+
+    return "\n".join(lines)

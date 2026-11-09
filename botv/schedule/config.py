@@ -34,4 +34,5 @@ SCHEDULE_TASKS = [
     {"scene": "提醒起身", "weekday": [0, 1, 2, 3, 4, 5, 6], "t": time(13, 30)},
     {"scene": "提醒晚餐", "weekday": [0, 1, 2, 3, 4, 5, 6], "t": time(16, 40)},
     {"scene": "催睡觉", "weekday": [0, 1, 2, 3, 4, 5, 6]},
+    {"scene": "周日复盘", "weekday": [6], "t": time(21, 0)},  # v12-G45：周日晚上回顾这一周
 ]

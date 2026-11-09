@@ -171,7 +171,7 @@ class TestCommandRegistry(unittest.TestCase):
         "acg", "apikeys", "clear", "clip", "code", "db", "diary", "event",
         "exit", "help", "img", "keywords", "log", "memory", "ping", "quit",
         "reload", "say", "sayg", "set", "status", "sticker", "task",
-        "uptime", "usage", "profile", "todo", "voice",
+        "uptime", "usage", "profile", "todo", "voice", "memorybook",
     }
 
     def setUp(self):
@@ -2357,6 +2357,65 @@ class TestMilestone(unittest.TestCase):
             client.phrases_for = orig_habit
             client.milestone_text = orig_ms
         self.assertIn("一百天", text)
+
+
+class TestV12Extras(unittest.TestCase):
+    """v12：仪式 / 记忆本 / 旧事重提"""
+
+    def test_sunday_ritual_task(self):
+        from botv.schedule.config import SCHEDULE_TASKS
+        scenes = [t["scene"] for t in SCHEDULE_TASKS]
+        self.assertIn("周日复盘", scenes, "周日晚上要有一次复盘仪式")
+
+    def test_memorybook_registered(self):
+        import botv.commands  # noqa: F401
+        from botv.cmd import registry
+        self.assertIn("memorybook", registry.COMMANDS)
+
+    def test_old_event_branch(self):
+        """主动闲聊有概率拿一件旧事当由头"""
+        import asyncio
+        from datetime import datetime
+        import botv.schedule.runner as R
+        import botv.life.impulse as IMP
+        from botv.core import state as cfg
+        from botv.config import CST
+
+        sent, prompts = [], []
+        orig = {}
+        def patch(name, fn):
+            orig[name] = getattr(R, name)
+            setattr(R, name, fn)
+
+        patch("load_old_events", lambda *a, **k: [{"summary": "去打疫苗", "day": "2026-10-01"}])
+        patch("load_today_life", lambda: [])
+
+        async def fake_reply(p, tid):
+            prompts.append(p)
+            return "还记得"
+
+        async def fake_send(*a, **k):
+            sent.append(a)
+
+        patch("get_character_reply", fake_reply)
+        patch("send_short_reply", fake_send)
+        patch("note_proactive", lambda: None)
+        orig_should = IMP.should_chat
+        IMP.should_chat = lambda **kw: (True, "ok", 0.3)
+        orig_random = R.random.random
+        R.random.random = lambda: 0.1
+        cfg.triggered_today.clear()
+        try:
+            ok = asyncio.run(R.maybe_chat(datetime.now(CST).replace(minute=0, second=0)))
+        finally:
+            for name, fn in orig.items():
+                setattr(R, name, fn)
+            IMP.should_chat = orig_should
+            R.random.random = orig_random
+            cfg.triggered_today.clear()
+        self.assertTrue(ok)
+        self.assertIn("旧事", prompts[0])
+        self.assertIn("去打疫苗", prompts[0])
 
 
 if __name__ == "__main__":

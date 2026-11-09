@@ -17,7 +17,7 @@ from ..image import fetch_and_save_acg_image, search_local_image_by_tags, get_be
 from ..utils import make_image_msg
 from ..ai.parse import parse_ai_reply
 from ..diary import generate_diary
-from ..infra.repo_memory import load_events_from_db, load_today_life
+from ..infra.repo_memory import load_events_from_db, load_today_life, load_old_events
 from ..life.impulse import should_reach_out, note_proactive  # v10-U9
 from ..life.pending import due as pending_due, finish as finish_pending, describe as describe_pending  # v10-U9b
 from ..life.agenda import due_soon as agenda_due_soon, mark_reminded as agenda_mark  # v10-U10
@@ -122,6 +122,23 @@ async def maybe_chat(now):
             note_proactive()
             log_system(f"主动闲聊（分享生活: {seed[:20]}）")
             return True
+
+        # v12-G52：有时拿一件旧事当由头，像突然想起来
+        if random.random() < 0.4:
+            try:
+                old = load_old_events(str(MASTER_QQ), days=7, limit=3)
+            except Exception:
+                old = []
+            if old:
+                picked = random.choice(old)
+                log_system(f"主动闲聊（提起旧事: {str(picked['summary'])[:20]}）")
+                rep = await get_character_reply(
+                    f"（你突然想起一件旧事：{picked['day']} {picked['summary']}。"
+                    f"顺口提一句，别像翻旧账，也别解释为什么想起来）",
+                    str(MASTER_QQ))
+                await send_short_reply(MASTER_QQ, rep, cfg.active_ws_qq, MASTER_QQ)
+                note_proactive()
+                return True
 
         # 基于最近事件
         recent = load_events_from_db(str(MASTER_QQ), limit=5)
@@ -304,6 +321,10 @@ async def cycle_task_run():
                             "提醒晚餐": [
                                 "晚上了，提醒主人该吃晚饭了，你主动发消息",
                                 "到晚饭时间了，主人还没吃，你催他去吃饭",
+                            ],
+                            "周日复盘": [
+                                "周日晚上了，回顾这一周：问问他这周过得怎么样，也说说你自己这周的事",
+                                "一周要结束了，跟主人聊聊这周发生的事，别像做汇报",
                             ],
                         }
                         prompts = scene_prompts.get(task["scene"], ["你主动找主人聊聊天"])
