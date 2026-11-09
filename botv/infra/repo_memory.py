@@ -133,6 +133,29 @@ def save_state_json(payload):
     c.connection.commit()
 
 
+def load_relation(tid):
+    """读某人的亲密度（v10-U8）"""
+    c = get_cursor()
+    c.execute(
+        "SELECT event_summary FROM events WHERE target_id=%s AND kind='rel' ORDER BY id DESC LIMIT 1",
+        (str(tid),),
+    )
+    row = c.fetchone()
+    return (row["event_summary"] or "") if row else ""
+
+
+def save_relation(tid, payload):
+    """覆盖写亲密度（一人一行）"""
+    c = get_cursor()
+    c.execute("DELETE FROM events WHERE target_id=%s AND kind='rel'", (str(tid),))
+    c.execute(
+        "INSERT INTO events(target_id, event_summary, tags, kind, dedupe_key, last_seen) "
+        "VALUES(%s,%s,'','rel',%s,NOW())",
+        (str(tid), payload, dedupe_key(str(tid), "rel", "relation")),
+    )
+    c.connection.commit()
+
+
 def load_today_life():
     """取今天的生活事件（v10-U9b 分享生活用）"""
     c = get_cursor()

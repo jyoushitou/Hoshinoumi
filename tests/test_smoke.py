@@ -1589,5 +1589,46 @@ class TestGateBypass(unittest.TestCase):
         self.assertEqual(why, "深夜")
 
 
+class TestRelation(unittest.TestCase):
+    """v10-U8：关系分档"""
+
+    def test_tiers(self):
+        from botv.life.relation import tier_of
+        self.assertEqual(tier_of(0.9)[0], "亲近")
+        self.assertEqual(tier_of(0.5)[0], "熟")
+        self.assertEqual(tier_of(0.3)[0], "认识")
+        self.assertEqual(tier_of(0.0)[0], "陌生")
+
+    def test_master_starts_higher(self):
+        import botv.life.relation as R
+        import botv.infra.repo_memory as rm
+        from botv.config import MASTER_QQ
+        orig = rm.load_relation
+        rm.load_relation = lambda tid: ""
+        try:
+            a_master = R.get(str(MASTER_QQ))
+            a_other = R.get("99999")
+        finally:
+            rm.load_relation = orig
+        self.assertGreater(a_master, a_other)
+
+    def test_describe_contains_tier(self):
+        import botv.life.relation as R
+        orig = R.get
+        R.get = lambda tid: 0.8
+        try:
+            s = R.describe("1")
+        finally:
+            R.get = orig
+        self.assertIn("亲近", s)
+        self.assertNotIn("0.8", s, "数值不该出现在描述里")
+
+    def test_tier_bounds(self):
+        from botv.life.relation import TIERS
+        lows = [lo for lo, _n, _d in TIERS]
+        self.assertEqual(lows, sorted(lows, reverse=True))
+        self.assertEqual(lows[-1], 0.0)
+
+
 if __name__ == "__main__":
     unittest.main()

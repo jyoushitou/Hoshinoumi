@@ -22,6 +22,7 @@ from .prompt import now_text  # 当前时间描述（v5-F7）
 from ..chat.timing import tone_hint  # 时段语气提示（v6-A20）
 from ..life.state import current as life_current, describe as describe_state, touch_talk  # v9-U4
 from ..life.events import ensure_daily_life  # v9-U7
+from ..life.relation import describe as relation_desc, bump as relation_bump  # v10-U8
 from ..infra.repo_profile import build_profile_text  # 对象画像（v7-B9）
 from ..memory.inject import trim, BUDGET  # 分层预算（v8-B13）
 from ..memory.timeline import build_timeline_text  # 时间线注入（v8-B16）
@@ -193,12 +194,17 @@ async def get_character_reply(txt, tid, current_kws=None):
         events=events,
         profile=trim(build_profile_text(tid), BUDGET["profile"]),  # v7-B9 画像，v8 按预算裁剪
         timeline=build_timeline_text(tid),  # v8-B16：最近 7 天
+        relation=relation_desc(tid),  # v10-U8：你跟他什么关系
         master_qq=MASTER_QQ,
         now=now_text(),  # v5-F7：让她知道现在几点
         tone=tone_line,  # v6-A20 时段 + v9-U4 状态
     )  # 格式化系统提示词
     log_api(f"[get_character_reply] system_prompt长度: {len(sys_p)}")  # 日志记录提示词长度
     user_content = f"{txt}\n(当前话题关键词:{cur_kw_str})"  # 构建用户消息（追加当前话题关键词）
+    # v10-U8：他提到过去的事，但记忆里可能真没有
+    if any(w in (txt or "") for w in ("上次", "之前", "记得", "说过", "那天", "当时", "你说过")):
+        user_content += "\n（他提到了过去的事。如果你记忆里确实没有，就直说记不太清，别硬编。）"
+
     msgs = [{"role":"system","content":sys_p}, {"role":"user","content":user_content}]  # 构建消息列表
     from ..core.locks import model_semaphore
     async with model_semaphore():  # v6-E26：最多 5 个模型请求同时在飞
@@ -211,6 +217,7 @@ async def get_character_reply(txt, tid, current_kws=None):
     if r and not isinstance(r, Fallback):
         try:
             touch_talk()
+            relation_bump(tid)  # v10-U8：聊一轮，近一点
         except Exception:
             pass
 
