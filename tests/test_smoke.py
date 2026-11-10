@@ -2108,6 +2108,16 @@ class TestEnvironment(unittest.TestCase):
         "NAO_READ_IDLE_HOURS",
         "NAO_READ_DAILY_CHAPTERS",
         "NAO_BOOK_URLS",
+        # v16：Docker/多机部署覆盖项
+        "NAO_MASTER_QQ",
+        "NAO_LISTEN_HOST",
+        "NAO_WS_PORT",
+        "NAO_API_PORT",
+        "NAO_DB_HOST",
+        "NAO_DB_PORT",
+        "NAO_DB_USER",
+        "NAO_DB_PASS",
+        "NAO_DB_NAME",
     }
 
     @staticmethod

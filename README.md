@@ -312,6 +312,25 @@ journalctl -u nao-bot -f
 | **C 单文件** | `python3 scripts/build_exe.py --version 16.0.0` | `dist/nao-16.0.0`（~60 MB） | 目标机没有 Python；**必须在本平台构建** |
 | **D Docker** | `docker compose up -d --build` | 镜像 `nao-bot:16.0.0` | 隔离环境、多机部署 |
 
+#### 一键打包（推荐）
+
+```bash
+python3 scripts/build_all.py                    # 版本号自动取最近 tag
+python3 scripts/build_all.py --version 16.0.0
+python3 scripts/build_all.py --with-browser     # Docker 带 Chromium
+python3 scripts/build_all.py --skip exe,docker  # 跳过某几项
+```
+
+它会依次尝试五种产物，**做不了的写清原因、不中断**，最后给汇总表：
+
+| 步骤 | 产物 | 前置条件 |
+|---|---|---|
+| 1 源码包 | `dist/nao-<ver>-src.zip` | 无 |
+| 2 整包 | `dist/nao-<ver>-full.zip` | pip 可用（自动装 `vendor/`） |
+| 3 单文件 | `dist/nao-<ver>[.exe]` | `pip install pyinstaller`；**只能出本平台** |
+| 4 Docker | `nao-bot:<ver>` + `dist/nao-bot-<ver>.tar.gz` | docker 守护进程在跑 |
+| 5 git bundle | `dist/nao-<ver>.bundle` | 有 git |
+
 Docker 相关文件：`Dockerfile`、`docker-compose.yml`、`.dockerignore`、`scripts/build_docker.py`。
 
 ```bash
