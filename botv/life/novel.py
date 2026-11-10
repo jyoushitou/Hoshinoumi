@@ -181,12 +181,15 @@ async def fetch_chapter(url):
     html = await fetch_html(url)
     text = parse_chapter(html) if html else ""
 
-    # 私有区字符多 → 字体加密没解开 → 截图 OCR
-    if life_ocr.pua_ratio(text) > 0.05 or len(text) < 200:
-        log_api(f"[小说] HTML 正文不可用（私有区 {life_ocr.pua_ratio(text):.0%}），转 OCR")
+    # 私有区字符多 → 字体加密没解开 → 截图 OCR，然后**合并**
+    # 正文里只要出现私有区字符，就说明被字体加密了（现实里番茄一章有几百个）
+    if life_ocr.pua_count(text) >= 1 or len(text) < 200:
+        log_api(f"[小说] HTML 正文有加密（私有区 {life_ocr.pua_ratio(text):.0%}），走 OCR 合并")
         ocr_text = await life_ocr.ocr_url(url)
-        if ocr_text and len(ocr_text) > len(text):
-            return ocr_text
+        if ocr_text:
+            merged = life_ocr.best_text(text, ocr_text)
+            log_api(f"[小说] 合并完成：HTML {len(text)} + OCR {len(ocr_text)} → {len(merged)}")
+            return merged
     return text
 
 

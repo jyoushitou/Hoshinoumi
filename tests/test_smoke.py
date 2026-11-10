@@ -4206,5 +4206,61 @@ class TestCookies(unittest.TestCase):
         self.assertEqual(self.C.describe(), ["qidian"])
 
 
+class TestMerge(unittest.TestCase):
+    """v16：HTML 骨架 + OCR 补字"""
+
+    def test_merge_fills_pua(self):
+        from botv.life.ocr import merge_html_ocr
+        html = "一座\ue000旧的道观里，黑夜带来了阳光\ue001曾给过的冷寂。"
+        ocr = "一座破旧的道观里，黑夜带来了阳光未曾给过的冷寂。"
+        self.assertEqual(merge_html_ocr(html, ocr),
+                         "一座破旧的道观里，黑夜带来了阳光未曾给过的冷寂。")
+
+    def test_merge_keeps_html_when_clean(self):
+        from botv.life.ocr import merge_html_ocr
+        html = "他推开门。外面在下雨。"
+        ocr = "他推开门。外面在下兩。"   # OCR 错字
+        self.assertIn("下雨", merge_html_ocr(html, ocr), "已知字用 HTML，别被 OCR 带错")
+
+    def test_merge_without_inputs(self):
+        from botv.life.ocr import merge_html_ocr
+        self.assertEqual(merge_html_ocr("", "abc"), "abc")
+        self.assertEqual(merge_html_ocr("abc", ""), "abc")
+        self.assertEqual(merge_html_ocr("", ""), "")
+
+    def test_merge_drops_leftover_pua(self):
+        from botv.life.ocr import merge_html_ocr, pua_ratio
+        html = "开头\ue000\ue001结尾"
+        ocr = "开头结尾"          # OCR 也没认出来
+        merged = merge_html_ocr(html, ocr)
+        self.assertEqual(pua_ratio(merged), 0.0)
+
+    def test_best_text_prefers_merged(self):
+        from botv.life.ocr import best_text
+        html = "一座\ue000旧的道观" + "很长的正文内容" * 20
+        ocr = "一座破旧的道观" + "很长的正文内容" * 20
+        self.assertIn("破旧", best_text(html, ocr))
+
+    def test_fetch_chapter_merges(self):
+        import asyncio
+        import botv.life.ocr as O
+        import botv.life.novel as N
+
+        async def fake_html(url):
+            return '<div class="muye-reader-content">一座\ue000旧的道观' + ("正文" * 200) + "</div>"
+
+        async def fake_ocr(url):
+            return "一座破旧的道观" + ("正文" * 200)
+
+        orig = (N.fetch_html, O.ocr_url)
+        N.fetch_html, O.ocr_url = fake_html, fake_ocr
+        try:
+            text = asyncio.run(N.fetch_chapter("https://x/reader/3"))
+        finally:
+            N.fetch_html, O.ocr_url = orig
+        self.assertIn("破旧", text)
+        self.assertNotIn("\ue000", text)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -343,6 +343,19 @@ journalctl -u nao-bot -f
 
 ---
 
+### 可选：小说正文（v16）
+
+`!` 她空闲时会读番茄小说。要拿到**正文**（不只是书名目录），需要在服务器装：
+
+```bash
+sudo apt install -y tesseract-ocr tesseract-ocr-chi-sim   # OCR 识别
+python3 -m pip install --user --break-system-packages playwright
+python3 -m playwright install chromium                     # 渲染截图
+```
+
+缺任何一项都会自动降级：只记书名/目录/进度，不抓正文。
+
+想读需要登录的页面，把 cookie 放 `data/cookies.json`（格式见 `docs/versions/v16.md`，该文件不进版本库）。
 ### 11. 打包与部署（四种形式）
 
 | 形式 | 命令 | 产物 | 适用 |

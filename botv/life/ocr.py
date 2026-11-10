@@ -32,6 +32,11 @@ def tesseract_ok():
     return _ok_cache["t"]
 
 
+def pua_count(text):
+    """私有区字符个数"""
+    return sum(1 for ch in (text or "") if PUA_RANGE[0] <= ord(ch) <= PUA_RANGE[1])
+
+
 def pua_ratio(text):
     """私有区字符占比（越高说明字体加密没解开）"""
     if not text:
@@ -119,3 +124,55 @@ async def ocr_url(url):
     if not tesseract_ok():
         return ""
     return await asyncio.to_thread(_shot_and_ocr, url)
+
+
+# ===================== HTML + OCR 合并（v16） =====================
+# 两者互补：
+#   HTML：非加密的字 100% 准确，标点/段落结构完整，但加密字是私有区码点
+#   OCR ：所有字都能认出来，但有 ~5% 错字、空格噪音
+#
+# 做法：HTML 当骨架，用 difflib 对齐，只在「差异段且含私有区」的位置用 OCR 补字。
+
+import difflib
+
+
+def _is_pua(ch):
+    return PUA_RANGE[0] <= ord(ch) <= PUA_RANGE[1]
+
+
+def merge_html_ocr(html_text, ocr_text):
+    """合并：已知字用 HTML，加密字用 OCR"""
+    if not html_text:
+        return ocr_text or ""
+    if not ocr_text:
+        return html_text or ""
+
+    sm = difflib.SequenceMatcher(a=list(html_text), b=list(ocr_text), autojunk=False)
+
+    out = []
+    for tag, i1, i2, j1, j2 in sm.get_opcodes():
+        seg_html = html_text[i1:i2]
+        seg_ocr = ocr_text[j1:j2]
+
+        if tag == "equal":
+            out.append(seg_html)
+        elif tag == "insert":
+            # OCR 多认出来的字（通常是把一个字认成两个）——不补，避免重复
+            continue
+        else:  # replace / delete
+            if any(_is_pua(c) for c in seg_html):
+                out.append(seg_ocr or seg_html)
+            else:
+                out.append(seg_html)
+
+    merged = "".join(out)
+    merged = "".join(c for c in merged if not _is_pua(c))
+    return clean(merged)
+
+
+def best_text(html_text, ocr_text):
+    """挑最好的结果：能合并就合并，合并后仍差就用 OCR"""
+    merged = merge_html_ocr(html_text, ocr_text)
+    ok = (merged and pua_ratio(merged) < 0.01
+          and len(merged) >= len(ocr_text or "") * 0.8)
+    return merged if ok else (ocr_text or merged or html_text or "")
