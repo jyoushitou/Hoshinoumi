@@ -18,6 +18,8 @@ import os
 import re
 import sys
 
+# 允许直接 `python3 scripts/xxx.py` 运行时也能 import botv
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.stdout.reconfigure(encoding="utf-8")
 
 CHAPTER_URL = "https://fanqienovel.com/reader/7688347832079614488"
