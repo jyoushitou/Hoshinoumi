@@ -14,6 +14,7 @@ from ..config import (  # API 配置
 )
 from ..log import log_api, log_err, log_system  # 日志
 from ..core.http import get_http_session  # 线程本地会话（v8-E27）
+from ..infra.blocking import run_blocking  # v17.0.3：阻塞调用统一入口
 from ..core.types import Fallback  # 兜底文案标记（v5-F2）
 from ..db import save_ai_raw_response  # 保存AI原始返回数据
 from ..memory import build_memory_context, extract_keywords  # 记忆上下文与关键词
@@ -78,7 +79,7 @@ async def call_deepseek(msgs, retry=2, max_tokens=None, target_id=None):
                 """同步HTTP请求函数（在子线程中运行）"""
                 s=get_http_session()  # 复用线程本地会话（v8-E27）
                 return s.post(DS_API_URL, headers=h, json=d, timeout=_timeout_for(out_tokens), verify=False)  # POST请求
-            r=await asyncio.to_thread(req)  # 在子线程中执行，避免阻塞事件循环
+            r=await run_blocking(req, timeout=_timeout_for(out_tokens) + 10, name="deepseek")  # v17.0.3：走统一线程池
             log_api(f"[DS] 响应状态码: {r.status_code}")  # 日志记录状态码
             if r.status_code==200:  # 请求成功
                 raw_json = r.json()  # 解析JSON
