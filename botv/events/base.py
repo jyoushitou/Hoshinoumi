@@ -37,6 +37,7 @@ class Event:
     priority: int = Priority.IDLE
     timeout: float = DEFAULT_TIMEOUT
     retries: int = 1                           # 失败重试次数（超时不重试）
+    args: tuple = ()                           # 业务参数（handler 从 ev.args 取）
     created_at: float = field(default_factory=time.time)
     id: str = field(default_factory=lambda: uuid.uuid4().hex[:8])
 

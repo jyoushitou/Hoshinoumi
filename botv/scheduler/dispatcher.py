@@ -54,6 +54,7 @@ class Scheduler:
 
         - kind 必须已注册，否则抛 KeyError（早发现拼错）
         - priority/timeout 不传就用注册表里的默认值
+        - args 挂在 Event 上，handler 用 `ev.args` 取（不是 fn 的参数）
         """
         from ..events.base import Event
 
@@ -63,9 +64,9 @@ class Scheduler:
         tmo = handler.timeout if timeout is None else timeout
         ret = handler.retries if retries is None else retries
 
-        fn = functools.partial(handler.fn, args) if args else functools.partial(handler.fn, None)
-        ev = Event(kind=kind, key=key, fn=fn, priority=prio,
-                   timeout=tmo, retries=ret)
+        ev = Event(kind=kind, key=key, fn=None, priority=prio,
+                   timeout=tmo, retries=ret, args=tuple(args or ()))
+        ev.fn = functools.partial(handler.fn, ev)   # handler(ev)
         ok = self.queue.put(ev)
         if not ok:
             log_api(f"[调度] 丢弃重复事件 {ev}")
