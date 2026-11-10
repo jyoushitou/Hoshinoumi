@@ -237,6 +237,30 @@ async def check_diary():
 import asyncio  # 异步 IO：运行主函数
 
 if __name__ == "__main__":  # 直接运行本文件时
+    # v16：配置检查（数据库/QQ 号不再写死在代码里）
+    try:
+        from botv.core import settings as _settings
+        _missing = _settings.missing_keys()
+        if _missing:
+            print("=" * 60)
+            print("❌ 配置不完整：数据库连接信息还没填")
+            print("=" * 60)
+            print("缺这些：")
+            for item in _missing:
+                print("  - " + item)
+            print("\n两种填法（任选一种）：")
+            print("  ① 配置文件：cp config.example.json config.local.json 然后改")
+            print("     这个文件不会进版本库，随便写密码。")
+            print("  ② 环境变量：NAO_DB_HOST / NAO_DB_USER / NAO_DB_PASS / NAO_DB_NAME")
+            print("\n当前配置来源：", _settings.describe_source())
+            sys.exit(1)
+        if not _settings.get("master_qq"):
+            print("⚠️ 没配 NAO_MASTER_QQ：所有 !命令 都不会生效")
+    except SystemExit:
+        raise
+    except Exception as _e:
+        print(f"⚠️ 配置检查跳过（{_e}）")
+
     # 先检查依赖
     if not check_all_dependencies():
         sys.exit(1)  # 依赖缺失 → 退出

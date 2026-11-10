@@ -90,6 +90,11 @@ def _shot_and_ocr(url):
                     user_agent=UA, locale="zh-CN", timezone_id="Asia/Shanghai",
                     viewport={"width": 1100, "height": 1600}, device_scale_factor=2,
                 )
+                try:  # v16：注入登录态（有就注入，没有不影响）
+                    from . import cookies as life_cookies
+                    life_cookies.apply_to(ctx, "fanqie")
+                except Exception:
+                    pass
                 page = ctx.new_page()
                 page.goto(url, wait_until="domcontentloaded", timeout=SHOT_TIMEOUT * 1000)
                 try:

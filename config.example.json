@@ -1,0 +1,13 @@
+{
+  "_说明": "复制成 config.local.json 再改。这个文件不会进版本库（.gitignore 已排除）。",
+  "master_qq": "123456789",
+  "ws_port": 3001,
+  "api_port": 60908,
+  "db": {
+    "host": "127.0.0.1",
+    "port": 3306,
+    "user": "your_user",
+    "password": "your_password",
+    "name": "TomoriNaoBotData"
+  }
+}

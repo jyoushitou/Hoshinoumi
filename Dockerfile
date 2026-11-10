@@ -5,7 +5,7 @@
 #
 # 运行（推荐 host 网络，NapCat 和 MySQL 都按 IP 直连）：
 #     docker run -d --name nao-bot --network host \
-#       -e NAO_DB_HOST=192.168.0.50 -e NAO_DB_PASS=TNB \
+#       -e NAO_DB_HOST=your-db-host -e NAO_DB_PASS=your-password \
 #       -v $PWD/data:/app/data -v $PWD/personas:/app/personas \
 #       --restart unless-stopped nao-bot:16.0.0
 

@@ -11,6 +11,46 @@ MySQL 存记忆与日志。图片不再用 CLIP 识别——**由她自己一句
 
 ## 快速开始
 
+### 首次配置（v16 起必做）
+
+数据库信息和主人 QQ **不再写死在代码里**，必须通过配置文件或环境变量提供。
+
+**方式一：配置文件（推荐）**
+
+```bash
+cp config.example.json config.local.json
+vi config.local.json          # 填 master_qq 和 db.*
+```
+
+```json
+{
+  "master_qq": "123456789",
+  "ws_port": 3001,
+  "api_port": 60908,
+  "db": {
+    "host": "127.0.0.1",
+    "port": 3306,
+    "user": "your_user",
+    "password": "your_password",
+    "name": "TomoriNaoBotData"
+  }
+}
+```
+
+`config.local.json` 在 `.gitignore` 里，**不会进版本库**。
+
+**方式二：环境变量**
+
+```bash
+export NAO_MASTER_QQ=123456789
+export NAO_DB_HOST=127.0.0.1
+export NAO_DB_USER=your_user
+export NAO_DB_PASS=your_password
+export NAO_DB_NAME=TomoriNaoBotData
+```
+
+优先级：**环境变量 > config.local.json > 空默认值**。没配齐时启动会直接退出并列出缺哪几项。
+
 ```bash
 # 1. 数据库迁移（首次升级到 v7/v8 时必须先跑）
 python3 scripts/migrate_v7.py --apply    # events 扩成记忆主表
@@ -340,7 +380,7 @@ python3 scripts/build_docker.py --version 16.0.0 --browser --save
 # 别的机器加载
 docker load -i nao-bot-16.0.0-browser.tar.gz
 docker run -d --name nao-bot --network host \
-  -e NAO_DB_HOST=192.168.0.50 -e NAO_DB_PASS=TNB \
+  -e NAO_DB_HOST=your-db-host -e NAO_DB_PASS=your-password \
   -v $PWD/data:/app/data -v $PWD/personas:/app/personas \
   --restart unless-stopped nao-bot:16.0.0-browser
 ```

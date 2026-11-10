@@ -7,7 +7,9 @@ from ..log import log_system, log_err
 from ..infra.conn import get_cursor
 
 API_HOST = "0.0.0.0"
-API_PORT = 60908
+from ..core import settings as _settings
+
+API_PORT = int(_settings.get("api_port") or 60908)  # v16：可被 NAO_API_PORT / 配置文件覆盖
 API_TOKEN = ""
 API_TOKEN_KEY_NAME = "API_SERVER_TOKEN"
 MAX_CONCURRENT_REQUESTS = 20

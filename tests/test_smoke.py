@@ -4067,5 +4067,80 @@ class TestOCR(unittest.TestCase):
         self.assertIn("正常正文", text)
 
 
+class TestSettings(unittest.TestCase):
+    """v16：配置从文件/环境变量来，代码里不存密码"""
+
+    def setUp(self):
+        import os
+        from botv.core import settings as S
+        self.S = S
+        self._env_backup = {k: os.environ.get(k) for k in S.ENV_MAP}
+        for k in S.ENV_MAP:
+            os.environ.pop(k, None)
+        self._orig_file = S.CONFIG_FILE
+        self._tmp = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                                 ".test-config.json")
+        S.CONFIG_FILE = self._tmp
+        if os.path.exists(self._tmp):
+            os.remove(self._tmp)
+        S.load(force=True)
+
+    def tearDown(self):
+        import os
+        for k, v in self._env_backup.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+        self.S.CONFIG_FILE = self._orig_file
+        try:
+            os.remove(self._tmp)
+        except OSError:
+            pass
+        self.S.load(force=True)
+
+    def test_empty_by_default(self):
+        self.assertEqual(self.S.get("db.password"), "")
+        self.assertEqual(self.S.get("db.host"), "")
+        self.assertTrue(self.S.missing_keys())
+
+    def test_file_config(self):
+        import json
+        with open(self._tmp, "w", encoding="utf-8") as f:
+            json.dump({"db": {"host": "1.2.3.4", "user": "u", "password": "p", "name": "n"}}, f)
+        self.S.load(force=True)
+        self.assertEqual(self.S.get("db.host"), "1.2.3.4")
+        self.assertFalse(self.S.missing_keys())
+
+    def test_env_overrides_file(self):
+        import json
+        import os
+        with open(self._tmp, "w", encoding="utf-8") as f:
+            json.dump({"db": {"host": "file-host", "user": "u", "password": "p", "name": "n"}}, f)
+        os.environ["NAO_DB_HOST"] = "env-host"
+        self.S.load(force=True)
+        self.assertEqual(self.S.get("db.host"), "env-host")
+
+    def test_port_coerced_to_int(self):
+        import os
+        os.environ["NAO_WS_PORT"] = "4001"
+        self.S.load(force=True)
+        self.assertEqual(self.S.get("ws_port"), 4001)
+
+    def test_db_config_shape(self):
+        db = self.S.db_config()
+        for key in ("host", "port", "user", "password", "database", "charset"):
+            self.assertIn(key, db)
+
+    def test_no_secret_in_code(self):
+        """constants.py 里不能再出现密码字面量"""
+        import os
+        path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                            "botv", "core", "constants.py")
+        text = open(path, encoding="utf-8").read()
+        self.assertNotIn('"TNB"', text)
+        self.assertNotIn("TomoriNaoBot", text)
+
+
 if __name__ == "__main__":
     unittest.main()

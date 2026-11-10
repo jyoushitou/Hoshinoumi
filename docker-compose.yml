@@ -6,7 +6,7 @@
 #
 # 网络说明：
 #   network_mode: host  —— 容器直接使用宿主机网络。
-#   NapCat 连 ws://<宿主机IP>:3001 就行；MySQL 用 192.168.0.50 也能直连。
+#   NapCat 连 ws://<宿主机IP>:3001 就行；MySQL 用 NAO_DB_HOST 里的地址也能直连。
 #   如果你必须用 bridge 网络，把 network_mode 换成 ports 映射（见文件末尾注释）。
 
 services:
@@ -23,16 +23,16 @@ services:
     environment:
       TZ: Asia/Shanghai
       # ---- 主人 ----
-      NAO_MASTER_QQ: "822891053"
+      NAO_MASTER_QQ: "${NAO_MASTER_QQ:?请先设置主人QQ}"
       # ---- WebSocket / API 端口 ----
       NAO_WS_PORT: "3001"
       NAO_API_PORT: "60908"
       # ---- 数据库 ----
-      NAO_DB_HOST: "192.168.0.50"
+      NAO_DB_HOST: "${NAO_DB_HOST:?请先在 .env 里设置数据库地址}"
       NAO_DB_PORT: "3306"
-      NAO_DB_USER: "TomoriNaoBot"
-      NAO_DB_PASS: "TNB"
-      NAO_DB_NAME: "TomoriNaoBotData"
+      NAO_DB_USER: "${NAO_DB_USER:?请先设置数据库用户}"
+      NAO_DB_PASS: "${NAO_DB_PASS:?请先设置数据库密码}"
+      NAO_DB_NAME: "${NAO_DB_NAME:-TomoriNaoBotData}"
       # ---- 可选功能 ----
       # NAO_CITY: "Tokyo"
       # NAO_PERSONA: "nao"

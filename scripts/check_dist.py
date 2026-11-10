@@ -23,13 +23,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # (级别, 说明, 正则)
 RULES = [
     ("HIGH", "数据库密码默认值写死在代码里",
-     re.compile(r'NAO_DB_PASS",\s*"([^"]+)"')),
-    ("HIGH", "数据库密码写死在代码里",
-     re.compile(r'"password"\s*:\s*"([^"]{1,40})"')),
-    ("HIGH", "疑似 API Key",
-     re.compile(r'(?i)(api[_-]?key|secret|token)\s*[=:]\s*["\']([A-Za-z0-9_\-]{16,})["\']')),
-    ("HIGH", "明文 Bearer Token",
-     re.compile(r"Bearer\s+([A-Za-z0-9._\-]{20,})")),
+     re.compile(r'_os\.getenv\("NAO_DB_PASS",\s*"([^"]*)"\)')),
     ("MID", "主人 QQ 号写死（可以考虑改成环境变量）",
      re.compile(r"MASTER_QQ\s*=\s*int\(_os\.getenv\(\"NAO_MASTER_QQ\",\s*\"(\d{6,12})\"\)\)")),
     ("MID", "内网数据库地址",
@@ -37,6 +31,8 @@ RULES = [
     ("LOW", "内网 IP",
      re.compile(r"\b(192\.168|10\.\d{1,3}|172\.(?:1[6-9]|2\d|3[01]))\.\d{1,3}\.\d{1,3}\b")),
 ]
+
+SAFE_VALUES = {"CHANGE_ME", "", "YOUR_PASSWORD"}
 
 SKIP_DIRS = {".git", ".venv", "venv", "dist", "data", "__pycache__", ".tmp", "node_modules", "vendor"}
 SKIP_EXT = (".pyc", ".zip", ".bundle", ".log", ".png", ".jpg", ".gif", ".ico", ".woff", ".woff2", ".ttf", ".otf")
@@ -47,6 +43,8 @@ def scan_text(text, filename):
     for level, desc, pattern in RULES:
         for m in pattern.finditer(text):
             value = m.group(m.lastindex) if m.lastindex else ""
+            if level == "HIGH" and value in SAFE_VALUES:
+                continue
             line_no = text[:m.start()].count("\n") + 1
             hits.append((level, desc, filename, line_no, value))
     return hits

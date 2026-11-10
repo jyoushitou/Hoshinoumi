@@ -62,13 +62,48 @@ def iter_files(include_deps=False):
             yield rel
 
 
-def build_zip(zip_path, files, extra=None):
+# 分发模式：把这些默认值换成占位符
+SANITIZE_RULES = [
+    (r'(NAO_DB_PASS",\s*)"[^"]*"', r'\1"CHANGE_ME"'),
+    (r'(NAO_DB_USER",\s*)"[^"]*"', r'\1"CHANGE_ME"'),
+    (r'(NAO_DB_HOST",\s*)"[^"]*"', r'\1"127.0.0.1"'),
+    (r'(NAO_MASTER_QQ",\s*)"\d+"', r'\1"0"'),
+    (r'(NAO_DB_NAME",\s*)"[^"]*"', r'\1"CHANGE_ME"'),
+]
+
+
+def sanitized_bytes(rel_path):
+    """返回脱敏后的文件字节；不需要脱敏返回 None"""
+    import re as _re
+    if not rel_path.replace("\\", "/").endswith("core/constants.py"):
+        return None
+    with open(os.path.join(ROOT, rel_path), encoding="utf-8") as f:
+        text = f.read()
+    original = text
+    for pattern, repl in SANITIZE_RULES:
+        text = _re.sub(pattern, repl, text)
+    if text == original:
+        return None
+    note = ("# 注意：这是分发包，数据库/QQ 等默认值已被替换成占位符。\n"
+            "# 请通过环境变量配置：NAO_DB_HOST / NAO_DB_PORT / NAO_DB_USER /\n"
+            "#   NAO_DB_PASS / NAO_DB_NAME / NAO_MASTER_QQ\n")
+    return (note + text).encode("utf-8")
+
+def build_zip(zip_path, files, extra=None, sanitize=False):
     os.makedirs(DIST, exist_ok=True)
     count = 0
+    replaced = 0
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as z:
         for rel in files:
             path = os.path.join(ROOT, rel)
             try:
+                if sanitize:
+                    safe = sanitized_bytes(rel)
+                    if safe is not None:
+                        z.writestr(rel, safe)
+                        count += 1
+                        replaced += 1
+                        continue
                 z.write(path, rel)
                 count += 1
             except Exception as e:
@@ -77,7 +112,8 @@ def build_zip(zip_path, files, extra=None):
             z.writestr(rel, content)
             count += 1
     size = os.path.getsize(zip_path) / 1024
-    print(f"   [OK] {os.path.relpath(zip_path, ROOT)}（{count} 个文件，{size:.0f} KB）")
+    note = f"，脱敏 {replaced} 个文件" if replaced else ""
+    print(f"   [OK] {os.path.relpath(zip_path, ROOT)}（{count} 个文件，{size:.0f} KB{note}）")
     return count
 
 
@@ -116,6 +152,8 @@ def main():
     ap.add_argument("--deps", action="store_true", help="同时打整包（含依赖）")
     ap.add_argument("--site-packages", action="store_true",
                     help="整包依赖从 site-packages 复制（默认用 vendor/ 目录）")
+    ap.add_argument("--sanitize", action="store_true",
+                    help="分发模式：把密码/QQ 等默认值替换成占位符")
     args = ap.parse_args()
 
     version = args.version.strip().lstrip("v")
@@ -136,7 +174,7 @@ def main():
             "自检：python3 scripts/preflight.py\n"
             f"打包时间：{datetime.now():%Y-%m-%d %H:%M}\n"
         )
-    })
+    }, sanitize=args.sanitize)
 
     if not args.deps:
         print("\n完成。要带依赖的整包，加 --deps")
@@ -181,7 +219,7 @@ def main():
             "依赖在 vendor/ 里，不需要联网装包。\n"
             f"打包时间：{datetime.now():%Y-%m-%d %H:%M}\n"
         ),
-    })
+    }, sanitize=args.sanitize)
     shutil.rmtree(staging, ignore_errors=True)
     return 0
 

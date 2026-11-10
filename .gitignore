@@ -20,3 +20,5 @@ vendor/
 .tmp-vendor/
 .nao-ref-glyphs.json
 .tmp/
+config.local.json
+qidian.json

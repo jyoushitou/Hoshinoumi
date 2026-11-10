@@ -62,7 +62,13 @@ def _render(url, timeout=FETCH_TIMEOUT):
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True, args=["--no-sandbox"])
             try:
-                page = browser.new_page(user_agent=USER_AGENT, locale="zh-CN")
+                ctx = browser.new_context(user_agent=USER_AGENT, locale="zh-CN")  # v16：cookie 需要 context
+                try:
+                    from . import cookies as life_cookies
+                    life_cookies.apply_to(ctx, "fanqie" if "fanqie" in url else "qidian")
+                except Exception:
+                    pass
+                page = ctx.new_page()
                 page.set_default_timeout(NAV_TIMEOUT * 1000)
                 page.goto(url, wait_until="domcontentloaded")
                 # 给字体/正文一点渲染时间
