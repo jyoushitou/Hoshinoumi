@@ -749,7 +749,13 @@ class TestV14Frequency(unittest.TestCase):
         from botv.life import impulse as I
         self.cfg.proactive_adjust = 1.0
         self.cfg.proactive_pending = True
-        I.should_chat(now=None, state={"lonely": 0.3, "mood": 0.0},
+        from datetime import datetime
+
+        from botv.config import CST
+
+        # 固定到白天：深夜会提前返回，测不到频率调整
+        I.should_chat(now=datetime(2026, 11, 10, 15, 0, tzinfo=CST),
+                      state={"lonely": 0.3, "mood": 0.0},
                       last_user_ts=0.0, last_proactive_ts=time.time() - 3600,
                       proactive_count=0, unanswered=0)
         self.assertLess(self.cfg.proactive_adjust, 1.0)
