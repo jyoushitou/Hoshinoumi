@@ -170,54 +170,16 @@ def claim_online_notice():
     return True
 
 
-async def _handle_message(d, ws):
-    """处理一条消息（v17.3 U1：从接收循环里抽出来，便于以后投递/合并）"""
-
-    mt = d.get("message_type")  # 消息类型：private/group
-    mid = d.get("message_id")  # 消息ID
-    if not mid or mid in cfg.PROCESSED_MSG_IDS:  # 消息ID无效或已处理
-        return  # 跳过
-    uid = str(d.get("user_id"))  # 用户QQ号
-    gid = d.get("group_id", 0)  # 群号（私聊为0）
-    # v6-E29：记录机器人自己的QQ号，用于判断是否被 @
-    self_qq = d.get("self_id")
-    if self_qq:
-        cfg.self_qq = self_qq
+async def _reply_and_send(d, ws, text, img_md5s=None):
+    """生成回复并发送（v17.3：从 _handle_message 抽出来，便于连发后统一回一次）"""
+    mt = d.get("message_type")
+    uid = str(d.get("user_id"))
+    gid = d.get("group_id", 0)
+    mid = d.get("message_id")
     addressed = is_at_me(d.get("message", ""), cfg.self_qq)
-    text, img_md5s = await parse_message_content(d.get("message", ""), uid, ws)  # (文本, 图片md5)
-    note_user_message()  # v10-U9：她在等你，别急着主动找
-    try:
-        life_habit.learn(uid, text)  # v12-A17：学一点他的口头禅
-    except Exception:
-        pass
-    try:  # v13：他说软话就哄好，否则只记录和好进度
-        if life_friction.is_sorry(text):
-            life_friction.apologize(uid)
-        life_friction.on_user_message(uid)
-    except Exception:
-        pass
-    try:
-        for it in life_pending.detect(text):  # v10-U9b：记下承诺/时间锚点
-            life_pending.add([it])
-    except Exception:
-        pass
-    try:
-        ev = life_agenda.extract(text)  # v10-U10：时间 + 事件 → 日程
-        if ev:
-            life_agenda.add(ev)
-    except Exception:
-        pass
-    if mt == "group" and addressed:
-        cfg.group_streak[gid] = 0  # v10：有人点她名，连说计数清零
-    if not text:  # 解析后文本为空
-        return  # 跳过
+    tid = uid if mt == "private" else str(gid)
+    ck = extract_keywords(text)
 
-    # 代码模式：每次收到消息更新最后活跃时间戳
-    if cfg.CODE_MODE:
-        cfg.CODE_MODE_LAST_MSG_TIME = _time.time()
-
-    tid = uid if mt == "private" else str(gid)  # 目标ID：私聊用QQ号，群聊用群号
-    # v6-E26：按对象加锁——同一个人串行，不同的人可以并行（5 路对话）
     async with get_target_lock(tid):
         cfg.PROCESSED_MSG_IDS.append(mid)  # 记录已处理的消息ID
         log_recv(f"[QQ]{uid}:{text}")  # 日志记录接收
@@ -334,6 +296,64 @@ async def _handle_message(d, ws):
                 await maybe_share_something(target, ws)
             except Exception:
                 pass
+
+async def _handle_message(d, ws):
+    """处理一条消息（v17.3 U1：从接收循环里抽出来，便于以后投递/合并）"""
+
+    mt = d.get("message_type")  # 消息类型：private/group
+    mid = d.get("message_id")  # 消息ID
+    if not mid or mid in cfg.PROCESSED_MSG_IDS:  # 消息ID无效或已处理
+        return  # 跳过
+    uid = str(d.get("user_id"))  # 用户QQ号
+    gid = d.get("group_id", 0)  # 群号（私聊为0）
+    # v6-E29：记录机器人自己的QQ号，用于判断是否被 @
+    self_qq = d.get("self_id")
+    if self_qq:
+        cfg.self_qq = self_qq
+    addressed = is_at_me(d.get("message", ""), cfg.self_qq)
+    text, img_md5s = await parse_message_content(d.get("message", ""), uid, ws)  # (文本, 图片md5)
+    note_user_message()  # v10-U9：她在等你，别急着主动找
+    try:
+        life_habit.learn(uid, text)  # v12-A17：学一点他的口头禅
+    except Exception:
+        pass
+    try:  # v13：他说软话就哄好，否则只记录和好进度
+        if life_friction.is_sorry(text):
+            life_friction.apologize(uid)
+        life_friction.on_user_message(uid)
+    except Exception:
+        pass
+    try:
+        for it in life_pending.detect(text):  # v10-U9b：记下承诺/时间锚点
+            life_pending.add([it])
+    except Exception:
+        pass
+    try:
+        ev = life_agenda.extract(text)  # v10-U10：时间 + 事件 → 日程
+        if ev:
+            life_agenda.add(ev)
+    except Exception:
+        pass
+    if mt == "group" and addressed:
+        cfg.group_streak[gid] = 0  # v10：有人点她名，连说计数清零
+    if not text:  # 解析后文本为空
+        return  # 跳过
+
+    # 代码模式：每次收到消息更新最后活跃时间戳
+    if cfg.CODE_MODE:
+        cfg.CODE_MODE_LAST_MSG_TIME = _time.time()
+
+    tid = uid if mt == "private" else str(gid)  # 目标ID：私聊用QQ号，群聊用群号
+
+    # v17.3 U2：连发合并——同一个人连发几句，只回一次
+    from .batcher import batchable, get_batcher
+    if batchable(mt, text):
+        await get_batcher().offer(tid, (d, ws, text, img_md5s))
+        return
+
+    # v6-E26：按对象加锁——同一个人串行，不同的人可以并行（5 路对话）
+    await _reply_and_send(d, ws, text, img_md5s)
+
 
 async def websocket_handle_qq(ws):
     """WebSocket消息处理主函数：接收→解析→处理→回复"""

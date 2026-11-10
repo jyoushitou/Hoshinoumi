@@ -217,6 +217,7 @@ class TestEnvironment(unittest.TestCase):
         "NAO_DB_POOL_SIZE",
         "NAO_DB_POOL_TIMEOUT",
         "NAO_VERSION",
+        "NAO_BATCH_CHAT",
     }
 
     @staticmethod
