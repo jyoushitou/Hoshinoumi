@@ -35,6 +35,9 @@ v6：P1 会说话 → P2 说实话 → P2.5 长感官 → P3 有生活 → P4 �
 | D21 | 时间感知 | F7 |
 | E30 | 图片链路 | F4 |
 | **v16** | [versions/v16.md](versions/v16.md) | 空闲时自己读小说（番茄/起点，记进度、聊剧情） | 规划中 |
-| **v17** | [versions/v17.md](versions/v17.md) | 空闲时刷 B 站（拉流、看字幕弹幕、群里 @ 主人） | 规划中 |
-| **v18** | [versions/v18.md](versions/v18.md) | 空闲时刷抖音（看 + 转发，不做发评论） | 规划中 |
-| **v19** | [versions/v19.md](versions/v19.md) | 连发消息合并（2 秒内算一条，只回一次） | 规划中 |
+| **v17** | [versions/v17.md](versions/v17.md) | 执行模型重构：17.0 基建与基线 → 17.1 事件/调度 → 17.2 出站层 → 17.3 主循环瘦身 | 规划中 |
+| **v18** | [versions/v18.md](versions/v18.md) | 视频系列：18.0 刷 B 站 → 18.1 刷抖音 | 规划中 |
+| **v19** | [versions/v19.md](versions/v19.md) | 运维系列：19.0 bash 只读 → 19.1 agent 只读 → 19.2 有限写 → 19.3 可写体系 | 规划中 |
+
+
+> 完整发布计划（次版本/小版本拆分）见 **[ROADMAP.md](ROADMAP.md)**。
