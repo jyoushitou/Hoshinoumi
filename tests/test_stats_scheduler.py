@@ -80,5 +80,13 @@ class TestStatsWithScheduler(unittest.TestCase):
         self.assertIn("队列 1", out, "投递的任务应出现在队列里")
 
 
+    def test_stats_has_egress_and_command(self):
+        """!stats 要同时显示调度、出站、命令"""
+        out = self._run()
+        self.assertIn("出站", out)
+        self.assertIn("命令", out)
+        self.assertIn("调度", out)
+
+
 if __name__ == "__main__":
     unittest.main()

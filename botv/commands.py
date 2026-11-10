@@ -40,7 +40,12 @@ async def handle_command(text, uid, ws, is_group, gid):
         ctx = registry.CommandContext(
             parts=parts, uid=str(uid), ws=ws, is_group=is_group, gid=gid
         )
-        reply = await registry.run(cmd_name, ctx)
+        # v17.2 U4：命令走专用通道（不进调度器队列，带超时与耗时统计）
+        from .cmd.channel import get_channel
+        ok, reply = await get_channel().run(
+            cmd_name, lambda: registry.run(cmd_name, ctx))
+        if not ok and not reply:
+            reply = "❌ 命令执行失败"
     else:
         reply = f"❌ 未知命令: {cmd_name}\n输入 !help 查看可用命令"
 

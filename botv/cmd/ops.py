@@ -26,6 +26,16 @@ async def cmd_stats(ctx):
         lines.append(get_scheduler().describe())   # 未启动时也会显示队列长度
     except Exception:
         pass
+    try:
+        from ..egress.outbound import get_outbound
+        lines.append(get_outbound().describe())
+    except Exception:
+        pass
+    try:
+        from ..cmd.channel import get_channel
+        lines.append(get_channel().describe())
+    except Exception:
+        pass
     return "\n".join(lines)
 
 
