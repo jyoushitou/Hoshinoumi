@@ -176,10 +176,12 @@ async def cycle_task_run():
     try:
         from ..scheduler.dispatcher import get_scheduler
         from ..executors import idle as idle_exec
+        from ..executors import proactive as proactive_exec
         _sched = get_scheduler()
         _sched.start()
         idle_exec.schedule_tick()
-        log_system("[调度] 调度器已启动，空闲读书由 tick 驱动")
+        proactive_exec.schedule_tick()
+        log_system("[调度] 调度器已启动：空闲读书 + 主动消息由 tick 驱动")
     except Exception as _e:
         log_err(f"[调度] 启动失败（回退旧路径）: {_e}")
     _last_today = None  # 记录上一次检查的日期
@@ -364,8 +366,8 @@ async def cycle_task_run():
             # ---------- v17.1：空闲读书改由调度器的 idle_tick 驱动 ----------
             # （_dispatch_reading 保留给旧路径/手动触发，循环里不再调用）
 
-            # ---------- 主动闲聊触发 ----------
-            await maybe_chat(now)
+            # ---------- v17.1：主动闲聊改由调度器的 proactive_tick 驱动 ----------
+            # （maybe_chat 保留给手动触发与旧测试）
 
         except Exception as e:
             log_err(f"定时异常:{e}")
