@@ -1,25 +1,50 @@
-# 友利奈绪 QQ 机器人 v16.0 —— 会自己看小说、可换角色的陪伴机器人
+# 友利奈绪 QQ 机器人 v16.0.4 —— 可换角色、会自己看小说的陪伴机器人
 
-> **v11 是「感官」版本**：她会看图（不再是猜标签）、会说话（语音合成）、
-> 也能听你发的语音条（能转写就转，不能就记一笔）。
-> 世界观取自原作结局之后：能力消失，回归普通生活；乙坂有宇已经意外去世。
+> 世界观取自原作结局之后：能力消失，回归普通生活；**乙坂有宇已经意外去世**。
+> 提到他需要克制，可以打哑谜，但不能假装他还活着。
 
 基于 **NapCat** 收 QQ 消息，**Python** 后端，**DeepSeek** 为主模型、**豆包** 兜底，
-MySQL 存记忆与日志。图片不再用 CLIP 识别——**由她自己一句话打标签**。
+MySQL 存记忆与日志。图片由她自己一句话打标签，正文小说用**截图 + OCR** 还原。
+
+---
+
+## 特性一览
+
+| 能力 | 说明 |
+|---|---|
+| **可换角色** | 人设、生活模板、状态基线全在 `personas/<名字>/`，改文件就换人 |
+| 说话像人 | 分条发送、按时段浮动延迟、语气受情绪影响 |
+| 记得住 | 30 轮对话 + 长期记忆（BM25 + 关键词双路 RRF）+ 关系里程碑 |
+| 有自己的生活 | 心情/精力/孤独随时间漂移，会写日记、会主动找你 |
+| 会看图 | 多模态直接看，动图抽 24 帧拼网格 |
+| 会说话 | edge-tts 语音，按心情和长度低频触发 |
+| 会听 | 语音条转写（能转就转，不能就记一笔） |
+| 会读小说 | 空闲时自己抓番茄章节（OCR 还原），攒够几章跟你分享 |
+| 有摩擦 | 期待、失落、冷战、和好（24 小时自动恢复） |
+| 能调参 | `!config` 改频率/概率，`!stats` 看今日数据，不用重启 |
+
+**442 条测试**，静态检查零未定义名字。
 
 ---
 
 ## 快速开始
 
+### 环境要求
+
+- Python 3.10+
+- MySQL 8（8 张表，见下文）
+- NapCat（QQ 协议端，WebSocket 连到本机 3001）
+
 ### 首次配置（v16 起必做）
 
-数据库信息和主人 QQ **不再写死在代码里**，必须通过配置文件或环境变量提供。
+数据库信息和主人 QQ **不再写死在代码里**。
 
 **方式一：配置文件（推荐）**
 
 ```bash
 cp config.example.json config.local.json
 vi config.local.json          # 填 master_qq 和 db.*
+chmod 600 config.local.json
 ```
 
 ```json
@@ -37,8 +62,6 @@ vi config.local.json          # 填 master_qq 和 db.*
 }
 ```
 
-`config.local.json` 在 `.gitignore` 里，**不会进版本库**。
-
 **方式二：环境变量**
 
 ```bash
@@ -50,6 +73,23 @@ export NAO_DB_NAME=TomoriNaoBotData
 ```
 
 优先级：**环境变量 > config.local.json > 空默认值**。没配齐时启动会直接退出并列出缺哪几项。
+
+### 可选依赖（读书功能要用）
+
+```bash
+# 番茄正文 OCR（必需）
+sudo apt install -y tesseract-ocr tesseract-ocr-chi-sim
+
+# 无头浏览器（抓页面 + 截图）
+python3 -m pip install --user --break-system-packages playwright
+python3 -m playwright install chromium
+# 缺系统库时：
+sudo python3 -m playwright install-deps chromium
+```
+
+不装也能跑——读书功能自动降级成「浅层在读」（只有书名和进度）。
+
+### 启动
 
 ```bash
 # 1. 数据库迁移（首次升级到 v7/v8 时必须先跑）
@@ -74,42 +114,163 @@ python3 run.py
 
 ### 单实例
 
-启动时自动抢 `.botv.lock`，已有实例在跑会直接退出并打印对方的 PID。
-锁由操作系统维护，进程死了自动释放，不会留僵尸锁。
+启动时自动抢 `.botv.lock`，已有实例在跑会直接退出并打印对方 PID。
+锁由操作系统维护，进程死了自动释放。
 
 ---
 
-## 架构
+## 角色卡：换一个人设（重点）
+
+人设**不在代码里**，全部放在 `personas/<名字>/` 下。改文件就能换角色，不用动一行 Python。
+
+### 目录结构
 
 ```
-botv/
-├── core/       常量、运行时状态、锁、单实例、HTTP 会话
-├── infra/      数据库连接与仓储（记忆 / 画像 / 密钥 / 日志 / AI 原文）
-├── memory/     上下文、检索（BM25+RRF）、分层预算、时间线
-├── ai/         人设、提示词、模型调用、回复解析
-├── chat/       入站解析、回复组装、发送、群聊节奏、回复时机
-├── cmd/        26 个命令（注册表 + 各分类实现）
-├── diary/      日记生成与存储
-├── schedule/   定时任务与随机闲聊
-├── image/      图库：存图、打标、检索、在线图源
-├── server/     HTTP API
-└── app/        启动引导与主循环
+personas/nao/
+├── prompt.txt       主提示词（含 {now}{tone} 等占位符）
+├── supplement.txt   人设补充：她是谁、口癖、关系、边界、示例
+├── life.txt         生活事件模板（# weight 0.25 分组，每组一行一条）
+└── state.json       状态基线 {"mood":0.1,"energy":0.7,"lonely":0.15}
 ```
 
-`botv/memory` 已从单文件变成同名包，`from botv.memory import ...` 写法不变；
-老模块名（`botv/config.py`、`botv/db.py`、`botv/send.py` 等）保留兼容 shim，`import` 也不用改。
+### 四个文件各管什么
+
+| 文件 | 作用 | 改动效果 |
+|---|---|---|
+| `prompt.txt` | 主提示词：世界观、性格锚点、说话规则、分条机制 | 说话风格、价值观 |
+| `supplement.txt` | 补充人设：口癖、称呼、日常习惯、软肋、示例对话 | 语气细节、关系感 |
+| `life.txt` | 她「今天经历了什么」的模板（109 条，带权重） | 生活内容、日常话题 |
+| `state.json` | 情绪基线（心情/精力/孤独） | 默认神态、活跃度 |
+
+### 占位符必须保留
+
+`prompt.txt` 里的这些占位符**一个都不能删**，否则渲染会报 `KeyError`：
+
+| 占位符 | 内容 |
+|---|---|
+| `{now}` | 当前时间（含时段描述） |
+| `{tone}` | 语气提示（情绪 + 天气） |
+| `{profile}` | 他的画像 + 口头禅 + 关系里程碑 |
+| `{relation}` | 关系档位 + 称呼建议 |
+| `{timeline}` | 最近事件时间线 |
+| `{events}` | 检索到的记忆 |
+| `{current_dialogue}` | 最近 30 轮对话 |
+| `{global_keywords}` | 关键词 |
+| `{available_tags}` | 图库标签（600 个） |
+| `{master_qq}` | 主人 QQ |
+| `{digest}` | 她自己的浓缩记录（每 10 轮压一行） |
+| `{reading}` | 她最近在看的小说 |
+
+### 三种换卡方式
+
+| 方式 | 命令 | 生效时机 | 持久化 |
+|---|---|---|---|
+| **运行时切换** | `!persona <名字>` | 下一句话 | ✅ 写 `personas/.active` |
+| 环境变量 | `NAO_PERSONA=<名字> python3 run.py` | 启动时 | ❌ |
+| 默认 | 无 | 用 `nao` | — |
+
+优先级：**`!persona` > `.active` > `NAO_PERSONA` > `nao`**，每层都会检查目录是否存在，不存在就往下落。
+
+### 自制一张卡
+
+```bash
+cp -r personas/nao personas/mychar
+# 改 personas/mychar 下的四个文件
+```
+
+QQ 里发：
+
+```
+!persona mychar
+```
+
+她会回「✅ 已切换到「mychar」。下一句话就生效。」
+
+### 导出当前人设
+
+如果人设还在代码里（从老版本升上来），跑：
+
+```bash
+python3 scripts/export_persona.py
+```
+
+会把当前硬编码的提示词、补充、生活模板、状态基线**无损导出**成 `personas/nao/` 四件套。
+
+### 注意
+
+- `life.txt` 每组第一行是权重：`# weight 0.25`，下面每行一条模板
+- 权重总和不必等于 1，程序会归一化
+- `supplement.txt` 留空也可以，不影响启动
+- 卡目录名不能以 `.` 开头（会被忽略）
 
 ---
 
-## 核心特性
+## 命令（33 个，仅主人可用）
 
-### 0. 数据库（8 张表）
+### 基础
 
-`logs` · `api_keys` · `global_keywords` · `user_memory` · `images` · `events` · `ai_raw_responses` · `diaries`
+| 命令 | 说明 |
+|---|---|
+| `!ping` | 测试是否在线 |
+| `!status` | 详细状态（配置 / API / 记忆 / 定时） |
+| `!uptime` | 运行时长 |
+| `!usage` | 最近 10 次 token 用量 |
+| `!help` | 命令列表 |
+| `!exit` / `!quit` | 安全退出 |
 
-- `events` 是**记忆主表**：`kind`（event / life / profile / promise）+ `dedupe_key` + `hit_count` + `importance` + `last_seen` + `embedding`（v8 预留）
-- `global_keywords` 按对象隔离：`(target_id, keyword)` 唯一，`target_id=''` 是公共词库
-- 表情包存档仍是本地文件（`sticker_archive/`），图片走 `images/` + `images` 表
+### 记忆与关系
+
+| 命令 | 说明 |
+|---|---|
+| `!memory [关键词]` | 检索记忆 |
+| `!memorybook` | 记忆本：认识天数 / 关系 / 口头禅 / 最近记得的事 |
+| `!growth` | 成长轨迹：关系进度条、一起经历过多少件事 |
+| `!profile` | 他/她的画像 |
+| `!event` | 查看/管理事件 |
+| `!keywords` | 关键词 |
+| `!clear` | 清理 |
+
+### 媒体
+
+| 命令 | 说明 |
+|---|---|
+| `!img` | 图库管理 |
+| `!sticker` | 表情包 |
+| `!acg` | 在线图源 |
+| `!clip` | CLIP 状态（v8 起已停用，仅展示） |
+| `!voice <文本>` | 合成一条语音 |
+
+### 日常
+
+| 命令 | 说明 |
+|---|---|
+| `!diary` | 今天的日记 |
+| `!diary <日期>` | 指定日期 |
+| `!diary list [天数]` | 最近几天概览 |
+| `!diary raw <日期>` | 原始事件记录 |
+| `!todo` | 待办 |
+| `!task` | 定时任务 |
+
+### 模式与运维
+
+| 命令 | 说明 |
+|---|---|
+| `!code` | 代码模式（知识正确性优先，30 分钟无消息自动退出） |
+| `!code off` | 手动退出 |
+| `!persona [名字]` | 查看 / 切换角色卡 |
+| `!config` | 列出可调参数 |
+| `!config <参数> <值>` | 改一个参数，立即生效 |
+| `!stats` | 今日统计：回复 / 配图 / 语音 / 群接话率 / 配图率 |
+| `!set` | 设置项 |
+| `!db` | 数据库信息 |
+| `!log` | 日志 |
+| `!apikeys` | 密钥管理 |
+| `!reload` | 重载配置 |
+| `!say` / `!sayg` | 以她的口吻说话（私聊 / 群聊） |
+
+---
+
+## 核心机制
 
 ### 1. 记忆系统
 
@@ -117,343 +278,272 @@ botv/
 
 | 层 | 存法 | 上限 |
 |---|---|---|
-| 对话记忆 | `user_memory` | 每人/每群最近 15 轮 |
-| 长期记忆 | `events` | 按 kind 分开：life 60 / event 30 / promise 30 / profile 20 |
-| 画像 | `events` 里 `kind='profile'` 的键值行 | 每字段一行，重写即覆盖 |
+| 对话记忆 | `user_memory` | 每人/每群最近 **30 轮** |
+| 长期记忆 | `events` | life 60 / event 30 / promise 30 / profile 20 |
+| 画像 | `events` 里 `kind='profile'` | 每字段一行，重写即覆盖 |
 
-**检索不再用 LIKE**
+**检索不用 LIKE**
 
 ```
 用户消息 → 分词 → BM25 排名 + 关键词命中排名 → RRF 融合 → top 5
 ```
 
 - 候选池：这个对象最近 300 条记忆
-- 两路都不命中 → 退回最近 3 条（不硬凑，也不失忆）
+- 两路都不命中 → 退回最近 3 条
 - 读库失败 → 给「无」，不影响回复
 
-**去重**：同一句话（去标点、转小写）7 天内重复出现，只累加 `hit_count` 和 `last_seen`，不新增行。
-「他总加班」因此是一条记录 + `hit_count=5`，而不是五条重复。
+**去重**：同一句话（去标点、转小写）7 天内重复只累加 `hit_count`，不新增行。
 
-**分层预算**（防止 prompt 无限膨胀）
+**分层预算**
 
 | 层 | 预算 |
 |---|---|
 | 画像 | 120 字 |
-| 最近对话 | 500 字（从最新往回留） |
+| 最近对话 | 700 字（30 轮，从最新往回留） |
 | 检索到的记忆 | 250 字 |
 | 全局关键词 | 120 字 |
 | 时间线 | 200 字 |
 
-**时间线**：最近 7 天的事件按 `11-07 答辩` 这种格式注入，让她知道「哪天发生了什么」。
+**长会话浓缩**：超过 30 轮后，溢出缓冲攒够 10 轮就压成一行，写进 `data/digests/<对象>.md`
+（最多 20 行，每行 ≤40 字）。注入 prompt 的 `{digest}`。
 
 ### 2. 对话模型
 
-- **主模型** DeepSeek，**兜底**豆包，都挂了返回傲娇短句（`Fallback` 标记，**不进记忆**）
-- **超时分级**：普通聊天 20 秒，长文（日记 / 代码模式，`out_tokens ≥ 1000`）40 秒
-- **会话复用**：每个线程一个常驻 `requests.Session`，不再每次重建 TLS
-- **并发**：不同对象各一把锁（互不排队），同时在飞的模型请求最多 5 个
-- 兜底文案永远不进记忆——它是系统噪声，不是她说的话
+- **主模型** DeepSeek（`deepseek-flash`），**兜底**豆包，都挂了返回傲娇短句（`Fallback` 标记，**不进记忆**）
+- **超时分级**：普通聊天 20 秒，长文（日记 / 代码模式）40 秒
+- **并发**：不同对象各一把锁，同时在飞的请求最多 5 个
 
-### 3. 说话方式（v6 的重点）
+### 3. 说话方式
 
-**分条**：她写几行，就发几条消息。代码只兜底「超过 10 行」这种异常。
+**分条**：她写几行就发几条，代码只兜底「超过 10 行」。
 
 ```
 今天好累啊
 不想动了
 （缩成一团）
-      ↓ 三条独立消息，间隔 1.5~3.0 秒随机
+      ↓ 三条独立消息，间隔 1.5~3.0 秒
 ```
 
-**延迟**：人不会秒回。按时段浮动，平方压低到短端——大多数时候几秒，偶尔拖很久。
+**延迟**：按时段浮动，平方压低到短端。深夜慢、白天快，整体倍率可用 `!config delay_scale` 调。
 
-| 时段 | 范围 | 实测中位数 |
-|---|---|---|
-| 00–06 凌晨 | 20~180 秒 | 61 秒 |
-| 06–09 清晨 | 10~60 秒 | 25 秒 |
-| 09–18 白天 | 5~30 秒 | 12 秒 |
-| 18–23 晚上 | 8~60 秒 | 22 秒 |
-| 23–24 深夜 | 20~120 秒 | 48 秒 |
-
-命令（`!` 开头）**立即回复**，不走延迟。
-
-**群聊节奏**
-
-| 情况 | 行为 |
-|---|---|
-| 被 @ | 一定回（至少隔 3 秒防连点） |
-| 没被 @，20 秒内刚回过 | 不回 |
-| 没被 @，冷却已过 | 1/3 概率接话 |
-| 60 秒内这个群已回满 6 条 | 谁 @ 都不回 |
-| 闸门放行但未 @ | 5% 概率直接沉默 |
-
-**语气**：由真实状态决定（见下一节），再叠一句时段提示。
+**语气**：受 mood / energy / lonely 影响，也受关系档位影响（亲近才会损你）。
 
 ### 4. 她自己的生活（v9）
 
-**世界观**：原作故事结束之后，能力消失，所有人回到普通人的生活。
-乙坂有宇已经意外去世——不是失踪，也回不来。提到他时她会停顿、岔开话题、用「那个人」代替名字；
-**不假装他还活着，也不煽情**。
+状态向量 `mood / energy / lonely` 随时间指数回归 + 孤独拉低心情基线。
+每天生成「生活事件」（109 条模板），写进记忆，聊天时自然提起。
 
-**状态向量**（`life/state.py`）
+### 5. 读小说（v16）
 
-| 维度 | 含义 | 基线 |
+**触发**：你空闲 ≥2 小时、不在深夜（01:00~07:00）、今天没读够 20 章。
+
+**流程**
+
+```
+挑书（热榜 / 内置书单 / 你点名）
+   ↓
+抓章节 HTML → 正文有私有区字符？ → 截图 + tesseract OCR
+   ↓
+HTML 骨架 + OCR 补字（difflib 对齐）→ 合并正文
+   ↓
+AI 摘要（≤100 字）→ 记进度
+   ↓ 攒够 3 个点
+主动说一句（3 小时冷却）
+```
+
+**为什么这么做**：番茄把多数字符替换成私有区码点，靠自定义字体渲染，正文 54% 是乱码。
+字体比对失败（字形被扰动，命中率 0.3%），所以改用截图 OCR——渲染出来的字是对的。
+
+**成本**：每章 8~12 秒（浏览器 + OCR + 摘要），每天最多 20 章。
+
+**你点名**：
+
+```
+去看看十日终焉呢     → 识别出书名 → 番茄搜索 → 开始追
+《十日终焉》你去看看  → 同上
+去看 <番茄链接> 这本   → 直接按链接追
+```
+
+### 6. 图片与语音
+
+- **看图**：多模态直接看，不猜标签；动图抽 24 帧拼 4×6 网格
+- **配图**：AI 给关键词 → 过闸门（30% 概率 / 10 分钟冷却 / 心情差减半）→ 搜图
+- **语音**：8% 概率转语音 + 20 分钟冷却，长度 4~60 字
+
+### 7. 摩擦（v13）
+
+```
+她说「早点睡」→ 记一次期待 → 8 小时没回应 → 失望
+     ↓ 累计 3 次
+   冷战 ── 24 小时自动结束
+     ├─ 说「对不起」→ 立刻和好
+     └─ 3 句话 → 和好
+```
+
+红线写死在代码：`COLD_WAR_MAX=24h`、`GRUDGE_LIMIT=1/周`、`DISAPPOINT_MAX=3`。
+
+### 8. 调参与观测（v15）
+
+```
+!stats                   今日统计
+!config                  列出可调参数
+!config image_prob 0.2   改一个，立即生效
+```
+
+| 参数 | 默认 | 含义 |
 |---|---|---|
-| `mood` | 心情 −1 ~ 1 | 0.10 |
-| `energy` | 精力 0 ~ 1 | 0.70 |
-| `lonely` | 孤独 0 ~ 1 | 0.15 |
+| `group_base_prob` | 0.20 | 群里没被 @ 的接话概率 |
+| `group_mention_prob` | 0.75 | 被 @ 时的回话概率 |
+| `image_prob` | 0.30 | 配图概率 |
+| `image_cooldown` | 600 | 配图间隔（秒） |
+| `voice_prob` | 0.08 | 语音概率 |
+| `lonely_threshold` | 0.45 | 孤独到多少主动开口 |
+| `proactive_cap` | 3 | 每天主动上限 |
+| `delay_scale` | 1.0 | 回复延迟倍率 |
 
-每小时推进一步，指数回归基线。孤独不直接扣心情，而是**把心情基线往下拉**——
-这样「逐小时推进」和「停机三天后一次补」得到的结果完全一致。
-
-```python
-mood_target = BASE - 0.6 * lonely + diary_bias
-```
-
-渲染只输出人话，**数值永远不进 prompt**：
-
-```
-初始        ：情绪平平，还算清醒。
-独处 8 小时  ：情绪平平，还算清醒，有点想找人聊两句。
-三天不理    ：有点烦，还算清醒，很久没人说话了，有点闷。
-```
-
-**每日生活事件**（`life/events.py`）：**105 条模板**分 5 类，每天 1~3 条；先按类别权重抽，再在类内随机。
-
-| 类别 | 权重 | 例子 |
-|---|---|---|
-| 学生会 | 25%（30 条） | 新来的干事把会议记录写错三处，我改到眼睛发酸。 |
-| 猫 | 20%（22 条） | 小咪把窗台上的多肉推下去了，土撒了一地。 |
-| 练琴 | 13%（15 条） | 练了一个小时琴，右手还是比左手快半拍。 |
-| 日常/天气 | 30%（28 条） | 下雨，便利店的伞卖完了，在门口站了十分钟。 |
-| 关于他 | 7%（10 条） | 整理抽屉翻到一张旧照片，看了会儿又放回去了。 |
-
-存在 `target_id='__self__'` 名下（她的一天是她自己的），时间线和检索都会带上，跟谁聊都能看到。
-
-**日记回流**（`life/reflow.py`）：凌晨写完日记后立刻处理——
-
-- 拆成 **2~3 条**记忆（`kind='life'`，归属 `__self__`）
-- 按词表估一个 **±0.15** 的情绪余韵，叠进状态并随时间衰减（半天左右淡掉）
-
-### 5. 图片系统（v11：她自己看）
-
-**CLIP 已移除。** 理由：ViT-B/32 要吃 2 GB 内存、首次加载几十秒、一张图推理 90 秒，
-而它猜的 200 个候选标签还不如她自己那一句提炼词准。
-
-**现在她真的会看图**：图片压缩后直接交给多模态模型，拿回一句描述 + 3~5 个标签。
-
-```
-你发图 → 下载 → 压缩（长边 1024）→ 模型看图
-                                    ↓
-              「一只橘猫趴在窗台上打哈欠」+ ['猫','橘猫','窗台']
-                                    ↓
-        标签写回 images.tags ｜ 存一条 kind='photo' 记忆 ｜ 描述喂给聊天模型
-```
-
-- 模型名/地址可配：`NAO_VISION_MODEL` / `NAO_VISION_URL`
-- **失败就当没有**：key 没开视觉、超时、格式不对 → 退回用聊天关键词打标，不中断
-- 图片记忆：`kind='photo'` 的事件会自动进时间线和检索，你说「那只猫」她能想起来
-
-回话发图的老链路不变：
-
-- 标签去重后最多 8 个，按 MD5 存 `images/`，元数据进 `images` 表
-- 回复时按标签 `LIKE` 匹配、按 `use_count` 排序
-- 防盗链：`Referer` 跟随图片自身域名；坏源最多换 3 张
-- 想找回 CLIP：`NAO_CLIP=1 python3 run.py`
-
-### 6. 语音（v11：能听能说）
-
-| 方向 | 实现 | 不可用时 |
-|---|---|---|
-| 合成（她说） | edge-tts，`record` 段 base64 直传 | 只发文字 |
-| 识别（你说） | POST 到 `/v1/audio/transcriptions` | 消息记 `[语音]` |
-
-- 合成择时：8% 概率、同人 20 分钟冷却、只私聊、长度 4~60 字
-- 音色：`NAO_VOICE`（默认 `zh-CN-XiaoxiaoNeural`）
-- 识别端点/模型：`NAO_ASR_URL` / `NAO_ASR_MODEL`
-- 手动试：`!voice 今天天气不错`
-- 启动时若缺 edge-tts，会自动尝试装一次（`NAO_NO_AUTOINSTALL=1` 可关）
-
-### 7. AI 日记
-
-- 数据源：当天 `events` + `ai_raw_responses` 片段
-- 每天凌晨 3 点由定时任务生成；启动时做历史补录（上线 10 分钟后才开始）
-- 命令：`!diary` / `!diary 2026-11-07` / `!diary list 7` / `!diary raw 2026-11-07`
-
-### 8. 定时任务
-
-- 7 个预设场景（催起床、吐槽赖床、提醒外卖、午睡、起身、晚餐、催睡觉）
-- 随机偏移 ±10 分钟
-- 工作日/节假日判断用 `chinesecalendar`：工作日 7:30 叫起床，休息日 8:30
-- 催睡时间看**明天**是否工作日：工作日前 23:00，休息日前 23:30
-- 每天随机 2~4 次日常闲聊，避开定时任务前后 60 分钟
-
-### 9. 稳定性
-
-| 机制 | 说明 |
-|---|---|
-| 分片锁 | 每个对象一把锁，同人串行、不同人并行；闲置 10 分钟回收 |
-| 模型信号量 | 并发请求上限 5，压得住 API 费用 |
-| 断线补发 | 发送失败入队（最多 50 条），重连后补发并打印结果 |
-| 上线通知 | 60 秒冷却，重连不刷屏 |
-| 单实例 | 文件锁 + PID 文件，双开直接被拒 |
-| 心跳 | 20 秒一次；`ping_timeout` 放宽到 60 秒，短暂卡顿不断线 |
-| 启动失败 | 打印人话 + 指向 preflight，不吐栈 |
+存在 `data/tunables.json`，重启也记得。
 
 ---
 
-## 命令（26 个，仅主人可用）
+## 运维
 
-**状态 / 运维**：`!help` `!status` `!ping` `!uptime` `!usage` `!db` `!log` `!clip` `!apikeys` `!set`
-
-**记忆**：`!memory [uid]` `!profile [uid]` `!profile set <uid> <字段> <值>` `!event <uid>` `!keywords` `!clear [uid]` `!diary`
-
-**图片**：`!img` `!sticker` `!acg`
-
-**模式**：`!code` `!reload` `!exit` `!quit`
-
-**主动**：`!say <文本>` `!sayg <群号> <文本>` `!task`
-
----
-
-## 测试与运维
+### 测试
 
 ```bash
-python3 -m unittest discover -s tests    # 390 条
-python3 scripts/preflight.py             # 13 项自检
+python3 -m unittest discover -s tests    # 442 条
+python3 scripts/check_names.py            # 静态检查：未定义名字 / 先用后赋值
 ```
 
-**脚本**
-
-| 脚本 | 用途 |
-|---|---|
-| `scripts/preflight.py` | 依赖 / 模块 / 数据库 / 表 / 记忆表结构 / 密钥 / 提示词 |
-| `scripts/migrate_v7.py` | events 扩列、回填 dedupe_key、合并重复（默认 dry-run） |
-| `scripts/migrate_v8.py` | global_keywords 加 target_id、换唯一索引（默认 dry-run） |
-| `scripts/backup_table.py` | 无 mysqldump 环境的表备份/还原 |
-| `scripts/clean_fallback_data.py` | 清理历史上的兜底文案（默认 dry-run） |
-
-**systemd**（`deploy/nao-bot.service`）
+### 自检
 
 ```bash
-sudo cp deploy/nao-bot.service /etc/systemd/system/
-sudo systemctl enable --now nao-bot
-journalctl -u nao-bot -f
+python3 scripts/preflight.py
 ```
 
----
+13 项：依赖 / 静态检查 / 环境变量 / 能力 / 网络 / 数据库表结构 / 目录 / 单实例 ...
 
-### 可选：小说正文（v16）
-
-`!` 她空闲时会读番茄小说。要拿到**正文**（不只是书名目录），需要在服务器装：
+### 发布正式版
 
 ```bash
-sudo apt install -y tesseract-ocr tesseract-ocr-chi-sim   # OCR 识别
-python3 -m pip install --user --break-system-packages playwright
-python3 -m playwright install chromium                     # 渲染截图
+# 1. 提交改动
+git add -A && git commit -m "..."
+
+# 2. 预演（不改任何东西）
+python3 scripts/release.py --version v16.1.0
+
+# 3. 真发布
+python3 scripts/release.py --version v16.1.0 --apply
 ```
 
-缺任何一项都会自动降级：只记书名/目录/进度，不抓正文。
+脚本会：检查工作区 → 跑测试 → 打 tag `vX.Y.Z` → 移动 `正式版` → 打包 `dist/nao-vX.Y.Z.bundle` → 生成 `docs/RELEASE-NOTES.md`。
 
-想读需要登录的页面，把 cookie 放 `data/cookies.json`（格式见 `docs/versions/v16.md`，该文件不进版本库）。
-### 11. 打包与部署（四种形式）
+**版本号必须三段式**（`v16.0.4`），两段会直接拒绝。
 
-| 形式 | 命令 | 产物 | 适用 |
-|---|---|---|---|
-| **A 源码包** | `python3 scripts/package.py --version 16.0.0` | `dist/nao-16.0.0-src.zip`（290 KB） | 日常部署、改代码 |
-| **B 整包** | 加 `--deps`，或先 `pip install --target vendor -r requirements.txt` | `dist/nao-16.0.0-full.zip`（~100 MB） | 给不想装依赖的人 |
-| **C 单文件** | `python3 scripts/build_exe.py --version 16.0.0` | `dist/nao-16.0.0`（~60 MB） | 目标机没有 Python；**必须在本平台构建** |
-| **D Docker** | `docker compose up -d --build` | 镜像 `nao-bot:16.0.0` | 隔离环境、多机部署 |
-
-#### 一键打包（推荐）
+### 服务器部署
 
 ```bash
-python3 scripts/build_all.py                    # 版本号自动取最近 tag
-python3 scripts/build_all.py --version 16.0.0
-python3 scripts/build_all.py --with-browser     # Docker 带 Chromium
-python3 scripts/build_all.py --skip exe,docker  # 跳过某几项
+cd ~/NapCat-Pyhon
+find . -name "__pycache__" -type d -prune -exec rm -rf {} +
+git pull ./nao-vX.Y.Z.bundle main
+rm nao-vX.Y.Z.bundle
+python3 -m unittest discover -s tests
+# 重启
 ```
 
-它会依次尝试五种产物，**做不了的写清原因、不中断**，最后给汇总表：
+### 打包（四种形式）
 
-| 步骤 | 产物 | 前置条件 |
+| 形式 | 命令 | 产物 |
 |---|---|---|
-| 1 源码包 | `dist/nao-<ver>-src.zip` | 无 |
-| 2 整包 | `dist/nao-<ver>-full.zip` | pip 可用（自动装 `vendor/`） |
-| 3 单文件 | `dist/nao-<ver>[.exe]` | `pip install pyinstaller`；**只能出本平台** |
-| 4 Docker | `nao-bot:<ver>` + `dist/nao-bot-<ver>.tar.gz` | docker 守护进程在跑 |
-| 5 git bundle | `dist/nao-<ver>.bundle` | 有 git |
+| git bundle | `python3 scripts/release.py --apply` | `dist/nao-vX.Y.Z.bundle` |
+| 源码 zip | `python3 scripts/package.py` | 含依赖清单 |
+| 可执行 | `python3 scripts/build_exe.py` | PyInstaller |
+| Docker | `python3 scripts/build_docker.py` | 镜像 |
 
-Docker 相关文件：`Dockerfile`、`docker-compose.yml`、`.dockerignore`、`scripts/build_docker.py`。
+Docker 镜像里自带 Chromium，抓小说可用。
 
-```bash
-# Docker 构建（带 Chromium 抓小说）
-python3 scripts/build_docker.py --version 16.0.0 --browser --save
+---
 
-# 别的机器加载
-docker load -i nao-bot-16.0.0-browser.tar.gz
-docker run -d --name nao-bot --network host \
-  -e NAO_DB_HOST=your-db-host -e NAO_DB_PASS=your-password \
-  -v $PWD/data:/app/data -v $PWD/personas:/app/personas \
-  --restart unless-stopped nao-bot:16.0.0-browser
+## 架构
+
+```
+botv/
+├── core/       常量、运行时状态、锁、单实例、参数中心、统计
+├── infra/      数据库连接与仓储（记忆 / 画像 / 密钥 / 日志 / AI 原文）
+├── memory/     上下文、检索（BM25+RRF）、分层预算、时间线、浓缩
+├── ai/         人设、角色卡加载、提示词、模型调用、工具调用、回复解析、视觉
+├── chat/       入站解析、回复组装、发送、群聊节奏、通知事件、摩擦反馈
+├── cmd/        33 个命令（注册表 + 各分类实现）
+├── diary/      日记生成与存储
+├── schedule/   定时任务、随机闲聊、空闲读书
+├── image/      图库：存图、打标、检索、在线图源
+├── speech/     语音合成（TTS）与转写（ASR）
+├── life/       状态、生活事件、愿望、日程、关系、习惯、摩擦、读书、OCR
+├── server/     HTTP API
+└── app/        启动引导与主循环
+
+personas/       角色卡（不进代码，可直接改）
+scripts/        迁移 / 自检 / 发布 / 打包 / 探测
+data/           运行时数据（tunables、digests、cookies、凭据）——不进版本库
 ```
 
-部署关键配置全部可用环境变量覆盖（默认值不变）：
-
-| 变量 | 默认 |
-|---|---|
-| `NAO_MASTER_QQ` | 822891053 |
-| `NAO_WS_PORT` | 3001 |
-| `NAO_API_PORT` | 60908 |
-| `NAO_DB_HOST` / `NAO_DB_PORT` / `NAO_DB_USER` / `NAO_DB_PASS` / `NAO_DB_NAME` | 见 `botv/core/constants.py` |
+---
 
 ## 版本历史
 
 | 版本 | 主题 | 关键内容 |
 |---|---|---|
-| v5 | 重构 + 修 bug | 3100 行拆成 10 个包；修 7 个线上缺陷 |
-| v6 | 说话节奏 | 一行一气泡、1.5~3 秒随机间隔、时段延迟、群聊节奏、反 AI 腔、分片锁 |
-| v7 | 记忆地基 | events 扩成记忆主表、7 天去重、对象画像、单实例锁 |
-| v8 | 记忆与检索 | BM25+RRF 双路召回、分层预算、时间线、关键词分对象、砍掉 CLIP |
-| v9 | 她有自己的生活 | 状态向量、每日生活事件、日记回流、原作结局后的世界观 |
-| v10 | 关系与主动 | 六道闸门、四种主动由头、关系四档、日程提醒、群聊概率回话 |
-| v11 | 感官 | 图片直传多模态、图片记忆、语音合成与择时、语音转写（可降级） |
-| v12 | 共同的东西 | 学口头禅、关系里程碑、周日复盘、记忆本、旧事重提、打错字撤回、戳一戳回戳、引用原文、分享欲、天气 |
-| v13 | 摩擦与成长 | 期待/失落/冷战/和好（24 小时自动恢复）、欲言又止、成长轨迹、称呼演化、她会管你、低频惊喜、工具调用 |
-| v16 | 自己看小说 | 空闲时抓番茄/起点读一章 → 摘要 → 攒 3 个点分享；支持热榜挑书和你点名 |\n| v14 | 可换角色 | 人设卡片化（prompt/补充/生活模板/状态基线）、发图择时、主动频率自适应、@ 判断、日程模糊表达 |
+| v5 | 重构 | 分层包、兼容 shim、单实例、断线重发 |
+| v6 | 说话节奏 | 分条、延迟、群聊节奏、代码模式 |
+| v7 | 记忆地基 | events 主表、去重、画像 |
+| v8 | 检索 | BM25+RRF、分层预算、时间线、CLIP 停用 |
+| v9 | 她自己的生活 | 状态向量、生活事件、日记、主动消息 |
+| v10 | 关系与主动 | 亲密度、TODO、日程、承诺 |
+| v11 | 感官 | 多模态看图、图片记忆、语音合成与转写 |
+| v12 | 共同的东西 | 口头禅、里程碑、记忆本、撤回、戳一戳、天气 |
+| v13 | 摩擦与成长 | 期待/冷战/和好、成长轨迹、称呼演化、工具调用 |
+| v14 | 可换角色 | 人设卡片化、发图择时、主动自适应、@ 判断 |
+| v14.1 | 会话延长 | 30 轮 + 浓缩记录、状态按人分 |
+| v15 | 调参与观测 | `!config` / `!stats`、参数持久化 |
+| v16 | 读小说 | 番茄抓取、字体加密实测、截图 OCR、HTML+OCR 合并 |
+| v16.0.4 | 点名 | 无书名号识别、按书名搜索 |
 
 ---
 
 ## 已知限制
 
-- **没有向量检索**：服务器无外网，下不了 embedding 模型；`BM25` 是替代方案，语义相近但用词不同的记忆召不回来
-- **画像靠手动**：`!profile set` 写，不会自己从对话里总结
-- **单进程**：SQLite 式的单实例假设，不支持多实例水平扩展
-- **情绪只有三条曲线**：mood / energy / lonely，还没有「因为你那句话而难过三天」的长线情绪
-- **生活事件是模板**：105 条轮换，一天 1~3 条，理论上三个月内不会重样
-- **视觉要看模型**：`deepseek-flash` 是否支持图片输入未经确认，不支持就自动退回关键词打标
-- **语音识别未经证实**：DeepSeek 公开文档里没见音频接口，失败时语音条只记 `[语音]`
-- **图片不是每条都发**：当前仍是「找到就发」，择时在 v14 的 B1 计划里
+| 限制 | 说明 |
+|---|---|
+| **番茄正文有 OCR 错字** | 约 5%（`神谨`→`神龛`），对摘要够用，逐字引用不可靠 |
+| **起点抓不了** | 章节页对机房 IP + 未登录双重限制，已放弃 |
+| **抖音未实现** | 规划在 v17，且只做看和转发，发评论不可行 |
+| 群聊记忆按群号 | 同一个人在私聊和群里是两份记忆 |
+| 语义检索靠关键词 | 无外网装不了 embedding，BM25 + 关键词双路 |
+| 视觉/ASR 依赖外部接口 | 失败静默降级，不影响聊天 |
+| 读书需要 tesseract | 没装就退化成浅层在读 |
 
-### 10. 调参与观测（v15）
+---
 
-两个命令，不用改代码：
+## 配置项速查
 
-```
-!stats                   今日统计：回复 / 配图 / 语音 / 群接话率 / 配图率
-!config                  列出所有可调参数
-!config image_prob 0.2   改一个参数，立即生效，重启也记得
-```
-
-可调参数（`data/tunables.json`）：
-
-| 参数 | 默认 | 含义 |
+| 环境变量 | 默认 | 说明 |
 |---|---|---|
-| `group_base_prob` | 0.20 | 群里没被 @ 时的接话概率 |
-| `group_mention_prob` | 0.75 | 群里被 @ 时的回话概率 |
-| `image_prob` | 0.30 | 私聊回复配图的概率 |
-| `image_cooldown` | 600 | 同一个人两次配图的间隔（秒） |
-| `voice_prob` | 0.08 | 回复变语音的概率 |
-| `lonely_threshold` | 0.45 | 孤独到多少才主动开口 |
-| `proactive_cap` | 3 | 每天主动消息上限 |
-| `delay_scale` | 1.0 | 回复延迟的整体倍率（0.5=快一倍） |
+| `NAO_MASTER_QQ` | 空 | 主人 QQ（只有他能用命令） |
+| `NAO_DB_HOST` / `NAO_DB_PORT` / `NAO_DB_USER` / `NAO_DB_PASS` / `NAO_DB_NAME` | 空 | 数据库 |
+| `NAO_PERSONA` | `nao` | 用哪个角色卡 |
+| `NAO_CITY` | 空 | 城市名，设了才查天气 |
+| `NAO_READ_IDLE_HOURS` | `2` | 多久没说话才去读书 |
+| `NAO_READ_DAILY_CHAPTERS` | `20` | 每天最多读几章 |
+| `NAO_BOOK_URLS` | 内置三本 | 自定义书单：`名字\|url,名字\|url` |
+| `NAO_OCR_LANG` | `chi_sim` | tesseract 语言包 |
+| `NAO_NO_AUTOINSTALL` | 未设置 | 设 `1` 关闭启动时自动装包 |
+
+完整清单见 [`docs/发布检查清单.md`](docs/发布检查清单.md)。
+
+## 文档索引
+
+| 文档 | 内容 |
+|---|---|
+| [`docs/发布检查清单.md`](docs/发布检查清单.md) | 5 组检查项 + 环境变量表 + 发布流程 |
+| [`docs/versions/`](docs/versions/) | 各版本设计文档（v6 ~ v17） |
+| [`docs/V14-后续清单.md`](docs/V14-后续清单.md) | 未排期需求（A~E 组） |
+| [`docs/RELEASE-NOTES.md`](docs/RELEASE-NOTES.md) | 最近一次发布说明 |
