@@ -4142,5 +4142,69 @@ class TestSettings(unittest.TestCase):
         self.assertNotIn("TomoriNaoBot", text)
 
 
+class TestCookies(unittest.TestCase):
+    """v16：登录态注入（多路径 + 多格式）"""
+
+    def setUp(self):
+        import os
+        import botv.life.cookies as C
+        self.C = C
+        self.orig = C.FALLBACKS
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        self.dir = os.path.join(root, ".test-cookies")
+        os.makedirs(self.dir, exist_ok=True)
+
+    def tearDown(self):
+        import shutil
+        self.C.FALLBACKS = self.orig
+        shutil.rmtree(self.dir, ignore_errors=True)
+
+    def _write(self, name, data):
+        import json, os
+        path = os.path.join(self.dir, name)
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(data, f)
+        self.C.FALLBACKS = (path,)
+        return path
+
+    ARR = [
+        {"name": "_csrfToken", "value": "abc1234", "domain": ".qidian.com", "path": "/"},
+        {"name": "ywopenid", "value": "xyz9999", "domain": ".qidian.com"},
+    ]
+
+    def test_array_format(self):
+        self._write("cookies.json", self.ARR)
+        items = self.C.for_site("qidian")
+        self.assertEqual(len(items), 2)
+        self.assertEqual(items[0]["domain"], ".qidian.com")
+
+    def test_grouped_format(self):
+        self._write("root.json", {"qidian": self.ARR})
+        self.assertEqual(len(self.C.for_site("qidian")), 2)
+
+    def test_domain_autofill(self):
+        self._write("c.json", [{"name": "a", "value": "b"}])
+        items = self.C.for_site("qidian")
+        self.assertEqual(items[0]["domain"], ".qidian.com", "没给域名就按站点补")
+
+    def test_missing_returns_empty(self):
+        import os
+        self.C.FALLBACKS = (os.path.join(self.dir, "nope.json"),)
+        self.assertEqual(self.C.for_site("qidian"), [])
+        self.assertEqual(self.C.describe(), [])
+
+    def test_bad_json_ignored(self):
+        import os
+        path = os.path.join(self.dir, "bad.json")
+        with open(path, "w", encoding="utf-8") as f:
+            f.write("{不是 json")
+        self.C.FALLBACKS = (path,)
+        self.assertEqual(self.C.for_site("qidian"), [])
+
+    def test_no_value_leak_in_describe(self):
+        self._write("c.json", {"qidian": self.ARR})
+        self.assertEqual(self.C.describe(), ["qidian"])
+
+
 if __name__ == "__main__":
     unittest.main()

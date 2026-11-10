@@ -18,6 +18,12 @@ from ..log import log_api
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 STORE = os.path.join(ROOT, "data", "cookies.json")
+# 也认这几个位置（放错地方也能用）
+FALLBACKS = (
+    os.path.join(ROOT, "data", "cookies.json"),
+    os.path.join(ROOT, "cookies.json"),
+    os.path.join(ROOT, "qidian.json"),
+)
 
 DOMAIN_HINTS = {
     "qidian": "qidian.com",
@@ -32,16 +38,19 @@ def _mask(value):
 
 
 def load():
-    """读 cookie 文件；坏文件返回 {}"""
-    try:
-        with open(STORE, encoding="utf-8") as f:
-            data = json.load(f)
-        return data if isinstance(data, (dict, list)) else {}
-    except FileNotFoundError:
-        return {}
-    except Exception as e:
-        log_api(f"[Cookie] 读取失败: {e}")
-        return {}
+    """读 cookie 文件；依次尝试几个位置，坏文件返回 {}"""
+    for path in FALLBACKS:
+        if not os.path.exists(path):
+            continue
+        try:
+            with open(path, encoding="utf-8") as f:
+                data = json.load(f)
+        except Exception as e:
+            log_api(f"[Cookie] {os.path.basename(path)} 解析失败: {e}")
+            continue
+        if isinstance(data, (dict, list)):
+            return data
+    return {}
 
 
 def _normalize(items, default_domain=""):
