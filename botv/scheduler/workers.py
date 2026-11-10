@@ -45,7 +45,7 @@ class WorkerPool:
         if self._tasks:
             return
         self._stopped = False
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()   # 必须在事件循环里启动
         for _ in range(self.event_slots):
             self._tasks.append(loop.create_task(self._worker(FAST)))
         for _ in range(self.idle_slots):

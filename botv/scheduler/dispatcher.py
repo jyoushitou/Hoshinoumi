@@ -34,12 +34,18 @@ class Scheduler:
     # ---------- 生命周期 ----------
 
     def start(self):
-        """起 worker（幂等）"""
-        if not self._started:
+        """起 worker（幂等）；必须在事件循环里调用"""
+        if self._started:
+            return
+        try:
             self.pool.start()
-            self._started = True
-            log_api(f"[调度] 已启动：{self.pool.event_slots} 快 / "
-                    f"{self.pool.idle_slots} 慢")
+        except RuntimeError as e:
+            # 没有运行中的事件循环：调用方用错了地方，别让整个 bot 挂
+            log_api(f"[调度] 启动失败（需在事件循环内调用）: {e}")
+            return
+        self._started = True
+        log_api(f"[调度] 已启动：{self.pool.event_slots} 快 / "
+                f"{self.pool.idle_slots} 慢")
 
     async def stop(self, timeout=10):
         if self._started:

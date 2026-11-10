@@ -21,6 +21,11 @@ async def cmd_stats(ctx):
         lines.append(describe_conns())
     except Exception:
         pass
+    try:
+        from ..scheduler.dispatcher import get_scheduler
+        lines.append(get_scheduler().describe())   # 未启动时也会显示队列长度
+    except Exception:
+        pass
     return "\n".join(lines)
 
 
