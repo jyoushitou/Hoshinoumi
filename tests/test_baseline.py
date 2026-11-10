@@ -1,19 +1,12 @@
-# ===================== 行为基线测试（v17.0.0） =====================
-# 重构（v17 系列）之前，先把**现有行为**固化成测试。
-#
-# 目的：重构后如果某个数字悄悄变了，这里会红。
-# 原则：只测「对外可观察的行为」，不测内部实现细节。
+# 测试
 
 import sys
 import types
 import unittest
-from datetime import datetime
-
-from botv.config import CST
 
 
 def _stub_missing_deps():
-    """单独跑本文件时缺依赖就打个桩（和 test_smoke 同款）"""
+    """缺依赖就打个桩（必须在导入 botv 之前调用）"""
     def module(name, **attrs):
         m = types.ModuleType(name)
         for k, v in attrs.items():
@@ -35,9 +28,46 @@ def _stub_missing_deps():
         except ImportError:
             module(name, **attrs)
 
+    try:
+        import requests  # noqa: F401
+    except ImportError:
+        module("requests", Session=lambda: None, get=lambda *a, **k: None,
+               post=lambda *a, **k: None)
+
 
 _stub_missing_deps()
 
+from datetime import datetime
+from botv.config import CST
+
+
+import unittest
+
+class TestBaselineBubble(unittest.TestCase):
+    """基线：气泡之间的间隔与数量上限"""
+
+    def test_bubble_delay_range(self):
+        """气泡间隔：落在 1.5~3.0 秒"""
+        from botv.chat.send import bubble_delay
+
+        samples = [bubble_delay() for _ in range(300)]
+        self.assertGreaterEqual(min(samples), 1.5)
+        self.assertLessEqual(max(samples), 3.0)
+        self.assertGreater(max(samples) - min(samples), 0.8, "应当有随机浮动")
+
+    def test_bubble_delay_uniform(self):
+        """气泡间隔是均匀分布（均值接近中点 2.25）"""
+        from botv.chat.send import bubble_delay
+
+        samples = [bubble_delay() for _ in range(2000)]
+        avg = sum(samples) / len(samples)
+        self.assertAlmostEqual(avg, 2.25, delta=0.1, msg="均匀分布均值约 2.25")
+
+    def test_max_reply_lines(self):
+        """一次回复最多 10 个气泡（超出合并）"""
+        from botv.chat.reply import MAX_REPLY_LINES
+
+        self.assertEqual(MAX_REPLY_LINES, 10)
 
 def _at(hour, minute=0):
     return datetime(2026, 11, 10, hour, minute, tzinfo=CST)
@@ -98,34 +128,6 @@ class TestBaselineDelay(unittest.TestCase):
         front_half = sum(1 for s in samples if s <= mid)
         self.assertGreater(front_half / len(samples), 0.6, "至少 60% 落在前半段")
 
-
-class TestBaselineBubble(unittest.TestCase):
-    """基线：气泡之间的间隔与数量上限"""
-
-    def test_bubble_delay_range(self):
-        """气泡间隔：落在 1.5~3.0 秒"""
-        from botv.chat.send import bubble_delay
-
-        samples = [bubble_delay() for _ in range(300)]
-        self.assertGreaterEqual(min(samples), 1.5)
-        self.assertLessEqual(max(samples), 3.0)
-        self.assertGreater(max(samples) - min(samples), 0.8, "应当有随机浮动")
-
-    def test_bubble_delay_uniform(self):
-        """气泡间隔是均匀分布（均值接近中点 2.25）"""
-        from botv.chat.send import bubble_delay
-
-        samples = [bubble_delay() for _ in range(2000)]
-        avg = sum(samples) / len(samples)
-        self.assertAlmostEqual(avg, 2.25, delta=0.1, msg="均匀分布均值约 2.25")
-
-    def test_max_reply_lines(self):
-        """一次回复最多 10 个气泡（超出合并）"""
-        from botv.chat.reply import MAX_REPLY_LINES
-
-        self.assertEqual(MAX_REPLY_LINES, 10)
-
-
 class TestBaselineGroupGate(unittest.TestCase):
     """基线：群聊闸门的三个数字与概率区间"""
 
@@ -177,7 +179,6 @@ class TestBaselineGroupGate(unittest.TestCase):
         self.assertIn("冷却", why)
         cfg.group_last_reply_ts.clear()
 
-
 class TestBaselineMemoryAndCommands(unittest.TestCase):
     """基线：记忆轮数上限与命令可用性"""
 
@@ -223,7 +224,6 @@ class TestBaselineMemoryAndCommands(unittest.TestCase):
 
         for name, cmd in registry.COMMANDS.items():
             self.assertTrue(callable(cmd.handler), f"{name} 的 handler 不可调用")
-
 
 if __name__ == "__main__":
     unittest.main()

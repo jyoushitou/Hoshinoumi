@@ -9,7 +9,7 @@
 #   1. 检查工作区干净
 #   2. 跑静态检查 + 全部测试
 #   3. 打附注 tag（vX.Y），并把「正式版」移到最新
-#   4. 生成 dist/nao-vX.Y.Z.bundle（**带 tag**）
+#   4. 生成 release/nao-vX.Y.Z.bundle（**带 tag**）
 #   5. 写 docs/RELEASE-NOTES.md（相对上一个版本的提交列表）
 
 import argparse
@@ -20,7 +20,7 @@ import sys
 from datetime import datetime
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DIST = os.path.join(ROOT, "dist")
+DIST = os.path.join(ROOT, "release")   # v17.x：打包产物集中放这里
 NOTES = os.path.join(ROOT, "docs", "RELEASE-NOTES.md")
 
 

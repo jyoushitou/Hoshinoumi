@@ -3,7 +3,7 @@
 # 打包给别人之前跑一遍：查有没有把密码、密钥、私人信息打进包里。
 #
 #     python3 scripts/check_dist.py              # 查源码
-#     python3 scripts/check_dist.py --zip dist/nao-16.0.0-src.zip
+#     python3 scripts/check_dist.py --zip release/nao-16.0.0-src.zip
 #
 # 退出码：0 = 没发现严重问题；1 = 有必须处理的
 

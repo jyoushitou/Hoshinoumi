@@ -22,3 +22,4 @@ vendor/
 .tmp/
 config.local.json
 qidian.json
+release/

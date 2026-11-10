@@ -6,7 +6,7 @@
 #     python3 scripts/package.py --version v16.0.0 --deps     # 带依赖整包（B）
 #     python3 scripts/package.py --version v16.0.0 --deps --site-packages
 #
-# 产物在 dist/：
+# 产物在 release/：
 #     nao-16.0.0-src.zip      源码包：解压 → pip install -r requirements → python3 run.py
 #     nao-16.0.0-full.zip     整包：解压 → ./start.sh（依赖已内置）
 
@@ -18,7 +18,7 @@ import zipfile
 from datetime import datetime
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DIST = os.path.join(ROOT, "dist")
+DIST = os.path.join(ROOT, "release")   # v17.x：打包产物集中放这里
 
 # 不进包的东西
 EXCLUDE_DIRS = {

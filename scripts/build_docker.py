@@ -6,7 +6,7 @@
 #
 # 产物：
 #     nao-bot:16.0.0            本地镜像
-#     dist/nao-bot-16.0.0.tar.gz  可拷到别的机器 docker load 的整包
+#     release/nao-bot-16.0.0.tar.gz  可拷到别的机器 docker load 的整包
 
 import argparse
 import os
@@ -15,7 +15,7 @@ import subprocess
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DIST = os.path.join(ROOT, "dist")
+DIST = os.path.join(ROOT, "release")   # v17.x：打包产物集中放这里
 
 
 def run(cmd):

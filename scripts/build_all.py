@@ -8,11 +8,11 @@
 #     python3 scripts/build_all.py --skip docker      # 跳过某一项
 #
 # 产出（能做的都做，做不了的会写清原因，不会中断）：
-#     dist/nao-<ver>-src.zip        源码包
-#     dist/nao-<ver>-full.zip       整包（含依赖，需要 vendor/ 或 pip 能装）
-#     dist/nao-<ver>[.exe]          单文件可执行（需要 pyinstaller）
+#     release/nao-<ver>-src.zip        源码包
+#     release/nao-<ver>-full.zip       整包（含依赖，需要 vendor/ 或 pip 能装）
+#     release/nao-<ver>[.exe]          单文件可执行（需要 pyinstaller）
 #     nao-bot:<ver>                 Docker 镜像（需要 docker 守护进程）
-#     dist/nao-<ver>.bundle         git 包（给仓库同步用）
+#     release/nao-<ver>.bundle         git 包（给仓库同步用）
 
 import argparse
 import os
@@ -23,7 +23,7 @@ import sys
 import time
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DIST = os.path.join(ROOT, "dist")
+DIST = os.path.join(ROOT, "release")   # v17.x：产物集中放这里
 PY = sys.executable
 IS_WIN = platform.system() == "Windows"
 

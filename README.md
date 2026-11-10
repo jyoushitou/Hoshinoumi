@@ -50,6 +50,42 @@ MySQL 存记忆与日志。图片由她自己一句话打标签，正文小说�
 
 ---
 
+## 目录布局
+
+```
+项目根/
+├── botv/            机器人代码（分层包）
+├── tests/           功能测试（分模块 + 冒烟，448 条）
+├── checks/          前置环境监测 + 迁移检查（37 条，与 botv 同级）
+├── scripts/         迁移 / 打包 / 发布 / 自检脚本
+├── docs/            版本计划、数据库设计、发布清单
+├── personas/        角色卡（可换人设）
+├── release/         打包与发布产物（不进版本库）
+├── config.example.json   配置模板
+├── config.local.json    真实配置（不进版本库）
+└── run.py           启动入口
+```
+
+`release/` 里放所有交付物：
+
+```
+release/
+  nao-v17.0.0.bundle        git 包（传服务器用）
+  nao-17.0.0-src.zip        源码包（给别人）
+  nao-17.0.0-full.zip       整包（带依赖）
+  nao-bot-17.0.0.tar.gz     Docker 镜像
+  old/                      历史包（保留最近 5 个，其余归档到这里）
+```
+
+一键跑测试：
+
+```bash
+python3 scripts/run_tests.py            # tests + checks
+python3 scripts/run_tests.py --fast     # 只跑功能测试
+```
+
+---
+
 ## 快速开始
 
 ### 环境要求
@@ -433,7 +469,7 @@ AI 摘要（≤100 字）→ 记进度
 ### 测试
 
 ```bash
-python3 -m unittest discover -s tests    # 462 条
+python3 scripts/run_tests.py             # 485 条（tests 448 + checks 37）
 python3 scripts/check_names.py            # 静态检查：未定义名字 / 先用后赋值
 ```
 
@@ -458,7 +494,7 @@ python3 scripts/release.py --version v16.1.0
 python3 scripts/release.py --version v16.1.0 --apply
 ```
 
-脚本会：检查工作区 → 跑测试 → 打 tag `vX.Y.Z` → 移动 `正式版` → 打包 `dist/nao-vX.Y.Z.bundle` → 生成 `docs/RELEASE-NOTES.md`。
+脚本会：检查工作区 → 跑测试 → 打 tag `vX.Y.Z` → 移动 `正式版` → 打包 `release/nao-vX.Y.Z.bundle` → 生成 `docs/RELEASE-NOTES.md`。
 
 **版本号必须三段式**（`v17.0.0`），两段会直接拒绝。
 
@@ -477,7 +513,7 @@ python3 -m unittest discover -s tests
 
 | 形式 | 命令 | 产物 |
 |---|---|---|
-| git bundle | `python3 scripts/release.py --apply` | `dist/nao-vX.Y.Z.bundle` |
+| git bundle | `python3 scripts/release.py --apply` | `release/nao-vX.Y.Z.bundle` |
 | 源码 zip | `python3 scripts/package.py` | 含依赖清单 |
 | 可执行 | `python3 scripts/build_exe.py` | PyInstaller |
 | Docker | `python3 scripts/build_docker.py` | 镜像 |
