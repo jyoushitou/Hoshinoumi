@@ -478,7 +478,7 @@ python3 scripts/check_names.py            # 静态检查：未定义名字 / 先
 ### 自检
 
 ```bash
-python3 scripts/preflight.py
+python3 scripts/preflight.py --init-db   # 顺手把缺的表建上（幂等）
 ```
 
 13 项：依赖 / 静态检查 / 环境变量 / 能力 / 网络 / 数据库表结构 / 目录 / 单实例 ...
@@ -727,6 +727,20 @@ r = await run_blocking(requests.post, url, json=payload, timeout=60, name="deeps
 | 连接池超时 > 0 | 池太小或漏还 |
 
 新增代码里**不允许再用裸 `asyncio.to_thread`**——有测试守卫（`test_no_raw_thread.py`）。
+
+---
+
+## 数据库表
+
+表定义集中在 `botv/infra/schema.py`（现状表 + 未来纯表），全部 `CREATE TABLE IF NOT EXISTS`。
+
+```bash
+python3 scripts/init_db.py            # 看缺哪些表
+python3 scripts/init_db.py --apply    # 建缺的（不会动已有表）
+python3 scripts/preflight.py --init-db   # 前置检查时自动建
+```
+
+**只建不存在的表，永不修改已有表结构**——加列/改类型仍走 `scripts/migrate_*.py`。
 
 ---
 

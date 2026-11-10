@@ -157,16 +157,30 @@ def step_db():
 
 
 def step_tables():
+    """表是否齐全（v17.5：用 schema.py 的统一表定义）"""
     from botv.infra.conn import get_cursor
-    expected = ["logs", "api_keys", "global_keywords", "user_memory",
-                "images", "events", "ai_raw_responses", "diaries"]
+    from botv.infra import schema
+
     c = get_cursor()
-    c.execute("SHOW TABLES")
-    existing = {list(row.values())[0] for row in c.fetchall()}
-    missing = [t for t in expected if t not in existing]
+    missing = schema.missing_tables(c, schema.REQUIRED)
     if missing:
-        raise RuntimeError("缺表: " + ", ".join(missing))
-    return f"{len(expected)} 张表齐全"
+        raise RuntimeError(
+            "缺表: " + ", ".join(missing) +
+            "（建表：python3 scripts/init_db.py --apply）")
+    return f"{len(set(schema.REQUIRED))} 张必需表齐全"
+
+
+def step_tables_extra():
+    """新表（v17.5 纯表）是否存在——缺了只警告，不阻塞"""
+    from botv.infra.conn import get_cursor
+    from botv.infra import schema
+
+    c = get_cursor()
+    missing = schema.missing_tables(c)
+    if missing:
+        raise RuntimeError(
+            f"还有 {len(missing)} 张表未建（不阻塞）：{', '.join(missing[:5])}…")
+    return f"{len(schema.TABLES)} 张表齐全"
 
 
 def step_memory_schema():
@@ -219,9 +233,24 @@ def step_prompt():
 
 
 def main():
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--init-db", action="store_true",
+                    help="缺表时自动建（等同 scripts/init_db.py --apply）")
+    args, _unknown = ap.parse_known_args()
+
     print("=" * 56)
     print("  友利奈绪 v11 部署预检")
     print("=" * 56)
+
+    if args.init_db:
+        try:
+            from botv.infra import schema
+            made = schema.ensure_tables(log=lambda m: print("  " + m))
+            if made:
+                print(f"  已自动建表 {len(made)} 张")
+        except Exception as _e:
+            print(f"  [!] 自动建表失败: {_e}")
 
     ok_python = check("Python 版本", step_python)
     ok_deps = check("必需依赖", step_deps)
@@ -235,6 +264,7 @@ def main():
         check("数据库连接", step_db)
         check("表结构", step_tables)
         check("记忆表结构", step_memory_schema)
+        check("新表（v17.5）", step_tables_extra, fatal=False)
         check("API 密钥", step_keys)
         check("人设提示词", step_prompt)
     else:

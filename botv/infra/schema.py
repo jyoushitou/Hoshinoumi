@@ -1,0 +1,348 @@
+# ===================== 数据库表定义（v17.5 起点 / 前置建表） =====================
+# 目的：把「建表」从「跑过的迁移脚本」里拿出来，变成一份**可重复执行**的定义。
+#
+# 用法：
+#     from botv.infra.schema import ensure_tables, missing_tables
+#     created = ensure_tables()          # 只建缺的（幂等，不碰已有表）
+#
+# 什么时候建：
+#     - 前置环境检查（scripts/preflight.py --init-db）
+#     - 手动：python3 scripts/init_db.py --apply
+#     - 启动时 bootstrap 只建 acg_images/diaries（历史原因，保留）
+#
+# 原则：
+#     - 全部 CREATE TABLE IF NOT EXISTS，跑一百次也不会破坏数据
+#     - 不改已有表结构（加列走迁移脚本，见 scripts/migrate_*.py）
+#     - 新表（v17.5 的纯表）先建出来，代码逐步切过去
+
+# ---------- 现状表（v7/v8 时代，代码正在用） ----------
+
+CURRENT = {
+    "logs": """
+        CREATE TABLE IF NOT EXISTS logs (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            level VARCHAR(16) NOT NULL DEFAULT 'INFO',
+            message TEXT,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            KEY idx_time (created_at)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
+    "api_keys": """
+        CREATE TABLE IF NOT EXISTS api_keys (
+            key_name VARCHAR(64) PRIMARY KEY,
+            key_value VARCHAR(512) NOT NULL,
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                       ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
+    "global_keywords": """
+        CREATE TABLE IF NOT EXISTS global_keywords (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            keyword VARCHAR(64) NOT NULL,
+            weight DECIMAL(6,3) NOT NULL DEFAULT 1,
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                       ON UPDATE CURRENT_TIMESTAMP,
+            UNIQUE KEY uk_keyword (keyword)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
+    "user_memory": """
+        CREATE TABLE IF NOT EXISTS user_memory (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            target_id VARCHAR(64) NOT NULL,
+            user_msg TEXT,
+            bot_msg TEXT,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            KEY idx_target_time (target_id, created_at)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
+    "events": """
+        CREATE TABLE IF NOT EXISTS events (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            target_id VARCHAR(64) NOT NULL,
+            event_summary VARCHAR(500) NOT NULL,
+            tags VARCHAR(200) DEFAULT '',
+            kind VARCHAR(16) NOT NULL DEFAULT 'event',
+            dedupe_key VARCHAR(128) NULL,
+            importance TINYINT NOT NULL DEFAULT 3,
+            due_date DATE NULL,
+            last_seen DATETIME NULL,
+            hit_count INT NOT NULL DEFAULT 0,
+            embedding BLOB NULL,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            deleted_at DATETIME NULL,
+            UNIQUE KEY uk_dedupe (target_id, dedupe_key),
+            KEY idx_target_time (target_id, created_at),
+            KEY idx_kind (kind)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
+    "images": """
+        CREATE TABLE IF NOT EXISTS images (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            md5_hash VARCHAR(32) NOT NULL,
+            file_path VARCHAR(255) NULL,
+            tags VARCHAR(255) DEFAULT '',
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY uk_md5 (md5_hash)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
+    "ai_raw_responses": """
+        CREATE TABLE IF NOT EXISTS ai_raw_responses (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            model_name VARCHAR(64) NULL,
+            user_msg TEXT,
+            raw_response_json MEDIUMTEXT,
+            response_text TEXT,
+            target_id VARCHAR(50) NULL,
+            status VARCHAR(16) NOT NULL DEFAULT 'success',
+            prompt_tokens INT DEFAULT 0,
+            completion_tokens INT DEFAULT 0,
+            total_tokens INT DEFAULT 0,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            KEY idx_time (created_at)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
+    "acg_images": """
+        CREATE TABLE IF NOT EXISTS acg_images (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            md5_hash VARCHAR(32) NOT NULL UNIQUE,
+            image_data MEDIUMBLOB,
+            tags VARCHAR(255) DEFAULT '',
+            source_url VARCHAR(512) DEFAULT '',
+            file_path VARCHAR(255) DEFAULT '',
+            ext VARCHAR(10) DEFAULT 'jpg',
+            use_count INT DEFAULT 0,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
+    "diaries": """
+        CREATE TABLE IF NOT EXISTS diaries (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            target_id VARCHAR(50) NOT NULL,
+            diary_date DATE NOT NULL,
+            content TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_target_date (target_id, diary_date)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
+}
+
+# ---------- 新表（docs/DB-DESIGN.md 的纯表，v17.5 逐步切过去） ----------
+
+PURE = {
+    "targets": """
+        CREATE TABLE IF NOT EXISTS targets (
+            target_id VARCHAR(64) PRIMARY KEY,
+            kind ENUM('private','group') NOT NULL,
+            display_name VARCHAR(64) NULL,
+            first_seen DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            last_seen DATETIME NULL,
+            KEY idx_kind (kind)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
+    "relations": """
+        CREATE TABLE IF NOT EXISTS relations (
+            target_id VARCHAR(64) PRIMARY KEY,
+            affinity DECIMAL(4,3) NOT NULL DEFAULT 0.600,
+            since DATE NULL,
+            tier VARCHAR(16) NULL,
+            daily_gain DECIMAL(4,3) NOT NULL DEFAULT 0,
+            gain_day DATE NULL,
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                       ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
+    "memories": """
+        CREATE TABLE IF NOT EXISTS memories (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            target_id VARCHAR(64) NOT NULL,
+            kind ENUM('event','life','photo','diary_seed') NOT NULL DEFAULT 'event',
+            summary VARCHAR(500) NOT NULL,
+            tags VARCHAR(200) NULL,
+            importance TINYINT NOT NULL DEFAULT 3,
+            source ENUM('chat','life','image','manual') NOT NULL DEFAULT 'chat',
+            dedupe_key VARCHAR(128) NULL,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            last_seen DATETIME NULL,
+            deleted_at DATETIME NULL,
+            UNIQUE KEY uk_dedupe (target_id, dedupe_key),
+            KEY idx_target_time (target_id, created_at),
+            KEY idx_kind (kind)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
+    "keywords": """
+        CREATE TABLE IF NOT EXISTS keywords (
+            target_id VARCHAR(64) NOT NULL,
+            keyword VARCHAR(32) NOT NULL,
+            weight DECIMAL(6,3) NOT NULL DEFAULT 1,
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                       ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (target_id, keyword)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
+    "digests": """
+        CREATE TABLE IF NOT EXISTS digests (
+            target_id VARCHAR(64) NOT NULL,
+            day DATE NOT NULL,
+            lines TEXT NOT NULL,
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                       ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (target_id, day)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
+    "bot_states": """
+        CREATE TABLE IF NOT EXISTS bot_states (
+            target_id VARCHAR(64) PRIMARY KEY,
+            mood DECIMAL(4,3) NOT NULL DEFAULT 0.100,
+            energy DECIMAL(4,3) NOT NULL DEFAULT 0.700,
+            lonely DECIMAL(4,3) NOT NULL DEFAULT 0.150,
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                       ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
+    "friction_states": """
+        CREATE TABLE IF NOT EXISTS friction_states (
+            target_id VARCHAR(64) PRIMARY KEY,
+            expect_ts DATETIME NULL,
+            expect_text VARCHAR(60) NULL,
+            disappoint TINYINT NOT NULL DEFAULT 0,
+            cold_ts DATETIME NULL,
+            last_grudge DATETIME NULL,
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                       ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
+    "habits": """
+        CREATE TABLE IF NOT EXISTS habits (
+            target_id VARCHAR(64) NOT NULL,
+            phrase VARCHAR(16) NOT NULL,
+            count INT NOT NULL DEFAULT 1,
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                       ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (target_id, phrase)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
+    "reading_progress": """
+        CREATE TABLE IF NOT EXISTS reading_progress (
+            target_id VARCHAR(64) NOT NULL,
+            book_url VARCHAR(255) NOT NULL,
+            title VARCHAR(120) NULL,
+            intro VARCHAR(300) NULL,
+            last_no INT NOT NULL DEFAULT 0,
+            last_chapter VARCHAR(120) NULL,
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                       ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (target_id, book_url)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
+    "ai_logs": """
+        CREATE TABLE IF NOT EXISTS ai_logs (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            target_id VARCHAR(64) NULL,
+            model VARCHAR(64) NULL,
+            latency_ms INT NULL,
+            ok TINYINT(1) NOT NULL DEFAULT 1,
+            err VARCHAR(300) NULL,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            KEY idx_time (created_at)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
+    "ops_audit": """
+        CREATE TABLE IF NOT EXISTS ops_audit (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            target_id VARCHAR(64) NULL,
+            action VARCHAR(64) NOT NULL,
+            command VARCHAR(300) NULL,
+            result VARCHAR(300) NULL,
+            ok TINYINT(1) NOT NULL DEFAULT 1,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            KEY idx_time (created_at)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
+    "settings": """
+        CREATE TABLE IF NOT EXISTS settings (
+            k VARCHAR(64) PRIMARY KEY,
+            v VARCHAR(500) NOT NULL,
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                       ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
+}
+
+TABLES = dict(CURRENT)
+TABLES.update(PURE)
+
+# 前置检查必须存在的最小集合（现状表；新表缺了不阻塞启动）
+REQUIRED = ["logs", "api_keys", "global_keywords", "user_memory",
+            "images", "events", "ai_raw_responses", "diaries"]
+
+
+# ---------- 动作 ----------
+
+def existing_tables(cursor):
+    cursor.execute("SHOW TABLES")
+    return {list(row.values())[0] for row in cursor.fetchall()}
+
+
+def missing_tables(cursor, names=None):
+    have = existing_tables(cursor)
+    want = names if names is not None else list(TABLES)
+    return [n for n in want if n not in have]
+
+
+def ensure_tables(cursor=None, names=None, log=None):
+    """建缺的表；返回实际创建的表名列表
+
+    cursor 不传时自己借一条（用完归还）。
+    """
+    owned = False
+    if cursor is None:
+        from .conn import get_cursor
+
+        cursor = get_cursor()
+        owned = True
+
+    created = []
+    try:
+        missing = missing_tables(cursor, names)
+        for name in missing:
+            ddl = TABLES.get(name)
+            if not ddl:
+                continue
+            cursor.execute(ddl)
+            created.append(name)
+            if log:
+                log(f"建表: {name}")
+        if created:
+            try:
+                cursor.connection.commit()
+            except Exception:
+                pass
+    finally:
+        if owned:
+            try:
+                cursor.close()
+            except Exception:
+                pass
+    return created
+
+
+def describe(cursor=None):
+    """给 preflight / !stats 用的一句话"""
+    owned = False
+    if cursor is None:
+        from .conn import get_cursor
+
+        cursor = get_cursor()
+        owned = True
+    try:
+        miss = missing_tables(cursor)
+        have = len(TABLES) - len(miss)
+        if miss:
+            return f"{have}/{len(TABLES)} 张表存在，缺 {len(miss)} 张（{', '.join(miss[:5])}…）"
+        return f"{len(TABLES)} 张表齐全"
+    finally:
+        if owned:
+            try:
+                cursor.close()
+            except Exception:
+                pass
