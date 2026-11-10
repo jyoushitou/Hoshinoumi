@@ -4,10 +4,39 @@
 # 目的：重构后如果某个数字悄悄变了，这里会红。
 # 原则：只测「对外可观察的行为」，不测内部实现细节。
 
+import sys
+import types
 import unittest
 from datetime import datetime
 
 from botv.config import CST
+
+
+def _stub_missing_deps():
+    """单独跑本文件时缺依赖就打个桩（和 test_smoke 同款）"""
+    def module(name, **attrs):
+        m = types.ModuleType(name)
+        for k, v in attrs.items():
+            setattr(m, k, v)
+        sys.modules[name] = m
+        return m
+
+    try:
+        import pymysql  # noqa: F401
+    except ImportError:
+        module("pymysql")
+        module("pymysql.cursors", DictCursor=object)
+        sys.modules["pymysql"].cursors = sys.modules["pymysql.cursors"]
+        sys.modules["pymysql"].connect = lambda **kw: None
+
+    for name, attrs in (("jieba", {"lcut": lambda s: list(s)}), ("PIL", {"Image": None})):
+        try:
+            __import__(name)
+        except ImportError:
+            module(name, **attrs)
+
+
+_stub_missing_deps()
 
 
 def _at(hour, minute=0):
@@ -68,6 +97,33 @@ class TestBaselineDelay(unittest.TestCase):
         # 且大部分样本落在前半段
         front_half = sum(1 for s in samples if s <= mid)
         self.assertGreater(front_half / len(samples), 0.6, "至少 60% 落在前半段")
+
+
+class TestBaselineBubble(unittest.TestCase):
+    """基线：气泡之间的间隔与数量上限"""
+
+    def test_bubble_delay_range(self):
+        """气泡间隔：落在 1.5~3.0 秒"""
+        from botv.chat.send import bubble_delay
+
+        samples = [bubble_delay() for _ in range(300)]
+        self.assertGreaterEqual(min(samples), 1.5)
+        self.assertLessEqual(max(samples), 3.0)
+        self.assertGreater(max(samples) - min(samples), 0.8, "应当有随机浮动")
+
+    def test_bubble_delay_uniform(self):
+        """气泡间隔是均匀分布（均值接近中点 2.25）"""
+        from botv.chat.send import bubble_delay
+
+        samples = [bubble_delay() for _ in range(2000)]
+        avg = sum(samples) / len(samples)
+        self.assertAlmostEqual(avg, 2.25, delta=0.1, msg="均匀分布均值约 2.25")
+
+    def test_max_reply_lines(self):
+        """一次回复最多 10 个气泡（超出合并）"""
+        from botv.chat.reply import MAX_REPLY_LINES
+
+        self.assertEqual(MAX_REPLY_LINES, 10)
 
 
 if __name__ == "__main__":
