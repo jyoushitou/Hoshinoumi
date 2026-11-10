@@ -54,7 +54,7 @@ def main():
     try:
         import PyInstaller  # noqa: F401
     except Exception:
-        print("\n❌ 没有 pyinstaller")
+        print("\n[X] 没有 pyinstaller")
         print("   先装：python3 -m pip install --user --break-system-packages pyinstaller")
         return 1
 
@@ -79,21 +79,21 @@ def main():
 
     cmd.append(os.path.join(ROOT, "run.py"))
 
-    print("\n▶ 开始构建（第一次会慢，2~5 分钟）")
+    print("\n>> 开始构建（第一次会慢，2~5 分钟）")
     print("   " + " ".join(cmd[:6]) + " ...")
     rc = subprocess.call(cmd, cwd=ROOT)
     if rc != 0:
-        print(f"\n❌ 构建失败（退出码 {rc}）")
+        print(f"\n[X] 构建失败（退出码 {rc}）")
         return rc
 
     out = os.path.join(DIST, name + (".exe" if platform.system() == "Windows" else ""))
     if os.path.exists(out):
         size = os.path.getsize(out) / 1024 / 1024
-        print(f"\n✅ {os.path.relpath(out, ROOT)}（{size:.0f} MB）")
+        print(f"\n[OK] {os.path.relpath(out, ROOT)}（{size:.0f} MB）")
         print("   目标机直接运行即可，不需要 python 和依赖。")
         print("   注意：personas/ 已打进去，但改角色卡需要重新构建。")
     else:
-        print("\n⚠️ 没找到产物，检查 PyInstaller 输出")
+        print("\n[!] 没找到产物，检查 PyInstaller 输出")
         return 1
     return 0
 

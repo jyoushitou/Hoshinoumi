@@ -169,8 +169,19 @@ async def fetch_book(url):
 
 
 async def fetch_chapter(url):
+    """取一章正文：HTML 解析优先，出现字体加密就转 OCR（v16）"""
+    from . import ocr as life_ocr
+
     html = await fetch_html(url)
-    return parse_chapter(html) if html else ""
+    text = parse_chapter(html) if html else ""
+
+    # 私有区字符多 → 字体加密没解开 → 截图 OCR
+    if life_ocr.pua_ratio(text) > 0.05 or len(text) < 200:
+        log_api(f"[小说] HTML 正文不可用（私有区 {life_ocr.pua_ratio(text):.0%}），转 OCR")
+        ocr_text = await life_ocr.ocr_url(url)
+        if ocr_text and len(ocr_text) > len(text):
+            return ocr_text
+    return text
 
 
 # ===================== 热榜（v16） =====================

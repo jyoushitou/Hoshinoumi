@@ -43,7 +43,7 @@ def main():
 
     if subprocess.call(["docker", "--version"], stdout=subprocess.DEVNULL,
                        stderr=subprocess.DEVNULL) != 0:
-        print("\n❌ 没装 docker，或者当前用户没有权限")
+        print("\n[X] 没装 docker，或者当前用户没有权限")
         print("   检查：docker --version / sudo usermod -aG docker $USER")
         return 1
 
@@ -51,7 +51,7 @@ def main():
     rc_info = subprocess.call(["docker", "info"], stdout=subprocess.DEVNULL,
                               stderr=subprocess.DEVNULL)
     if rc_info != 0:
-        print("\n❌ docker 命令有了，但**守护进程没运行**")
+        print("\n[X] docker 命令有了，但**守护进程没运行**")
         print("   Linux：sudo systemctl start docker")
         print("   Windows/macOS：先打开 Docker Desktop")
         print("   验证：docker info | head -5")
@@ -67,17 +67,17 @@ def main():
         rc = run(cmd)
 
     if rc != 0:
-        print(f"\n❌ 构建失败（退出码 {rc}）")
+        print(f"\n[X] 构建失败（退出码 {rc}）")
         return rc
 
-    print(f"\n✅ 镜像已生成：{tag}")
+    print(f"\n[OK] 镜像已生成：{tag}")
     if not args.save:
         print("   导出 tar.gz：加 --save")
         return 0
 
     os.makedirs(DIST, exist_ok=True)
     out = os.path.join(DIST, f"nao-bot-{version}{'-browser' if args.browser else ''}.tar.gz")
-    print(f"\n▶ 导出 {os.path.relpath(out, ROOT)}")
+    print(f"\n>> 导出 {os.path.relpath(out, ROOT)}")
     with open(out, "wb") as f:
         p1 = subprocess.Popen(["docker", "save", tag], stdout=subprocess.PIPE)
         p2 = subprocess.Popen(["gzip", "-c"], stdin=p1.stdout, stdout=f)
@@ -86,10 +86,10 @@ def main():
         p1.wait()
     if p2.returncode == 0:
         size = os.path.getsize(out) / 1024 / 1024
-        print(f"✅ {os.path.relpath(out, ROOT)}（{size:.0f} MB）")
+        print(f"[OK] {os.path.relpath(out, ROOT)}（{size:.0f} MB）")
         print(f"   别的机器：docker load -i {os.path.basename(out)}")
     else:
-        print("❌ 导出失败")
+        print("[X] 导出失败")
         return 1
     return 0
 

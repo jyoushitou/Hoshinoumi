@@ -2108,6 +2108,7 @@ class TestEnvironment(unittest.TestCase):
         "NAO_READ_IDLE_HOURS",
         "NAO_READ_DAILY_CHAPTERS",
         "NAO_BOOK_URLS",
+        "NAO_OCR_LANG",
         # v16：Docker/多机部署覆盖项
         "NAO_MASTER_QQ",
         "NAO_LISTEN_HOST",
@@ -3840,12 +3841,14 @@ class TestMaybeRead(unittest.TestCase):
         self._orig_cfg = (R.cfg.last_user_msg_ts,)
         R.cfg.last_user_msg_ts = 0.0
         R._last_read_check = 0.0
+        self._orig_novel = (N.fetch_rank, N.fetch_book, N.fetch_chapter)
 
     def tearDown(self):
         import botv.infra.repo_memory as rm
         rm.load_reading, rm.save_reading = self._orig
         self.R.cfg.last_user_msg_ts = self._orig_cfg[0]
         self.R._last_read_check = 0.0
+        self.N.fetch_rank, self.N.fetch_book, self.N.fetch_chapter = self._orig_novel
 
     def _patch_novel(self):
         async def fetch_rank():
@@ -4004,6 +4007,64 @@ class TestShareReading(unittest.TestCase):
         self._patch(ret=Fallback("挂了"))
         self.assertFalse(asyncio.run(self.R.maybe_share_reading()))
         self.assertEqual(self.sent, [])
+
+
+class TestOCR(unittest.TestCase):
+    """v16：番茄正文 OCR 兜底"""
+
+    def test_pua_ratio(self):
+        from botv.life.ocr import pua_ratio
+        self.assertEqual(pua_ratio("正常文本"), 0.0)
+        self.assertGreater(pua_ratio("\ue000\ue001\ue002"), 0.9)
+        self.assertEqual(pua_ratio(""), 0.0)
+
+    def test_clean_removes_cjk_spaces(self):
+        from botv.life.ocr import clean
+        self.assertEqual(clean("云 千 珩 说 话"), "云千珩说话")
+        self.assertEqual(clean("hello world"), "hello world", "英文空格要留")
+
+    def test_clean_collapses_blank(self):
+        from botv.life.ocr import clean
+        self.assertEqual(clean("第一段\n\n\n\n第二段"), "第一段\n\n第二段")
+
+    def test_fetch_chapter_prefers_ocr_on_pua(self):
+        import asyncio
+        import botv.life.novel as N
+        import botv.life.ocr as O
+
+        async def fake_html(url):
+            return '<div class="muye-reader-content">' + ("\ue000" * 100) + "</div>"
+
+        async def fake_ocr(url):
+            return "这是一段正常的正文" * 20
+
+        orig = (N.fetch_html, O.ocr_url)
+        N.fetch_html, O.ocr_url = fake_html, fake_ocr
+        try:
+            text = asyncio.run(N.fetch_chapter("https://x/reader/1"))
+        finally:
+            N.fetch_html, O.ocr_url = orig
+        self.assertIn("正常", text)
+        self.assertEqual(O.pua_ratio(text), 0.0)
+
+    def test_fetch_chapter_keeps_clean_html(self):
+        import asyncio
+        import botv.life.novel as N
+        import botv.life.ocr as O
+
+        async def fake_html(url):
+            return '<div class="muye-reader-content">' + ("正常正文" * 100) + "</div>"
+
+        async def fake_ocr(url):
+            raise AssertionError("正文干净时不该走 OCR")
+
+        orig = (N.fetch_html, O.ocr_url)
+        N.fetch_html, O.ocr_url = fake_html, fake_ocr
+        try:
+            text = asyncio.run(N.fetch_chapter("https://x/reader/2"))
+        finally:
+            N.fetch_html, O.ocr_url = orig
+        self.assertIn("正常正文", text)
 
 
 if __name__ == "__main__":

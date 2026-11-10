@@ -77,7 +77,7 @@ def build_zip(zip_path, files, extra=None):
             z.writestr(rel, content)
             count += 1
     size = os.path.getsize(zip_path) / 1024
-    print(f"   ✅ {os.path.relpath(zip_path, ROOT)}（{count} 个文件，{size:.0f} KB）")
+    print(f"   [OK] {os.path.relpath(zip_path, ROOT)}（{count} 个文件，{size:.0f} KB）")
     return count
 
 
@@ -125,7 +125,7 @@ def main():
 
     os.makedirs(DIST, exist_ok=True)
     files = list(iter_files())
-    print(f"\n▶ 源码包（{len(files)} 个文件）")
+    print(f"\n>> 源码包（{len(files)} 个文件）")
     src_zip = os.path.join(DIST, f"nao-{version}-src.zip")
     build_zip(src_zip, files, extra={
         "启动说明.txt": (
@@ -142,7 +142,7 @@ def main():
         print("\n完成。要带依赖的整包，加 --deps")
         return 0
 
-    print("\n▶ 整包（含依赖）")
+    print("\n>> 整包（含依赖）")
     staging = os.path.join(ROOT, ".tmp-vendor")
     shutil.rmtree(staging, ignore_errors=True)
     os.makedirs(staging, exist_ok=True)
@@ -151,13 +151,13 @@ def main():
         sp = find_site_packages()
         print(f"   从 site-packages 复制：{sp}")
         if not sp:
-            print("   ❌ 找不到 site-packages")
+            print("   [X] 找不到 site-packages")
             return 1
         n = copy_vendor(sp, staging)
     else:
         vendor = os.path.join(ROOT, "vendor")
         if not os.path.isdir(vendor):
-            print("   ❌ 没有 vendor/ 目录")
+            print("   [X] 没有 vendor/ 目录")
             print("      先建：pip install --target vendor -r requirements.txt")
             return 1
         shutil.copytree(vendor, staging, dirs_exist_ok=True)

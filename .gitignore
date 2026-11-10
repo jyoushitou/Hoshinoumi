@@ -19,3 +19,4 @@ data/credentials.json
 vendor/
 .tmp-vendor/
 .nao-ref-glyphs.json
+.tmp/

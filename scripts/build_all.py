@@ -30,7 +30,8 @@ IS_WIN = platform.system() == "Windows"
 
 def run(cmd, cwd=None, quiet=False):
     """跑子进程；返回 (退出码, 合并输出)"""
-    proc = subprocess.run(cmd, cwd=cwd or ROOT, stdout=subprocess.PIPE,
+    env = dict(os.environ, PYTHONIOENCODING="utf-8", PYTHONUTF8="1")
+    proc = subprocess.run(cmd, cwd=cwd or ROOT, env=env, stdout=subprocess.PIPE,
                           stderr=subprocess.STDOUT, text=True,
                           encoding="utf-8", errors="ignore")
     out = (proc.stdout or "").strip()
@@ -57,14 +58,14 @@ def auto_version():
 
 
 def step_source(version):
-    print("\n▶ [1/5] 源码包")
+    print("\n>> [1/5] 源码包")
     rc, _ = run([PY, os.path.join("scripts", "package.py"), "--version", f"v{version}"])
     path = os.path.join(DIST, f"nao-{version}-src.zip")
     return (rc == 0 and os.path.exists(path)), path, "" if rc == 0 else "脚本报错"
 
 
 def step_full(version):
-    print("\n▶ [2/5] 整包（含依赖）")
+    print("\n>> [2/5] 整包（含依赖）")
     vendor = os.path.join(ROOT, "vendor")
     if not os.path.isdir(vendor):
         print("   没有 vendor/，先尝试装一份…")
@@ -72,7 +73,7 @@ def step_full(version):
                      "-r", "requirements.txt", "--no-cache-dir",
                      "-i", "https://pypi.tuna.tsinghua.edu.cn/simple"], quiet=True)
         if rc != 0:
-            print("   ⏭ 跳过：pip 装不进 vendor/（网络或权限问题）")
+            print("   [SKIP] 跳过：pip 装不进 vendor/（网络或权限问题）")
             print("      手动解决：pip install --target vendor -r requirements.txt")
             return False, "", "pip 不可用"
 
@@ -83,9 +84,9 @@ def step_full(version):
 
 
 def step_exe(version):
-    print(f"\n▶ [3/5] 单文件可执行（当前平台：{platform.system()}）")
+    print(f"\n>> [3/5] 单文件可执行（当前平台：{platform.system()}）")
     if not has_module("PyInstaller"):
-        print("   ⏭ 跳过：没装 pyinstaller")
+        print("   [SKIP] 跳过：没装 pyinstaller")
         print(f"      装：{('py -m pip' if IS_WIN else 'python3 -m pip')} install pyinstaller")
         return False, "", "没装 pyinstaller"
 
@@ -96,13 +97,13 @@ def step_exe(version):
 
 
 def step_docker(version, with_browser):
-    print("\n▶ [4/5] Docker 镜像")
+    print("\n>> [4/5] Docker 镜像")
     if shutil.which("docker") is None:
-        print("   ⏭ 跳过：没装 docker")
+        print("   [SKIP] 跳过：没装 docker")
         return False, "", "没装 docker"
     if subprocess.call(["docker", "info"], stdout=subprocess.DEVNULL,
                        stderr=subprocess.DEVNULL) != 0:
-        print("   ⏭ 跳过：docker 守护进程没运行")
+        print("   [SKIP] 跳过：docker 守护进程没运行")
         print("      Linux: sudo systemctl start docker / Windows: 打开 Docker Desktop")
         return False, "", "docker 守护进程未运行"
 
@@ -117,10 +118,10 @@ def step_docker(version, with_browser):
 
 
 def step_bundle(version):
-    print("\n▶ [5/5] git bundle（仓库同步用）")
+    print("\n>> [5/5] git bundle（仓库同步用）")
     rc, out = run(["git", "status", "--porcelain"], quiet=True)
     if out:
-        print("   ⚠️ 工作区有未提交改动，bundle 只包含已提交内容")
+        print("   [!] 工作区有未提交改动，bundle 只包含已提交内容")
     path = os.path.join(DIST, f"nao-{version}.bundle")
     rc, _ = run(["git", "bundle", "create", path, "main", "--tags"])
     return (rc == 0 and os.path.exists(path)), path, "" if rc == 0 else "git bundle 失败"
@@ -166,7 +167,7 @@ def main():
     print("=" * 60)
     ok_count = 0
     for name, ok, path, why in results:
-        mark = "✅" if ok else "⏭"
+        mark = "[OK]" if ok else "[SKIP]"
         ok_count += 1 if ok else 0
         shown = os.path.relpath(path, ROOT) if path and os.path.exists(str(path)) else (path or "-")
         print(f"  {mark} {name:10} {shown}")
