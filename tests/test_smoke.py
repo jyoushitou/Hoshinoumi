@@ -2119,6 +2119,9 @@ class TestEnvironment(unittest.TestCase):
         "NAO_DB_USER",
         "NAO_DB_PASS",
         "NAO_DB_NAME",
+        # v17.0.1：阻塞调用线程池
+        "NAO_TASK_THREADS",
+        "NAO_BLOCKING_TIMEOUT",
     }
 
     @staticmethod
