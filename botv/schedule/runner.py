@@ -179,139 +179,18 @@ async def cycle_task_run():
         log_system("[调度] 调度器已启动：空闲读书 + 主动消息由 tick 驱动")
     except Exception as _e:
         log_err(f"[调度] 启动失败（回退旧路径）: {_e}")
-    _last_today = None  # 记录上一次检查的日期
-    _is_workday = True  # 缓存当天是否工作日
-    _last_due_check = 0.0  # 上次检查日程/待办的时间（节流用，函数内局部）
+    # v17.3 U3：不再自己跑 1 秒循环——跨天 / 日记 / 生日 / 场景 / 日程
+    # 全部交给调度器的 minute_tick（每 30 秒），这里只保活。
+    try:
+        from ..executors import ticker as ticker_exec
+        ticker_exec.schedule_tick()
+        log_system("[调度] minute_tick 已安排（每 30 秒）")
+    except Exception as _e:
+        log_err(f"[调度] minute_tick 安排失败: {_e}")
+
     while True:
-        try:
-            now = datetime.now(CST)
-            today = now.date()
-            cur_minute = now.hour * 60 + now.minute
+        await asyncio.sleep(3600)
 
-            # ---------- 跨天/首次初始化 ----------
-            if today != _last_today:
-                log_system(f"定时任务：切换到 {today}")
-                _is_workday = is_workday_today()
-                log_system(f"今天 {'工作日' if _is_workday else '非工作日'} 催起床={'7:30' if _is_workday else '8:30'} 催睡觉=看明天工作日定")
-                # 清空所有触发记录
-                cfg.daily_trigger.clear()
-                cfg.triggered_today.clear()
-                cfg.task_trigger_minute.clear()
-                cfg.today = today
-                # 先计算当日所有任务触发时刻（后面闲聊要避开这些时间）
-                cfg.task_trigger_minute.update(calc_day_tasks(today, _is_workday))
-
-                # v10.4：主动闲聊不再预设时刻，改成每 30 分钟掷一次骰子
-                _last_today = today
-                log_system(f"定时任务初始化完成，共 {len(cfg.task_trigger_minute)} 个任务点"
-                           f"（主动闲聊改为每 30 分钟掷骰）")
-
-            # ---------- 凌晨3点自动生成昨天日记并存入数据库 ----------
-            # 3点时昨天的数据已完整，AI生成日记后保存到 diaries 表（不推送）
-            # 查看用 !diary <日期> 命令，从数据库读取
-            if now.hour == 3 and now.minute == 0:
-                prev_date = today - timedelta(days=1)
-                diary_key = f"diary_{prev_date}"
-                if diary_key not in cfg.daily_trigger:
-                    cfg.daily_trigger.add(diary_key)  # 先标记，防重复
-                    log_system(f"定时:自动写日记({prev_date})")
-                    try:
-                        # generate_diary 内部会保存到 diaries 表，若已存在则直接读取不重复生成
-                        diary_text = await generate_diary(str(MASTER_QQ), prev_date.isoformat())
-                        log_system(f"自动日记({prev_date}) 已生成并保存到数据库（{len(diary_text)}字）")
-                    except Exception as diary_e:
-                        log_err(f"自动日记生成失败: {diary_e}")
-
-            # ---------- 生日检查 ----------
-            birthday_flag_key = f"birthday_{today.year}"
-            if (birthday_flag_key not in cfg.daily_trigger and
-                    now.month == 9 and now.day == 6 and now.hour == 12 and now.minute == 0):
-                age = now.year - 2006
-                rep = await get_character_reply(f"生日快乐,今年{age}岁了", str(MASTER_QQ))
-                dialog, action, img_kw, event, refined_kw = parse_ai_reply(rep)
-                add_target_memory(str(MASTER_QQ), f"今天是我{age}岁生日", rep, img_kw, refined_kw, event or f"主人过{age}岁生日")
-                await send_short_reply(MASTER_QQ, rep, cfg.active_ws_qq, MASTER_QQ)
-                bd_fp = await get_best_image(["生日快乐", "生日", "蛋糕", "庆祝", "happy"], str(MASTER_QQ))
-                bd_msg = make_image_msg(bd_fp)
-                if bd_msg:
-                    await send_private_msg(MASTER_QQ, bd_msg, cfg.active_ws_qq)
-                cfg.daily_trigger.add(birthday_flag_key)
-                log_system(f"主人生日快乐！今年{age}岁了")
-
-            nao_birthday_key = f"nao_birthday_{today.year}"
-            if (nao_birthday_key not in cfg.daily_trigger and
-                    now.month == 11 and now.day == 13 and now.hour == 8 and now.minute == 0):
-                rep = await get_character_reply("奈绪生日快乐", str(MASTER_QQ))
-                dialog, action, img_kw, event, refined_kw = parse_ai_reply(rep)
-                add_target_memory(str(MASTER_QQ), "友利奈绪生日", rep, img_kw, refined_kw, event or "今天是我(奈绪)的生日")
-                await send_short_reply(MASTER_QQ, rep, cfg.active_ws_qq, MASTER_QQ)
-                nao_results = search_local_image_by_tags(["奈绪", "友利奈绪", "Charlotte", "夏洛特"], limit=5)
-                if nao_results:
-                    nao_fp = random.choice(nao_results)[2]
-                    nao_msg = make_image_msg(nao_fp)
-                    if nao_msg:
-                        await send_private_msg(MASTER_QQ, nao_msg, cfg.active_ws_qq)
-                else:
-                    img_fp = await fetch_and_save_acg_image()
-                    img_msg = make_image_msg(img_fp)
-                    if img_msg and cfg.active_ws_qq and not getattr(cfg.active_ws_qq, "closed", False):
-                        await send_private_msg(MASTER_QQ, img_msg, cfg.active_ws_qq)
-                cfg.daily_trigger.add(nao_birthday_key)
-                log_system("奈绪生日快乐！")
-
-            # ---------- 代码模式30分钟超时自动退出 ----------
-            if cfg.CODE_MODE and cfg.CODE_MODE_LAST_MSG_TIME > 0:
-                if _time.time() - cfg.CODE_MODE_LAST_MSG_TIME > cfg.CODE_MODE_TIMEOUT:
-                    cfg.CODE_MODE = False
-                    cfg.CODE_MODE_LAST_MSG_TIME = 0
-                    log_system("代码模式超时自动退出（30分钟无消息）")
-                    # 通知主人代码模式已自动退出
-                    try:
-                        if cfg.active_ws_qq and not getattr(cfg.active_ws_qq, "closed", False):
-                            await send_private_msg(MASTER_QQ, [{"type": "text", "data": {"text": "⏰ 代码模式已因30分钟无消息自动退出，恢复人设回复"}}], cfg.active_ws_qq)
-                    except Exception as notify_e:
-                        log_err(f"代码模式超时退出通知失败: {notify_e}")
-
-            # ---------- 任务触发 ----------
-            for task in SCHEDULE_TASKS:
-                key = f"{task['scene']}_{today}"
-                if key in cfg.daily_trigger:
-                    continue
-                if today.weekday() not in task["weekday"]:
-                    continue
-                # 仅节假日任务（周末吐槽赖床），工作日跳过
-                if task.get("only_holiday") and _is_workday:
-                    continue
-                tm = cfg.task_trigger_minute.get(key)
-                if tm is None or cur_minute != tm:
-                    continue
-
-                # ★ 修复：先标记任务已触发，防止异常导致重复触发
-                cfg.daily_trigger.add(key)
-                log_system(f"定时:{task['scene']}")
-
-                # v17.1：执行交给调度器（不再内联在 1 秒循环里）
-                try:
-                    from ..executors.schedule import submit_scene
-                    submit_scene(task["scene"], today)
-                except Exception as task_e:
-                    log_err(f"定时任务投递失败({task['scene']}):{task_e}")
-
-            # ---------- 日程 / 待办检查（每 30 秒一次，别每秒查库） ----------
-            if (_time.time() - _last_due_check) > 30:
-                _last_due_check = _time.time()
-                await process_due(now)
-
-            # ---------- v17.1：空闲读书改由调度器的 idle_tick 驱动 ----------
-            # （_dispatch_reading 保留给旧路径/手动触发，循环里不再调用）
-
-            # ---------- v17.1：主动闲聊改由调度器的 proactive_tick 驱动 ----------
-            # （maybe_chat 保留给手动触发与旧测试）
-
-        except Exception as e:
-            log_err(f"定时异常:{e}")
-
-        await asyncio.sleep(1)
 
 # ===================== 空闲读书（v16） =====================
 
