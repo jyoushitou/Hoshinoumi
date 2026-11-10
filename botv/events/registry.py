@@ -25,6 +25,7 @@ class Handler:
     priority: int = Priority.IDLE
     timeout: float = DEFAULT_TIMEOUT
     description: str = ""
+    retries: int = 1                            # 默认重试次数
     calls: int = field(default=0)               # 调用次数（观测用）
     failures: int = field(default=0)
 
@@ -32,7 +33,7 @@ class Handler:
 _handlers = {}
 
 
-def register(kind, priority=None, timeout=None, description=""):
+def register(kind, priority=None, timeout=None, description="", retries=1):
     """注册装饰器：把 async 函数绑到某个 kind"""
 
     def deco(fn):
@@ -46,6 +47,7 @@ def register(kind, priority=None, timeout=None, description=""):
             priority=Priority.IDLE if priority is None else priority,
             timeout=DEFAULT_TIMEOUT if timeout is None else timeout,
             description=description,
+            retries=max(1, int(retries)),
         )
         return fn
 
