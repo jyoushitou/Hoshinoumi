@@ -479,7 +479,8 @@ python3 scripts/check_names.py            # 静态检查：未定义名字 / 先
 ### 自检
 
 ```bash
-python3 scripts/preflight.py --init-db   # 顺手把缺的表建上（幂等）
+python3 scripts/setup.py --install    # 装缺的依赖 + 建缺的表（幂等）
+python3 scripts/preflight.py         # 13 项自检
 ```
 
 13 项：依赖 / 静态检查 / 环境变量 / 能力 / 网络 / 数据库表结构 / 目录 / 单实例 ...
