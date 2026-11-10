@@ -2122,6 +2122,9 @@ class TestEnvironment(unittest.TestCase):
         # v17.0.1：阻塞调用线程池
         "NAO_TASK_THREADS",
         "NAO_BLOCKING_TIMEOUT",
+        # v17.0.2：连接池
+        "NAO_DB_POOL_SIZE",
+        "NAO_DB_POOL_TIMEOUT",
     }
 
     @staticmethod
