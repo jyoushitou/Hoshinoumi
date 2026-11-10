@@ -40,3 +40,26 @@ async def run_blocking(fn, *args, timeout=DEFAULT_TIMEOUT, name=None, **kwargs):
     except Exception as e:
         log_api(f"[blocking:{label}] 失败: {e}")
         raise
+
+
+def shutdown_pool(wait=True, timeout=5.0):
+    """进程退出时收尾：不再接新任务，给在跑的线程一点时间
+
+    - wait=True：等正在跑的任务结束（最多 timeout 秒由调用方控制）
+    - 关闭后池会被重建，所以测试/热重载后还能继续用
+    返回 True 表示正常关闭
+    """
+    global _pool
+    old = _pool
+    if old is None:
+        return True
+    try:
+        old.shutdown(wait=wait, cancel_futures=not wait)
+        log_api(f"[blocking] 线程池已关闭（wait={wait}）")
+        return True
+    except Exception as e:
+        log_api(f"[blocking] 关闭线程池失败: {e}")
+        return False
+    finally:
+        # 重建，保证后续调用不会打到已关闭的池
+        _pool = ThreadPoolExecutor(max_workers=POOL_SIZE, thread_name_prefix="nao-block")

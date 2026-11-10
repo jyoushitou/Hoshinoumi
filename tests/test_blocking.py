@@ -110,5 +110,15 @@ class TestRunBlocking(unittest.TestCase):
         self.assertLess(elapsed, 0.36, f"没有并行（用了 {elapsed:.2f}s）")
 
 
+    def test_shutdown_and_reuse(self):
+        """关闭线程池后还能继续用（池会重建）"""
+        from botv.infra.blocking import run_blocking, shutdown_pool
+
+        self.assertEqual(asyncio.run(run_blocking(lambda: "before")), "before")
+        self.assertTrue(shutdown_pool(wait=True))
+        # 关闭后重建，仍能执行
+        self.assertEqual(asyncio.run(run_blocking(lambda: "after")), "after")
+
+
 if __name__ == "__main__":
     unittest.main()
