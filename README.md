@@ -73,9 +73,9 @@ MySQL 存记忆与日志。图片由她自己一句话打标签，正文小说�
 ```
 release/
   nao-v17.0.0.bundle        git 包（传服务器用）
-  nao-17.0.0-src.zip        源码包（给别人）
-  nao-17.0.0-full.zip       整包（带依赖）
-  nao-bot-17.0.0.tar.gz     Docker 镜像
+  nao-v17.0.0-src.zip        源码包（给别人）
+  nao-v17.0.0-full.zip       整包（带依赖）
+  nao-bot-v17.0.0.tar.gz     Docker 镜像
   old/                      历史包（保留最近 5 个，其余归档到这里）
 ```
 

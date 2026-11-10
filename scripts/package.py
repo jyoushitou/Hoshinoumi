@@ -7,8 +7,8 @@
 #     python3 scripts/package.py --version v16.0.0 --deps --site-packages
 #
 # 产物在 release/：
-#     nao-16.0.0-src.zip      源码包：解压 → pip install -r requirements → python3 run.py
-#     nao-16.0.0-full.zip     整包：解压 → ./start.sh（依赖已内置）
+#     nao-v16.0.0-src.zip      源码包：解压 → pip install -r requirements → python3 run.py
+#     nao-v16.0.0-full.zip     整包：解压 → ./start.sh（依赖已内置）
 
 import argparse
 import os
@@ -41,6 +41,11 @@ export PYTHONPATH="$PWD/vendor:${PYTHONPATH:-}"
 export PYTHONIOENCODING=utf-8
 exec python3 run.py "$@"
 """
+
+
+def _ver(v):
+    """版本号去掉开头的 v（避免打成 nao-vv17.1.1）"""
+    return str(v).lstrip("vV")
 
 
 def iter_files(include_deps=False):
@@ -164,7 +169,7 @@ def main():
     os.makedirs(DIST, exist_ok=True)
     files = list(iter_files())
     print(f"\n>> 源码包（{len(files)} 个文件）")
-    src_zip = os.path.join(DIST, f"nao-{version}-src.zip")
+    src_zip = os.path.join(DIST, f"nao-v{_ver(version)}-src.zip")
     build_zip(src_zip, files, extra={
         "启动说明.txt": (
             f"友利奈绪 QQ 机器人 {version}（源码包）\n\n"
@@ -208,7 +213,7 @@ def main():
             rel = os.path.relpath(os.path.join(base, name), staging)
             full_files.append(os.path.join("vendor", rel))
 
-    full_zip = os.path.join(DIST, f"nao-{version}-full.zip")
+    full_zip = os.path.join(DIST, f"nao-v{_ver(version)}-full.zip")
     build_zip(full_zip, full_files, extra={
         "start.sh": START_SH,
         "启动说明.txt": (

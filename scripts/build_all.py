@@ -8,11 +8,11 @@
 #     python3 scripts/build_all.py --skip docker      # 跳过某一项
 #
 # 产出（能做的都做，做不了的会写清原因，不会中断）：
-#     release/nao-<ver>-src.zip        源码包
-#     release/nao-<ver>-full.zip       整包（含依赖，需要 vendor/ 或 pip 能装）
-#     release/nao-<ver>[.exe]          单文件可执行（需要 pyinstaller）
+#     release/nao-v<ver>-src.zip        源码包
+#     release/nao-v<ver>-full.zip       整包（含依赖，需要 vendor/ 或 pip 能装）
+#     release/nao-v<ver>[.exe]          单文件可执行（需要 pyinstaller）
 #     nao-bot:<ver>                 Docker 镜像（需要 docker 守护进程）
-#     release/nao-<ver>.bundle         git 包（给仓库同步用）
+#     release/nao-v<ver>.bundle         git 包（给仓库同步用）
 
 import argparse
 import os
@@ -26,6 +26,11 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DIST = os.path.join(ROOT, "release")   # v17.x：产物集中放这里
 PY = sys.executable
 IS_WIN = platform.system() == "Windows"
+
+
+def _ver(v):
+    """版本号去掉开头的 v（避免打成 nao-vv17.1.1）"""
+    return str(v).lstrip("vV")
 
 
 def run(cmd, cwd=None, quiet=False):
@@ -60,7 +65,7 @@ def auto_version():
 def step_source(version):
     print("\n>> [1/5] 源码包")
     rc, _ = run([PY, os.path.join("scripts", "package.py"), "--version", f"v{version}"])
-    path = os.path.join(DIST, f"nao-{version}-src.zip")
+    path = os.path.join(DIST, f"nao-v{_ver(version)}-src.zip")
     return (rc == 0 and os.path.exists(path)), path, "" if rc == 0 else "脚本报错"
 
 
@@ -79,7 +84,7 @@ def step_full(version):
 
     rc, _ = run([PY, os.path.join("scripts", "package.py"),
                  "--version", f"v{version}", "--deps"])
-    path = os.path.join(DIST, f"nao-{version}-full.zip")
+    path = os.path.join(DIST, f"nao-v{_ver(version)}-full.zip")
     return (rc == 0 and os.path.exists(path)), path, "" if rc == 0 else "打包失败"
 
 
@@ -91,7 +96,7 @@ def step_exe(version):
         return False, "", "没装 pyinstaller"
 
     rc, _ = run([PY, os.path.join("scripts", "build_exe.py"), "--version", version])
-    name = f"nao-{version}.exe" if IS_WIN else f"nao-{version}"
+    name = f"nao-v{_ver(version)}.exe" if IS_WIN else f"nao-v{_ver(version)}"
     path = os.path.join(DIST, name)
     return (rc == 0 and os.path.exists(path)), path, "" if rc == 0 else "构建失败"
 
@@ -122,7 +127,7 @@ def step_bundle(version):
     rc, out = run(["git", "status", "--porcelain"], quiet=True)
     if out:
         print("   [!] 工作区有未提交改动，bundle 只包含已提交内容")
-    path = os.path.join(DIST, f"nao-{version}.bundle")
+    path = os.path.join(DIST, f"nao-v{_ver(version)}.bundle")
     rc, _ = run(["git", "bundle", "create", path, "main", "--tags"])
     return (rc == 0 and os.path.exists(path)), path, "" if rc == 0 else "git bundle 失败"
 

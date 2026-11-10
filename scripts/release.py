@@ -24,6 +24,11 @@ DIST = os.path.join(ROOT, "release")   # v17.x：打包产物集中放这里
 NOTES = os.path.join(ROOT, "docs", "RELEASE-NOTES.md")
 
 
+def _ver(v):
+    """版本号去掉开头的 v（避免打成 nao-vv17.1.1）"""
+    return str(v).lstrip("vV")
+
+
 def run(cmd, check=True, capture=True):
     """跑一个命令，返回 (退出码, 输出)"""
     proc = subprocess.run(
@@ -101,7 +106,7 @@ def write_notes(version, prev, commits):
         "## 升级步骤",
         "",
         "```bash",
-        f"git pull ./nao-{version}.bundle main",
+        f"git pull ./nao-v{_ver(version)}.bundle main",
         "python3 scripts/preflight.py",
         "python3 -m unittest discover -s tests",
         "# 重启进程",
@@ -175,7 +180,7 @@ def main():
 
     # 打包（带 tag）
     os.makedirs(DIST, exist_ok=True)
-    bundle = os.path.join(DIST, f"nao-{version}.bundle")
+    bundle = os.path.join(DIST, f"nao-v{_ver(version)}.bundle")
     run(["git", "bundle", "create", bundle, "main", "--tags"])
     size = os.path.getsize(bundle) / 1024
     print(f"   ✅ {os.path.relpath(bundle, ROOT)}（{size:.0f} KB）")
