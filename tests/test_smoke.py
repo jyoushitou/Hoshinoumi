@@ -425,6 +425,15 @@ class TestPhotoMemory(unittest.TestCase):
         from botv.infra.repo_memory import KIND_LIMITS
         self.assertGreaterEqual(KIND_LIMITS["photo"], 20)
 
+
+class _Ev:
+    """伪造的事件对象（只要 args/kind）"""
+
+    def __init__(self, args=()):
+        self.args = args
+        self.kind = "proactive_tick"
+
+
 class TestScheduleTick(unittest.TestCase):
     """v10.3：定时循环的两段逻辑，用假数据做代码级测试（不连 AI）"""
 
@@ -518,42 +527,73 @@ class TestScheduleTick(unittest.TestCase):
         self._patch("load_today_life", lambda: [])
         self._patch("load_events_from_db", lambda *a, **k: [])
 
-    def test_maybe_chat_fires(self):
+    def _run_proactive_tick(self, gate_result):
+        """跑一次 proactive_tick（新执行器，v17.3）"""
         import asyncio
-        from botv.core import state as cfg
-        cfg.triggered_today.clear()
-        self._patch_should_chat((True, "想说话了", 0.1))
-        ok = asyncio.run(self.R.maybe_chat(self.now))
-        self.assertTrue(ok)
-        self.assertEqual(len(self.sent), 1)
 
-    def test_maybe_chat_skipped_by_gate(self):
-        import asyncio
-        from botv.core import state as cfg
-        cfg.triggered_today.clear()
-        self._patch_should_chat((False, "刚聊过", 0.0))
-        ok = asyncio.run(self.R.maybe_chat(self.now))
-        self.assertFalse(ok)
-        self.assertEqual(self.sent, [])
+        import botv.executors.proactive as P
+        from botv.scheduler.dispatcher import Scheduler, set_scheduler
 
-    def test_maybe_chat_ignores_other_minutes(self):
-        import asyncio
-        from botv.core import state as cfg
-        cfg.triggered_today.clear()
-        self._patch_should_chat((True, "ok", 0.5))
-        odd = self.now.replace(minute=17)  # 不在整半点
-        ok = asyncio.run(self.R.maybe_chat(odd))
-        self.assertFalse(ok)
+        sched = Scheduler()
+        set_scheduler(sched)
+        orig = P.should_chat if hasattr(P, "should_chat") else None
+        import botv.life.impulse as IMP
 
-    def test_maybe_chat_only_once_per_window(self):
+        orig_gate = IMP.should_chat
+        IMP.should_chat = lambda **kw: gate_result
+        orig_life = None
+        try:
+            import botv.infra.repo_memory as rm
+
+            orig_life = rm.load_today_life
+            rm.load_today_life = lambda: []
+        except Exception:
+            pass
+        try:
+            out = asyncio.run(P.handle_proactive_tick(_Ev()))
+        finally:
+            IMP.should_chat = orig_gate
+            if orig_life is not None:
+                import botv.infra.repo_memory as rm
+
+                rm.load_today_life = orig_life
+            set_scheduler(None)
+        return out, sched
+
+    def test_proactive_tick_fires(self):
+        out, sched = self._run_proactive_tick((True, "想说话了", 0.1))
+        self.assertTrue(out["ok"])
+        self.assertEqual(sched.stats()["queue"]["event"], 1, "应投递一条发言事件")
+
+    def test_proactive_tick_skipped_by_gate(self):
+        out, sched = self._run_proactive_tick((False, "刚聊过", 0.0))
+        self.assertFalse(out["ok"])
+        self.assertEqual(out["reason"], "刚聊过")
+        self.assertEqual(sched.stats()["queue"]["total"], 0)
+
+    def test_proactive_tick_dedupes(self):
+        """已在飞时第二次 tick 不会重复投递"""
         import asyncio
-        from botv.core import state as cfg
-        cfg.triggered_today.clear()
-        self._patch_should_chat((True, "ok", 0.5))
-        first = asyncio.run(self.R.maybe_chat(self.now))
-        second = asyncio.run(self.R.maybe_chat(self.now))
-        self.assertTrue(first)
-        self.assertFalse(second, "同一个 30 分钟窗口不能触发两次")
+
+        import botv.executors.proactive as P
+        from botv.scheduler.dispatcher import Scheduler, set_scheduler
+        import botv.life.impulse as IMP
+
+        sched = Scheduler()
+        set_scheduler(sched)
+        orig = IMP.should_chat
+        IMP.should_chat = lambda **kw: (True, "ok", 0.3)
+        try:
+            first = asyncio.run(P.handle_proactive_tick(_Ev()))
+            second = asyncio.run(P.handle_proactive_tick(_Ev()))
+        finally:
+            IMP.should_chat = orig
+            set_scheduler(None)
+
+        self.assertTrue(first["ok"])
+        self.assertFalse(second["ok"], "同一个人不该重复投递")
+        self.assertEqual(sched.stats()["queue"]["event"], 1)
+
 
 class TestSingleInstance(unittest.TestCase):
     """v7-E32：单实例锁"""

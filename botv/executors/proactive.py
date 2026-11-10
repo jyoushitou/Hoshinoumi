@@ -53,9 +53,12 @@ async def handle_proactive_tick(ev):
             log_api(f"[主动] 跳过：{why}")
             return {"ok": False, "reason": why, "p": p}
 
-        get_scheduler().submit("proactive_say", f"proactive:{tid}", args=(tid,))
-        log_api(f"[主动] 通过闸门（p={p:.2f}），投递发言")
-        return {"ok": True, "p": p}
+        queued = get_scheduler().submit("proactive_say", f"proactive:{tid}", args=(tid,))
+        if queued:
+            log_api(f"[主动] 通过闸门（p={p:.2f}），投递发言")
+        else:
+            log_api("[主动] 已有一条在飞，跳过投递")
+        return {"ok": queued, "p": p, "reason": "" if queued else "已有在飞"}
     finally:
         _ticking["running"] = False
 
