@@ -103,5 +103,53 @@ class TestDoubaoUsesBlocking(unittest.TestCase):
         self.assertIn("timeout", calls[0])
 
 
+class TestVisionUsesBlocking(unittest.TestCase):
+    """describe_image 必须走 run_blocking（视觉最慢，超时放宽）"""
+
+    def test_uses_run_blocking(self):
+        import botv.ai.vision as V
+
+        calls = []
+
+        async def fake_run_blocking(fn, *a, **k):
+            calls.append(k)
+            return fn()
+
+        class _Resp:
+            status_code = 200
+            text = ""
+
+            def json(self):
+                return {"choices": [{"message": {"content": "描述：一只猫\n标签：猫,窗台"}}]}
+
+        orig = (V.run_blocking, V.prepare, V.cfg.DS_API_KEY)
+        V.run_blocking = fake_run_blocking
+        V.prepare = lambda img: ("FAKEB64", False, 1)      # 跳过 PIL
+
+        class _FakeRequests:
+            Session = lambda self=None: self           # noqa: E731
+
+            def post(self, *a, **k):
+                return _Resp()
+
+            def close(self):
+                pass
+
+        # vision 是在函数里 import requests 的，改 sys.modules 才能拦到
+        import requests as real_requests
+        sys.modules["requests"] = _FakeRequests()
+        V.cfg.DS_API_KEY = "test-key"
+        try:
+            out = asyncio.run(V.describe_image(b"fake-image-bytes"))
+        finally:
+            (V.run_blocking, V.prepare, V.cfg.DS_API_KEY) = orig
+            sys.modules["requests"] = real_requests
+
+        self.assertTrue(calls, "必须经过 run_blocking")
+        self.assertEqual(calls[0].get("name"), "vision")
+        self.assertGreaterEqual(calls[0].get("timeout", 0), 30, "视觉超时要放宽")
+        desc, tags = out
+        self.assertIn("猫", desc + "".join(tags))
+
 if __name__ == "__main__":
     unittest.main()

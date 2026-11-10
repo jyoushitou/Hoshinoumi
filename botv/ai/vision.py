@@ -9,6 +9,7 @@ import io
 import os
 
 import botv.core.state as cfg
+from ..infra.blocking import run_blocking  # v17.0.3：阻塞调用统一入口
 from ..log import log_api
 
 # 可用环境变量覆盖，默认用 DeepSeek 的视觉模型
@@ -183,7 +184,7 @@ async def describe_image(img_bytes):
             finally:
                 s.close()
 
-        resp = await asyncio.to_thread(_post)
+        resp = await run_blocking(_post, timeout=40, name="vision")  # v17.0.3：统一线程池（视觉较慢，超时放宽）
         if resp.status_code != 200:
             log_api(f"[视觉] 失败 {resp.status_code}: {resp.text[:120]}")
             return None, []
