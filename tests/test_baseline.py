@@ -126,5 +126,57 @@ class TestBaselineBubble(unittest.TestCase):
         self.assertEqual(MAX_REPLY_LINES, 10)
 
 
+class TestBaselineGroupGate(unittest.TestCase):
+    """基线：群聊闸门的三个数字与概率区间"""
+
+    def test_gate_constants(self):
+        """冷却 20 秒、窗口 60 秒、窗口内最多 6 条、@ 最小间隔 3 秒"""
+        from botv.chat import handler as H
+
+        self.assertEqual(H.GROUP_COOLDOWN, 20)
+        self.assertEqual(H.GROUP_WINDOW, 60)
+        self.assertEqual(H.GROUP_WINDOW_MAX, 6)
+        self.assertEqual(H.GROUP_AT_MIN_GAP, 3)
+
+    def test_probability_clamped(self):
+        """概率始终落在 0.05~0.45 之间"""
+        from botv.chat.handler import group_reply_probability
+        from botv.chat import handler as H
+
+        for lonely in (0.0, 0.5, 1.0):
+            for streak in (0, 2, 5, 20):
+                p = group_reply_probability({"lonely": lonely, "mood": 0.0}, streak)
+                self.assertGreaterEqual(p, H.GROUP_PROB_MIN)
+                self.assertLessEqual(p, H.GROUP_PROB_MAX)
+
+    def test_base_probability(self):
+        """没有情绪加成、没有连说时，基础概率是 0.20"""
+        from botv.chat.handler import group_reply_probability
+
+        p = group_reply_probability({"lonely": 0.0, "mood": 0.0}, 0)
+        self.assertAlmostEqual(p, 0.20, delta=0.001)
+
+    def test_streak_halves(self):
+        """连说 3 句没人接，概率减半"""
+        from botv.chat.handler import group_reply_probability
+
+        base = group_reply_probability({"lonely": 0.0, "mood": 0.0}, 0)
+        decayed = group_reply_probability({"lonely": 0.0, "mood": 0.0}, 3)
+        self.assertAlmostEqual(decayed, base * 0.5, delta=0.001)
+
+    def test_cooldown_blocks(self):
+        """刚回过（<20 秒）时，没被 @ 一律不接"""
+        from botv.chat.handler import should_answer_group, note_group_reply
+        from botv.core import state as cfg
+
+        cfg.group_last_reply_ts.clear()
+        cfg.group_msg_window.clear()
+        note_group_reply(9001)
+        ok, why = should_answer_group(9001, False)
+        self.assertFalse(ok)
+        self.assertIn("冷却", why)
+        cfg.group_last_reply_ts.clear()
+
+
 if __name__ == "__main__":
     unittest.main()
