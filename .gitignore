@@ -16,3 +16,6 @@ dist/
 data/tunables.json
 .test-tunables.json
 data/credentials.json
+vendor/
+.tmp-vendor/
+.nao-ref-glyphs.json

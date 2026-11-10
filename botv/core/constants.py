@@ -9,9 +9,12 @@ CST = timezone(timedelta(hours=8))  # 东八区（北京时间）
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)  # 禁用SSL警告
 
 # ===================== 配置常量 =====================
-MASTER_QQ = 822891053  # 主人QQ号（只有此QQ能使用!命令）
-LISTEN_HOST = "0.0.0.0"  # WebSocket监听地址（所有网卡）
-LISTEN_PORT_QQ = 3001  # WebSocket监听端口（NapCat连接此端口）
+# v16：以下关键项可被环境变量覆盖（Docker/多机部署用），默认值与以前完全一致
+import os as _os
+
+MASTER_QQ = int(_os.getenv("NAO_MASTER_QQ", "822891053"))  # 主人QQ号（只有此QQ能使用!命令）
+LISTEN_HOST = _os.getenv("NAO_LISTEN_HOST", "0.0.0.0")  # WebSocket监听地址（所有网卡）
+LISTEN_PORT_QQ = int(_os.getenv("NAO_WS_PORT", "3001"))  # WebSocket监听端口（NapCat连接此端口）
 HEARTBEAT_INTERVAL = 15  # 心跳间隔（秒）
 API_RETRY_DELAY = 1.5  # API调用失败重试延迟（秒）
 MAX_RETRY_TIMES = 3  # API最大重试次数
@@ -34,8 +37,14 @@ IMAGE_DIR = "images"  # 新图片存储目录
 MAX_USER_ROUND = 30  # 每个用户最大对话记忆轮数
 MAX_GLOBAL_KEY = 40  # 全局关键词最大数量
 
-DB_CONFIG = {"host": "192.168.0.50", "port": 3306, "user": "TomoriNaoBot",  # MySQL数据库配置
-             "password": "TNB", "database": "TomoriNaoBotData", "charset": "utf8mb4"}
+DB_CONFIG = {  # MySQL数据库配置（v16：可被环境变量覆盖）
+    "host": _os.getenv("NAO_DB_HOST", "192.168.0.50"),
+    "port": int(_os.getenv("NAO_DB_PORT", "3306")),
+    "user": _os.getenv("NAO_DB_USER", "TomoriNaoBot"),
+    "password": _os.getenv("NAO_DB_PASS", "TNB"),
+    "database": _os.getenv("NAO_DB_NAME", "TomoriNaoBotData"),
+    "charset": "utf8mb4",
+}
 
 CLIP_IMAGE_TAGS = [
     # === 表情包常用（20个标签） ===

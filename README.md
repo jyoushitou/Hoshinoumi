@@ -303,6 +303,38 @@ journalctl -u nao-bot -f
 
 ---
 
+### 11. 打包与部署（四种形式）
+
+| 形式 | 命令 | 产物 | 适用 |
+|---|---|---|---|
+| **A 源码包** | `python3 scripts/package.py --version 16.0.0` | `dist/nao-16.0.0-src.zip`（290 KB） | 日常部署、改代码 |
+| **B 整包** | 加 `--deps`，或先 `pip install --target vendor -r requirements.txt` | `dist/nao-16.0.0-full.zip`（~100 MB） | 给不想装依赖的人 |
+| **C 单文件** | `python3 scripts/build_exe.py --version 16.0.0` | `dist/nao-16.0.0`（~60 MB） | 目标机没有 Python；**必须在本平台构建** |
+| **D Docker** | `docker compose up -d --build` | 镜像 `nao-bot:16.0.0` | 隔离环境、多机部署 |
+
+Docker 相关文件：`Dockerfile`、`docker-compose.yml`、`.dockerignore`、`scripts/build_docker.py`。
+
+```bash
+# Docker 构建（带 Chromium 抓小说）
+python3 scripts/build_docker.py --version 16.0.0 --browser --save
+
+# 别的机器加载
+docker load -i nao-bot-16.0.0-browser.tar.gz
+docker run -d --name nao-bot --network host \
+  -e NAO_DB_HOST=192.168.0.50 -e NAO_DB_PASS=TNB \
+  -v $PWD/data:/app/data -v $PWD/personas:/app/personas \
+  --restart unless-stopped nao-bot:16.0.0-browser
+```
+
+部署关键配置全部可用环境变量覆盖（默认值不变）：
+
+| 变量 | 默认 |
+|---|---|
+| `NAO_MASTER_QQ` | 822891053 |
+| `NAO_WS_PORT` | 3001 |
+| `NAO_API_PORT` | 60908 |
+| `NAO_DB_HOST` / `NAO_DB_PORT` / `NAO_DB_USER` / `NAO_DB_PASS` / `NAO_DB_NAME` | 见 `botv/core/constants.py` |
+
 ## 版本历史
 
 | 版本 | 主题 | 关键内容 |

@@ -1,0 +1,25 @@
+# 友利奈绪 QQ 机器人 —— 运行依赖
+# 生成自 run.py 的 REQUIRED_PACKAGES / OPTIONAL_PACKAGES / AUTO_OPTIONAL_PACKAGES
+#
+# 安装：pip install -r requirements.txt
+# 可选（语音）：pip install edge-tts
+# 可选（节假日/CLIP）：pip install chinesecalendar torch
+
+websockets
+requests
+urllib3
+pymysql
+jieba
+Pillow
+aiohttp
+
+# 语音合成（可选，缺了自动静音降级）
+edge-tts
+
+# 中国法定节假日（可选，缺了按周一到周五判断）
+chinesecalendar
+
+# 小说正文抓取（可选，v16；装了才能抓番茄/起点）
+# playwright          # 另需：playwright install chromium
+# fonttools           # 番茄字体解密用
+# brotli              # woff2 解压用

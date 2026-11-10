@@ -9,11 +9,12 @@
 #   1. 检查工作区干净
 #   2. 跑静态检查 + 全部测试
 #   3. 打附注 tag（vX.Y），并把「正式版」移到最新
-#   4. 生成 dist/nao-<版本>.bundle（**带 tag**）
+#   4. 生成 dist/nao-vX.Y.Z.bundle（**带 tag**）
 #   5. 写 docs/RELEASE-NOTES.md（相对上一个版本的提交列表）
 
 import argparse
 import os
+import re
 import subprocess
 import sys
 from datetime import datetime
@@ -100,7 +101,7 @@ def write_notes(version, prev, commits):
         "## 升级步骤",
         "",
         "```bash",
-        f"git pull ./nao-{version.lstrip('v')}.bundle main",
+        f"git pull ./nao-{version}.bundle main",
         "python3 scripts/preflight.py",
         "python3 -m unittest discover -s tests",
         "# 重启进程",
@@ -121,7 +122,7 @@ def write_notes(version, prev, commits):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--version", required=True, help="形如 v14.2")
+    ap.add_argument("--version", required=True, help="形如 v16.0.0（必须三段）")
     ap.add_argument("--apply", action="store_true", help="真的执行（默认只预演）")
     ap.add_argument("--no-正式版", dest="move_stable", action="store_false",
                     help="不移动「正式版」标签")
@@ -131,6 +132,10 @@ def main():
     version = args.version.strip()
     if not version.startswith("v"):
         version = "v" + version
+    if not re.fullmatch(r"v\d+\.\d+\.\d+", version):
+        print(f"❌ 版本号必须是三段式 vX.Y.Z（收到 {version}）")
+        print("   例：v16.0.0 / v16.1.2")
+        sys.exit(1)
 
     print("=" * 56)
     print(f"  发布 {version}  " + ("" if args.apply else "（预演模式）"))
@@ -170,7 +175,7 @@ def main():
 
     # 打包（带 tag）
     os.makedirs(DIST, exist_ok=True)
-    bundle = os.path.join(DIST, f"nao-{version.lstrip('v')}.bundle")
+    bundle = os.path.join(DIST, f"nao-{version}.bundle")
     run(["git", "bundle", "create", bundle, "main", "--tags"])
     size = os.path.getsize(bundle) / 1024
     print(f"   ✅ {os.path.relpath(bundle, ROOT)}（{size:.0f} KB）")

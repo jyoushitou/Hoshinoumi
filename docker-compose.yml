@@ -1,0 +1,51 @@
+# ===================== docker compose =====================
+# 用法：
+#     docker compose up -d --build
+#     docker compose logs -f
+#     docker compose down
+#
+# 网络说明：
+#   network_mode: host  —— 容器直接使用宿主机网络。
+#   NapCat 连 ws://<宿主机IP>:3001 就行；MySQL 用 192.168.0.50 也能直连。
+#   如果你必须用 bridge 网络，把 network_mode 换成 ports 映射（见文件末尾注释）。
+
+services:
+  nao-bot:
+    build:
+      context: .
+      args:
+        WITH_BROWSER: "0"        # 改成 "1" 把 Chromium 打进来（+400MB）
+    image: nao-bot:16.0.0
+    container_name: nao-bot
+    restart: unless-stopped
+    network_mode: host
+
+    environment:
+      TZ: Asia/Shanghai
+      # ---- 主人 ----
+      NAO_MASTER_QQ: "822891053"
+      # ---- WebSocket / API 端口 ----
+      NAO_WS_PORT: "3001"
+      NAO_API_PORT: "60908"
+      # ---- 数据库 ----
+      NAO_DB_HOST: "192.168.0.50"
+      NAO_DB_PORT: "3306"
+      NAO_DB_USER: "TomoriNaoBot"
+      NAO_DB_PASS: "TNB"
+      NAO_DB_NAME: "TomoriNaoBotData"
+      # ---- 可选功能 ----
+      # NAO_CITY: "Tokyo"
+      # NAO_PERSONA: "nao"
+      # NAO_READ_IDLE_HOURS: "2"
+      # NAO_READ_DAILY_CHAPTERS: "20"
+      # NAO_BOOK_URLS: "天外玉|https://fanqienovel.com/page/7688347825909812248"
+      # NAO_NO_AUTOINSTALL: "1"
+
+    volumes:
+      - ./data:/app/data          # 浓缩记录、可调参数
+      - ./personas:/app/personas  # 角色卡（改完重启容器生效）
+
+    # bridge 网络写法（把 network_mode 删掉，取消下面注释）：
+    # ports:
+    #   - "3001:3001"
+    #   - "60908:60908"
