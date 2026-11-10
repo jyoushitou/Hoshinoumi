@@ -183,7 +183,7 @@ PURE = {
         CREATE TABLE IF NOT EXISTS digests (
             target_id VARCHAR(64) NOT NULL,
             day DATE NOT NULL,
-            lines TEXT NOT NULL,
+            content TEXT NOT NULL,   -- 原来叫 lines，但 LINES 是 MySQL 保留字
             updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
                        ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY (target_id, day)
@@ -302,16 +302,23 @@ def ensure_tables(cursor=None, names=None, log=None):
         owned = True
 
     created = []
+    errors = []
     try:
         missing = missing_tables(cursor, names)
         for name in missing:
             ddl = TABLES.get(name)
             if not ddl:
                 continue
-            cursor.execute(ddl)
-            created.append(name)
-            if log:
-                log(f"建表: {name}")
+            try:
+                cursor.execute(ddl)
+                created.append(name)
+                if log:
+                    log(f"建表: {name}")
+            except Exception as e:
+                # 单张表失败不该拖住其它表：记下来继续
+                errors.append((name, str(e)[:120]))
+                if log:
+                    log(f"[失败] {name}: {str(e)[:120]}")
         if created:
             try:
                 cursor.connection.commit()
@@ -323,6 +330,12 @@ def ensure_tables(cursor=None, names=None, log=None):
                 cursor.close()
             except Exception:
                 pass
+
+    if errors:
+        import sys as _sys
+
+        print(f"[!] {len(errors)} 张表建失败：" +
+              ", ".join(n for n, _ in errors), file=_sys.stderr)
     return created
 
 

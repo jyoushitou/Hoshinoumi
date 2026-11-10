@@ -80,7 +80,7 @@ CREATE TABLE keywords (
 CREATE TABLE digests (
     target_id VARCHAR(64) NOT NULL,
     day       DATE NOT NULL,
-    lines     TEXT NOT NULL,          -- 浓缩后的几行
+    content   TEXT NOT NULL,          -- 浓缩后的几行（原 lines，MySQL 保留字）
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (target_id, day)
 );
