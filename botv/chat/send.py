@@ -130,6 +130,21 @@ def _enqueue(payload, label):
     log_err(f"{label}: 连接不可用，消息已入队（队列 {len(cfg.pending_outbox)} 条）")
 
 
+def _kind_of_label(label):
+    """把中文标签归到出站统计的 kind（v17.2）"""
+    text = str(label)
+    if "撤回" in text or "get_msg" in text or "取消息" in text:
+        return "query"
+    if "戳" in text:
+        return "poke"
+    if "图" in text:
+        return "image"
+    if "语音" in text or "voice" in text:
+        return "voice"
+    if "群" in text:
+        return "group"
+    return "chat"
+
 async def _send_or_queue(action, params, ws, label, want_response=False, timeout=8):
     """发送一条消息；连接断了就入队，等重连补发
 
@@ -149,21 +164,16 @@ async def _send_or_queue(action, params, ws, label, want_response=False, timeout
     else:
         payload = json.dumps({"action": action, "params": params}, ensure_ascii=False)
 
-    if not _alive(ws):
-        _enqueue(payload, label)
-        if fut is not None:
-            cfg.pending_echo.pop(echo, None)
-        return None if want_response else False
-
-    try:
-        async with cfg.send_lock:
-            await ws.send(payload)
-    except Exception as e:
-        log_err(f"{label}失败:{e}")
-        _enqueue(payload, label)
-        if fut is not None:
-            cfg.pending_echo.pop(echo, None)
-        return None if want_response else False
+    # v17.2：统一交给出站口（锁 / 入队 / echo 都在里面）
+    from ..egress.outbound import get_outbound
+    out = get_outbound()
+    out.bind(ws)
+    if want_response:
+        return await out.send(action, params, label=label,
+                              kind=_kind_of_label(label), want_response=True,
+                              timeout=timeout)
+    ok = await out.send(action, params, label=label, kind=_kind_of_label(label))
+    return bool(ok)
 
     if fut is None:
         return True
@@ -183,23 +193,11 @@ async def request_action(action, params, ws, label="请求", timeout=8):
 
 
 async def flush_outbox(ws):
-    """重连后补发断线期间积压的消息，返回补发条数"""
-    if not _alive(ws) or not cfg.pending_outbox:
-        return 0
-    sent = 0
-    while cfg.pending_outbox:
-        payload = cfg.pending_outbox[0]
-        try:
-            async with cfg.send_lock:
-                await ws.send(payload)
-            cfg.pending_outbox.popleft()
-            sent += 1
-        except Exception as e:
-            log_err(f"补发失败，保留队列: {e}")
-            break
-    if sent:
-        log_system(f"断线消息补发完成: {sent} 条")
-    return sent
+    """重连后补发断线期间积压的消息，返回补发条数（v17.2 走出站口）"""
+    from ..egress.outbound import get_outbound
+    out = get_outbound()
+    out.bind(ws)
+    return await out.flush()
 
 
 async def send_private_msg(qq, msg, ws, want_response=False):

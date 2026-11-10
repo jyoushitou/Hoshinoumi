@@ -30,9 +30,11 @@ class QqTransport:
         params = {"user_id": user_id}
         if target.kind == "group":
             params["group_id"] = target.id
-        payload = {"action": "send_poke", "params": params}
-        async with cfg.send_lock:
-            await self.ws.send(json.dumps(payload, ensure_ascii=False))
+        # v17.2：走出站口（全局锁 + 断线入队）
+        from ..egress.outbound import get_outbound
+        out = get_outbound()
+        out.bind(self.ws)
+        await out.send("send_poke", params, label="戳一戳", kind="poke")
 
 
 assert isinstance(QqTransport(None), Transport)
