@@ -171,7 +171,7 @@ class TestCommandRegistry(unittest.TestCase):
         "acg", "apikeys", "clear", "clip", "code", "db", "diary", "event",
         "exit", "help", "img", "keywords", "log", "memory", "ping", "quit",
         "reload", "say", "sayg", "set", "status", "sticker", "task",
-        "uptime", "usage", "profile", "todo", "voice", "memorybook", "growth", "persona", "stats", "config",
+        "uptime", "usage", "profile", "todo", "voice", "memorybook", "growth", "persona", "stats", "config", "version",
     }
 
     def setUp(self):
@@ -2125,6 +2125,7 @@ class TestEnvironment(unittest.TestCase):
         # v17.0.2：连接池
         "NAO_DB_POOL_SIZE",
         "NAO_DB_POOL_TIMEOUT",
+        "NAO_VERSION",
     }
 
     @staticmethod

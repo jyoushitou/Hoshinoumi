@@ -27,12 +27,20 @@ def check_source(src, filename):
 
     module_names = set(st.get_identifiers())
 
+    # Python 自动注入的模块级名字（__file__ / __name__ 等），静态检查看不到赋值
+    dunders = {
+        "__file__", "__name__", "__doc__", "__package__", "__spec__",
+        "__loader__", "__builtins__", "__path__", "__cached__",
+    }
+
     def walk(table):
         for sym in table.get_symbols():
             name = sym.get_name()
             # 只看「在函数里当全局用、但模块层没定义」的名字
             # 注意：3.13 的参数也会 is_global()=True，所以本地变量/参数要排除
             if sym.is_local() or sym.is_parameter():
+                continue
+            if name in dunders:
                 continue
             if sym.is_global() and not sym.is_assigned() and not sym.is_imported():
                 if name not in module_names and not hasattr(builtins, name):

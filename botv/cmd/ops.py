@@ -24,6 +24,14 @@ async def cmd_stats(ctx):
     return "\n".join(lines)
 
 
+@command("version")
+async def cmd_version(ctx):
+    """!version - 当前版本、提交、运行时长"""
+    from ..core import version as V
+
+    return V.describe()
+
+
 @command("config")
 async def cmd_config(ctx):
     """!config - 查看可调参数；!config <参数> <值> 修改"""
