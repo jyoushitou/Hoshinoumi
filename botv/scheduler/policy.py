@@ -78,10 +78,15 @@ class Breaker:
         }
 
 
-def retry_delay(attempt, base=RETRY_BASE_DELAY, cap=RETRY_MAX_DELAY):
-    """第 attempt 次重试前等多久（attempt 从 1 开始）：2, 4, 8, … 封顶"""
+def retry_delay(attempt, base=None, cap=None):
+    """第 attempt 次重试前等多久（attempt 从 1 开始）：2, 4, 8, … 封顶
+
+    base/cap 不传时**运行时**读模块常量——这样测试里改常量就能生效。
+    """
     if attempt <= 0:
         return 0.0
+    base = RETRY_BASE_DELAY if base is None else base
+    cap = RETRY_MAX_DELAY if cap is None else cap
     return min(cap, base * (2 ** (attempt - 1)))
 
 

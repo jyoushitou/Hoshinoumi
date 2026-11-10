@@ -66,6 +66,17 @@ class EventQueue:
                 return lane.popleft()
         return None
 
+    def get_from(self, priorities):
+        """只在这些优先级里取（按给定顺序）；都空返回 None
+
+        worker 按档位取任务用：快车道传 (CHAT, EVENT)，空闲车道传 (EVENT, IDLE)。
+        """
+        for prio in priorities:
+            lane = self._lanes.get(int(prio))
+            if lane:
+                return lane.popleft()
+        return None
+
     def peek(self):
         """看一眼下一条会取谁（不弹出）"""
         for prio in (Priority.CHAT, Priority.EVENT, Priority.IDLE):
