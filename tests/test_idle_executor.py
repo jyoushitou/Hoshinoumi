@@ -41,18 +41,19 @@ class TestIdleExecutors(unittest.TestCase):
 
         self.R = registry
         self.idle = idle
-        self.R.clear()
-        # 重新注册（clear 会清掉）
+        self._snapshot = dict(registry._handlers)   # 保留别人的注册
+        # 确保三个 kind 在（若被别的测试清过）
         for kind, fn, prio, tmo in (
             ("idle_tick", idle.handle_idle_tick, 2, 30),
             ("idle_pick_book", idle.handle_pick_book, 2, 120),
             ("idle_read", idle.handle_read, 2, 300),
         ):
-            self.R._handlers[kind] = self.R.Handler(
-                kind=kind, fn=fn, priority=prio, timeout=tmo)
+            self.R._handlers.setdefault(
+                kind, self.R.Handler(kind=kind, fn=fn, priority=prio, timeout=tmo))
 
     def tearDown(self):
-        self.R.clear()
+        self.R._handlers.clear()
+        self.R._handlers.update(self._snapshot)
 
     def test_kinds_registered(self):
         for kind in ("idle_tick", "idle_pick_book", "idle_read"):

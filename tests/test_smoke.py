@@ -472,16 +472,26 @@ class TestScheduleTick(unittest.TestCase):
         """回归：节流变量不能是模块全局，否则函数内赋值会 UnboundLocalError"""
         self.assertFalse(hasattr(self.R, "_last_due_check"))
 
-    def test_process_due_sends_agenda(self):
+    def test_process_due_submits_agenda(self):
+        """v17.1：process_due 只投递事件，生成由 worker 做"""
         import asyncio
-        self._patch("agenda_due_soon", lambda m: [{"id": 7, "t": "面试"}])
-        self._patch("pending_due", lambda now: [])
-        self._patch("should_reach_out", lambda **kw: (True, "ok"))
-        self._patch("agenda_mark", lambda i: None)
-        n = asyncio.run(self.R.process_due(self.now))
-        self.assertEqual(n, 1)
-        self.assertEqual(len(self.sent), 1)
-        self.assertEqual(self.sent[0][1], "假回复")
+        from botv.scheduler.dispatcher import Scheduler, set_scheduler
+
+        sched = Scheduler()
+        set_scheduler(sched)
+        try:
+            self._patch("agenda_due_soon", lambda m: [{"id": 7, "t": "面试"}])
+            self._patch("pending_due", lambda now: [])
+            self._patch("should_reach_out", lambda **kw: (True, "ok"))
+            n = asyncio.run(self.R.process_due(self.now))
+        finally:
+            set_scheduler(None)
+
+        self.assertEqual(n, 1, "投递成功算一条")
+        self.assertEqual(sched.stats()["queue"]["total"], 1)
+        ev = sched.queue.get_from((1, 2))
+        self.assertEqual(ev.kind, "agenda_remind")
+        self.assertEqual(ev.args[0], "面试")
 
     def test_process_due_blocked_by_gate(self):
         import asyncio

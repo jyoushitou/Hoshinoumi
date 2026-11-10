@@ -40,21 +40,20 @@ async def process_due(now):
     """
     sent = 0
 
+    # v17.1：只判定「到点没有 + 闸门放不放行」，生成交给调度器
+    from ..executors import reminders as reminder_exec
+
     # 日程提醒（v10-U10）
     try:
         for it in agenda_due_soon(60):
             ok, _why = should_reach_out(now=now, require_lonely=False)
             if not ok:
                 continue
-            rep = await get_character_reply(
-                f"（提醒他：{it.get('t', '')}。一句话，别说教。）", str(MASTER_QQ))
-            await send_short_reply(MASTER_QQ, rep, cfg.active_ws_qq, MASTER_QQ)
-            note_proactive()
-            agenda_mark(it["id"])
-            sent += 1
-            log_system(f"日程已提醒: {it.get('t', '')[:20]}")
+            if reminder_exec.submit_agenda(it.get("t", ""), it["id"]):
+                sent += 1
+                log_system(f"日程已投递: {it.get('t', '')[:20]}")
     except Exception as a_e:
-        log_err(f"日程提醒异常:{a_e}")
+        log_err(f"日程投递异常:{a_e}")
 
     # 待办到点：回访承诺 / 时间锚点（v10-U9b）
     try:
@@ -63,15 +62,11 @@ async def process_due(now):
             if not ok:
                 log_api(f"待办暂缓({why}): {item.get('t')}")
                 continue
-            rep = await get_character_reply(
-                f"（{describe_pending(item)}。就一句话，别解释。）", str(MASTER_QQ))
-            await send_short_reply(MASTER_QQ, rep, cfg.active_ws_qq, MASTER_QQ)
-            note_proactive()
-            finish_pending(item_id)
-            sent += 1
-            log_system(f"待办已回访: {item.get('t')}")
+            if reminder_exec.submit_pending(describe_pending(item), item_id):
+                sent += 1
+                log_system(f"待办已投递: {item.get('t')}")
     except Exception as p_e:
-        log_err(f"待办处理异常:{p_e}")
+        log_err(f"待办投递异常:{p_e}")
 
     return sent
 

@@ -33,8 +33,9 @@ class TestScheduler(unittest.TestCase):
         from botv.events import registry
         from botv.scheduler.dispatcher import Scheduler
 
-        registry.clear()
         self.R = registry
+        self._snapshot = dict(registry._handlers)
+        registry._handlers.clear()
         self.S = Scheduler(idle_workers=1, event_workers=1)
         self.ran = []
 
@@ -44,7 +45,8 @@ class TestScheduler(unittest.TestCase):
             return "ok"
 
     def tearDown(self):
-        self.R.clear()
+        self.R._handlers.clear()
+        self.R._handlers.update(self._snapshot)
 
     def test_submit_requires_registered_kind(self):
         with self.assertRaises(KeyError):
