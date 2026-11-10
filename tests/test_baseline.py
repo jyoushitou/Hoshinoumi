@@ -41,6 +41,34 @@ class TestBaselineDelay(unittest.TestCase):
         self.assertEqual(delay_range(_at(18)), (8, 60))
         self.assertEqual(delay_range(_at(0)), (20, 180))
 
+    def test_reply_delay_stays_in_band(self):
+        """200 次采样都要落在当前时段的区间内"""
+        from botv.chat.timing import reply_delay, delay_range
+
+        now = _at(13)                      # 白天：5~30 秒
+        lo, hi = delay_range(now)
+        samples = [reply_delay(now) for _ in range(200)]
+
+        self.assertGreaterEqual(min(samples), lo)
+        self.assertLessEqual(max(samples), hi)
+        self.assertGreater(max(samples) - min(samples), 1.0, "应当有随机浮动")
+
+    def test_reply_delay_skewed_short(self):
+        """平方分布：大多数延迟靠近下界，中位数明显小于区间中点"""
+        from botv.chat.timing import reply_delay, delay_range
+
+        now = _at(13)
+        lo, hi = delay_range(now)
+        mid = (lo + hi) / 2
+
+        samples = sorted(reply_delay(now) for _ in range(400))
+        median = samples[len(samples) // 2]
+
+        self.assertLess(median, mid, "中位数应低于区间中点（偏向短端）")
+        # 且大部分样本落在前半段
+        front_half = sum(1 for s in samples if s <= mid)
+        self.assertGreater(front_half / len(samples), 0.6, "至少 60% 落在前半段")
+
 
 if __name__ == "__main__":
     unittest.main()
