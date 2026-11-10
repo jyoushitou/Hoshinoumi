@@ -72,7 +72,9 @@ async def process_due(now):
 
 
 async def maybe_chat(now):
-    """到点主动闲聊：先问她想不想说话，再决定说什么。返回是否真的发出"""
+    """【v17.3 起弃用】主动消息已由 executors/proactive.py 接管
+
+    到点主动闲聊：先问她想不想说话，再决定说什么。返回是否真的发出"""
     # v10.4：每 30 分钟掷一次骰子，不再依赖预设时刻
     if now.minute % 30 != 0 or now.second > 10:
         return False
@@ -199,7 +201,7 @@ _last_read_check = 0.0
 
 
 async def maybe_read(now=None, force=False):
-    """（v17.1 起由 executors/idle.py 接管；保留给手动触发与旧测试）
+    """【v17.3 起弃用】空闲读书已由 executors/idle.py 接管；保留给旧测试与手动触发
 
     空闲时读一章小说；返回是否真的读了
 
@@ -269,19 +271,5 @@ async def maybe_share_reading(now=None):
     return True
 
 
-# ===================== 读书派发（v16.0.3） =====================
-# 读一章可能要 30~60 秒（浏览器 + OCR + AI），绝不能 await 在主循环里。
-READING_BUSY = {"task": None}
-
-
-def _dispatch_reading(now=None):
-    """有任务在跑就不重复派发；否则起一个后台任务"""
-    t = READING_BUSY.get("task")
-    if t and not t.done():
-        return False
-    try:
-        READING_BUSY["task"] = asyncio.create_task(maybe_read(now))
-        return True
-    except Exception as e:
-        log_err(f"读书任务派发失败: {e}")
-        return False
+# v17.3 U4：_dispatch_reading / READING_BUSY 已删除
+# 读书由 executors/idle.py 的 idle_tick → idle_read 驱动，不再需要手动派发。
