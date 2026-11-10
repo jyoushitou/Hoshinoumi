@@ -2,8 +2,11 @@
 # ===================== 环境初始化（建表前置） =====================
 # 一个脚本把「跑起来之前要做的两件事」做完：
 #
-#     python3 scripts/setup.py            # 只检查（不动环境）
-#     python3 scripts/setup.py --install  # 装缺的依赖 + 建缺的表
+#     python3 scripts/setup.py            # 一条命令：装缺的依赖 + 建缺的表
+#     python3 scripts/setup.py --check    # 只检查，不动环境
+#
+# 拉下来之后只需要两条命令：
+#     python3 scripts/setup.py && python3 run.py
 #
 # 顺序刻意如此：
 #   1. 依赖：没有 pymysql 连数据库都 import 不了
@@ -69,7 +72,7 @@ def check_deps(install=False):
     names = ", ".join(pkg for _, pkg in missing)
     print(f"  [X]  缺依赖：{names}")
     if not install:
-        print(f"       安装：python3 scripts/setup.py --install")
+        print("       运行 python3 scripts/setup.py 会自动安装")
         return False
 
     print("       正在安装……")
@@ -136,7 +139,8 @@ def init_tables():
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--install", action="store_true", help="缺依赖就 pip 安装")
+    ap.add_argument("--check", action="store_true", help="只检查，不装也不建表")
+    ap.add_argument("--install", action="store_true", help="（兼容旧写法，默认就是装）")
     ap.add_argument("--skip-tables", action="store_true", help="只处理依赖，不建表")
     args = ap.parse_args()
 
@@ -144,8 +148,9 @@ def main():
     print("  友利奈绪 · 环境初始化")
     print("=" * 56)
 
+    dry = args.check
     ok_py = check_python()
-    ok_deps = check_deps(install=args.install)
+    ok_deps = check_deps(install=not dry)
     check_optional()
 
     if not (ok_py and ok_deps):
@@ -153,8 +158,8 @@ def main():
         print("阻塞项未解决，先别建表 / 启动。")
         return 1
 
-    if args.skip_tables:
-        print("  [--] 按参数跳过建表")
+    if args.skip_tables or dry:
+        print("  [--] 跳过建表（" + ("--check" if dry else "--skip-tables") + "）")
         return 0
 
     print()
