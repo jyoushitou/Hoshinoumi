@@ -27,6 +27,29 @@ MySQL 存记忆与日志。图片由她自己一句话打标签，正文小说�
 
 ---
 
+## 开发计划
+
+**当前：v16.0.4（读小说）已发布** → 下一步：**v17 执行模型重构**。
+
+| 系列 | 主题 | 状态 | 文档 |
+|---|---|---|---|
+| v5 ~ v13 | 说话节奏 / 记忆 / 生活 / 感官 / 摩擦 | ✅ 已发布 | [versions/](docs/versions/) |
+| v14 ~ v15 | 可换角色 / 调参与观测 | ✅ 已发布 | [v14.md](docs/versions/v14.md) |
+| **v16** | **读小说（番茄 OCR + HTML 合并）** | ✅ 已发布 | [v16.md](docs/versions/v16.md) |
+| v17 | 执行模型重构：阻塞池 → 事件/调度 → 出站层 → 主循环瘦身 | 📋 已规划 | [v17.md](docs/versions/v17.md) |
+| v18 | 视频：先 B 站，再抖音（只读 + 群里 @ 主人） | 📋 已规划 | [v18.md](docs/versions/v18.md) |
+| v19 | 运维通道：bash 只读 → agent → 有限写 | 📋 已规划 | [v19.md](docs/versions/v19.md) |
+| v20 | 嵌入式常驻：systemd / 看门狗 / LITE / ARM / 一键安装 | 📋 已规划 | [v20.md](docs/versions/v20.md) |
+
+- **细到每个小版本**（`x.y.z` 级）的拆解与验收点：[ROADMAP.md](docs/ROADMAP.md)
+- **数据库设计**（一表一职责）：[DB-DESIGN.md](docs/DB-DESIGN.md)
+- **未排期需求**（A~E 组）：[V14-后续清单.md](docs/V14-后续清单.md)
+- **v6 功能总表**（74 项封版）：[V6-功能.md](docs/V6-功能.md)
+
+> 规矩：v6–v16 范围内的问题直接改代码；**超出范围的新需求先写进清单**，不直接动代码。
+
+---
+
 ## 快速开始
 
 ### 环境要求
@@ -543,7 +566,11 @@ data/           运行时数据（tunables、digests、cookies、凭据）——
 
 | 文档 | 内容 |
 |---|---|
+| [`docs/README.md`](docs/README.md) | 文档总索引（版本 → 条目 → 状态） |
+| [`docs/ROADMAP.md`](docs/ROADMAP.md) | 发布路线图：v17~v20 每个小版本的拆解与验收点 |
+| [`docs/DB-DESIGN.md`](docs/DB-DESIGN.md) | 数据库设计（一表一职责） |
 | [`docs/发布检查清单.md`](docs/发布检查清单.md) | 5 组检查项 + 环境变量表 + 发布流程 |
-| [`docs/versions/`](docs/versions/) | 各版本设计文档（v6 ~ v17） |
+| [`docs/versions/`](docs/versions/) | 各版本设计文档（v6 ~ v20） |
 | [`docs/V14-后续清单.md`](docs/V14-后续清单.md) | 未排期需求（A~E 组） |
+| [`docs/V6-功能.md`](docs/V6-功能.md) | v6 时代的功能总表（74 项，封版） |
 | [`docs/RELEASE-NOTES.md`](docs/RELEASE-NOTES.md) | 最近一次发布说明 |
