@@ -79,9 +79,26 @@ class TestScheduleExecutor(unittest.TestCase):
         self.assertEqual(conf["prompts"], self.S.DEFAULT_PROMPTS)
 
     def test_execute_sends(self):
-        out = asyncio.run(self.S.handle_schedule_scene(_Ev(args=("提醒晚餐",))))
+        """v17.2：执行后进合并窗口，flush 才真正发出"""
+        from botv.egress.merge import Merger, set_merger
+
+        got = []
+
+        async def send(target, text):
+            got.append((target, text))
+
+        merger = Merger(send=send, window=0.05)
+        set_merger(merger)
+
+        async def main():
+            out = await self.S.handle_schedule_scene(_Ev(args=("提醒晚餐",)))
+            await merger.flush_all()
+            return out
+
+        out = asyncio.run(main())
         self.assertTrue(out["ok"], out)
-        self.assertEqual(len(self.sent), 1)
+        self.assertEqual(len(got), 1, "合并窗口应发出 1 条")
+        self.assertIn("定时的一句", got[0][1])
 
     def test_submit_scene_dedupes_by_day(self):
         self.assertTrue(self.S.submit_scene("催起床", "2026-11-10"))

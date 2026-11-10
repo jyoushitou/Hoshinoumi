@@ -115,3 +115,29 @@ class Merger:
             "window": self.window,
             "targets": len(self._buckets),
         }
+
+
+# ---------- 全局单例：发送适配器接的是 send_short_reply ----------
+
+_merger = None
+
+
+async def _default_send(target, text):
+    """把合并后的整段文本发出去（走 send_short_reply，内部再进出站口）"""
+    from ..chat.send import send_short_reply
+    from ..core import state as cfg
+
+    await send_short_reply(target, text, cfg.active_ws_qq, target)
+    return True
+
+
+def get_merger():
+    global _merger
+    if _merger is None:
+        _merger = Merger(send=_default_send)
+    return _merger
+
+
+def set_merger(m):
+    global _merger
+    _merger = m

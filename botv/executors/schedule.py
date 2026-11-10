@@ -106,7 +106,11 @@ async def handle_schedule_scene(ev):
     if not rep:
         return {"ok": False, "reason": "空回复"}
 
-    await send_short_reply(cfg.MASTER_QQ, rep, cfg.active_ws_qq, cfg.MASTER_QQ)
+    # v17.2 U3：走合并窗口——相邻的定时消息 3 秒内并成一条气泡
+    from ..egress.merge import get_merger
+    merged = await get_merger().offer(str(cfg.MASTER_QQ), rep, kind="schedule")
+    if not merged:
+        await send_short_reply(cfg.MASTER_QQ, rep, cfg.active_ws_qq, cfg.MASTER_QQ)
 
     # 起床/睡觉配一张图（失败不影响文字已发）
     if conf.get("with_image"):
