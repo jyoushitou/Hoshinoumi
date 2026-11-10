@@ -74,5 +74,34 @@ class TestDeepseekUsesBlocking(unittest.TestCase):
         self.assertEqual(calls[0].get("name"), "deepseek")
 
 
+class TestDoubaoUsesBlocking(unittest.TestCase):
+    """call_doubao 也必须走 run_blocking"""
+
+    def test_uses_run_blocking(self):
+        import botv.ai.client as C
+
+        calls = []
+
+        async def fake_run_blocking(fn, *a, **k):
+            calls.append(k)
+            return fn()
+
+        orig = (C.run_blocking, C.get_http_session, C.cfg.DOUBAO_API_KEY,
+                C.save_ai_raw_response)
+        C.run_blocking = fake_run_blocking
+        C.get_http_session = lambda: _Session()
+        C.cfg.DOUBAO_API_KEY = "test-key"
+        C.save_ai_raw_response = lambda **kw: None
+        try:
+            out = asyncio.run(C.call_doubao([{"role": "user", "content": "在吗"}]))
+        finally:
+            (C.run_blocking, C.get_http_session, C.cfg.DOUBAO_API_KEY,
+             C.save_ai_raw_response) = orig
+
+        self.assertEqual(out, "她回了一句")
+        self.assertEqual(calls[0].get("name"), "doubao")
+        self.assertIn("timeout", calls[0])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -136,7 +136,7 @@ async def call_doubao(msgs, max_tokens=None, target_id=None):
                 """同步HTTP请求函数（在子线程中运行）"""
                 s=get_http_session()  # 复用线程本地会话（v8-E27）
                 return s.post(DOUBAO_API_URL, headers=h, json=d, timeout=_timeout_for(out_tokens), verify=False)  # POST请求
-            r=await asyncio.to_thread(req)  # 在子线程中执行
+            r=await run_blocking(req, timeout=_timeout_for(out_tokens) + 10, name="doubao")  # v17.0.3：走统一线程池
             log_api(f"[豆包] 响应状态码: {r.status_code}")  # 日志记录状态码
             if r.status_code==200:  # 请求成功
                 raw_json = r.json()  # 解析JSON
