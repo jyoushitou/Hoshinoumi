@@ -4262,5 +4262,65 @@ class TestMerge(unittest.TestCase):
         self.assertNotIn("\ue000", text)
 
 
+class TestBareTitleRequest(unittest.TestCase):
+    """v16.0.4：没有书名号也能认出来 + 按书名搜索"""
+
+    def setUp(self):
+        import botv.infra.repo_memory as rm
+        import botv.life.reading as R
+        self.R = R
+        self.store = {}
+        self._orig = (rm.load_reading, rm.save_reading)
+        rm.load_reading = lambda tid: self.store.get(str(tid), "")
+        rm.save_reading = lambda tid, p: self.store.__setitem__(str(tid), p) or True
+
+    def tearDown(self):
+        import botv.infra.repo_memory as rm
+        rm.load_reading, rm.save_reading = self._orig
+
+    def test_detect_bare_title(self):
+        got = self.R.detect_book_request("去看看十日终焉呢？")
+        self.assertEqual(got["title"], "十日终焉", "别把「呢」吃进书名")
+
+    def test_detect_bare_title_other_particle(self):
+        got = self.R.detect_book_request("看看十日终焉吧")
+        self.assertEqual(got["title"], "十日终焉")
+
+    def test_plain_chat_not_detected(self):
+        self.assertIsNone(self.R.detect_book_request("你上课了吗"))
+        self.assertIsNone(self.R.detect_book_request("今天天气不错"))
+
+    def test_follow_with_search(self):
+        import asyncio
+
+        async def search(title):
+            return ("十日终焉", "https://fanqienovel.com/page/999")
+
+        async def fetch_book(url):
+            return {"title": "十日终焉", "intro": "无限流", "chapters": []}
+
+        book, msg = asyncio.run(self.R.follow(
+            "30", title="十日终焉", search=search, fetch_book=fetch_book))
+        self.assertIsNotNone(book)
+        self.assertEqual(book["url"], "https://fanqienovel.com/page/999")
+        self.assertIn("好，我去看", msg)
+
+    def test_follow_search_miss_asks_link(self):
+        import asyncio
+
+        async def search(title):
+            return None
+
+        book, msg = asyncio.run(self.R.follow("31", title="找不到的书", search=search))
+        self.assertIsNone(book)
+        self.assertIn("链接", msg)
+
+    def test_follow_without_search(self):
+        import asyncio
+        book, msg = asyncio.run(self.R.follow("32", title="十日终焉"))
+        self.assertIsNone(book)
+        self.assertIn("链接", msg)
+
+
 if __name__ == "__main__":
     unittest.main()

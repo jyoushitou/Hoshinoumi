@@ -279,7 +279,9 @@ BOOK_URL = _re.compile(
     r"https?://(?:www\.)?(?:fanqienovel\.com|qidian\.com)/[^\s，。、）)]+"
 )
 BOOK_TITLE = _re.compile(r"《([^》]{1,30})》")
-FOLLOW_HINT = _re.compile(r"(去看|去读|看看|追|读一下|开始看)")
+FOLLOW_HINT = _re.compile(r"(去看看|去读读|去读|看看|追一下|追|读一下|开始看)")
+# 「去看看十日终焉呢？」这种没书名号的：抓指令词后面那一小段
+BARE_TITLE = _re.compile(r"(?:去看看|去读读|去读|看看|读一下|追一下|开始看)\s*[《]?([^《》\s，。！？、呢吧啊嘛呀]{2,15})")
 
 
 def detect_book_request(text):
@@ -294,10 +296,16 @@ def detect_book_request(text):
     m = BOOK_TITLE.search(text)
     if m and FOLLOW_HINT.search(text):
         return {"url": "", "title": m.group(1).strip()}
+    # 没书名号：「去看看十日终焉呢」
+    m = BARE_TITLE.search(text)
+    if m:
+        title = m.group(1).strip()
+        if len(title) >= 2:
+            return {"url": "", "title": title}
     return None
 
 
-async def follow(tid, url="", title="", fetch_book=None):
+async def follow(tid, url="", title="", fetch_book=None, search=None):
     """把一本书加进追更列表；已在列表里就切回那本
 
     返回 (book | None, 说明)
@@ -328,6 +336,17 @@ async def follow(tid, url="", title="", fetch_book=None):
         for b in books:
             if b.get("title") == title:
                 return b, "已经在追这本了"
+        # 先试试搜索（有搜索能力才能按名字找）
+        if search:
+            try:
+                hit = await search(title)
+            except Exception as e:
+                log_api(f"[读书] 搜索《{title}》失败: {e}")
+                hit = None
+            if hit:
+                found_title, found_url = hit
+                return await follow(tid, url=found_url, title=found_title,
+                                    fetch_book=fetch_book, search=None)
         return None, f"《{title}》——给我个链接吧，我找不到同名的那本"
 
     return None, "没听出是哪本"
@@ -418,7 +437,7 @@ async def summarize_chapter(text, limit=SUMMARY_MAX, call_model=None):
             log_api(f"[读书] 摘要模型失败，用兜底: {e}")
 
     return fallback_summary(snippet, limit)
-async def follow_request(tid, req, fetch_book=None):
+async def follow_request(tid, req, fetch_book=None, search=None):
     """处理「主人点名一本书」：立刻给回应，不等抓取
 
     返回要发出去的那句话
@@ -426,7 +445,7 @@ async def follow_request(tid, req, fetch_book=None):
     if not req:
         return ""
     book, msg = await follow(tid, url=req.get("url", ""), title=req.get("title", ""),
-                             fetch_book=fetch_book)
+                             fetch_book=fetch_book, search=search)
     return msg
 # ===================== 攒够几个点再分享（v16-E8） =====================
 

@@ -31,6 +31,7 @@ from ..life import agenda as life_agenda  # v10-U10
 from ..life import habit as life_habit  # v12-A17
 from ..life import friction as life_friction  # v13-U20
 from ..life import reading as life_reading  # v16：点名看书
+from ..life import novel as life_novel  # v16：按书名搜索
 from .notice import handle_notice  # v12-A16
 
 # ===================== 群聊节奏（v6-E29 / v10） =====================
@@ -319,7 +320,7 @@ async def websocket_handle_qq(ws):
                     ans = None
                     if _req:
                         try:
-                            _reply = await life_reading.follow_request(uid, _req)
+                            _reply = await life_reading.follow_request(uid, _req, search=life_novel.search_book)
                         except Exception as _e:
                             log_api(f"[读书] 点名处理失败: {_e}")
                             _reply = "我记下了，等会儿去翻"

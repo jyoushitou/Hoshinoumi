@@ -235,3 +235,24 @@ async def fetch_rank(limit=20):
     else:
         log_api("[小说] 热榜解析为空（页面结构可能变了）")
     return items
+
+# ===================== 按书名搜索（v16.0.4） =====================
+
+SEARCH_URL = "https://fanqienovel.com/search?q={}"
+
+
+async def search_book(title):
+    """在番茄搜索一本书；返回 (书名, url) 或 None"""
+    from urllib.parse import quote
+    if not (title or "").strip():
+        return None
+    url = SEARCH_URL.format(quote(title.strip()))
+    html = await fetch_html(url)
+    if not html:
+        return None
+    items = parse_rank(html, limit=5)
+    if not items:
+        log_api(f"[小说] 搜索「{title}」无结果")
+        return None
+    log_api(f"[小说] 搜索「{title}」→ {items[0][0]}")
+    return items[0]
