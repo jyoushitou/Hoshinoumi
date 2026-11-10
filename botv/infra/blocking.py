@@ -63,3 +63,22 @@ def shutdown_pool(wait=True, timeout=5.0):
     finally:
         # 重建，保证后续调用不会打到已关闭的池
         _pool = ThreadPoolExecutor(max_workers=POOL_SIZE, thread_name_prefix="nao-block")
+
+
+def thread_stats():
+    """线程池状态（只管线程池，连接池在 infra/pool.py）"""
+    queued = None
+    try:
+        q = getattr(_pool, "_work_queue", None)
+        if q is not None:
+            queued = q.qsize()
+    except Exception:
+        queued = None
+    return {"size": POOL_SIZE, "queued": queued}
+
+
+def describe_threads():
+    """给 !stats 的一句话"""
+    s = thread_stats()
+    queued = "?" if s["queued"] is None else str(s["queued"])
+    return f"🧵 线程池：{s['size']} 线程，排队 {queued}"

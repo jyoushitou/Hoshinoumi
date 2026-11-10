@@ -170,3 +170,20 @@ class pooled_cursor:
             pass
         get_pool().release(self.conn)
         return False
+
+
+def conn_stats():
+    """连接池状态（只管连接池，线程池在 infra/blocking.py）"""
+    try:
+        return get_pool().stats()
+    except Exception as e:
+        return {"error": str(e)}
+
+
+def describe_conns():
+    """给 !stats 的一句话"""
+    s = conn_stats()
+    if "error" in s:
+        return f"🗄️ 连接池：不可用（{s['error']}）"
+    return (f"🗄️ 连接池：空闲 {s['idle']}/{s['size']}，借出 {s['borrowed']}，"
+            f"复用 {s['reused']}，超时 {s['timeouts']}")

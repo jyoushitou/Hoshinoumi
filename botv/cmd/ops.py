@@ -9,7 +9,19 @@ from .registry import command
 async def cmd_stats(ctx):
     """!stats - 今日统计（回复/配图/语音/群聊接话率）"""
     from ..core import metrics
-    return metrics.describe()
+
+    lines = [metrics.describe()]
+    try:
+        from ..infra.blocking import describe_threads
+        lines.append(describe_threads())
+    except Exception:
+        pass
+    try:
+        from ..infra.pool import describe_conns
+        lines.append(describe_conns())
+    except Exception:
+        pass
+    return "\n".join(lines)
 
 
 @command("config")
