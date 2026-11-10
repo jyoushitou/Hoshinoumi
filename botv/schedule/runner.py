@@ -350,8 +350,8 @@ async def cycle_task_run():
                 _last_due_check = _time.time()
                 await process_due(now)
 
-            # ---------- v16：空闲时自己读小说（30 分钟最多检查一次） ----------
-            await maybe_read(now)
+            # ---------- v16：空闲时自己读小说（后台跑，不堵定时循环） ----------
+            _dispatch_reading(now)
 
             # ---------- 主动闲聊触发 ----------
             await maybe_chat(now)
@@ -434,3 +434,21 @@ async def maybe_share_reading(now=None):
     life_reading.save(str(MASTER_QQ), data)
     log_system("读书分享已发送")
     return True
+
+
+# ===================== 读书派发（v16.0.3） =====================
+# 读一章可能要 30~60 秒（浏览器 + OCR + AI），绝不能 await 在主循环里。
+READING_BUSY = {"task": None}
+
+
+def _dispatch_reading(now=None):
+    """有任务在跑就不重复派发；否则起一个后台任务"""
+    t = READING_BUSY.get("task")
+    if t and not t.done():
+        return False
+    try:
+        READING_BUSY["task"] = asyncio.create_task(maybe_read(now))
+        return True
+    except Exception as e:
+        log_err(f"读书任务派发失败: {e}")
+        return False

@@ -50,7 +50,8 @@ def save(tid, data):
         from ..infra.repo_memory import save_reading
         save_reading(str(tid), json.dumps(data, ensure_ascii=False, separators=(",", ":")))
         return True
-    except Exception:
+    except Exception as e:
+        log_api(f"[读书] 保存进度失败 tid={tid}: {e}")  # 别静默吞掉
         return False
 
 
@@ -229,6 +230,7 @@ async def read_once(tid, fetch_book=None, fetch_chapter=None, summarize=None, no
         return {"ok": False, "reason": "今天读够了"}
     book = current_book(data)
     if not book:
+        log_api(f"[读书] read_once 读不到书 tid={tid} books={len(data.get('books') or [])}")
         return {"ok": False, "reason": "还没挑书"}
 
     try:
