@@ -1,4 +1,4 @@
-# 友利奈绪 QQ 机器人 v17.1.0-dev —— 可换角色、会看小说、事件驱动
+# 友利奈绪 QQ 机器人 v17.1.0 —— 可换角色、会看小说、事件驱动
 
 > 世界观取自原作结局之后：能力消失，回归普通生活；**乙坂有宇已经意外去世**。
 > 提到他需要克制，可以打哑谜，但不能假装他还活着。
@@ -25,13 +25,13 @@ MySQL 存记忆与日志。图片由她自己一句话打标签，正文小说�
 | 跑得动 | 阻塞调用统一线程池（13 处），连接池复用 MySQL 连接 |
 | 查版本 | `!version` 看版本号、提交、运行时长 |
 
-**485 条测试**（功能 448 + 环境/迁移 37），静态检查零未定义名字。
+**545 条测试**（功能 508 + 环境/迁移 37），静态检查零未定义名字。
 
 ---
 
 ## 开发计划
 
-**当前：v17.1 进行中**（事件对象 + 注册表已完成，调度器在做）。
+**当前：v17.1.0（事件调度）已实现** → 下一步：**v17.2 出站层**。
 
 | 系列 | 主题 | 状态 | 文档 |
 |---|---|---|---|
@@ -471,7 +471,7 @@ AI 摘要（≤100 字）→ 记进度
 ### 测试
 
 ```bash
-python3 scripts/run_tests.py             # 485 条（tests 448 + checks 37）
+python3 scripts/run_tests.py             # 545 条（tests 508 + checks 37）
 python3 scripts/check_names.py            # 静态检查：未定义名字 / 先用后赋值
 ```
 
@@ -568,29 +568,63 @@ data/           运行时数据（tunables、digests、cookies、凭据）——
 | v16 | 读小说 | 番茄抓取、字体加密实测、截图 OCR、HTML+OCR 合并 |
 | v16.0.4 | 点名 | 无书名号识别、按书名搜索 |
 | v17.0 | 并发基建 | 线程池 + 连接池 + `run_blocking` 统一阻塞入口；17 条行为基线 |
-| v17.1 | 事件驱动 | `Event` + 注册表；`!version`；测试重组为 tests/ + checks/ |
+| v17.1 | 事件驱动 | 事件对象/注册表/三档队列/worker 池；四个执行器接管定时、主动、读书、日程 |
 
 ---
 
 ## 事件与调度（v17.1）
 
-所有会触发动作的东西（聊天、定时、主动、空闲、通知）最终都变成同一种对象：
+所有会触发动作的东西——聊天、定时、主动、读书、日程——最终都是同一种对象：
 
 ```python
-Event(kind="idle_read", key="book:1", fn=read_chapter,
-      priority=Priority.IDLE, timeout=180, retries=1)
+Event(kind="idle_read", key="read:1:u1", fn=read_chapter,
+      priority=Priority.IDLE, timeout=300, retries=1)
 ```
 
-| 组件 | 作用 |
+### 三档优先级
+
+| 档位 | 用途 | 排队行为 |
+|---|---|---|
+| `P0_CHAT` | 聊天回复、命令 | 独占快车道，不排队 |
+| `P1_EVENT` | 定时任务、主动消息、提醒 | 快车道，可等 |
+| `P2_IDLE` | 读书、抓取、浓缩 | 慢车道，容量满时丢最旧 |
+
+### 调度器结构
+
+| 文件 | 作用 |
 |---|---|
-| `botv/events/base.py` | `Event` + 三档优先级（CHAT / EVENT / IDLE） |
-| `botv/events/registry.py` | `kind → handler` 注册表（重复注册直接报错） |
+| `events/base.py` | `Event` + 三档优先级 |
+| `events/registry.py` | `kind → handler` 注册（重复注册直接报错） |
+| `scheduler/queue.py` | 三档队列 + 去重 + 容量（**只限空闲档**） |
+| `scheduler/policy.py` | 超时 / 退避重试 / 熔断（按 kind 隔离） |
+| `scheduler/workers.py` | 双车道 worker 池 |
+| `scheduler/dispatcher.py` | 入口：`submit` / `stats` / `describe` |
 
-调度器（排队 / worker / 超时 / 熔断）还在做，完成后：
+### 已注册的事件
 
-- 两个空闲任务能**真并行**
-- 定时任务延迟 < 30 秒
-- 聊天永远是 P0 独占槽位
+| kind | 档位 | 做什么 |
+|---|---|---|
+| `idle_tick` | P2 | 每 30 分钟判断该不该读书 |
+| `idle_read` | P2 | 读一章（几百秒上限） |
+| `idle_pick_book` | P2 | 没在追书时挑一本 |
+| `proactive_tick` | P1 | 每 30 分钟掷骰决定要不要主动 |
+| `proactive_say` | P1 | 真正生成并发送主动消息 |
+| `schedule_scene` | P1 | 催起床/催睡觉/午睡/复盘等八个场景 |
+| `agenda_remind` | P1 | 日程到点提醒 |
+| `pending_nudge` | P1 | 待办到点回访 |
+
+### 三条运行规则
+
+| 规则 | 说明 |
+|---|---|
+| 超时不重试 | 卡住的任务重试只会更慢，直接放弃并计数 |
+| 失败退避重试 | 2→4→8 秒，封顶 30 秒 |
+| 连续失败熔断 | 同 kind 连续 3 次失败 → 停 1 小时，到期自动恢复 |
+
+### 主循环瘦身效果
+
+改造前，runner 每秒都在判断「要不要读书」，读书时还要排队等它跑完；
+现在 tick 30 分钟醒一次，重活全在 worker 里，**聊天永远能插进来**。
 
 ---
 
