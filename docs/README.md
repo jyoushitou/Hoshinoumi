@@ -36,9 +36,10 @@ v6：P1 会说话 → P2 说实话 → P2.5 长感官 → P3 有生活 → P4 �
 | E30 | 图片链路 | F4 |
 | **v16** | [versions/v16.md](versions/v16.md) | 空闲时自己读小说（番茄/起点，记进度、聊剧情） | 规划中 |
 | **v17** | [versions/v17.md](versions/v17.md) | 执行模型重构：17.0 基建与基线 → 17.1 事件/调度 → 17.2 出站层 → 17.3 主循环瘦身 → 17.4 定时消息 → 17.5 数据模型重建 | 规划中 |
-| **v18** | [versions/v18.md](versions/v18.md) | 视频系列：18.0 刷 B 站 → 18.1 刷抖音 | 规划中 |
-| **v19** | [versions/v19.md](versions/v19.md) | 运维系列：19.0 bash 只读 → 19.1 agent → 19.2 有限写 → 19.3 可写体系 | 规划中 |
-| **v20** | [versions/v20.md](versions/v20.md) | 嵌入式常驻：20.0 systemd 化 → 20.1 看门狗/LITE/ARM/安装脚本 | 规划中 |
+| **v18** | [versions/v18.md](versions/v18.md) | QQ 空间：18.0 发布链路 → 18.1 配图（只发不互动） | 规划中 |
+| **v19** | [versions/v19.md](versions/v19.md) | 视频系列：19.0 刷 B 站 → 19.1 刷抖音 | 规划中 |
+| **v20** | [versions/v20.md](versions/v20.md) | 运维系列：20.0 bash 只读 → 20.1 agent → 20.2 有限写 → 20.3 可写体系 | 规划中 |
+| **v21** | [versions/v21.md](versions/v21.md) | 嵌入式常驻：21.0 systemd 化 → 21.1 看门狗/LITE/ARM/安装脚本 | 规划中 |
 
 
 

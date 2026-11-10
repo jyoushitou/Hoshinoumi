@@ -170,6 +170,171 @@ def claim_online_notice():
     return True
 
 
+async def _handle_message(d, ws):
+    """处理一条消息（v17.3 U1：从接收循环里抽出来，便于以后投递/合并）"""
+
+    mt = d.get("message_type")  # 消息类型：private/group
+    mid = d.get("message_id")  # 消息ID
+    if not mid or mid in cfg.PROCESSED_MSG_IDS:  # 消息ID无效或已处理
+        return  # 跳过
+    uid = str(d.get("user_id"))  # 用户QQ号
+    gid = d.get("group_id", 0)  # 群号（私聊为0）
+    # v6-E29：记录机器人自己的QQ号，用于判断是否被 @
+    self_qq = d.get("self_id")
+    if self_qq:
+        cfg.self_qq = self_qq
+    addressed = is_at_me(d.get("message", ""), cfg.self_qq)
+    text, img_md5s = await parse_message_content(d.get("message", ""), uid, ws)  # (文本, 图片md5)
+    note_user_message()  # v10-U9：她在等你，别急着主动找
+    try:
+        life_habit.learn(uid, text)  # v12-A17：学一点他的口头禅
+    except Exception:
+        pass
+    try:  # v13：他说软话就哄好，否则只记录和好进度
+        if life_friction.is_sorry(text):
+            life_friction.apologize(uid)
+        life_friction.on_user_message(uid)
+    except Exception:
+        pass
+    try:
+        for it in life_pending.detect(text):  # v10-U9b：记下承诺/时间锚点
+            life_pending.add([it])
+    except Exception:
+        pass
+    try:
+        ev = life_agenda.extract(text)  # v10-U10：时间 + 事件 → 日程
+        if ev:
+            life_agenda.add(ev)
+    except Exception:
+        pass
+    if mt == "group" and addressed:
+        cfg.group_streak[gid] = 0  # v10：有人点她名，连说计数清零
+    if not text:  # 解析后文本为空
+        return  # 跳过
+
+    # 代码模式：每次收到消息更新最后活跃时间戳
+    if cfg.CODE_MODE:
+        cfg.CODE_MODE_LAST_MSG_TIME = _time.time()
+
+    tid = uid if mt == "private" else str(gid)  # 目标ID：私聊用QQ号，群聊用群号
+    # v6-E26：按对象加锁——同一个人串行，不同的人可以并行（5 路对话）
+    async with get_target_lock(tid):
+        cfg.PROCESSED_MSG_IDS.append(mid)  # 记录已处理的消息ID
+        log_recv(f"[QQ]{uid}:{text}")  # 日志记录接收
+        ck = extract_keywords(text)  # 提取关键词
+        pending = None  # 待发送内容（锁外延迟发送，v6-A1）
+
+        # v6-E29：群聊先过节奏闸门（命令不受限）
+        if mt == "group" and not text.startswith("!"):
+            ok, why = should_answer_group(gid, addressed)
+            if not ok:
+                log_api(f"[群聊] 跳过 {gid}: {why}")
+                try:
+                    from ..core import metrics
+                    metrics.inc("group_skip")
+                except Exception:
+                    pass
+                await asyncio.sleep(LOCK_RELEASE_DELAY)
+                return
+            log_api(f"[群聊] 接话 {gid}: {why}")
+            try:
+                from ..core import metrics
+                metrics.inc("group_answer")
+            except Exception:
+                pass
+            if not addressed and random.random() < GROUP_SILENCE_PROB:  # v6-A19：偶尔选择沉默
+                log_api(f"[群聊] 这次选择沉默 {gid}")
+                await asyncio.sleep(LOCK_RELEASE_DELAY)
+                return
+
+        # 先检查是否是命令（仅主人有效，立即回复不走延迟）
+        if await handle_command(text, uid, ws, mt == "group", gid):  # 是命令
+            pass  # 命令已处理，不再走AI回复
+        elif contains_sticker_key(text):  # 包含表情包关键词
+            pending = ("sticker",)
+        else:  # 普通对话
+            target = gid if mt == "group" else uid  # 回复目标
+            # v16：主人点名要她去看某本书 → 不走模型，直接应下
+            _req = None
+            try:
+                _req = life_reading.detect_book_request(text)
+            except Exception:
+                _req = None
+            ans = None
+            if _req:
+                try:
+                    _reply = await life_reading.follow_request(uid, _req, search=life_novel.search_book)
+                except Exception as _e:
+                    log_api(f"[读书] 点名处理失败: {_e}")
+                    _reply = "我记下了，等会儿去翻"
+                pending = ("reply", target, _reply, mt == "group")
+            else:
+                ans = await get_character_reply(text, tid, ck)  # 获取AI回复
+            if _req:
+                pass  # v16：点名已处理，不再走模型分支
+            elif not ans or isinstance(ans, Fallback):
+                # v5-F2：兜底文案不是她的话——不进记忆、不进事件，只回一条中性的
+                log_api("[handler] 模型无回复或返回兜底，静默处理（不入库）")
+                pending = ("reply", target, "……", mt == "group")
+            else:
+                dialog, action, img_kw, event, refined_kw = parse_ai_reply(ans)  # 解析AI回复
+                add_target_memory(tid, text, ans, img_kw, refined_kw, event)  # 保存记忆
+                if img_md5s and refined_kw:  # v8：用 AI 关键词回写图片标签
+                    update_image_tags(img_md5s, refined_kw)
+                pending = ("reply", target, ans, mt == "group")
+
+        await asyncio.sleep(LOCK_RELEASE_DELAY)  # 锁释放延迟，防止消息处理过快
+
+    # ===================== 锁外：延迟 + 发送（v6-A1） =====================
+    if pending and pending[0] == "sticker":
+        if mt == "group":
+            await send_sticker_group(gid, ws, uid)
+        else:
+            await send_sticker_private(uid, ws, uid)
+    elif pending:
+        _, target, reply_text, is_group = pending
+        delay = reply_delay()  # 按时段 + 随机
+        log_api(f"[延迟] {delay:.1f} 秒后回复 {target}")
+        await asyncio.sleep(delay)
+        # v13-G47：偶尔欲言又止
+        try:
+            modified = life_friction.maybe_trail_off(reply_text)
+            if modified != reply_text:
+                log_api("[摩擦] 欲言又止")
+                reply_text = modified
+                pending = ("reply", target, reply_text, is_group)
+        except Exception:
+            pass
+
+        # v12-A13：小概率先「手滑」一次
+        if not is_group:
+            try:
+                from ..chat.send import try_typo_recall
+                first_line = (reply_text or "").split("\n")[0]
+                await try_typo_recall(target, first_line, ws)
+            except Exception:
+                pass
+
+        await send_short_reply(target, reply_text, ws, uid, is_group, ck)
+        try:
+            from ..core import metrics
+            metrics.inc("replies")
+        except Exception:
+            pass
+        if is_group:  # v6-E29：记录这次群回复
+            note_group_reply(gid)
+        else:  # v11-A10：私聊有概率把第一句念出来
+            try:
+                from ..chat.send import maybe_send_voice
+                first_line = (reply_text or "").split("\n")[0]
+                await maybe_send_voice(first_line, target, ws, False)
+            except Exception:
+                pass
+            try:  # v12-A18：偶尔补一句自己的事
+                await maybe_share_something(target, ws)
+            except Exception:
+                pass
+
 async def websocket_handle_qq(ws):
     """WebSocket消息处理主函数：接收→解析→处理→回复"""
     async with cfg.active_ws_lock:  # 加锁，确保只有一个WebSocket连接
@@ -230,167 +395,7 @@ async def websocket_handle_qq(ws):
                 except Exception as e:
                     log_api(f"[通知] 处理失败: {e}")
                 continue
-            mt = d.get("message_type")  # 消息类型：private/group
-            mid = d.get("message_id")  # 消息ID
-            if not mid or mid in cfg.PROCESSED_MSG_IDS:  # 消息ID无效或已处理
-                continue  # 跳过
-            uid = str(d.get("user_id"))  # 用户QQ号
-            gid = d.get("group_id", 0)  # 群号（私聊为0）
-            # v6-E29：记录机器人自己的QQ号，用于判断是否被 @
-            self_qq = d.get("self_id")
-            if self_qq:
-                cfg.self_qq = self_qq
-            addressed = is_at_me(d.get("message", ""), cfg.self_qq)
-            text, img_md5s = await parse_message_content(d.get("message", ""), uid, ws)  # (文本, 图片md5)
-            note_user_message()  # v10-U9：她在等你，别急着主动找
-            try:
-                life_habit.learn(uid, text)  # v12-A17：学一点他的口头禅
-            except Exception:
-                pass
-            try:  # v13：他说软话就哄好，否则只记录和好进度
-                if life_friction.is_sorry(text):
-                    life_friction.apologize(uid)
-                life_friction.on_user_message(uid)
-            except Exception:
-                pass
-            try:
-                for it in life_pending.detect(text):  # v10-U9b：记下承诺/时间锚点
-                    life_pending.add([it])
-            except Exception:
-                pass
-            try:
-                ev = life_agenda.extract(text)  # v10-U10：时间 + 事件 → 日程
-                if ev:
-                    life_agenda.add(ev)
-            except Exception:
-                pass
-            if mt == "group" and addressed:
-                cfg.group_streak[gid] = 0  # v10：有人点她名，连说计数清零
-            if not text:  # 解析后文本为空
-                continue  # 跳过
-
-            # 代码模式：每次收到消息更新最后活跃时间戳
-            if cfg.CODE_MODE:
-                cfg.CODE_MODE_LAST_MSG_TIME = _time.time()
-
-            tid = uid if mt == "private" else str(gid)  # 目标ID：私聊用QQ号，群聊用群号
-            # v6-E26：按对象加锁——同一个人串行，不同的人可以并行（5 路对话）
-            async with get_target_lock(tid):
-                cfg.PROCESSED_MSG_IDS.append(mid)  # 记录已处理的消息ID
-                log_recv(f"[QQ]{uid}:{text}")  # 日志记录接收
-                ck = extract_keywords(text)  # 提取关键词
-                pending = None  # 待发送内容（锁外延迟发送，v6-A1）
-
-                # v6-E29：群聊先过节奏闸门（命令不受限）
-                if mt == "group" and not text.startswith("!"):
-                    ok, why = should_answer_group(gid, addressed)
-                    if not ok:
-                        log_api(f"[群聊] 跳过 {gid}: {why}")
-                        try:
-                            from ..core import metrics
-                            metrics.inc("group_skip")
-                        except Exception:
-                            pass
-                        await asyncio.sleep(LOCK_RELEASE_DELAY)
-                        continue
-                    log_api(f"[群聊] 接话 {gid}: {why}")
-                    try:
-                        from ..core import metrics
-                        metrics.inc("group_answer")
-                    except Exception:
-                        pass
-                    if not addressed and random.random() < GROUP_SILENCE_PROB:  # v6-A19：偶尔选择沉默
-                        log_api(f"[群聊] 这次选择沉默 {gid}")
-                        await asyncio.sleep(LOCK_RELEASE_DELAY)
-                        continue
-
-                # 先检查是否是命令（仅主人有效，立即回复不走延迟）
-                if await handle_command(text, uid, ws, mt == "group", gid):  # 是命令
-                    pass  # 命令已处理，不再走AI回复
-                elif contains_sticker_key(text):  # 包含表情包关键词
-                    pending = ("sticker",)
-                else:  # 普通对话
-                    target = gid if mt == "group" else uid  # 回复目标
-                    # v16：主人点名要她去看某本书 → 不走模型，直接应下
-                    _req = None
-                    try:
-                        _req = life_reading.detect_book_request(text)
-                    except Exception:
-                        _req = None
-                    ans = None
-                    if _req:
-                        try:
-                            _reply = await life_reading.follow_request(uid, _req, search=life_novel.search_book)
-                        except Exception as _e:
-                            log_api(f"[读书] 点名处理失败: {_e}")
-                            _reply = "我记下了，等会儿去翻"
-                        pending = ("reply", target, _reply, mt == "group")
-                    else:
-                        ans = await get_character_reply(text, tid, ck)  # 获取AI回复
-                    if _req:
-                        pass  # v16：点名已处理，不再走模型分支
-                    elif not ans or isinstance(ans, Fallback):
-                        # v5-F2：兜底文案不是她的话——不进记忆、不进事件，只回一条中性的
-                        log_api("[handler] 模型无回复或返回兜底，静默处理（不入库）")
-                        pending = ("reply", target, "……", mt == "group")
-                    else:
-                        dialog, action, img_kw, event, refined_kw = parse_ai_reply(ans)  # 解析AI回复
-                        add_target_memory(tid, text, ans, img_kw, refined_kw, event)  # 保存记忆
-                        if img_md5s and refined_kw:  # v8：用 AI 关键词回写图片标签
-                            update_image_tags(img_md5s, refined_kw)
-                        pending = ("reply", target, ans, mt == "group")
-
-                await asyncio.sleep(LOCK_RELEASE_DELAY)  # 锁释放延迟，防止消息处理过快
-
-            # ===================== 锁外：延迟 + 发送（v6-A1） =====================
-            if pending and pending[0] == "sticker":
-                if mt == "group":
-                    await send_sticker_group(gid, ws, uid)
-                else:
-                    await send_sticker_private(uid, ws, uid)
-            elif pending:
-                _, target, reply_text, is_group = pending
-                delay = reply_delay()  # 按时段 + 随机
-                log_api(f"[延迟] {delay:.1f} 秒后回复 {target}")
-                await asyncio.sleep(delay)
-                # v13-G47：偶尔欲言又止
-                try:
-                    modified = life_friction.maybe_trail_off(reply_text)
-                    if modified != reply_text:
-                        log_api("[摩擦] 欲言又止")
-                        reply_text = modified
-                        pending = ("reply", target, reply_text, is_group)
-                except Exception:
-                    pass
-
-                # v12-A13：小概率先「手滑」一次
-                if not is_group:
-                    try:
-                        from ..chat.send import try_typo_recall
-                        first_line = (reply_text or "").split("\n")[0]
-                        await try_typo_recall(target, first_line, ws)
-                    except Exception:
-                        pass
-
-                await send_short_reply(target, reply_text, ws, uid, is_group, ck)
-                try:
-                    from ..core import metrics
-                    metrics.inc("replies")
-                except Exception:
-                    pass
-                if is_group:  # v6-E29：记录这次群回复
-                    note_group_reply(gid)
-                else:  # v11-A10：私聊有概率把第一句念出来
-                    try:
-                        from ..chat.send import maybe_send_voice
-                        first_line = (reply_text or "").split("\n")[0]
-                        await maybe_send_voice(first_line, target, ws, False)
-                    except Exception:
-                        pass
-                    try:  # v12-A18：偶尔补一句自己的事
-                        await maybe_share_something(target, ws)
-                    except Exception:
-                        pass
+            await _handle_message(d, ws)
     except Exception as e:  # 捕获异常
         log_err(f"QQ异常:{e}")  # 日志记录异常
     finally:  # 清理
