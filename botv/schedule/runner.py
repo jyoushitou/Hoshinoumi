@@ -295,68 +295,12 @@ async def cycle_task_run():
                 cfg.daily_trigger.add(key)
                 log_system(f"定时:{task['scene']}")
 
-                # 执行任务（用随机自然提示让AI以女友身份主动发起对话，每次不一样）
+                # v17.1：执行交给调度器（不再内联在 1 秒循环里）
                 try:
-                    if task["scene"] == "催起床":
-                        prompt = random.choice([
-                            "现在是早上，该催主人起床了，你主动发消息给他",
-                            "早上好，主人还在睡懒觉，你叫他起床",
-                            "天亮了，主人还没醒，你去喊他起床",
-                        ])
-                        rep = await get_character_reply(prompt, str(MASTER_QQ))
-                        await send_short_reply(MASTER_QQ, rep, cfg.active_ws_qq, MASTER_QQ)
-                        img_fp = await fetch_and_save_acg_image()
-                        img_msg = make_image_msg(img_fp)
-                        if img_msg and cfg.active_ws_qq and not getattr(cfg.active_ws_qq, "closed", False):
-                            await send_private_msg(MASTER_QQ, img_msg, cfg.active_ws_qq)
-                            log_system("ACG起床图已发送")
-                    elif task["scene"] == "催睡觉":
-                        prompt = random.choice([
-                            "夜深了，该催主人睡觉了，你主动发消息给他",
-                            "很晚了，主人还没睡，你催他去睡觉",
-                            "已经深夜了，主人还在熬夜，你叫他早点休息",
-                        ])
-                        rep = await get_character_reply(prompt, str(MASTER_QQ))
-                        await send_short_reply(MASTER_QQ, rep, cfg.active_ws_qq, MASTER_QQ)
-                        img_fp = await fetch_and_save_acg_image()
-                        img_msg = make_image_msg(img_fp)
-                        if img_msg and cfg.active_ws_qq and not getattr(cfg.active_ws_qq, "closed", False):
-                            await send_private_msg(MASTER_QQ, img_msg, cfg.active_ws_qq)
-                            log_system("ACG催睡图已发送")
-                    else:
-                        # 其他定时任务：每次用不同的自然提示
-                        scene_prompts = {
-                            "周末吐槽赖床": [
-                                "周末了，主人还在睡懒觉，你主动吐槽他",
-                                "休息日了，主人还没起床，你去调侃他一下",
-                            ],
-                            "提醒点外卖": [
-                                "中午了，提醒主人该点外卖了，你主动发消息",
-                                "到饭点了，主人还没吃饭，你催他去吃饭",
-                            ],
-                            "叮嘱午睡": [
-                                "中午了，叮嘱主人睡个午觉，你主动发消息",
-                                "午休时间到了，提醒主人休息一下，你主动说",
-                            ],
-                            "提醒起身": [
-                                "下午了，提醒主人起来活动活动，你主动发消息",
-                                "坐太久了，叫主人起来走走，你主动说",
-                            ],
-                            "提醒晚餐": [
-                                "晚上了，提醒主人该吃晚饭了，你主动发消息",
-                                "到晚饭时间了，主人还没吃，你催他去吃饭",
-                            ],
-                            "周日复盘": [
-                                "周日晚上了，回顾这一周：问问他这周过得怎么样，也说说你自己这周的事",
-                                "一周要结束了，跟主人聊聊这周发生的事，别像做汇报",
-                            ],
-                        }
-                        prompts = scene_prompts.get(task["scene"], ["你主动找主人聊聊天"])
-                        prompt = random.choice(prompts)
-                        rep = await get_character_reply(prompt, str(MASTER_QQ))
-                        await send_short_reply(MASTER_QQ, rep, cfg.active_ws_qq, MASTER_QQ)
+                    from ..executors.schedule import submit_scene
+                    submit_scene(task["scene"], today)
                 except Exception as task_e:
-                    log_err(f"定时任务执行异常({task['scene']}):{task_e}")
+                    log_err(f"定时任务投递失败({task['scene']}):{task_e}")
 
             # ---------- 日程 / 待办检查（每 30 秒一次，别每秒查库） ----------
             if (_time.time() - _last_due_check) > 30:
