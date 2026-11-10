@@ -178,5 +178,52 @@ class TestBaselineGroupGate(unittest.TestCase):
         cfg.group_last_reply_ts.clear()
 
 
+class TestBaselineMemoryAndCommands(unittest.TestCase):
+    """基线：记忆轮数上限与命令可用性"""
+
+    def test_memory_rounds(self):
+        """每个对象最多保留 30 轮对话"""
+        from botv.core.constants import MAX_USER_ROUND
+
+        self.assertEqual(MAX_USER_ROUND, 30)
+
+    def test_memory_budget(self):
+        """分层预算：profile 120 / dialogue 700 / memories 250 / keywords 120 / timeline 200"""
+        from botv.memory.inject import BUDGET
+
+        self.assertEqual(BUDGET, {
+            "profile": 120,
+            "dialogue": 700,
+            "memories": 250,
+            "keywords": 120,
+            "timeline": 200,
+        })
+        self.assertEqual(sum(BUDGET.values()), 1390, "总预算 1390 字")
+
+    def test_command_count(self):
+        """命令数量不少于 26 个（v5 基线）"""
+        import botv.commands  # noqa: F401
+        from botv.cmd import registry
+
+        self.assertGreaterEqual(len(registry.COMMANDS), 26)
+
+    def test_core_commands_exist(self):
+        """核心命令一个都不能少"""
+        import botv.commands  # noqa: F401
+        from botv.cmd import registry
+
+        for name in ("help", "status", "memory", "diary", "todo",
+                     "persona", "stats", "config", "memorybook", "growth"):
+            self.assertIn(name, registry.COMMANDS, f"命令 {name} 不见了")
+
+    def test_commands_are_callable(self):
+        """每个命令都挂了可调用的 handler"""
+        import botv.commands  # noqa: F401
+        from botv.cmd import registry
+
+        for name, cmd in registry.COMMANDS.items():
+            self.assertTrue(callable(cmd.handler), f"{name} 的 handler 不可调用")
+
+
 if __name__ == "__main__":
     unittest.main()
