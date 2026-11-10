@@ -369,47 +369,58 @@ class TestGrowth(unittest.TestCase):
         self.assertIn("笨蛋", close)
         self.assertNotIn("笨蛋", stranger)
 
-    def test_surprise_branch(self):
-        import asyncio
-        from datetime import datetime
-        import botv.schedule.runner as R
-        import botv.life.impulse as IMP
-        from botv.core import state as cfg
-        from botv.config import CST
 
-        prompts, sent = [], []
-        orig = {}
-        def patch(name, fn):
-            orig[name] = getattr(R, name)
-            setattr(R, name, fn)
+    def test_pick_seed_surprise(self):
+        """心情不差、没有生活事件、掷骰 < 0.05 → 惊喜分支（v17.3：测新执行器）"""
+        import botv.executors.proactive as P
 
-        async def fake_reply(p, tid):
-            prompts.append(p)
-            return "哼"
-
-        async def fake_send(*a, **k):
-            sent.append(a)
-
-        patch("load_today_life", lambda: [])
-        patch("get_character_reply", fake_reply)
-        patch("send_short_reply", fake_send)
-        patch("note_proactive", lambda: None)
-        orig_should = IMP.should_chat
-        IMP.should_chat = lambda **kw: (True, "ok", 0.3)
-        orig_random = R.random.random
-        R.random.random = lambda: 0.0   # 分享生活跳过 -> 惊喜命中
-        cfg.triggered_today.clear()
+        orig_random = P.random.random
+        orig_life = None
         try:
-            ok = asyncio.run(R.maybe_chat(datetime.now(CST).replace(minute=0, second=0)))
+            import botv.infra.repo_memory as rm
+
+            orig_life = rm.load_today_life
+            rm.load_today_life = lambda: []
+        except Exception:
+            pass
+        P.random.random = lambda: 0.01      # 分享 0.5 跳过，惊喜 0.05 命中
+        try:
+            seed, tag = P._pick_seed()
         finally:
-            for name, fn in orig.items():
-                setattr(R, name, fn)
-            IMP.should_chat = orig_should
-            R.random.random = orig_random
-            cfg.triggered_today.clear()
-        self.assertTrue(ok)
-        self.assertTrue(prompts, "应该有提示词")
-        self.assertIn("逗他", prompts[0], "走的是惊喜分支")
+            P.random.random = orig_random
+            if orig_life is not None:
+                import botv.infra.repo_memory as rm
+
+                rm.load_today_life = orig_life
+
+        self.assertEqual(tag, "惊喜")
+        self.assertIn("逗他", seed)
+
+    def test_pick_seed_shares_life(self):
+        """有生活事件且掷骰命中 → 分享生活分支"""
+        import botv.executors.proactive as P
+
+        orig_random = P.random.random
+        try:
+            import botv.infra.repo_memory as rm
+
+            orig_life = rm.load_today_life
+            rm.load_today_life = lambda: ["今天下雨了"]
+        except Exception:
+            orig_life = None
+        P.random.random = lambda: 0.1
+        try:
+            seed, tag = P._pick_seed()
+        finally:
+            P.random.random = orig_random
+            if orig_life is not None:
+                import botv.infra.repo_memory as rm
+
+                rm.load_today_life = orig_life
+
+        self.assertIn("分享生活", tag)
+        self.assertIn("今天下雨了", seed)
+
 
 class TestHabit(unittest.TestCase):
     """v12-A17：学口头禅"""
@@ -861,51 +872,36 @@ class TestV12Extras(unittest.TestCase):
         import botv.commands  # noqa: F401
         from botv.cmd import registry
         self.assertIn("memorybook", registry.COMMANDS)
+    def test_pick_seed_old_event(self):
+        """有旧事 → 旧事重提分支（v17.3：测新执行器的 _pick_seed）"""
+        import botv.executors.proactive as P
 
-    def test_old_event_branch(self):
-        """主动闲聊有概率拿一件旧事当由头"""
-        import asyncio
-        from datetime import datetime
-        import botv.schedule.runner as R
-        import botv.life.impulse as IMP
-        from botv.core import state as cfg
-        from botv.config import CST
-
-        sent, prompts = [], []
-        orig = {}
-        def patch(name, fn):
-            orig[name] = getattr(R, name)
-            setattr(R, name, fn)
-
-        patch("load_old_events", lambda *a, **k: [{"summary": "去打疫苗", "day": "2026-10-01"}])
-        patch("load_today_life", lambda: [])
-
-        async def fake_reply(p, tid):
-            prompts.append(p)
-            return "还记得"
-
-        async def fake_send(*a, **k):
-            sent.append(a)
-
-        patch("get_character_reply", fake_reply)
-        patch("send_short_reply", fake_send)
-        patch("note_proactive", lambda: None)
-        orig_should = IMP.should_chat
-        IMP.should_chat = lambda **kw: (True, "ok", 0.3)
-        orig_random = R.random.random
-        R.random.random = lambda: 0.1
-        cfg.triggered_today.clear()
+        orig_random = P.random.random
+        orig_life, orig_old = None, None
         try:
-            ok = asyncio.run(R.maybe_chat(datetime.now(CST).replace(minute=0, second=0)))
+            import botv.infra.repo_memory as rm
+
+            orig_life = rm.load_today_life
+            orig_old = rm.load_old_events
+            rm.load_today_life = lambda: []
+            rm.load_old_events = lambda *a, **k: [
+                {"summary": "去打疫苗", "day": "2026-10-01"}]
+        except Exception:
+            pass
+        P.random.random = lambda: 0.1     # 惊喜不中，旧事命中
+        try:
+            seed, tag = P._pick_seed()
         finally:
-            for name, fn in orig.items():
-                setattr(R, name, fn)
-            IMP.should_chat = orig_should
-            R.random.random = orig_random
-            cfg.triggered_today.clear()
-        self.assertTrue(ok)
-        self.assertIn("旧事", prompts[0])
-        self.assertIn("去打疫苗", prompts[0])
+            P.random.random = orig_random
+            if orig_life is not None:
+                import botv.infra.repo_memory as rm
+
+                rm.load_today_life = orig_life
+                rm.load_old_events = orig_old
+
+        self.assertEqual(tag, "旧事")
+        self.assertIn("去打疫苗", seed)
+
 
 class TestWeather(unittest.TestCase):
     """v12-A21：天气（没配城市就完全跳过）"""
