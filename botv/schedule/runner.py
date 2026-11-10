@@ -171,6 +171,17 @@ async def maybe_chat(now):
 
 async def cycle_task_run():
     await asyncio.sleep(_FIRST_RUN_DELAY)
+
+    # v17.1：启动事件调度器，并把「空闲读书」交给它（每 30 分钟自己排下一次）
+    try:
+        from ..scheduler.dispatcher import get_scheduler
+        from ..executors import idle as idle_exec
+        _sched = get_scheduler()
+        _sched.start()
+        idle_exec.schedule_tick()
+        log_system("[调度] 调度器已启动，空闲读书由 tick 驱动")
+    except Exception as _e:
+        log_err(f"[调度] 启动失败（回退旧路径）: {_e}")
     _last_today = None  # 记录上一次检查的日期
     _is_workday = True  # 缓存当天是否工作日
     _last_due_check = 0.0  # 上次检查日程/待办的时间（节流用，函数内局部）
@@ -350,8 +361,8 @@ async def cycle_task_run():
                 _last_due_check = _time.time()
                 await process_due(now)
 
-            # ---------- v16：空闲时自己读小说（后台跑，不堵定时循环） ----------
-            _dispatch_reading(now)
+            # ---------- v17.1：空闲读书改由调度器的 idle_tick 驱动 ----------
+            # （_dispatch_reading 保留给旧路径/手动触发，循环里不再调用）
 
             # ---------- 主动闲聊触发 ----------
             await maybe_chat(now)
@@ -368,7 +379,9 @@ _last_read_check = 0.0
 
 
 async def maybe_read(now=None, force=False):
-    """空闲时读一章小说；返回是否真的读了
+    """（v17.1 起由 executors/idle.py 接管；保留给手动触发与旧测试）
+
+    空闲时读一章小说；返回是否真的读了
 
     闸门：深夜不读 / 刚聊过不读 / 今天读够了不读。
     没有在追的书 → 先从热榜挑一本。
