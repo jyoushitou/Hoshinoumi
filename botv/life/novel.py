@@ -83,9 +83,13 @@ def _render(url, timeout=FETCH_TIMEOUT):
 
 
 async def fetch_html(url):
-    """异步入口：把浏览器操作丢到线程里"""
-    import asyncio
-    return await asyncio.to_thread(_render, url)
+    """异步入口：把浏览器操作丢到线程池（v17.0.3 统一入口）
+
+    浏览器启动 + 渲染可能要 10 秒以上，超时给宽一点。
+    """
+    from ..infra.blocking import run_blocking
+
+    return await run_blocking(_render, url, timeout=FETCH_TIMEOUT + 15, name="novel")
 
 
 # ===================== 解析 =====================

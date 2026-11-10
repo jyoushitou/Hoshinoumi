@@ -119,11 +119,16 @@ def _shot_and_ocr(url):
 
 
 async def ocr_url(url):
-    """异步入入口：截图 + OCR"""
-    import asyncio
+    """异步入入口：截图 + OCR（v17.0.3 统一线程池）
+
+    截图 + tesseract 加起来可能 60 秒，超时给 SHOT_TIMEOUT + OCR_TIMEOUT。
+    """
+    from ..infra.blocking import run_blocking
+
     if not tesseract_ok():
         return ""
-    return await asyncio.to_thread(_shot_and_ocr, url)
+    return await run_blocking(_shot_and_ocr, url,
+                              timeout=SHOT_TIMEOUT + OCR_TIMEOUT + 15, name="ocr")
 
 
 # ===================== HTML + OCR 合并（v16） =====================
