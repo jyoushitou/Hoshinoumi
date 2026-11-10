@@ -6,6 +6,7 @@
 import asyncio
 import random
 
+from ..infra.blocking import run_blocking  # v17.0.3：阻塞调用统一入口
 from ..core import state as cfg  # 运行时变量（Token 从数据库加载）
 from ..log import log_api
 from ..utils import download_url, DEFAULT_HEADERS
@@ -15,12 +16,13 @@ from .store import process_and_save_image
 
 async def _get(session, url, **kwargs):
     """同步 session.get 丢进线程，别阻塞事件循环"""
-    return await asyncio.to_thread(lambda: session.get(url, **kwargs))
+    return await run_blocking(lambda: session.get(url, **kwargs),
+                              timeout=30, name="image-get")  # v17.0.3：统一线程池
 
 
 async def _download(url):
     """同步下载丢进线程"""
-    return await asyncio.to_thread(download_url, url)
+    return await run_blocking(download_url, url, timeout=60, name="image-download")  # v17.0.3
 
 
 async def fetch_and_save_acg_image():

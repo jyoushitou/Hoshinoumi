@@ -7,6 +7,7 @@
 import os
 
 import botv.core.state as cfg
+from ..infra.blocking import run_blocking  # v17.0.3：阻塞调用统一入口
 from ..log import log_api
 
 DEFAULT_ASR_URL = os.getenv("NAO_ASR_URL", "https://api.deepseek.com/v1/audio/transcriptions")
@@ -51,7 +52,7 @@ async def transcribe(audio_bytes, source_url=""):
             finally:
                 s.close()
 
-        resp = await asyncio.to_thread(_post)
+        resp = await run_blocking(_post, timeout=60, name="asr")  # v17.0.3：统一线程池
         if resp.status_code != 200:
             log_api(f"[识别] 失败 {resp.status_code}: {resp.text[:120]}")
             return None

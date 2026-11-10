@@ -6,6 +6,7 @@
 
 from io import BytesIO  # 字节流：将图片二进制数据转为 PIL Image
 import asyncio  # 异步 IO：在子线程中运行 CLIP 推理，避免阻塞事件循环
+from .infra.blocking import run_blocking  # v17.0.3：阻塞调用统一入口
 from .config import CLIP_IMAGE_TAGS  # 候选标签列表（约200个）
 from .log import log_system, log_api, log_err  # 日志
 from botv.core import state as cfg  # 全局运行时变量
@@ -60,7 +61,7 @@ async def analyze_image_with_clip(image_data: bytes, custom_tags: list = None) -
             txt_f /= txt_f.norm(dim=-1, keepdim=True)  # L2 归一化
             return (100.0 * img_f @ txt_f.T).softmax(dim=-1)[0].tolist()  # 计算相似度并 softmax
         
-        scores = await asyncio.to_thread(_run)  # 在子线程中执行推理
+        scores = await run_blocking(_run, timeout=60, name="clip")  # v17.0.3：统一线程池
         idx = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)  # 按得分降序排序
         best_tags = [tags[i] for i in idx[:3] if scores[i] > 0.01]  # 取得分 > 0.01 的前3个标签
         desc = tags[idx[0]] if idx else "图片"  # 最高分标签作为描述

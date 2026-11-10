@@ -7,6 +7,7 @@
 import os
 import time as _time
 
+from ..infra.blocking import run_blocking  # v17.0.3：阻塞调用统一入口
 from ..log import log_api
 
 DEFAULT_TIMEOUT = 6
@@ -59,7 +60,7 @@ async def current(force=False):
             finally:
                 s.close()
 
-        resp = await asyncio.to_thread(_get)
+        resp = await run_blocking(_get, timeout=DEFAULT_TIMEOUT + 10, name="weather")  # v17.0.3
         if resp.status_code != 200:
             log_api(f"[天气] 失败 {resp.status_code}")
             return None

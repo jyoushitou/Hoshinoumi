@@ -5,6 +5,7 @@
 import asyncio
 
 from botv.core import state as cfg
+from ..infra.blocking import run_blocking  # v17.0.3：阻塞调用统一入口
 from ..log import log_api
 from ..image import process_and_save_image
 from ..infra.repo_memory import add_event_to_db  # v11-A9：图片记忆
@@ -50,7 +51,7 @@ async def parse_message_content(raw_content, user_id, ws=None):
             elif t == "image":  # 图片类型
                 url = d.get("url") or d.get("file")  # 获取图片URL
                 log_api(f"[消息解析] 收到图片: {url[:60]}")  # 日志记录
-                img_data = await asyncio.to_thread(download_url, url)  # 下载图片（丢线程，别卡事件循环）
+                img_data = await run_blocking(download_url, url, timeout=60, name="image")  # v17.0.3：统一线程池
                 if img_data:  # 下载成功
                     is_gif = img_data[:6] in (b"GIF89a", b"GIF87a")  # v11：动图只能看到一帧
                     md5, tags_str, fp = await process_and_save_image(img_data, url, user_id, keywords=["用户发图"])  # 先存下来
@@ -115,7 +116,7 @@ async def parse_message_content(raw_content, user_id, ws=None):
                 audio = None
                 if url:
                     try:
-                        audio = await asyncio.to_thread(download_url, url)
+                        audio = await run_blocking(download_url, url, timeout=60, name="audio")  # v17.0.3
                     except Exception:
                         audio = None
                 text = await transcribe(audio, url or "") if audio else None
