@@ -517,16 +517,21 @@ class TestPooledCursor(unittest.TestCase):
         self.assertEqual(self.P.get_pool().stats()["borrowed"], 0, "异常时也要归还")
 
 class TestRegistry(unittest.TestCase):
-    """注册/查询/重复检测/默认参数继承"""
+    """注册/查询/重复检测/默认参数继承
+
+    注意：不能直接 clear() 之后不恢复——会清掉已注册的执行器，污染后面的测试。
+    """
 
     def setUp(self):
         from botv.events import registry
 
-        registry.clear()
         self.R = registry
+        self._snapshot = dict(registry._handlers)   # 先存别人的注册
+        registry._handlers.clear()
 
     def tearDown(self):
-        self.R.clear()
+        self.R._handlers.clear()
+        self.R._handlers.update(self._snapshot)     # 原样恢复
 
     def test_register_and_get(self):
         Priority = __import__("botv.events.base", fromlist=["Priority"]).Priority

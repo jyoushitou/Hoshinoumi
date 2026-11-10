@@ -70,12 +70,12 @@ async def handle_minute_tick(ev):
         key = f"diary_{prev_date}"
         if key not in cfg.daily_trigger:
             cfg.daily_trigger.add(key)
-            log_system(f"[心跳] 写日记 {prev_date}")
+            log_system(f"[心跳] 投递写日记 {prev_date}")
             try:
-                text = await R.generate_diary(str(MASTER_QQ), prev_date.isoformat())
-                log_system(f"[心跳] 日记已生成（{len(text)} 字）")
+                from .diary import submit as submit_diary
+                submit_diary(prev_date.isoformat())
             except Exception as e:
-                log_err(f"[心跳] 日记生成失败: {e}")
+                log_err(f"[心跳] 日记投递失败: {e}")
 
     # ---------- 生日 ----------
     await _maybe_birthday(now, today)
