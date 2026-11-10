@@ -44,6 +44,8 @@ MySQL 存记忆与日志。图片由她自己一句话打标签，正文小说�
 | v20 | 运维通道：bash 只读 → agent → 有限写 | 📋 已规划 | [v20.md](docs/versions/v20.md) |
 | v21 | 嵌入式常驻：systemd / 看门狗 / LITE / ARM / 一键安装 | 📋 已规划 | [v21.md](docs/versions/v21.md) |
 
+> **约定**：每个大版本的**最后一个次版本**用来收尾修 bug 和技术债（如 v17.6），不堆新功能。
+
 - **细到每个小版本**（`x.y.z` 级）的拆解与验收点：[ROADMAP.md](docs/ROADMAP.md)
 - **数据库设计**（一表一职责）：[DB-DESIGN.md](docs/DB-DESIGN.md)
 - **未排期需求**（A~E 组）：[V14-后续清单.md](docs/V14-后续清单.md)
