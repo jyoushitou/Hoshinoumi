@@ -6,6 +6,7 @@ from collections import deque
 from datetime import datetime, timedelta
 
 from ..config import MAX_USER_ROUND, MAX_GLOBAL_KEY, CST
+from ..log import log_api, log_err
 from .conn import get_cursor
 from .dedupe import dedupe_key
 
@@ -177,7 +178,7 @@ def save_state_json(payload, target=None):
         (tid, payload, dedupe_key(tid, "state", "bot_state")),
     )
     c.connection.commit()
-
+    dual_write("state", tid, payload)
 
 def load_todo_items():
     """所有日程（v10-U10）"""
@@ -257,7 +258,7 @@ def save_friction(tid, payload):
         (str(tid), payload, dedupe_key(str(tid), "friction", "friction")),
     )
     c.connection.commit()
-
+    dual_write("friction", tid, payload)
 
 def load_reading(tid):
     """读小说进度（v16）"""
@@ -304,7 +305,7 @@ def save_reading(tid, payload):
         (str(tid), payload, dedupe_key(str(tid), "reading", "reading")),
     )
     c.connection.commit()
-
+    dual_write("reading", tid, payload)
 
 def load_habit(tid):
     """读某人的口头禅计数（v12-A17）"""
@@ -408,7 +409,7 @@ def save_relation(tid, payload):
         (str(tid), payload, dedupe_key(str(tid), "rel", "relation")),
     )
     c.connection.commit()
-
+    dual_write("rel", tid, payload)
 
 def load_today_life():
     """取今天的生活事件（v10-U9b 分享生活用）"""
@@ -506,3 +507,46 @@ def add_event_to_db(tid, event_summary, tags="", kind="event", importance=3, due
     )
     c.connection.commit()
     return None
+
+# ===================== 双写（v17.4） =====================
+# 写旧表之后，顺手写一份到新表。失败只记日志，绝不影响旧路径。
+# 等 v17.5 验证够了，再把旧写入删掉。
+
+_JSON_TABLES = {
+    "state": ("bot_states", ("mood", "energy", "lonely")),
+    "rel": ("relations", ("affinity", "since", "tier")),
+    "friction": ("friction_states", ("expect_ts", "expect_text", "disappoint",
+                                     "cold_ts", "last_grudge")),
+    "reading": ("reading_progress", ("title", "intro", "last_no", "last_chapter")),
+}
+
+
+def dual_write(kind, tid, payload):
+    """把 JSON payload 拆到新表；失败静默"""
+    conf = _JSON_TABLES.get(kind)
+    if not conf:
+        return False
+    table, fields = conf
+    try:
+        import json
+
+        data = json.loads(payload) if payload else {}
+        if not isinstance(data, dict):
+            return False
+        row = {"target_id": str(tid)}
+        row.update({k: v for k, v in data.items() if k in fields})
+        if len(row) <= 1:
+            return False
+        cols = list(row)
+        ph = ",".join(["%s"] * len(cols))
+        updates = ",".join(f"{k}=VALUES({k})" for k in cols if k != "target_id")
+        sql = f"INSERT INTO {table}({','.join(cols)}) VALUES({ph})"
+        if updates:
+            sql += f" ON DUPLICATE KEY UPDATE {updates}"
+        c = get_cursor()
+        c.execute(sql, tuple(row[k] for k in cols))
+        c.connection.commit()
+        return True
+    except Exception as e:
+        log_api(f"[双写] {kind} → {table} 失败（忽略）：{e}")
+        return False
