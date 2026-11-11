@@ -77,6 +77,18 @@ async def handle_minute_tick(ev):
             except Exception as e:
                 log_err(f"[心跳] 日记投递失败: {e}")
 
+    # ---------- 04:00 定时任务对账 ----------
+    if now.hour == 4 and now.minute == 0:
+        key = f"cron_sync_{today}"
+        if key not in cfg.daily_trigger:
+            cfg.daily_trigger.add(key)
+            try:
+                from ..schedule import cron as cron_mod
+                n = cron_mod.schedule_all()
+                log_system(f"[定时] 04:00 对账：重建 {n} 个钩子")
+            except Exception as e:
+                log_err(f"[定时] 对账失败: {e}")
+
     # ---------- 生日 ----------
     await _maybe_birthday(now, today)
 

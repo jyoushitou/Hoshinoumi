@@ -89,6 +89,13 @@ async def cycle_task_run():
     # v17.3 U3：不再自己跑 1 秒循环——跨天 / 日记 / 生日 / 场景 / 日程
     # 全部交给调度器的 minute_tick（每 30 秒），这里只保活。
     try:
+        from ..schedule import cron as cron_mod
+        n = cron_mod.schedule_all()
+        log_system(f"[定时] 启动对账：挂了 {n} 个钩子")
+    except Exception as _e:
+        log_err(f"[定时] 启动对账失败: {_e}")
+
+    try:
         from ..executors import ticker as ticker_exec
         ticker_exec.schedule_tick()
         log_system("[调度] minute_tick 已安排（每 30 秒）")
