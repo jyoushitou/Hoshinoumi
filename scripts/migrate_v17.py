@@ -165,7 +165,12 @@ def migrate(c, dist):
         if not dist.get(kind):
             continue
         try:
-            n = migrate_json_kind(c, kind)
+            if kind == "reading":
+                n = migrate_reading(c)
+            elif kind == "habit":
+                n = migrate_habit(c)
+            else:
+                n = migrate_json_kind(c, kind)
             moved += n
             print(f"  [OK] {kind} → {JSON_TARGET[kind]}（{n} 行）")
         except Exception as e:
@@ -224,9 +229,12 @@ def _upsert(c, table, row):
     cols = [k for k in row if k in FIELDS[table]]
     if not cols:
         return 0
+    if len(cols) <= 1:
+        return 0                      # 只有主键，没有可写字段 → 跳过
     placeholders = ",".join(["%s"] * len(cols))
     updates = ",".join(f"{k}=VALUES({k})" for k in cols if k != "target_id")
-    sql = f"INSERT INTO {table}({','.join(cols)}) VALUES({placeholders})"
+    head = "INSERT INTO" if updates else "INSERT IGNORE INTO"
+    sql = f"{head} {table}({','.join(cols)}) VALUES({placeholders})"
     if updates:
         sql += f" ON DUPLICATE KEY UPDATE {updates}"
     return c.execute(sql, tuple(row[k] for k in cols))
@@ -248,6 +256,57 @@ def migrate_json_kind(c, kind):
         row = {"target_id": tid}
         row.update({k: v for k, v in data.items() if k in FIELDS[table]})
         moved += _upsert(c, table, row) or 0
+    return moved
+
+
+def migrate_reading(c):
+    """reading 的 JSON 里有 books 列表，一本书一行"""
+    import json
+    moved = 0
+    for tid, payload in _latest_rows(c, "reading"):
+        try:
+            data = json.loads(payload) if payload else {}
+        except Exception:
+            continue
+        books = data.get("books") if isinstance(data, dict) else None
+        if not books:
+            continue
+        for b in books:
+            url = b.get("url") or b.get("book_url")
+            if not url:
+                continue
+            row = {"target_id": tid, "book_url": url,
+                   "title": b.get("title"), "last_no": b.get("last_no") or 0,
+                   "last_chapter": b.get("last_chapter")}
+            moved += _upsert(c, "reading_progress", row) or 0
+    return moved
+
+
+def migrate_habit(c):
+    """habit 的 JSON 是 {词: 次数} 或 [词,...]"""
+    import json
+    moved = 0
+    for tid, payload in _latest_rows(c, "habit"):
+        try:
+            data = json.loads(payload) if payload else {}
+        except Exception:
+            continue
+        pairs = []
+        if isinstance(data, dict):
+            for key in ("phrases", "words", "counts", "habits"):
+                val = data.get(key)
+                if isinstance(val, dict):
+                    pairs = list(val.items()); break
+                if isinstance(val, list):
+                    pairs = [(w, 1) for w in val]; break
+        if not pairs:
+            continue
+        for phrase, count in pairs:
+            if not phrase:
+                continue
+            row = {"target_id": tid, "phrase": str(phrase)[:16],
+                   "count": int(count or 1)}
+            moved += _upsert(c, "habits", row) or 0
     return moved
 
 
