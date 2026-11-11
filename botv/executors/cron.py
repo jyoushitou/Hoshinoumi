@@ -47,6 +47,25 @@ async def handle_cron_task(ev):
     if not content:
         return {"ok": False, "reason": "内容为空"}
 
+    # scene:xxx → 交给场景执行器（带提示词/配图），不是念一句话
+    if content.startswith("scene:"):
+        scene = content.split(":", 1)[1].strip()
+        try:
+            from .schedule import handle_schedule_scene
+
+            class _Ev:
+                kind = "schedule_scene"
+                args = (scene,)
+
+            out = await handle_schedule_scene(_Ev())
+            _mark(task_id, ok=bool(out.get("ok")))
+            log_system(f"[定时] 场景 {scene} 已完成")
+            return {"ok": bool(out.get("ok")), "scene": scene}
+        except Exception as e:
+            log_err(f"[定时] 场景 {scene} 执行失败: {e}")
+            _mark(task_id, ok=False)
+            return {"ok": False, "reason": "场景失败"}
+
     target = str(task.get("target_id") or cfg.MASTER_QQ)
 
     # 生成 + 发送

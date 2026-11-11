@@ -81,32 +81,6 @@ class TestTicker(unittest.TestCase):
         asyncio.run(self.T.handle_minute_tick(_Ev()))
         self.assertFalse(self.cfg.CODE_MODE, "超时应退出代码模式")
 
-    def test_scene_dispatch_only_matching_minute(self):
-        """只有任务时刻匹配才派发 schedule_scene"""
-        asyncio.run(self.T.handle_minute_tick(_Ev()))   # 先完成跨天初始化
-        now = self.T._now()
-        today = now.date()
-
-        # 造一个「就在此刻」的任务
-        key = f"测试场景_{today}"
-        from datetime import datetime
-
-        from botv.config import CST
-
-        self.cfg.task_trigger_minute[key] = now.hour * 60 + now.minute
-        import botv.executors.ticker as T
-
-        orig = T.SCHEDULE_TASKS
-        T.SCHEDULE_TASKS = [{
-            "scene": "测试场景", "weekday": tuple(range(7)),
-        }]
-        try:
-            asyncio.run(T.handle_minute_tick(_Ev()))
-        finally:
-            T.SCHEDULE_TASKS = orig
-
-        self.assertIn(key, self.cfg.daily_trigger, "到点应标记已派发")
-
     def test_stats(self):
         asyncio.run(self.T.handle_minute_tick(_Ev()))
         s = self.T.stats()

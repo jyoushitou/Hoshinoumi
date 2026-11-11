@@ -99,24 +99,8 @@ async def handle_minute_tick(ev):
             cfg.CODE_MODE_LAST_MSG_TIME = 0
             log_system("[心跳] 代码模式超时退出")
 
-    # ---------- 定时场景派发 ----------
-    for task in SCHEDULE_TASKS:
-        key = f"{task['scene']}_{today}"
-        if key in cfg.daily_trigger:
-            continue
-        if today.weekday() not in task["weekday"]:
-            continue
-        if task.get("only_holiday") and _state["workday"]:
-            continue
-        if cfg.task_trigger_minute.get(key) != cur_minute:
-            continue
-        cfg.daily_trigger.add(key)
-        log_system(f"[心跳] 派发场景：{task['scene']}")
-        try:
-            from .schedule import submit_scene
-            submit_scene(task["scene"], today)
-        except Exception as e:
-            log_err(f"[心跳] 场景派发失败: {e}")
+    # v17.7：定时场景改由 cron_tasks 的钩子驱动（scripts/seed_scenes.py 导入）
+    # 这里不再轮询 SCHEDULE_TASKS，避免和 cron 钩子重复触发。
 
     # ---------- 日程/待办（每 30 秒一次） ----------
     if time.time() - _state["last_due"] > 30:

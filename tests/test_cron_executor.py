@@ -119,5 +119,29 @@ async def _async(v):
     return v
 
 
+
+    def test_scene_prefix_routes_to_scene_executor(self):
+        """content 以 scene: 开头 → 走场景执行器（带提示词/配图）"""
+        from botv.executors import schedule as S
+        import botv.executors.cron as X
+
+        called = []
+
+        async def fake_scene(ev):
+            called.append(ev.args)
+            return {"ok": True, "scene": ev.args[0]}
+
+        orig = S.handle_schedule_scene
+        S.handle_schedule_scene = fake_scene
+        self.task = dict(self.task, content="scene:催起床")
+        try:
+            out = asyncio.run(X.handle_cron_task(_Ev(args=(7,))))
+        finally:
+            S.handle_schedule_scene = orig
+
+        self.assertTrue(out["ok"])
+        self.assertEqual(called, [("催起床",)], "应转给场景执行器")
+        self.assertEqual(self.sent, [], "场景执行器自己发，不走这里")
+
 if __name__ == "__main__":
     unittest.main()
