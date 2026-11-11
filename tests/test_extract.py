@@ -129,5 +129,23 @@ class TestExtract(unittest.TestCase):
         self.assertEqual(added["uid"], "822891053")
 
 
+
+    def test_describe_daily(self):
+        d = self.E.extract("每晚十一点提醒我睡觉", self.now)
+        text = self.E.describe(d, 7)
+        self.assertIn("每天 23:00", text)
+        self.assertIn("睡觉", text)
+        self.assertIn("!cron del 7", text, "要告诉她怎么撤")
+
+    def test_describe_weekly(self):
+        d = self.E.extract("周五提醒我交报告", self.now)
+        text = self.E.describe(d, 3)
+        self.assertIn("每周五", text)
+        self.assertIn("09:00", text)
+
+    def test_describe_once(self):
+        d = self.E.extract("明天七点叫我", self.now)
+        self.assertIn("2026-11-12 07:00", self.E.describe(d, 1))
+
 if __name__ == "__main__":
     unittest.main()

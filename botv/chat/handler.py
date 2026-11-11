@@ -346,6 +346,12 @@ async def _handle_message(d, ws):
             _tid, _data = extract_mod.create_from_text(text, uid)
             if _tid and _data:
                 log_system(f"[定时] 从对话建任务 #{_tid}：{_data.get('content')}")
+                try:
+                    from ..chat.send import send_short_reply
+                    await send_short_reply(uid, extract_mod.describe(_data, _tid),
+                                           ws, uid, False, None)
+                except Exception as _e:
+                    log_api(f"[定时] 确认回复失败（忽略）: {_e}")
     except Exception as _e:
         log_api(f"[定时] 提取失败（忽略）: {_e}")
 

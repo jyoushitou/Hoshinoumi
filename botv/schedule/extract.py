@@ -229,3 +229,21 @@ def create_from_text(text, uid, now=None, add_func=None):
         return tid, data
     except Exception:
         return None, data
+
+def describe(data, task_id=None):
+    """把解析结果说成一句人话，用于回复确认"""
+    if not data:
+        return ""
+    kind = data.get("schedule_type")
+    if kind == "daily":
+        when = f"每天 {data.get('at_time')}"
+    elif kind == "weekly":
+        wd = {"1": "一", "2": "二", "3": "三", "4": "四",
+              "5": "五", "6": "六", "7": "日"}
+        days = str(data.get("weekdays") or "").replace(",", "")
+        days = "".join(wd.get(c, c) for c in days) or "?"
+        when = f"每周{days} {data.get('at_time')}"
+    else:
+        when = f"{data.get('once_at', '')[:16]}"
+    tail = f"（#{task_id}，不想要就说 !cron del {task_id}）" if task_id else ""
+    return f"好，{when} 提醒你{data.get('content', '')}{tail}"
