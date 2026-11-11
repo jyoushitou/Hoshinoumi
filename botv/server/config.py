@@ -4,7 +4,7 @@
 import secrets
 
 from ..log import log_system, log_err
-from ..infra.conn import get_cursor
+from ..infra.repo_key import get_api_key_from_db, save_api_key
 
 API_HOST = "0.0.0.0"
 from ..core import settings as _settings
@@ -19,11 +19,9 @@ def load_api_token():
     """从数据库加载 API Token，不存在则生成并落库"""
     global API_TOKEN
     try:
-        c = get_cursor()
-        c.execute("SELECT key_value FROM api_keys WHERE key_name=%s", (API_TOKEN_KEY_NAME,))
-        r = c.fetchone()
-        if r and r.get("key_value"):
-            API_TOKEN = r["key_value"]
+        existing = get_api_key_from_db(API_TOKEN_KEY_NAME)   # v17.16：不写 SQL
+        if existing:
+            API_TOKEN = existing
             log_system("API Token 已从数据库加载")
             return
     except Exception as e:
@@ -31,13 +29,10 @@ def load_api_token():
 
     API_TOKEN = "nao_" + secrets.token_hex(20)
     try:
-        c = get_cursor()
-        c.execute(
-            "INSERT INTO api_keys (key_name, key_value) VALUES (%s, %s) ON DUPLICATE KEY UPDATE key_value=%s",
-            (API_TOKEN_KEY_NAME, API_TOKEN, API_TOKEN)
-        )
-        c.connection.commit()
-        log_system(f"已生成默认 API Token: {API_TOKEN[:20]}...")
+        if save_api_key(API_TOKEN_KEY_NAME, API_TOKEN):
+            log_system(f"已生成默认 API Token: {API_TOKEN[:20]}...")
+        else:
+            log_err("保存 API Token 失败")
     except Exception as e:
         log_err(f"保存 API Token 失败: {e}")
 

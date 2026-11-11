@@ -30,17 +30,15 @@ async def cmd_log(ctx):
 async def cmd_db(ctx):
     """!db - 数据库统计"""
     try:
-        c = get_cursor()
-        c.execute("SELECT COUNT(*) as cnt FROM images")
-        img_count = c.fetchone()["cnt"]
-        c.execute("SELECT COUNT(*) as cnt FROM user_memory")
-        mem_count = c.fetchone()["cnt"]
-        c.execute("SELECT COUNT(*) as cnt FROM events")
-        evt_count = c.fetchone()["cnt"]
-        c.execute("SELECT COUNT(*) as cnt FROM logs")
-        log_count = c.fetchone()["cnt"]
-        c.execute("SELECT COUNT(*) as cnt FROM global_keywords")
-        kw_count = c.fetchone()["cnt"]
+        from ..infra.repo_query import counts
+
+        # v17.16：命令层不再写 SQL
+        n = counts(("images", "user_memory", "events", "logs", "global_keywords"))
+        img_count = n["images"]
+        mem_count = n["user_memory"]
+        evt_count = n["events"]
+        log_count = n["logs"]
+        kw_count = n["global_keywords"]
         return (
             f"🗄️ 数据库状态：\n"
             f"  🖼️ 图片库: {img_count} 张\n"
@@ -57,9 +55,9 @@ async def cmd_db(ctx):
 async def cmd_uptime(ctx):
     """!uptime - 运行时长"""
     try:
-        c = get_cursor()
-        c.execute("SELECT MIN(id) as first_id, MIN(created_at) as first_log FROM logs")
-        r = c.fetchone()
+        from ..infra.repo_query import first_log as repo_first_log
+
+        r = repo_first_log()
         if r and r["first_log"]:
             first_log = r["first_log"]
             # created_at 可能是 datetime 对象或字符串

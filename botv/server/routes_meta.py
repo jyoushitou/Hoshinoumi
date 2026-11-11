@@ -6,7 +6,6 @@ from datetime import datetime
 
 from botv.core import state as cfg
 from ..config import CST, MASTER_QQ
-from ..infra.conn import get_cursor
 from ..infra.repo_ai import get_recent_usage
 from ..log import get_recent_logs
 from . import config as apicfg
@@ -22,19 +21,17 @@ async def handle_health(request):
 
 async def handle_status(request):
     try:
-        c = get_cursor()
-        c.execute("SELECT COUNT(*) as cnt FROM images")
-        img_count = c.fetchone()["cnt"]
-        c.execute("SELECT COUNT(*) as cnt FROM user_memory")
-        mem_count = c.fetchone()["cnt"]
-        c.execute("SELECT COUNT(*) as cnt FROM events")
-        evt_count = c.fetchone()["cnt"]
-        c.execute("SELECT COUNT(*) as cnt FROM logs")
-        log_count = c.fetchone()["cnt"]
-        c.execute("SELECT COUNT(*) as cnt FROM global_keywords")
-        kw_count = c.fetchone()["cnt"]
-        c.execute("SELECT COUNT(*) as cnt FROM ai_raw_responses")
-        ai_count = c.fetchone()["cnt"]
+        # v17.16：路由层不写 SQL
+        from ..infra.repo_query import counts
+
+        n = counts(("images", "user_memory", "events", "logs",
+                    "global_keywords", "ai_raw_responses"))
+        img_count = n["images"]
+        mem_count = n["user_memory"]
+        evt_count = n["events"]
+        log_count = n["logs"]
+        kw_count = n["global_keywords"]
+        ai_count = n["ai_raw_responses"]
     except Exception as e:
         return json_response({"error": "db_query_failed", "message": str(e)}, 500)
 

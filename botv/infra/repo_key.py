@@ -20,3 +20,39 @@ def reload_api_keys():
     cfg.DOUBAO_API_KEY = get_api_key_from_db("ARK_API_KEY")  # 豆包密钥
     cfg.STICKER_API_ALAPI_TOKEN = get_api_key_from_db("ALAPI_TOKEN")  # ALAPI搜图密钥
     log_system(f"API: DS={bool(cfg.DS_API_KEY)},豆包={bool(cfg.DOUBAO_API_KEY)},ALAPI={bool(cfg.STICKER_API_ALAPI_TOKEN)}")
+
+def save_api_key(name, value, cursor=None):
+    """写入/覆盖一条 api_keys（v17.16：server 层不再写 SQL）
+
+    MySQL 用 ON DUPLICATE KEY，SQLite 用 INSERT OR REPLACE。
+    """
+    owned = cursor is None
+    c = cursor
+    try:
+        if c is None:
+            from .conn import get_cursor
+
+            c = get_cursor()
+        backend = ""
+        try:
+            from .conn import _resolve_backend
+
+            backend = _resolve_backend()
+        except Exception:
+            backend = ""
+        if backend == "sqlite":
+            c.execute("INSERT OR REPLACE INTO api_keys (key_name, key_value) "
+                      "VALUES (%s, %s)", (name, value))
+        else:
+            c.execute("INSERT INTO api_keys (key_name, key_value) VALUES (%s, %s) "
+                      "ON DUPLICATE KEY UPDATE key_value=%s", (name, value, value))
+        c.connection.commit()
+        return True
+    except Exception:
+        return False
+    finally:
+        if owned and c is not None:
+            try:
+                c.close()
+            except Exception:
+                pass

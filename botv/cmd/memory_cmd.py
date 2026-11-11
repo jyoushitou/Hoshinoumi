@@ -33,10 +33,9 @@ async def cmd_clear(ctx):
     parts = ctx.parts
     target = parts[1] if len(parts) > 1 else str(MASTER_QQ)
     try:
-        c = get_cursor()
-        c.execute("DELETE FROM user_memory WHERE target_id=%s", (target,))
-        c.execute("DELETE FROM events WHERE target_id=%s", (target,))
-        c.connection.commit()
+        from ..infra.repo_query import clear_target
+
+        ok = clear_target(target)
         if target in cfg.user_memory_pool:
             del cfg.user_memory_pool[target]
         return f"已清除 {target} 的对话记忆和事件记录"
