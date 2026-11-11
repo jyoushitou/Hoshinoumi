@@ -14,7 +14,7 @@
 #
 # 之后才是 preflight（更全面的自检）和 run.py（启动）：
 #
-#     setup.py → preflight.py → run.py
+#     setup.py → run.py（就这两条；preflight 等属可选排查）
 
 import argparse
 import os
@@ -137,6 +137,109 @@ def init_tables():
             pass
 
 
+def migrate_data():
+    """把旧表里的数据搬进新表（幂等：搬过就不会重复搬）"""
+    try:
+        from botv.infra import schema
+        from botv.infra.conn import get_cursor
+    except Exception as e:
+        print(f"  [!]  跳过迁移（导入失败）：{e}")
+        return True
+
+    try:
+        c = get_cursor()
+    except Exception as e:
+        print(f"  [!]  跳过迁移（连不上库）：{e}")
+        return True
+
+    try:
+        # 新表还没建好就别迁
+        have = schema.existing_tables(c)
+        need = {"memories", "bot_states", "relations"}
+        if not need.issubset(have):
+            print("  [!]  新表不全，跳过数据迁移")
+            return True
+
+        c.execute("SELECT COUNT(*) AS n FROM events")
+        legacy = list(c.fetchone().values())[0] if c.rowcount != 0 else 0
+        c.execute("SELECT COUNT(*) AS n FROM memories")
+        migrated = list(c.fetchone().values())[0]
+
+        if legacy == 0:
+            print("  [OK] 旧表没有数据，无需迁移")
+            return True
+        if migrated > 0:
+            print(f"  [OK] 已迁移过（memories {migrated} 行），跳过")
+            return True
+
+        print(f"  [..] 检测到旧数据 {legacy} 行，开始迁移")
+        sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        import importlib
+
+        m = importlib.import_module("scripts.migrate_v17")
+        moved, err = m.run_migration()
+        if err:
+            print(f"  [!]  迁移中断：{err}")
+        else:
+            print(f"  [OK] 迁移完成（{moved} 行）")
+        return True
+    except Exception as e:
+        print(f"  [!]  迁移失败（不影响启动，可手动跑 migrate_v17.py）：{e}")
+        return True
+    finally:
+        try:
+            c.close()
+        except Exception:
+            pass
+
+
+def seed_scenes():
+    """把内置 8 个场景写进 cron_tasks（幂等：按内容去重）"""
+    try:
+        from botv.core import state as cfg
+        from botv.schedule import cron
+    except Exception as e:
+        print(f"  [!]  跳过场景导入（导入失败）：{e}")
+        return True
+
+    try:
+        uid = str(cfg.MASTER_QQ)
+        if not uid:
+            print("  [--] 没配 master_qq，跳过场景导入")
+            return True
+
+        scenes = [
+            ("催起床", "07:30", "1,2,3,4,5"),
+            ("周末吐槽赖床", "08:30", "6,7"),
+            ("提醒点外卖", "10:40", "1,2,3,4,5,6,7"),
+            ("叮嘱午睡", "12:30", "1,2,3,4,5,6,7"),
+            ("提醒起身", "13:30", "1,2,3,4,5,6,7"),
+            ("提醒晚餐", "18:00", "1,2,3,4,5,6,7"),
+            ("催睡觉", "23:00", "1,2,3,4,5,6,7"),
+            ("周日复盘", "20:00", "7"),
+        ]
+        existing = set()
+        for row in cron.list_tasks(uid):
+            existing.add((row.get("at_time"), row.get("weekdays"), row.get("content")))
+
+        created = 0
+        for scene, at, days in scenes:
+            key = (at, days, f"scene:{scene}")
+            if key in existing:
+                continue
+            if cron.add(uid, "weekly", f"scene:{scene}", at_time=at,
+                        weekdays=days, source="command", jitter_min=0):
+                created += 1
+        if created:
+            print(f"  [OK] 导入 {created} 个内置场景")
+        else:
+            print("  [OK] 内置场景已存在")
+        return True
+    except Exception as e:
+        print(f"  [!]  场景导入失败（不影响启动）：{e}")
+        return True
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--check", action="store_true", help="只检查，不装也不建表")
@@ -165,13 +268,32 @@ def main():
     print()
     print("建表：")
     ok_tables = init_tables()
+    if not ok_tables:
+        print()
+        print("建表没完成，修完再跑一次。")
+        return 1
 
     print()
-    if ok_tables:
-        print("环境就绪。下一步：")
-        print("    python3 scripts/preflight.py     # 完整自检（可选）")
-        print("    python3 run.py                   # 启动")
-        return 0
+    print("迁移旧数据：")
+    migrate_data()
+
+    print()
+    print("导入内置场景：")
+    seed_scenes()
+
+    print()
+    print("=" * 60)
+    print("  环境就绪，直接启动：")
+    print("      python3 run.py")
+    print()
+    print("  需要单独排查时（都可选，正常部署不用跑）：")
+    print("      python3 scripts/preflight.py    # 13 项环境自检")
+    print("      python3 scripts/init_db.py      # 只建表（加 --apply）")
+    print("      python3 scripts/migrate_v17.py  # 只迁移（加 --apply）")
+    print("      python3 scripts/seed_scenes.py  # 只导入场景（加 --apply）")
+    print("      python3 scripts/run_tests.py    # 全量测试（807 条）")
+    print("=" * 60)
+    return 0
     print("建表没完成，修完再跑一次。")
     return 1
 

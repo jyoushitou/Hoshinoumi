@@ -283,5 +283,11 @@ def main():
     return 0
 
 
+def _hint():
+    print("\n[提示] 这是可选的深度自检；日常部署只需 setup.py + run.py")
+
+
 if __name__ == "__main__":
-    sys.exit(main())
+    code = main()
+    _hint()
+    sys.exit(code)

@@ -129,6 +129,10 @@ run.py → app.bootstrap → app.loop
 
 ---
 
+
+> **部署/升级只有两条命令**：python3 scripts/setup.py → python3 run.py。
+> 建表、旧数据迁移、内置定时场景导入，setup 一次做完，重复跑安全。
+
 ## 快速开始
 
 ### 环境要求
@@ -519,7 +523,7 @@ python3 scripts/check_names.py            # 静态检查：未定义名字 / 先
 ### 自检
 
 ```bash
-python3 scripts/setup.py --install    # 装缺的依赖 + 建缺的表（幂等）
+python3 scripts/setup.py              # 装依赖 + 建表 + 迁移 + 场景（幂等）
 python3 scripts/preflight.py         # 13 项自检
 ```
 

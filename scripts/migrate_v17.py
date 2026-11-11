@@ -59,6 +59,47 @@ def counts(c):
     return {r["kind"]: int(r["n"]) for r in rows}
 
 
+def run_migration():
+    """给 setup.py 调用的入口：按真实流程迁一次，返回 (迁移行数, 错误)
+
+    与命令行 `--apply` 等价，但不打印大段表格。
+    """
+    from botv.infra import schema
+    from botv.infra.conn import get_cursor
+
+    c = get_cursor()
+    try:
+        missing = schema.missing_tables(c)
+        if missing:
+            return 0, f"缺 {len(missing)} 张新表"
+
+        dist = counts(c)
+        total = sum(dist.values())
+        if not total:
+            return 0, None
+
+        moved = 0
+        for kind in [k for k in dist if k in KIND_TO_TABLE]:
+            try:
+                moved += migrate_json_kind(c, kind) or 0
+            except Exception as e:
+                return moved, f"{kind}: {e}"
+        try:
+            migrate_reading(c)
+        except Exception:
+            pass
+        try:
+            migrate_habit(c)
+        except Exception:
+            pass
+        return moved, None
+    finally:
+        try:
+            c.close()
+        except Exception:
+            pass
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--apply", action="store_true", help="真的迁移（默认只统计）")
@@ -316,5 +357,11 @@ def migrate_habit(c):
     return moved
 
 
+def _hint():
+    print("\n[提示] 通常不需要单独跑：python3 scripts/setup.py 已包含数据迁移")
+
+
 if __name__ == "__main__":
-    sys.exit(main())
+    code = main()
+    _hint()
+    sys.exit(code)

@@ -84,5 +84,11 @@ def main():
     return 0
 
 
+def _hint():
+    print("\n[提示] 通常不需要单独跑：python3 scripts/setup.py 已包含场景导入")
+
+
 if __name__ == "__main__":
-    sys.exit(main())
+    code = main()
+    _hint()
+    sys.exit(code)
