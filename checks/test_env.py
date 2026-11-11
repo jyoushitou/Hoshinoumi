@@ -222,6 +222,8 @@ class TestEnvironment(unittest.TestCase):
         "NAO_MONITOR_INTERVAL",
         "NAO_READ_IDLE_MINUTES",
         "NAO_LEGACY_WRITE",
+        "NAO_DB_PATH",
+        "NAO_DB_BACKEND",
         "NAO_LOG_KEEP_DAYS",
         "NAO_LOG_DIR",
     }

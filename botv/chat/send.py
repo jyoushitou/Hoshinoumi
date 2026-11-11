@@ -41,6 +41,13 @@ async def send_voice(target, mp3, ws, is_group=False):
         await send_private_msg(target, msg, ws)
 
 
+def _voice_worthy(text):
+    """剥掉标点和空白后还够长才值得念（v16 修复：别发 1 秒的「……」）"""
+    import re as _re
+    core = _re.sub(r"[\s\W_]+", "", text or "", flags=_re.UNICODE)
+    return len(core) >= VOICE_MIN_LEN
+
+
 async def maybe_send_voice(text, target, ws, is_group=False):
     """按概率/冷却决定要不要把这句话念出来。返回是否发了"""
     import time as _t
@@ -224,6 +231,9 @@ def bubble_delay():
 
 async def send_short_reply(tid, text, ws, uid, is_group=False, kws=None):
     """发送完整回复：构建消息→逐条发送（文本+图片）"""
+    if is_duplicate_reply(tid, text):  # v16.0.5：同一句话短时间内不重复发
+        log_api("[发送] 与上一条重复，跳过")
+        return False
     parts = await build_reply_message(text, uid, kws, is_group)  # 构建回复消息列表（带发图择时）
     log_api(f"[发送] 共{len(parts)}条消息: {[p[0] for p in parts]}")  # 日志记录消息数量
     for ptype, msg in parts:  # 遍历每条消息
@@ -236,9 +246,9 @@ async def send_short_reply(tid, text, ws, uid, is_group=False, kws=None):
     log_send(f"回复:{text[:40]}")  # 日志记录发送
 
 
-async def send_sticker_private(qq, ws, uid):
+async def send_sticker_private(qq, ws, uid, ctx=""):
     """发送私聊表情包"""
-    s = select_best_sticker(uid)  # 选择最佳表情包
+    s = select_best_sticker(uid, ctx)  # 选择最佳表情包（带上下文，避免甩无关图）
     if isinstance(s, str):  # 返回的是QQ表情ID（字符串）
         await send_private_msg(qq, [{"type":"face","data":{"id":s}}], ws)  # 发送QQ表情
     else:  # 返回的是文件路径
@@ -247,7 +257,7 @@ async def send_sticker_private(qq, ws, uid):
             await send_private_msg(qq, img_msg, ws)  # 发送图片
 
 
-async def send_sticker_group(gid, ws, uid):
+async def send_sticker_group(gid, ws, uid, ctx=""):
     """发送群聊表情包"""
     s = select_best_sticker(uid)  # 选择最佳表情包
     if isinstance(s, str):  # 返回的是QQ表情ID（字符串）
@@ -322,3 +332,30 @@ async def try_typo_recall(target, text, ws):
     cfg.typo_history.append(now)
     log_system(f"打错字撤回: {typo[:12]} -> {text[:12]}")
     return True
+
+# ===================== 重复回复拦截（v16.0.5） =====================
+# 同一个对象短时间内收到两次一样的话，很出戏（「烦什么。」连问两遍）。
+# 归一化后比较：去掉空格和标点，只比「说了什么」。
+
+RECENT_REPLY_TTL = 180      # 3 分钟内的重复算重复
+RECENT_REPLY_MIN_LEN = 3    # 太短的话（「嗯」「好」）不拦；3 字起才拦，否则「烦什么」漏掉
+_recent_replies = {}        # target -> (normalized, ts)
+
+
+def _normalize_reply(text):
+    import re as _re
+    return _re.sub(r"[\s\W_]+", "", text or "", flags=_re.UNICODE)
+
+
+def is_duplicate_reply(target, text, now=None):
+    """最近说过同样的话？返回 True 表示应该跳过"""
+    import time as _t
+    core = _normalize_reply(text)
+    if len(core) < RECENT_REPLY_MIN_LEN:
+        return False
+    now = now or _t.time()
+    last = _recent_replies.get(str(target))
+    if last and now - last[1] < RECENT_REPLY_TTL and last[0] == core:
+        return True
+    _recent_replies[str(target)] = (core, now)
+    return False

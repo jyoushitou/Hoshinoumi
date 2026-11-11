@@ -21,6 +21,8 @@ DEFAULTS = {
     "ws_port": 3001,
     "api_port": 60908,
     "db": {
+        "backend": "auto",         # auto：能用 MySQL 就用，连不上退 SQLite
+        "path": "data/nao.db",     # sqlite 文件位置
         "host": "",
         "port": 3306,
         "user": "",
@@ -34,6 +36,8 @@ ENV_MAP = {
     "NAO_MASTER_QQ": "master_qq",
     "NAO_WS_PORT": "ws_port",
     "NAO_API_PORT": "api_port",
+    "NAO_DB_BACKEND": "db.backend",
+    "NAO_DB_PATH": "db.path",
     "NAO_DB_HOST": "db.host",
     "NAO_DB_PORT": "db.port",
     "NAO_DB_USER": "db.user",
@@ -105,6 +109,58 @@ def load(force=False):
 def get(path, default=None):
     """取配置项，支持点号路径：get("db.host")"""
     return _get_path(load(), path, default)
+
+
+_backend_cache = {"value": None}
+
+
+def mysql_reachable(timeout=3.0):
+    """MySQL 能不能连（连不上就返回 False，不抛异常）"""
+    from ..log import log_api
+
+    try:
+        import pymysql
+
+        db = load().get("db", {})
+        if not db.get("host"):
+            return False
+        conn = pymysql.connect(
+            host=db.get("host"), port=int(db.get("port") or 3306),
+            user=db.get("user") or "", password=db.get("password") or "",
+            database=db.get("name") or "", charset="utf8mb4",
+            connect_timeout=int(timeout))
+        conn.close()
+        return True
+    except Exception as e:
+        log_api(f"[存储] MySQL 不可用（{type(e).__name__}），改用 SQLite")
+        return False
+
+
+def storage_backend(force="", timeout=3.0):
+    """用哪个存储后端
+
+    - 配了 `mysql` / `sqlite`：照配的来（强制）
+    - `auto`（默认）：**先试 MySQL，连不上才退 SQLite**
+    """
+    if force:
+        _backend_cache["value"] = None
+    backend = str(load().get("db", {}).get("backend") or "auto").strip().lower()
+
+    if backend in ("sqlite", "sqlite3", "file"):
+        return "sqlite"
+    if backend in ("mysql", "mariadb"):
+        return "mysql"
+
+    # auto
+    if _backend_cache["value"] is None:
+        _backend_cache["value"] = "mysql" if mysql_reachable(timeout) else "sqlite"
+    return _backend_cache["value"]
+
+
+def sqlite_path():
+    """sqlite 数据文件路径（相对项目根目录）"""
+    raw = str(load().get("db", {}).get("path") or "data/nao.db")
+    return raw if os.path.isabs(raw) else os.path.join(ROOT, raw)
 
 
 def db_config():

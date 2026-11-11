@@ -213,7 +213,7 @@ async def _reply_and_send(d, ws, text, img_md5s=None):
         if await handle_command(text, uid, ws, mt == "group", gid):  # 是命令
             pass  # 命令已处理，不再走AI回复
         elif contains_sticker_key(text):  # 包含表情包关键词
-            pending = ("sticker",)
+            pending = ("sticker", text)
         else:  # 普通对话
             target = gid if mt == "group" else uid  # 回复目标
             # v16：主人点名要她去看某本书 → 不走模型，直接应下

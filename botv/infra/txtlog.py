@@ -61,6 +61,8 @@ def write(tag, message):
     """写一行：时间|级别|内容；失败静默"""
     if not enabled():
         return False
+    need_init = False
+    ok = False
     try:
         with _lock:
             day = datetime.now().strftime("%Y-%m-%d")
@@ -69,9 +71,8 @@ def write(tag, message):
                 _state["day"] = day
                 _state["path"] = _path_for(day)
                 if not _state["inited"]:
-                    cleanup()
-                    purge_db_logs()
                     _state["inited"] = True
+                    need_init = True
 
             path = _rotate_if_needed(_state["path"])
             _state["path"] = path
@@ -79,9 +80,23 @@ def write(tag, message):
             with open(path, "a", encoding="utf-8") as f:
                 f.write(line)
             _state["size"] = os.path.getsize(path)
-        return True
+            ok = True
     except Exception:
-        return False
+        ok = False
+
+    # 清理放在锁外：purge_db_logs 会连数据库 → 日志 → 本函数，
+    # 持锁做必然死锁（v17.11 踩过）。
+    if need_init:
+        try:
+            cleanup()
+        except Exception:
+            pass
+        try:
+            purge_db_logs()
+        except Exception:
+            pass
+    return ok
+    return False
 
 
 def cleanup():
