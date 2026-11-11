@@ -23,3 +23,6 @@ vendor/
 config.local.json
 qidian.json
 release/
+
+# v17.5：TXT 日志
+logs/

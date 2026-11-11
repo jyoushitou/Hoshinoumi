@@ -9,29 +9,43 @@ def get_db_writer():
     from .db import write_log_to_db
     return write_log_to_db
 
+def _txt(tag, m):
+    """写一份到 txt 文件（失败静默）"""
+    try:
+        from .infra import txtlog
+        txtlog.write(tag, m)
+    except Exception:
+        pass
+
+
 def log_system(m):
     """系统级日志：初始化、定时任务、状态变更等"""
     print(f"【系统】{datetime.now().strftime('%H:%M:%S')}|{m}")
+    _txt("系统", m)
     get_db_writer()("系统",m)
 
 def log_recv(m):
     """接收日志：收到的QQ消息"""
     print(f"【接收】{datetime.now().strftime('%H:%M:%S')}|{m}")
+    _txt("接收", m)
     get_db_writer()("接收",m)
 
 def log_send(m):
     """发送日志：发送的消息内容"""
     print(f"【发送】{datetime.now().strftime('%H:%M:%S')}|{m}")
+    _txt("发送", m)
     get_db_writer()("发送",str(m))
 
 def log_api(m):
     """接口日志：API调用、图片处理、CLIP分析等"""
     print(f"【接口】{datetime.now().strftime('%H:%M:%S')}|{m}")
+    _txt("接口", m)
     get_db_writer()("接口",m)
 
 def log_err(m):
     """异常日志：捕获到的错误和异常"""
     print(f"【异常】{datetime.now().strftime('%H:%M:%S')}|{m}")
+    _txt("异常", m)
     get_db_writer()("异常",m)
 
 def get_recent_logs(limit=20):

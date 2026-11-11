@@ -36,6 +36,11 @@ async def cmd_stats(ctx):
         lines.append(get_channel().describe())
     except Exception:
         pass
+    try:
+        from ..infra.txtlog import describe as describe_log
+        lines.append(describe_log())
+    except Exception:
+        pass
     return "\n".join(lines)
 
 
