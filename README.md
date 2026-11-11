@@ -74,7 +74,7 @@ MySQL 存记忆与日志。图片由她自己一句话打标签，正文小说�
 ├── tests/           功能测试（分模块 + 冒烟，448 条）
 ├── checks/          前置环境监测 + 迁移检查（37 条，与 botv 同级）
 ├── scripts/         迁移 / 打包 / 发布 / 自检脚本
-├── docs/            版本计划、数据库设计、发布清单
+├── docs/            版本计划、架构图、数据库设计、发布清单
 ├── personas/        角色卡（可换人设）
 ├── release/         打包与发布产物（不进版本库）
 ├── config.example.json   配置模板
@@ -99,6 +99,31 @@ release/
 python3 scripts/run_tests.py            # tests + checks
 python3 scripts/run_tests.py --fast     # 只跑功能测试
 ```
+
+---
+
+## 架构
+
+```
+run.py → app.bootstrap → app.loop
+                 │
+  接入(WS/HTTP/定时) → 调度器 → 业务/能力层 → 基础层 → MySQL/SQLite
+                 │
+            唯一出站口 egress.outbound → ws.send
+```
+
+完整分层图、消息生命周期、调度器模型、已知架构债：
+
+> **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** —— 架构图
+> **[docs/ARCH-REVIEW.md](docs/ARCH-REVIEW.md)** —— 审查结论与修复顺序（综合 6.3/10）
+
+三条硬约束：
+
+| 约束 | 违反的后果 |
+|---|---|
+| 所有发送只走 `egress.outbound` | 并发时帧交错（心跳插进气泡中间） |
+| 阻塞调用只走 `run_blocking` | 卡住的请求永久占线程，池慢慢空 |
+| P0 聊天不排队 | 读书/抓取时回消息变慢 |
 
 ---
 
