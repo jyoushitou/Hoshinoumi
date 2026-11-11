@@ -301,6 +301,12 @@ REQUIRED = ["logs", "api_keys", "global_keywords", "user_memory",
 # ---------- 动作 ----------
 
 def existing_tables(cursor):
+    """列出已存在的表名（v17.11：按游标类型判断后端）"""
+    from .conn import _SQLiteCursor
+
+    if isinstance(cursor, _SQLiteCursor):
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        return {row["name"] for row in cursor.fetchall()}
     cursor.execute("SHOW TABLES")
     return {list(row.values())[0] for row in cursor.fetchall()}
 
@@ -332,7 +338,9 @@ def ensure_tables(cursor=None, names=None, log=None):
             if not ddl:
                 continue
             try:
-                cursor.execute(ddl)
+                # v17.11：按后端翻译（sqlite 需要改写自增/ENUM/索引）
+                for stmt in adapt_ddl(ddl):
+                    cursor.execute(stmt)
                 created.append(name)
                 if log:
                     log(f"建表: {name}")
@@ -381,3 +389,77 @@ def describe(cursor=None):
                 cursor.close()
             except Exception:
                 pass
+
+# ===================== DDL 方言适配（v17.11） =====================
+# 表定义只写一份（MySQL 语法），SQLite 用这个函数现场翻译。
+# 只处理这 20 张表里真实用到的写法，不做通用 SQL 解析器。
+
+import re as _re
+
+
+def _is_sqlite():
+    try:
+        from ..core.settings import storage_backend
+
+        return storage_backend() == "sqlite"
+    except Exception:
+        return False
+
+
+def adapt_ddl(ddl, backend=None):
+    """把 MySQL 建表语句翻成目标后端；返回要执行的语句列表
+
+    MySQL 特有、SQLite 不认的部分：
+      AUTO_INCREMENT / ENGINE / CHARSET / COMMENT / UNSIGNED /
+      ENUM(...) / ON UPDATE CURRENT_TIMESTAMP / 表级 KEY
+    """
+    backend = backend or ("sqlite" if _is_sqlite() else "mysql")
+    if backend != "sqlite":
+        return [ddl]
+
+    sql = ddl
+    extra = []
+
+    # 1) 表选项（ENGINE=... CHARSET=...）
+    sql = _re.sub(r"\)\s*ENGINE=\w+[^;]*$", ")", sql.strip())
+
+    # 2) 整数主键自增
+    sql = _re.sub(
+        r"(?:BIGINT|INT|INTEGER)\s+AUTO_INCREMENT\s+PRIMARY\s+KEY",
+        "INTEGER PRIMARY KEY AUTOINCREMENT", sql, flags=_re.I)
+    sql = _re.sub(r"\bBIGINT\b", "INTEGER", sql, flags=_re.I)
+    sql = _re.sub(r"\bUNSIGNED\b", "", sql, flags=_re.I)
+
+    # 3) ENUM(...) → TEXT
+    sql = _re.sub(r"ENUM\s*\([^)]*\)", "TEXT", sql, flags=_re.I)
+
+    # 4) TINYINT(1) → INTEGER
+    sql = _re.sub(r"TINYINT\s*\(\s*1\s*\)", "INTEGER", sql, flags=_re.I)
+
+    # 5) ON UPDATE CURRENT_TIMESTAMP（SQLite 不支持，去掉）
+    sql = _re.sub(r"ON\s+UPDATE\s+CURRENT_TIMESTAMP", "", sql, flags=_re.I)
+
+    # 6) COMMENT '...'
+    sql = _re.sub(r"\bCOMMENT\s+'[^']*'", "", sql, flags=_re.I)
+
+    # 7) 表级 UNIQUE KEY / KEY / INDEX → 拆成独立 CREATE [UNIQUE] INDEX
+    key_re = r",\s*(UNIQUE\s+)?(?:KEY|INDEX)\s+(\w+)\s*\(([^)]*)\)"
+    keys = _re.findall(key_re, sql, _re.I)
+    if keys:
+        table = _re.search(r"CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?`?(\w+)`?", sql, _re.I)
+        tname = table.group(1) if table else "t"
+        sql = _re.sub(key_re, "", sql, flags=_re.I)
+        for unique, idx, cols in keys:
+            cols = cols.replace("`", "").replace(" ", "")
+            uniq = "UNIQUE " if unique else ""
+            extra.append(
+                f"CREATE {uniq}INDEX IF NOT EXISTS {idx} ON {tname}({cols})")
+
+    # 8) 收尾：多余逗号、连续空格
+    sql = _re.sub(r",\s*,", ",", sql)
+    sql = _re.sub(r"\(\s*,", "(", sql)
+    sql = _re.sub(r",\s*\)", ")", sql)
+    sql = _re.sub(r"[ \t]+", " ", sql)
+    sql = sql.strip()
+
+    return [sql] + extra
