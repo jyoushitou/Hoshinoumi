@@ -16,6 +16,17 @@ from ..core import tunables  # v15：运行时参数
 from ..ai.prompt import load_personality_supplement
 
 
+def _wire_life():
+    """v17.15：注册生活能力端口；失败不阻断启动（ai 侧有默认值）"""
+    try:
+        from ..core.lifeport import setup_life_bridge
+
+        names = setup_life_bridge()
+        log_system(f"[端口] 生活能力已注册：{len(names)} 项")
+    except Exception as e:
+        log_err(f"[端口] 注册失败，ai 用默认值：{e}")
+
+
 def _configure_db():
     """v17.14：把数据库配置注入 infra.conn，断开 conn → settings 的边
 
@@ -99,6 +110,7 @@ def _ensure_tables():
 def bootstrap():
     """同步初始化：加载密钥/记忆/表情包/CLIP/人设，建表，初始化运行时状态"""
     _configure_db()  # v17.14：先把数据库配置注入 infra.conn
+    _wire_life()     # v17.15：把 life 能力注册进端口（ai 不 import life）
     reload_api_keys()  # 必须先于 load_memories（追溯日记需要 API key）
     load_memories()  # 从数据库加载对话记忆和全局关键词
     init_sticker_archive()  # 表情包存档目录，迁移旧版 JSON 索引

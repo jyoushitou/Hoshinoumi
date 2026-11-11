@@ -639,18 +639,21 @@ class TestStateInPrompt(unittest.TestCase):
             captured["sys"] = msgs[0]["content"]
             return "好"
 
-        orig = (client.call_deepseek, mem.load_events_from_db,
-                client.life_current, client.touch_talk)
+        from botv.core import lifeport
+
+        orig = (client.call_deepseek, mem.load_events_from_db)
         client.call_deepseek = fake_ds
         mem.load_events_from_db = lambda *a, **k: []
-        client.life_current = lambda *a, **k: {"mood": -0.3, "energy": 0.15, "lonely": 0.9}
-        client.touch_talk = lambda: None
+        lifeport.register("state_line",
+                          lambda tid: "她现在有点烦，困得不行，还有点想你")
+        lifeport.register("touch_talk", lambda tid: None)
         locks._model_sem = None
         try:
             asyncio.run(client.get_character_reply("hi", "1"))
         finally:
-            (client.call_deepseek, mem.load_events_from_db,
-             client.life_current, client.touch_talk) = orig
+            client.call_deepseek, mem.load_events_from_db = orig
+            lifeport.unregister("state_line")
+            lifeport.unregister("touch_talk")
         self.assertIn("有点烦", captured["sys"])
         self.assertIn("困得不行", captured["sys"])
 

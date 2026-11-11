@@ -21,19 +21,26 @@ from ..memory import build_memory_context, extract_keywords  # 记忆上下文�
 from ..personality import get_system_prompt  # 系统提示词
 from .prompt import now_text  # 当前时间描述（v5-F7）
 from ..chat.timing import tone_hint  # 时段语气提示（v6-A20）
-from ..life.state import current as life_current, describe as describe_state, touch_talk  # v9-U4
-from ..life.events import ensure_daily_life  # v9-U7
-from ..life.relation import describe as relation_desc, bump as relation_bump, addressing  # v10-U8 / v13-G54
-from ..life.habit import phrases_for, describe as habit_line  # v12-A17
-from ..life.milestone import milestone_text  # v12-G38
-from ..life import friction as life_friction  # v13-U20
-from ..life import digest as life_digest  # v14.1-D3
-from ..life import reading as life_reading  # v16：她在看什么
+# v17.15：ai 不再 import life，改成端口（life 启动时注册）
+from ..core.lifeport import life  # noqa: E402
 from ..infra.repo_profile import build_profile_text  # 对象画像（v7-B9）
 from ..memory.inject import trim, BUDGET  # 分层预算（v8-B13）
 from ..memory.timeline import build_timeline_text  # 时间线注入（v8-B16）
 from .parse import parse_ai_reply  # 解析AI回复
 from botv.core import state as cfg  # 全局运行时变量
+
+
+async def _maybe_condense(tid, summary=None):
+    """调 life 的浓缩能力（端口里是同步函数还是协程都兼容）"""
+    import inspect
+
+    fn = getattr(life, "condense", None)
+    if fn is None:
+        return None
+    out = fn(tid, summary)
+    if inspect.isawaitable(out):
+        return await out
+    return out
 
 
 def _timeout_for(out_tokens):
@@ -189,13 +196,13 @@ def _profile_with_habit(tid):
     base = build_profile_text(tid)
     extras = []
     try:
-        line = habit_line(phrases_for(tid))
+        line = life.habit_line(tid)
         if line:
             extras.append(line)
     except Exception:
         pass
     try:
-        ms = milestone_text(tid)
+        ms = life.milestone_line(tid)
         if ms:
             extras.append(ms)
     except Exception:
@@ -224,7 +231,7 @@ async def get_character_reply(txt, tid, current_kws=None):
     cur_kw_str = "、".join(current_kws) if current_kws else "无"  # 当前话题关键词（顿号分隔）
     # v9-U4：她的真实状态 + 当前时段，拼成一句"她现在什么感觉"
     try:
-        state_line = describe_state(life_current(tid=tid))
+        state_line = life.state_line(tid)
     except Exception:
         state_line = ""
     try:
@@ -234,8 +241,8 @@ async def get_character_reply(txt, tid, current_kws=None):
 
     # v13-U20：她现在在不在闹别扭
     try:
-        life_friction.refresh(tid)
-        _f = life_friction.prompt_line(tid)
+        life.friction_refresh(tid)
+        _f = life.friction_line(tid)
         if _f:
             tone_line += " " + _f
     except Exception:
@@ -252,7 +259,7 @@ async def get_character_reply(txt, tid, current_kws=None):
 
     # v9-U7：她今天过得怎么样——每天第一次对话时生成，之后不再写
     try:
-        ensure_daily_life()
+        life.ensure_daily()
     except Exception:
         pass
 
@@ -260,11 +267,11 @@ async def get_character_reply(txt, tid, current_kws=None):
         global_keywords=kw,
         current_dialogue=dia,
         events=events,
-        digest=life_digest.describe(tid),  # v14.1-D3：浓缩记录
-        reading=life_reading.describe(tid) or "最近没在看书",  # v16：在追的小说
+        digest=life.digest_line(tid),  # v14.1-D3：浓缩记录
+        reading=life.reading_line(tid) or "最近没在看书",  # v16：在追的小说
         profile=trim(_profile_with_habit(tid), BUDGET["profile"]),  # v7-B9 画像 + v12 口头禅
         timeline=build_timeline_text(tid),  # v8-B16：最近 7 天
-        relation=(relation_desc(tid) + ("｜" + addressing(tid) if addressing(tid) else "")),  # v10-U8 / v13-G54
+        relation=life.relation_line(tid),  # v10-U8 / v13-G54
         master_qq=MASTER_QQ,
         now=now_text(),  # v5-F7：让她知道现在几点
         tone=tone_line,  # v6-A20 时段 + v9-U4 状态
@@ -307,12 +314,12 @@ async def get_character_reply(txt, tid, current_kws=None):
     # v9-U4：她真的回话了，算一次"被陪着"——缓解孤独
     if r and not isinstance(r, Fallback):
         try:
-            touch_talk(tid=tid)
-            relation_bump(tid)  # v10-U8：聊一轮，近一点
+            life.touch_talk(tid)
+            life.relation_bump(tid)  # v10-U8：聊一轮，近一点
         except Exception:
             pass
         try:  # v14.1-D3：超过 30 轮后，把溢出的旧对话浓缩成一行
-            await life_digest.maybe_condense(tid, _digest_summary)
+            await _maybe_condense(tid, _digest_summary)
         except Exception:
             pass
 

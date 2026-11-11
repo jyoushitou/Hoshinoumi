@@ -479,13 +479,16 @@ class TestHabit(unittest.TestCase):
 
     def test_profile_with_habit(self):
         import botv.ai.client as client
-        orig_build, orig_phrases = client.build_profile_text, client.phrases_for
+        from botv.core import lifeport
+
+        orig_build = client.build_profile_text
+        lifeport.register("habit_line", lambda tid: "口头禅：绝了")
         client.build_profile_text = lambda tid: "昵称：小奈"
-        client.phrases_for = lambda tid: ["绝了"]
         try:
             text = client._profile_with_habit("1")
         finally:
-            client.build_profile_text, client.phrases_for = orig_build, orig_phrases
+            client.build_profile_text = orig_build
+            lifeport.unregister("habit_line")
         self.assertIn("小奈", text)
         self.assertIn("绝了", text)
 
@@ -737,18 +740,19 @@ class TestMilestone(unittest.TestCase):
 
     def test_profile_includes_milestone(self):
         import botv.ai.client as client
+        from botv.core import lifeport
+
         orig_build = client.build_profile_text
-        orig_habit = client.phrases_for
-        orig_ms = client.milestone_text
+        lifeport.register("habit_line", lambda tid: "")
+        lifeport.register("milestone_line",
+                          lambda tid: "今天正好认识一百天（第 100 天）")
         client.build_profile_text = lambda tid: "昵称：小奈"
-        client.phrases_for = lambda tid: []
-        client.milestone_text = lambda tid, now=None: "今天正好认识一百天（第 100 天）"
         try:
             text = client._profile_with_habit("1")
         finally:
             client.build_profile_text = orig_build
-            client.phrases_for = orig_habit
-            client.milestone_text = orig_ms
+            lifeport.unregister("habit_line")
+            lifeport.unregister("milestone_line")
         self.assertIn("一百天", text)
 
 class TestPending(unittest.TestCase):
