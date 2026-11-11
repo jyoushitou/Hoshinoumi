@@ -155,6 +155,18 @@ CREATE TABLE ai_logs (
     KEY idx_time (created_at)
 );
 
+CREATE TABLE call_logs (
+    id           BIGINT AUTO_INCREMENT PRIMARY KEY,
+    target_id    VARCHAR(64) NOT NULL,
+    kind         ENUM('voice','video') NOT NULL DEFAULT 'voice',
+    direction    ENUM('in','out') NOT NULL DEFAULT 'in',
+    started_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ended_at     DATETIME NULL,
+    duration_sec INT NOT NULL DEFAULT 0,
+    end_reason   ENUM('hangup','timeout','error') NULL,
+    KEY idx_target_time (target_id, started_at)
+);
+
 CREATE TABLE ops_audit (
     id         BIGINT AUTO_INCREMENT PRIMARY KEY,
     target_id  VARCHAR(64) NULL,

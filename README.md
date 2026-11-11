@@ -42,7 +42,9 @@ MySQL 存记忆与日志。图片由她自己一句话打标签，正文小说�
 | v18 | QQ 空间：她发自己的说说（每天 1 条，只发不互动） | 📋 已规划 | [v18.md](docs/versions/v18.md) |
 | v19 | 视频：先 B 站，再抖音（只读 + 群里 @ 主人） | 📋 已规划 | [v19.md](docs/versions/v19.md) |
 | v20 | 运维通道：bash 只读 → agent → 有限写 | 📋 已规划 | [v20.md](docs/versions/v20.md) |
-| v21 | 嵌入式常驻：systemd / 看门狗 / LITE / ARM / 一键安装 | 📋 已规划 | [v21.md](docs/versions/v21.md) |
+| v21 | 语音通话：先验证通话信令，退路是语音连续对话 | 📋 已规划 | [v21.md](docs/versions/v21.md) |
+| v22 | 视频通话：依赖语音通道，退路是视频消息 | 📋 已规划 | [v22.md](docs/versions/v22.md) |
+| v23 | 嵌入式常驻：systemd / 看门狗 / LITE / ARM / 一键安装 | 📋 已规划 | [v23.md](docs/versions/v23.md) |
 
 > **约定**：每个大版本的**最后一个次版本**用来收尾修 bug 和技术债（如 v17.6），不堆新功能。
 
