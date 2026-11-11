@@ -202,10 +202,11 @@ FIELDS = {
 
 
 def _latest_rows(c, kind):
-    """每人最新一行"""
+    """每人最新一行（兼容没有 deleted_at 的老表）"""
+    alive = "AND deleted_at IS NULL" if has_deleted_at(c) else ""
     c.execute(
-        "SELECT target_id, event_summary FROM events "
-        "WHERE kind=%s AND deleted_at IS NULL ORDER BY id DESC",
+        f"SELECT target_id, event_summary FROM events "
+        f"WHERE kind=%s {alive} ORDER BY id DESC",
         (kind,),
     )
     seen, out = set(), []
