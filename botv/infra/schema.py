@@ -159,6 +159,9 @@ PURE = {
             summary VARCHAR(500) NOT NULL,
             tags VARCHAR(200) NULL,
             importance TINYINT NOT NULL DEFAULT 3,
+            -- v18.0：记忆分量。weight 0~1（检索排序用），tier 三档（人看的）
+            weight FLOAT NOT NULL DEFAULT 0.5,
+            tier ENUM('light','medium','heavy') NOT NULL DEFAULT 'medium',
             source ENUM('chat','life','image','manual') NOT NULL DEFAULT 'chat',
             dedupe_key VARCHAR(128) NULL,
             created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -166,7 +169,8 @@ PURE = {
             deleted_at DATETIME NULL,
             UNIQUE KEY uk_dedupe (target_id, dedupe_key),
             KEY idx_target_time (target_id, created_at),
-            KEY idx_kind (kind)
+            KEY idx_kind (kind),
+            KEY idx_mem_weight (target_id, weight)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """,
     "keywords": """
@@ -438,6 +442,10 @@ def adapt_ddl(ddl, backend=None):
 
     # 5) ON UPDATE CURRENT_TIMESTAMP（SQLite 不支持，去掉）
     sql = _re.sub(r"ON\s+UPDATE\s+CURRENT_TIMESTAMP", "", sql, flags=_re.I)
+
+    # 5.5) -- 行注释：必须在压缩空白之前删掉，
+    #      否则后面把换行压成空格，整行会被当成注释吞掉（v18.0 踩过）
+    sql = _re.sub(r"--[^\n]*", "", sql)
 
     # 6) COMMENT '...'
     sql = _re.sub(r"\bCOMMENT\s+'[^']*'", "", sql, flags=_re.I)
