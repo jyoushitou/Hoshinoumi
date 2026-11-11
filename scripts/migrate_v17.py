@@ -299,6 +299,12 @@ def migrate_habit(c):
                     pairs = list(val.items()); break
                 if isinstance(val, list):
                     pairs = [(w, 1) for w in val]; break
+        if not pairs and isinstance(data, dict):
+            # 兜底：顶层直接就是 {词: 次数}
+            pairs = [(k, v) for k, v in data.items()
+                     if isinstance(v, (int, float))]
+        if not pairs and isinstance(data, list):
+            pairs = [(w, 1) for w in data if isinstance(w, str)]
         if not pairs:
             continue
         for phrase, count in pairs:
