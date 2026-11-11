@@ -339,6 +339,16 @@ async def _handle_message(d, ws):
     if not text:  # 解析后文本为空
         return  # 跳过
 
+    # v17.7：从对话里提取定时任务（只私聊 + 只主人）
+    try:
+        from ..schedule import extract as extract_mod
+        if extract_mod.should_extract(mt, text, uid, cfg.MASTER_QQ):
+            _tid, _data = extract_mod.create_from_text(text, uid)
+            if _tid and _data:
+                log_system(f"[定时] 从对话建任务 #{_tid}：{_data.get('content')}")
+    except Exception as _e:
+        log_api(f"[定时] 提取失败（忽略）: {_e}")
+
     # 代码模式：每次收到消息更新最后活跃时间戳
     if cfg.CODE_MODE:
         cfg.CODE_MODE_LAST_MSG_TIME = _time.time()

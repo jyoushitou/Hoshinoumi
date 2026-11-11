@@ -44,6 +44,7 @@ def build_cmd_help():
         "!stats         - 今日统计：回复/配图/语音/群聊接话率\n"
         "!config [k] [v]- 查看/修改运行时参数\n"
         "!version       - 当前版本、提交、运行时长\n"
+        "!cron          - 定时消息（add/once/every/del/on/off）\n"
         "!event <uid>   - 查看指定对象的事件记忆\n"
         "!clear <uid>   - 清除指定对象的对话记忆\n"
         "!log <行数>     - 查看最近日志（默认20行）\n"
