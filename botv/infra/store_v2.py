@@ -40,11 +40,16 @@ def _fallback_events(tid, limit):
     """旧表回退（kind 三类）"""
     try:
         c = get_cursor()
-        sql = ("SELECT event_summary AS summary, tags, importance, created_at "
-               "FROM events WHERE target_id=%s AND deleted_at IS NULL "
-               "AND kind IN ('event','life','photo') "
-               "ORDER BY created_at DESC LIMIT %s")
-        c.execute(sql, (tid, int(limit)))
+        base = ("SELECT event_summary AS summary, tags, importance, created_at "
+                "FROM events WHERE target_id=%s ")
+        kind = "AND kind IN ('event','life','photo') "
+        order = "ORDER BY created_at DESC LIMIT %s"
+        try:
+            c.execute(base + "AND deleted_at IS NULL " + kind + order,
+                      (tid, int(limit)))
+        except Exception:
+            # 老库没有 deleted_at 列
+            c.execute(base + kind + order, (tid, int(limit)))
         rows = list(c.fetchall())
         if rows:
             log_api(f"[存储] 回退 events 读到 {len(rows)} 条（{tid}）")

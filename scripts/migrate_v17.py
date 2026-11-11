@@ -42,9 +42,19 @@ KIND_TO_TABLE = {
 }
 
 
+def has_deleted_at(c, table="events"):
+    """表里有没有 deleted_at 列（老库没有）"""
+    try:
+        c.execute(f"SHOW COLUMNS FROM {table} LIKE 'deleted_at'")
+        return c.fetchone() is not None
+    except Exception:
+        return False
+
+
 def counts(c):
-    """各 kind 有多少行"""
-    c.execute("SELECT kind, COUNT(*) AS n FROM events WHERE deleted_at IS NULL GROUP BY kind")
+    """各 kind 有多少行（兼容没有 deleted_at 的老表）"""
+    where = "WHERE deleted_at IS NULL" if has_deleted_at(c) else ""
+    c.execute(f"SELECT kind, COUNT(*) AS n FROM events {where} GROUP BY kind")
     rows = c.fetchall()
     return {r["kind"]: int(r["n"]) for r in rows}
 
@@ -131,7 +141,8 @@ def migrate(c, dist):
     for kind in ("event", "life", "photo"):
         if not dist.get(kind):
             continue
-        sql = """
+        alive = "AND deleted_at IS NULL" if has_deleted_at(c) else ""
+        sql = f"""
             INSERT IGNORE INTO memories
                 (target_id, kind, summary, tags, importance, source,
                  dedupe_key, created_at, last_seen)
@@ -139,7 +150,7 @@ def migrate(c, dist):
                    COALESCE(importance, 3), 'chat',
                    dedupe_key, created_at, last_seen
               FROM events
-             WHERE kind = %s AND deleted_at IS NULL
+             WHERE kind = %s {alive}
         """
         try:
             n = c.execute(sql, (kind, kind))
