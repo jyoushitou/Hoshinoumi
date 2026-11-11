@@ -14,8 +14,18 @@ from ..schedule import cycle_task_run
 from ..chat.handler import websocket_handle_qq
 
 
+MAX_RESTARTS = 10          # 连续失败多少次就放弃
+BACKOFF_BASE = 5           # 首次等待 5 秒
+BACKOFF_MAX = 60           # 退避封顶 60 秒
+
+
 async def serve(api_runner):
-    """常驻服务循环：收到 shutdown_event 时安全退出"""
+    """常驻服务循环：收到 shutdown_event 时安全退出
+
+    v17.10：端口被占用这类错误不能无限重启——连续失败 10 次就退出，
+    间隔按 5→10→20→40→60 秒退避，别再每 5 秒刷一条日志。
+    """
+    failures = 0
     while True:
         # 收到 !exit 命令后安全退出
         if getattr(cfg, "shutdown_event", None) and cfg.shutdown_event.is_set():
@@ -41,9 +51,11 @@ async def serve(api_runner):
                 websocket_handle_qq, LISTEN_HOST, LISTEN_PORT_QQ,
                 ping_interval=20, ping_timeout=60,  # v8-FIX：容忍短暂卡顿，别一卡就断线
             ):
+                failures = 0                       # 起来了就清零
                 await cfg.shutdown_event.wait()  # 保持运行，等待 !exit 命令触发退出
         except Exception as e:
-            log_err(f"重启:{e}")  # 异常时记录日志并自动重启
+            failures += 1
+            log_err(f"启动失败({failures}/{MAX_RESTARTS}): {e}")
         finally:
             hb.cancel()  # 取消心跳任务
             cyc.cancel()  # 取消定时任务
@@ -56,4 +68,9 @@ async def serve(api_runner):
             if getattr(cfg, "shutdown_event", None) and cfg.shutdown_event.is_set():
                 log_system("已安全退出")
                 return
-            await asyncio.sleep(5)  # 等待 5 秒后重启
+            if failures >= MAX_RESTARTS:
+                log_err(f"[退出] 连续 {failures} 次启动失败，交给 systemd 拉起")
+                return
+            delay = min(BACKOFF_MAX, BACKOFF_BASE * (2 ** max(0, failures - 1)))
+            log_system(f"[重启] {delay:.0f} 秒后重试（第 {failures + 1} 次）")
+            await asyncio.sleep(delay)
