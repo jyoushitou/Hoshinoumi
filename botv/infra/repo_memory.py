@@ -111,15 +111,43 @@ STATE_TARGET = "__self__"  # 状态行用固定 target，不占任何人的记�
 
 
 def load_state_json(target=None):
-    """读某个对象的状态；不传就是机器人自己（v14.1-D1 按人分开）"""
+    """读某个对象的状态；不传就是机器人自己（v14.1-D1 按人分开）
+
+    v17.4：先读新表 bot_states；没有就回退 events 的 JSON。
+    新表只有 mood/energy/lonely 三列，其它字段以旧表 JSON 为底合并。
+    """
     tid = str(target) if target else STATE_TARGET
+
+    # 旧表（作为底，保留新表没有的字段）
     c = get_cursor()
     c.execute(
         "SELECT event_summary FROM events WHERE target_id=%s AND kind='state' ORDER BY id DESC LIMIT 1",
         (tid,),
     )
     row = c.fetchone()
-    return (row["event_summary"] or "") if row else ""
+    legacy = (row["event_summary"] or "") if row else ""
+
+    # 新表
+    try:
+        from .store_v2 import read_state
+        fresh = read_state(tid)
+    except Exception:
+        fresh = {}
+
+    if not fresh:
+        return legacy
+    if not legacy:
+        import json
+        return json.dumps(fresh, ensure_ascii=False)
+    try:
+        import json
+        data = json.loads(legacy)
+        if not isinstance(data, dict):
+            data = {}
+        data.update(fresh)
+        return json.dumps(data, ensure_ascii=False)
+    except Exception:
+        return legacy
 
 
 def save_state_json(payload, target=None):
