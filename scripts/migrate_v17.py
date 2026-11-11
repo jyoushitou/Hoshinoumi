@@ -177,10 +177,6 @@ def migrate(c, dist):
         pass
     return moved
 
-
-if __name__ == "__main__":
-    sys.exit(main())
-
 # ===================== 五类 JSON 数据的迁移 =====================
 # 这五类在 events 里都是「一人一行、整段 JSON 存在 event_summary」。
 # 迁移 = 取每人最新一行 → 解析 JSON → 按字段名映射到新表。
@@ -252,3 +248,7 @@ def migrate_json_kind(c, kind):
         row.update({k: v for k, v in data.items() if k in FIELDS[table]})
         moved += _upsert(c, table, row) or 0
     return moved
+
+
+if __name__ == "__main__":
+    sys.exit(main())
