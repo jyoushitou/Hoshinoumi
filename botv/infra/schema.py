@@ -258,6 +258,28 @@ PURE = {
             KEY idx_time (created_at)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """,
+    "cron_tasks": """
+        CREATE TABLE IF NOT EXISTS cron_tasks (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            target_id VARCHAR(64) NOT NULL,
+            schedule_type ENUM('daily','weekly','once','interval') NOT NULL,
+            at_time VARCHAR(16) NULL,                 -- HH:MM
+            weekdays VARCHAR(16) NULL,                -- 1,3,5（周一=1）
+            once_at DATETIME NULL,                    -- 一次性
+            interval_min INT NULL,                    -- 间隔分钟
+            content VARCHAR(500) NOT NULL,            -- 要说什么/做什么
+            source ENUM('chat','command') NOT NULL DEFAULT 'command',
+            enabled TINYINT(1) NOT NULL DEFAULT 1,
+            jitter_min TINYINT NOT NULL DEFAULT 10,   -- ±分钟
+            last_fire DATETIME NULL,
+            next_ts DATETIME NULL,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                       ON UPDATE CURRENT_TIMESTAMP,
+            KEY idx_enabled_next (enabled, next_ts),
+            KEY idx_target (target_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
     "settings": """
         CREATE TABLE IF NOT EXISTS settings (
             k VARCHAR(64) PRIMARY KEY,
