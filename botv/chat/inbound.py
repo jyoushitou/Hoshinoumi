@@ -87,9 +87,9 @@ async def parse_message_content(raw_content, user_id, ws=None):
                     elif vt:  # 只有标签
                         img_info.append(f"[{vt[0]}]")
                         input_text += " " + " ".join(vt[:5])
-                    else:  # v11：视觉没拿到东西，明确告诉模型「图没看清」
+                    else:  # v17.9：图收到了，只是没看清——别说成「没加载出来」
                         img_info.append("[图]")
-                        input_text += " （他发来一张图，但图没加载出来/看不清内容）"
+                        input_text += " （他发了一张图，你看清了轮廓但说不出细节，别让他重发）"
                 else:  # 下载失败
                     img_info.append("[图]")  # 添加通用图片标识
                     log_api(f"[消息解析] 图片下载失败: {url[:60]}")  # 日志记录

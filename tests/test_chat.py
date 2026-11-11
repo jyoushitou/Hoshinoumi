@@ -791,5 +791,47 @@ class TestTypoRecall(unittest.TestCase):
 if __name__ == "__main__":
     unittest.main()
 
+
+
+class TestImageFallbackWording(unittest.TestCase):
+    """v17.9：图收到了、视觉失败 → 不能说「没加载出来」"""
+
+    def _run_parse(self, desc, tags, download_ok=True):
+        import asyncio
+        import botv.chat.inbound as I
+
+        orig = (I.download_url, I.process_and_save_image, I.describe_image)
+        # download_url 跑在 run_blocking 的线程里，必须是同步函数
+        I.download_url = lambda url: b"JPEGDATA" if download_ok else None
+
+        async def fake_proc(data, url, uid, keywords=None):
+            return "md5x", "标签", "/tmp/x.jpg"
+
+        I.process_and_save_image = fake_proc
+        async def fake_vision(data):
+            return desc, tags
+
+        I.describe_image = fake_vision
+        try:
+            msg = [{"type": "image", "data": {"url": "http://x/a.jpg"}}]
+            text, md5s = asyncio.run(I.parse_message_content(msg, "1", None))
+        finally:
+            (I.download_url, I.process_and_save_image, I.describe_image) = orig
+        return text
+
+    def test_vision_empty_not_missing(self):
+        text = self._run_parse(None, [])
+        self.assertNotIn("没加载出来", text)
+        self.assertNotIn("没加载", text)
+
+    def test_vision_ok_uses_desc(self):
+        text = self._run_parse("一只猫在窗台", ["猫"])
+        self.assertIn("一只猫", text)
+
+
+async def _async(v):
+    return v
+
+
 if __name__ == "__main__":
     unittest.main()
