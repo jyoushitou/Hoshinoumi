@@ -39,18 +39,19 @@ MySQL 存记忆与日志。图片由她自己一句话打标签，正文小说�
 | v14 ~ v15 | 可换角色 / 调参与观测 | ✅ 已发布 | [v14.md](docs/versions/v14.md) |
 | **v16** | **读小说（番茄 OCR + HTML 合并）** | ✅ 已发布 | [v16.md](docs/versions/v16.md) |
 | v17 | 执行模型重构：阻塞池 → 事件/调度 → 出站层 → 主循环瘦身 | 📋 已规划 | [v17.md](docs/versions/v17.md) |
-| v18 | 情感的深刻度：记忆分轻/中/重，情绪跨天保留 | 📋 已规划 | [v18.md](docs/versions/v18.md) |
-| v19 | 微信接入（OpenClaw/龙虾）：通道抽象 → 适配器 → 身份统一 | 📋 已规划 | [v19.md](docs/versions/v19.md) |
+| v18 | 情感的深刻度：记忆分轻重、情绪跨天、元数据表+视图解耦 | 📋 已规划 | [v18.md](docs/versions/v18.md) |
+| v19 | QQ 空间：她发自己的说说（每天 1 条，只发不互动） | 📋 已规划 | [v19.md](docs/versions/v19.md) |
 | v20 | 运维（一）bash 只读：白名单命令，只能查不能改 | 📋 已规划 | [v20.md](docs/versions/v20.md) |
 | v21 | 运维（二）agent：她自己调工具排障 | 📋 已规划 | [v21.md](docs/versions/v21.md) |
 | v22 | 运维（三）有限写：白名单 + 强制备份 + 二次确认 | 📋 已规划 | [v22.md](docs/versions/v22.md) |
 | v23 | 运维（四）可写体系：分级 / 备份 / 回滚 | 📋 已规划 | [v23.md](docs/versions/v23.md) |
-| v24 | 视频：先 B 站，再抖音（只读 + 群里  你） | 📋 已规划 | [v24.md](docs/versions/v24.md) |
-| v25 | QQ 空间：她发自己的说说（每天 1 条，只发不互动） | 📋 已规划 | [v25.md](docs/versions/v25.md) |
-| v26 | 语音通话：先验证通话信令，退路是语音连续对话 | 📋 已规划 | [v26.md](docs/versions/v26.md) |
-| v27 | 视频通话：依赖语音通道，退路是视频消息 | 📋 已规划 | [v27.md](docs/versions/v27.md) |
-| v28 | 常驻（一）systemd + 看门狗：开机自启 / 崩溃自拉 / 自愈 | 📋 已规划 | [v28.md](docs/versions/v28.md) |
-| v29 | 常驻（二）LITE / ARM / 一键安装 | 📋 已规划 | [v29.md](docs/versions/v29.md) |
+| v24 | 视频（一）B 站：真的看过，群里分享 | 📋 已规划 | [v24.md](docs/versions/v24.md) |
+| v25 | 视频（二）抖音：抓公开页，降级到 cookie | 📋 已规划 | [v25.md](docs/versions/v25.md) |
+| v26 | 微信接入（OpenClaw）：通道抽象 → 适配器 → 身份统一 | 📋 已规划 | [v26.md](docs/versions/v26.md) |
+| v27 | 语音通话：先验证通话信令，退路是语音连续对话 | 📋 已规划 | [v27.md](docs/versions/v27.md) |
+| v28 | 视频通话：依赖语音通道，退路是视频消息 | 📋 已规划 | [v28.md](docs/versions/v28.md) |
+| v29 | 常驻（一）systemd / 看门狗：开机自启 / 崩溃自拉 | 📋 已规划 | [v29.md](docs/versions/v29.md) |
+| v30 | 常驻（二）LITE / ARM / 一键安装 | 📋 已规划 | [v30.md](docs/versions/v30.md) |
 
 > **约定**：每个大版本的**最后一个次版本**用来收尾修 bug 和技术债，不堆新功能。
 
