@@ -230,6 +230,11 @@ async def _reply_and_send(d, ws, text, img_md5s=None):
                     log_api(f"[读书] 点名处理失败: {_e}")
                     _reply = "我记下了，等会儿去翻"
                 pending = ("reply", target, _reply, mt == "group")
+                # v17.9：答应了就得真读——后台读一章，读完补一句
+                try:
+                    asyncio.create_task(_read_after_request(uid, ws))
+                except Exception as _e:
+                    log_api(f"[读书] 后台读书启动失败: {_e}")
             else:
                 ans = await get_character_reply(text, tid, ck)  # 获取AI回复
             if _req:
@@ -296,6 +301,30 @@ async def _reply_and_send(d, ws, text, img_md5s=None):
                 await maybe_share_something(target, ws)
             except Exception:
                 pass
+
+async def _read_after_request(uid, ws):
+    """点名之后真的读一章，读完回一句（失败也说明原因）"""
+    from ..life import novel as life_novel
+    from ..life import reading as life_reading
+
+    try:
+        out = await life_reading.read_for_request(
+            str(uid), life_novel.fetch_book, life_novel.fetch_chapter,
+            life_reading.summarize_chapter)
+    except Exception as e:
+        log_api(f"[读书] 后台读书异常: {e}")
+        return
+
+    try:
+        if out.get("ok"):
+            rep = (f"看完了《{out.get('chapter')}》。{out.get('summary') or ''}").strip()
+        else:
+            rep = f"没读成：{out.get('reason') or '原因不明'}"
+        from .send import send_short_reply
+        await send_short_reply(str(uid), rep[:400], ws, str(uid), False, None)
+    except Exception as e:
+        log_api(f"[读书] 结果发送失败: {e}")
+
 
 async def _handle_message(d, ws):
     """处理一条消息（v17.3 U1：从接收循环里抽出来，便于以后投递/合并）"""

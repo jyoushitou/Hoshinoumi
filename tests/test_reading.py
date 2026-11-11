@@ -526,9 +526,9 @@ class TestReadingFlow(unittest.TestCase):
         from datetime import datetime
         from botv.config import CST
         now = datetime(2026, 11, 9, 15, 0, tzinfo=CST)
-        recent = now.timestamp() - 600
+        recent = now.timestamp() - 60          # 1 分钟前
         ok, why = self.R.should_read(recent, now)
-        self.assertFalse(ok, "刚聊过不读")
+        self.assertFalse(ok, "1 分钟前刚聊过，不读")
         old = now.timestamp() - 3 * 3600
         ok, _why = self.R.should_read(old, now)
         self.assertTrue(ok)
@@ -903,5 +903,56 @@ class TestShareReading(unittest.TestCase):
         self.LR.mark_shared(self.data)
         self.assertEqual(len(self.data["pending"]), 0)
         self.assertGreater(self.data["last_share_ts"], 0)
+
+
+
+class TestForceRead(unittest.TestCase):
+    """v17.9：被明确要求读书 → 跳过「闲着」闸门，真读正文"""
+
+    def setUp(self):
+        import botv.life.reading as R
+
+        self.R = R
+        self.seed = {}
+        self._orig = (R.load, R.save)
+        R.load = lambda tid: {"books": [{"title": "天外玉", "url": "u1", "last_no": 0}],
+                              "pending": [], "day": "", "chapters": 0,
+                              "last_share_ts": 0}
+        R.save = lambda tid, d: self.seed.update(d) or True
+
+    def tearDown(self):
+        self.R.load, self.R.save = self._orig
+
+    def test_force_ignores_idle_gate(self):
+        """刚聊过（1 分钟前）也能读"""
+        import asyncio
+        from datetime import datetime
+
+        from botv.config import CST
+
+        async def fetch_book(url):
+            return {"title": "天外玉", "intro": "",
+                    "chapters": [("第1章 开始", "c1")]}
+
+        async def fetch_chapter(url):
+            return "正文" * 200
+
+        now = datetime(2026, 11, 9, 15, 0, tzinfo=CST)
+        out = asyncio.run(self.R.read_once(
+            "1", fetch_book, fetch_chapter, None, now=now, force=True))
+        self.assertTrue(out.get("ok"), out)
+
+    def test_force_still_respects_night(self):
+        import asyncio
+        from datetime import datetime
+
+        from botv.config import CST
+
+        now = datetime(2026, 11, 9, 3, 0, tzinfo=CST)
+        out = asyncio.run(self.R.read_once("1", None, None, None,
+                                           now=now, force=True))
+        self.assertFalse(out.get("ok"))
+        self.assertEqual(out.get("reason"), "深夜")
+
 
 

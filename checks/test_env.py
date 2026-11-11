@@ -220,6 +220,7 @@ class TestEnvironment(unittest.TestCase):
         "NAO_BATCH_CHAT",
         "NAO_LOG_TXT",
         "NAO_MONITOR_INTERVAL",
+        "NAO_READ_IDLE_MINUTES",
         "NAO_LOG_KEEP_DAYS",
         "NAO_LOG_DIR",
     }

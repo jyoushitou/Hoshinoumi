@@ -12,7 +12,8 @@ from datetime import datetime
 from ..config import CST
 from ..log import log_api, log_system
 
-IDLE_HOURS = float(os.getenv("NAO_READ_IDLE_HOURS", "2"))
+# v17.9：自发读书的宁静门槛改成 5 分钟（原来 2 小时，几乎不读）
+IDLE_MINUTES = float(os.getenv("NAO_READ_IDLE_MINUTES", "5"))
 DAILY_CHAPTERS = int(os.getenv("NAO_READ_DAILY_CHAPTERS", "20"))
 MAX_PER_SESSION = 3
 NIGHT_START, NIGHT_END = 1, 7        # 深夜不读
@@ -83,7 +84,7 @@ def is_idle(last_user_ts, now=None):
     """主人多久没说话了"""
     if not last_user_ts:
         return True
-    return (_now(now).timestamp() - last_user_ts) >= IDLE_HOURS * 3600
+    return (_now(now).timestamp() - last_user_ts) >= IDLE_MINUTES * 60
 
 
 def should_read(last_user_ts=None, now=None):
@@ -216,14 +217,22 @@ async def pick_book(tid, fetch_book=None, rng=None, candidates=None):
 
 # ===================== 读一次 =====================
 
-async def read_once(tid, fetch_book=None, fetch_chapter=None, summarize=None, now=None):
+async def read_once(tid, fetch_book=None, fetch_chapter=None, summarize=None,
+                    now=None, force=False):
     """读一章（或几章）。依赖注入方便测试。
+
+    force=True：明确被要求读书时，只查「深夜」，跳过「闲着」——
+    因为人刚说完「看看这本」，本来就不闲着。
 
     返回 {"ok": bool, "chapter": str, "summary": str, "reason": str}
     """
-    ok, why = should_read(None, now)
-    if not ok:
-        return {"ok": False, "reason": why}
+    if force:
+        if is_night(now):
+            return {"ok": False, "reason": "深夜"}
+    else:
+        ok, why = should_read(None, now)
+        if not ok:
+            return {"ok": False, "reason": why}
 
     data = load(tid)
     if quota_left(data, now) <= 0:
@@ -492,3 +501,13 @@ def mark_shared(data, now=None):
     data["pending"] = pending[SHARE_AFTER:]
     data["last_share_ts"] = _now(now).timestamp()
     return data
+
+async def read_for_request(tid, fetch_book=None, fetch_chapter=None,
+                           summarize=None, now=None):
+    """被明确要求读书：跳过「闲着」闸门，真的读一章正文。
+
+    v17.9：以前 follow_request 只把书加进列表就说「我去看」，
+    实际一个字没读。这里强制读，并保证正文够长才算成功。
+    """
+    return await read_once(tid, fetch_book, fetch_chapter, summarize,
+                           now=now, force=True)
