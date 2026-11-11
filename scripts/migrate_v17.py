@@ -149,10 +149,16 @@ def migrate(c, dist):
             print(f"  [X] {kind} → memories 失败：{e}")
             return None
 
-    # 其余 kind（state/rel/habit/reading/friction）结构差异大，单独处理
-    others = [k for k in dist if k not in ("event", "life", "photo")]
-    if others:
-        print(f"  [..] 待处理（结构差异，下一步逐表做）：{', '.join(others)}")
+    # ---- 其余五类：events 里存的是 JSON（一人一行） ----
+    for kind in ("state", "rel", "habit", "reading", "friction"):
+        if not dist.get(kind):
+            continue
+        try:
+            n = migrate_json_kind(c, kind)
+            moved += n
+            print(f"  [OK] {kind} → {JSON_TARGET[kind]}（{n} 行）")
+        except Exception as e:
+            print(f"  [X] {kind} → {JSON_TARGET[kind]} 失败：{e}")
 
     try:
         c.connection.commit()
@@ -163,3 +169,75 @@ def migrate(c, dist):
 
 if __name__ == "__main__":
     sys.exit(main())
+
+# ===================== 五类 JSON 数据的迁移 =====================
+# 这五类在 events 里都是「一人一行、整段 JSON 存在 event_summary」。
+# 迁移 = 取每人最新一行 → 解析 JSON → 按字段名映射到新表。
+
+JSON_TARGET = {
+    "state": "bot_states",
+    "rel": "relations",
+    "habit": "habits",
+    "reading": "reading_progress",
+    "friction": "friction_states",
+}
+
+# 新表允许的字段（不在表里的 JSON 键忽略）
+FIELDS = {
+    "bot_states": ("target_id", "mood", "energy", "lonely"),
+    "relations": ("target_id", "affinity", "since", "tier"),
+    "habits": ("target_id", "phrase", "count"),
+    "reading_progress": ("target_id", "book_url", "title", "intro",
+                         "last_no", "last_chapter"),
+    "friction_states": ("target_id", "expect_ts", "expect_text",
+                        "disappoint", "cold_ts", "last_grudge"),
+}
+
+
+def _latest_rows(c, kind):
+    """每人最新一行"""
+    c.execute(
+        "SELECT target_id, event_summary FROM events "
+        "WHERE kind=%s AND deleted_at IS NULL ORDER BY id DESC",
+        (kind,),
+    )
+    seen, out = set(), []
+    for r in c.fetchall():
+        tid = str(r["target_id"])
+        if tid in seen:
+            continue
+        seen.add(tid)
+        out.append((tid, r["event_summary"] or ""))
+    return out
+
+
+def _upsert(c, table, row):
+    """按主键覆盖写（INSERT ... ON DUPLICATE KEY UPDATE）"""
+    cols = [k for k in row if k in FIELDS[table]]
+    if not cols:
+        return 0
+    placeholders = ",".join(["%s"] * len(cols))
+    updates = ",".join(f"{k}=VALUES({k})" for k in cols if k != "target_id")
+    sql = f"INSERT INTO {table}({','.join(cols)}) VALUES({placeholders})"
+    if updates:
+        sql += f" ON DUPLICATE KEY UPDATE {updates}"
+    return c.execute(sql, tuple(row[k] for k in cols))
+
+
+def migrate_json_kind(c, kind):
+    """把某一种 JSON 数据搬到新表；返回迁移行数"""
+    import json
+
+    table = JSON_TARGET[kind]
+    moved = 0
+    for tid, payload in _latest_rows(c, kind):
+        try:
+            data = json.loads(payload) if payload else {}
+        except Exception:
+            continue                      # 坏 JSON 跳过，不阻塞整批
+        if not isinstance(data, dict):
+            continue
+        row = {"target_id": tid}
+        row.update({k: v for k, v in data.items() if k in FIELDS[table]})
+        moved += _upsert(c, table, row) or 0
+    return moved
