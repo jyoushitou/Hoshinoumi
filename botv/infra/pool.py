@@ -21,7 +21,7 @@ import time
 
 from ..log import log_api
 
-DEFAULT_POOL_SIZE = int(os.getenv("NAO_DB_POOL_SIZE", "5"))
+DEFAULT_POOL_SIZE = int(os.getenv("NAO_DB_POOL_SIZE", "6"))
 DEFAULT_ACQUIRE_TIMEOUT = float(os.getenv("NAO_DB_POOL_TIMEOUT", "5.0"))
 
 

@@ -774,7 +774,7 @@ class TestThreadStats(unittest.TestCase):
         s = thread_stats()
         self.assertIn("size", s)
         self.assertIn("queued", s)
-        self.assertEqual(s["size"], 3)
+        self.assertEqual(s["size"], 5)   # v17.8：线程池 3 → 5
 
     def test_describe_threads(self):
         from botv.infra.blocking import describe_threads

@@ -103,8 +103,14 @@ async def cycle_task_run():
     except Exception as _e:
         log_err(f"[调度] minute_tick 安排失败: {_e}")
 
-    while True:
-        await asyncio.sleep(3600)
+    # v17.8：启动池监护线程（一个线程看线程池 + 连接池）
+    try:
+        from ..infra.monitor import start_monitor
+        start_monitor()
+    except Exception as _e:
+        log_err(f"[监护] 启动失败: {_e}")
+
+    # v17.8：不再自建保活循环——主循环 app/loop.py serve 负责常驻
 
 
 # ===================== 空闲读书（v16） =====================

@@ -41,6 +41,11 @@ async def cmd_stats(ctx):
         lines.append(describe_log())
     except Exception:
         pass
+    try:
+        from ..infra.monitor import describe as describe_monitor
+        lines.append(describe_monitor())
+    except Exception:
+        pass
     return "\n".join(lines)
 
 

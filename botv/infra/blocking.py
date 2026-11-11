@@ -16,7 +16,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from ..log import log_api
 
-POOL_SIZE = int(os.getenv("NAO_TASK_THREADS", "3"))
+POOL_SIZE = int(os.getenv("NAO_TASK_THREADS", "5"))
 DEFAULT_TIMEOUT = float(os.getenv("NAO_BLOCKING_TIMEOUT", "120"))
 
 _pool = ThreadPoolExecutor(max_workers=POOL_SIZE, thread_name_prefix="nao-block")
