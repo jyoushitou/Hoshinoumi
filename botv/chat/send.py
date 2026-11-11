@@ -61,7 +61,14 @@ async def maybe_send_voice(text, target, ws, is_group=False):
     now = _t.time()
     if now - _last_voice_ts.get(target, 0.0) < VOICE_COOLDOWN:
         return False
-    mp3 = await tts_synth(text)
+    # v17.12：按当前情绪 + 角色声线合成
+    try:
+        from ..speech import voice as voice_mod
+        _p = voice_mod.emotion_params(voice_mod.detect_emotion(target))
+        mp3 = await tts_synth(text, voice=_p["voice"], rate=_p["rate"],
+                              pitch=_p["pitch"], volume=_p["volume"])
+    except Exception:
+        mp3 = await tts_synth(text)
     if not mp3:
         return False
     await send_voice(target, mp3, ws)

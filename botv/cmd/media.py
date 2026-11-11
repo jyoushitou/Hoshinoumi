@@ -87,18 +87,89 @@ async def cmd_acg(ctx):
     log_send(f"[!acg] 已发送ACG图: {abs_fp}")
     return ""
 
+VOICE_HELP = """🎙️ 声线
+
+!voice                    看当前声线
+!voice <文本>              合成一条语音发给你
+!voice set <音色名>        换音色
+!voice pitch <Hz>         基频偏移（-80~80）
+!voice rate <百分比>       语速偏移（-50~50）
+!voice vol <百分比>        音量偏移（-50~50）
+!voice note <文字>         备注
+!voice test [文字]         试听（不发送，只报告）
+!voice reset              恢复默认"""
+
+
 @command("voice")
 async def cmd_voice(ctx):
-    """!voice <文本> - 合成一条语音发给你"""
-    from ..speech.tts import synth, available
+    """!voice - 声线：查看 / 试听 / 调参 / 合成一条语音"""
     from ..chat.send import send_voice
+    from ..speech import voice as voice_mod
+    from ..speech.tts import available, synth
 
-    text = " ".join(ctx.args).strip()
+    args = [a for a in (ctx.args or []) if a is not None]
+    sub = (args[0].lower() if args else "")
+
+    # ---- 子命令 ----
+    if sub in ("", "show", "help"):
+        return VOICE_HELP if sub == "help" else voice_mod.describe()
+
+    if sub == "reset":
+        ok = voice_mod.save_profile({})
+        return "✅ 已恢复默认声线" if ok else "❌ 恢复失败"
+
+    try:
+        if sub == "set":
+            name = args[1].strip()
+            prof = voice_mod.load_profile()
+            prof["voice"] = name
+            ok = voice_mod.save_profile(prof)
+            return f"✅ 音色 → {name}" if ok else "❌ 保存失败"
+
+        if sub in ("pitch", "rate", "vol"):
+            field = {"pitch": "pitch_base", "rate": "rate_base",
+                     "vol": "volume"}[sub]
+            limit = 80 if sub == "pitch" else 50
+            v = int(args[1])
+            if not (-limit <= v <= limit):
+                return f"❌ 要在 {-limit}~{limit} 之间"
+            prof = voice_mod.load_profile()
+            prof[field] = v
+            ok = voice_mod.save_profile(prof)
+            return f"✅ {field} → {v:+d}" if ok else "❌ 保存失败"
+
+        if sub == "note":
+            prof = voice_mod.load_profile()
+            prof["notes"] = " ".join(args[1:])[:40]
+            ok = voice_mod.save_profile(prof)
+            return "✅ 备注已存" if ok else "❌ 保存失败"
+
+        if sub == "test":
+            text = " ".join(args[1:]) or "今天有点累，想早点睡。"
+            if not available():
+                return "没装 edge-tts，试听不了"
+            marks = []
+            for emo in voice_mod.EMOTIONS:
+                p = voice_mod.emotion_params(emo)
+                data = await synth(text, voice=p["voice"], rate=p["rate"],
+                                   pitch=p["pitch"], volume=p["volume"])
+                marks.append(f"{emo}{'✅' if data else '❌'}")
+            return "🎙️ 试听：" + " ".join(marks) + "\n（没发送，只验证合成）"
+    except IndexError:
+        return "❌ 参数不够\n" + VOICE_HELP
+    except ValueError:
+        return "❌ 参数要是整数\n" + VOICE_HELP
+
+    # ---- 默认：合成一句话发出去（带当前声线 + 情绪）----
+    text = " ".join(args).strip()
     if not text:
-        return "用法：!voice <文本>"
+        return VOICE_HELP
     if not available():
         return "没装 edge-tts。重启一次会自动尝试安装；也可以手动 pip install edge-tts"
-    mp3 = await synth(text)
+
+    p = voice_mod.emotion_params(voice_mod.detect_emotion(ctx.uid))
+    mp3 = await synth(text, voice=p["voice"], rate=p["rate"],
+                      pitch=p["pitch"], volume=p["volume"])
     if not mp3:
         return "合成失败（多半是网络或音色名不对）"
     await send_voice(ctx.uid, mp3, ctx.ws)

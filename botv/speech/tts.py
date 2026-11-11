@@ -20,17 +20,31 @@ def available():
         return False
 
 
-async def synth(text, voice=None):
-    """把文字合成 mp3 字节；失败返回 None"""
+async def synth(text, voice=None, rate=0, pitch=0, volume=0):
+    """把文字合成 mp3 字节；失败返回 None
+
+    v17.12：rate/pitch/volume 由声线档案 + 情绪决定（整数，单位 % / Hz）
+    """
     text = (text or "").strip()
     if not text or not available():
         return None
     if len(text) > MAX_CHARS:
         text = text[:MAX_CHARS]
 
+    # edge-tts 只认 "+8%" / "+30Hz" 这种带符号字符串
+    def _fmt(v, unit):
+        try:
+            v = int(v)
+        except Exception:
+            v = 0
+        return f"{v:+d}{unit}" if v else "+0" + unit
+
     try:
         import edge_tts
-        communicate = edge_tts.Communicate(text, voice or DEFAULT_VOICE)
+        communicate = edge_tts.Communicate(
+            text, voice or DEFAULT_VOICE,
+            rate=_fmt(rate, "%"), pitch=_fmt(pitch, "Hz"),
+            volume=_fmt(volume, "%"))
         buf = io.BytesIO()
         async for chunk in communicate.stream():
             if chunk.get("type") == "audio" and chunk.get("data"):
