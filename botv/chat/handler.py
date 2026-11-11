@@ -255,9 +255,9 @@ async def _reply_and_send(d, ws, text, img_md5s=None):
     # ===================== 锁外：延迟 + 发送（v6-A1） =====================
     if pending and pending[0] == "sticker":
         if mt == "group":
-            await send_sticker_group(gid, ws, uid)
+            await send_sticker_group(gid, ws, uid, text)
         else:
-            await send_sticker_private(uid, ws, uid)
+            await send_sticker_private(uid, ws, uid, text)
     elif pending:
         _, target, reply_text, is_group = pending
         delay = reply_delay()  # 按时段 + 随机

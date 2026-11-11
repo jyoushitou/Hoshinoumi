@@ -84,5 +84,42 @@ class TestStickerContext(unittest.TestCase):
             self.assertIn("ctx", params, f"{fn.__name__} 应接受 ctx")
 
 
+
+
+class TestVoiceGateWired(unittest.TestCase):
+    """v17.13：门槛要真接在发送路径上，不是只定义了个函数"""
+
+    def test_maybe_send_voice_rejects_punctuation(self):
+        import asyncio
+        import botv.chat.send as S
+
+        class Boom(Exception):
+            pass
+
+        called = []
+
+        async def fake_synth(*a, **k):
+            called.append(1)
+            return b"MP3"
+
+        orig = S.tts_synth
+        S.tts_synth = fake_synth
+        try:
+            ok = asyncio.run(S.maybe_send_voice("……", "1", None))
+        finally:
+            S.tts_synth = orig
+        self.assertFalse(ok, "纯标点不该合成")
+        self.assertEqual(called, [], "连 TTS 都不该调")
+
+    def test_sticker_ctx_from_handler(self):
+        """handler 贴图时应把用户原话传下去"""
+        import inspect
+        import botv.chat.handler as H
+
+        src = inspect.getsource(H)
+        self.assertIn("send_sticker_private(uid, ws, uid, text)", src)
+        self.assertIn("send_sticker_group(gid, ws, uid, text)", src)
+
+
 if __name__ == "__main__":
     unittest.main()

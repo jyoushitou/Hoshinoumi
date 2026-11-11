@@ -55,6 +55,8 @@ async def maybe_send_voice(text, target, ws, is_group=False):
         return False  # 群里先不发语音，太吵
     if not (VOICE_MIN_LEN <= len(text or "") <= VOICE_MAX_LEN):
         return False
+    if not _voice_worthy(text):          # v17.13：「……」「？？？」不合成
+        return False
     from ..core import tunables
     if random.random() > tunables.get("voice_prob", VOICE_PROB):
         return False
@@ -96,6 +98,12 @@ def select_best_sticker(uid, ctx=""):
         except:
             pass  # 更新失败不影响
         return results[0][2]  # 返回文件路径
+    # v17.13：没提取到关键词就退 QQ 表情，别拿存档图乱甩
+    if not kws:
+        face_id = str(random.choice(STICKER_FACE_IDS))
+        log_api(f"[选图] 无关键词，退 QQ 表情: {face_id}")
+        return face_id
+
     # 旧存档查
     uid_s = str(uid)  # 用户ID转字符串
     if uid_s in cfg.USER_STICKER_ARCHIVE and cfg.USER_STICKER_ARCHIVE[uid_s]:  # 用户有旧存档
