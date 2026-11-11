@@ -220,7 +220,31 @@ def load_friction(tid):
         (str(tid),),
     )
     row = c.fetchone()
-    return (row["event_summary"] or "") if row else ""
+    legacy = (row["event_summary"] or "") if row else ""
+
+    try:
+        c.execute(
+            "SELECT expect_ts, expect_text, disappoint, cold_ts, last_grudge "
+            "FROM friction_states WHERE target_id=%s", (str(tid),))
+        fs = c.fetchone()
+    except Exception:
+        fs = None
+    if not fs:
+        return legacy
+    fresh = {k: fs[k] for k in ("expect_ts", "expect_text", "disappoint",
+                                "cold_ts", "last_grudge") if fs.get(k) is not None}
+    if not legacy:
+        import json
+        return json.dumps({k: str(v) for k, v in fresh.items()}, ensure_ascii=False)
+    try:
+        import json
+        data = json.loads(legacy)
+        if not isinstance(data, dict):
+            data = {}
+        data.update({k: str(v) for k, v in fresh.items()})
+        return json.dumps(data, ensure_ascii=False)
+    except Exception:
+        return legacy
 
 
 def save_friction(tid, payload):
@@ -243,7 +267,31 @@ def load_reading(tid):
         (str(tid),),
     )
     row = c.fetchone()
-    return (row["event_summary"] or "") if row else ""
+    legacy = (row["event_summary"] or "") if row else ""
+
+    try:
+        c.execute(
+            "SELECT title, intro, last_no, last_chapter FROM reading_progress "
+            "WHERE target_id=%s ORDER BY updated_at DESC LIMIT 1", (str(tid),))
+        rp = c.fetchone()
+    except Exception:
+        rp = None
+    if not rp:
+        return legacy
+    fresh = {k: rp[k] for k in ("title", "intro", "last_no", "last_chapter")
+             if rp.get(k) is not None}
+    if not legacy:
+        import json
+        return json.dumps(fresh, ensure_ascii=False)
+    try:
+        import json
+        data = json.loads(legacy)
+        if not isinstance(data, dict):
+            data = {}
+        data.update(fresh)
+        return json.dumps(data, ensure_ascii=False)
+    except Exception:
+        return legacy
 
 
 def save_reading(tid, payload):
@@ -266,7 +314,30 @@ def load_habit(tid):
         (str(tid),),
     )
     row = c.fetchone()
-    return (row["event_summary"] or "") if row else ""
+    legacy = (row["event_summary"] or "") if row else ""
+
+    try:
+        c.execute(
+            "SELECT phrase, count FROM habits WHERE target_id=%s "
+            "ORDER BY count DESC LIMIT 5", (str(tid),))
+        hs = list(c.fetchall())
+    except Exception:
+        hs = []
+    if not hs:
+        return legacy
+    fresh = {"phrases": [h["phrase"] for h in hs if h.get("phrase")]}
+    if not legacy:
+        import json
+        return json.dumps(fresh, ensure_ascii=False)
+    try:
+        import json
+        data = json.loads(legacy)
+        if not isinstance(data, dict):
+            data = {}
+        data.update(fresh)
+        return json.dumps(data, ensure_ascii=False)
+    except Exception:
+        return legacy
 
 
 def save_habit(tid, payload):
