@@ -55,6 +55,18 @@ def _extract_target_id(msgs):
     return user_content[:80] if user_content else ""  # 截断前80字符作为ID
 
 
+def _fallback_img_keywords(msgs, reply=""):
+    """回复没给图片关键词时，从**用户消息**里补。
+
+    v17.9：以前从她自己的回复里抽，会抽到「出来/一次/还有/几点」这种词。
+    用户没打字就返回空——宁可不配图，也别乱搜。
+    """
+    user_text = _extract_user_msg(msgs)
+    if not user_text:
+        return []
+    return extract_keywords(user_text)[:10]
+
+
 async def call_deepseek(msgs, retry=2, max_tokens=None, target_id=None):
     """调用DeepSeek API，支持重试，返回回复文本或None
     max_tokens: 可选，覆盖默认输出长度（聊天默认200，代码模式2000；日记等长文场景调用方传入更大值）
@@ -313,8 +325,8 @@ async def get_character_reply(txt, tid, current_kws=None):
     if r:
         dialog, action, img_kw, event, refined_kw = parse_ai_reply(r)
         if not img_kw:
-            # 从对话内容中提取关键词作为图片搜索关键词
-            fallback_kws = extract_keywords(dialog)
+            # v17.9：只从**用户原文**补关键词；用户没打字就不补
+            fallback_kws = _fallback_img_keywords(msgs, dialog)
             if fallback_kws:
                 # 限制最多10个关键词
                 fallback_kws = fallback_kws[:10]

@@ -604,5 +604,40 @@ class TestTransport(unittest.TestCase):
         self.assertEqual(payload["params"]["user_id"], 789)
         self.assertEqual(payload["params"]["group_id"], 456)
 
+
+
+class TestImageKeywordFallback(unittest.TestCase):
+    """v17.9：图片关键词只从用户原文补，不从她的回复里抽"""
+
+    def test_uses_user_text(self):
+        import botv.ai.client as C
+
+        seen = []
+        orig = C.extract_keywords
+        C.extract_keywords = lambda text: seen.append(text) or ["下雨", "天气"]
+        try:
+            kws = C._fallback_img_keywords(
+                [{"role": "user", "content": "今天下雨了"}],
+                "图没出来。还有，都几点了")
+        finally:
+            C.extract_keywords = orig
+
+        self.assertEqual(kws, ["下雨", "天气"])
+        self.assertIn("下雨", seen[0], "应当拿用户原文去抽词")
+        self.assertNotIn("几点", seen[0], "不该拿她的回复抽词")
+
+    def test_empty_user_text_gives_no_keywords(self):
+        import botv.ai.client as C
+
+        msgs = [{"role": "user", "content": ""}]
+        self.assertEqual(C._fallback_img_keywords(msgs, "随便说点什么"), [],
+                         "用户没打字就不该补关键词")
+
+    def test_no_user_message(self):
+        import botv.ai.client as C
+
+        self.assertEqual(C._fallback_img_keywords([], "回复"), [])
+
+
 if __name__ == "__main__":
     unittest.main()
