@@ -12,13 +12,22 @@ from ..infra.repo_memory import add_event_to_db  # v11-A9：图片记忆
 from ..ai.vision import describe_image  # v11-A8：直接看图
 from ..speech.asr import transcribe  # v11-A14：语音转文字
 from ..image.store import update_image_tags
+import re
+
 from ..utils import download_url
 
 
 def contains_sticker_key(text):
-    """检查文本是否包含表情包触发关键词"""
+    """检查文本是否包含表情包触发关键词
+
+    v17.9：先剥掉 [表情5] / [图] 这类占位符，否则「他发表情」会被当成
+    「他要我发表情」，于是只回一个表情包、没有一句话。
+    """
+    import re
+
+    plain = re.sub(r"\[[^\]]{1,8}\]", "", text or "")
     for kw in cfg.STICKER_KEYWORDS:  # 遍历表情包关键词列表
-        if kw in text:  # 文本包含该关键词
+        if kw in plain:  # 文本包含该关键词
             return True  # 返回True
     return False  # 不包含任何关键词
 
@@ -135,6 +144,16 @@ async def parse_message_content(raw_content, user_id, ws=None):
                 img_info.append(f"[表情{fid}]")  # 添加表情标识
     else:  # 消息是纯文本
         input_text = str(raw_content).strip()  # 直接转为字符串
+    # v17.9：整条消息只有表情/占位符 → 换成一句人话，让模型正常接
+    _plain = re.sub(r"\[[^\]]{1,8}\]", "", input_text).strip()
+    if not _plain and img_info:
+        if any(x.startswith("[表情") for x in img_info):
+            input_text = "（他发了个 QQ 表情，没说话，你用一句话接住）"
+            img_info = [x for x in img_info if not x.startswith("[表情")]
+        elif "[图]" in img_info:
+            input_text = "（他发了一张图，没说话）"
+            img_info = [x for x in img_info if x != "[图]"]
+
     if img_info:  # 有图片/表情信息
         input_text = f"{input_text} {' '.join(img_info)}"  # 追加到文本末尾
     log_api(f"[消息解析] 最终文本: {input_text[:60]}")  # 日志记录

@@ -27,6 +27,14 @@
 
 > 详见 [versions/v17.md](versions/v17.md)
 
+## v17.11 · 存储后端可切换（3 天）
+
+| 内容 | 验收 |
+|---|---|
+| storage.backend 选 mysql / sqlite | 切换后能启动 |
+| 方言适配（自增/ENUM/幂等插入/日期函数） | 建表与增删改通过 |
+| migrate_backend.py 互导 | 行数一致 |
+
 ## v17.5 · 日志与观测（2 天）
 
 | 内容 | 验收 |

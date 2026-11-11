@@ -833,5 +833,38 @@ async def _async(v):
     return v
 
 
+
+
+class TestPureEmoji(unittest.TestCase):
+    """v17.9：用户发表情 → 正常对话，不是「她要发表情包」"""
+
+    def test_placeholder_not_sticker_request(self):
+        from botv.chat.inbound import contains_sticker_key
+
+        self.assertFalse(contains_sticker_key("[表情5]"),
+                         "[表情5] 是占位符，不该当请求")
+        self.assertFalse(contains_sticker_key("[图][表情3]"))
+
+    def test_real_request_still_works(self):
+        from botv.chat.inbound import contains_sticker_key
+
+        self.assertTrue(contains_sticker_key("发个表情包"))
+        self.assertTrue(contains_sticker_key("来个表情"))
+
+    def test_pure_emoji_becomes_sentence(self):
+        import asyncio
+        import botv.chat.inbound as I
+
+        orig = I.download_url
+        I.download_url = lambda url: b"x"
+        try:
+            msg = [{"type": "face", "data": {"id": "5"}}]
+            text, _ = asyncio.run(I.parse_message_content(msg, "1", None))
+        finally:
+            I.download_url = orig
+        self.assertIn("表情", text)
+        self.assertNotIn("[表情", text, "不该把占位符原样喂给模型")
+
+
 if __name__ == "__main__":
     unittest.main()
