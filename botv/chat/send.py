@@ -3,6 +3,7 @@
 # 迁移自 botv/send.py：这里只负责「发」，组装在 chat/reply.py
 
 import asyncio
+import time
 import json
 import os
 import random
@@ -285,7 +286,14 @@ def _typo_quota_ok(now):
 
 
 async def try_typo_recall(target, text, ws):
-    """有概率先发一条打错的、撤回，再发正确的。返回是否真的演了一次"""
+    """有概率先发一条打错的、撤回，再发正确的。返回是否真的演了一次
+
+    v17.9：如果这句话已经用语音念出来了，就不再演撤回——
+    语音收不回来，撤回文字只会造成「说的和写的不一致」。
+    """
+    if _last_voice_ts.get(target) and (time.time() - _last_voice_ts[target]) < 120:
+        log_api("[撤回] 这句刚发过语音，跳过撤回")
+        return False
     if random.random() > TYPO_PROB:
         return False
     if not (TYPO_MIN_LEN <= len(text or "") <= TYPO_MAX_LEN):

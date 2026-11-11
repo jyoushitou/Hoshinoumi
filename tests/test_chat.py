@@ -866,5 +866,50 @@ class TestPureEmoji(unittest.TestCase):
         self.assertNotIn("[表情", text, "不该把占位符原样喂给模型")
 
 
+
+
+class TestVoiceSkipsTypoRecall(unittest.TestCase):
+    """v17.9：语音念过了就别再撤文字（说写不一致）"""
+
+    def setUp(self):
+        import botv.chat.send as S
+
+        self.S = S
+        self.S._last_voice_ts.clear()
+        self._orig = (S.send_private_msg, S._send_or_queue)
+
+    def tearDown(self):
+        self.S._last_voice_ts.clear()
+        self.S.send_private_msg, self.S._send_or_queue = self._orig
+
+    def test_skip_after_voice(self):
+        import asyncio
+        import time
+
+        self.S._last_voice_ts["1"] = time.time()      # 刚刚发过语音
+        called = []
+
+        async def fake_send(*a, **k):
+            called.append(a)
+            return {"data": {"message_id": 1}}
+
+        self.S.send_private_msg = fake_send
+        ok = asyncio.run(self.S.try_typo_recall("1", "没有就是没吃", None))
+        self.assertFalse(ok, "发过语音就不该再演撤回")
+        self.assertEqual(called, [], "不该发出错字版本")
+
+    def test_normal_path_unaffected(self):
+        """没有语音时逻辑不变（概率 0 直接 False）"""
+        import asyncio
+
+        orig = self.S.TYPO_PROB
+        self.S.TYPO_PROB = 0.0
+        try:
+            ok = asyncio.run(self.S.try_typo_recall("1", "没有就是没吃", None))
+        finally:
+            self.S.TYPO_PROB = orig
+        self.assertFalse(ok)
+
+
 if __name__ == "__main__":
     unittest.main()
