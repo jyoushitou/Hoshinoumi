@@ -39,23 +39,25 @@ MySQL 存记忆与日志。图片由她自己一句话打标签，正文小说�
 | v14 ~ v15 | 可换角色 / 调参与观测 | ✅ 已发布 | [v14.md](docs/versions/v14.md) |
 | **v16** | **读小说（番茄 OCR + HTML 合并）** | ✅ 已发布 | [v16.md](docs/versions/v16.md) |
 | v17 | 执行模型重构：阻塞池 → 事件/调度 → 出站层 → 主循环瘦身 | 📋 已规划 | [v17.md](docs/versions/v17.md) |
-| v18 | 微信接入（OpenClaw/龙虾）：通道抽象 → 适配器 → 身份统一 | 📋 已规划 | [v18.md](docs/versions/v18.md) |
-| v19 | 运维（一）bash 只读：白名单命令，只能查不能改 | 📋 已规划 | [v19.md](docs/versions/v19.md) |
-| v20 | 运维（二）agent：她自己调工具排障 | 📋 已规划 | [v20.md](docs/versions/v20.md) |
-| v21 | 运维（三）有限写：白名单 + 强制备份 + 二次确认 | 📋 已规划 | [v21.md](docs/versions/v21.md) |
-| v22 | 运维（四）可写体系：分级 / 备份 / 回滚 | 📋 已规划 | [v22.md](docs/versions/v22.md) |
-| v23 | 视频：先 B 站，再抖音（只读 + 群里 @ 你） | 📋 已规划 | [v23.md](docs/versions/v23.md) |
-| v24 | QQ 空间：她发自己的说说（每天 1 条，只发不互动） | 📋 已规划 | [v24.md](docs/versions/v24.md) |
-| v25 | 语音通话：先验证通话信令，退路是语音连续对话 | 📋 已规划 | [v25.md](docs/versions/v25.md) |
-| v26 | 视频通话：依赖语音通道，退路是视频消息 | 📋 已规划 | [v26.md](docs/versions/v26.md) |
-| v27 | 常驻（一）systemd + 看门狗：开机自启 / 崩溃自拉 / 自愈 | 📋 已规划 | [v27.md](docs/versions/v27.md) |
-| v28 | 常驻（二）LITE / ARM / 一键安装 | 📋 已规划 | [v28.md](docs/versions/v28.md) |
+| v18 | 情感的深刻度：记忆分轻/中/重，情绪跨天保留 | 📋 已规划 | [v18.md](docs/versions/v18.md) |
+| v19 | 微信接入（OpenClaw/龙虾）：通道抽象 → 适配器 → 身份统一 | 📋 已规划 | [v19.md](docs/versions/v19.md) |
+| v20 | 运维（一）bash 只读：白名单命令，只能查不能改 | 📋 已规划 | [v20.md](docs/versions/v20.md) |
+| v21 | 运维（二）agent：她自己调工具排障 | 📋 已规划 | [v21.md](docs/versions/v21.md) |
+| v22 | 运维（三）有限写：白名单 + 强制备份 + 二次确认 | 📋 已规划 | [v22.md](docs/versions/v22.md) |
+| v23 | 运维（四）可写体系：分级 / 备份 / 回滚 | 📋 已规划 | [v23.md](docs/versions/v23.md) |
+| v24 | 视频：先 B 站，再抖音（只读 + 群里  你） | 📋 已规划 | [v24.md](docs/versions/v24.md) |
+| v25 | QQ 空间：她发自己的说说（每天 1 条，只发不互动） | 📋 已规划 | [v25.md](docs/versions/v25.md) |
+| v26 | 语音通话：先验证通话信令，退路是语音连续对话 | 📋 已规划 | [v26.md](docs/versions/v26.md) |
+| v27 | 视频通话：依赖语音通道，退路是视频消息 | 📋 已规划 | [v27.md](docs/versions/v27.md) |
+| v28 | 常驻（一）systemd + 看门狗：开机自启 / 崩溃自拉 / 自愈 | 📋 已规划 | [v28.md](docs/versions/v28.md) |
+| v29 | 常驻（二）LITE / ARM / 一键安装 | 📋 已规划 | [v29.md](docs/versions/v29.md) |
 
 > **约定**：每个大版本的**最后一个次版本**用来收尾修 bug 和技术债，不堆新功能。
 
 > v17.11 起**MySQL 连不上会自动退 SQLite**；备份/恢复见 [docs/存储后端与备份.md](docs/存储后端与备份.md)。
 
 > v17.12 起语音带**情绪与声线**：语气随心情变，声线跟角色卡走。
+
 
 - **细到每个小版本**（`x.y.z` 级）的拆解与验收点：[ROADMAP.md](docs/ROADMAP.md)
 - **数据库设计**（一表一职责）：[DB-DESIGN.md](docs/DB-DESIGN.md)
@@ -492,8 +494,8 @@ AI 摘要（≤100 字）→ 记进度
 
 | 参数 | 默认 | 含义 |
 |---|---|---|
-| `group_base_prob` | 0.20 | 群里没被 @ 的接话概率 |
-| `group_mention_prob` | 0.75 | 被 @ 时的回话概率 |
+| `group_base_prob` | 0.20 | 群里没被  的接话概率 |
+| `group_mention_prob` | 0.75 | 被  时的回话概率 |
 | `image_prob` | 0.30 | 配图概率 |
 | `image_cooldown` | 600 | 配图间隔（秒） |
 | `voice_prob` | 0.08 | 语音概率 |
@@ -602,7 +604,7 @@ data/           运行时数据（tunables、digests、cookies、凭据）——
 | v11 | 感官 | 多模态看图、图片记忆、语音合成与转写 |
 | v12 | 共同的东西 | 口头禅、里程碑、记忆本、撤回、戳一戳、天气 |
 | v13 | 摩擦与成长 | 期待/冷战/和好、成长轨迹、称呼演化、工具调用 |
-| v14 | 可换角色 | 人设卡片化、发图择时、主动自适应、@ 判断 |
+| v14 | 可换角色 | 人设卡片化、发图择时、主动自适应、 判断 |
 | v14.1 | 会话延长 | 30 轮 + 浓缩记录、状态按人分 |
 | v15 | 调参与观测 | `!config` / `!stats`、参数持久化 |
 | v16 | 读小说 | 番茄抓取、字体加密实测、截图 OCR、HTML+OCR 合并 |
@@ -821,7 +823,7 @@ python3 scripts/preflight.py --init-db   # 前置检查时自动建
 |---|---|
 | **番茄正文有 OCR 错字** | 约 5%（`神谨`→`神龛`），对摘要够用，逐字引用不可靠 |
 | **起点抓不了** | 章节页对机房 IP + 未登录双重限制，已放弃 |
-| **抖音未实现** | 规划在 v21.1，且只做看和转发，发评论不可行 |
+| **抖音未实现** | 规划在 v22.1，且只做看和转发，发评论不可行 |
 | 群聊记忆按群号 | 同一个人在私聊和群里是两份记忆 |
 | 语义检索靠关键词 | 无外网装不了 embedding，BM25 + 关键词双路 |
 | 视觉/ASR 依赖外部接口 | 失败静默降级，不影响聊天 |
@@ -850,10 +852,10 @@ python3 scripts/preflight.py --init-db   # 前置检查时自动建
 | 文档 | 内容 |
 |---|---|
 | [`docs/README.md`](docs/README.md) | 文档总索引（版本 → 条目 → 状态） |
-| [`docs/ROADMAP.md`](docs/ROADMAP.md) | 发布路线图：v17~v20 每个小版本的拆解与验收点 |
+| [`docs/ROADMAP.md`](docs/ROADMAP.md) | 发布路线图：v17~v21 每个小版本的拆解与验收点 |
 | [`docs/DB-DESIGN.md`](docs/DB-DESIGN.md) | 数据库设计（一表一职责） |
 | [`docs/发布检查清单.md`](docs/发布检查清单.md) | 5 组检查项 + 环境变量表 + 发布流程 |
-| [`docs/versions/`](docs/versions/) | 各版本设计文档（v6 ~ v20） |
+| [`docs/versions/`](docs/versions/) | 各版本设计文档（v6 ~ v21） |
 | [`docs/V14-后续清单.md`](docs/V14-后续清单.md) | 未排期需求（A~E 组） |
 | [`docs/V6-功能.md`](docs/V6-功能.md) | v6 时代的功能总表（74 项，封版） |
 | [`docs/RELEASE-NOTES.md`](docs/RELEASE-NOTES.md) | 最近一次发布说明 |
