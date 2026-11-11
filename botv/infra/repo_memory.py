@@ -92,6 +92,22 @@ def load_events_from_db(tid, tag_keywords=None, limit=5, kinds=None):
     kind_ph = ",".join(["%s"] * len(kinds))
     params = [tid] + list(kinds)
 
+    # v17.4：先读新表 memories；空则回退 events
+    try:
+        new_sql = ("SELECT summary AS event_summary, tags FROM memories "
+                   "WHERE target_id=%s AND deleted_at IS NULL ")
+        if tag_keywords:
+            conds = " OR ".join(["tags LIKE %s" for _ in tag_keywords[:3]])
+            c.execute(new_sql + f"AND ({conds}) ORDER BY id DESC LIMIT %s",
+                      [tid] + [f"%{kw}%" for kw in tag_keywords[:3]] + [int(limit)])
+        else:
+            c.execute(new_sql + "ORDER BY id DESC LIMIT %s", [tid, int(limit)])
+        rows = [(r["event_summary"], r["tags"]) for r in c.fetchall()]
+        if rows:
+            return rows
+    except Exception:
+        pass      # 新表没建/没数据 → 走旧表
+
     if tag_keywords:
         conds = " OR ".join(["tags LIKE %s" for _ in tag_keywords[:3]])  # 动态构建LIKE条件
         sql = (f"SELECT event_summary, tags FROM events "
@@ -266,14 +282,49 @@ def save_habit(tid, payload):
 
 
 def load_relation(tid):
-    """读某人的亲密度（v10-U8）"""
+    """读某人的亲密度（v10-U8）
+
+    v17.4：先读新表 relations；没有就回退 events 的 rel JSON。
+    新表只有 affinity/since/tier，其它字段以旧 JSON 为底合并。
+    """
+    tid = str(tid)
     c = get_cursor()
     c.execute(
         "SELECT event_summary FROM events WHERE target_id=%s AND kind='rel' ORDER BY id DESC LIMIT 1",
-        (str(tid),),
+        (tid,),
     )
     row = c.fetchone()
-    return (row["event_summary"] or "") if row else ""
+    legacy = (row["event_summary"] or "") if row else ""
+
+    try:
+        c.execute("SELECT affinity, since, tier FROM relations WHERE target_id=%s", (tid,))
+        rel = c.fetchone()
+    except Exception:
+        rel = None
+
+    if not rel:
+        return legacy
+
+    fresh = {}
+    if rel.get("affinity") is not None:
+        fresh["affinity"] = float(rel["affinity"])
+    if rel.get("since") is not None:
+        fresh["since"] = str(rel["since"])
+    if rel.get("tier"):
+        fresh["tier"] = rel["tier"]
+
+    if not legacy:
+        import json
+        return json.dumps(fresh, ensure_ascii=False)
+    try:
+        import json
+        data = json.loads(legacy)
+        if not isinstance(data, dict):
+            data = {}
+        data.update(fresh)
+        return json.dumps(data, ensure_ascii=False)
+    except Exception:
+        return legacy
 
 
 def save_relation(tid, payload):
