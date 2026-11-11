@@ -16,7 +16,7 @@ from ..log import log_api, log_err, log_system  # 日志
 from ..core.http import get_http_session  # 线程本地会话（v8-E27）
 from ..infra.blocking import run_blocking  # v17.0.3：阻塞调用统一入口
 from ..core.types import Fallback  # 兜底文案标记（v5-F2）
-from ..db import save_ai_raw_response  # 保存AI原始返回数据
+from ..infra.repo_ai import save_ai_raw_response  # 保存AI原始返回数据
 from ..memory import build_memory_context, extract_keywords  # 记忆上下文与关键词
 from ..personality import get_system_prompt  # 系统提示词
 from .prompt import now_text  # 当前时间描述（v5-F7）

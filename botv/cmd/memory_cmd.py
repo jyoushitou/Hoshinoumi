@@ -4,7 +4,8 @@
 
 from botv.core import state as cfg
 from ..config import MASTER_QQ
-from ..db import get_cursor, load_events_from_db
+from ..infra.conn import get_cursor
+from ..infra.repo_memory import load_events_from_db
 from .registry import command
 
 

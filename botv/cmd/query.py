@@ -4,7 +4,8 @@
 
 from datetime import datetime
 
-from ..db import get_cursor, get_recent_usage  # 数据库
+from ..infra.conn import get_cursor
+from ..infra.repo_ai import get_recent_usage  # 数据库
 from ..log import get_recent_logs  # 日志
 from .registry import command
 

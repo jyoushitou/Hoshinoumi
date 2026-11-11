@@ -11,9 +11,59 @@
 import sqlite3
 import threading
 
-from ..core.settings import sqlite_path, storage_backend
-
 _local = threading.local()  # 线程本地存储（每个线程独立数据库连接）
+
+# ===================== 配置注入（v17.14 债一） =====================
+# 以前这里 import settings，settings 又 import log，log 又 import db…
+# 现在改成：**谁用谁注入**。app/bootstrap.py 启动时调一次 configure()。
+# 没注入时退回旧的懒加载（兼容脚本/测试），但那是唯一残留的边。
+
+_config = {"backend": None, "mysql": None, "sqlite_path": None}
+
+
+def configure(mysql_config=None, backend=None, sqlite_path=None):
+    """注入数据库配置；bootstrap 启动时调一次
+
+    mysql_config 形如 {"host":..., "port":..., "user":..., "password":..., "database":...}
+    """
+    _config["mysql"] = dict(mysql_config) if mysql_config else None
+    _config["backend"] = backend
+    _config["sqlite_path"] = sqlite_path
+    # 配置变了，旧连接作废
+    try:
+        _local.__dict__.clear()
+    except Exception:
+        pass
+    return _config
+
+
+def configured():
+    """有没有注入过配置（测试用）"""
+    return _config["backend"] is not None
+
+
+def _resolve_backend():
+    if _config["backend"]:
+        return _config["backend"]
+    from ..core.settings import storage_backend   # 兼容路径：仅未注入时走
+
+    return storage_backend()
+
+
+def _resolve_mysql():
+    if _config["mysql"]:
+        return _config["mysql"]
+    from ..core.constants import DB_CONFIG        # 兼容路径：仅未注入时走
+
+    return DB_CONFIG
+
+
+def _resolve_sqlite_path():
+    if _config["sqlite_path"]:
+        return _config["sqlite_path"]
+    from ..core.settings import sqlite_path
+
+    return sqlite_path()
 
 
 class _SQLiteCursor:
@@ -54,7 +104,7 @@ class _SQLiteCursor:
 
 
 def _connect_sqlite():
-    path = sqlite_path()
+    path = _resolve_sqlite_path()
     import os
 
     d = os.path.dirname(path)
@@ -70,7 +120,7 @@ def _connect_sqlite():
 def get_db():
     """获取当前线程的数据库连接（懒加载）"""
     if not hasattr(_local, "conn") or _local.conn is None:
-        backend = storage_backend()
+        backend = _resolve_backend()
         if not getattr(_local, "announced", False):
             _local.announced = True
             try:
@@ -84,16 +134,14 @@ def get_db():
         else:
             import pymysql
 
-            from ..core.constants import DB_CONFIG
-
             _local.conn = pymysql.connect(
-                **DB_CONFIG, cursorclass=pymysql.cursors.DictCursor)
+                **_resolve_mysql(), cursorclass=pymysql.cursors.DictCursor)
     return _local.conn
 
 
 def get_cursor():
     """获取数据库游标（两种后端统一接口）"""
     conn = get_db()
-    if storage_backend() == "sqlite":
+    if _resolve_backend() == "sqlite":
         return _SQLiteCursor(conn.cursor(), conn)
     return conn.cursor()

@@ -7,7 +7,7 @@ import time as _time
 
 from botv.core import state as cfg
 from ..config import MASTER_QQ, HEARTBEAT_INTERVAL
-from ..db import reload_api_keys
+from ..infra.repo_key import reload_api_keys
 from ..log import log_system
 from ..memory import load_memories
 from ..send import send_private_msg, send_group_msg

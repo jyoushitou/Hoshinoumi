@@ -14,7 +14,7 @@ from ..log import log_send, log_err, log_api, log_system
 from ..image import search_local_image_by_tags, get_best_image
 from ..memory import extract_keywords
 from ..utils import encode_image_base64, make_image_msg
-from ..db import get_cursor
+from ..infra.conn import get_cursor
 from ..speech.tts import synth as tts_synth  # v11-A10：语音合成
 from .reply import build_reply_message
 

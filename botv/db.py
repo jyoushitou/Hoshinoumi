@@ -1,6 +1,11 @@
-# ===================== 兼容层 =====================
-# v5-R6：数据访问已迁至 botv/infra/*
-# 本文件只做转发；所有调用方迁完后可删除
+# ===================== 兼容层（弃用别名） =====================
+# v5-R6 起数据访问已迁到 botv/infra/*；v17.14 起本文件是**弃用别名**：
+# 只 re-export + 打一次警告，v18 删除。
+#
+# 新代码请直接：
+#     from ..infra.conn import get_cursor
+#     from ..infra.repo_log import write_log_to_db
+#     from ..infra.repo_memory import ...
 
 from .infra.conn import get_db, get_cursor  # noqa: F401
 from .infra.repo_log import write_log_to_db  # noqa: F401
@@ -14,3 +19,23 @@ from .infra.repo_memory import (  # noqa: F401
     add_event_to_db,
 )
 from .infra.repo_ai import save_ai_raw_response, get_recent_usage  # noqa: F401
+
+_WARNED = False
+
+
+def _warn_once():
+    """第一次被导入时提醒一次（不刷屏）"""
+    global _WARNED
+    if _WARNED:
+        return
+    _WARNED = True
+    try:
+        import sys
+
+        print("[弃用] botv.db 将在 v18 删除，请改用 botv.infra.repo_*",
+              file=sys.stderr)
+    except Exception:
+        pass
+
+
+_warn_once()

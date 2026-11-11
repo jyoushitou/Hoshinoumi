@@ -7,7 +7,7 @@ from collections import defaultdict  # 默认字典（未使用但保留）
 
 from .config import STICKER_ARCHIVE_DIR, MAX_USER_STICKERS  # 存档目录配置
 from botv.core import state as cfg  # 全局运行时变量
-from .db import get_cursor  # 数据库游标
+from .infra.conn import get_cursor  # 数据库游标
 from .log import log_system, log_err  # 日志
 from .image import save_image_to_db  # 图片入库
 

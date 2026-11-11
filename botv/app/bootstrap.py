@@ -16,6 +16,29 @@ from ..core import tunables  # v15：运行时参数
 from ..ai.prompt import load_personality_supplement
 
 
+def _configure_db():
+    """v17.14：把数据库配置注入 infra.conn，断开 conn → settings 的边
+
+    启动时调一次；之后各处 get_cursor() 不再回头读配置。
+    """
+    try:
+        from ..core import settings
+        from ..infra import conn
+
+        backend = settings.storage_backend()
+        mysql_cfg = settings.db_config() if backend == "mysql" else None
+        conn.configure(
+            mysql_config=mysql_cfg,
+            backend=backend,
+            sqlite_path=settings.sqlite_path() if backend == "sqlite" else None,
+        )
+        log_system(f"[存储] 已注入配置：{backend}")
+        return backend
+    except Exception as e:
+        log_err(f"[存储] 注入配置失败，用默认：{e}")
+        return None
+
+
 def _ensure_tables():
     """确保 acg_images / diaries 表存在，并给 ai_raw_responses 补 token 字段"""
     # 确保 ACG 图片表存在（用于缓存 ACG 二次元图片）
@@ -75,6 +98,7 @@ def _ensure_tables():
 
 def bootstrap():
     """同步初始化：加载密钥/记忆/表情包/CLIP/人设，建表，初始化运行时状态"""
+    _configure_db()  # v17.14：先把数据库配置注入 infra.conn
     reload_api_keys()  # 必须先于 load_memories（追溯日记需要 API key）
     load_memories()  # 从数据库加载对话记忆和全局关键词
     init_sticker_archive()  # 表情包存档目录，迁移旧版 JSON 索引
