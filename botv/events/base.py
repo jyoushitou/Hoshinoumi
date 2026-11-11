@@ -36,7 +36,17 @@ class Event:
     fn: object                                 # 无参 async 可调用
     priority: int = Priority.IDLE
     timeout: float = DEFAULT_TIMEOUT
-    retries: int = 1                           # 失败重试次数（超时不重试）
+    retries: int = 1                           # 失败重试次数（超时不重试，上限 MAX_RETRIES）
+
+    MAX_RETRIES = 5                            # v17.10：防止传错值长时间占槽
+
+    def __post_init__(self):
+        try:
+            r = int(self.retries)
+        except Exception:
+            r = 1
+        # 0 表示不重试；负数按 0；超过上限按上限
+        self.retries = max(0, min(self.MAX_RETRIES, r))
     args: tuple = ()                           # 业务参数（handler 从 ev.args 取）
     created_at: float = field(default_factory=time.time)
     id: str = field(default_factory=lambda: uuid.uuid4().hex[:8])

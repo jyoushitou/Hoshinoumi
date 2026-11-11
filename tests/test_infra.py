@@ -971,5 +971,33 @@ class TestVisionUsesBlocking(unittest.TestCase):
 if __name__ == "__main__":
     unittest.main()
 
+
+
+class TestRetriesClamp(unittest.TestCase):
+    """v17.10：Event.retries 上限 5，防止传错值占着 worker 很久"""
+
+    def _ev(self, retries):
+        from botv.events.base import Event
+
+        async def noop():
+            return None
+
+        return Event(kind="k", key="k", fn=noop, retries=retries)
+
+    def test_normal_values_kept(self):
+        for r in (0, 1, 3, 5):
+            self.assertEqual(self._ev(r).retries, r)
+
+    def test_oversized_clamped(self):
+        self.assertEqual(self._ev(100).retries, 5)
+        self.assertEqual(self._ev(1000).retries, 5)
+
+    def test_negative_becomes_zero(self):
+        self.assertEqual(self._ev(-3).retries, 0)
+
+    def test_garbage_falls_back_to_one(self):
+        self.assertEqual(self._ev("abc").retries, 1)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -2,6 +2,7 @@
 # 对话记忆 / 全局关键词 / 事件记忆
 # 迁移自 db.py（v5-R6），SQL 逐字未改
 
+import os as _os
 from collections import deque
 from datetime import datetime, timedelta
 
@@ -169,7 +170,13 @@ def load_state_json(target=None):
 
 def save_state_json(payload, target=None):
     """覆盖写某个对象的状态（一人一行）"""
+
     tid = str(target) if target else STATE_TARGET
+    # v17.10：停写旧表；要回退双写设 NAO_LEGACY_WRITE=1
+    if not legacy_write_enabled():
+        dual_write("state", tid, payload)
+        return
+
     c = get_cursor()
     c.execute("DELETE FROM events WHERE target_id=%s AND kind='state'", (tid,))
     c.execute(
@@ -250,6 +257,11 @@ def load_friction(tid):
 
 def save_friction(tid, payload):
     """覆盖写摩擦状态"""
+    # v17.10：停写旧表；要回退双写设 NAO_LEGACY_WRITE=1
+    if not legacy_write_enabled():
+        dual_write("friction", str(tid), payload)
+        return
+
     c = get_cursor()
     c.execute("DELETE FROM events WHERE target_id=%s AND kind='friction'", (str(tid),))
     c.execute(
@@ -297,6 +309,11 @@ def load_reading(tid):
 
 def save_reading(tid, payload):
     """覆盖写小说进度"""
+    # v17.10：停写旧表；要回退双写设 NAO_LEGACY_WRITE=1
+    if not legacy_write_enabled():
+        dual_write("reading", str(tid), payload)
+        return
+
     c = get_cursor()
     c.execute("DELETE FROM events WHERE target_id=%s AND kind='reading'", (str(tid),))
     c.execute(
@@ -401,6 +418,11 @@ def load_relation(tid):
 
 def save_relation(tid, payload):
     """覆盖写亲密度（一人一行）"""
+    # v17.10：停写旧表；要回退双写设 NAO_LEGACY_WRITE=1
+    if not legacy_write_enabled():
+        dual_write("rel", str(tid), payload)
+        return
+
     c = get_cursor()
     c.execute("DELETE FROM events WHERE target_id=%s AND kind='rel'", (str(tid),))
     c.execute(
@@ -519,6 +541,15 @@ _JSON_TABLES = {
                                      "cold_ts", "last_grudge")),
     "reading": ("reading_progress", ("title", "intro", "last_no", "last_chapter")),
 }
+
+
+# v17.10：先停写旧表（只写新表），旧表仅作为读的回退。
+# 想回退到双写：NAO_DUAL_WRITE=1
+_LEGACY_WRITE = _os.getenv("NAO_LEGACY_WRITE", "0") in ("1", "true", "True")
+
+
+def legacy_write_enabled():
+    return _LEGACY_WRITE
 
 
 def dual_write(kind, tid, payload):
