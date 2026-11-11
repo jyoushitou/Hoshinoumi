@@ -40,7 +40,7 @@ MySQL 存记忆与日志。图片由她自己一句话打标签，正文小说�
 | **v16** | **读小说（番茄 OCR + HTML 合并）** | ✅ 已发布 | [v16.md](docs/versions/v16.md) |
 | v17 | 执行模型重构：阻塞池 → 事件/调度 → 出站层 → 主循环瘦身 | 📋 已规划 | [v17.md](docs/versions/v17.md) |
 | v18 | 情感的深刻度：记忆分轻重、情绪跨天、元数据表+视图解耦 | 📋 已规划 | [v18.md](docs/versions/v18.md) |
-| v19 | QQ 空间：她发自己的说说（每天 1 条，只发不互动） | 📋 已规划 | [v19.md](docs/versions/v19.md) |
+| v19 | QQ 空间：发说说 + **只对熟人点赞/评论**，与聊天记忆联动 | 📋 已规划 | [v19.md](docs/versions/v19.md) |
 | v20 | 运维（一）bash 只读：白名单命令，只能查不能改 | 📋 已规划 | [v20.md](docs/versions/v20.md) |
 | v21 | 运维（二）agent：她自己调工具排障 | 📋 已规划 | [v21.md](docs/versions/v21.md) |
 | v22 | 运维（三）有限写：白名单 + 强制备份 + 二次确认 | 📋 已规划 | [v22.md](docs/versions/v22.md) |
@@ -130,6 +130,9 @@ run.py → app.bootstrap → app.loop
 
 ---
 
+
+> **新功能一律先进 `docs/versions/` 的开发计划，再按版本迭代。**
+> 已发布版本冻结，bug 记进下一个版本的「遗留问题」。
 
 > **部署/升级只有两条命令**：python3 scripts/setup.py → python3 run.py。
 > 建表、旧数据迁移、内置定时场景导入，setup 一次做完，重复跑安全。
