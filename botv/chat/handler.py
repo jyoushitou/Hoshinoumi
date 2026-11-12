@@ -16,7 +16,7 @@ from ..image.store import update_image_tags  # 图片标签回写（v8）
 from ..image import fetch_and_save_acg_image
 from ..memory import extract_keywords, add_target_memory
 from ..ai.client import get_character_reply
-from ..commands import handle_command
+from ..commands import handle_command, normalize_command
 from ..utils import make_image_msg
 from ..ai.parse import parse_ai_reply
 from ..core.types import Fallback  # 兜底文案标记（v5-F2）
@@ -51,11 +51,11 @@ def _looks_like_command(d):
         return False
     msg = d.get("message")
     if isinstance(msg, str):
-        return msg.lstrip().startswith("!")
+        return msg.lstrip()[:1] in ("!", "！")
     for seg in msg or []:
         if isinstance(seg, dict) and seg.get("type") == "text":
             text = (seg.get("data") or {}).get("text", "")
-            return text.lstrip().startswith("!")
+            return text.lstrip()[:1] in ("!", "！")
     return False
 
 
@@ -387,6 +387,7 @@ async def _handle_message(d, ws):
         cfg.self_qq = self_qq
     addressed = is_at_me(d.get("message", ""), cfg.self_qq)
     text, img_md5s = await parse_message_content(d.get("message", ""), uid, ws)  # (文本, 图片md5)
+    text = normalize_command(text)  # v18.20：全角 ! 也能当命令
     remember_message(mid, _sender_name(d), text)  # v18.6：入站消息进缓存，引用可零延迟命中
     note_user_message()  # v10-U9：她在等你，别急着主动找
     try:

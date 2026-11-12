@@ -11,6 +11,19 @@ from .cmd import basic, query, admin, media, memory_cmd, diary_cmd, ops, cron_cm
 
 CMD_PREFIX = "!"  # 命令前缀
 
+# v18.20：手机输入法常打出全角符号，命令判定与参数切分前先归一化
+_FULLWIDTH = str.maketrans({
+    "！": "!", "：": ":", "，": ",", "；": ";", "？": "?", "（": "(", "）": ")",
+})
+
+
+def normalize_command(text):
+    """只归一化命令文本；普通聊天原样返回，别改她的语气"""
+    s = (text or "").lstrip()
+    if s[:1] in ("!", "！"):
+        return "!" + s[1:].translate(_FULLWIDTH)
+    return text
+
 
 async def _send_command_reply(reply, uid, ws, is_group, gid):
     """发送命令回复文本"""
@@ -26,6 +39,7 @@ async def _send_command_reply(reply, uid, ws, is_group, gid):
 
 async def handle_command(text, uid, ws, is_group, gid):
     """处理对话命令，返回True表示已处理（不再走AI回复）"""
+    text = normalize_command(text)
     if not text.startswith(CMD_PREFIX):
         return False
     # 只有主人才能用命令

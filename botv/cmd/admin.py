@@ -3,6 +3,8 @@
 # 迁移自 commands.py（v5-R5）
 
 import asyncio
+import os
+import threading
 import time as _time
 
 from botv.core import state as cfg
@@ -97,6 +99,16 @@ async def _do_exit(ctx):
             await send_private_msg(uid, msg, ws)
         log_system(f"[!exit] 收到退出命令，正在设置退出事件")
         cfg.shutdown_event.set()
+
+        # v18.20：5 秒看门狗——serve() 干净退出失败时强制结束进程
+        def _watchdog():
+            log_system("[!exit] 5 秒看门狗触发，强制退出")
+            os._exit(0)
+
+        _t = threading.Timer(5.0, _watchdog)
+        _t.daemon = True
+        _t.start()
+
         await asyncio.sleep(0.8)
         log_system(f"[!exit] 退出事件已触发，程序即将退出")
         return ""

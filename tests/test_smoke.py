@@ -181,6 +181,12 @@ class TestCommandRegistry(unittest.TestCase):
     def test_all_commands_registered(self):
         self.assertEqual(set(registry.COMMANDS), self.EXPECTED)
 
+    def test_fullwidth_version(self):
+        """v18.20：手机输入法打 ！version 也要有反应"""
+        handled, ws = self._run("！version")
+        self.assertTrue(handled)
+        self.assertTrue(ws.texts(), "应返回版本信息")
+
     def test_help(self):
         handled, ws = self._run("!help")
         self.assertTrue(handled)
