@@ -72,7 +72,8 @@ CURRENT = {
             deleted_at DATETIME NULL,
             UNIQUE KEY uk_dedupe (target_id, dedupe_key),
             KEY idx_target_time (target_id, created_at),
-            KEY idx_kind (kind)
+            KEY idx_kind (kind),
+            KEY idx_events_target_kind (target_id, kind, created_at)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """,
     "images": """
@@ -98,7 +99,8 @@ CURRENT = {
             completion_tokens INT DEFAULT 0,
             total_tokens INT DEFAULT 0,
             created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            KEY idx_time (created_at)
+            KEY idx_time (created_at),
+            KEY idx_ai_target_time (target_id, created_at)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """,
     "acg_images": """
@@ -324,6 +326,7 @@ PURE = {
             source ENUM('chat','manual') NOT NULL DEFAULT 'chat',
             updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
             UNIQUE KEY uk_fact (target_id, slot, value),
+            KEY idx_facts_target_vis (target_id, visibility, valid_until),
             KEY idx_fact_target (target_id, slot)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """,
