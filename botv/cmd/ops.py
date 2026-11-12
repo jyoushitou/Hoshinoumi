@@ -27,6 +27,11 @@ async def cmd_stats(ctx):
     except Exception:
         pass
     try:
+        from ..infra.cache import describe as describe_cache
+        lines.append(describe_cache())
+    except Exception:
+        pass
+    try:
         from ..schedule import cron
         lines.append("⏰ 定时：" + cron.next_summary())
     except Exception:

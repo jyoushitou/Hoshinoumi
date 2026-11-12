@@ -38,9 +38,18 @@ def count_table(table, cursor=None):
 
 
 def counts(tables=None, cursor=None):
-    """多表计数：{表名: 行数}"""
-    names = tables or _TABLES
-    return {t: count_table(t, cursor) for t in names}
+    """多表计数：{表名: 行数}；v18.13 传游标不缓存，否则 5 秒 TTL"""
+    names = list(tables or _TABLES)
+    if cursor is not None:  # 调用方要一致性快照，别给缓存
+        return {t: count_table(t, cursor) for t in names}
+    from . import cache
+    key = "counts:" + ",".join(names)
+    hit = cache.get(key)
+    if hit is not None:
+        return dict(hit)
+    val = {t: count_table(t) for t in names}
+    cache.set(key, val, ttl=5.0)
+    return val
 
 
 def first_log(cursor=None):

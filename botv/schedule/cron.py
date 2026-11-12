@@ -32,8 +32,13 @@ _COLS = ("id, target_id, schedule_type, at_time, weekdays, once_at, "
 
 
 def list_tasks(target_id=None, enabled_only=False):
+    from ..infra import cache
     from ..infra.conn import get_cursor
 
+    key = f"cron:list:{target_id or ''}:{1 if enabled_only else 0}"
+    hit = cache.get(key)
+    if hit is not None:
+        return list(hit)
     c = get_cursor()
     sql = f"SELECT {_COLS} FROM cron_tasks WHERE 1=1"
     params = []
@@ -44,7 +49,9 @@ def list_tasks(target_id=None, enabled_only=False):
         sql += " AND enabled=1"
     sql += " ORDER BY id"
     c.execute(sql, params or None)
-    return list(c.fetchall())
+    rows = list(c.fetchall())
+    cache.set(key, rows, ttl=3.0)
+    return rows
 
 
 def get(task_id):
@@ -70,6 +77,11 @@ def add(target_id, schedule_type, content, at_time=None, weekdays=None,
             (str(target_id), schedule_type, at_time, weekdays, once_at,
              interval_min, content, source, int(jitter_min), rule, timing))
         c.connection.commit()
+        try:
+            from ..infra import cache
+            cache.invalidate("cron:list")
+        except Exception:
+            pass
         return c.lastrowid
     except Exception as e:
         log_err(f"[定时] 新增失败: {e}")
@@ -83,6 +95,11 @@ def remove(task_id):
         c = get_cursor()
         c.execute("DELETE FROM cron_tasks WHERE id=%s", (int(task_id),))
         c.connection.commit()
+        try:
+            from ..infra import cache
+            cache.invalidate("cron:list")
+        except Exception:
+            pass
         return True
     except Exception as e:
         log_err(f"[定时] 删除失败: {e}")
@@ -97,6 +114,11 @@ def set_enabled(task_id, on):
         c.execute("UPDATE cron_tasks SET enabled=%s WHERE id=%s",
                   (1 if on else 0, int(task_id)))
         c.connection.commit()
+        try:
+            from ..infra import cache
+            cache.invalidate("cron:list")
+        except Exception:
+            pass
         return True
     except Exception as e:
         log_err(f"[定时] 启停失败: {e}")
@@ -110,6 +132,11 @@ def set_next(task_id, ts):
         c = get_cursor()
         c.execute("UPDATE cron_tasks SET next_ts=%s WHERE id=%s", (ts, int(task_id)))
         c.connection.commit()
+        try:
+            from ..infra import cache
+            cache.invalidate("cron:list")
+        except Exception:
+            pass
         return True
     except Exception:
         return False
@@ -384,6 +411,11 @@ def migrate_scene_rules():
                 "WHERE content=%s",
                 (rule, stype, at, days, timing, int(jitter), content))
         c.connection.commit()
+        try:
+            from ..infra import cache
+            cache.invalidate("cron:list")
+        except Exception:
+            pass
         return True
     except Exception as e:
         log_err(f"[定时] 场景规则迁移失败: {e}")
