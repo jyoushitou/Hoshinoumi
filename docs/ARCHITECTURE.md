@@ -97,6 +97,39 @@
  NapCat → QQ
 ```
 
+**NapCat 的定位：QQ 通道网关，不是 v20 体系网关。**
+
+| 维度 | NapCat | v20 网关 |
+|---|---|---|
+| 位置 | **南向**：QQ ↔ botv | **北向**：公网 ↔ botv |
+| 角色 | QQ 协议适配器 / 通道网关 | 体系网关 / 公网唯一入口 |
+| 协议 | OneBot v11（WS/HTTP） | HTTPS/WSS + JSON ↔ gRPC |
+| 鉴权 | QQ 登录（一个 bot 账号） | JWT `sub=user_id` + 角色 |
+| 多用户 | 一个 QQ 号服务多个 QQ 用户 | 多个人类账号/租户 |
+| 可信边界 | 本机可信 | 公网不可信 |
+| 能否互相替代 | **不能** | **不能** |
+
+- 把 NapCat 看成「QQ 这一侧的接入网关」可以；但它**不管** Web/桌面/手机的登录、限流、审计。
+- v20 网关也**不管** QQ 协议；它只服务自有客户端。
+- v33 的 `channels/base.py` 把 NapCat 包成 **QQ channel adapter**；以后微信/其他通道同理。
+- v36 微服务接入时，NapCat 仍是 QQ sidecar/通道网关，不会被吸收进宿主网关。
+
+### 流量控制放哪
+
+| 方案 | 做法 | 结论 |
+|---|---|---|
+| **A. 直连 + 进程内限流**（默认） | NapCat → botv loopback；`chat/inbound` / `egress/outbound` 做令牌桶 + 有界队列 | ✅ 少一跳、低延迟、够用 |
+| **B. 独立 QQ 通道网关** | NapCat → channel-gw → botv；mTLS/token、按 QQ 号配额、连接复用 | 🟡 多 QQ 号 / NapCat 不在本机时 |
+| **C. 走 v20 体系网关** | v20 同时说 OneBot/JWT，代理 NapCat | ❌ 不推荐：协议/鉴权/信任边界全混 |
+
+**规则**：
+
+- v20 **不接** OneBot，不做 QQ 协议；QQ 的限流在 channel adapter 里，不在 v20。
+- 两层限流：**平台层**（QQ 发消息频率/风控）+ **用户层**（按 `user_id` 配额）。
+- 背压：有界队列 + 丢弃/合并策略；模型并发有上限，不能无限堆。
+- 观测：按 channel / user 记发送速率、队列长度、丢弃数。
+- 如果以后 NapCat 跑在另一台机器，再上 B（独立通道网关）；仍然不走 v20。
+
 ---
 
 ## 3. 调度器模型（v17.1 起）

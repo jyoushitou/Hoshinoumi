@@ -53,7 +53,7 @@ v6：P1 会说话 → P2 说实话 → P2.5 长感官 → P3 有生活 → P4 �
 | **v16** | [versions/v16.md](versions/v16.md) | 空闲时自己读小说（番茄/起点，记进度、聊剧情） | 规划中 |
 | **v17** | [versions/v17.md](versions/v17.md) | 执行模型重构（16 个次版本，v17.17.0 已发布） | ✅ 已发布 |
 | **v18** | [versions/v18.md](versions/v18.md) | 情感的深刻度：记忆分量 → 事实卡 → 情绪跨天 …（21 个次版本，18.0–18.20） | 🚧 进行中（v18.5 已完成 → v18.6 待开） |
-| **v19** | [versions/v19.md](versions/v19.md) | 后端 API：把能力做成服务（只监听本机） | 规划中 |
+| **v19** | [versions/v19.md](versions/v19.md) | 多用户后端 API：users/identity/隔离 + 服务化 | 规划中 |
 | **v20** | [versions/v20.md](versions/v20.md) | 网关：自有软件与 Web 的**唯一入口**（鉴权/限流/审计） | 规划中 |
 | **v21** | [versions/v21.md](versions/v21.md) | DSH / Qoder / WorkBuddy 插件：她成为你所有工具的记忆层 | 规划中 |
 | **v22** | [versions/v22.md](versions/v22.md) | 电脑 Web：聊天 + 历史 + 功能面板 | 规划中 |
@@ -70,8 +70,9 @@ v6：P1 会说话 → P2 说实话 → P2.5 长感官 → P3 有生活 → P4 �
 | **v33** | [versions/v33.md](versions/v33.md) | 微信接入（OpenClaw） | 规划中 |
 | **v34** | [versions/v34.md](versions/v34.md) | 语音通话 | 规划中 |
 | **v35** | [versions/v35.md](versions/v35.md) | 视频通话 | 规划中 |
-| **v36** | [versions/v36.md](versions/v36.md) | 常驻（一）systemd / 看门狗 | 规划中 |
-| **v37** | [versions/v37.md](versions/v37.md) | 常驻（二）LITE / ARM / 一键安装 | 规划中 |
+| **v36** | [versions/v36.md](versions/v36.md) | 微服务接入：融进自有 Web，探网关 5 次 + 池复用 | 规划中 |
+| **v37** | [versions/v37.md](versions/v37.md) | 常驻（一）systemd / 看门狗 | 规划中 |
+| **v38** | [versions/v38.md](versions/v38.md) | 常驻（二）LITE / ARM / 一键安装 | 规划中 |
 
 
 
