@@ -133,7 +133,7 @@ run.py → app.bootstrap → app.loop
 完整分层图、消息生命周期、调度器模型、已知架构债：
 
 > **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** —— 架构图
-> **[docs/ARCH-REVIEW.md](docs/ARCH-REVIEW.md)** —— 审查结论与修复顺序（综合 6.3/10）
+> **[docs/ARCH-REVIEW.md](docs/ARCH-REVIEW.md)** —— 审查结论与修复顺序（v18.20，综合 6.2/10）
 
 三条硬约束：
 
