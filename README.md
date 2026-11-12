@@ -149,8 +149,10 @@ run.py → app.bootstrap → app.loop
 > **新功能一律先进 `docs/versions/` 的开发计划，再按版本迭代。**
 > 已发布版本冻结，bug 记进下一个版本的「遗留问题」。
 
-> **部署/升级只有两条命令**：python3 scripts/setup.py → python3 run.py。
-> 建表、旧数据迁移、内置定时场景导入，setup 一次做完，重复跑安全。
+> **首次安装**：`python3 scripts/setup.py` → `python3 run.py`。
+> **从 v18.4–v18.16 升到 v18.20**：多了 v18.17 的 `events → memories` 迁移，
+> 必须先 `python3 scripts/migrate_v18.py --apply`，再 `setup.py`，最后启动。
+> 完整步骤（含备份/回滚）：[升级到 v18.20.0](docs/升级到v18.20.md)。
 
 ## 快速开始
 
@@ -220,6 +222,9 @@ sudo python3 -m playwright install-deps chromium
 # 1. 数据库迁移（首次升级到 v7/v8 时必须先跑）
 python3 scripts/migrate_v7.py --apply    # events 扩成记忆主表
 python3 scripts/migrate_v8.py --apply    # global_keywords 按对象隔离
+
+# v18.4–v18.16 升到 v18.20：先跑 v18.17 迁移（events → memories）
+python3 scripts/migrate_v18.py --apply
 
 # 2. 部署前自检（13 项：依赖 / 静态检查 / 环境变量 / 能力 / 网络 / 数据库 ...）
 python3 scripts/preflight.py
@@ -572,16 +577,32 @@ python3 scripts/build_all.py --version 18.20.0 --skip full,exe,docker
 
 **版本号必须三段式**（`v17.0.0`），两段会直接拒绝。
 
-### 服务器部署
+### 服务器部署 / 从 v18.4 升级
+
+**先备份数据库**（迁移不可逆，回滚要靠它）：
 
 ```bash
 cd ~/NapCat-Pyhon
-find . -name "__pycache__" -type d -prune -exec rm -rf {} +
-git pull ./nao-vX.Y.Z.bundle main
-rm nao-vX.Y.Z.bundle
-python3 -m unittest discover -s tests
-# 重启
+mysqldump -h 127.0.0.1 -u 用户 -p 库名 > ~/nao-before-v18.20.sql
+# 或 SQLite：sqlite3 data/nao.db ".backup '$HOME/nao-before-v18.20.db'"
 ```
+
+取代码并迁移：
+
+```bash
+git fetch ./nao-v18.20.0.bundle \
+  refs/heads/main:refs/remotes/bundle/main \
+  refs/tags/v18.20.0:refs/tags/v18.20.0
+git checkout v18.20.0
+
+python3 scripts/migrate_v18.py          # 预览：events 有多少行要迁
+python3 scripts/migrate_v18.py --apply  # 真迁：events → memories，旧表改名
+python3 scripts/setup.py                # 补表 / 补定时场景
+python3 scripts/preflight.py
+python3 run.py
+```
+
+完整清单（依赖、systemd、验证、回滚）：[升级到 v18.20.0](docs/升级到v18.20.md)。
 
 ### 打包（四种形式）
 

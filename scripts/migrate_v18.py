@@ -57,11 +57,15 @@ def _is_sqlite(c):
 
 
 def _table_exists(c, table):
+    """只认基表；events 兼容视图不能被当成待迁表（迁移要能重复跑）"""
     try:
         if _is_sqlite(c):
             c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=?", (table,))
         else:
-            c.execute("SHOW TABLES LIKE %s", (table,))
+            c.execute(
+                "SELECT table_name FROM information_schema.tables "
+                "WHERE table_schema=DATABASE() AND table_name=%s "
+                "AND table_type='BASE TABLE'", (table,))
         return bool(c.fetchone())
     except Exception:
         return False

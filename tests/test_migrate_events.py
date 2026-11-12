@@ -56,6 +56,10 @@ class TestMigrateEvents(unittest.TestCase):
         # 旧名字只剩视图
         self.c.execute("SELECT type FROM sqlite_master WHERE name='events'")
         self.assertEqual(self.c.fetchone()["type"], "view")
+        # 重复跑必须安全：视图不算待迁表
+        self.assertEqual(migrate_events(self.c), 0)
+        self.c.execute("SELECT COUNT(*) AS n FROM memories")
+        self.assertEqual(self.c.fetchone()["n"], 2)
 
 
 if __name__ == "__main__":
