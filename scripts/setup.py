@@ -309,8 +309,9 @@ def main():
     print("      python3 scripts/preflight.py    # 13 项环境自检")
     print("      python3 scripts/init_db.py      # 只建表（加 --apply）")
     print("      python3 scripts/migrate_v17.py  # 只迁移（加 --apply）")
+    print("      python3 scripts/migrate_v18.py  # v18.17 events→memories（加 --apply）")
     print("      python3 scripts/seed_scenes.py  # 只导入场景（加 --apply）")
-    print("      python3 scripts/run_tests.py    # 全量测试（807 条）")
+    print("      python3 scripts/run_tests.py    # 全量测试（931 条）")
     print("=" * 60)
     return 0
     print("建表没完成，修完再跑一次。")

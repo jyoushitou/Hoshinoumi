@@ -189,5 +189,6 @@ def main():
 
 if __name__ == "__main__":
     code = main()
-    print("\n[提示] 通常不需要单独跑：python3 scripts/setup.py 会处理")
+    print("\n[提示] v18.4–v18.16 升级必须先跑本脚本；setup.py 只建缺表，"
+          "不会补 memories 列，也不会迁 events。")
     sys.exit(code)
