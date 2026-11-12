@@ -12,9 +12,51 @@ import botv.core.state as cfg
 from ..infra.blocking import run_blocking  # v17.0.3：阻塞调用统一入口
 from ..log import log_api
 
-# 可用环境变量覆盖，默认用 DeepSeek 的视觉模型
-DEFAULT_VISION_MODEL = os.getenv("NAO_VISION_MODEL", "deepseek-flash")
-DEFAULT_VISION_URL = os.getenv("NAO_VISION_URL", "https://api.deepseek.com/v1/chat/completions")
+# ===================== 视觉模型配置（v18.1） =====================
+# 两段式：视觉模型看图 → 文本交给对话模型（DeepSeek）接话。
+# DeepSeek 的 chat 接口**不接受 image_url**，所以默认第一段走豆包。
+
+DOUBAO_VISION_URL = "https://ark.cn-beijing.volces.com/api/v3/chat/completions"
+# 方舟（Ark）通常要填「接入点 ID」（ep-2024xxxx-abc123），不是模型名；
+# 新版也支持直接写模型名。视觉任务只用「看图说话」，lite 足够且便宜快。
+DOUBAO_VISION_MODEL = "doubao-seed-2.1-lite"
+DEEPSEEK_VISION_URL = "https://api.deepseek.com/v1/chat/completions"
+DEEPSEEK_VISION_MODEL = "deepseek-flash"
+
+DEFAULT_VISION_MODEL = os.getenv("NAO_VISION_MODEL", DOUBAO_VISION_MODEL)
+DEFAULT_VISION_URL = os.getenv("NAO_VISION_URL", DOUBAO_VISION_URL)
+
+
+def vision_key():
+    """视觉用哪个 key：专用 key → 豆包 key → DeepSeek key（兜底）"""
+    return (os.getenv("NAO_VISION_KEY")
+            or getattr(cfg, "DOUBAO_API_KEY", "")
+            or getattr(cfg, "DS_API_KEY", ""))
+
+
+def providers():
+    """按顺序尝试的后端；环境变量可覆盖第一个
+
+    返回 [{"name","url","model","key"}]，跳过没有 key 的。
+    """
+    custom_url = os.getenv("NAO_VISION_URL")
+    custom_model = os.getenv("NAO_VISION_MODEL")
+    out = []
+    if custom_url:
+        out.append({"name": "自定义", "url": custom_url,
+                    "model": custom_model or DEFAULT_VISION_MODEL,
+                    "key": vision_key()})
+    else:
+        out.append({"name": "豆包", "url": DOUBAO_VISION_URL,
+                    "model": custom_model or DOUBAO_VISION_MODEL,
+                    "key": (os.getenv("NAO_VISION_KEY")
+                            or getattr(cfg, "DOUBAO_API_KEY", ""))})
+        if getattr(cfg, "DS_API_KEY", ""):
+            out.append({"name": "DeepSeek", "url": DEEPSEEK_VISION_URL,
+                        "model": os.getenv("NAO_VISION_FALLBACK_MODEL",
+                                           DEEPSEEK_VISION_MODEL),
+                        "key": cfg.DS_API_KEY})
+    return [p for p in out if p.get("key")]
 MAX_SIDE = 1024
 JPEG_QUALITY = 85
 
@@ -147,53 +189,96 @@ def parse_reply(text):
 
 
 async def describe_image(img_bytes):
-    """返回 (描述, 标签)；任何失败都返回 (None, [])"""
-    if not img_bytes or not getattr(cfg, "DS_API_KEY", ""):
+    """看图 → (描述, 标签)；所有后端都失败返回 (None, [])
+
+    v18.1：按 providers() 顺序尝试；每次失败都记 status + 响应前 200 字。
+    """
+    if not img_bytes:
         return None, []
 
     try:
-        import asyncio
-        import json
-        import requests
-
-        url = DEFAULT_VISION_URL
-        model = DEFAULT_VISION_MODEL
         b64, animated, frames = prepare(img_bytes)
-        payload = {
-            "model": model,
-            "messages": [{
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": prompt_with_hint(animated, frames)},
-                    {"type": "image_url",
-                     "image_url": {"url": f"data:image/jpeg;base64,{b64}"}},
-                ],
-            }],
-            "max_tokens": 200,
-            "temperature": 0.3,
-        }
-        headers = {
-            "Authorization": f"Bearer {cfg.DS_API_KEY}",
-            "Content-Type": "application/json",
-        }
-
-        def _post():
-            s = requests.Session()
-            try:
-                return s.post(url, headers=headers, data=json.dumps(payload), timeout=20)
-            finally:
-                s.close()
-
-        resp = await run_blocking(_post, timeout=40, name="vision")  # v17.0.3：统一线程池（视觉较慢，超时放宽）
-        if resp.status_code != 200:
-            log_api(f"[视觉] 失败 {resp.status_code}: {resp.text[:120]}")
-            return None, []
-
-        data = resp.json()
-        text = data["choices"][0]["message"]["content"]
-        desc, tags = parse_reply(text)
-        log_api(f"[视觉] {desc[:30]} | 标签 {tags}")
-        return desc, tags
     except Exception as e:
-        log_api(f"[视觉] 异常: {e}")
+        log_api(f"[视觉] 预处理失败: {e}")
         return None, []
+
+    import json
+    import requests
+
+    for prov in providers():
+        try:
+            payload = {
+                "model": prov["model"],
+                "messages": [{
+                    "role": "user",
+                    "content": [
+                        {"type": "text",
+                         "text": prompt_with_hint(animated, frames)},
+                        {"type": "image_url",
+                         "image_url": {"url": f"data:image/jpeg;base64,{b64}"}},
+                    ],
+                }],
+                "max_tokens": 200,
+                "temperature": 0.3,
+            }
+            headers = {"Authorization": f"Bearer {prov['key']}",
+                       "Content-Type": "application/json"}
+
+            def _post(url=prov["url"], h=headers, d=json.dumps(payload)):
+                s = requests.Session()
+                try:
+                    return s.post(url, headers=h, data=d, timeout=20)
+                finally:
+                    s.close()
+
+            resp = await run_blocking(_post, timeout=40, name="vision")
+
+            if resp.status_code != 200:
+                # U3：必须能看出是哪一步、为什么
+                log_api(f"[视觉] {prov['name']} HTTP {resp.status_code} | "
+                        f"{resp.text[:200]}")
+                continue
+
+            data = resp.json()
+            text = data["choices"][0]["message"]["content"]
+            desc, tags = parse_reply(text)
+            if desc or tags:
+                log_api(f"[视觉] {prov['name']} 成功：{desc[:30]} | 标签 {tags}")
+                return desc, tags
+            log_api(f"[视觉] {prov['name']} 返回空内容")
+        except Exception as e:
+            log_api(f"[视觉] {prov['name']} 异常: {e}")
+
+    log_api("[视觉] 所有后端都失败，退回「看不清」文案")
+    return None, []
+
+
+async def self_test():
+    """!vision test 用：画一张测试图跑一遍，返回可读报告"""
+    try:
+        from PIL import Image, ImageDraw
+
+        im = Image.new("RGB", (240, 160), (245, 245, 245))
+        d = ImageDraw.Draw(im)
+        d.rectangle([20, 100, 220, 140], fill=(80, 160, 220))
+        d.ellipse([90, 30, 150, 90], fill=(250, 200, 60))
+        buf = io.BytesIO()
+        im.save(buf, format="PNG")
+        img = buf.getvalue()
+    except Exception as e:
+        return f"❌ 生成测试图失败：{e}"
+
+    import time
+
+    t0 = time.time()
+    desc, tags = await describe_image(img)
+    cost = time.time() - t0
+    names = "、".join(p["name"] for p in providers()) or "（没有可用的 key）"
+    if desc:
+        return (f"🖼️ 视觉 ✅（{cost:.1f}s）\n"
+                f"   后端：{names}\n"
+                f"   描述：{desc[:60]}\n"
+                f"   标签：{tags}")
+    return (f"🖼️ 视觉 ❌（{cost:.1f}s）\n"
+            f"   后端：{names}\n"
+            f"   看日志里的 [视觉] 行，有 HTTP 状态码和响应前 200 字")

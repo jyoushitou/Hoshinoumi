@@ -57,6 +57,14 @@ async def cmd_version(ctx):
     return V.describe()
 
 
+@command("vision")
+async def cmd_vision(ctx):
+    """!vision test - 视觉自检（画一张测试图跑一遍）"""
+    from ..ai.vision import self_test
+
+    return await self_test()
+
+
 @command("config")
 async def cmd_config(ctx):
     """!config - 查看可调参数；!config <参数> <值> 修改"""

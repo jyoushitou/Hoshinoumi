@@ -220,6 +220,8 @@ class TestEnvironment(unittest.TestCase):
         "NAO_BATCH_CHAT",
         "NAO_LOG_TXT",
         "NAO_MONITOR_INTERVAL",
+        "NAO_VISION_FALLBACK_MODEL",
+        "NAO_VISION_KEY",
         "NAO_CLOCK_OFFSET",
         "NAO_TZ",
         "NAO_READ_IDLE_MINUTES",
