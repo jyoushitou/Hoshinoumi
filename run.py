@@ -36,6 +36,18 @@ AUTO_OPTIONAL_PACKAGES = [
 INSTALL_TIMEOUT = 120
 
 # ===================== 函数定义 =====================
+def _lock_timezone():
+    """v18.0：把进程时区锁到东八区（服务器常是 UTC，会差 8 小时）"""
+    try:
+        from botv.core import clock
+
+        changed = clock.ensure_tz()
+        print(f"[启动] 时区 Asia/Shanghai（{'已纠正' if changed else '原本正确'}）"
+              f"，当前 {clock.fmt_full()}")
+    except Exception as e:
+        print(f"[启动] 时区设置失败：{e}")
+
+
 def check_and_install(package_name, optional=False, allow_install=False):
     """检查包是否已安装，未安装则优先用 Ubuntu apt 命令自动安装，失败回退 pip"""
     # 特殊处理：某些 pip 包名 ≠ 导入模块名

@@ -8,6 +8,7 @@ from ..infra.conn import get_cursor
 from ..infra.repo_ai import get_recent_usage  # 数据库
 from ..log import get_recent_logs  # 日志
 from .registry import command
+from ..core import clock
 
 
 @command("ping")
@@ -65,7 +66,7 @@ async def cmd_uptime(ctx):
                 start = first_log
             else:
                 start = datetime.strptime(str(first_log), "%Y-%m-%d %H:%M:%S")
-            now = datetime.now()
+            now = clock.naive()
             delta = now - start
             days = delta.days
             hours = delta.seconds // 3600

@@ -12,6 +12,8 @@ import re
 import time
 from datetime import datetime, timedelta
 
+from ..core import clock
+
 # 时间词
 _CN_NUM = {"零": 0, "一": 1, "二": 2, "两": 2, "三": 3, "四": 4,
            "五": 5, "六": 6, "七": 7, "八": 8, "九": 9, "十": 10,
@@ -61,7 +63,7 @@ def parse_time(text, now=None):
       明天/今晚 HH点               → once
       N分钟后 / 半小时后            → once（相对）
     """
-    now = now or datetime.now()
+    now = now or clock.naive()
     text = (text or "").strip()
     if not text:
         return None

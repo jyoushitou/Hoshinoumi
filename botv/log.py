@@ -10,12 +10,17 @@
 
 import queue
 import threading
-from datetime import datetime
+from .core import clock
 
 _QUEUE_MAX = 2000
 _queue = queue.Queue(maxsize=_QUEUE_MAX)
 _stats = {"dropped": 0, "flushed": 0, "failed": 0}
 _flusher = {"thread": None, "stop": threading.Event()}
+
+
+def _stamp():
+    """日志时间戳：固定东八区（服务器 TZ=UTC 时也不会差 8 小时）"""
+    return clock.fmt_hms()
 
 
 def _db_writer():
@@ -108,27 +113,27 @@ def _emit(tag, m, fmt):
 
 def log_system(m):
     """系统级日志：初始化、定时任务、状态变更等"""
-    _emit("系统", m, f"【系统】{datetime.now().strftime('%H:%M:%S')}|{m}")
+    _emit("系统", m, f"【系统】{_stamp()}|{m}")
 
 
 def log_recv(m):
     """接收日志：收到的QQ消息"""
-    _emit("接收", m, f"【接收】{datetime.now().strftime('%H:%M:%S')}|{m}")
+    _emit("接收", m, f"【接收】{_stamp()}|{m}")
 
 
 def log_send(m):
     """发送日志：发送的消息内容"""
-    _emit("发送", m, f"【发送】{datetime.now().strftime('%H:%M:%S')}|{m}")
+    _emit("发送", m, f"【发送】{_stamp()}|{m}")
 
 
 def log_api(m):
     """接口日志：API调用、图片处理、CLIP分析等"""
-    _emit("接口", m, f"【接口】{datetime.now().strftime('%H:%M:%S')}|{m}")
+    _emit("接口", m, f"【接口】{_stamp()}|{m}")
 
 
 def log_err(m):
     """异常日志：捕获到的错误和异常"""
-    _emit("异常", m, f"【异常】{datetime.now().strftime('%H:%M:%S')}|{m}")
+    _emit("异常", m, f"【异常】{_stamp()}|{m}")
 
 
 def get_recent_logs(limit=20):

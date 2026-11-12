@@ -19,15 +19,22 @@
 import os
 import threading
 from datetime import datetime, timedelta
+from ..core import clock
 
 MAX_SIZE = 64 * 1024 * 1024
 _lock = threading.Lock()
 _state = {"day": None, "path": None, "size": 0, "inited": False}
+_fail_logged = False     # 写失败只报一次，避免刷屏
 
 
 def _dir():
+    """日志目录：默认仓库根的 logs/
+
+    v18.0：原来只往上两层，落在 botv/logs/；应为三层（仓库根）。
+    """
     return os.getenv("NAO_LOG_DIR") or os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "logs")
+        os.path.dirname(os.path.dirname(os.path.dirname(
+            os.path.abspath(__file__)))), "logs")
 
 
 def keep_days():
@@ -65,7 +72,7 @@ def write(tag, message):
     ok = False
     try:
         with _lock:
-            day = datetime.now().strftime("%Y-%m-%d")
+            day = clock.fmt_ymd()
             if _state["day"] != day or not _state["path"]:
                 os.makedirs(_dir(), exist_ok=True)
                 _state["day"] = day
@@ -76,13 +83,22 @@ def write(tag, message):
 
             path = _rotate_if_needed(_state["path"])
             _state["path"] = path
-            line = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}|{tag}|{message}\n"
+            line = f"{clock.fmt_full()}|{tag}|{message}\n"
             with open(path, "a", encoding="utf-8") as f:
                 f.write(line)
             _state["size"] = os.path.getsize(path)
             ok = True
-    except Exception:
+    except Exception as e:
         ok = False
+        global _fail_logged
+        if not _fail_logged:
+            _fail_logged = True
+            try:
+                import sys as _sys
+
+                print(f"[日志] 写入失败（后续不再提示）：{e}", file=_sys.stderr)
+            except Exception:
+                pass
 
     # 清理放在锁外：purge_db_logs 会连数据库 → 日志 → 本函数，
     # 持锁做必然死锁（v17.11 踩过）。
@@ -101,7 +117,7 @@ def write(tag, message):
 
 def cleanup():
     """删掉超过保留期的日志文件"""
-    cutoff = datetime.now() - timedelta(days=keep_days())
+    cutoff = clock.naive() - timedelta(days=keep_days())
     removed = 0
     try:
         d = _dir()

@@ -9,6 +9,7 @@ import asyncio
 from datetime import datetime, timedelta
 
 from ..log import log_api, log_err
+from ..core import clock
 
 # 一周从周一开始，和 Python 的 weekday() 差 1
 _WEEK = {"mon": 1, "tue": 2, "wed": 3, "thu": 4, "fri": 5, "sat": 6, "sun": 7}
@@ -20,7 +21,7 @@ _clock = {"now": None}  # 测试注入
 def _now():
     if _clock["now"]:
         return _clock["now"]()
-    return datetime.now()
+    return clock.naive()
 
 
 # ===================== 表操作 =====================

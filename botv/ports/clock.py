@@ -1,26 +1,32 @@
-# ===================== 时钟端口 =====================
-# 目的：把 datetime.now() 收口，测试时能冻结时间
+# ===================== 时钟端口（DI 用） =====================
+# 目的：把时间来源做成可注入的端口，测试时能冻结时间。
+#
+# 实现统一放在 botv/core/clock.py（不依赖任何业务模块）；
+# 这里只保留接口和默认实现，避免两套时间逻辑。
 
 from datetime import datetime, timedelta, timezone
 from typing import Protocol, runtime_checkable
 
-CST = timezone(timedelta(hours=8))  # 东八区（与 config.CST 一致，但这里不依赖 config）
+from ..core import clock as _clock
+
+CST = timezone(timedelta(hours=8))   # 东八区
 
 
 @runtime_checkable
 class Clock(Protocol):
     """时间端口"""
+
     def now(self) -> datetime: ...
 
 
 class SystemClock:
-    """默认实现：东八区系统时钟"""
+    """默认实现：东八区系统时钟（委托 core.clock）"""
 
-    def __init__(self, tz=timezone.utc):
+    def __init__(self, tz=CST):
         self._tz = tz
 
     def now(self) -> datetime:
-        return datetime.now(self._tz)
+        return _clock.now(self._tz)
 
 
 def default_clock() -> Clock:

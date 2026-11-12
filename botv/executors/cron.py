@@ -13,6 +13,7 @@ from ..core import state as cfg
 from ..events.base import Priority
 from ..events.registry import register
 from ..log import log_api, log_err, log_system
+from ..core import clock
 
 # content 前面加这句，让她以「提醒/告知」的语气说，而不是自言自语
 _PROMPT = "（现在是你要主动提醒他的时间。要提醒的事：{content}。用一句话说出来，别解释为什么）"
@@ -103,7 +104,7 @@ def _mark(task_id, ok=True):
 
         c = get_cursor()
         c.execute("UPDATE cron_tasks SET last_fire=%s WHERE id=%s",
-                  (datetime.now(), int(task_id)))
+                  (clock.naive(), int(task_id)))
         c.connection.commit()
     except Exception as e:
         log_err(f"[定时] 更新 last_fire 失败({task_id}): {e}")
