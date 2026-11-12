@@ -64,10 +64,10 @@ class TestBaselineBubble(unittest.TestCase):
         self.assertAlmostEqual(avg, 2.25, delta=0.1, msg="均匀分布均值约 2.25")
 
     def test_max_reply_lines(self):
-        """一次回复最多 10 个气泡（超出合并）"""
+        """v18.10：一次回复最多 4 个气泡（超出合并）"""
         from botv.chat.reply import MAX_REPLY_LINES
 
-        self.assertEqual(MAX_REPLY_LINES, 10)
+        self.assertEqual(MAX_REPLY_LINES, 4)
 
 def _at(hour, minute=0):
     return datetime(2026, 11, 10, hour, minute, tzinfo=CST)

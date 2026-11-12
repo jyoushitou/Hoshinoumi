@@ -18,8 +18,21 @@ from ..memory import extract_keywords  # 关键词提取
 # 出现这些标记的行，以及它之后的所有行，都算内部元数据
 META_MARKERS = ("关键词搜索图片用", "事件摘要", "关键词提炼", "标签：", "标签:")
 
-# 单轮最多几条气泡：不是风格上限，只是模型格式崩了时的兜底（v6-A12）
-MAX_REPLY_LINES = 10
+# v18.10：一条回复最多 4 个气泡；超过就合并相邻短句
+MAX_REPLY_LINES = 4
+
+
+def _merge_to_limit(lines, limit=MAX_REPLY_LINES):
+    """超过 limit 时，反复合并最短的相邻两句（动作行尽量不拆）"""
+    out = list(lines)
+    while len(out) > limit:
+        def _key(i):
+            action_pair = (out[i].startswith(("（", "("))
+                           or out[i + 1].startswith(("（", "(")))
+            return (1 if action_pair else 0, len(out[i]) + len(out[i + 1]))
+        i = min(range(len(out) - 1), key=_key)
+        out[i:i + 2] = [f"{out[i].rstrip()} {out[i + 1].lstrip()}"]
+    return out
 
 
 def _strip_line_prefix(line):
@@ -84,11 +97,9 @@ async def build_reply_message(txt, uid, kws=None, is_group=False):
     if action:
         lines.append(action)  # 动作也单独一条
 
-    if len(lines) > MAX_REPLY_LINES:  # 异常保护：不是常规上限，只在模型失控时兜一下
-        log_api(f"[构建回复] 回复行数异常({len(lines)})，尾部合并为一条")
-        head = lines[:MAX_REPLY_LINES - 1]
-        tail = "\n".join(lines[MAX_REPLY_LINES - 1:])
-        lines = head + [tail]
+    if len(lines) > MAX_REPLY_LINES:
+        log_api(f"[构建回复] 气泡过多({len(lines)})，合并相邻短句到 {MAX_REPLY_LINES} 条")
+        lines = _merge_to_limit(lines)
 
     for i, line in enumerate(lines, 1):
         parts.append(("text", [{"type": "text", "data": {"text": line}}]))

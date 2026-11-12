@@ -592,11 +592,16 @@ class TestReplyAssembly(unittest.TestCase):
         self.assertEqual(texts, ["第一句", "第二句", "第三句"])
 
     def test_too_many_lines_merged(self):
-        """异常保护：只有超过 10 行才合并尾部"""
+        """v18.10：超过 4 条就合并相邻短句，最多 4 个气泡"""
         text = "\n".join(f"第{i}行" for i in range(1, 16))
         texts = self._build(text)
-        self.assertEqual(len(texts), 10)
+        self.assertEqual(len(texts), 4)
         self.assertIn("第15行", texts[-1])
+
+    def test_five_lines_merge_to_four(self):
+        text = "\n".join(f"第{i}行" for i in range(1, 6))
+        texts = self._build(text)
+        self.assertEqual(len(texts), 4)
 
     def test_no_action_sends_no_bubble(self):
         """F1：无动作时不该补一条「（无）」"""
