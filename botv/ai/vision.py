@@ -19,7 +19,7 @@ from ..log import log_api
 DOUBAO_VISION_URL = "https://ark.cn-beijing.volces.com/api/v3/chat/completions"
 # 方舟（Ark）通常要填「接入点 ID」（ep-2024xxxx-abc123），不是模型名；
 # 新版也支持直接写模型名。视觉任务只用「看图说话」，lite 足够且便宜快。
-DOUBAO_VISION_MODEL = "doubao-seed-2.1-lite"
+DOUBAO_VISION_MODEL = "doubao-seed-2.1-lite-260915"
 DEEPSEEK_VISION_URL = "https://api.deepseek.com/v1/chat/completions"
 DEEPSEEK_VISION_MODEL = "deepseek-flash"
 
@@ -234,9 +234,17 @@ async def describe_image(img_bytes):
             resp = await run_blocking(_post, timeout=40, name="vision")
 
             if resp.status_code != 200:
-                # U3：必须能看出是哪一步、为什么
+                # U3/L20：必须能看出是哪一步、为什么，以及怎么改
+                hint = ""
+                low = (resp.text or "").lower()
+                if resp.status_code == 404 or "notfound" in low:
+                    hint = ("｜模型/接入点不存在或无权访问："
+                            "填方舟的 Model ID（形如 doubao-seed-2.1-lite-260915）"
+                            "或接入点 ID（ep-xxxx）")
+                elif resp.status_code in (401, 403):
+                    hint = "｜key 无效：用「API Key」（Bearer），不是 Access Key"
                 log_api(f"[视觉] {prov['name']} HTTP {resp.status_code} | "
-                        f"{resp.text[:200]}")
+                        f"{resp.text[:160]}{hint}")
                 continue
 
             data = resp.json()
@@ -273,7 +281,9 @@ async def self_test():
     t0 = time.time()
     desc, tags = await describe_image(img)
     cost = time.time() - t0
-    names = "、".join(p["name"] for p in providers()) or "（没有可用的 key）"
+    provs = providers()
+    names = "、".join(p["name"] for p in provs) or "（没有可用的 key）"
+    model = provs[0]["model"] if provs else "（未配置）"
     if desc:
         return (f"🖼️ 视觉 ✅（{cost:.1f}s）\n"
                 f"   后端：{names}\n"
@@ -281,4 +291,5 @@ async def self_test():
                 f"   标签：{tags}")
     return (f"🖼️ 视觉 ❌（{cost:.1f}s）\n"
             f"   后端：{names}\n"
-            f"   看日志里的 [视觉] 行，有 HTTP 状态码和响应前 200 字")
+            f"   模型：{model}\n"
+            f"   看日志里的 [视觉] 行：有 HTTP 状态码 + 怎么改")

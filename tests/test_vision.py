@@ -53,7 +53,7 @@ class TestProviders(unittest.TestCase):
         provs = self.V.providers()
         self.assertEqual(provs[0]["name"], "豆包")
         self.assertIn("ark.cn-beijing.volces.com", provs[0]["url"])
-        self.assertIn("doubao-seed-2.1-lite", provs[0]["model"])
+        self.assertIn("doubao-seed-2.1-lite-260915", provs[0]["model"])
 
     def test_fallback_to_deepseek(self):
         self.V.cfg.DOUBAO_API_KEY = "d"

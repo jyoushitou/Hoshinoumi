@@ -223,7 +223,8 @@ async def _digest_summary(convo):
             {"role": "user", "content": convo}]
     return await call_deepseek(msgs, max_tokens=60) or await call_doubao(msgs, max_tokens=60)
 
-async def get_character_reply(txt, tid, current_kws=None):
+async def get_character_reply(txt, tid, current_kws=None,
+                             speaker=None, is_group=False):
     """核心函数：获取角色回复，优先DeepSeek，失败时降级到豆包"""
     log_api(f"[get_character_reply] 收到消息: {txt[:40]}, tid={tid}, kws={current_kws}")  # 日志记录输入
     kw, dia, events = build_memory_context(tid, current_kws, query=txt)
@@ -232,7 +233,8 @@ async def get_character_reply(txt, tid, current_kws=None):
     try:
         from ..life import facts as _facts
 
-        _fb = _facts.prompt_block(tid)
+        # v18.4：按「说话人」取事实；群聊只带 group_ok
+        _fb = _facts.prompt_block(speaker or tid, group=is_group)
         if _fb:
             events = (_fb + "\n" + events) if events else _fb
     except Exception as _e:

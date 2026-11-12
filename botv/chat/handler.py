@@ -236,7 +236,9 @@ async def _reply_and_send(d, ws, text, img_md5s=None):
                 except Exception as _e:
                     log_api(f"[读书] 后台读书启动失败: {_e}")
             else:
-                ans = await get_character_reply(text, tid, ck)  # 获取AI回复
+                ans = await get_character_reply(text, tid, ck,
+                                        speaker=uid,
+                                        is_group=(mt == "group"))  # 获取AI回复
             if _req:
                 pass  # v16：点名已处理，不再走模型分支
             elif not ans or isinstance(ans, Fallback):
@@ -372,7 +374,7 @@ async def _handle_message(d, ws):
     try:
         from ..life import facts as facts_mod
 
-        if mt == "private" and str(uid) == str(cfg.MASTER_QQ):
+        if True:  # v18.4：任何人的事实都记（按说话人隔离）
             _fs = facts_mod.extract(text)
             if _fs:
                 n = facts_mod.remember(uid, _fs)

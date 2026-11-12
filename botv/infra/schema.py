@@ -290,6 +290,9 @@ PURE = {
             target_id VARCHAR(64) NOT NULL,
             slot VARCHAR(32) NOT NULL,
             value VARCHAR(100) NOT NULL,
+            -- v18.4：这条事实是关于谁的 + 能不能公开提
+            subject VARCHAR(64) NOT NULL DEFAULT '',
+            visibility ENUM('group_ok','private','secret') NOT NULL DEFAULT 'group_ok',
             polarity TINYINT NOT NULL DEFAULT 1,
             valid_from DATETIME NULL,
             valid_until DATETIME NULL,

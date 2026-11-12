@@ -97,7 +97,7 @@ class TestPromptBlock(unittest.TestCase):
         from botv.life import facts
 
         orig = facts.active
-        facts.active = lambda tid, now=None, limit=10, cursor=None: [
+        facts.active = lambda tid, now=None, limit=10, cursor=None, group=False: [
             {"slot": "课程", "value": "早八", "polarity": 0,
              "valid_until": datetime(2026, 11, 13, 23, 59), "confidence": 0.7},
             {"slot": "饮食", "value": "香菜", "polarity": 0,
@@ -120,6 +120,52 @@ class TestPromptBlock(unittest.TestCase):
             self.assertEqual(facts.prompt_block("1"), "")
         finally:
             facts.active = orig
+
+
+
+
+class TestPrivacy(unittest.TestCase):
+    """v18.4：事实的归属与隐私"""
+
+    def setUp(self):
+        from botv.life import facts
+        from datetime import datetime
+
+        self.F = facts
+        self.now = datetime(2026, 11, 12, 9, 0)
+
+    def test_family_status_is_private(self):
+        fs = self.F.extract("我妈住院了", self.now)
+        self.assertTrue(fs)
+        self.assertEqual(fs[0]["subject"], "妈妈")
+        self.assertEqual(fs[0]["visibility"], "private")
+
+    def test_normal_fact_is_group_ok(self):
+        fs = self.F.extract("明天没有早八", self.now)
+        self.assertEqual(fs[0]["subject"], "自己")
+        self.assertEqual(fs[0]["visibility"], "group_ok")
+
+    def test_secret_marker(self):
+        self.assertEqual(self.F.visibility_of("这个别告诉别人", "自己"), "secret")
+
+    def test_group_filter_drops_private(self):
+        rows = [
+            {"slot": "课程", "value": "早八", "polarity": 0,
+             "visibility": "group_ok", "valid_until": None},
+            {"slot": "近况", "value": "住院", "polarity": 1,
+             "visibility": "private", "valid_until": None},
+        ]
+        orig = self.F.active
+        self.F.active = lambda tid, now=None, limit=10, cursor=None, group=False: [
+            r for r in rows if (not group) or r["visibility"] == "group_ok"]
+        try:
+            priv = self.F.prompt_block("1", group=False)
+            pub = self.F.prompt_block("1", group=True)
+        finally:
+            self.F.active = orig
+        self.assertIn("住院", priv, "私聊应该看得到")
+        self.assertNotIn("住院", pub, "群里绝不该出现")
+        self.assertIn("岔开", pub, "群聊要带「装不知道」提示")
 
 
 if __name__ == "__main__":
