@@ -284,6 +284,22 @@ PURE = {
             KEY idx_target (target_id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """,
+    "facts": """
+        CREATE TABLE IF NOT EXISTS facts (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            target_id VARCHAR(64) NOT NULL,
+            slot VARCHAR(32) NOT NULL,
+            value VARCHAR(100) NOT NULL,
+            polarity TINYINT NOT NULL DEFAULT 1,
+            valid_from DATETIME NULL,
+            valid_until DATETIME NULL,
+            confidence FLOAT NOT NULL DEFAULT 0.6,
+            source ENUM('chat','manual') NOT NULL DEFAULT 'chat',
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY uk_fact (target_id, slot, value),
+            KEY idx_fact_target (target_id, slot)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
     "settings": """
         CREATE TABLE IF NOT EXISTS settings (
             k VARCHAR(64) PRIMARY KEY,

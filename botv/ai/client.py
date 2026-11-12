@@ -226,7 +226,17 @@ async def _digest_summary(convo):
 async def get_character_reply(txt, tid, current_kws=None):
     """核心函数：获取角色回复，优先DeepSeek，失败时降级到豆包"""
     log_api(f"[get_character_reply] 收到消息: {txt[:40]}, tid={tid}, kws={current_kws}")  # 日志记录输入
-    kw, dia, events = build_memory_context(tid, current_kws, query=txt)  # 上下文（关键词、对话历史、检索到的记忆）
+    kw, dia, events = build_memory_context(tid, current_kws, query=txt)
+
+    # v18.3 U4：事实卡常驻（「没有早八」这类状态，不走检索）
+    try:
+        from ..life import facts as _facts
+
+        _fb = _facts.prompt_block(tid)
+        if _fb:
+            events = (_fb + "\n" + events) if events else _fb
+    except Exception as _e:
+        log_api(f"[事实] 注入失败（忽略）：{_e}")  # 上下文（关键词、对话历史、检索到的记忆）
     log_api(f"[get_character_reply] 记忆: kw_len={len(kw)}, dia_len={len(dia)}, events={events[:40]}")  # 日志记录上下文信息
     cur_kw_str = "、".join(current_kws) if current_kws else "无"  # 当前话题关键词（顿号分隔）
     # v9-U4：她的真实状态 + 当前时段，拼成一句"她现在什么感觉"

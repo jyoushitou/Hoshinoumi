@@ -368,6 +368,20 @@ async def _handle_message(d, ws):
     if not text:  # 解析后文本为空
         return  # 跳过
 
+    # v18.3 U2：从对话里抽事实卡（只私聊 + 只主人）
+    try:
+        from ..life import facts as facts_mod
+
+        if mt == "private" and str(uid) == str(cfg.MASTER_QQ):
+            _fs = facts_mod.extract(text)
+            if _fs:
+                n = facts_mod.remember(uid, _fs)
+                if n:
+                    log_system(f"[事实] 记住 {n} 条："
+                               + "；".join(facts_mod.describe(f) for f in _fs))
+    except Exception as _e:
+        log_api(f"[事实] 提取失败（忽略）: {_e}")
+
     # v17.7：从对话里提取定时任务（只私聊 + 只主人）
     try:
         from ..schedule import extract as extract_mod
