@@ -76,7 +76,10 @@ def main():
             return rc
 
         print("  [4/5] 索引")
-        migrate_indexes.apply(c)
+        try:
+            migrate_indexes.apply(c)
+        except Exception as e:
+            print(f"  [!] 索引补齐失败（不影响启动，可跳过后重试）：{e}")
 
         print("  [5/5] 内置场景")
         setup.seed_scenes()

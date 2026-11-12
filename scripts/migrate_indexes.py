@@ -37,6 +37,19 @@ def _index_names(cursor, table):
     except Exception:
         pass
     try:
+        # v18.17：events 已是只读视图，视图不能建索引
+        cursor.execute(
+            "SELECT table_type AS t FROM information_schema.tables "
+            "WHERE table_schema=DATABASE() AND table_name=%s", (table,))
+        row = cursor.fetchone()
+        if not row:
+            return None
+        ttype = row["t"] if isinstance(row, dict) else row[0]
+        if str(ttype).upper() != "BASE TABLE":
+            return None
+    except Exception:
+        pass
+    try:
         cursor.execute(f"SHOW INDEX FROM {table}")
         rows = cursor.fetchall()
         return {r["Key_name"] if isinstance(r, dict) else r[2] for r in rows}
@@ -60,8 +73,11 @@ def missing(cursor, indexes=None):
 def apply(cursor, indexes=None):
     created = []
     for table, name, cols in missing(cursor, indexes):
-        cursor.execute(f"CREATE INDEX {name} ON {table}({cols})")
-        created.append((table, name))
+        try:
+            cursor.execute(f"CREATE INDEX {name} ON {table}({cols})")
+            created.append((table, name))
+        except Exception as e:
+            print(f"  [!] 跳过索引 {name}（{table}）：{e}")
     try:
         cursor.connection.commit()
     except Exception:
