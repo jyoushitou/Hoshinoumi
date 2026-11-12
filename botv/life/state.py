@@ -30,6 +30,10 @@ _rng = random.Random()
 def default_state():
     s = dict(BASE)
     s["diary_bias"] = 0.0  # 昨天日记带来的情绪余韵（v9-U11）
+    # v18.11：情绪标签跨天保留（半衰期 3/5 天）
+    s["emotion"] = ""
+    s["emotion_at"] = 0.0
+    s["emotion_power"] = 0.0
     return s
 
 
@@ -40,6 +44,10 @@ def clamp(state):
         out[key] = max(lo, min(hi, float(state.get(key, BASE[key]))))
     if "diary_bias" in state:  # 只在有时才保留，避免污染只含三键的旧数据
         out["diary_bias"] = max(-0.15, min(0.15, float(state.get("diary_bias") or 0.0)))
+    if "emotion" in state:
+        out["emotion"] = str(state.get("emotion") or "")
+        out["emotion_at"] = float(state.get("emotion_at") or 0.0)
+        out["emotion_power"] = max(0.0, min(1.0, float(state.get("emotion_power") or 0.0)))
     return out
 
 
@@ -65,6 +73,12 @@ def tick(state, hours, now=None):
         s["diary_bias"] = round(s["diary_bias"] * (1 - factor), 4)  # 余韵随时间淡去
     s["energy"] += factor * (BASE["energy"] - s["energy"])
     s["lonely"] = lonely_after
+
+    # v18.11：情绪标签按半衰期衰减（强烈 5 天 / 普通 3 天）
+    if s.get("emotion") and s.get("emotion_power"):
+        days = hours / 24.0
+        half = 5.0 if float(s["emotion_power"]) >= 0.8 else 3.0
+        s["emotion_power"] = float(s["emotion_power"]) * (0.5 ** (days / half))
 
     if now is not None:
         hour = now.hour
@@ -219,3 +233,21 @@ def touch_ignored(hours=1.0, tid=None):
         g = current(tid=None)
         save(on_ignored(g, hours), None)
     return new_s
+
+
+def remember_emotion(label, power=1.0, tid=None):
+    """v18.11：记住当前情绪标签；voice.detect_emotion 优先读它"""
+    if not label:
+        return None
+    s = dict(current(tid=tid))
+    s["emotion"] = str(label)
+    s["emotion_at"] = _time.time()
+    s["emotion_power"] = max(0.0, min(1.0, float(power)))
+    save(s, tid)
+    return s
+
+
+def emotion_power(tid=None):
+    """当前情绪标签的剩余强度（0~1）"""
+    s = current(tid=tid)
+    return float(s.get("emotion_power") or 0.0) if s.get("emotion") else 0.0

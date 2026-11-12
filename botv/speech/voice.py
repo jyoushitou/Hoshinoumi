@@ -126,13 +126,17 @@ def emotion_params(emotion=None, profile=None):
 #   摩擦值          → 生气
 
 def detect_emotion(tid=None):
-    """读现有状态推断当前情绪；任何一项读不到都退回平静"""
+    """读现有状态推断当前情绪；v18.11 优先用跨天保留的标签"""
     mood, fric, close = None, 0.0, 0.0
 
     try:
         from ..life import state as life_state
-
-        mood = float((life_state.current(tid=tid) or {}).get("mood"))
+        st = life_state.current(tid=tid) or {}
+        mood = float(st.get("mood"))
+        # 存过的标签还有分量就用它，别被今天的小波动盖掉
+        old = st.get("emotion")
+        if old in EMOTIONS and float(st.get("emotion_power") or 0) >= 0.15:
+            return old
     except Exception:
         mood = None
 
@@ -155,7 +159,13 @@ def detect_emotion(tid=None):
     except Exception:
         close = 0.0
 
-    return emotion_from(mood, fric, close)
+    emo = emotion_from(mood, fric, close)
+    try:  # v18.11：把这次判断记下来，跨天保留
+        from ..life import state as life_state
+        life_state.remember_emotion(emo, power=1.0, tid=tid)
+    except Exception:
+        pass
+    return emo
 
 
 def emotion_from(mood=None, fric=0.0, close=0.0):
