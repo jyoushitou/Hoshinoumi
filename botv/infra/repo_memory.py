@@ -477,6 +477,20 @@ def load_timeline(tid, days=7, limit=12):
     return list(c.fetchall())
 
 
+def load_heavy_memories(tid, min_weight=0.7, limit=20):
+    """v18.12：取重记忆（memories.weight ≥ 阈值）"""
+    try:
+        c = get_cursor()
+        c.execute(
+            "SELECT id, summary, weight, created_at, last_seen FROM memories "
+            "WHERE target_id=%s AND weight>=%s AND deleted_at IS NULL "
+            "ORDER BY weight DESC, id DESC LIMIT %s",
+            (str(tid), float(min_weight), int(limit)))
+        return list(c.fetchall())
+    except Exception:
+        return []
+
+
 def load_memories_for_search(tid, limit=300):
     """取一批候选记忆喂给检索器（v8-B11）"""
     c = get_cursor()

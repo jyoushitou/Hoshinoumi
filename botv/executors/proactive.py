@@ -73,7 +73,7 @@ async def handle_proactive_say(ev):
     from ..chat.send import send_short_reply
 
     tid = _tid(ev)
-    seed, tag = _pick_seed()
+    seed, tag = _pick_seed(tid)
 
     try:
         rep = await get_character_reply(seed, tid)
@@ -94,8 +94,17 @@ async def handle_proactive_say(ev):
     return {"ok": True, "tag": tag}
 
 
-def _pick_seed():
-    """挑一个由头：心情差 / 生活分享 / 惊喜 / 旧事 / 普通"""
+def _pick_seed(tid=None):
+    """挑一个由头：回忆 / 心情差 / 生活分享 / 惊喜 / 旧事 / 普通"""
+    # v18.12：重记忆先冒出来（每天最多一次）
+    try:
+        from ..life import recall
+        r = recall.pick(tid)
+        if r:
+            return (r["prompt"], "回忆")
+    except Exception:
+        pass
+
     # 心情很差：只说一句
     try:
         from ..life.state import current as life_current
