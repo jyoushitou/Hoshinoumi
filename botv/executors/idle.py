@@ -11,6 +11,7 @@
 # 为什么拆两级：tick 只做判断（毫秒级），read 才是重活（几十秒）。
 
 import asyncio
+import random
 import time
 
 from ..core import state as cfg
@@ -18,7 +19,9 @@ from ..events.base import Priority
 from ..events.registry import register
 from ..log import log_api, log_system
 
-TICK_INTERVAL = 1800        # 30 分钟
+TICK_INTERVAL = 1800        # 兼容旧调用
+MIN_DELAY = 25 * 60         # v18.7：30 分钟 ±5 分钟，再随机到秒
+MAX_DELAY = 35 * 60
 _tick_handle = None
 _last_run = {}
 
@@ -97,22 +100,27 @@ async def handle_read(ev):
 
 # ---------- tick 的自我重排 ----------
 
+def _next_delay():
+    """v18.7：下次空闲检查带随机秒，不固定 30 分钟整"""
+    return random.randint(MIN_DELAY, MAX_DELAY) + random.randint(0, 59)
+
+
 def schedule_tick(loop=None, delay=None, scheduler=None):
-    """安排下一次 tick；每次触发后再排下一次"""
+    """安排下一次 tick（call_at 秒级挂载）"""
     from ..scheduler.dispatcher import get_scheduler
 
     loop = loop or asyncio.get_event_loop()
     sched = scheduler or get_scheduler()
-    delay = TICK_INTERVAL if delay is None else delay
+    delay = _next_delay() if delay is None else delay
 
     def _fire():
         try:
             sched.submit("idle_tick", "idle:tick")
         finally:
-            schedule_tick(loop, delay, sched)
+            schedule_tick(loop, None, sched)
 
     global _tick_handle
-    _tick_handle = loop.call_later(delay, _fire)
+    _tick_handle = loop.call_at(loop.time() + max(1.0, delay), _fire)
     return _tick_handle
 
 

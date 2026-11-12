@@ -22,13 +22,19 @@ HELP = """⏰ 定时消息
 !cron once YYYY-MM-DD HH:MM 内容  一次性
 !cron every 分钟 内容           每隔几分钟
 !cron del <id>                  删除
-!cron on|off <id>               启用/停用"""
+!cron on|off <id>               启用/停用
+!cron reload                    立即重建全部钩子"""
 
 
 def _fmt_task(t):
     flag = "✅" if int(t.get("enabled") or 0) else "⏸️"
     kind = t.get("schedule_type")
-    if kind == "daily":
+    rule = (t.get("rule") or "").strip()
+    if rule == "wake":
+        when = "规则 工作日07:30 / 周末08:00"
+    elif rule == "sleep":
+        when = "规则 明天工作日23:00 / 否则23:30"
+    elif kind == "daily":
         when = f"每天 {t.get('at_time')}"
     elif kind == "weekly":
         when = f"周{t.get('weekdays')} {t.get('at_time')}"
@@ -37,8 +43,20 @@ def _fmt_task(t):
     else:
         when = f"每 {t.get('interval_min')} 分钟"
     src = "对话" if t.get("source") == "chat" else "命令"
+    tail = f"下次 {t.get('next_ts') or '待排'}"
+    # v18.7：今天有微调就显示出来
+    try:
+        from datetime import date
+        from ..schedule import cron
+        content = (t.get("content") or "").strip()
+        scene = content[6:].strip() if content.startswith("scene:") else content[:64]
+        ov = cron.get_override(t.get("target_id"), scene, date.today())
+        if ov:
+            tail += "｜今天跳过" if ov.get("skip") else f"｜今天微调 {ov.get('at_time')}"
+    except Exception:
+        pass
     return (f"{flag} #{t['id']} {when} · {t.get('content', '')[:30]}"
-            f"（{src}｜下次 {t.get('next_ts') or '待排'}）")
+            f"（{src}｜{tail}）")
 
 
 @command("cron")
@@ -62,6 +80,19 @@ async def cmd_cron(ctx):
 
     if sub == "help":
         return HELP
+
+    if sub == "reload":
+        try:
+            n = cron.schedule_all()
+        except Exception as e:
+            return f"❌ 重建失败：{e}"
+        m = 0
+        try:
+            from ..schedule import items as item_hooks
+            m = item_hooks.schedule_all()
+        except Exception:
+            pass
+        return f"🔄 定时钩子已重建：{n} 条；日程/待办 {m} 条"
 
     try:
         if sub == "del":

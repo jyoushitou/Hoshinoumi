@@ -275,6 +275,8 @@ PURE = {
             source ENUM('chat','command') NOT NULL DEFAULT 'command',
             enabled TINYINT(1) NOT NULL DEFAULT 1,
             jitter_min TINYINT NOT NULL DEFAULT 10,   -- ±分钟
+            rule VARCHAR(16) NULL,                    -- v18.7：wake / sleep / fixed
+            timing VARCHAR(8) NOT NULL DEFAULT 'exact',  -- v18.7：exact / habit
             last_fire DATETIME NULL,
             next_ts DATETIME NULL,
             created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -282,6 +284,20 @@ PURE = {
                        ON UPDATE CURRENT_TIMESTAMP,
             KEY idx_enabled_next (enabled, next_ts),
             KEY idx_target (target_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
+    "cron_overrides": """
+        CREATE TABLE IF NOT EXISTS cron_overrides (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            target_id VARCHAR(64) NOT NULL,
+            scene VARCHAR(64) NOT NULL,
+            day DATE NOT NULL,
+            at_time VARCHAR(16) NULL,
+            skip TINYINT(1) NOT NULL DEFAULT 0,
+            source VARCHAR(16) NOT NULL DEFAULT 'chat',
+            note VARCHAR(200) NULL,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE (target_id, scene, day)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """,
     "bot_meta": """

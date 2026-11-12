@@ -83,6 +83,12 @@ async def cycle_task_run():
         _sched.start()
         idle_exec.schedule_tick()
         proactive_exec.schedule_tick()
+        try:  # v18.7：日程/待办也走秒级钩子
+            from . import items as item_hooks
+            n = item_hooks.schedule_all()
+            log_system(f"[日程] 钩子已重建：{n} 条")
+        except Exception as _e:
+            log_err(f"[日程] 钩子重建失败: {_e}")
         log_system("[调度] 调度器已启动：空闲读书 + 主动消息由 tick 驱动")
     except Exception as _e:
         log_err(f"[调度] 启动失败（回退旧路径）: {_e}")

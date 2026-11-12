@@ -18,7 +18,9 @@ from ..events.base import Priority
 from ..events.registry import register
 from ..log import log_api, log_system
 
-TICK_INTERVAL = 1800         # 30 分钟
+TICK_INTERVAL = 1800         # 兼容旧调用
+MIN_DELAY = 20 * 60          # v18.7：20–40 分钟，再随机到秒
+MAX_DELAY = 40 * 60
 _tick_handle = None
 _ticking = {"running": False}
 
@@ -148,22 +150,27 @@ def _now():
 
 # ---------- tick 的自我重排 ----------
 
+def _next_delay():
+    """v18.7：下次主动时间不固定在整点/半点"""
+    return random.randint(MIN_DELAY, MAX_DELAY) + random.randint(0, 59)
+
+
 def schedule_tick(loop=None, delay=None, scheduler=None):
-    """安排下一次 proactive_tick"""
+    """安排下一次 proactive_tick（call_at 秒级挂载）"""
     from ..scheduler.dispatcher import get_scheduler
 
     loop = loop or asyncio.get_event_loop()
     sched = scheduler or get_scheduler()
-    delay = TICK_INTERVAL if delay is None else delay
+    delay = _next_delay() if delay is None else delay
 
     def _fire():
         try:
             sched.submit("proactive_tick", "proactive:tick")
         finally:
-            schedule_tick(loop, delay, sched)
+            schedule_tick(loop, None, sched)
 
     global _tick_handle
-    _tick_handle = loop.call_later(delay, _fire)
+    _tick_handle = loop.call_at(loop.time() + max(1.0, delay), _fire)
     return _tick_handle
 
 

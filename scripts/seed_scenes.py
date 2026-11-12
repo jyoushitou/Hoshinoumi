@@ -21,16 +21,15 @@ try:
 except Exception:
     pass
 
-# scene → (时间, 星期, 说明)
+# v18.7：scene → (rule, 时间, 星期, timing, jitter, 说明)
 SCENES = [
-    ("催起床", "07:30", "1,2,3,4,5", "叫我起床"),
-    ("周末吐槽赖床", "08:30", "6,7", "吐槽我赖床"),
-    ("提醒点外卖", "10:40", "1,2,3,4,5,6,7", "提醒我点外卖"),
-    ("叮嘱午睡", "12:30", "1,2,3,4,5,6,7", "提醒我午睡"),
-    ("提醒起身", "13:30", "1,2,3,4,5,6,7", "提醒我起身活动"),
-    ("提醒晚餐", "18:00", "1,2,3,4,5,6,7", "提醒我吃晚饭"),
-    ("催睡觉", "23:00", "1,2,3,4,5,6,7", "催我睡觉"),
-    ("周日复盘", "20:00", "7", "跟我复盘这一周"),
+    ("催起床", "wake", None, None, "habit", 5, "叫我起床"),
+    ("催睡觉", "sleep", None, None, "habit", 3, "催我睡觉"),
+    ("提醒点外卖", None, "10:40", None, "habit", 5, "提醒我点外卖"),
+    ("叮嘱午睡", None, "12:30", None, "habit", 2, "提醒我午睡"),
+    ("叫午睡起床", None, "13:30", None, "exact", 0, "叫我午睡起来"),
+    ("提醒晚餐", None, "16:40", None, "habit", 2, "提醒我吃晚饭"),
+    ("周日复盘", None, "21:00", "7", "exact", 0, "跟我复盘这一周"),
 ]
 
 
@@ -55,22 +54,24 @@ def main():
     existing = set()
     try:
         for t in cron.list_tasks(uid):
-            existing.add((t.get("schedule_type"), t.get("at_time"),
-                          t.get("weekdays"), t.get("content")))
+            existing.add(t.get("content"))
     except Exception as e:
         print(f"[!] 读现有任务失败（可能还没建表）：{e}")
         if args.apply:
             return 1
 
     created = 0
-    for scene, at, days, content in SCENES:
-        key = ("weekly", at, days, f"scene:{scene}")
+    for scene, rule, at, days, timing, jitter, content in SCENES:
+        key = f"scene:{scene}"
         mark = "已有" if key in existing else "新建"
-        print(f"  [{mark}] {at} 周{days} · scene:{scene}（{content}）")
+        when = "规则" if rule else (f"周{days} {at}" if days else at)
+        print(f"  [{mark}] {when} · {key}（{content}）")
         if not args.apply or key in existing:
             continue
-        tid = cron.add(uid, "weekly", f"scene:{scene}", at_time=at,
-                       weekdays=days, source="command")
+        stype = "weekly" if days else "daily"
+        tid = cron.add(uid, stype, key, at_time=at, weekdays=days,
+                       source="command", jitter_min=jitter,
+                       rule=rule, timing=timing)
         if tid:
             created += 1
 

@@ -81,24 +81,32 @@ def scene_config(name):
     return SCENES.get(name, {"prompts": DEFAULT_PROMPTS})
 
 
-@register("schedule_scene", priority=Priority.EVENT, timeout=120, retries=1,
-          description="执行一个定时场景（催起床/午睡/复盘…）")
-async def handle_schedule_scene(ev):
-    """ev.args = (场景名,)；返回执行结果"""
+async def generate_scene_reply(scene):
+    """只生成不发送（v18.7 预生成用）"""
     import random
 
     from ..ai.client import get_character_reply
+
+    conf = scene_config(scene)
+    prompt = random.choice(conf["prompts"])
+    log_api(f"[定时] 生成场景：{scene}")
+    return await get_character_reply(prompt, str(cfg.MASTER_QQ))
+
+
+@register("schedule_scene", priority=Priority.EVENT, timeout=120, retries=1,
+          description="执行一个定时场景（催起床/午睡/复盘…）")
+async def handle_schedule_scene(ev, prepared=None):
+    """ev.args = (场景名,)；prepared 有值就直接发，不再生成"""
     from ..chat.send import send_short_reply
 
     args = getattr(ev, "args", ()) or ()
     scene = args[0] if args else ""
     conf = scene_config(scene)
 
-    prompt = random.choice(conf["prompts"])
     log_api(f"[定时] 执行场景：{scene}")
 
     try:
-        rep = await get_character_reply(prompt, str(cfg.MASTER_QQ))
+        rep = prepared or await generate_scene_reply(scene)
     except Exception as e:
         log_err(f"[定时] {scene} 生成失败: {e}")
         return {"ok": False, "reason": "生成失败"}
@@ -106,11 +114,15 @@ async def handle_schedule_scene(ev):
     if not rep:
         return {"ok": False, "reason": "空回复"}
 
-    # v17.2 U3：走合并窗口——相邻的定时消息 3 秒内并成一条气泡
-    from ..egress.merge import get_merger
-    merged = await get_merger().offer(str(cfg.MASTER_QQ), rep, kind="schedule")
-    if not merged:
+    # v18.7：预生成（exact）绕过 3 秒合并窗口，到点先发首条
+    if prepared:
         await send_short_reply(cfg.MASTER_QQ, rep, cfg.active_ws_qq, cfg.MASTER_QQ)
+    else:
+        # v17.2 U3：走合并窗口——相邻的定时消息 3 秒内并成一条气泡
+        from ..egress.merge import get_merger
+        merged = await get_merger().offer(str(cfg.MASTER_QQ), rep, kind="schedule")
+        if not merged:
+            await send_short_reply(cfg.MASTER_QQ, rep, cfg.active_ws_qq, cfg.MASTER_QQ)
 
     # 起床/睡觉配一张图（失败不影响文字已发）
     if conf.get("with_image"):

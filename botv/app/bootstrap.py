@@ -107,6 +107,31 @@ def _ensure_tables():
         log_err(f"升级ai_raw_responses表失败: {e}")
 
 
+def _ensure_cron_schema():
+    """v18.7：老库补 rule / timing 列 + cron_overrides 表"""
+    try:
+        from ..infra import schema
+        schema.ensure_tables(names=["cron_overrides"])
+    except Exception as e:
+        log_err(f"[定时] 建 cron_overrides 失败: {e}")
+    try:
+        c = get_cursor()
+        for name, ddl in (("rule", "VARCHAR(16) NULL"),
+                          ("timing", "VARCHAR(8) NOT NULL DEFAULT 'exact'")):
+            try:
+                c.execute(f"ALTER TABLE cron_tasks ADD COLUMN {name} {ddl}")
+            except Exception:
+                pass  # 已存在
+        c.connection.commit()
+    except Exception as e:
+        log_err(f"[定时] 补 cron_tasks 列失败: {e}")
+    try:
+        from ..schedule import cron as cron_mod
+        cron_mod.migrate_scene_rules()
+    except Exception as e:
+        log_err(f"[定时] 场景规则迁移失败: {e}")
+
+
 def bootstrap():
     """同步初始化：加载密钥/记忆/表情包/CLIP/人设，建表，初始化运行时状态"""
     _configure_db()  # v17.14：先把数据库配置注入 infra.conn
@@ -120,6 +145,7 @@ def bootstrap():
     load_personality_supplement()  # 人设补充文本（远程 > 本地）
 
     _ensure_tables()
+    _ensure_cron_schema()  # v18.7：rule/timing + 当天覆盖表
     _mark_start()    # v18.5：记录首次启动时间（!uptime 用，不受日志 TTL 影响）
 
     cfg.PROCESS_LOCK = asyncio.Lock()  # 消息处理锁

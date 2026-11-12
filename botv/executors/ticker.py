@@ -32,6 +32,7 @@ _state = {
     "last_due": 0.0,
     "tick_handle": None,
     "count": 0,
+    "last_watch": 0.0,
 }
 
 
@@ -102,13 +103,22 @@ async def handle_minute_tick(ev):
     # v17.7：定时场景改由 cron_tasks 的钩子驱动（scripts/seed_scenes.py 导入）
     # 这里不再轮询 SCHEDULE_TASKS，避免和 cron 钩子重复触发。
 
-    # ---------- 日程/待办（每 30 秒一次） ----------
-    if time.time() - _state["last_due"] > 30:
-        _state["last_due"] = time.time()
+    # v18.7：日程/待办已改成 call_at 秒级钩子（schedule/items.py），tick 不再扫 due
+    # 每 60 秒做一次钩子看门狗（不补发，只重排丢失的）
+    if time.time() - _state["last_watch"] > 60:
+        _state["last_watch"] = time.time()
         try:
-            await R.process_due(now)
+            from ..schedule import cron as cron_mod
+            n = cron_mod.watchdog()
+            if n:
+                log_err(f"[定时] 看门狗重排 {n} 条")
         except Exception as e:
-            log_err(f"[心跳] 日程检查失败: {e}")
+            log_err(f"[定时] 看门狗失败: {e}")
+        try:
+            from ..schedule import items as item_hooks
+            item_hooks.watchdog()
+        except Exception as e:
+            log_err(f"[日程] 看门狗失败: {e}")
 
     return {"ok": True, "count": _state["count"]}
 

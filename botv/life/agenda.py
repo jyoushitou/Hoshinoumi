@@ -131,10 +131,16 @@ def add(item):
     """写入一条日程"""
     try:
         from ..infra.repo_memory import add_event_to_db, STATE_TARGET
-        add_event_to_db(STATE_TARGET, json.dumps(item, ensure_ascii=False),
-                        tags="日程", kind="todo")
+        rid = add_event_to_db(STATE_TARGET, json.dumps(item, ensure_ascii=False),
+                              tags="日程", kind="todo")
         log_system(f"日程已记下: {item.get('t', '')[:20]}")
-        return True
+        try:  # v18.7：写库后立刻挂秒级钩子
+            from ..schedule import items as item_hooks
+            if rid:
+                item_hooks.schedule("agenda", rid, item.get("due", 0), item.get("t", ""))
+        except Exception:
+            pass
+        return rid or True
     except Exception as e:
         log_system(f"日程写入失败: {e}")
         return False
@@ -176,6 +182,11 @@ def due_soon(minutes=60):
 
 def mark_reminded(item_id):
     """标记已提醒"""
+    try:  # v18.7：提醒完取消钩子
+        from ..schedule import items as item_hooks
+        item_hooks.cancel("agenda", item_id)
+    except Exception:
+        pass
     from ..infra.repo_memory import load_todo_items, update_todo_item
     for row in load_todo_items():
         if row["id"] != item_id:

@@ -72,10 +72,19 @@ def add(items):
         return 0
     try:
         from ..infra.repo_memory import add_event_to_db, STATE_TARGET
+        try:
+            from ..schedule import items as item_hooks
+        except Exception:
+            item_hooks = None
+        n = 0
         for it in items[:MAX_ITEMS]:
-            add_event_to_db(STATE_TARGET, json.dumps(it, ensure_ascii=False),
-                            tags="待办", kind="agenda")
-        return len(items)
+            rid = add_event_to_db(STATE_TARGET, json.dumps(it, ensure_ascii=False),
+                                  tags="待办", kind="agenda")
+            n += 1
+            if item_hooks and rid:
+                item_hooks.schedule("pending", rid, it.get("due", 0),
+                                    describe(it))
+        return n
     except Exception as e:
         log_system(f"待办写入失败: {e}")
         return 0
@@ -110,6 +119,11 @@ def due(now=None):
 
 def finish(item_id):
     """处理完删掉"""
+    try:  # v18.7：取消钩子
+        from ..schedule import items as item_hooks
+        item_hooks.cancel("pending", item_id)
+    except Exception:
+        pass
     try:
         from ..infra.repo_memory import delete_agenda_item
         delete_agenda_item(item_id)

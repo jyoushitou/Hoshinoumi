@@ -519,6 +519,7 @@ def add_event_to_db(tid, event_summary, tags="", kind="event", importance=3, due
         "VALUES(%s,%s,%s,%s,%s,%s,%s,%s)",
         (tid, event_summary, tags, kind, key, importance, due_date, now),
     )
+    new_id = getattr(c, "lastrowid", None)
     # 按 kind 分别保留
     keep = KIND_LIMITS.get(kind, KIND_LIMIT_DEFAULT)
     c.execute(
@@ -528,7 +529,7 @@ def add_event_to_db(tid, event_summary, tags="", kind="event", importance=3, due
         (tid, kind, keep, tid, kind),
     )
     c.connection.commit()
-    return None
+    return new_id
 
 # ===================== 双写（v17.4） =====================
 # 写旧表之后，顺手写一份到新表。失败只记日志，绝不影响旧路径。

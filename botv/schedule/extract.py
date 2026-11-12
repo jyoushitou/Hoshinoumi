@@ -28,6 +28,15 @@ _recent = {}      # 去重：内容 -> ts
 DEDUPE_WINDOW = 300
 DEFAULT_HOUR = 9        # 周几没说几点时默认 09:00
 
+# v18.7：能按天微调的场景
+_SCENE_WORDS = (
+    ("叫午睡起床", ("午睡", "午觉")),
+    ("催睡觉", ("睡觉", "睡了", "催我睡", "睡")),
+    ("催起床", ("起床", "叫我", "叫醒", "喊我")),
+    ("提醒晚餐", ("晚饭", "晚餐", "吃饭")),
+)
+_SKIP_WORDS = ("别叫", "不用叫", "取消", "不用提醒", "别提醒")
+
 
 def _norm_num(s):
     """十二 / 7 / 两 → int"""
@@ -209,8 +218,82 @@ def dedupe_ok(content):
     return True
 
 
+def _scene_for(text):
+    for scene, words in _SCENE_WORDS:
+        if any(w in text for w in words):
+            return scene
+    return None
+
+
+def parse_override(text, now=None):
+    """v18.7：今天/今晚/明天 + 场景 → 当天覆盖（不是新建任务）"""
+    now = now or clock.naive()
+    text = (text or "").strip()
+    if not text:
+        return None
+    if not any(w in text for w in ("今天", "今晚", "明天")) and not any(
+            w in text for w in _SKIP_WORDS):
+        return None
+    scene = _scene_for(text)
+    if not scene:
+        return None
+
+    skip = any(w in text for w in _SKIP_WORDS)
+    parsed = parse_time(text, now)
+    at_time = None
+    day = now.date()
+    if "明天" in text:
+        day = (now + timedelta(days=1)).date()
+    elif "今天" in text or "今晚" in text:
+        day = now.date()
+
+    if parsed:
+        stype, kwargs = parsed
+        if stype != "once":
+            return None
+        once_at = kwargs.get("once_at") or ""
+        try:
+            dt = datetime.strptime(once_at, "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            return None
+        at_time = dt.strftime("%H:%M")
+        if "今天" not in text and "今晚" not in text and "明天" not in text:
+            day = dt.date()
+
+    if not at_time and not skip:
+        return None
+    return {"scene": scene, "day": day, "at_time": at_time, "skip": skip,
+            "content": parse_content(text)}
+
+
 def create_from_text(text, uid, now=None, add_func=None):
     """解析 + 入库 + 挂钩子；返回 (task_id, kwargs) 或 (None, None)"""
+    # v18.7：今天/明天 + 场景 → 只改当天，不新建任务
+    ov = parse_override(text, now)
+    if ov:
+        try:
+            from ..schedule import cron
+            ok = cron.add_override(str(uid), ov["scene"], ov["day"],
+                                   at_time=ov["at_time"], skip=ov["skip"],
+                                   source="chat", note=text[:80])
+            if ok:
+                data = {
+                    "schedule_type": "once",
+                    "once_at": f"{ov['day']} {ov['at_time'] or '00:00'}:00",
+                    "content": ov["content"],
+                    "override_scene": ov["scene"],
+                    "override_day": ov["day"].isoformat(),
+                    "override_skip": ov["skip"],
+                    "override_time": ov["at_time"],
+                }
+                try:
+                    cron.schedule_all()
+                except Exception:
+                    pass
+                return 0, data
+        except Exception:
+            pass
+
     data = extract(text, now)
     if not data:
         return None, None
@@ -236,6 +319,12 @@ def describe(data, task_id=None):
     """把解析结果说成一句人话，用于回复确认"""
     if not data:
         return ""
+    if data.get("override_scene"):
+        scene = data.get("override_scene")
+        day = data.get("override_day", "")
+        if data.get("override_skip"):
+            return f"好，{day} 不提醒{scene}（只改这一天）"
+        return f"好，{day} {data.get('override_time')} 提醒{scene}（只改这一天）"
     kind = data.get("schedule_type")
     if kind == "daily":
         when = f"每天 {data.get('at_time')}"

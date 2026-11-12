@@ -208,27 +208,28 @@ def seed_scenes():
             print("  [--] 没配 master_qq，跳过场景导入")
             return True
 
+        # v18.7：规则化种子；已有旧行由 cron.migrate_scene_rules() 原地修正
         scenes = [
-            ("催起床", "07:30", "1,2,3,4,5"),
-            ("周末吐槽赖床", "08:30", "6,7"),
-            ("提醒点外卖", "10:40", "1,2,3,4,5,6,7"),
-            ("叮嘱午睡", "12:30", "1,2,3,4,5,6,7"),
-            ("提醒起身", "13:30", "1,2,3,4,5,6,7"),
-            ("提醒晚餐", "18:00", "1,2,3,4,5,6,7"),
-            ("催睡觉", "23:00", "1,2,3,4,5,6,7"),
-            ("周日复盘", "20:00", "7"),
+            # scene, rule, at_time, weekdays, timing, jitter
+            ("催起床", "wake", None, None, "habit", 5),
+            ("催睡觉", "sleep", None, None, "habit", 3),
+            ("提醒点外卖", None, "10:40", None, "habit", 5),
+            ("叮嘱午睡", None, "12:30", None, "habit", 2),
+            ("叫午睡起床", None, "13:30", None, "exact", 0),
+            ("提醒晚餐", None, "16:40", None, "habit", 2),
+            ("周日复盘", None, "21:00", "7", "exact", 0),
         ]
-        existing = set()
-        for row in cron.list_tasks(uid):
-            existing.add((row.get("at_time"), row.get("weekdays"), row.get("content")))
+        existing = {row.get("content") for row in cron.list_tasks(uid)}
 
         created = 0
-        for scene, at, days in scenes:
-            key = (at, days, f"scene:{scene}")
-            if key in existing:
+        for scene, rule, at, days, timing, jitter in scenes:
+            content = f"scene:{scene}"
+            if content in existing:
                 continue
-            if cron.add(uid, "weekly", f"scene:{scene}", at_time=at,
-                        weekdays=days, source="command", jitter_min=0):
+            stype = "weekly" if days else "daily"
+            if cron.add(uid, stype, content, at_time=at, weekdays=days,
+                        source="command", jitter_min=jitter,
+                        rule=rule, timing=timing):
                 created += 1
         if created:
             print(f"  [OK] 导入 {created} 个内置场景")
