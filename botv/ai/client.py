@@ -306,6 +306,13 @@ async def get_character_reply(txt, tid, current_kws=None,
         if not r:  # DeepSeek无回复
             log_api("[get_character_reply] DeepSeek无回复，转豆包")  # 日志记录降级
             r = await call_doubao(msgs)  # 降级到豆包
+        if not r:  # v18.16：空回复要能区分原因（调用层日志已带 HTTP 状态/超时）
+            try:
+                from ..core import metrics
+                metrics.inc("empty_reply")
+            except Exception:
+                pass
+            log_err("[空回复] DeepSeek 与豆包均未返回可用内容（空/超时/HTTP 失败）")
 
     # v13-U22：她自己决定要不要用工具（最多一轮）
     if r and not isinstance(r, Fallback):

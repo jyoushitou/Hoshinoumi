@@ -3,6 +3,7 @@
 # 迁移自 db.py（v5-R6），SQL 逐字未改
 
 import os as _os
+import time as _time
 from collections import deque
 from datetime import datetime, timedelta
 
@@ -562,6 +563,14 @@ _JSON_TABLES = {
 # 想回退到双写：NAO_DUAL_WRITE=1
 _LEGACY_WRITE = _os.getenv("NAO_LEGACY_WRITE", "0") in ("1", "true", "True")
 
+# v18.15：双写失败可见（不再只打一行「忽略」）
+_dual_fail = 0
+_dual_last_log = 0.0
+
+
+def dual_write_stats():
+    return {"fail": _dual_fail}
+
 
 def legacy_write_enabled():
     return _LEGACY_WRITE
@@ -594,5 +603,10 @@ def dual_write(kind, tid, payload):
         c.connection.commit()
         return True
     except Exception as e:
-        log_api(f"[双写] {kind} → {table} 失败（忽略）：{e}")
+        global _dual_fail, _dual_last_log
+        _dual_fail += 1
+        now = _time.time()
+        if now - _dual_last_log >= 3600:
+            _dual_last_log = now
+            log_api(f"[双写] 失败累计 {_dual_fail} 次；最近：{kind} → {table}：{e}")
         return False

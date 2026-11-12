@@ -32,6 +32,13 @@ async def cmd_stats(ctx):
     except Exception:
         pass
     try:
+        from ..infra.repo_memory import dual_write_stats
+        dw = dual_write_stats()
+        if dw.get("fail"):
+            lines.append(f"⚠️ 双写失败：{dw['fail']} 次")
+    except Exception:
+        pass
+    try:
         from ..schedule import cron
         lines.append("⏰ 定时：" + cron.next_summary())
     except Exception:
