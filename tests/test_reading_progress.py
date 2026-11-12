@@ -46,8 +46,7 @@ class TestReadingProgress(unittest.TestCase):
             {"title": "书A", "url": "http://a", "last_no": 2, "last_title": "第二章"},
             {"title": "书B", "url": "http://b", "last_no": 5},
         ]}
-        with patch.object(repo_memory, "dual_write", fake_dual), \
-                patch.object(repo_memory, "legacy_write_enabled", return_value=False):
+        with patch.object(repo_memory, "dual_write", fake_dual):
             repo_memory.save_reading("1", json.dumps(payload))
         self.assertEqual(len(calls), 2)
         self.assertEqual(calls[0]["book_url"], "http://a")

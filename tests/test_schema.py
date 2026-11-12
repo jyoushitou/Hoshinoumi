@@ -61,8 +61,9 @@ class TestSchema(unittest.TestCase):
     def test_tables_defined(self):
         from botv.infra import schema
 
-        for name in ("events", "user_memory", "logs", "api_keys"):
+        for name in ("user_memory", "logs", "api_keys"):
             self.assertIn(name, schema.TABLES, f"缺现状表 {name}")
+        self.assertIn("events", schema.VIEWS, "v18.17：events 改为兼容视图")
         for name in ("targets", "relations", "memories", "settings"):
             self.assertIn(name, schema.TABLES, f"缺纯表 {name}")
 
@@ -77,7 +78,7 @@ class TestSchema(unittest.TestCase):
 
         c = FakeCursor(tables=["logs"])
         miss = schema.missing_tables(c)
-        self.assertIn("events", miss)
+        self.assertIn("memories", miss)
         self.assertNotIn("logs", miss)
 
     def test_ensure_creates_only_missing(self):
@@ -85,7 +86,7 @@ class TestSchema(unittest.TestCase):
 
         c = FakeCursor(tables=["logs", "api_keys"])
         created = schema.ensure_tables(cursor=c)
-        self.assertIn("events", created)
+        self.assertIn("memories", created)
         self.assertNotIn("logs", created, "已有的表不该重建")
         self.assertIn("targets", created, "新表也该建")
 

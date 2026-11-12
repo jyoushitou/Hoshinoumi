@@ -1,8 +1,18 @@
-"""v18 U1：迁移脚本（给已存在的 memories 表加 weight / tier）"""
+"""v18 数据迁移（先预览，--apply 才改）
+
+v18.0：memories 加 weight / tier
+v18.17：memories 加 due_date / hit_count，kind 放宽为 VARCHAR；
+        events 全量复制进 memories，然后改名 events_old_YYYYMMDD，
+        最后建只读兼容视图 events（代码读老名字不炸，写路径已切 memories）。
+
+    python3 scripts/migrate_v18.py
+    python3 scripts/migrate_v18.py --apply
+"""
 
 import argparse
 import os
 import sys
+from datetime import date
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -14,6 +24,8 @@ except Exception:
 COLUMNS = [
     ("weight", "FLOAT NOT NULL DEFAULT 0.5"),
     ("tier", "VARCHAR(8) NOT NULL DEFAULT 'medium'"),
+    ("due_date", "DATE NULL"),
+    ("hit_count", "INT NOT NULL DEFAULT 0"),
 ]
 
 
@@ -31,6 +43,110 @@ def _existing(c, table="memories"):
         return set()
 
 
+def _is_sqlite(c):
+    try:
+        from botv.infra.conn import _SQLiteCursor
+        if isinstance(c, _SQLiteCursor):
+            return True
+    except Exception:
+        pass
+    try:
+        return type(c.connection).__module__ == "sqlite3"
+    except Exception:
+        return False
+
+
+def _table_exists(c, table):
+    try:
+        if _is_sqlite(c):
+            c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=?", (table,))
+        else:
+            c.execute("SHOW TABLES LIKE %s", (table,))
+        return bool(c.fetchone())
+    except Exception:
+        return False
+
+
+def migrate_columns(c):
+    have = _existing(c)
+    if not have:
+        print("[X] 没有 memories 表（先跑 python3 scripts/setup.py）")
+        return 1
+    todo = [(name, ddl) for name, ddl in COLUMNS if name not in have]
+    print("=" * 56)
+    print("  v18.0/v18.17 · memories 列")
+    print("=" * 56)
+    print("现有列:", ", ".join(sorted(have)))
+    if not todo:
+        print("[OK] 列都已存在")
+        return 0
+    for name, ddl in todo:
+        print(f"  [缺] {name} {ddl}")
+    return len(todo)
+
+
+def migrate_events(c):
+    """events → memories，改名旧表，建兼容视图"""
+    print("=" * 56)
+    print("  v18.17 · events → memories")
+    print("=" * 56)
+    if not _table_exists(c, "events"):
+        print("[OK] 没有 events 基表（已是视图或已迁移）")
+        return 0
+
+    c.execute("SELECT id, target_id, event_summary, tags, kind, dedupe_key, "
+              "importance, due_date, last_seen, hit_count, created_at, deleted_at "
+              "FROM events")
+    rows = list(c.fetchall())
+    print(f"  待迁 {len(rows)} 行")
+    if not rows:
+        pass
+    sqlite = _is_sqlite(c)
+    ph = "?" if sqlite else "%s"
+    verb = "INSERT OR IGNORE" if sqlite else "INSERT IGNORE"
+    sql = (
+        f"{verb} INTO memories(target_id, kind, summary, tags, "
+        "importance, weight, tier, source, dedupe_key, due_date, last_seen, "
+        "hit_count, created_at, deleted_at) "
+        f"VALUES({ph},{ph},{ph},{ph},{ph},0.5,'medium','chat',{ph},{ph},{ph},{ph},{ph},{ph})")
+    for r in rows:
+        vals = (r["target_id"], r["kind"] or "event", r["event_summary"],
+                r["tags"] or "", r["importance"] or 3, r["dedupe_key"],
+                r["due_date"], r["last_seen"], r["hit_count"] or 0,
+                r["created_at"], r["deleted_at"])
+        try:
+            c.execute(sql, vals)
+        except Exception as e:
+            print(f"  [!] 跳过一行：{e}")
+    c.connection.commit()
+
+    old_name = f"events_old_{date.today().strftime('%Y%m%d')}"
+    try:
+        if _is_sqlite(c):
+            c.execute(f"ALTER TABLE events RENAME TO {old_name}")
+        else:
+            c.execute(f"RENAME TABLE events TO {old_name}")
+        c.connection.commit()
+        print(f"[OK] 旧表改名为 {old_name}")
+    except Exception as e:
+        print(f"[!] 旧表改名失败（可能已改名）：{e}")
+
+    try:
+        from botv.infra import schema
+        ddl = schema.VIEWS["events"]
+        if _is_sqlite(c):
+            c.execute("DROP VIEW IF EXISTS events")
+            c.execute(schema._adapt_view(ddl))
+        else:
+            c.execute(ddl)
+        c.connection.commit()
+        print("[OK] 已建只读兼容视图 events")
+    except Exception as e:
+        print(f"[!] 建 events 视图失败：{e}")
+        return 1
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--apply", action="store_true", help="真的改表（默认只看）")
@@ -40,32 +156,26 @@ def main():
 
     c = get_cursor()
     try:
-        have = _existing(c)
-        if not have:
-            print("[X] 没有 memories 表（先跑 python3 scripts/setup.py）")
+        n = migrate_columns(c)
+        if n == 1 and not _existing(c):
             return 1
-
-        todo = [(name, ddl) for name, ddl in COLUMNS if name not in have]
-        print("=" * 56)
-        print("  v18.0 · memories 增加记忆分量列")
-        print("=" * 56)
-        print("现有列:", ", ".join(sorted(have)))
-        if not todo:
-            print("\n[OK] weight / tier 都已存在，无需迁移")
-            return 0
-
-        for name, ddl in todo:
-            print(f"\n[..] 待加：{name} {ddl}")
         if not args.apply:
             print("\n这是预览。真改：加 --apply")
             return 0
 
-        for name, ddl in todo:
-            c.execute(f"ALTER TABLE memories ADD COLUMN {name} {ddl}")
-            print(f"[OK] 已加 {name}")
+        have = _existing(c)
+        for name, ddl in COLUMNS:
+            if name not in have:
+                c.execute(f"ALTER TABLE memories ADD COLUMN {name} {ddl}")
+                print(f"[OK] memories 加列 {name}")
+        if not _is_sqlite(c):
+            try:
+                c.execute("ALTER TABLE memories MODIFY kind VARCHAR(16) NOT NULL DEFAULT 'event'")
+                print("[OK] memories.kind 放宽为 VARCHAR")
+            except Exception:
+                pass
         c.connection.commit()
-        print("\n完成。旧记忆的 weight 默认 0.5（中等），tier 默认 medium。")
-        return 0
+        return migrate_events(c)
     finally:
         try:
             c.close()

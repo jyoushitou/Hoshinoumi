@@ -107,8 +107,10 @@ def clear_target(target, cursor=None):
 
             c = get_cursor()
         c.execute("DELETE FROM user_memory WHERE target_id=%s", (str(target),))
-        c.execute("DELETE FROM events WHERE target_id=%s", (str(target),))
+        c.execute("DELETE FROM memories WHERE target_id=%s", (str(target),))
         c.connection.commit()
+        from . import cache
+        cache.invalidate("counts:")
         return True
     except Exception as e:
         log_api(f"[查询] 清记忆失败：{e}")

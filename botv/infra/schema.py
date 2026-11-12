@@ -55,27 +55,8 @@ CURRENT = {
             KEY idx_target_time (target_id, created_at)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """,
-    "events": """
-        CREATE TABLE IF NOT EXISTS events (
-            id BIGINT AUTO_INCREMENT PRIMARY KEY,
-            target_id VARCHAR(64) NOT NULL,
-            event_summary VARCHAR(500) NOT NULL,
-            tags VARCHAR(200) DEFAULT '',
-            kind VARCHAR(16) NOT NULL DEFAULT 'event',
-            dedupe_key VARCHAR(128) NULL,
-            importance TINYINT NOT NULL DEFAULT 3,
-            due_date DATE NULL,
-            last_seen DATETIME NULL,
-            hit_count INT NOT NULL DEFAULT 0,
-            embedding BLOB NULL,
-            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            deleted_at DATETIME NULL,
-            UNIQUE KEY uk_dedupe (target_id, dedupe_key),
-            KEY idx_target_time (target_id, created_at),
-            KEY idx_kind (kind),
-            KEY idx_events_target_kind (target_id, kind, created_at)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-    """,
+    # v18.17：events 已迁到 memories，旧名保留为只读兼容视图（见 VIEWS）
+
     "images": """
         CREATE TABLE IF NOT EXISTS images (
             id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -157,10 +138,12 @@ PURE = {
         CREATE TABLE IF NOT EXISTS memories (
             id BIGINT AUTO_INCREMENT PRIMARY KEY,
             target_id VARCHAR(64) NOT NULL,
-            kind ENUM('event','life','photo','diary_seed') NOT NULL DEFAULT 'event',
+            kind VARCHAR(16) NOT NULL DEFAULT 'event',
             summary VARCHAR(500) NOT NULL,
             tags VARCHAR(200) NULL,
             importance TINYINT NOT NULL DEFAULT 3,
+            due_date DATE NULL,
+            hit_count INT NOT NULL DEFAULT 0,
             -- v18.0：记忆分量。weight 0~1（检索排序用），tier 三档（人看的）
             weight FLOAT NOT NULL DEFAULT 0.5,
             tier ENUM('light','medium','heavy') NOT NULL DEFAULT 'medium',
@@ -345,7 +328,7 @@ TABLES.update(PURE)
 
 # 前置检查必须存在的最小集合（现状表；新表缺了不阻塞启动）
 REQUIRED = ["logs", "api_keys", "global_keywords", "user_memory",
-            "images", "events", "ai_raw_responses", "diaries"]
+            "images", "memories", "ai_raw_responses", "diaries"]
 
 
 # ---------- 动作 ----------
@@ -541,6 +524,14 @@ def adapt_ddl(ddl, backend=None):
 # 两者一减就多 8 小时（L11 同源）。所以另存一份 first_start_ts（epoch），
 # 用「当前 epoch − 启动 epoch」算，跨时区、跨方言都对得上。
 VIEWS = {
+    # v18.17：旧 events 表迁到 memories；保留只读兼容视图，写路径已切 memories
+    "events": """
+        CREATE OR REPLACE VIEW events AS
+        SELECT id, target_id, summary AS event_summary, tags, kind,
+               dedupe_key, importance, due_date, last_seen, hit_count,
+               created_at, deleted_at, NULL AS embedding
+        FROM memories
+    """,
     # 元数据一览：首次启动 / 版本 / 已运行秒数 / 第几天
     "v_bot_meta": """
         CREATE OR REPLACE VIEW v_bot_meta AS

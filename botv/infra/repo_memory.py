@@ -2,7 +2,6 @@
 # 对话记忆 / 全局关键词 / 事件记忆
 # 迁移自 db.py（v5-R6），SQL 逐字未改
 
-import os as _os
 import time as _time
 from collections import deque
 from datetime import datetime, timedelta
@@ -169,42 +168,41 @@ def load_state_json(target=None):
         return legacy
 
 
-def save_state_json(payload, target=None):
-    """覆盖写某个对象的状态（一人一行）"""
-
-    tid = str(target) if target else STATE_TARGET
-    # v17.10：停写旧表；要回退双写设 NAO_LEGACY_WRITE=1
-    if not legacy_write_enabled():
-        dual_write("state", tid, payload)
-        return
-
+def _replace_kind_row(tid, kind, payload, key_tag):
+    """v18.17：在 memories 里保留一行 JSON（state/rel/friction 这类单行状态）"""
     c = get_cursor()
-    c.execute("DELETE FROM events WHERE target_id=%s AND kind='state'", (tid,))
+    c.execute("DELETE FROM memories WHERE target_id=%s AND kind=%s", (str(tid), kind))
     c.execute(
-        "INSERT INTO events(target_id, event_summary, tags, kind, dedupe_key, last_seen) "
-        "VALUES(%s,%s,'','state',%s,NOW())",
-        (tid, payload, dedupe_key(tid, "state", "bot_state")),
+        "INSERT INTO memories(target_id, kind, summary, tags, importance, weight, tier, "
+        "source, dedupe_key, last_seen) VALUES(%s,%s,%s,'',3,0.5,'medium','chat',%s,NOW())",
+        (str(tid), kind, payload, dedupe_key(str(tid), kind, key_tag)),
     )
     c.connection.commit()
+
+
+def save_state_json(payload, target=None):
+    """覆盖写某个对象的状态（一人一行；memories 保留完整 JSON）"""
+    tid = str(target) if target else STATE_TARGET
     dual_write("state", tid, payload)
+    _replace_kind_row(tid, "state", payload, "bot_state")
 
 def load_todo_items():
     """所有日程（v10-U10）"""
     c = get_cursor()
-    c.execute("SELECT id, event_summary FROM events WHERE target_id=%s AND kind='todo' ORDER BY id",
-              (STATE_TARGET,))
+    c.execute("SELECT id, summary AS event_summary FROM memories "
+              "WHERE target_id=%s AND kind='todo' ORDER BY id", (STATE_TARGET,))
     return list(c.fetchall())
 
 
 def update_todo_item(item_id, payload):
     c = get_cursor()
-    c.execute("UPDATE events SET event_summary=%s WHERE id=%s AND kind='todo'", (payload, item_id))
+    c.execute("UPDATE memories SET summary=%s WHERE id=%s AND kind='todo'", (payload, item_id))
     c.connection.commit()
 
 
 def delete_todo_item(item_id):
     c = get_cursor()
-    c.execute("DELETE FROM events WHERE id=%s AND kind='todo'", (item_id,))
+    c.execute("DELETE FROM memories WHERE id=%s AND kind='todo'", (item_id,))
     c.connection.commit()
 
 
@@ -258,20 +256,8 @@ def load_friction(tid):
 
 def save_friction(tid, payload):
     """覆盖写摩擦状态"""
-    # v17.10：停写旧表；要回退双写设 NAO_LEGACY_WRITE=1
-    if not legacy_write_enabled():
-        dual_write("friction", str(tid), payload)
-        return
-
-    c = get_cursor()
-    c.execute("DELETE FROM events WHERE target_id=%s AND kind='friction'", (str(tid),))
-    c.execute(
-        "INSERT INTO events(target_id, event_summary, tags, kind, dedupe_key, last_seen) "
-        "VALUES(%s,%s,'','friction',%s,NOW())",
-        (str(tid), payload, dedupe_key(str(tid), "friction", "friction")),
-    )
-    c.connection.commit()
-    dual_write("friction", tid, payload)
+    dual_write("friction", str(tid), payload)
+    _replace_kind_row(tid, "friction", payload, "friction")
 
 def load_reading(tid):
     """读小说进度（v18.16：优先 reading_progress，一台设备多本书）"""
@@ -310,36 +296,23 @@ def save_reading(tid, payload):
     """覆盖写小说进度；v18.16 按书拆到 reading_progress"""
     import json
 
-    # v17.10：停写旧表；要回退双写设 NAO_LEGACY_WRITE=1
-    if not legacy_write_enabled():
-        try:
-            data = json.loads(payload) if payload else {}
-            books = data.get("books") if isinstance(data, dict) else None
-            if books:
-                for b in books:
-                    row = {
-                        "book_url": b.get("url") or b.get("book_url") or "",
-                        "title": b.get("title") or "",
-                        "intro": b.get("intro") or "",
-                        "last_no": int(b.get("last_no") or 0),
-                        "last_chapter": b.get("last_title") or b.get("last_chapter") or "",
-                    }
-                    dual_write("reading", str(tid), json.dumps(row, ensure_ascii=False))
-            else:
-                dual_write("reading", str(tid), payload)
-        except Exception:
+    try:
+        data = json.loads(payload) if payload else {}
+        books = data.get("books") if isinstance(data, dict) else None
+        if books:
+            for b in books:
+                row = {
+                    "book_url": b.get("url") or b.get("book_url") or "",
+                    "title": b.get("title") or "",
+                    "intro": b.get("intro") or "",
+                    "last_no": int(b.get("last_no") or 0),
+                    "last_chapter": b.get("last_title") or b.get("last_chapter") or "",
+                }
+                dual_write("reading", str(tid), json.dumps(row, ensure_ascii=False))
+        else:
             dual_write("reading", str(tid), payload)
-        return
-
-    c = get_cursor()
-    c.execute("DELETE FROM events WHERE target_id=%s AND kind='reading'", (str(tid),))
-    c.execute(
-        "INSERT INTO events(target_id, event_summary, tags, kind, dedupe_key, last_seen) "
-        "VALUES(%s,%s,'','reading',%s,NOW())",
-        (str(tid), payload, dedupe_key(str(tid), "reading", "reading")),
-    )
-    c.connection.commit()
-    dual_write("reading", tid, payload)
+    except Exception:
+        dual_write("reading", str(tid), payload)
 
 def load_habit(tid):
     """读某人的口头禅计数（v12-A17）"""
@@ -377,14 +350,7 @@ def load_habit(tid):
 
 def save_habit(tid, payload):
     """覆盖写口头禅计数（一人一行）"""
-    c = get_cursor()
-    c.execute("DELETE FROM events WHERE target_id=%s AND kind='habit'", (str(tid),))
-    c.execute(
-        "INSERT INTO events(target_id, event_summary, tags, kind, dedupe_key, last_seen) "
-        "VALUES(%s,%s,'','habit',%s,NOW())",
-        (str(tid), payload, dedupe_key(str(tid), "habit", "habit")),
-    )
-    c.connection.commit()
+    _replace_kind_row(tid, "habit", payload, "habit")
 
 
 def load_relation(tid):
@@ -435,20 +401,8 @@ def load_relation(tid):
 
 def save_relation(tid, payload):
     """覆盖写亲密度（一人一行）"""
-    # v17.10：停写旧表；要回退双写设 NAO_LEGACY_WRITE=1
-    if not legacy_write_enabled():
-        dual_write("rel", str(tid), payload)
-        return
-
-    c = get_cursor()
-    c.execute("DELETE FROM events WHERE target_id=%s AND kind='rel'", (str(tid),))
-    c.execute(
-        "INSERT INTO events(target_id, event_summary, tags, kind, dedupe_key, last_seen) "
-        "VALUES(%s,%s,'','rel',%s,NOW())",
-        (str(tid), payload, dedupe_key(str(tid), "rel", "relation")),
-    )
-    c.connection.commit()
-    dual_write("rel", tid, payload)
+    dual_write("rel", str(tid), payload)
+    _replace_kind_row(tid, "rel", payload, "relation")
 
 def load_today_life():
     """取今天的生活事件（v10-U9b 分享生活用）"""
@@ -466,16 +420,15 @@ def load_agenda_items():
     """取出她的待办（v10-U9b）"""
     c = get_cursor()
     c.execute(
-        "SELECT id, event_summary FROM events WHERE target_id=%s AND kind='agenda' ORDER BY id",
-        (STATE_TARGET,),
-    )
+        "SELECT id, summary AS event_summary FROM memories "
+        "WHERE target_id=%s AND kind='agenda' ORDER BY id", (STATE_TARGET,))
     return list(c.fetchall())
 
 
 def delete_agenda_item(item_id):
     """删掉一条待办"""
     c = get_cursor()
-    c.execute("DELETE FROM events WHERE id=%s AND kind='agenda'", (item_id,))
+    c.execute("DELETE FROM memories WHERE id=%s AND kind='agenda'", (item_id,))
     c.connection.commit()
 
 
@@ -534,28 +487,29 @@ def add_event_to_db(tid, event_summary, tags="", kind="event", importance=3, due
     now = datetime.now(CST)
 
     c.execute("""
-        SELECT id FROM events
+        SELECT id FROM memories
         WHERE target_id=%s AND kind=%s AND dedupe_key=%s
           AND COALESCE(last_seen, created_at) >= %s
         ORDER BY id LIMIT 1
     """, (tid, kind, key, now - timedelta(days=DEDUPE_WINDOW_DAYS)))
     hit = c.fetchone()
     if hit:  # 命中：不新增，只记账
-        c.execute("UPDATE events SET hit_count=hit_count+1, last_seen=%s WHERE id=%s", (now, hit["id"]))
+        c.execute("UPDATE memories SET hit_count=hit_count+1, last_seen=%s WHERE id=%s", (now, hit["id"]))
         c.connection.commit()
         return hit["id"]
 
     c.execute(
-        "INSERT INTO events(target_id, event_summary, tags, kind, dedupe_key, importance, due_date, last_seen) "
-        "VALUES(%s,%s,%s,%s,%s,%s,%s,%s)",
-        (tid, event_summary, tags, kind, key, importance, due_date, now),
+        "INSERT INTO memories(target_id, kind, summary, tags, importance, weight, tier, "
+        "source, dedupe_key, due_date, last_seen) "
+        "VALUES(%s,%s,%s,%s,%s,0.5,'medium','chat',%s,%s,%s)",
+        (tid, kind, event_summary, tags, importance, key, due_date, now),
     )
     new_id = getattr(c, "lastrowid", None)
     # 按 kind 分别保留
     keep = KIND_LIMITS.get(kind, KIND_LIMIT_DEFAULT)
     c.execute(
-        "DELETE FROM events WHERE id NOT IN("
-        "SELECT id FROM(SELECT id FROM events WHERE target_id=%s AND kind=%s ORDER BY id DESC LIMIT %s)AS tmp"
+        "DELETE FROM memories WHERE id NOT IN("
+        "SELECT id FROM(SELECT id FROM memories WHERE target_id=%s AND kind=%s ORDER BY id DESC LIMIT %s)AS tmp"
         ")AND target_id=%s AND kind=%s",
         (tid, kind, keep, tid, kind),
     )
@@ -575,10 +529,6 @@ _JSON_TABLES = {
 }
 
 
-# v17.10：先停写旧表（只写新表），旧表仅作为读的回退。
-# 想回退到双写：NAO_DUAL_WRITE=1
-_LEGACY_WRITE = _os.getenv("NAO_LEGACY_WRITE", "0") in ("1", "true", "True")
-
 # v18.16：双写失败可见（不再只打一行「忽略」）
 _dual_fail = 0
 _dual_last_log = 0.0
@@ -586,10 +536,6 @@ _dual_last_log = 0.0
 
 def dual_write_stats():
     return {"fail": _dual_fail}
-
-
-def legacy_write_enabled():
-    return _LEGACY_WRITE
 
 
 def dual_write(kind, tid, payload):

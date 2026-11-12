@@ -19,12 +19,12 @@ def set_profile(tid, field, value):
     c = get_cursor()
     # 先删同字段旧行，保证是「覆盖」而不是「追加」
     c.execute(
-        "DELETE FROM events WHERE target_id=%s AND kind='profile' AND event_summary LIKE %s",
+        "DELETE FROM memories WHERE target_id=%s AND kind='profile' AND summary LIKE %s",
         (tid, f"{field}：%"),
     )
     text = f"{field}：{value}"
     c.execute(
-        "INSERT INTO events(target_id, event_summary, tags, kind, dedupe_key, last_seen) "
+        "INSERT INTO memories(target_id, summary, tags, kind, dedupe_key, last_seen) "
         "VALUES(%s,%s,%s,'profile',%s,NOW())",
         (tid, text, field, dedupe_key(tid, "profile", text)),
     )
@@ -37,12 +37,15 @@ def get_profile(tid):
     try:
         c = get_cursor()
         c.execute(
-            "SELECT event_summary FROM events WHERE target_id=%s AND kind='profile' ORDER BY id DESC",
+            "SELECT summary FROM memories WHERE target_id=%s AND kind='profile' ORDER BY id DESC",
             (tid,),
         )
         out = {}
         for r in c.fetchall():
-            s = r["event_summary"] or ""
+            try:
+                s = r["summary"] or ""
+            except Exception:
+                s = r["event_summary"] or ""
             if "：" in s:
                 k, v = s.split("：", 1)
                 out.setdefault(k, v)  # 新的在前，旧的忽略
