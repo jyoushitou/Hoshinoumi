@@ -55,6 +55,18 @@ async def cmd_db(ctx):
 @command("uptime")
 async def cmd_uptime(ctx):
     """!uptime - 运行时长"""
+    # v18.5：启动时间来自 bot_meta（logs 有 180 天 TTL，清空就归零）
+    try:
+        from ..infra import repo_meta
+
+        got = repo_meta.uptime_text()
+        if got:
+            up, start = got
+            return (f"⏱️ 机器人运行时长：{up}\n"
+                    f"  首次启动: {start.strftime('%Y-%m-%d %H:%M:%S')}")
+    except Exception:
+        pass
+
     try:
         from ..infra.repo_query import first_log as repo_first_log
 

@@ -120,7 +120,25 @@ def bootstrap():
     load_personality_supplement()  # 人设补充文本（远程 > 本地）
 
     _ensure_tables()
+    _mark_start()    # v18.5：记录首次启动时间（!uptime 用，不受日志 TTL 影响）
 
     cfg.PROCESS_LOCK = asyncio.Lock()  # 消息处理锁
     cfg.shutdown_event = asyncio.Event()  # 退出事件（!exit 触发）
     log_system("初始化完成")
+
+def _mark_start():
+    """v18.5：记录首次启动时间（用于 !uptime，不受日志 TTL 影响）"""
+    try:
+        from ..core import version as V
+        from ..infra import repo_meta
+
+        first = repo_meta.mark_start(V.get_version())
+        if first:
+            try:
+                from ..log import log_system
+
+                log_system(f"[元数据] 首次启动 {first}")
+            except Exception:
+                pass
+    except Exception:
+        pass

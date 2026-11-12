@@ -284,6 +284,13 @@ PURE = {
             KEY idx_target (target_id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """,
+    "bot_meta": """
+        CREATE TABLE IF NOT EXISTS bot_meta (
+            k VARCHAR(64) PRIMARY KEY,
+            v VARCHAR(500) NOT NULL,
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
     "facts": """
         CREATE TABLE IF NOT EXISTS facts (
             id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -372,6 +379,13 @@ def ensure_tables(cursor=None, names=None, log=None):
                 errors.append((name, str(e)[:120]))
                 if log:
                     log(f"[失败] {name}: {str(e)[:120]}")
+        # v18.5：视图也要建（方言差异在这里吸收）
+        for vname, vddl in VIEWS.items():
+            try:
+                cursor.execute(_adapt_view(vddl))
+            except Exception as e:
+                errors.append((vname, str(e)[:120]))
+
         if created:
             try:
                 cursor.connection.commit()
@@ -490,3 +504,45 @@ def adapt_ddl(ddl, backend=None):
     sql = sql.strip()
 
     return [sql] + extra
+
+
+# ===================== 视图（v18.5） =====================
+# 红线：视图不建索引；索引一律建在基表上。
+# 视图只做「派生计算」，让上层不用关心方言差异。
+VIEWS = {
+    # 已运行秒数：库里算，避免应用侧反复读
+    "v_bot_meta": """
+        CREATE OR REPLACE VIEW v_bot_meta AS
+        SELECT
+            (SELECT v FROM bot_meta WHERE k='first_start') AS first_start,
+            (SELECT v FROM bot_meta WHERE k='version')     AS version,
+            TIMESTAMPDIFF(SECOND,
+                (SELECT v FROM bot_meta WHERE k='first_start'),
+                NOW()) AS uptime_seconds
+    """,
+}
+
+def _adapt_view(ddl):
+    """视图方言适配
+
+    MySQL:  CREATE OR REPLACE VIEW ... TIMESTAMPDIFF(SECOND, a, b)
+    SQLite: 没有 CREATE OR REPLACE / TIMESTAMPDIFF
+    """
+    try:
+        from .conn import _resolve_backend
+
+        backend = _resolve_backend()
+    except Exception:
+        backend = "mysql"
+    if backend != "sqlite":
+        return ddl
+
+    out = ddl.replace("CREATE OR REPLACE VIEW", "CREATE VIEW IF NOT EXISTS")
+    import re
+
+    out = out.replace("NOW()", "datetime('now','localtime')")
+    out = re.sub(
+        r"TIMESTAMPDIFF\(SECOND,\s*(.+?),\s*(.+?)\)\s+AS",
+        r"CAST((julianday(\2) - julianday(\1)) * 86400 AS INTEGER) AS",
+        out, flags=re.S)
+    return out

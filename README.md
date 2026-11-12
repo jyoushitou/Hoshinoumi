@@ -1,4 +1,4 @@
-# 友利奈绪 QQ 机器人 v18.4.0 —— 事实卡 + 隐私归属
+# 友利奈绪 QQ 机器人 v18.5.0 —— 事实卡 + 元数据视图
 
 > 世界观取自原作结局之后：能力消失，回归普通生活；**乙坂有宇已经意外去世**。
 > 提到他需要克制，可以打哑谜，但不能假装他还活着。
@@ -25,13 +25,13 @@ MySQL 存记忆与日志。图片由她自己一句话打标签，正文小说�
 | 跑得动 | 阻塞调用统一线程池（13 处），连接池复用 MySQL 连接 |
 | 查版本 | `!version` 看版本号、提交、运行时长 |
 
-**866 条测试**（功能 829 + 环境/迁移 37），静态检查零未定义名字。
+**872 条测试**（功能 835 + 环境/迁移 37），静态检查零未定义名字。
 
 ---
 
 ## 开发计划
 
-**当前：v18.4.0（事实卡的归属与隐私）已实现** → 下一步：**v18.3 事实卡（记住「没有早八」）**。
+**当前：v18.5.0（uptime 与元数据视图）已实现** → 下一步：**v18.3 事实卡（记住「没有早八」）**。
 
 | 系列 | 主题 | 状态 | 文档 |
 |---|---|---|---|
@@ -39,23 +39,24 @@ MySQL 存记忆与日志。图片由她自己一句话打标签，正文小说�
 | v14 ~ v15 | 可换角色 / 调参与观测 | ✅ 已发布 | [v14.md](docs/versions/v14.md) |
 | **v16** | **读小说（番茄 OCR + HTML 合并）** | ✅ 已发布 | [v16.md](docs/versions/v16.md) |
 | v17 | 执行模型重构：阻塞池 → 事件/调度 → 出站层 → 主循环瘦身 | ✅ 已发布（v17.17） | [v17.md](docs/versions/v17.md) |
-| v18 | 情感的深刻度：记忆分轻重、情绪跨天、时间与日志修复 | 🚧 进行中（v18.4） | [v18.md](docs/versions/v18.md) |
+| v18 | 情感的深刻度：记忆分轻重、情绪跨天、时间与日志修复 | 🚧 进行中（v18.5） | [v18.md](docs/versions/v18.md) |
 | v19 | 后端 API：把能力做成服务（只监听本机） | 📋 已规划 | [v19.md](docs/versions/v19.md) |
 | v20 | 网关：自有软件与 Web 的**唯一入口**（鉴权/限流/审计） | 📋 已规划 | [v20.md](docs/versions/v20.md) |
-| v21 | 电脑 Web：聊天 + 历史 + 功能面板 | 📋 已规划 | [v21.md](docs/versions/v21.md) |
-| v22 | 手机 App（Flutter）+ 推送通知 | 📋 已规划 | [v22.md](docs/versions/v22.md) |
-| v23 | QQ 空间：发说说 + 只对熟人点赞/评论 | 📋 已规划 | [v23.md](docs/versions/v23.md) |
-| v24 | 运维（一）bash 只读 | 📋 已规划 | [v24.md](docs/versions/v24.md) |
-| v25 | 运维（二）agent | 📋 已规划 | [v25.md](docs/versions/v25.md) |
-| v26 | 运维（三）有限写 | 📋 已规划 | [v26.md](docs/versions/v26.md) |
-| v27 | 运维（四）可写体系 | 📋 已规划 | [v27.md](docs/versions/v27.md) |
-| v28 | 视频（一）B 站 | 📋 已规划 | [v28.md](docs/versions/v28.md) |
-| v29 | 视频（二）抖音 | 📋 已规划 | [v29.md](docs/versions/v29.md) |
-| v30 | 微信接入（OpenClaw） | 📋 已规划 | [v30.md](docs/versions/v30.md) |
-| v31 | 语音通话 | 📋 已规划 | [v31.md](docs/versions/v31.md) |
-| v32 | 视频通话 | 📋 已规划 | [v32.md](docs/versions/v32.md) |
-| v33 | 常驻（一）systemd / 看门狗 | 📋 已规划 | [v33.md](docs/versions/v33.md) |
-| v34 | 常驻（二）LITE / ARM / 一键安装 | 📋 已规划 | [v34.md](docs/versions/v34.md) |
+| v21 | DSH / Qoder / WorkBuddy 插件：她成为你所有工具的记忆层 | 📋 已规划 | [v21.md](docs/versions/v21.md) |
+| v22 | 电脑 Web：聊天 + 历史 + 功能面板 | 📋 已规划 | [v22.md](docs/versions/v22.md) |
+| v23 | 手机 App（Flutter）+ 推送通知 | 📋 已规划 | [v23.md](docs/versions/v23.md) |
+| v24 | QQ 空间：发说说 + 只对熟人点赞/评论 | 📋 已规划 | [v24.md](docs/versions/v24.md) |
+| v25 | 运维（一）bash 只读 | 📋 已规划 | [v25.md](docs/versions/v25.md) |
+| v26 | 运维（二）agent | 📋 已规划 | [v26.md](docs/versions/v26.md) |
+| v27 | 运维（三）有限写 | 📋 已规划 | [v27.md](docs/versions/v27.md) |
+| v28 | 运维（四）可写体系 | 📋 已规划 | [v28.md](docs/versions/v28.md) |
+| v29 | 视频（一）B 站 | 📋 已规划 | [v29.md](docs/versions/v29.md) |
+| v30 | 视频（二）抖音 | 📋 已规划 | [v30.md](docs/versions/v30.md) |
+| v31 | 微信接入（OpenClaw） | 📋 已规划 | [v31.md](docs/versions/v31.md) |
+| v32 | 语音通话 | 📋 已规划 | [v32.md](docs/versions/v32.md) |
+| v33 | 视频通话 | 📋 已规划 | [v33.md](docs/versions/v33.md) |
+| v34 | 常驻（一）systemd / 看门狗 | 📋 已规划 | [v34.md](docs/versions/v34.md) |
+| v35 | 常驻（二）LITE / ARM / 一键安装 | 📋 已规划 | [v35.md](docs/versions/v35.md) |
 
 > **约定**：每个大版本的**最后一个次版本**用来收尾修 bug 和技术债，不堆新功能。
 
@@ -524,7 +525,7 @@ AI 摘要（≤100 字）→ 记进度
 ### 测试
 
 ```bash
-python3 scripts/run_tests.py             # 866 条（tests 829 + checks 37）
+python3 scripts/run_tests.py             # 872 条（tests 835 + checks 37）
 python3 scripts/check_names.py            # 静态检查：未定义名字 / 先用后赋值
 ```
 
