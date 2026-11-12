@@ -69,6 +69,14 @@ class TestQuoteContext(unittest.TestCase):
         self.assertIn("（他引用了一条较早的消息，你看不到，别装懂）", text)
         self.assertNotIn("[引用]", text)
 
+    def test_quote_metrics(self):
+        from botv.core import metrics
+        before = metrics.snapshot()[0].get("quote_hit", 0)
+        cache.remember(456, "友利奈绪", "原话")
+        asyncio.run(parse_message_content(_raw(456), "1", None))
+        after = metrics.snapshot()[0].get("quote_hit", 0)
+        self.assertEqual(after, before + 1)
+
     def test_quote_label_not_in_keywords(self):
         cache.remember(321, "友利奈绪", "之前不是还慌得不行。")
         text, _ = asyncio.run(parse_message_content(_raw(321), "1", None))

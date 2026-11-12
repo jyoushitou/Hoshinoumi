@@ -154,5 +154,17 @@ class TestOverrides(unittest.TestCase):
         self.assertIsNone(self.E.parse_override("每天 7:30 叫我", now=self.now))
 
 
+class TestNextSummary(unittest.TestCase):
+    def test_next_summary(self):
+        task = {"id": 1, "content": "scene:提醒晚餐",
+                "next_ts": "2026-11-13 16:40:00", "enabled": 1}
+        with patch.object(cron, "list_tasks", return_value=[task]), \
+                patch.object(cron, "_now", return_value=datetime(2026, 11, 13, 12, 0)):
+            out = cron.next_summary()
+        self.assertIn("钩子 1 条", out)
+        self.assertIn("16:40", out)
+        self.assertIn("提醒晚餐", out)
+
+
 if __name__ == "__main__":
     unittest.main()

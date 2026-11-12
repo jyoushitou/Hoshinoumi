@@ -27,6 +27,11 @@ async def cmd_stats(ctx):
     except Exception:
         pass
     try:
+        from ..schedule import cron
+        lines.append("⏰ 定时：" + cron.next_summary())
+    except Exception:
+        pass
+    try:
         from ..egress.outbound import get_outbound
         lines.append(get_outbound().describe())
     except Exception:

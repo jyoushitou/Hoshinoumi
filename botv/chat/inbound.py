@@ -12,6 +12,7 @@ from ..infra.repo_memory import add_event_to_db  # v11-A9：图片记忆
 from ..ai.vision import describe_image  # v11-A8：直接看图
 from ..speech.asr import transcribe  # v11-A14：语音转文字
 from ..image.store import update_image_tags
+from ..core import metrics
 import re
 
 from ..utils import download_url
@@ -151,6 +152,8 @@ async def parse_message_content(raw_content, user_id, ws=None):
                 if cached:
                     who, text_q = cached
                     detail = _quote_detail(who, text_q)
+                    if detail:
+                        metrics.inc("quote_hit")
 
                 # 2) 缓存没有才发 get_msg；超时压到 2 秒
                 if not detail and quoted and ws is not None:
@@ -164,11 +167,16 @@ async def parse_message_content(raw_content, user_id, ws=None):
                         if text_q:
                             detail = _quote_detail(who, text_q)
                             remember_message(quoted, who, text_q)
+                            metrics.inc("quote_hit")
+                    except asyncio.TimeoutError:
+                        metrics.inc("quote_timeout")
+                        detail = ""
                     except Exception:
                         detail = ""
 
                 # 3) 还取不到就明说，别让模型装懂
                 if not detail:
+                    metrics.inc("quote_miss")
                     log_api(f"[引用] 未命中: {quoted}")
                     detail = "（他引用了一条较早的消息，你看不到，别装懂）"
                 quote_block = detail

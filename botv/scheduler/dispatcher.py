@@ -95,7 +95,8 @@ class Scheduler:
             f"⚙️ 调度：{'运行中' if s['started'] else '已停止'} | "
             f"队列 {q.get('total', 0)}（聊天 {q.get('chat', 0)} / "
             f"定时 {q.get('event', 0)} / 空闲 {q.get('idle', 0)}）",
-            f"   完成 {s.get('done', 0)} | 失败 {s.get('failed', 0)} | "
+            f"   完成 {s.get('done', 0)}（近1分 {s.get('done_1m', 0)}） | "
+            f"失败 {s.get('failed', 0)} | "
             f"超时 {s.get('timeouts', 0)} | 重试 {s.get('retries', 0)}",
         ]
         open_kinds = s.get("breaker", {}).get("open_kinds") or []

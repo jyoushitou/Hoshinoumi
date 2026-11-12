@@ -10,6 +10,7 @@
 
 import asyncio
 import time
+from collections import deque
 
 from ..events.base import Priority
 from ..log import log_api, log_err
@@ -35,6 +36,7 @@ class WorkerPool:
         self._timeouts = 0
         self._retries = 0
         self._by_kind = {}
+        self._done_ts = deque(maxlen=10000)  # v18.8：最近完成时间
         self._stopped = True
         self._tasks = []
 
@@ -93,6 +95,7 @@ class WorkerPool:
                     await asyncio.wait_for(
                         ev.fn(), timeout=getattr(ev, "timeout", 120) or None)
                     self._done += 1
+                    self._done_ts.append(self._clock())
                     self._count(kind, ok=True)
                     self.breaker.record_success(kind)
                     return True
@@ -127,10 +130,17 @@ class WorkerPool:
         item = self._by_kind.setdefault(kind, {"ok": 0, "fail": 0})
         item["ok" if ok else "fail"] += 1
 
+    def _recent_done(self, seconds=60):
+        cutoff = self._clock() - seconds
+        while self._done_ts and self._done_ts[0] < cutoff:
+            self._done_ts.popleft()
+        return len(self._done_ts)
+
     def stats(self):
         return {
             "running": self._running,
             "done": self._done,
+            "done_1m": self._recent_done(),
             "failed": self._failed,
             "timeouts": self._timeouts,
             "retries": self._retries,

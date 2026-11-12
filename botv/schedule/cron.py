@@ -527,5 +527,31 @@ def watchdog():
     return fixed
 
 
+def next_summary():
+    """v18.8：给 !stats 的一行：钩子数 + 最近一条"""
+    try:
+        tasks = list_tasks(enabled_only=True)
+    except Exception:
+        return "读取失败"
+    now = _now()
+    best = None
+    for t in tasks:
+        nxt = t.get("next_ts")
+        if isinstance(nxt, str):
+            try:
+                nxt = datetime.strptime(nxt, "%Y-%m-%d %H:%M:%S")
+            except ValueError:
+                continue
+        if not nxt or nxt <= now:
+            continue
+        if best is None or nxt < best[0]:
+            best = (nxt, t)
+    if not best:
+        return f"钩子 {len(tasks)} 条｜下次 待排"
+    nxt, task = best
+    label = _scene_of(task) or (task.get("content") or "")[:20]
+    return f"钩子 {len(tasks)} 条｜下次 {nxt.strftime('%m-%d %H:%M')}（{label}）"
+
+
 def stats():
     return {"hooked": len(handles), "ids": sorted(handles)}

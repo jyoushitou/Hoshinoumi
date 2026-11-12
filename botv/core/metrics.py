@@ -11,6 +11,9 @@ COUNTERS = (
     "group_skip",     # 群里跳过次数
     "proactive",      # 主动发出次数
     "digest",         # 浓缩写入次数
+    "quote_hit",      # v18.8：引用命中缓存/get_msg
+    "quote_miss",     # 引用没取到
+    "quote_timeout",  # 引用 get_msg 超时
 )
 
 _data = {}
@@ -55,6 +58,9 @@ def describe():
         "group_skip": "群里跳过",
         "proactive": "主动",
         "digest": "浓缩",
+        "quote_hit": "引用命中",
+        "quote_miss": "引用未命中",
+        "quote_timeout": "引用超时",
     }
     lines = [f"📊 今日统计（{day}）"]
     for k in COUNTERS:
