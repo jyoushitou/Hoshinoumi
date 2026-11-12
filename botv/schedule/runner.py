@@ -22,8 +22,7 @@ from ..infra.repo_memory import load_events_from_db, load_today_life, load_old_e
 from ..life.impulse import should_reach_out, note_proactive  # v10-U9
 from ..life.pending import due as pending_due, finish as finish_pending, describe as describe_pending  # v10-U9b
 from ..life.agenda import due_soon as agenda_due_soon, mark_reminded as agenda_mark  # v10-U10
-from .config import SCHEDULE_TASKS, is_workday_today
-from .planner import calc_day_tasks
+from .config import is_workday_today
 
 # 每天首次运行的延迟（秒），用于跨天精确触发
 _FIRST_RUN_DELAY = 10

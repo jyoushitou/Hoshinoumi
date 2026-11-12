@@ -6,7 +6,7 @@ from botv.core import state as cfg  # 全局运行时变量
 from ..schedule import is_workday_today  # 工作日判断
 from .registry import command
 from .formatters import (
-    build_cmd_help, format_status_detailed, format_task_list,
+    build_cmd_help, format_status_detailed,
     format_memory_stats, format_sticker_stats, format_clip_status,
     format_keywords, format_apikeys,
 )
@@ -36,8 +36,8 @@ async def cmd_status(ctx):
 
 @command("task")
 async def cmd_task(ctx):
-    """!task - 定时任务列表"""
-    return format_task_list()
+    """!task - 已移除，指向 !cron / !hooks"""
+    return "⏰ `!task` 已移除：真实计划用 `!cron`，钩子状态用 `!hooks`"
 
 
 @command("memory")

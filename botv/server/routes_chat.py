@@ -55,7 +55,7 @@ async def handle_command(request):
         elif cmd == "status":
             result = fmt.format_status_detailed()
         elif cmd == "task":
-            result = fmt.format_task_list()
+            result = "⏰ `!task` 已移除：真实计划用 `!cron`，钩子状态用 `!hooks`"
         elif cmd == "memory":
             if args:
                 target = args[0]

@@ -868,9 +868,8 @@ class TestV12Extras(unittest.TestCase):
     """v12：仪式 / 记忆本 / 旧事重提"""
 
     def test_sunday_ritual_task(self):
-        from botv.schedule.config import SCHEDULE_TASKS
-        scenes = [t["scene"] for t in SCHEDULE_TASKS]
-        self.assertIn("周日复盘", scenes, "周日晚上要有一次复盘仪式")
+        from botv.executors.schedule import SCENES
+        self.assertIn("周日复盘", SCENES, "周日晚上要有一次复盘仪式")
 
     def test_memorybook_registered(self):
         import botv.commands  # noqa: F401

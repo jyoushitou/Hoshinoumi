@@ -59,6 +59,42 @@ def _fmt_task(t):
             f"（{src}｜{tail}）")
 
 
+@command("hooks")
+async def cmd_hooks(ctx):
+    """!hooks - 定时/主动/空闲/日程钩子一眼可见"""
+    from ..schedule import cron
+
+    rows = cron.hook_rows()
+    mounted = sum(1 for r in rows if r["hooked"])
+    started = False
+    try:
+        from ..scheduler.dispatcher import get_scheduler
+        started = bool(get_scheduler().stats().get("started"))
+    except Exception:
+        pass
+    lines = [f"🪝 定时钩子：{mounted}/{len(rows)} 条已挂载｜"
+             f"调度器 {'✅ 运行中' if started else '❌ 未启动'}"]
+    for r in rows:
+        mark = "✅" if r["hooked"] else "❌"
+        nxt = r.get("next") or "待排"
+        lines.append(f"  {mark} #{r['id']} {r['label']}｜下次 {nxt}")
+
+    try:
+        from ..executors import proactive, idle
+        lines.append(
+            f"  主动：{'✅' if proactive._tick_handle else '❌'}｜"
+            f"空闲：{'✅' if idle._tick_handle else '❌'}")
+    except Exception:
+        pass
+    try:
+        from ..schedule import items as item_hooks
+        st = item_hooks.stats()
+        lines.append(f"  日程/待办：{st.get('hooked', 0)} 条已挂载")
+    except Exception:
+        pass
+    return "\n".join(lines)
+
+
 @command("cron")
 async def cmd_cron(ctx):
     """!cron - 定时消息管理"""

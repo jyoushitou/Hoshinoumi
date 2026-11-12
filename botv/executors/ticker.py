@@ -17,7 +17,6 @@ import time
 from datetime import timedelta
 
 from ..config import CST, MASTER_QQ
-from ..schedule.config import SCHEDULE_TASKS
 from ..core import state as cfg
 from ..events.base import Priority
 from ..events.registry import register
@@ -57,13 +56,10 @@ async def handle_minute_tick(ev):
         workday = R.is_workday_today()
         cfg.daily_trigger.clear()
         cfg.triggered_today.clear()
-        cfg.task_trigger_minute.clear()
         cfg.today = today
-        cfg.task_trigger_minute.update(R.calc_day_tasks(today, workday))
         _state["day"] = today
         _state["workday"] = workday
-        log_system(f"[心跳] 跨天 {today}：{'工作日' if workday else '休息日'}，"
-                   f"{len(cfg.task_trigger_minute)} 个任务点")
+        log_system(f"[心跳] 跨天 {today}：{'工作日' if workday else '休息日'}")
 
     # ---------- 凌晨 3 点写昨天日记 ----------
     if now.hour == 3 and now.minute == 0:

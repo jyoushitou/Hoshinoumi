@@ -10,7 +10,7 @@ from ..config import (
     MASTER_QQ, LISTEN_HOST, LISTEN_PORT_QQ, HEARTBEAT_INTERVAL,
     DS_MODEL, STICKER_ARCHIVE_DIR, CLIP_IMAGE_TAGS,
 )
-from ..schedule import is_workday_today, SCHEDULE_TASKS, CHINESE_CALENDAR_OK  # 工作日判断、定时任务表
+from ..schedule import is_workday_today, CHINESE_CALENDAR_OK  # 工作日判断
 from ..memory import extract_keywords  # 关键词提取
 
 
@@ -89,25 +89,6 @@ def format_status_detailed():
     lines.append(f"💬 今日闲聊次数: {len(cfg.triggered_today)}/{len(cfg.daily_chat_trigger_times) if cfg.daily_chat_trigger_times else '?'}")
     wd = "工作日" if is_workday_today() else ("周末" if date.today().weekday() >= 5 else "法定节假日")
     lines.append(f"📆 今天: {date.today().strftime('%Y-%m-%d')} {['周一','周二','周三','周四','周五','周六','周日'][date.today().weekday()]}({wd})")
-    return "\n".join(lines)
-
-
-def format_task_list():
-    lines = ["⏰ 定时任务列表："]
-    today_key = date.today().isoformat()
-    for task in SCHEDULE_TASKS:
-        sc = task["scene"]
-        key = f"{sc}_{today_key}"
-        tm = cfg.task_trigger_minute.get(key, -1)
-        tm_str = f"{tm//60:02d}:{tm%60:02d}" if tm >= 0 else "待计算"
-        trig = "✅" if key in cfg.daily_trigger else "⏳"
-        if sc == "催起床":
-            wd_info = "工作日7:30 / 假日8:30"
-        else:
-            wd_info = f"{task['t'].strftime('%H:%M') if 't' in task else '动态'}"
-        lines.append(f"  {trig} {sc} ({wd_info}) → {tm_str}")
-    lines.append("")
-    lines.append(f"💬 今日闲聊时间点: {', '.join(f'{t//60:02d}:{t%60:02d}' for t in cfg.daily_chat_trigger_times) if cfg.daily_chat_trigger_times else '待计算'}")
     return "\n".join(lines)
 
 

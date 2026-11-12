@@ -53,7 +53,6 @@ class TestTicker(unittest.TestCase):
         from botv.core import state as cfg
 
         cfg.daily_trigger.clear()
-        cfg.task_trigger_minute.clear()
         self.cfg = cfg
 
     def tearDown(self):
@@ -71,7 +70,6 @@ class TestTicker(unittest.TestCase):
         out = asyncio.run(self.T.handle_minute_tick(_Ev()))
         self.assertTrue(out["ok"])
         self.assertIsNotNone(self.T._state["day"], "跨天应记录日期")
-        self.assertGreater(len(self.cfg.task_trigger_minute), 0, "应算出任务时刻")
 
     def test_code_mode_timeout(self):
         import time

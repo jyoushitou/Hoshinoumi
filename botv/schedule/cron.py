@@ -527,6 +527,27 @@ def watchdog():
     return fixed
 
 
+def hook_rows():
+    """v18.9：!hooks 用（任务 + 是否已挂 + 下次）"""
+    try:
+        tasks = list_tasks(enabled_only=True)
+    except Exception:
+        return []
+    rows = []
+    for t in tasks:
+        try:
+            tid = int(t.get("id"))
+        except Exception:
+            continue
+        rows.append({
+            "id": tid,
+            "label": _scene_of(t) or (t.get("content") or "")[:20],
+            "next": t.get("next_ts"),
+            "hooked": tid in handles,
+        })
+    return rows
+
+
 def next_summary():
     """v18.8：给 !stats 的一行：钩子数 + 最近一条"""
     try:

@@ -37,7 +37,7 @@ daily_trigger = set()  # 今日已触发的定时任务key集合
 today = date.today()  # 当前日期
 daily_chat_trigger_times = []  # 今日闲聊触发时间点列表
 triggered_today = set()  # 今日已触发的闲聊时间点
-task_trigger_minute = {}  # 定时任务触发分钟映射 {key: minute}
+
 
 # ===================== 记忆与图片 =====================
 user_memory_pool = {}  # 用户对话记忆池 {target_id: deque}
