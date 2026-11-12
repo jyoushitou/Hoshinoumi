@@ -35,7 +35,9 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 
 ## 开发计划
 
-**当前：v18.20.0（v18 封版）已完成** → 下一步：v19 后端 API。
+**当前：v18.20.0 已封存（v18 只读）｜v19 观察期第 1 天** → 24 小时观察结束后进 v19.0 多用户底座。
+
+> v18 封存后不再打补丁；观察期出现的 bug 统一记入 [v19 观察表](docs/versions/v19.md#v18-封存后的-1-天观察期)。
 
 | 系列 | 主题 | 状态 | 文档 |
 |---|---|---|---|
@@ -43,8 +45,8 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | v14 ~ v15 | 可换角色 / 调参与观测 | ✅ 已发布 | [v14.md](docs/versions/v14.md) |
 | **v16** | **读小说（番茄 OCR + HTML 合并）** | ✅ 已发布 | [v16.md](docs/versions/v16.md) |
 | v17 | 执行模型重构：阻塞池 → 事件/调度 → 出站层 → 主循环瘦身 | ✅ 已发布（v17.17） | [v17.md](docs/versions/v17.md) |
-| v18 | 情感的深刻度：记忆分轻重、情绪跨天、时间与日志修复 | ✅ 已完成（v18.6–v18.20） | [v18.md](docs/versions/v18.md) |
-| v19 | 多用户后端 API：users/identity/隔离 + 服务化 | 📋 已规划 | [v19.md](docs/versions/v19.md) |
+| v18 | 情感的深刻度：记忆分轻重、情绪跨天、时间与日志修复 | 🔒 已封存（v18.20.0） | [v18.md](docs/versions/v18.md) |
+| v19 | 多用户后端 API：users/identity/隔离 + 服务化 | 🚧 观察期（1 天）→ v19.0 | [v19.md](docs/versions/v19.md) |
 | v20 | 网关：自有软件与 Web 的**唯一入口**（鉴权/限流/审计） | 📋 已规划 | [v20.md](docs/versions/v20.md) |
 | v21 | DSH / Qoder / WorkBuddy 插件：她成为你所有工具的记忆层 | 📋 已规划 | [v21.md](docs/versions/v21.md) |
 | v22 | 电脑 Web：聊天 + 历史 + 功能面板 | 📋 已规划 | [v22.md](docs/versions/v22.md) |
