@@ -46,19 +46,23 @@ v6：P1 会说话 → P2 说实话 → P2.5 长感官 → P3 有生活 → P4 �
 | E30 | 图片链路 | F4 |
 | **v16** | [versions/v16.md](versions/v16.md) | 空闲时自己读小说（番茄/起点，记进度、聊剧情） | 规划中 |
 | **v17** | [versions/v17.md](versions/v17.md) | 执行模型重构：17.0 基建与基线 → 17.1 事件/调度 → 17.2 出站层 → 17.3 主循环瘦身 → 17.4 定时消息 → 17.5 数据模型重建 | 规划中 |
-| **v18** | [versions/v18.md](versions/v18.md) | 情感的深刻度：记忆分量 / 情绪跨天 / 回忆触发 / 旧表移除 | 规划中 |
-| **v19** | [versions/v19.md](versions/v19.md) | QQ 空间：每天 1 条说说，只发不互动（默认关） | 规划中 |
-| **v20** | [versions/v20.md](versions/v20.md) | 运维（一）bash 只读 | 规划中 |
-| **v21** | [versions/v21.md](versions/v21.md) | 运维（二）agent 只读 | 规划中 |
-| **v22** | [versions/v22.md](versions/v22.md) | 运维（三）有限写 | 规划中 |
-| **v23** | [versions/v23.md](versions/v23.md) | 运维（四）可写体系 | 规划中 |
-| **v24** | [versions/v24.md](versions/v24.md) | 视频（一）B 站 | 规划中 |
-| **v25** | [versions/v25.md](versions/v25.md) | 视频（二）抖音 | 规划中 |
-| **v26** | [versions/v26.md](versions/v26.md) | 微信接入（OpenClaw） | 规划中 |
-| **v27** | [versions/v27.md](versions/v27.md) | 语音通话 | 规划中 |
-| **v28** | [versions/v28.md](versions/v28.md) | 视频通话 | 规划中 |
-| **v29** | [versions/v29.md](versions/v29.md) | 常驻（一）systemd / 看门狗 | 规划中 |
-| **v30** | [versions/v30.md](versions/v30.md) | 常驻（二）LITE / ARM / 一键安装 | 规划中 |
+| **v18** | [versions/v18.md](versions/v18.md) | 情感的深刻度：记忆分轻重、情绪跨天、时间与日志修复 | 规划中 |
+| **v19** | [versions/v19.md](versions/v19.md) | 后端 API：把能力做成服务（只监听本机） | 规划中 |
+| **v20** | [versions/v20.md](versions/v20.md) | 网关：自有软件与 Web 的**唯一入口**（鉴权/限流/审计） | 规划中 |
+| **v21** | [versions/v21.md](versions/v21.md) | 电脑 Web：聊天 + 历史 + 功能面板 | 规划中 |
+| **v22** | [versions/v22.md](versions/v22.md) | 手机 App（Flutter）+ 推送通知 | 规划中 |
+| **v23** | [versions/v23.md](versions/v23.md) | QQ 空间：发说说 + 只对熟人点赞/评论 | 规划中 |
+| **v24** | [versions/v24.md](versions/v24.md) | 运维（一）bash 只读 | 规划中 |
+| **v25** | [versions/v25.md](versions/v25.md) | 运维（二）agent | 规划中 |
+| **v26** | [versions/v26.md](versions/v26.md) | 运维（三）有限写 | 规划中 |
+| **v27** | [versions/v27.md](versions/v27.md) | 运维（四）可写体系 | 规划中 |
+| **v28** | [versions/v28.md](versions/v28.md) | 视频（一）B 站 | 规划中 |
+| **v29** | [versions/v29.md](versions/v29.md) | 视频（二）抖音 | 规划中 |
+| **v30** | [versions/v30.md](versions/v30.md) | 微信接入（OpenClaw） | 规划中 |
+| **v31** | [versions/v31.md](versions/v31.md) | 语音通话 | 规划中 |
+| **v32** | [versions/v32.md](versions/v32.md) | 视频通话 | 规划中 |
+| **v33** | [versions/v33.md](versions/v33.md) | 常驻（一）systemd / 看门狗 | 规划中 |
+| **v34** | [versions/v34.md](versions/v34.md) | 常驻（二）LITE / ARM / 一键安装 | 规划中 |
 
 
 
