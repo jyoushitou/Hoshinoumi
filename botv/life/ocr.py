@@ -23,6 +23,40 @@ SHOT_TIMEOUT = 30
 PUA_RANGE = (0xE000, 0xF8FF)
 
 _ok_cache = {}
+_UNCERTAIN = {"n": 0}
+
+
+def paddle_ok():
+    """PaddleOCR 装了没（可选；没装就只用 tesseract）"""
+    if "p" not in _ok_cache:
+        try:
+            import paddleocr  # noqa: F401
+            _ok_cache["p"] = True
+        except Exception:
+            _ok_cache["p"] = False
+    return _ok_cache["p"]
+
+
+def ocr_uncertain_count():
+    return _UNCERTAIN["n"]
+
+
+def merge_ocr_results(tess, paddle):
+    """v18.18：两引擎一致就用 tesseract；不一致记日志并标记不确定"""
+    tess = (tess or "").strip()
+    paddle = (paddle or "").strip()
+    if not tess:
+        return paddle
+    if not paddle:
+        return tess
+    import difflib
+
+    ratio = difflib.SequenceMatcher(a=tess, b=paddle, autojunk=False).ratio()
+    if ratio >= 0.90:
+        return tess
+    _UNCERTAIN["n"] += 1
+    log_api(f"[OCR] 两引擎不一致（相似度 {ratio:.2f}），标记不确定，以 tesseract 为主")
+    return tess
 
 
 def tesseract_ok():
@@ -75,6 +109,37 @@ def _ocr_file(path, lang=OCRLANG):
     return clean(r.stdout.decode("utf-8", "ignore"))
 
 
+def _ocr_paddle(path, lang=OCRLANG):
+    """可选：PaddleOCR（没装/失败返回空串）"""
+    if not paddle_ok():
+        return ""
+    try:
+        from paddleocr import PaddleOCR
+        engine = _ok_cache.get("p_engine")
+        if engine is None:
+            engine = PaddleOCR(use_angle_cls=True, lang="ch", show_log=False)
+            _ok_cache["p_engine"] = engine
+        result = engine.ocr(path, cls=True) or []
+        lines = []
+        for block in result:
+            for item in block or []:
+                try:
+                    lines.append(item[1][0])
+                except Exception:
+                    continue
+        return clean("\n".join(lines))
+    except Exception as e:
+        log_api(f"[OCR] PaddleOCR 失败: {e}")
+        return ""
+
+
+def _ocr_file_dual(path, lang=OCRLANG):
+    """tesseract + 可选 PaddleOCR；两引擎不一致时记不确定"""
+    tess = _ocr_file(path, lang)
+    paddle = _ocr_paddle(path, lang)
+    return merge_ocr_results(tess, paddle)
+
+
 def _shot_and_ocr(url):
     """同步执行：开浏览器截图 → OCR。放在线程里跑。"""
     try:
@@ -115,7 +180,7 @@ def _shot_and_ocr(url):
         log_api(f"[OCR] 截图失败: {e}")
         return ""
 
-    return _ocr_file(png)
+    return _ocr_file_dual(png)
 
 
 async def ocr_url(url):
