@@ -309,8 +309,13 @@ def main():
                     help="缺表时自动建（等同 scripts/init_db.py --apply）")
     args, _unknown = ap.parse_known_args()
 
+    try:
+        from botv.core.version import VERSION
+        _ver = f"v{VERSION}"
+    except Exception:
+        _ver = "?"
     print("=" * 56)
-    print("  友利奈绪 v11 部署预检")
+    print(f"  友利奈绪 {_ver} 部署预检")
     print("=" * 56)
 
     if args.init_db:
