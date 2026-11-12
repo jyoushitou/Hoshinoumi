@@ -27,3 +27,6 @@ release/
 # v17.5：TXT 日志
 logs/
 docs/HANDOFF.md
+data/nao.db
+data/nao.db-shm
+data/nao.db-wal
