@@ -32,6 +32,7 @@ _state = {
     "tick_handle": None,
     "count": 0,
     "last_watch": 0.0,
+    "backup_month": "",
 }
 
 
@@ -39,6 +40,16 @@ def _now():
     from datetime import datetime
 
     return datetime.now(CST)
+
+
+async def _run_backup_bg():
+    try:
+        from ..infra.backup import run_backup
+        from ..infra.blocking import run_blocking
+        return await run_blocking(run_backup, name="backup")
+    except Exception as e:
+        log_err(f"[备份] 自动备份失败: {e}")
+        return None
 
 
 @register("minute_tick", priority=Priority.EVENT, timeout=_TIMEOUT,
@@ -60,6 +71,18 @@ async def handle_minute_tick(ev):
         _state["day"] = today
         _state["workday"] = workday
         log_system(f"[心跳] 跨天 {today}：{'工作日' if workday else '休息日'}")
+
+    # ---------- v18.19：每月 1 号 04:30 自动备份 ----------
+    month_key = now.strftime("%Y-%m")
+    if (now.day == 1 and now.hour == 4 and now.minute == 30
+            and _state["backup_month"] != month_key):
+        _state["backup_month"] = month_key
+        try:
+            import asyncio as _aio
+            _aio.create_task(_run_backup_bg())
+            log_system("[备份] 本月自动备份已投递")
+        except Exception as e:
+            log_err(f"[备份] 投递失败: {e}")
 
     # ---------- 凌晨 3 点写昨天日记 ----------
     if now.hour == 3 and now.minute == 0:

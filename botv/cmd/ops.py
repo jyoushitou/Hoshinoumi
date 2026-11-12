@@ -66,6 +66,25 @@ async def cmd_stats(ctx):
     return "\n".join(lines)
 
 
+@command("backup")
+async def cmd_backup(ctx):
+    """!backup [run|list] - 备份清单 / 立即备份"""
+    from ..infra import backup
+
+    args = [a.lower() for a in (ctx.args or [])]
+    if args and args[0] == "run":
+        try:
+            from ..infra.blocking import run_blocking
+            r = await run_blocking(backup.run_backup, name="backup")
+        except Exception as e:
+            return f"❌ 备份失败：{e}"
+        if r.get("ok"):
+            return (f"✅ 备份完成：{r['file']}（{r['size'] / 1024:.0f} KB，"
+                    f"{r['tables']} 张表）")
+        return f"❌ 备份失败：{r.get('error', '未知原因')}"
+    return backup.describe()
+
+
 @command("version")
 async def cmd_version(ctx):
     """!version - 当前版本、提交、运行时长"""
