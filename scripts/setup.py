@@ -193,6 +193,40 @@ def migrate_data():
             pass
 
 
+def ensure_cron_schema():
+    """v18.7：setup 阶段补 cron_tasks.rule/timing + 场景规则迁移
+
+    不能只依赖 bootstrap：seed_scenes 在 run.py 之前跑，旧库还没补列。
+    """
+    try:
+        from botv.infra import schema
+        from botv.infra.conn import get_cursor
+    except Exception as e:
+        print(f"  [!]  跳过定时表补列（导入失败）：{e}")
+        return True
+
+    try:
+        schema.ensure_tables(names=["cron_overrides"])
+        c = get_cursor()
+        for name, ddl in (("rule", "VARCHAR(16) NULL"),
+                          ("timing", "VARCHAR(8) NOT NULL DEFAULT 'exact'")):
+            try:
+                c.execute(f"ALTER TABLE cron_tasks ADD COLUMN {name} {ddl}")
+                print(f"  [OK] cron_tasks 补列 {name}")
+            except Exception:
+                pass  # 已存在
+        c.connection.commit()
+        try:
+            from botv.schedule import cron
+            cron.migrate_scene_rules()
+        except Exception as e:
+            print(f"  [!]  场景规则迁移失败（启动时会再试）：{e}")
+        return True
+    except Exception as e:
+        print(f"  [!]  定时表补列失败（启动时会再试）：{e}")
+        return True
+
+
 def seed_scenes():
     """把内置 8 个场景写进 cron_tasks（幂等：按内容去重）"""
     try:
@@ -295,6 +329,10 @@ def main():
     print()
     print("迁移旧数据：")
     migrate_data()
+
+    print()
+    print("补定时表结构：")
+    ensure_cron_schema()
 
     print()
     print("导入内置场景：")
