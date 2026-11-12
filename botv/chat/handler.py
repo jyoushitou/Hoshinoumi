@@ -33,6 +33,50 @@ from ..life import friction as life_friction  # v13-U20
 from ..life import reading as life_reading  # v16：点名看书
 from ..life import novel as life_novel  # v16：按书名搜索
 from .notice import handle_notice  # v12-A16
+from .cache import remember as remember_message  # v18.6：最近消息缓存
+
+# v18.6：后台消息任务集合（避免 create_task 被 GC）
+_bg_tasks = set()
+
+
+def _sender_name(d):
+    """取说话人昵称/群名片，缓存和引用块用"""
+    s = d.get("sender") or {}
+    return (s.get("card") or s.get("nickname") or str(d.get("user_id") or "")).strip()
+
+
+def _looks_like_command(d):
+    """命令走同步路径；只有主人发的才算"""
+    if str(d.get("user_id")) != str(MASTER_QQ):
+        return False
+    msg = d.get("message")
+    if isinstance(msg, str):
+        return msg.lstrip().startswith("!")
+    for seg in msg or []:
+        if isinstance(seg, dict) and seg.get("type") == "text":
+            text = (seg.get("data") or {}).get("text", "")
+            return text.lstrip().startswith("!")
+    return False
+
+
+def _bg_done(task):
+    _bg_tasks.discard(task)
+    try:
+        task.result()
+    except asyncio.CancelledError:
+        pass
+    except Exception as e:
+        log_err(f"[消息] 后台处理失败: {e}")
+
+
+def _dispatch_message(d, ws):
+    """v18.6 U1：普通消息起独立任务，recv 循环不再被模型/get_msg 堵住"""
+    if os.getenv("NAO_ASYNC_DISPATCH", "1") in ("0", "false", "False"):
+        return _handle_message(d, ws)
+    task = asyncio.create_task(_handle_message(d, ws))
+    _bg_tasks.add(task)
+    task.add_done_callback(_bg_done)
+    return None
 
 # ===================== 群聊节奏（v6-E29 / v10） =====================
 GROUP_COOLDOWN = 20        # 同一个群两条回复的最小间隔（秒）
@@ -343,6 +387,7 @@ async def _handle_message(d, ws):
         cfg.self_qq = self_qq
     addressed = is_at_me(d.get("message", ""), cfg.self_qq)
     text, img_md5s = await parse_message_content(d.get("message", ""), uid, ws)  # (文本, 图片md5)
+    remember_message(mid, _sender_name(d), text)  # v18.6：入站消息进缓存，引用可零延迟命中
     note_user_message()  # v10-U9：她在等你，别急着主动找
     try:
         life_habit.learn(uid, text)  # v12-A17：学一点他的口头禅
@@ -476,10 +521,17 @@ async def websocket_handle_qq(ws):
                 except Exception as e:
                     log_api(f"[通知] 处理失败: {e}")
                 continue
-            await _handle_message(d, ws)
+            if _looks_like_command(d):
+                await _handle_message(d, ws)  # 命令保持同步，别排在模型后面
+            else:
+                _coro = _dispatch_message(d, ws)  # 普通消息并发，recv 循环继续读回包
+                if _coro is not None:
+                    await _coro              # NAO_ASYNC_DISPATCH=0 时退回串行
     except Exception as e:  # 捕获异常
         log_err(f"QQ异常:{e}")  # 日志记录异常
     finally:  # 清理
+        for _t in list(_bg_tasks):
+            _t.cancel()
         async with cfg.active_ws_lock:  # 加锁
             if cfg.active_ws_qq is ws:  # 当前连接就是本连接
                 cfg.active_ws_qq = None  # 清空活跃连接

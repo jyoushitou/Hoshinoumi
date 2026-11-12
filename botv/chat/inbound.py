@@ -15,6 +15,45 @@ from ..image.store import update_image_tags
 import re
 
 from ..utils import download_url
+from .cache import get as get_cached_message, remember as remember_message
+
+_CQ_RE = re.compile(r"\[CQ:([a-zA-Z]+)[^\]]*\]")
+
+
+def _clean_quoted(text):
+    """把引用原文里的 CQ 码换成类型位，压掉换行"""
+    text = (text or "").strip()
+    if not text:
+        return ""
+    type_map = {"image": "[图片]", "record": "[语音]", "face": "[表情]",
+                "mface": "[表情]", "at": "@某人"}
+
+    def _repl(m):
+        return type_map.get(m.group(1).lower(), "")
+
+    text = _CQ_RE.sub(_repl, text)
+    text = re.sub(r"\s+", " ", text).strip()
+    return text
+
+
+def _quote_detail(who, text):
+    """引用块：带说话人 + 原话，最多 120 字"""
+    text = _clean_quoted(text)
+    if not text:
+        return ""
+    who = (who or "某人").strip()
+    return f"【引用 {who}】原话：{text[:120]}"
+
+
+def _quoted_text(data):
+    """get_msg 回包里的原文：优先 raw_message，没有就拼 message 段"""
+    raw = (data or {}).get("raw_message") or ""
+    if not raw:
+        segs = (data or {}).get("message")
+        if isinstance(segs, list):
+            raw = "".join(str((s.get("data") or {}).get("text", ""))
+                          for s in segs if s.get("type") == "text")
+    return _clean_quoted(raw)
 
 
 def contains_sticker_key(text):
@@ -51,6 +90,7 @@ async def parse_message_content(raw_content, user_id, ws=None):
     input_text = ""  # 最终文本
     img_info = []  # 图片信息列表
     img_md5s = []  # 本条消息里的图片 md5
+    quote_block = ""  # v18.6：引用块，最后统一追加
     if isinstance(raw_content, list):  # 消息是数组格式（包含多种类型）
         for item in raw_content:  # 遍历消息片段
             t = item.get("type")  # 消息类型
@@ -102,22 +142,36 @@ async def parse_message_content(raw_content, user_id, ws=None):
                 else:  # 下载失败
                     img_info.append("[图]")  # 添加通用图片标识
                     log_api(f"[消息解析] 图片下载失败: {url[:60]}")  # 日志记录
-            elif t == "reply":  # 引用某条消息（v12-A15）
-                img_info.append("[引用]")
+            elif t == "reply":  # 引用某条消息（v12-A15 / v18.6）
                 quoted = d.get("id")
                 detail = ""
-                if quoted and ws is not None:
+
+                # 1) 先查最近消息缓存（零延迟）
+                cached = get_cached_message(quoted)
+                if cached:
+                    who, text_q = cached
+                    detail = _quote_detail(who, text_q)
+
+                # 2) 缓存没有才发 get_msg；超时压到 2 秒
+                if not detail and quoted and ws is not None:
                     try:
                         from .send import request_action
-                        resp = await request_action("get_msg", {"message_id": quoted}, ws, "取引用")
+                        resp = await request_action(
+                            "get_msg", {"message_id": quoted}, ws, "取引用", timeout=2)
                         data = (resp or {}).get("data") or {}
-                        text_q = (data.get("raw_message") or "").strip()
+                        text_q = _quoted_text(data)
                         who = ((data.get("sender") or {}).get("nickname") or "").strip()
                         if text_q:
-                            detail = f"{who}：{text_q[:40]}" if who else text_q[:40]
+                            detail = _quote_detail(who, text_q)
+                            remember_message(quoted, who, text_q)
                     except Exception:
                         detail = ""
-                input_text += f" （他在引用{detail}）" if detail else " （他在引用某条消息）"
+
+                # 3) 还取不到就明说，别让模型装懂
+                if not detail:
+                    log_api(f"[引用] 未命中: {quoted}")
+                    detail = "（他引用了一条较早的消息，你看不到，别装懂）"
+                quote_block = detail
 
             elif t == "record":  # 语音条（v11-A14）
                 url = d.get("url") or d.get("file")
@@ -156,5 +210,7 @@ async def parse_message_content(raw_content, user_id, ws=None):
 
     if img_info:  # 有图片/表情信息
         input_text = f"{input_text} {' '.join(img_info)}"  # 追加到文本末尾
+    if quote_block:  # v18.6：引用块放最后，不污染关键词
+        input_text = f"{input_text} {quote_block}"
     log_api(f"[消息解析] 最终文本: {input_text[:60]}")  # 日志记录
     return input_text.strip(), img_md5s  # (文本, 图片md5列表)

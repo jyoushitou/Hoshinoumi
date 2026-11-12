@@ -17,6 +17,7 @@ from ..utils import encode_image_base64, make_image_msg
 from ..infra.conn import get_cursor
 from ..speech.tts import synth as tts_synth  # v11-A10：语音合成
 from .reply import build_reply_message
+from .cache import remember as remember_message
 
 # ===== 语音（v11-A10）=====
 VOICE_PROB = 0.08        # 每条回复变成语音的概率
@@ -244,6 +245,24 @@ def bubble_delay():
     return random.uniform(*BUBBLE_DELAY_RANGE)
 
 
+def _remember_outgoing(resp, msg):
+    """v18.6：把刚发出的文本记进缓存（拿到 message_id 才记）"""
+    try:
+        data = (resp or {}).get("data") or {}
+        mid = data.get("message_id") or data.get("message_id_str")
+        if not mid:
+            return
+        if isinstance(msg, list):
+            txt = "".join(str((s.get("data") or {}).get("text", ""))
+                          for s in msg if s.get("type") == "text").strip()
+        else:
+            txt = str(msg or "").strip()
+        if txt:
+            remember_message(mid, "友利奈绪", txt)
+    except Exception:
+        pass
+
+
 async def send_short_reply(tid, text, ws, uid, is_group=False, kws=None):
     """发送完整回复：构建消息→逐条发送（文本+图片）"""
     if is_duplicate_reply(tid, text):  # v16.0.5：同一句话短时间内不重复发
@@ -251,12 +270,18 @@ async def send_short_reply(tid, text, ws, uid, is_group=False, kws=None):
         return False
     parts = await build_reply_message(text, uid, kws, is_group)  # 构建回复消息列表（带发图择时）
     log_api(f"[发送] 共{len(parts)}条消息: {[p[0] for p in parts]}")  # 日志记录消息数量
+    # v18.6：只有真实连接 + 异步接收时才等回包拿 message_id；测试/回退模式不等
+    capture = (ws is not None and ws is cfg.active_ws_qq
+               and os.getenv("NAO_ASYNC_DISPATCH", "1") not in ("0", "false", "False"))
     for ptype, msg in parts:  # 遍历每条消息
         log_api(f"[发送] 类型={ptype}, 内容预览={str(msg)[:60]}")  # 日志记录
+        want = capture and ptype == "text"
         if is_group:  # 群聊
-            await send_group_msg(tid, msg, ws)  # 发送群消息
+            resp = await send_group_msg(tid, msg, ws, want_response=want)  # 发送群消息
         else:  # 私聊
-            await send_private_msg(tid, msg, ws)  # 发送私聊消息
+            resp = await send_private_msg(tid, msg, ws, want_response=want)  # 发送私聊消息
+        if want:
+            _remember_outgoing(resp, msg)
         await asyncio.sleep(bubble_delay())  # 每条间隔随机 1.5~3 秒，像真人打字
     log_send(f"回复:{text[:40]}")  # 日志记录发送
 

@@ -218,6 +218,7 @@ class TestEnvironment(unittest.TestCase):
         "NAO_DB_POOL_TIMEOUT",
         "NAO_VERSION",
         "NAO_BATCH_CHAT",
+        "NAO_ASYNC_DISPATCH",
         "NAO_LOG_TXT",
         "NAO_MONITOR_INTERVAL",
         "NAO_VISION_FALLBACK_MODEL",
