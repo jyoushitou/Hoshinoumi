@@ -44,6 +44,14 @@ class TestMigrateEvents(unittest.TestCase):
     def tearDown(self):
         self.con.close()
 
+    def test_old_events_without_deleted_at(self):
+        """v17.4.1 的老库没有 deleted_at，迁移不能因此失败"""
+        self.c.execute("ALTER TABLE events DROP COLUMN deleted_at")
+        self.con.commit()
+        self.assertEqual(migrate_events(self.c), 0)
+        self.c.execute("SELECT COUNT(*) AS n FROM memories")
+        self.assertEqual(self.c.fetchone()["n"], 2)
+
     def test_copy_and_view(self):
         rc = migrate_events(self.c)
         self.assertEqual(rc, 0)

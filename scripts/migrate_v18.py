@@ -12,7 +12,7 @@ v18.17：memories 加 due_date / hit_count，kind 放宽为 VARCHAR；
 import argparse
 import os
 import sys
-from datetime import date
+from datetime import date, datetime
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -98,13 +98,28 @@ def migrate_events(c):
         print("[OK] 没有 events 基表（已是视图或已迁移）")
         return 0
 
-    c.execute("SELECT id, target_id, event_summary, tags, kind, dedupe_key, "
-              "importance, due_date, last_seen, hit_count, created_at, deleted_at "
-              "FROM events")
+    # v18.4 的老 events 表可能没有 deleted_at / due_date / hit_count；
+    # 按实际列拼 SELECT，缺的用默认值，别让 ALTER 历史差异卡死迁移。
+    cols = _existing(c, "events")
+    if not cols:
+        print("[X] 读不到 events 列结构")
+        return 1
+    parts = [
+        "target_id",
+        "event_summary",
+        "tags" if "tags" in cols else "'' AS tags",
+        "kind" if "kind" in cols else "'event' AS kind",
+        "dedupe_key" if "dedupe_key" in cols else "NULL AS dedupe_key",
+        "importance" if "importance" in cols else "3 AS importance",
+        "due_date" if "due_date" in cols else "NULL AS due_date",
+        "last_seen" if "last_seen" in cols else "NULL AS last_seen",
+        "hit_count" if "hit_count" in cols else "0 AS hit_count",
+        "created_at" if "created_at" in cols else "CURRENT_TIMESTAMP AS created_at",
+        "deleted_at" if "deleted_at" in cols else "NULL AS deleted_at",
+    ]
+    c.execute("SELECT " + ", ".join(parts) + " FROM events")
     rows = list(c.fetchall())
     print(f"  待迁 {len(rows)} 行")
-    if not rows:
-        pass
     sqlite = _is_sqlite(c)
     ph = "?" if sqlite else "%s"
     verb = "INSERT OR IGNORE" if sqlite else "INSERT IGNORE"
@@ -113,11 +128,12 @@ def migrate_events(c):
         "importance, weight, tier, source, dedupe_key, due_date, last_seen, "
         "hit_count, created_at, deleted_at) "
         f"VALUES({ph},{ph},{ph},{ph},{ph},0.5,'medium','chat',{ph},{ph},{ph},{ph},{ph},{ph})")
+    now = datetime.now()
     for r in rows:
         vals = (r["target_id"], r["kind"] or "event", r["event_summary"],
                 r["tags"] or "", r["importance"] or 3, r["dedupe_key"],
                 r["due_date"], r["last_seen"], r["hit_count"] or 0,
-                r["created_at"], r["deleted_at"])
+                r["created_at"] or now, r["deleted_at"])
         try:
             c.execute(sql, vals)
         except Exception as e:
