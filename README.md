@@ -44,19 +44,21 @@ MySQL 存记忆与日志。图片由她自己一句话打标签，正文小说�
 | v20 | 网关：自有软件与 Web 的**唯一入口**（鉴权/限流/审计） | 📋 已规划 | [v20.md](docs/versions/v20.md) |
 | v21 | DSH / Qoder / WorkBuddy 插件：她成为你所有工具的记忆层 | 📋 已规划 | [v21.md](docs/versions/v21.md) |
 | v22 | 电脑 Web：聊天 + 历史 + 功能面板 | 📋 已规划 | [v22.md](docs/versions/v22.md) |
-| v23 | 手机 App（Flutter）+ 推送通知 | 📋 已规划 | [v23.md](docs/versions/v23.md) |
-| v24 | QQ 空间：发说说 + 只对熟人点赞/评论 | 📋 已规划 | [v24.md](docs/versions/v24.md) |
-| v25 | 运维（一）bash 只读 | 📋 已规划 | [v25.md](docs/versions/v25.md) |
-| v26 | 运维（二）agent | 📋 已规划 | [v26.md](docs/versions/v26.md) |
-| v27 | 运维（三）有限写 | 📋 已规划 | [v27.md](docs/versions/v27.md) |
-| v28 | 运维（四）可写体系 | 📋 已规划 | [v28.md](docs/versions/v28.md) |
-| v29 | 视频（一）B 站 | 📋 已规划 | [v29.md](docs/versions/v29.md) |
-| v30 | 视频（二）抖音 | 📋 已规划 | [v30.md](docs/versions/v30.md) |
-| v31 | 微信接入（OpenClaw） | 📋 已规划 | [v31.md](docs/versions/v31.md) |
-| v32 | 语音通话 | 📋 已规划 | [v32.md](docs/versions/v32.md) |
-| v33 | 视频通话 | 📋 已规划 | [v33.md](docs/versions/v33.md) |
-| v34 | 常驻（一）systemd / 看门狗 | 📋 已规划 | [v34.md](docs/versions/v34.md) |
-| v35 | 常驻（二）LITE / ARM / 一键安装 | 📋 已规划 | [v35.md](docs/versions/v35.md) |
+| v23 | 桌面端（一）Linux：Tauri + Web UI | 📋 已规划 | [v23.md](docs/versions/v23.md) |
+| v24 | 桌面端（二）Windows：Tauri + WebView2 | 📋 已规划 | [v24.md](docs/versions/v24.md) |
+| v25 | 手机 App（Flutter）+ 推送通知 | 📋 已规划 | [v25.md](docs/versions/v25.md) |
+| v26 | QQ 空间：发说说 + 只对熟人点赞/评论 | 📋 已规划 | [v26.md](docs/versions/v26.md) |
+| v27 | 运维（一）bash 只读 | 📋 已规划 | [v27.md](docs/versions/v27.md) |
+| v28 | 运维（二）agent | 📋 已规划 | [v28.md](docs/versions/v28.md) |
+| v29 | 运维（三）有限写 | 📋 已规划 | [v29.md](docs/versions/v29.md) |
+| v30 | 运维（四）可写体系 | 📋 已规划 | [v30.md](docs/versions/v30.md) |
+| v31 | 视频（一）B 站 | 📋 已规划 | [v31.md](docs/versions/v31.md) |
+| v32 | 视频（二）抖音 | 📋 已规划 | [v32.md](docs/versions/v32.md) |
+| v33 | 微信接入（OpenClaw） | 📋 已规划 | [v33.md](docs/versions/v33.md) |
+| v34 | 语音通话 | 📋 已规划 | [v34.md](docs/versions/v34.md) |
+| v35 | 视频通话 | 📋 已规划 | [v35.md](docs/versions/v35.md) |
+| v36 | 常驻（一）systemd / 看门狗 | 📋 已规划 | [v36.md](docs/versions/v36.md) |
+| v37 | 常驻（二）LITE / ARM / 一键安装 | 📋 已规划 | [v37.md](docs/versions/v37.md) |
 
 > **约定**：每个大版本的**最后一个次版本**用来收尾修 bug 和技术债，不堆新功能。
 
