@@ -207,9 +207,15 @@ def _make_handle(task, loop, scheduler):
     def _fire():
         handles.pop(task_id, None)
         try:
-            if scheduler is not None:
-                scheduler.submit("cron_task", f"cron:{task_id}",
-                                 args=(task_id,))
+            sched = scheduler
+            if sched is None:
+                # L15 修复：命令建的、启动对账建的钩子都没传 scheduler，
+                # 以前这里直接跳过 → 到点什么都不做（静默失效）。
+                from ..scheduler.dispatcher import get_scheduler
+
+                sched = get_scheduler()
+            sched.submit("cron_task", f"cron:{task_id}", args=(task_id,))
+            log_api(f"[定时] 到点投递：任务 {task_id}")
         except Exception as e:
             log_err(f"[定时] 投递失败({task_id}): {e}")
         # 重新上膛
@@ -229,7 +235,15 @@ def _make_handle(task, loop, scheduler):
 def schedule_one(task, loop=None, scheduler=None):
     """给一条任务挂钩子（已有就先取消）"""
     cancel(int(task["id"]))
-    loop = loop or asyncio.get_event_loop()
+    if loop is None:
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            try:
+                loop = asyncio.get_event_loop_policy().get_event_loop()
+            except RuntimeError:
+                log_err("[定时] 没有可用事件循环，钩子未挂载")
+                return None
     return _make_handle(task, loop, scheduler)
 
 
