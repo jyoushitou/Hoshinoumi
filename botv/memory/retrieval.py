@@ -90,6 +90,19 @@ def retrieve(query, memories, top_k=5, tokenizer=None):
     kw_rank = sorted(range(len(docs)), key=kw_key, reverse=True)
 
     fused = rrf([bm_rank, kw_rank])
+
+    # v18.2 U3：按记忆分量加权——同等相关时，重的事排前面
+    def _boost(item):
+        idx, score = item
+        try:
+            w = float(memories[idx].get("weight", 0.5) or 0.5)
+        except Exception:
+            w = 0.5
+        return score * (0.6 + 0.4 * max(0.0, min(1.0, w)))
+
+    fused = sorted(((i, _boost((i, s))) for i, s in fused),
+                   key=lambda x: x[1], reverse=True)
+
     out = []
     for idx, score in fused[:top_k]:
         if bm_scores[idx] <= 0 and kw_key(idx)[0] == 0:

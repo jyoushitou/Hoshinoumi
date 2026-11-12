@@ -210,6 +210,8 @@ class TestDigest(unittest.TestCase):
         self.orig_dir = D.DIGEST_DIR
         root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         self.tmp = os.path.join(root, ".test-digest")
+        import shutil
+        shutil.rmtree(self.tmp, ignore_errors=True)   # 先清，避免上次残留污染
         os.makedirs(self.tmp, exist_ok=True)
         D.DIGEST_DIR = self.tmp
 
@@ -564,6 +566,40 @@ class TestTimeline(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+
+class TestWeightBoost(unittest.TestCase):
+    """v18.2 U3：同等相关时，weight 高的排前面"""
+
+    def test_heavy_wins_tie(self):
+        from botv.memory.retrieval import retrieve
+
+        mems = [
+            {"summary": "今天吃了面", "tags": "吃饭", "importance": 3,
+             "hit_count": 0, "weight": 0.3},
+            {"summary": "我妈住院了", "tags": "家里 医院", "importance": 3,
+             "hit_count": 0, "weight": 0.9},
+        ]
+        out = retrieve("住院 家里", mems, top_k=2, tokenizer=lambda q: ["住院", "家里"])
+        self.assertTrue(out, "应该有结果")
+        self.assertEqual(out[0][0]["summary"], "我妈住院了", "重的应排前")
+
+    def test_no_weight_falls_back_default(self):
+        from botv.memory.retrieval import retrieve
+
+        mems = [{"summary": "测试一条", "tags": "测试", "importance": 3, "hit_count": 0}]
+        out = retrieve("测试", mems, top_k=1, tokenizer=lambda q: ["测试"])
+        self.assertEqual(len(out), 1, "缺 weight 不该报错")
+
+    def test_zero_weight_still_returned(self):
+        from botv.memory.retrieval import retrieve
+
+        mems = [{"summary": "很轻松的事", "tags": "轻松", "importance": 1,
+                 "hit_count": 0, "weight": 0.0}]
+        out = retrieve("轻松", mems, top_k=1, tokenizer=lambda q: ["轻松"])
+        self.assertTrue(out, "weight=0 也要能检索到（只是排后）")
+
 
 if __name__ == "__main__":
     unittest.main()

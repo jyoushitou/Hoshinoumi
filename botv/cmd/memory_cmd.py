@@ -15,12 +15,19 @@ async def cmd_event(ctx):
     parts = ctx.parts
     target = parts[1] if len(parts) > 1 else str(MASTER_QQ)
     try:
-        events = load_events_from_db(target, limit=10)
-        if events:
-            lines = [f"📅 {target} 的事件记忆（最近{len(events)}条）："]
-            for i, (summary, tags) in enumerate(events, 1):
+        # v18.2 U4：带分量显示（轻 0.3 / 中 0.6 / 重 0.9）
+        from ..infra import store_v2
+
+        rows = store_v2.read_memories(target, limit=10)
+        if rows:
+            lines = [f"📅 {target} 的事件记忆（最近{len(rows)}条）："]
+            for i, r in enumerate(rows, 1):
+                tags = r.get("tags") or ""
                 tag_str = f" [{tags}]" if tags else ""
-                lines.append(f"  {i}. {summary}{tag_str}")
+                w = float(r.get("weight", 0.5) or 0.5)
+                mark = "🔴" if w >= 0.8 else ("🟡" if w >= 0.5 else "⚪")
+                lines.append(f"  {i}. {mark} {r.get('summary', '')}{tag_str}")
+            lines.append("  图例：🔴重（长期）🟡中（90 天）⚪轻（7 天）")
             return "\n".join(lines)
         return f"📅 {target} 暂无事件记忆"
     except Exception as e:

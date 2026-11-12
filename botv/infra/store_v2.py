@@ -21,7 +21,9 @@ def read_memories(target_id, limit=20):
     try:
         c = get_cursor()
         c.execute(
-            "SELECT summary, tags, importance, created_at FROM memories "
+            "SELECT summary, tags, importance, created_at, "
+            "COALESCE(weight, 0.5) AS weight, COALESCE(tier, 'medium') AS tier "
+            "FROM memories "
             "WHERE target_id=%s AND deleted_at IS NULL "
             "ORDER BY created_at DESC LIMIT %s",
             (tid, int(limit)),
@@ -40,8 +42,8 @@ def _fallback_events(tid, limit):
     """旧表回退（kind 三类）"""
     try:
         c = get_cursor()
-        base = ("SELECT event_summary AS summary, tags, importance, created_at "
-                "FROM events WHERE target_id=%s ")
+        base = ("SELECT event_summary AS summary, tags, importance, created_at, "
+                "0.5 AS weight, 'medium' AS tier FROM events WHERE target_id=%s ")
         kind = "AND kind IN ('event','life','photo') "
         order = "ORDER BY created_at DESC LIMIT %s"
         try:
