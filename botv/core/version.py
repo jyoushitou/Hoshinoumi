@@ -14,7 +14,7 @@ import subprocess
 import sys
 import time
 
-VERSION = "17.17.0"          # 与 README / tag 对齐；发版时改这里
+VERSION = "18.0.0"          # 与 README / tag 对齐；发版时改这里
 _started_at = time.time()
 _cache = {}
 
@@ -90,4 +90,10 @@ def describe():
         lines.append(f"🔀 提交：{commit}" + (f"（{branch}）" if branch and branch != "HEAD" else ""))
     lines.append(f"⏱️ 已运行：{up}")
     lines.append(f"🐍 Python：{platform.python_version()} / {platform.system()} {platform.machine()}")
+    try:
+        from . import clock
+
+        lines.append(f"🕐 时区：{clock.tz_label()}｜{clock.fmt_full()}")
+    except Exception:
+        pass
     return "\n".join(lines)

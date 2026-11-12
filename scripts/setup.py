@@ -240,6 +240,23 @@ def seed_scenes():
         return True
 
 
+
+def check_clock():
+    """机器时间检查（v18.0 U6）：只提示，不阻塞"""
+    import datetime as _dt
+
+    now_local = _dt.datetime.now()
+    now_utc = _dt.datetime.now(_dt.timezone.utc).replace(tzinfo=None)
+    offset = round((now_local - now_utc).total_seconds() / 3600)
+    if offset != 8:
+        print(f"  [!]  机器时区是 UTC{offset:+d}，不是 UTC+8")
+        print("       定时/日志会偏 8 小时，建议：")
+        print("       sudo timedatectl set-timezone Asia/Shanghai")
+        return False
+    print(f"  [OK] 机器时间 UTC{offset:+d}（{now_local.strftime('%Y-%m-%d %H:%M')}）")
+    return True
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--check", action="store_true", help="只检查，不装也不建表")
@@ -255,6 +272,7 @@ def main():
     ok_py = check_python()
     ok_deps = check_deps(install=not dry)
     check_optional()
+    check_clock()
 
     if not (ok_py and ok_deps):
         print()

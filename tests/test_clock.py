@@ -122,5 +122,63 @@ class TestLogAndTxtlogUseCst(unittest.TestCase):
         self.assertEqual(d, os.path.join(root, "logs"))
 
 
+
+
+class TestCustomClock(unittest.TestCase):
+    """v18.0 U8：时区可配、可冻结、可偏移"""
+
+    def setUp(self):
+        from botv.core import clock
+
+        self.C = clock
+        clock.reset()
+
+    def tearDown(self):
+        self.C.reset()
+        import os
+        os.environ.pop("NAO_TZ", None)
+        os.environ.pop("NAO_CLOCK_OFFSET", None)
+
+    def test_default_label(self):
+        self.assertIn("Asia/Shanghai", self.C.tz_label())
+        self.assertIn("UTC+8", self.C.tz_label())
+
+    def test_freeze_and_reset(self):
+        import datetime as dt
+
+        self.C.use_fake(dt.datetime(2026, 11, 12, 7, 30))
+        self.assertEqual(self.C.fmt_full(), "2026-11-12 07:30:00")
+        self.C.reset()
+        self.assertNotEqual(self.C.fmt_full(), "2026-11-12 07:30:00")
+
+    def test_offset_from_env(self):
+        import os
+
+        os.environ["NAO_CLOCK_OFFSET"] = "60"
+        self.assertEqual(self.C.offset_minutes(), 60)
+
+    def test_tz_name_from_env(self):
+        import os
+
+        os.environ["NAO_TZ"] = "Asia/Tokyo"
+        self.assertEqual(self.C.tz_name(), "Asia/Tokyo")
+
+    def test_invalid_tz_falls_back(self):
+        import os
+
+        os.environ["NAO_TZ"] = "Mars/Olympus"
+        self.assertEqual(self.C.tz_label().split()[0], "Mars/Olympus")  # 名字照显
+        self.assertEqual(self.C.now().utcoffset(), self.C.CST.utcoffset(None))  # 实际回 +8
+
+
+class TestVersionShowsTimezone(unittest.TestCase):
+    def test_version_line(self):
+        from botv.core import version
+
+        text = version.describe()
+        self.assertIn("时区", text)
+        self.assertIn("UTC+8", text)
+
+
 if __name__ == "__main__":
     unittest.main()

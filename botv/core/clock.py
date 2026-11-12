@@ -13,14 +13,18 @@ CST = timezone(timedelta(hours=8))   # 东八区（北京时间）
 UTC = timezone.utc
 
 
-def now(tz=CST):
-    """当前时间（默认带东八区时区）"""
-    return datetime.now(tz)
+def now(tz=None):
+    """当前时间（默认按配置的时区；测试可冻结）"""
+    tz = tz or _tzinfo()
+    fake = _FAKE["value"]
+    if fake is not None:
+        return to_cst(fake).astimezone(tz) if fake.tzinfo else fake.replace(tzinfo=tz)
+    return datetime.now(tz) + _offset_delta()
 
 
 def naive():
-    """当前北京时间的墙钟值（naive，用于和解析出的字符串时间做算术）"""
-    return datetime.now(CST).replace(tzinfo=None)
+    """当前时区的墙钟值（naive，用于和解析出的字符串时间做算术）"""
+    return now().replace(tzinfo=None)
 
 
 def ts():
@@ -88,3 +92,82 @@ def ensure_tz():
     except Exception:
         pass
     return changed
+
+# ===================== 自定义时钟（U8） =====================
+# 默认东八区；可通过 config.local.json 或环境变量改：
+#   {"clock": {"timezone": "Asia/Tokyo", "offset_minutes": 0}}
+#   NAO_TZ=Asia/Tokyo
+#   NAO_CLOCK_OFFSET=+60      # 整体快 60 分钟（调试/测试）
+
+_FAKE = {"value": None}          # 测试冻结用
+
+
+def _cfg():
+    try:
+        from . import settings
+
+        return settings.load().get("clock", {}) or {}
+    except Exception:
+        return {}
+
+
+def tz_name():
+    """时区名字：配置 > 环境变量 > 默认 Asia/Shanghai"""
+    import os
+
+    return (os.getenv("NAO_TZ")
+            or _cfg().get("timezone")
+            or "Asia/Shanghai")
+
+
+def offset_minutes():
+    """整体偏移（分钟）：配置 > 环境变量 > 0"""
+    import os
+
+    raw = os.getenv("NAO_CLOCK_OFFSET") or _cfg().get("offset_minutes") or 0
+    try:
+        return int(raw)
+    except Exception:
+        return 0
+
+
+def _tzinfo():
+    """把时区名换成 tzinfo；认不出就回东八区"""
+    name = tz_name()
+    if name in ("Asia/Shanghai", "CST", "UTC+8", "Etc/GMT-8"):
+        return CST
+    try:
+        from zoneinfo import ZoneInfo
+
+        return ZoneInfo(name)
+    except Exception:
+        return CST
+
+
+def _offset_delta():
+    from datetime import timedelta as _td
+
+    return _td(minutes=offset_minutes())
+
+
+def tz_label():
+    """给人看的一行：Asia/Shanghai (UTC+8)"""
+    try:
+        delta = _tzinfo().utcoffset(datetime.now()) or _offset_delta()
+        off = int(delta.total_seconds() // 3600)
+    except Exception:
+        off = 8
+    sign = f"+{off}" if off >= 0 else str(off)
+    extra = f"，偏移 {offset_minutes():+d} 分钟" if offset_minutes() else ""
+    return f"{tz_name()} (UTC{sign}{extra})"
+
+
+def use_fake(dt):
+    """测试用：把「现在」冻结到指定时间（生产不要调）"""
+    _FAKE["value"] = dt
+    return dt
+
+
+def reset():
+    """恢复真实时间"""
+    _FAKE["value"] = None

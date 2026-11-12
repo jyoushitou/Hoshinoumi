@@ -27,6 +27,49 @@ def check(label, fn, fatal=True):
         return False
 
 
+
+def step_clock():
+    """机器时间与时区检查（v18.0 U6）
+
+    这套代码大量依赖「本地时间 = 东八区」：日志、cron、深夜判断。
+    机器若是 UTC，定时会整体偏 8 小时（2026-11-12 实测踩过）。
+    """
+    import datetime as _dt
+    import os as _os
+
+    problems = []
+    now_local = _dt.datetime.now()
+    now_utc = _dt.datetime.now(_dt.timezone.utc).replace(tzinfo=None)
+    offset = round((now_local - now_utc).total_seconds() / 3600)
+
+    if offset != 8:
+        problems.append(f"系统时区 UTC{offset:+d}（应为 UTC+8）")
+    if not _os.environ.get("TZ"):
+        problems.append("未设置 TZ=Asia/Shanghai")
+
+    # 时钟漂移：拿 HTTP Date 头比（取不到就跳过）
+    drift = None
+    try:
+        import email.utils
+        import urllib.request
+
+        resp = urllib.request.urlopen("https://api.deepseek.com", timeout=5)
+        date_hdr = resp.headers.get("Date")
+        if date_hdr:
+            server_ts = email.utils.parsedate_to_datetime(date_hdr)
+            drift = abs((now_local - server_ts.astimezone().replace(tzinfo=None)).total_seconds())
+            if drift > 120:
+                problems.append(f"时钟漂移 {drift:.0f} 秒（>120 秒需校时）")
+    except Exception:
+        pass
+
+    detail = (f"UTC{offset:+d}｜{now_local.strftime('%Y-%m-%d %H:%M')}"
+              + (f"｜漂移 {drift:.0f}s" if drift is not None else "｜漂移未知"))
+    if problems:
+        raise RuntimeError("；".join(problems) + f"（{detail}）")
+    return detail
+
+
 def step_network():
     """能否连上模型 API（3 秒超时，失败只警告不阻塞）"""
     import socket
@@ -253,6 +296,7 @@ def main():
             print(f"  [!] 自动建表失败: {_e}")
 
     ok_python = check("Python 版本", step_python)
+    check("机器时间", step_clock)
     ok_deps = check("必需依赖", step_deps)
     check("代码静态检查", step_names)
     check("环境变量", step_env)
