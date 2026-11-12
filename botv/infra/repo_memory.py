@@ -274,45 +274,61 @@ def save_friction(tid, payload):
     dual_write("friction", tid, payload)
 
 def load_reading(tid):
-    """读小说进度（v16）"""
-    c = get_cursor()
-    c.execute(
-        "SELECT event_summary FROM events WHERE target_id=%s AND kind='reading' ORDER BY id DESC LIMIT 1",
-        (str(tid),),
-    )
-    row = c.fetchone()
-    legacy = (row["event_summary"] or "") if row else ""
+    """读小说进度（v18.16：优先 reading_progress，一台设备多本书）"""
+    import json
 
     try:
+        c = get_cursor()
         c.execute(
-            "SELECT title, intro, last_no, last_chapter FROM reading_progress "
-            "WHERE target_id=%s ORDER BY updated_at DESC LIMIT 1", (str(tid),))
-        rp = c.fetchone()
+            "SELECT book_url, title, intro, last_no, last_chapter FROM reading_progress "
+            "WHERE target_id=%s ORDER BY updated_at DESC", (str(tid),))
+        rows = list(c.fetchall())
+        if rows:
+            books = []
+            for r in rows:
+                books.append({
+                    "title": r["title"] or "",
+                    "url": r["book_url"] or "",
+                    "last_no": int(r["last_no"] or 0),
+                    "last_title": r["last_chapter"] or "",
+                    "intro": r["intro"] or "",
+                })
+            return json.dumps({"books": books}, ensure_ascii=False)
     except Exception:
-        rp = None
-    if not rp:
-        return legacy
-    fresh = {k: rp[k] for k in ("title", "intro", "last_no", "last_chapter")
-             if rp.get(k) is not None}
-    if not legacy:
-        import json
-        return json.dumps(fresh, ensure_ascii=False)
-    try:
-        import json
-        data = json.loads(legacy)
-        if not isinstance(data, dict):
-            data = {}
-        data.update(fresh)
-        return json.dumps(data, ensure_ascii=False)
-    except Exception:
-        return legacy
+        pass
+
+    # 回退旧 events（迁移前数据）
+    c = get_cursor()
+    c.execute(
+        "SELECT event_summary FROM events WHERE target_id=%s AND kind='reading' "
+        "ORDER BY id DESC LIMIT 1", (str(tid),))
+    row = c.fetchone()
+    return (row["event_summary"] or "") if row else ""
 
 
 def save_reading(tid, payload):
-    """覆盖写小说进度"""
+    """覆盖写小说进度；v18.16 按书拆到 reading_progress"""
+    import json
+
     # v17.10：停写旧表；要回退双写设 NAO_LEGACY_WRITE=1
     if not legacy_write_enabled():
-        dual_write("reading", str(tid), payload)
+        try:
+            data = json.loads(payload) if payload else {}
+            books = data.get("books") if isinstance(data, dict) else None
+            if books:
+                for b in books:
+                    row = {
+                        "book_url": b.get("url") or b.get("book_url") or "",
+                        "title": b.get("title") or "",
+                        "intro": b.get("intro") or "",
+                        "last_no": int(b.get("last_no") or 0),
+                        "last_chapter": b.get("last_title") or b.get("last_chapter") or "",
+                    }
+                    dual_write("reading", str(tid), json.dumps(row, ensure_ascii=False))
+            else:
+                dual_write("reading", str(tid), payload)
+        except Exception:
+            dual_write("reading", str(tid), payload)
         return
 
     c = get_cursor()
@@ -555,7 +571,7 @@ _JSON_TABLES = {
     "rel": ("relations", ("affinity", "since", "tier")),
     "friction": ("friction_states", ("expect_ts", "expect_text", "disappoint",
                                      "cold_ts", "last_grudge")),
-    "reading": ("reading_progress", ("title", "intro", "last_no", "last_chapter")),
+    "reading": ("reading_progress", ("book_url", "title", "intro", "last_no", "last_chapter")),
 }
 
 
@@ -563,7 +579,7 @@ _JSON_TABLES = {
 # 想回退到双写：NAO_DUAL_WRITE=1
 _LEGACY_WRITE = _os.getenv("NAO_LEGACY_WRITE", "0") in ("1", "true", "True")
 
-# v18.15：双写失败可见（不再只打一行「忽略」）
+# v18.16：双写失败可见（不再只打一行「忽略」）
 _dual_fail = 0
 _dual_last_log = 0.0
 

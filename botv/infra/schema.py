@@ -230,7 +230,7 @@ PURE = {
     "reading_progress": """
         CREATE TABLE IF NOT EXISTS reading_progress (
             target_id VARCHAR(64) NOT NULL,
-            book_url VARCHAR(255) NOT NULL,
+            book_url VARCHAR(255) NOT NULL DEFAULT '',
             title VARCHAR(120) NULL,
             intro VARCHAR(300) NULL,
             last_no INT NOT NULL DEFAULT 0,
