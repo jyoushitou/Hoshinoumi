@@ -49,7 +49,7 @@ v6：P1 会说话 → P2 说实话 → P2.5 长感官 → P3 有生活 → P4 �
 | E30 | 图片链路 | F4 |
 | **v16** | [versions/v16.md](versions/v16.md) | 空闲时自己读小说（番茄/起点，记进度、聊剧情） | 规划中 |
 | **v17** | [versions/v17.md](versions/v17.md) | 执行模型重构（16 个次版本，v17.17.0 已发布） | ✅ 已发布 |
-| **v18** | [versions/v18.md](versions/v18.md) | 情感的深刻度：记忆分量 → 事实卡 → 情绪跨天 …（16 个次版本） | 🚧 进行中（v18.3） |
+| **v18** | [versions/v18.md](versions/v18.md) | 情感的深刻度：记忆分量 → 事实卡 → 情绪跨天 …（16 个次版本） | 🚧 进行中（v18.5 已完成 → v18.6 待开） |
 | **v19** | [versions/v19.md](versions/v19.md) | 后端 API：把能力做成服务（只监听本机） | 规划中 |
 | **v20** | [versions/v20.md](versions/v20.md) | 网关：自有软件与 Web 的**唯一入口**（鉴权/限流/审计） | 规划中 |
 | **v21** | [versions/v21.md](versions/v21.md) | DSH / Qoder / WorkBuddy 插件：她成为你所有工具的记忆层 | 规划中 |

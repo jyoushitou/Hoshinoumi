@@ -289,6 +289,7 @@ PURE = {
             k VARCHAR(64) PRIMARY KEY,
             v VARCHAR(500) NOT NULL,
             updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                       ON UPDATE CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """,
     "facts": """
@@ -380,8 +381,14 @@ def ensure_tables(cursor=None, names=None, log=None):
                 if log:
                     log(f"[失败] {name}: {str(e)[:120]}")
         # v18.5：视图也要建（方言差异在这里吸收）
+        # SQLite 没有 CREATE OR REPLACE：先 DROP 再建，老库里的旧视图定义才会升级
+        from .conn import _SQLiteCursor
+
+        sqlite_backend = isinstance(cursor, _SQLiteCursor)
         for vname, vddl in VIEWS.items():
             try:
+                if sqlite_backend:
+                    cursor.execute(f"DROP VIEW IF EXISTS {vname}")
                 cursor.execute(_adapt_view(vddl))
             except Exception as e:
                 errors.append((vname, str(e)[:120]))
@@ -509,24 +516,39 @@ def adapt_ddl(ddl, backend=None):
 # ===================== 视图（v18.5） =====================
 # 红线：视图不建索引；索引一律建在基表上。
 # 视图只做「派生计算」，让上层不用关心方言差异。
+#
+# v18.5 的教训：**别在视图里用库的 NOW() 算运行时长**。
+# MySQL 服务器时区常是 UTC，而 first_start 是应用按东八区写的字符串，
+# 两者一减就多 8 小时（L11 同源）。所以另存一份 first_start_ts（epoch），
+# 用「当前 epoch − 启动 epoch」算，跨时区、跨方言都对得上。
 VIEWS = {
-    # 已运行秒数：库里算，避免应用侧反复读
+    # 元数据一览：首次启动 / 版本 / 已运行秒数 / 第几天
     "v_bot_meta": """
         CREATE OR REPLACE VIEW v_bot_meta AS
         SELECT
-            (SELECT v FROM bot_meta WHERE k='first_start') AS first_start,
-            (SELECT v FROM bot_meta WHERE k='version')     AS version,
-            TIMESTAMPDIFF(SECOND,
-                (SELECT v FROM bot_meta WHERE k='first_start'),
-                NOW()) AS uptime_seconds
+            m.first_start,
+            m.first_start_ts,
+            m.version,
+            CASE WHEN m.first_start_ts IS NULL THEN NULL
+                 ELSE UNIX_TIMESTAMP() - m.first_start_ts END AS uptime_seconds,
+            CASE WHEN m.first_start_ts IS NULL THEN NULL
+                 ELSE CAST((UNIX_TIMESTAMP() - m.first_start_ts) / 86400 AS SIGNED)
+            END AS days_since
+        FROM (
+            SELECT
+                (SELECT v FROM bot_meta WHERE k='first_start') AS first_start,
+                (SELECT CAST(v AS UNSIGNED) FROM bot_meta WHERE k='first_start_ts')
+                    AS first_start_ts,
+                (SELECT v FROM bot_meta WHERE k='version') AS version
+        ) m
     """,
 }
 
 def _adapt_view(ddl):
     """视图方言适配
 
-    MySQL:  CREATE OR REPLACE VIEW ... TIMESTAMPDIFF(SECOND, a, b)
-    SQLite: 没有 CREATE OR REPLACE / TIMESTAMPDIFF
+    MySQL:  CREATE OR REPLACE VIEW ... UNIX_TIMESTAMP() ... CAST(... AS SIGNED)
+    SQLite: 没有 CREATE OR REPLACE / UNIX_TIMESTAMP / SIGNED
     """
     try:
         from .conn import _resolve_backend
@@ -538,11 +560,14 @@ def _adapt_view(ddl):
         return ddl
 
     out = ddl.replace("CREATE OR REPLACE VIEW", "CREATE VIEW IF NOT EXISTS")
-    import re
-
+    # epoch 秒：julianday('now') 是 UTC 儒略日，减 1970 的儒略日 = 秒。
+    # 注意别写成 strftime('%s','now')：_SQLiteCursor 会把 "%s" 换成 "?"（占位符）。
+    out = out.replace(
+        "UNIX_TIMESTAMP()",
+        "CAST((julianday('now') - 2440587.5) * 86400 AS INTEGER)")
+    out = out.replace("AS UNSIGNED", "AS INTEGER")
+    out = out.replace("AS SIGNED", "AS INTEGER")
+    # 兼容以后视图里可能出现的 NOW()
     out = out.replace("NOW()", "datetime('now','localtime')")
-    out = re.sub(
-        r"TIMESTAMPDIFF\(SECOND,\s*(.+?),\s*(.+?)\)\s+AS",
-        r"CAST((julianday(\2) - julianday(\1)) * 86400 AS INTEGER) AS",
-        out, flags=re.S)
     return out
+

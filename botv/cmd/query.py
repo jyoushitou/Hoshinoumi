@@ -55,15 +55,17 @@ async def cmd_db(ctx):
 @command("uptime")
 async def cmd_uptime(ctx):
     """!uptime - 运行时长"""
-    # v18.5：启动时间来自 bot_meta（logs 有 180 天 TTL，清空就归零）
+    # v18.5：启动时间来自 bot_meta / v_bot_meta（logs 有 180 天 TTL，清空不再归零）
     try:
         from ..infra import repo_meta
 
-        got = repo_meta.uptime_text()
-        if got:
-            up, start = got
-            return (f"⏱️ 机器人运行时长：{up}\n"
-                    f"  首次启动: {start.strftime('%Y-%m-%d %H:%M:%S')}")
+        info = repo_meta.uptime()
+        if info:
+            origin = ("v_bot_meta" if info["source"] == "view" else "bot_meta")
+            return (f"⏱️ 机器人运行时长：{info['uptime_text']}\n"
+                    f"  首次启动: {info['first_start']}\n"
+                    f"  当前版本: {info['version'] or '未知'}\n"
+                    f"  来源: {origin}（清空日志不会归零）")
     except Exception:
         pass
 
@@ -87,6 +89,17 @@ async def cmd_uptime(ctx):
         return "⏱️ 暂无运行时长数据"
     except Exception as e:
         return f"❌ 查询失败: {e}"
+
+
+@command("meta")
+async def cmd_meta(ctx):
+    """!meta - 元数据与运行时长视图"""
+    try:
+        from ..infra import repo_meta
+
+        return repo_meta.describe()
+    except Exception as e:
+        return f"❌ 读取元数据失败: {e}"
 
 
 @command("usage")
