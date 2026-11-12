@@ -167,6 +167,26 @@ def migrate_events(c):
     return 0
 
 
+def upgrade(c):
+    """真正执行 v18.17 迁移（幂等）；不会关闭游标，给 migrate.py 复用"""
+    have = _existing(c)
+    if not have:
+        print("[X] 没有 memories 表")
+        return 1
+    for name, ddl in COLUMNS:
+        if name not in have:
+            c.execute(f"ALTER TABLE memories ADD COLUMN {name} {ddl}")
+            print(f"[OK] memories 加列 {name}")
+    if not _is_sqlite(c):
+        try:
+            c.execute("ALTER TABLE memories MODIFY kind VARCHAR(16) NOT NULL DEFAULT 'event'")
+            print("[OK] memories.kind 放宽为 VARCHAR")
+        except Exception:
+            pass
+    c.connection.commit()
+    return migrate_events(c)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--apply", action="store_true", help="真的改表（默认只看）")
@@ -182,20 +202,7 @@ def main():
         if not args.apply:
             print("\n这是预览。真改：加 --apply")
             return 0
-
-        have = _existing(c)
-        for name, ddl in COLUMNS:
-            if name not in have:
-                c.execute(f"ALTER TABLE memories ADD COLUMN {name} {ddl}")
-                print(f"[OK] memories 加列 {name}")
-        if not _is_sqlite(c):
-            try:
-                c.execute("ALTER TABLE memories MODIFY kind VARCHAR(16) NOT NULL DEFAULT 'event'")
-                print("[OK] memories.kind 放宽为 VARCHAR")
-            except Exception:
-                pass
-        c.connection.commit()
-        return migrate_events(c)
+        return upgrade(c)
     finally:
         try:
             c.close()

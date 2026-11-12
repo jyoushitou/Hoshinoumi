@@ -149,10 +149,16 @@ run.py → app.bootstrap → app.loop
 > **新功能一律先进 `docs/versions/` 的开发计划，再按版本迭代。**
 > 已发布版本冻结，bug 记进下一个版本的「遗留问题」。
 
-> **首次安装**：`python3 scripts/setup.py` → `python3 run.py`。
-> **从 v18.4–v18.16 升到 v18.20**：多了 v18.17 的 `events → memories` 迁移，
-> 必须先 `python3 scripts/migrate_v18.py --apply`，再 `setup.py`，最后启动。
-> 完整步骤（含备份/回滚）：[升级到 v18.20.0](docs/升级到v18.20.md)。
+> **启动/升级固定三步**：
+>
+> ```bash
+> python3 scripts/migrate.py --apply   # 1. 迁移（首次/升级；幂等，没东西可迁也会跳过）
+> python3 scripts/preflight.py         # 2. 严格环境检测（任何 FAIL 都不启动）
+> python3 run.py                       # 3. 启动
+> ```
+>
+> 首次机器先 `python3 -m pip install -r requirements.txt`。完整升级/回滚：
+> [升级到 v18.20.0](docs/升级到v18.20.md)。
 
 ## 快速开始
 
@@ -219,22 +225,18 @@ sudo python3 -m playwright install-deps chromium
 ### 启动
 
 ```bash
-# 1. 数据库迁移（首次升级到 v7/v8 时必须先跑）
-python3 scripts/migrate_v7.py --apply    # events 扩成记忆主表
-python3 scripts/migrate_v8.py --apply    # global_keywords 按对象隔离
+# 1. 数据库迁移（首次/升级都跑；幂等）
+python3 scripts/migrate.py --apply
 
-# v18.4–v18.16 升到 v18.20：先跑 v18.17 迁移（events → memories）
-python3 scripts/migrate_v18.py --apply
-
-# 2. 部署前自检（13 项：依赖 / 静态检查 / 环境变量 / 能力 / 网络 / 数据库 ...）
+# 2. 严格环境检测（依赖 / 配置 / 时区 / 数据库 / 表结构 / 密钥 / 人设）
 python3 scripts/preflight.py
 
 # 3. 启动
 python3 run.py
 ```
 
-预检逐项打勾，退出码 0 才算通过。**迁移必须先于启动**——新代码会查 `kind`、`target_id`，
-列不存在直接报 `Unknown column`。
+预检逐项打勾，退出码 0 才算通过；任何 **FAIL** 都别启动。
+**迁移必须先于启动**——新代码会查 `kind`、`target_id`，列不存在直接报 `Unknown column`。
 
 ### 停止
 
@@ -540,18 +542,19 @@ AI 摘要（≤100 字）→ 记进度
 ### 测试
 
 ```bash
-python3 scripts/run_tests.py             # 872 条（tests 835 + checks 37）
+python3 scripts/run_tests.py             # 931 条（tests 894 + checks 37）
 python3 scripts/check_names.py            # 静态检查：未定义名字 / 先用后赋值
 ```
 
 ### 自检
 
 ```bash
-python3 scripts/setup.py              # 装依赖 + 建表 + 迁移 + 场景（幂等）
-python3 scripts/preflight.py         # 13 项自检
+python3 scripts/migrate.py --apply   # 迁移：建表 + 补列 + v18.17 events→memories + 场景
+python3 scripts/preflight.py         # 严格自检，任何 FAIL 都不启动
 ```
 
-13 项：依赖 / 静态检查 / 环境变量 / 能力 / 网络 / 数据库表结构 / 目录 / 单实例 ...
+检查项：Python / 依赖 / 静态检查 / 环境变量 / 配置 / 能力 / 网络 / 数据库连接 /
+必需表 / 全部表 / v18 表结构（memories/cron_tasks/reading_progress）/ API 密钥 / 人设。
 
 ### 发布正式版
 
@@ -595,10 +598,8 @@ git fetch ./nao-v18.20.0.bundle \
   refs/tags/v18.20.0:refs/tags/v18.20.0
 git checkout v18.20.0
 
-python3 scripts/migrate_v18.py          # 预览：events 有多少行要迁
-python3 scripts/migrate_v18.py --apply  # 真迁：events → memories，旧表改名
-python3 scripts/setup.py                # 补表 / 补定时场景
-python3 scripts/preflight.py
+python3 scripts/migrate.py --apply      # 建表 + 补列 + events→memories + 场景
+python3 scripts/preflight.py            # 严格自检（FAIL 不启动）
 python3 run.py
 ```
 

@@ -57,12 +57,10 @@ git checkout v18.20.0
 # 3. 依赖
 python3 -m pip install -r requirements.txt
 
-# 4. 迁移（顺序不能反）
-python3 scripts/migrate_v18.py          # 预览
-python3 scripts/migrate_v18.py --apply  # events → memories
-python3 scripts/setup.py
+# 4. 迁移（一条命令，幂等）
+python3 scripts/migrate.py --apply
 
-# 5. 自检并启动
+# 5. 严格自检并启动
 python3 scripts/preflight.py
 python3 run.py
 ```

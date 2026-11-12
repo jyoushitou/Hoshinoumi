@@ -35,7 +35,6 @@ def step_clock():
     机器若是 UTC，定时会整体偏 8 小时（2026-11-12 实测踩过）。
     """
     import datetime as _dt
-    import os as _os
 
     problems = []
     now_local = _dt.datetime.now()
@@ -44,8 +43,8 @@ def step_clock():
 
     if offset != 8:
         problems.append(f"系统时区 UTC{offset:+d}（应为 UTC+8）")
-    if not _os.environ.get("TZ"):
-        problems.append("未设置 TZ=Asia/Shanghai")
+    # run.py 启动时会 lock 到 Asia/Shanghai；preflight 只要求实际偏移正确，
+    # 不强制当前 shell 已 export TZ（systemd 环境通常没有 TZ 变量）。
 
     # 时钟漂移：拿 HTTP Date 头比（取不到就跳过）
     drift = None
@@ -222,39 +221,67 @@ def step_tables_extra():
     missing = schema.missing_tables(c)
     if missing:
         raise RuntimeError(
-            f"还有 {len(missing)} 张表未建（不阻塞）：{', '.join(missing[:5])}…")
+            f"还有 {len(missing)} 张表未建：{', '.join(missing[:8])}…"
+            "（python3 scripts/migrate.py --apply）")
     return f"{len(schema.TABLES)} 张表齐全"
 
 
+def step_config():
+    """严格检查配置：缺 DB/QQ 直接阻塞"""
+    from botv.core import settings
+
+    missing = settings.missing_keys()
+    if missing:
+        raise RuntimeError(
+            "配置缺项: " + ", ".join(missing) +
+            "（cp config.example.json config.local.json 后填，或设 NAO_* 环境变量）")
+    return f"来源 {settings.describe_source()}，master_qq 已配"
+
+
 def step_memory_schema():
-    """v7：events 是否已扩成记忆主表"""
+    """v18.17：检查 memories / cron_tasks / reading_progress 的最终结构"""
     from botv.infra.conn import get_cursor
-    need_cols = ["kind", "dedupe_key", "importance", "due_date",
-                 "last_seen", "hit_count", "embedding"]
-    need_idx = ["idx_kind", "idx_dedupe"]
 
     c = get_cursor()
-    c.execute("SHOW COLUMNS FROM events")
-    cols = {r["Field"] for r in c.fetchall()}
-    missing = [x for x in need_cols if x not in cols]
-    if missing:
-        raise RuntimeError("events 缺列: " + ", ".join(missing) + "（跑 scripts/migrate_v7.py --apply）")
+    checks = [
+        ("memories", ("kind", "summary", "tags", "importance", "weight", "tier",
+                      "due_date", "hit_count", "dedupe_key", "last_seen")),
+        ("cron_tasks", ("rule", "timing", "next_ts")),
+        ("reading_progress", ("book_url",)),
+    ]
+    def _columns(table):
+        try:
+            c.execute(f"SHOW COLUMNS FROM {table}")
+            return {r["Field"] for r in c.fetchall()}
+        except Exception:
+            c.execute(f"PRAGMA table_info({table})")
+            return {r["name"] if isinstance(r, dict) else r[1] for r in c.fetchall()}
 
-    c.execute("SHOW INDEX FROM events")
-    idx = {r["Key_name"] for r in c.fetchall()}
-    missing_idx = [x for x in need_idx if x not in idx]
-    if missing_idx:
-        raise RuntimeError("events 缺索引: " + ", ".join(missing_idx))
+    for table, need in checks:
+        try:
+            cols = _columns(table)
+        except Exception as e:
+            raise RuntimeError(f"{table} 读不到: {e}（python3 scripts/migrate.py --apply）")
+        if not cols:
+            raise RuntimeError(f"{table} 不存在（python3 scripts/migrate.py --apply）")
+        missing = [x for x in need if x not in cols]
+        if missing:
+            raise RuntimeError(
+                f"{table} 缺列: {', '.join(missing)}"
+                "（python3 scripts/migrate.py --apply）")
 
-    c.execute("SELECT COUNT(*) AS n FROM events WHERE dedupe_key IS NULL")
-    nulls = c.fetchone()["n"] or 0
-    if nulls:
-        raise RuntimeError(f"{nulls} 行 dedupe_key 为空（重跑迁移脚本）")
+    try:
+        c.execute("SHOW TABLES LIKE 'cron_overrides'")
+        has_overrides = bool(c.fetchone())
+    except Exception:
+        c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='cron_overrides'")
+        has_overrides = bool(c.fetchone())
+    if not has_overrides:
+        raise RuntimeError("缺 cron_overrides 表（python3 scripts/migrate.py --apply）")
 
-    c.execute("SELECT kind, COUNT(*) AS n FROM events GROUP BY kind")
-    rows = c.fetchall()
-    dist = ", ".join(f"{r['kind']}={r['n']}" for r in rows) if rows else "空表"
-    return f"7 列 + 2 索引齐全 · {dist}"
+    c.execute("SELECT COUNT(*) AS n FROM memories")
+    n = c.fetchone()["n"] or 0
+    return f"memories {n} 行 · v18 列齐全 · cron_overrides 存在"
 
 
 def step_keys():
@@ -300,6 +327,7 @@ def main():
     ok_deps = check("必需依赖", step_deps)
     check("代码静态检查", step_names)
     check("环境变量", step_env)
+    check("配置", step_config)
     check("能力自检", step_capabilities)
     check("网络连通", step_network, fatal=False)
     check("可选依赖", step_optional, fatal=False)
@@ -307,8 +335,8 @@ def main():
     if ok_deps and ok_import:
         check("数据库连接", step_db)
         check("表结构", step_tables)
-        check("记忆表结构", step_memory_schema)
-        check("新表（v17.5）", step_tables_extra, fatal=False)
+        check("v18 表结构", step_memory_schema)
+        check("全部表", step_tables_extra)
         check("API 密钥", step_keys)
         check("人设提示词", step_prompt)
     else:
@@ -328,7 +356,7 @@ def main():
 
 
 def _hint():
-    print("\n[提示] 这是可选的深度自检；日常部署只需 setup.py + run.py")
+    print("\n[提示] 固定三步：migrate.py --apply → preflight.py → run.py")
 
 
 if __name__ == "__main__":
