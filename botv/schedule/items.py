@@ -23,10 +23,15 @@ def cancel(kind, item_id):
             h.cancel()
         except Exception:
             pass
+        return True
+    return False
 
 
-def schedule(kind, item_id, due_ts, text):
-    """挂一个到点钩子；due_ts 是 epoch 秒"""
+def schedule(kind, item_id, due_ts, text, only_missing=False):
+    """挂一个到点钩子；due_ts 是 epoch 秒。only_missing=True 时不重排已有钩子"""
+    key = _key(kind, item_id)
+    if only_missing and key in _handles:
+        return _handles[key]
     cancel(kind, item_id)
     try:
         loop = asyncio.get_running_loop()
@@ -52,8 +57,8 @@ def _fire(kind, item_id, text):
         log_err(f"[{kind}] 投递失败({item_id}): {e}")
 
 
-def schedule_all():
-    """启动/04:00 对账：从 events 表重建所有未到点的日程/待办"""
+def schedule_all(only_missing=False):
+    """启动/04:00 对账：从 events 表重建未到点的日程/待办"""
     n = 0
     try:
         from ..life.agenda import list_all as agenda_all
@@ -63,7 +68,7 @@ def schedule_all():
             due = float(it.get("due") or 0)
             if due <= time.time():
                 continue
-            if schedule("agenda", it.get("id"), due, it.get("t", "")):
+            if schedule("agenda", it.get("id"), due, it.get("t", ""), only_missing=only_missing):
                 n += 1
     except Exception as e:
         log_err(f"[agenda] 重建失败: {e}")
@@ -79,7 +84,7 @@ def schedule_all():
             due = float(it.get("due") or 0)
             if due <= time.time():
                 continue
-            if schedule("pending", row["id"], due, describe_pending(it)):
+            if schedule("pending", row["id"], due, describe_pending(it), only_missing=only_missing):
                 n += 1
     except Exception as e:
         log_err(f"[pending] 重建失败: {e}")
@@ -87,8 +92,8 @@ def schedule_all():
 
 
 def watchdog():
-    """v18.7：丢失的日程/待办钩子重新挂载（不补发已过期的）"""
-    return schedule_all()
+    """v19.5：只补缺失钩子，不重排已有日程/待办"""
+    return schedule_all(only_missing=True)
 
 
 def stats():

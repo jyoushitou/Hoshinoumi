@@ -15,6 +15,7 @@ from ..core import clock
 _WEEK = {"mon": 1, "tue": 2, "wed": 3, "thu": 4, "fri": 5, "sat": 6, "sun": 7}
 
 handles = {}          # task_id -> TimerHandle
+_prepare_handles = {} # v19.5：task_id -> 提前 30 秒预生成 TimerHandle
 _clock = {"now": None}  # 测试注入
 
 
@@ -462,6 +463,9 @@ def _make_handle(task, loop, scheduler):
         p_delay = (nxt - timedelta(seconds=30) - _now()).total_seconds()
         if p_delay > 0:
             def _fire_prepare():
+                _prepare_handles.pop(task_id, None)
+                if task_id not in handles:
+                    return
                 try:
                     sched = scheduler
                     if sched is None:
@@ -470,7 +474,7 @@ def _make_handle(task, loop, scheduler):
                     sched.submit("cron_prepare", f"cronprep:{task_id}", args=(task_id,))
                 except Exception as e:
                     log_err(f"[定时] 预生成投递失败({task_id}): {e}")
-            loop.call_at(loop.time() + p_delay, _fire_prepare)
+            _prepare_handles[task_id] = loop.call_at(loop.time() + p_delay, _fire_prepare)
 
     handle = loop.call_at(
         loop.time() + max(0.0, (nxt - _now()).total_seconds()), _fire)
@@ -494,14 +498,23 @@ def schedule_one(task, loop=None, scheduler=None):
 
 
 def cancel(task_id):
-    h = handles.pop(int(task_id), None)
+    task_id = int(task_id)
+    cancelled = False
+    ph = _prepare_handles.pop(task_id, None)
+    if ph is not None:
+        cancelled = True
+        try:
+            ph.cancel()
+        except Exception:
+            pass
+    h = handles.pop(task_id, None)
     if h is not None:
+        cancelled = True
         try:
             h.cancel()
         except Exception:
             pass
-        return True
-    return False
+    return cancelled
 
 
 def cancel_all():
