@@ -15,7 +15,18 @@ find_dependency(Boost CONFIG COMPONENTS system)  # 递归查找 Boost：下游�
 # 若不在这里找回，下游 include(CommonNetTargets.cmake) 会因这些目标不存在而在
 # generate 阶段报错。开关值由 CMakeLists.txt 在配置期替换进来。
 if(@COMMONNET_HTTP_SERVER_ENABLED@)  # @VAR@ 由 configure_package_config_file 替换为 TRUE / FALSE
-    find_dependency(Boost CONFIG COMPONENTS beast json)  # HTTP 报文解析与 JSON 解析（纯头文件导入目标）
+    find_package(Boost CONFIG QUIET COMPONENTS beast json)  # HTTP 报文解析与 JSON 解析（纯头文件导入目标）
+    # 发行版 BoostConfig 可能不导出这两个 header-only 组件，补 INTERFACE 目标
+    if(NOT TARGET Boost::beast)
+        add_library(Boost::beast INTERFACE IMPORTED)
+        set_target_properties(Boost::beast PROPERTIES
+            INTERFACE_INCLUDE_DIRECTORIES "${Boost_INCLUDE_DIRS}")
+    endif()
+    if(NOT TARGET Boost::json)
+        add_library(Boost::json INTERFACE IMPORTED)
+        set_target_properties(Boost::json PROPERTIES
+            INTERFACE_INCLUDE_DIRECTORIES "${Boost_INCLUDE_DIRS}")
+    endif()
 endif()  # HTTP 服务端库依赖结束
 
 # 出站 HTTP 客户端（Common::Net::HttpClient）链接 OpenSSL：https 的 TLS 由它提供。

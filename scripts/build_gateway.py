@@ -8,6 +8,7 @@
 import argparse
 import gzip
 import os
+import shutil
 import subprocess
 import sys
 
@@ -26,11 +27,20 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--version", default="20.0.0")
     ap.add_argument("--no-save", action="store_true")
+    ap.add_argument("--offline", action="store_true",
+                    help="用系统 Boost/OpenSSL 构建，不依赖 vcpkg/GitHub")
+    ap.add_argument("--base-image", default="",
+                    help="覆盖基础镜像，例如 docker.m.daocloud.io/library/ubuntu:24.04")
     args = ap.parse_args()
     ver = args.version.strip().lstrip("v")
-    tag = f"hoshinoumi-gateway:{ver}"
+    tag = f"hoshinoumi-gateway:{ver}" + ("-offline" if args.offline else "")
+    dockerfile = "gateway/Dockerfile.offline" if args.offline else "gateway/Dockerfile"
 
-    rc = run(["docker", "build", "-f", "gateway/Dockerfile", "-t", tag, "."]).returncode
+    cmd = ["docker", "build", "-f", dockerfile, "-t", tag]
+    if args.base_image:
+        cmd += ["--build-arg", f"BASE_IMAGE={args.base_image}"]
+    cmd.append(".")
+    rc = run(cmd).returncode
     if rc != 0:
         print("[X] docker build 失败")
         return rc
@@ -39,19 +49,19 @@ def main():
 
     os.makedirs(DIST, exist_ok=True)
     out = os.path.join(DIST, docker_name(ver))
+    tmp = os.path.join(DIST, ".docker-save.tar")
     print(f"\n>> 导出 {os.path.relpath(out, ROOT)}")
-    with gzip.open(out, "wb") as f:
-        p = subprocess.Popen(["docker", "save", tag], stdout=subprocess.PIPE)
-        assert p.stdout is not None
-        while True:
-            chunk = p.stdout.read(1024 * 1024)
-            if not chunk:
-                break
-            f.write(chunk)
-        p.wait()
-    if p.returncode != 0:
+    if run(["docker", "save", tag, "-o", tmp]).returncode != 0:
         print("[X] docker save 失败")
-        return p.returncode
+        return 1
+    try:
+        with open(tmp, "rb") as f, gzip.open(out, "wb") as g:
+            shutil.copyfileobj(f, g)
+    finally:
+        try:
+            os.remove(tmp)
+        except OSError:
+            pass
     print(f"[OK] {os.path.relpath(out, ROOT)}（{os.path.getsize(out) / 1024 / 1024:.0f} MB）")
     return 0
 

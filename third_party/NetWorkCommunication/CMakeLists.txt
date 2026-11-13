@@ -301,9 +301,21 @@ if(COMMONNET_BUILD_HTTP_SERVER) # 开关打开时才定义本库（开关见文�
     # 不加 REQUIRED 而是 QUIET + 自检，是为了在缺组件时给出"装哪个 vcpkg 端口"的可操作提示，
     # 而不是只抛 CMake 自带的 "Could not find a package configuration file"。
     find_package(Boost CONFIG QUIET COMPONENTS beast json)
-    if(NOT Boost_FOUND)
+    # 发行版（如 Ubuntu libboost-all-dev）的 BoostConfig 不导出 beast/json 这两个
+    # header-only 组件；补两个 INTERFACE 目标，包含目录来自基础 Boost。
+    if(NOT TARGET Boost::beast)
+        add_library(Boost::beast INTERFACE IMPORTED)
+        set_target_properties(Boost::beast PROPERTIES
+            INTERFACE_INCLUDE_DIRECTORIES "${Boost_INCLUDE_DIRS}")
+    endif()
+    if(NOT TARGET Boost::json)
+        add_library(Boost::json INTERFACE IMPORTED)
+        set_target_properties(Boost::json PROPERTIES
+            INTERFACE_INCLUDE_DIRECTORIES "${Boost_INCLUDE_DIRS}")
+    endif()
+    if(NOT TARGET Boost::beast OR NOT TARGET Boost::json)
         message(FATAL_ERROR
-            "未找到 Boost 的 beast / json 组件（HTTP 服务端库需要）。\n"
+            "未找到 Boost 的 beast / json 头文件（HTTP 服务端库需要）。\n"
             "请安装依赖：\n"
             "    vcpkg install boost-beast:x64-windows boost-json:x64-windows\n"
             "或临时跳过该库：cmake -B build -DCOMMONNET_BUILD_HTTP_SERVER=OFF")

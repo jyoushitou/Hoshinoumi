@@ -64,7 +64,8 @@ docker build -f gateway/Dockerfile -t hoshinoumi-gateway:20.0.0 .
 #   -f gateway/Dockerfile -t hoshinoumi-gateway:20.0.0 .
 
 # 导出给部署机
-docker save hoshinoumi-gateway:20.0.0 | gzip > release/REC-v20.0.0-docker.tar.gz
+python3 scripts/build_gateway.py --version 20.0.0
+# release/REC-v20.0.0-docker.tar.gz
 
 # 部署机
 docker load -i REC-v20.0.0-docker.tar.gz
@@ -75,6 +76,16 @@ docker run -d --name hoshinoumi-gateway \
   -v "$PWD/config:/app/config:ro" \
   hoshinoumi-gateway:20.0.0
 ```
+
+> 构建机访问不了 GitHub / vcpkg 时，用离线版（系统 Boost/OpenSSL，不走 vcpkg）：
+>
+> ```bash
+> docker build --build-arg BASE_IMAGE=docker.m.daocloud.io/library/ubuntu:24.04 \
+>   -f gateway/Dockerfile.offline -t hoshinoumi-gateway:20.0.0-offline .
+>
+> python3 scripts/build_gateway.py --version 20.0.0 --offline \
+>   --base-image docker.m.daocloud.io/library/ubuntu:24.04
+> ```
 
 > v20 后端只允许 `127.0.0.1` / `localhost`；容器里用 `--network host` 让
 > `127.0.0.1:7070` 指向宿主机后端。不要给后端配公网地址。

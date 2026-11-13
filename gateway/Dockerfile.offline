@@ -1,0 +1,52 @@
+﻿# Hoshinoumi（REC）gateway 镜像（离线构建版）
+# 不依赖 vcpkg / GitHub：用 Ubuntu 系统 Boost + OpenSSL 编译 CommonNet。
+# 适用网络无法访问 GitHub 的部署机/构建机。
+#
+#   docker build --build-arg BASE_IMAGE=docker.m.daocloud.io/library/ubuntu:24.04 \
+#     -f gateway/Dockerfile.offline -t hoshinoumi-gateway:20.0.0-offline .
+
+ARG BASE_IMAGE=ubuntu:24.04
+FROM ${BASE_IMAGE} AS build
+
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        build-essential cmake ninja-build libboost-all-dev libssl-dev ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /src
+COPY third_party/Utils third_party/Utils
+COPY third_party/NetWorkCommunication third_party/NetWorkCommunication
+COPY gateway gateway
+
+# Utils 先装到 /usr/local，CommonNet 通过 find_package(Utils) 找到它
+RUN cmake -S third_party/Utils -B /build-utils -G Ninja -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=/usr/local -DBUILD_SHARED_LIBS=OFF \
+        -DUTILS_BUILD_TESTS=OFF -DUTILS_BUILD_EXAMPLES=OFF \
+    && cmake --build /build-utils -j"$(nproc)" --target install
+
+# CommonNet：系统 Boost 的 beast/json 头文件由 CMake 兜底目标补上
+RUN cmake -S third_party/NetWorkCommunication -B /build-net -G Ninja -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=/usr/local -DBUILD_SHARED_LIBS=OFF \
+        -DCOMMONNET_BUILD_EXAMPLES=OFF \
+        -DCOMMONNET_BUILD_HTTP_SERVER=ON -DCOMMONNET_BUILD_HTTP_CLIENT=ON \
+    && cmake --build /build-net -j"$(nproc)" --target install
+
+RUN cmake -S gateway -B /build-gw -G Ninja -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_PREFIX_PATH=/usr/local -DVCPKG_MANIFEST_MODE=OFF \
+    && cmake --build /build-gw -j"$(nproc)"
+
+ARG BASE_IMAGE=ubuntu:24.04
+FROM ${BASE_IMAGE}
+
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        ca-certificates libstdc++6 libboost-system1.83.0 libboost-json1.83.0 libssl3t64 \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=build /build-gw/rec_gateway /usr/local/bin/rec_gateway
+RUN mkdir -p /app/config
+COPY gateway/config.docker.json /app/config/gateway.json
+
+EXPOSE 8080
+ENTRYPOINT ["/usr/local/bin/rec_gateway", "--config", "/app/config/gateway.json"]
+

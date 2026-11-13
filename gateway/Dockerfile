@@ -1,4 +1,4 @@
-# Hoshinoumi（REC）gateway 镜像
+﻿# Hoshinoumi（REC）gateway 镜像
 # 构建上下文是项目根目录：
 #   docker build -f gateway/Dockerfile -t hoshinoumi-gateway:20.0.0 .
 # 部署机只 docker load / docker run，不在部署机编译 C++。
@@ -45,7 +45,8 @@ COPY --from=build /opt/vcpkg/installed/x64-linux/lib /usr/local/lib
 RUN ldconfig
 
 RUN mkdir -p /app/config
-COPY gateway/config.example.json /app/config/gateway.json
+COPY gateway/config.docker.json /app/config/gateway.json
 
 EXPOSE 8080
 ENTRYPOINT ["/usr/local/bin/rec_gateway", "--config", "/app/config/gateway.json"]
+

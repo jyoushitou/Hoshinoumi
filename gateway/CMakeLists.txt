@@ -9,9 +9,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # CommonNet：用户自己的 Boost.Asio 通讯库（vcpkg overlay port: commonnet）
 find_package(CommonNet CONFIG REQUIRED)
 
-# Boost.JSON 由 CommonNet 的 HTTP 组件带出，但显式声明便于阅读错误信息
-find_package(Boost CONFIG REQUIRED COMPONENTS beast json)
-
 add_executable(rec_gateway
     src/main.cpp
     src/config.cpp
