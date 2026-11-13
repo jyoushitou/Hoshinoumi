@@ -21,27 +21,27 @@
 
 namespace
 {
-    std::string ParseConfigPath(int argc, char** argv)
+std::string ParseConfigPath(int argc, char **argv)
+{
+    std::string path = "config/gateway.json";
+    for (int i = 1; i < argc; ++i)
     {
-        std::string path = "config/gateway.json";
-        for (int i = 1; i < argc; ++i)
+        const std::string arg = argv[i];
+        if (arg == "--config" && i + 1 < argc)
         {
-            const std::string arg = argv[i];
-            if (arg == "--config" && i + 1 < argc)
-            {
-                path = argv[++i];
-            }
-            else if (arg == "--help" || arg == "-h")
-            {
-                std::cout << "用法: rec_gateway [--config config/gateway.json]\n";
-                std::exit(0);
-            }
+            path = argv[++i];
         }
-        return path;
+        else if (arg == "--help" || arg == "-h")
+        {
+            std::cout << "用法: rec_gateway [--config config/gateway.json]\n";
+            std::exit(0);
+        }
     }
+    return path;
+}
 } // namespace
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
     try
     {
@@ -60,39 +60,31 @@ int main(int argc, char** argv)
 
         auto router = std::make_shared<Gateway::Router>(cfg);
         auto handler = std::make_shared<Net::Server::HttpServer::HttpHandleFunction>(
-            [router](const std::shared_ptr<Net::Server::HttpServer::HttpSession>& session,
-                     const Net::Server::HttpServer::Url& url)
-            {
-                router->Handle(session, url);
-            });
+            [router](const std::shared_ptr<Net::Server::HttpServer::HttpSession> &session,
+                     const Net::Server::HttpServer::Url &url) { router->Handle(session, url); });
 
-        auto server = std::make_shared<Net::Server::HttpServer::HttpServer>(
-            io, epTcp, epHttp, handler);
+        auto server = std::make_shared<Net::Server::HttpServer::HttpServer>(io, epTcp, epHttp, handler);
         server->setTrustProxy(false);
 
         std::weak_ptr<Net::Server::HttpServer::HttpServer> weakServer = server;
-        Utils::Exit::registerStopCallback(
-            [weakServer]()
+        Utils::Exit::registerStopCallback([weakServer]() {
+            if (auto s = weakServer.lock())
             {
-                if (auto s = weakServer.lock())
-                {
-                    s->stop();
-                }
-            });
+                s->stop();
+            }
+        });
 
         server->start();
-        std::thread ioThread(
-            [&io]()
+        std::thread ioThread([&io]() {
+            try
             {
-                try
-                {
-                    io.run();
-                }
-                catch (const std::exception& e)
-                {
-                    Utils::Out::outErr(std::string("网关 IO 线程异常: ") + e.what());
-                }
-            });
+                io.run();
+            }
+            catch (const std::exception &e)
+            {
+                Utils::Out::outErr(std::string("网关 IO 线程异常: ") + e.what());
+            }
+        });
 
         Utils::Out::outMsg("HTTP 监听 " + cfg.listenHost + ":" + std::to_string(cfg.listenPort));
         Utils::Exit::waitExit();
@@ -105,9 +97,9 @@ int main(int argc, char** argv)
         Utils::Out::outMsg("网关已退出");
         return 0;
     }
-    catch (const std::exception& e)
+    catch (const std::exception &e)
     {
-        std::cerr << "网关启动失败: " << e.what() << "\n";
+        Utils::Out::outErr("网关启动失败: " + std::string(e.what()));
         return 1;
     }
 }
