@@ -1,4 +1,4 @@
-# ===================== 服务端口协议（v19.4） =====================
+﻿# ===================== 服务端口协议（v19.4） =====================
 # 只定义接口，不 import 任何业务实现；app 负责装配。
 
 from typing import Any, Iterable, Optional, Protocol
@@ -9,7 +9,7 @@ class MessageStore(Protocol):
                channel: str = "qq", thread_id: Optional[str] = None,
                message_id: Optional[str] = None, meta: Any = None) -> bool: ...
 
-    def recent(self, target_id: str, limit: int = 20,
+    def recent(self, target_id: str, limit: int = 100,
                before_id: Optional[int] = None,
                user_id: Optional[str] = None) -> Iterable[dict]: ...
 

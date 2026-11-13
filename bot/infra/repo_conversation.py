@@ -1,4 +1,4 @@
-# ===================== 短期对话消息仓储（v19.1） =====================
+﻿# ===================== 短期对话消息仓储（v19.1） =====================
 # conversation_messages：每个会话保留最近 1 天 / 100 条。
 # 写失败不阻塞聊天；读给 !history / 内部 API。
 
@@ -56,9 +56,9 @@ def append(user_id="__owner__", target_id="", content="", role="user",
         return False
 
 
-def recent(target_id, limit=20, before_id=None, user_id=None, cursor=None):
+def recent(target_id, limit=100, before_id=None, user_id=None, cursor=None):
     """按 target 取最近消息，返回时间正序；before_id 用于游标分页"""
-    limit = max(1, min(int(limit or 20), MAX_PER_THREAD))
+    limit = max(1, min(int(limit or 100), MAX_PER_THREAD))
     c = _cursor(cursor)
     where = ["target_id=%s"]
     params = [str(target_id)]

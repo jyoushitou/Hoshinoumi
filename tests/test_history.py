@@ -1,4 +1,4 @@
-# ===================== v19.2 !history =====================
+﻿# ===================== v19.2 !history =====================
 import unittest
 
 from bot.cmd import history_cmd as H
@@ -11,10 +11,10 @@ class TestHistoryCommand(unittest.TestCase):
                               is_group=is_group, gid=gid)
 
     def test_default_and_cap(self):
-        self.assertEqual(H._limit(["history"]), 20)
+        self.assertEqual(H._limit(["history"]), 100)
         self.assertEqual(H._limit(["history", "10"]), 10)
         self.assertEqual(H._limit(["history", "999"]), 100)
-        self.assertEqual(H._limit(["history", "abc"]), 20)
+        self.assertEqual(H._limit(["history", "abc"]), 100)
 
     def test_format_roles(self):
         text = H._format([

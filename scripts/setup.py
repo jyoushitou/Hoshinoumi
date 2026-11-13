@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 # ===================== 环境初始化（建表前置） =====================
 # 一个脚本把「跑起来之前要做的两件事」做完：
 #
@@ -355,7 +355,7 @@ def main():
     print("      python3 scripts/migrate_v17.py  # 只迁移（加 --apply）")
     print("      python3 scripts/migrate_v18.py  # v18.17 events→memories（加 --apply）")
     print("      python3 scripts/seed_scenes.py  # 只导入场景（加 --apply）")
-    print("      python3 scripts/run_tests.py    # 全量测试（931 条）")
+    print("      python3 scripts/run_tests.py    # 全量测试（968 条）")
     print("=" * 60)
     return 0
     print("建表没完成，修完再跑一次。")

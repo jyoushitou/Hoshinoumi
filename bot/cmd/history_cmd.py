@@ -1,5 +1,5 @@
-# ===================== 对话历史命令（v19.2） =====================
-# !history [n]：当前会话最近 n 条短期消息，默认 20，最多 100。
+﻿# ===================== 对话历史命令（v19.2） =====================
+# !history [n]：当前会话最近 n 条短期消息，默认 100，最多 100。
 
 from .registry import command
 
@@ -8,7 +8,7 @@ def _limit(parts):
     for p in parts[1:]:
         if str(p).isdigit():
             return max(1, min(int(p), 100))
-    return 20
+    return 100
 
 
 def _format(rows):
@@ -26,7 +26,7 @@ def _format(rows):
 
 @command("history")
 async def cmd_history(ctx):
-    """!history [n] - 当前会话最近 n 条对话（默认 20，最多 100）"""
+    """!history [n] - 当前会话最近 n 条对话（默认 100，最多 100）"""
     from ..infra import repo_conversation
 
     target = str(ctx.gid) if ctx.is_group else str(ctx.uid)

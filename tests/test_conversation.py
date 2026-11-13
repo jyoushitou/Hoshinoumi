@@ -77,5 +77,14 @@ class TestConversationRepo(unittest.TestCase):
         self.assertIn("OFFSET", sqls)
 
 
+class TestRecentDefault(unittest.TestCase):
+    def test_default_100(self):
+        from bot.infra import repo_conversation as R
+
+        c = _Cursor(rows=[])
+        R.recent("1", cursor=c)
+        self.assertEqual(c.statements[0][1][-1], 100)
+
+
 if __name__ == "__main__":
     unittest.main()

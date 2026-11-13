@@ -1,4 +1,4 @@
-# ===================== HTTP 服务器装配 =====================
+﻿# ===================== HTTP 服务器装配 =====================
 # 鉴权中间件 + 路由注册 + 启动
 # 迁移自 api_server.py（v5-R5）
 
@@ -25,7 +25,7 @@ async def handle_internal_history(request):
     if not target:
         return json_response({"ok": False, "error": "target_id required"}, status=400)
     try:
-        limit = int(request.query.get("limit") or 20)
+        limit = int(request.query.get("limit") or 100)
         before = int(request.query["before"]) if request.query.get("before") else None
     except ValueError:
         return json_response({"ok": False, "error": "bad limit/before"}, status=400)
