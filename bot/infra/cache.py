@@ -34,6 +34,29 @@ def set(key, value, ttl=5.0):
     return value
 
 
+class Namespace:
+    """命名空间视图：统一前缀，避免不同模块手写 key 前缀"""
+
+    def __init__(self, name):
+        self.prefix = f"{name}:"
+
+    def get(self, key):
+        return get(self.prefix + str(key))
+
+    def set(self, key, value, ttl=5.0):
+        return set(self.prefix + str(key), value, ttl)
+
+    def invalidate(self, key=None):
+        if key is None:
+            invalidate(self.prefix)
+        else:
+            invalidate(self.prefix + str(key))
+
+
+def namespace(name):
+    return Namespace(name)
+
+
 def invalidate(prefix=None):
     """删 key（前缀）或全部"""
     if prefix is None:
