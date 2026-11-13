@@ -12,8 +12,11 @@
 #include "NetHttpServer.h"
 
 #include <atomic>
+#include <chrono>
 #include <memory>
+#include <mutex>
 #include <string>
+#include <unordered_map>
 
 namespace Gateway
 {
@@ -43,6 +46,8 @@ namespace Gateway
                    const Net::Server::HttpServer::Url& url);
         void Login(const std::shared_ptr<Net::Server::HttpServer::HttpSession>& session,
                    const Net::Server::HttpServer::Url& url);
+        void Refresh(const std::shared_ptr<Net::Server::HttpServer::HttpSession>& session,
+                     const Net::Server::HttpServer::Url& url);
         void StartProbe(bool fullCycle);
         bool Authenticate(const Net::Server::HttpServer::Url& url, Claims& claims);
         void Proxy(const std::shared_ptr<Net::Server::HttpServer::HttpSession>& session,
@@ -58,6 +63,15 @@ namespace Gateway
         Auth auth_;
         BackendClient backend_;
         std::shared_ptr<ProbeState> probe_;
+
+        struct LoginState
+        {
+            int failures = 0;
+            std::chrono::steady_clock::time_point lockedUntil{};
+        };
+        std::mutex loginMutex_;
+        std::unordered_map<std::string, LoginState> loginStates_;
+
         static std::atomic<unsigned long long> requestSeq_;
     };
 } // namespace Gateway

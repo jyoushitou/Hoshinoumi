@@ -65,9 +65,7 @@ namespace Gateway
         }
         if (url.target == "/api/refresh")
         {
-            session->httpReplay(R"({"ok":false,"error":"not_implemented"})",
-                                boost::beast::http::status::not_implemented,
-                                JsonHeaders(NextRequestId()));
+            Refresh(session, url);
             return;
         }
 
@@ -241,6 +239,26 @@ namespace Gateway
             return;
         }
 
+        const std::string ip = url.requestIP.empty() ? "0.0.0.0" : url.requestIP;
+        {
+            std::lock_guard<std::mutex> lock(loginMutex_);
+            const auto it = loginStates_.find(ip);
+            const auto now = std::chrono::steady_clock::now();
+            if (it != loginStates_.end() && it->second.lockedUntil > now)
+            {
+                const auto retry = std::chrono::duration_cast<std::chrono::seconds>(
+                    it->second.lockedUntil - now).count();
+                boost::json::object body;
+                body["ok"] = false;
+                body["error"] = "too_many_attempts";
+                body["retry_after"] = retry;
+                session->httpReplay(boost::json::serialize(body),
+                                    boost::beast::http::status::too_many_requests,
+                                    JsonHeaders(NextRequestId()));
+                return;
+            }
+        }
+
         std::string secret;
         try
         {
@@ -261,7 +279,87 @@ namespace Gateway
 
         if (!auth_.CheckSecret(secret))
         {
+            bool locked = false;
+            {
+                std::lock_guard<std::mutex> lock(loginMutex_);
+                auto& st = loginStates_[ip];
+                ++st.failures;
+                if (st.failures >= 3)
+                {
+                    st.lockedUntil = std::chrono::steady_clock::now() +
+                                     std::chrono::minutes(5);
+                    locked = true;
+                }
+            }
+            if (locked)
+            {
+                Utils::Out::outErr("[网关] 登录失败 3 次，IP " + ip + " 锁定 5 分钟");
+            }
             session->httpReplay("{\"ok\":false,\"error\":\"invalid_secret\"}",
+                                boost::beast::http::status::unauthorized,
+                                JsonHeaders(NextRequestId()));
+            return;
+        }
+
+        {
+            std::lock_guard<std::mutex> lock(loginMutex_);
+            loginStates_.erase(ip);
+        }
+
+        try
+        {
+            boost::json::object data;
+            data["access"] = auth_.IssueAccess();
+            data["refresh"] = auth_.IssueRefresh();
+            data["token_type"] = "Bearer";
+            data["expires_in"] = auth_.AccessTtl();
+            boost::json::object body;
+            body["ok"] = true;
+            body["data"] = data;
+            session->httpReplay(boost::json::serialize(body),
+                                boost::beast::http::status::ok,
+                                JsonHeaders(NextRequestId()));
+        }
+        catch (const std::exception& e)
+        {
+            Utils::Out::outErr(std::string("[网关] 签发 token 失败: ") + e.what());
+            session->httpReplay("{\"ok\":false,\"error\":\"token_issue_failed\"}",
+                                boost::beast::http::status::internal_server_error,
+                                JsonHeaders(NextRequestId()));
+        }
+    }
+
+    void Router::Refresh(const std::shared_ptr<Net::Server::HttpServer::HttpSession>& session,
+                         const Net::Server::HttpServer::Url& url)
+    {
+        if (url.method != "POST")
+        {
+            session->httpReplay("{\"ok\":false,\"error\":\"method_not_allowed\"}",
+                                boost::beast::http::status::method_not_allowed,
+                                JsonHeaders(NextRequestId()));
+            return;
+        }
+
+        std::string token = Auth::Bearer(url.headers);
+        if (token.empty())
+        {
+            try
+            {
+                const auto parsed = boost::json::parse(url.body);
+                if (parsed.is_object())
+                {
+                    token = std::string(parsed.as_object().at("refresh").as_string());
+                }
+            }
+            catch (const std::exception&)
+            {
+            }
+        }
+
+        Claims claims;
+        if (!auth_.Verify(token, "refresh", claims))
+        {
+            session->httpReplay("{\"ok\":false,\"error\":\"invalid_refresh\"}",
                                 boost::beast::http::status::unauthorized,
                                 JsonHeaders(NextRequestId()));
             return;
@@ -283,7 +381,7 @@ namespace Gateway
         }
         catch (const std::exception& e)
         {
-            Utils::Out::outErr(std::string("[网关] 签发 token 失败: ") + e.what());
+            Utils::Out::outErr(std::string("[网关] 刷新 token 失败: ") + e.what());
             session->httpReplay("{\"ok\":false,\"error\":\"token_issue_failed\"}",
                                 boost::beast::http::status::internal_server_error,
                                 JsonHeaders(NextRequestId()));
