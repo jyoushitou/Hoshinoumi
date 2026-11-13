@@ -3,6 +3,10 @@
 > 后端 [v19.5.7](docs/versions/v19.md)（v19 试运行）· 网关 [v20.0](docs/versions/v20.md)（v20 核心，Docker 交付）
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+![C++17](https://img.shields.io/badge/C%2B%2B-17-00599C)
+![Boost.Asio](https://img.shields.io/badge/Boost.Asio%2FBeast-vcpkg-6D4C9F)
+![CMake](https://img.shields.io/badge/CMake-3.20%2B-064F8C)
+![Docker](https://img.shields.io/badge/Docker-compose-2496ED)
 [![Database](https://img.shields.io/badge/Database-MySQL%20%7C%20SQLite-4479A1)](#)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-5C2D91)](#)
 [![NapCat](https://img.shields.io/badge/NapCat-QQ-12B7F5)](#)
@@ -25,6 +29,18 @@
 MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一句话打标签，正文小说用**截图 + OCR** 还原。
 
 ---
+
+## 技术栈
+
+| 部分 | 技术 |
+|---|---|
+| **Python 后端** | Python 3.10+、asyncio、websockets（NapCat 通道）、aiohttp（HTTP API）、PyMySQL / SQLite、requests、Pillow、jieba、edge-tts、Playwright、tesseract |
+| **C++ 网关（v20）** | C++17、Boost.Asio / Boost.Beast、CommonNet（NetWorkCommunication / Utils）、CMake 3.20+、vcpkg overlay ports |
+| **存储** | MySQL 8（默认）/ SQLite（自动回退） |
+| **部署** | Docker / docker compose、systemd、Windows / Linux |
+| **外部服务** | NapCat（QQ 协议）、DeepSeek（主对话）、豆包 / 火山方舟（视觉）、ALAPI（搜图） |
+
+> 网关是独立的 C++ 进程：`gateway/`；Python 后端是 `bot/`。两者只通过本机 HTTP 对接，后端不监听公网。
 
 ## 特性一览
 
