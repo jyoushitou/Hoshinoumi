@@ -42,10 +42,106 @@ async def handle_internal_history(request):
     return json_response({"ok": True, "data": data})
 
 
+async def handle_internal_chat(request):
+    """POST /internal/chat：网关转发用，复用 /api/chat 逻辑"""
+    return await handle_chat(request)
+
+
+async def handle_internal_state(request):
+    """GET /internal/state：情绪 / 关系 / 书架摘要"""
+    from ..core import state as cfg
+    from ..life import reading as life_reading
+    from ..life import relation as life_relation
+    from ..life import state as life_state
+
+    uid = (request.query.get("user_id") or "__owner__").strip()
+    tid = str(cfg.MASTER_QQ) if uid == "__owner__" else uid
+    st = life_state.current(tid=None if uid == "__owner__" else uid) or {}
+    try:
+        rel = life_relation.get(tid)
+    except Exception:
+        rel = 0.0
+    try:
+        shelf = life_reading.load(tid)
+    except Exception:
+        shelf = {"books": []}
+    return json_response({
+        "ok": True,
+        "data": {
+            "user_id": uid,
+            "mood": st.get("mood"),
+            "energy": st.get("energy"),
+            "lonely": st.get("lonely"),
+            "emotion": st.get("emotion", ""),
+            "relation": rel,
+            "reading": shelf,
+        },
+    })
+
+
+async def handle_internal_cron(request):
+    """GET /internal/cron：当前用户的定时任务"""
+    from ..core import state as cfg
+    from ..schedule import cron
+
+    uid = (request.query.get("user_id") or "__owner__").strip()
+    target = str(cfg.MASTER_QQ) if uid == "__owner__" else uid
+    rows = []
+    for task in cron.list_tasks(target):
+        rows.append({
+            "id": task.get("id"),
+            "schedule_type": task.get("schedule_type"),
+            "content": task.get("content"),
+            "at_time": task.get("at_time"),
+            "weekdays": task.get("weekdays"),
+            "once_at": str(task.get("once_at")) if task.get("once_at") else None,
+            "rule": task.get("rule"),
+            "timing": task.get("timing"),
+            "enabled": bool(task.get("enabled")),
+            "next_ts": str(task.get("next_ts")) if task.get("next_ts") else None,
+        })
+    return json_response({"ok": True, "data": rows})
+
+
+async def handle_internal_diary(request):
+    """GET /internal/diary：最近日记"""
+    from ..core import state as cfg
+    from ..infra.conn import get_cursor
+
+    uid = (request.query.get("user_id") or "__owner__").strip()
+    target = str(cfg.MASTER_QQ) if uid == "__owner__" else uid
+    try:
+        limit = max(1, min(int(request.query.get("limit") or 20), 100))
+    except ValueError:
+        return json_response({"ok": False, "error": "bad limit"}, status=400)
+    c = get_cursor()
+    c.execute(
+        "SELECT diary_date, content, created_at FROM diaries "
+        "WHERE target_id=%s ORDER BY diary_date DESC LIMIT %s", (target, limit))
+    rows = []
+    for r in c.fetchall():
+        rows.append({
+            "date": str(r["diary_date"]),
+            "content": r["content"] or "",
+            "created_at": str(r["created_at"]) if r["created_at"] else None,
+        })
+    return json_response({"ok": True, "data": rows})
+
+
+async def handle_internal_shelf(request):
+    """GET /internal/shelf：书架 / 阅读进度"""
+    from ..core import state as cfg
+    from ..life import reading as life_reading
+
+    uid = (request.query.get("user_id") or "__owner__").strip()
+    target = str(cfg.MASTER_QQ) if uid == "__owner__" else uid
+    return json_response({"ok": True, "data": life_reading.load(target)})
+
+
 @web.middleware
 async def auth_middleware(request, handler):
-    """Bearer Token 鉴权；/api/health 与 /internal/history 免鉴权"""
-    if request.path in ("/api/health", "/internal/history"):
+    """Bearer Token 鉴权；/api/health 与 /internal/* 免鉴权（只监听本机）"""
+    if request.path == "/api/health" or request.path.startswith("/internal/"):
         return await handler(request)
 
     auth_header = request.headers.get("Authorization", "")
@@ -78,6 +174,11 @@ async def start_api_server():
     app.router.add_post("/api/chat", handle_chat)
     app.router.add_post("/api/command", handle_command)
     app.router.add_get("/internal/history", handle_internal_history)
+    app.router.add_post("/internal/chat", handle_internal_chat)
+    app.router.add_get("/internal/state", handle_internal_state)
+    app.router.add_get("/internal/cron", handle_internal_cron)
+    app.router.add_get("/internal/diary", handle_internal_diary)
+    app.router.add_get("/internal/shelf", handle_internal_shelf)
 
     runner = web.AppRunner(app, handle_signals=False)
     await runner.setup()

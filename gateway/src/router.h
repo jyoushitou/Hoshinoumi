@@ -33,6 +33,9 @@ namespace Gateway
                     const Net::Server::HttpServer::Url& url);
         void Ready(const std::shared_ptr<Net::Server::HttpServer::HttpSession>& session,
                    const Net::Server::HttpServer::Url& url);
+        void Proxy(const std::shared_ptr<Net::Server::HttpServer::HttpSession>& session,
+                   const Net::Server::HttpServer::Url& url,
+                   const std::string& backendPath, const std::string& method);
         void NotFound(const std::shared_ptr<Net::Server::HttpServer::HttpSession>& session,
                       const Net::Server::HttpServer::Url& url);
 

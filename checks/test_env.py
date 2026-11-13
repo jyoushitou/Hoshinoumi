@@ -228,6 +228,7 @@ class TestEnvironment(unittest.TestCase):
         "NAO_TZ",
         "NAO_READ_IDLE_MINUTES",
         "NAO_DB_PATH",
+        "NAO_API_HOST",
         "NAO_BACKUP_DIR",
         "NAO_DB_BACKEND",
         "NAO_LOG_KEEP_DAYS",

@@ -49,6 +49,36 @@ namespace Gateway
             Ready(session, url);
             return;
         }
+        if (url.target.rfind("/api/chat", 0) == 0)
+        {
+            Proxy(session, url, "/internal/chat", "POST");
+            return;
+        }
+        if (url.target.rfind("/api/history", 0) == 0)
+        {
+            Proxy(session, url, "/internal/history", "GET");
+            return;
+        }
+        if (url.target.rfind("/api/state", 0) == 0)
+        {
+            Proxy(session, url, "/internal/state", "GET");
+            return;
+        }
+        if (url.target.rfind("/api/cron", 0) == 0)
+        {
+            Proxy(session, url, "/internal/cron", "GET");
+            return;
+        }
+        if (url.target.rfind("/api/diary", 0) == 0)
+        {
+            Proxy(session, url, "/internal/diary", "GET");
+            return;
+        }
+        if (url.target.rfind("/api/shelf", 0) == 0)
+        {
+            Proxy(session, url, "/internal/shelf", "GET");
+            return;
+        }
         NotFound(session, url);
     }
 
@@ -95,6 +125,68 @@ namespace Gateway
                         const auto status = ok ? boost::beast::http::status::ok
                                                : boost::beast::http::status::service_unavailable;
                         session->httpAsyncReplay(seq, boost::json::serialize(body), status,
+                                                 JsonHeaders(requestId));
+                    })
+            .detach();
+    }
+
+    void Router::Proxy(const std::shared_ptr<Net::Server::HttpServer::HttpSession>& session,
+                       const Net::Server::HttpServer::Url& url,
+                       const std::string& backendPath, const std::string& method)
+    {
+        if (url.method != method)
+        {
+            session->httpReplay("{\"ok\":false,\"error\":\"method_not_allowed\"}",
+                                boost::beast::http::status::method_not_allowed,
+                                JsonHeaders(NextRequestId()));
+            return;
+        }
+
+        std::string path = backendPath;
+        const auto query = url.target.find('?');
+        if (query != std::string::npos)
+        {
+            path += url.target.substr(query);  // query 原样带过去，path 部分由路由决定
+        }
+
+        const auto seq = url.seq;
+        const std::string requestId = NextRequestId();
+        const std::string body = url.body;
+        BackendClient backend = backend_;
+        std::thread([session, seq, backend, path, method, body, requestId]()
+                    {
+                        const auto result = backend.Request(method, path, body);
+                        boost::json::object out;
+                        boost::beast::http::status status = boost::beast::http::status::ok;
+                        if (result.ok)
+                        {
+                            try
+                            {
+                                const auto parsed = boost::json::parse(result.body);
+                                if (parsed.is_object() && parsed.as_object().contains("ok"))
+                                {
+                                    session->httpAsyncReplay(seq, result.body, status,
+                                                             JsonHeaders(requestId));
+                                    return;
+                                }
+                                out["ok"] = true;
+                                out["data"] = parsed;
+                            }
+                            catch (const std::exception&)
+                            {
+                                out["ok"] = true;
+                                out["data"] = result.body;
+                            }
+                        }
+                        else
+                        {
+                            out["ok"] = false;
+                            out["error"] = result.error;
+                            status = (result.status >= 400 && result.status < 600)
+                                         ? static_cast<boost::beast::http::status>(result.status)
+                                         : boost::beast::http::status::bad_gateway;
+                        }
+                        session->httpAsyncReplay(seq, boost::json::serialize(out), status,
                                                  JsonHeaders(requestId));
                     })
             .detach();

@@ -13,8 +13,11 @@
 |---|---|
 | `/healthz` | 登录 / JWT |
 | `/readyz`（探后端 `/api/health`） | 限流 / 审计 |
-| 配置向导 `scripts/configure.py` | chat/history 路由（v20.1） |
-| Dockerfile 多阶段构建 | TLS |
+| `/api/chat` → `/internal/chat` | TLS |
+| `/api/history` → `/internal/history` | 多用户隔离（v23） |
+| `/api/state` / `/api/cron` / `/api/diary` / `/api/shelf` | |
+| 配置向导 `scripts/configure.py` | |
+| Dockerfile 多阶段构建 | |
 
 ## 本机构建
 

@@ -18,9 +18,22 @@ namespace Gateway
     public:
         explicit BackendClient(Config cfg);
 
+        /// @brief 一次后端请求结果
+        struct Result
+        {
+            bool ok = false;
+            unsigned status = 0;
+            std::string body;
+            std::string error;
+        };
+
         /// @brief 调 GET /api/health；返回是否 2xx
         /// @param[out] detail 失败原因或状态摘要
         bool CheckHealth(std::string& detail) const;
+
+        /// @brief 发一次 JSON 请求（同步，必须在工作线程调用）
+        Result Request(const std::string& method, const std::string& path,
+                       const std::string& body) const;
 
     private:
         Config cfg_;
