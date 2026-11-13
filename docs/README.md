@@ -1,6 +1,70 @@
 # Hoshinoumi（REC）· 文档索引
 
-> **当前：v19.5.7 试运行** → 试运行结束后进入 v20 网关（一）。
+> **当前事实：后端 v20.5，网关 v20.5（Docker / 网关验证）**（2026-11-13）
+> 已部署试运行；v19 与 v20.0–v20.4 已完成。
+>
+> 这里只放“现在有效”的文档；开发计划单独维护，历史文档明确标注。
+> 如果文档与代码冲突，以代码和测试为准，并回来改文档。
+
+## 先读哪几篇
+
+| 顺序 | 文档 | 为什么先读 |
+|---|---|---|
+| 1 | [../README.md](../README.md) | 项目是什么、怎么跑、命令、限制 |
+| 2 | [ARCHITECTURE.md](ARCHITECTURE.md) | 分层、一条消息的生命周期 |
+| 3 | [DB-DESIGN.md](DB-DESIGN.md) | 表职责、字段规范 |
+| 4 | [发布检查清单.md](发布检查清单.md) | 改完/发版前逐项过 |
+| 5 | [存储后端与备份.md](存储后端与备份.md) | 换库/备份/恢复 |
+
+## 当前有效文档
+
+| 文档 | 内容 | 维护状态 |
+|---|---|---|
+| [../README.md](../README.md) | 总览、快速开始、命令、配置、限制 | ✅ 现行 |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | 分层图、消息生命周期、调度/出站 | ✅ 现行（以实际代码为准） |
+| [DB-DESIGN.md](DB-DESIGN.md) | 数据库设计与表职责 | ✅ 现行（DDL 以 `bot/infra/schema.py` 为准） |
+| [存储后端与备份.md](存储后端与备份.md) | MySQL/SQLite 备份、恢复、换后端 | ✅ 现行 |
+| [发布检查清单.md](发布检查清单.md) | 代码/环境/文档/打包/部署 5 组检查 | ✅ 现行 |
+| [NAMING.md](NAMING.md) | 项目命名、缩写、兼容边界 | ✅ 现行 |
+| [RELEASE-NOTES.md](RELEASE-NOTES.md) | 发布记录（含当前 v20.5） | 🕘 只追加，不改旧记录 |
+| [gateway/README.md](../gateway/README.md) | C++ 网关构建/配置/Docker | ✅ 现行 |
+
+## 开发计划（单独维护）
+
+开发计划**不在这个索引里展开**，避免和事实文档混在一起：
+
+| 入口 | 内容 |
+|---|---|
+| [ROADMAP.md](ROADMAP.md) | 全部大版本的总表、依赖、验收 |
+| [versions/](versions/) | 每个大版本一个 `vN.md` |
+| [HANDOFF.md](HANDOFF.md) | 交接用的当前状态/坑/下一步 |
+
+> 规则：新功能先写进 `docs/versions/vN.md`；已发布版本冻结；bug 记进当前开发版本的「遗留问题」。
+
+## 历史文档（保留，但不再代表当前事实）
+
+| 文档 | 是什么 | 怎么读 |
+|---|---|---|
+| [V6-功能.md](V6-功能.md) | v6 的功能清单（74 项） | 历史需求池，不代表已实现 |
+| [V14-后续清单.md](V14-后续清单.md) | v14 之后的 13 项后续需求 | 历史需求池 |
+| [ARCH-REVIEW.md](ARCH-REVIEW.md) | v18.20 的架构审查（6.2/10） | 历史审查；问题可能已修 |
+| [升级到v18.20.md](升级到v18.20.md) | 从 v18.4 升到 v18.20 的步骤 | 历史升级路径；新版本看 README |
+| [RELEASE-NOTES.md](RELEASE-NOTES.md) | 发布记录 | 只追加，旧记录保留原文 |
+
+## 文档维护约定
+
+1. **事实文档**（README/ARCHITECTURE/DB-DESIGN/存储/发布清单）随代码改，版本号、表数、命令数、测试数必须同步。
+2. **计划文档**（ROADMAP/versions/HANDOFF）只管“接下来做什么”，不抄当前事实。
+3. **历史文档**只加日期和“历史”标注，不追着改内容；需要新事实就写新文档。
+4. 改完文档跑一次 `git diff --check`，别留行尾空格/坏表格。
+
+---
+
+## 历史索引（v5/v6 时期，保留原文）
+
+> 下面是旧版文档索引，保留是为了不丢历史；当前事实以上文为准。
+
+> **当时：v19.5.7 试运行** → 试运行结束后进入 v20 网关（一）。
 
 
 > **协作规矩（2026-11 起）**
@@ -59,14 +123,17 @@ v6：P1 会说话 → P2 说实话 → P2.5 长感官 → P3 有生活 → P4 �
 | **v21** | [versions/v21.md](versions/v21.md) | 网关（二）owner 鉴权：JWT/刷新/失败锁定 | 规划中 |
 | **v22** | [versions/v22.md](versions/v22.md) | 网关（三）安全：限流/审计/TLS/`!gw` | 规划中 |
 | **v23** | [versions/v23.md](versions/v23.md) | 多用户：users/identities/roles + 全表 `user_id` 隔离 | 规划中 |
-| **v24** | [versions/v24.md](versions/v24.md) | 插件管理：manifest / 生命周期 / 权限 / 健康 | 规划中 |
-| **v25** | [versions/v25.md](versions/v25.md) | 模型层插件：ModelProvider + 注册表 + 降级链 | 规划中 |
-| **v26** | [versions/v26.md](versions/v26.md) | 记忆层插件：MemoryStore / Retriever / Embedding | 规划中 |
-| **v27** | [versions/v27.md](versions/v27.md) | 通道层插件：Channel + QQ/Web 适配器 | 规划中 |
-| **v28** | [versions/v28.md](versions/v28.md) | 工具层插件：manifest + 权限 + 超时 + 审计 | 规划中 |
-| **v29** | [versions/v29.md](versions/v29.md) | 存储层插件：StorageBackend + Repository | 规划中 |
-| **v30** | [versions/v30.md](versions/v30.md) | 调度层插件：Scheduler + Trigger | 规划中 |
-| **v31** | [versions/v31.md](versions/v31.md) | 出站层插件：Transport + WS/HTTP 适配器 | 规划中 |
+| **v24** | [versions/v24.md](versions/v24.md) | 外部插件管理：manifest / 生命周期 / 权限 / 健康 | 规划中 |
+| **v25** | [versions/v25.md](versions/v25.md) | 模型层扩展点：ModelProvider + 注册表 + 降级链 | 规划中 |
+| **v26** | [versions/v26.md](versions/v26.md) | 记忆层扩展点：MemoryStore / Retriever / Embedding | 规划中 |
+| **v27** | [versions/v27.md](versions/v27.md) | 通道层扩展点：Channel + QQ/Web 适配器 | 规划中 |
+| **v28** | [versions/v28.md](versions/v28.md) | 工具层扩展点：manifest + 权限 + 超时 + 审计 | 规划中 |
+| **v29** | [versions/v29.md](versions/v29.md) | 存储层扩展点：StorageBackend + Repository | 规划中 |
+| **v30** | [versions/v30.md](versions/v30.md) | 调度层扩展点：Scheduler + Trigger | 规划中 |
+| **v31** | [versions/v31.md](versions/v31.md) | 出站层扩展点：Transport + WS/HTTP 适配器 | 规划中 |
+
+> v24–v31 暴露的是分层扩展点。核心功能保持 native、不注册为插件；
+> 外部插件只 extend / enhance / 显式 replace 路由，禁用/卸载/失败回退核心。
 | **v32** | [versions/v32.md](versions/v32.md) | 多端推送：主动消息扇出到所有接入口 | 规划中 |
 | **v33** | [versions/v33.md](versions/v33.md) | DSH / Qoder / WorkBuddy 插件：她成为你所有工具的记忆层 | 规划中 |
 | **v34** | [versions/v34.md](versions/v34.md) | 电脑 Web：聊天 + 历史 + 功能面板 | 规划中 |
