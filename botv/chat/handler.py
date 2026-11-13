@@ -463,7 +463,8 @@ async def _handle_message(d, ws):
     tid = uid if mt == "private" else str(gid)  # 目标ID：私聊用QQ号，群聊用群号
 
     # v17.3 U2：连发合并——同一个人连发几句，只回一次
-    from .batcher import batchable, get_batcher
+    from .batcher import batchable, get_batcher, set_handler
+    set_handler(_reply_and_send)
     if batchable(mt, text):
         await get_batcher().offer(tid, (d, ws, text, img_md5s))
         return

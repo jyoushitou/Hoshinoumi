@@ -77,7 +77,8 @@ class TestLifePort(unittest.TestCase):
         self.assertIsNone(fn("1"))
 
     def test_bridge_registers_all(self):
-        names = self.LP.setup_life_bridge()
+        from botv.app.life_bridge import setup_life_bridge
+        names = setup_life_bridge()
         self.assertGreaterEqual(len(names), 10)
         self.assertIn("state_line", names)
         self.assertIn("condense", names)

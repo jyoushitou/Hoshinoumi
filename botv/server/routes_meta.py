@@ -1,4 +1,4 @@
-# ===================== 查询类路由 =====================
+﻿# ===================== 查询类路由 =====================
 # health / status / usage / memory / logs / token
 # 迁移自 api_server.py（v5-R5），逻辑逐字未改
 
@@ -7,7 +7,7 @@ from datetime import datetime
 from botv.core import state as cfg
 from ..config import CST, MASTER_QQ
 from ..infra.repo_ai import get_recent_usage
-from ..log import get_recent_logs
+from ..infra.log_sink import get_recent_logs
 from . import config as apicfg
 from .common import json_response, format_dt
 
@@ -164,3 +164,4 @@ async def handle_get_token(request):
             {"path": "/api/token", "method": "GET", "auth": True},
         ]
     })
+

@@ -1,5 +1,3 @@
 # ===================== server 包 =====================
 # HTTP API（v5-R5）：配置 / 工具 / 路由 / 启动，四块分开
-
-from .http_api import start_api_server  # noqa: F401
-from .config import format_api_token_info, load_api_token  # noqa: F401
+# v19.4：不在包 __init__ import http_api，避免 http_api → server 包的反向环

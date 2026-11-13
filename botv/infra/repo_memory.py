@@ -96,7 +96,7 @@ def load_events_from_db(tid, tag_keywords=None, limit=5, kinds=None):
 
     # v17.4：先读新表 memories；空则回退 events
     try:
-        new_sql = ("SELECT summary AS event_summary, tags FROM memories "
+        new_sql = ("SELECT summary AS summary, tags FROM memories "
                    "WHERE target_id=%s AND deleted_at IS NULL ")
         if tag_keywords:
             conds = " OR ".join(["tags LIKE %s" for _ in tag_keywords[:3]])
@@ -104,7 +104,7 @@ def load_events_from_db(tid, tag_keywords=None, limit=5, kinds=None):
                       [tid] + [f"%{kw}%" for kw in tag_keywords[:3]] + [int(limit)])
         else:
             c.execute(new_sql + "ORDER BY id DESC LIMIT %s", [tid, int(limit)])
-        rows = [(r["event_summary"], r["tags"]) for r in c.fetchall()]
+        rows = [(r["summary"], r["tags"]) for r in c.fetchall()]
         if rows:
             return rows
     except Exception:
@@ -112,16 +112,16 @@ def load_events_from_db(tid, tag_keywords=None, limit=5, kinds=None):
 
     if tag_keywords:
         conds = " OR ".join(["tags LIKE %s" for _ in tag_keywords[:3]])  # 动态构建LIKE条件
-        sql = (f"SELECT event_summary, tags FROM events "
+        sql = (f"SELECT summary, tags FROM memories "
                f"WHERE target_id=%s AND kind IN ({kind_ph}) AND ({conds}) "
                f"ORDER BY id DESC LIMIT %s")
         c.execute(sql, params + [f"%{kw}%" for kw in tag_keywords[:3]] + [limit])
     else:
-        sql = (f"SELECT event_summary, tags FROM events "
+        sql = (f"SELECT summary, tags FROM memories "
                f"WHERE target_id=%s AND kind IN ({kind_ph}) "
                f"ORDER BY id DESC LIMIT %s")
         c.execute(sql, params + [limit])
-    return [(r["event_summary"], r["tags"]) for r in c.fetchall()]
+    return [(r["summary"], r["tags"]) for r in c.fetchall()]
 
 
 # ===================== 机器人自身状态（v9-U4） =====================
@@ -139,11 +139,11 @@ def load_state_json(target=None):
     # 旧表（作为底，保留新表没有的字段）
     c = get_cursor()
     c.execute(
-        "SELECT event_summary FROM events WHERE target_id=%s AND kind='state' ORDER BY id DESC LIMIT 1",
+        "SELECT summary FROM memories WHERE target_id=%s AND kind='state' ORDER BY id DESC LIMIT 1",
         (tid,),
     )
     row = c.fetchone()
-    legacy = (row["event_summary"] or "") if row else ""
+    legacy = (row.get("summary") or row.get("event_summary") or "") if row else ""
 
     # 新表
     try:
@@ -189,7 +189,7 @@ def save_state_json(payload, target=None):
 def load_todo_items():
     """所有日程（v10-U10）"""
     c = get_cursor()
-    c.execute("SELECT id, summary AS event_summary FROM memories "
+    c.execute("SELECT id, summary AS summary FROM memories "
               "WHERE target_id=%s AND kind='todo' ORDER BY id", (STATE_TARGET,))
     return list(c.fetchall())
 
@@ -210,8 +210,8 @@ def load_old_events(tid, days=7, limit=5):
     """取一周以前的旧事（v12-G52 旧事重提）"""
     c = get_cursor()
     c.execute("""
-        SELECT event_summary AS summary, DATE(COALESCE(last_seen, created_at)) AS day
-        FROM events
+        SELECT summary AS summary, DATE(COALESCE(last_seen, created_at)) AS day
+        FROM memories
         WHERE target_id IN (%s, %s) AND kind IN ('event','life')
           AND COALESCE(last_seen, created_at) < NOW() - INTERVAL %s DAY
         ORDER BY RAND() LIMIT %s
@@ -223,11 +223,11 @@ def load_friction(tid):
     """读摩擦状态（v13-U20）"""
     c = get_cursor()
     c.execute(
-        "SELECT event_summary FROM events WHERE target_id=%s AND kind='friction' ORDER BY id DESC LIMIT 1",
+        "SELECT summary FROM memories WHERE target_id=%s AND kind='friction' ORDER BY id DESC LIMIT 1",
         (str(tid),),
     )
     row = c.fetchone()
-    legacy = (row["event_summary"] or "") if row else ""
+    legacy = (row.get("summary") or row.get("event_summary") or "") if row else ""
 
     try:
         c.execute(
@@ -286,10 +286,10 @@ def load_reading(tid):
     # 回退旧 events（迁移前数据）
     c = get_cursor()
     c.execute(
-        "SELECT event_summary FROM events WHERE target_id=%s AND kind='reading' "
+        "SELECT summary FROM memories WHERE target_id=%s AND kind='reading' "
         "ORDER BY id DESC LIMIT 1", (str(tid),))
     row = c.fetchone()
-    return (row["event_summary"] or "") if row else ""
+    return (row["summary"] or "") if row else ""
 
 
 def save_reading(tid, payload):
@@ -318,11 +318,11 @@ def load_habit(tid):
     """读某人的口头禅计数（v12-A17）"""
     c = get_cursor()
     c.execute(
-        "SELECT event_summary FROM events WHERE target_id=%s AND kind='habit' ORDER BY id DESC LIMIT 1",
+        "SELECT summary FROM memories WHERE target_id=%s AND kind='habit' ORDER BY id DESC LIMIT 1",
         (str(tid),),
     )
     row = c.fetchone()
-    legacy = (row["event_summary"] or "") if row else ""
+    legacy = (row.get("summary") or row.get("event_summary") or "") if row else ""
 
     try:
         c.execute(
@@ -362,11 +362,11 @@ def load_relation(tid):
     tid = str(tid)
     c = get_cursor()
     c.execute(
-        "SELECT event_summary FROM events WHERE target_id=%s AND kind='rel' ORDER BY id DESC LIMIT 1",
+        "SELECT summary FROM memories WHERE target_id=%s AND kind='rel' ORDER BY id DESC LIMIT 1",
         (tid,),
     )
     row = c.fetchone()
-    legacy = (row["event_summary"] or "") if row else ""
+    legacy = (row.get("summary") or row.get("event_summary") or "") if row else ""
 
     try:
         c.execute("SELECT affinity, since, tier FROM relations WHERE target_id=%s", (tid,))
@@ -408,19 +408,19 @@ def load_today_life():
     """取今天的生活事件（v10-U9b 分享生活用）"""
     c = get_cursor()
     c.execute(
-        "SELECT event_summary FROM events "
+        "SELECT summary FROM memories "
         "WHERE target_id=%s AND kind='life' AND tags='生活' AND DATE(created_at)=CURDATE() "
         "ORDER BY id DESC LIMIT 5",
         (STATE_TARGET,),
     )
-    return [r["event_summary"] for r in c.fetchall()]
+    return [r["summary"] for r in c.fetchall()]
 
 
 def load_agenda_items():
     """取出她的待办（v10-U9b）"""
     c = get_cursor()
     c.execute(
-        "SELECT id, summary AS event_summary FROM memories "
+        "SELECT id, summary AS summary FROM memories "
         "WHERE target_id=%s AND kind='agenda' ORDER BY id", (STATE_TARGET,))
     return list(c.fetchall())
 
@@ -437,8 +437,8 @@ def load_timeline(tid, days=7, limit=12):
     c = get_cursor()
     c.execute("""
         SELECT DATE(COALESCE(last_seen, created_at)) AS day,
-               event_summary AS summary
-        FROM events
+               summary AS summary
+        FROM memories
         WHERE target_id IN (%s, %s) AND kind IN ('event', 'life', 'photo')
           AND COALESCE(last_seen, created_at) >= NOW() - INTERVAL %s DAY
         ORDER BY COALESCE(last_seen, created_at) DESC
@@ -465,25 +465,25 @@ def load_memories_for_search(tid, limit=300):
     """取一批候选记忆喂给检索器（v8-B11）"""
     c = get_cursor()
     c.execute("""
-        SELECT id, kind, event_summary AS summary, tags, importance, hit_count,
+        SELECT id, kind, summary AS summary, tags, importance, hit_count,
                created_at, last_seen
-        FROM events
+        FROM memories
         WHERE target_id IN (%s, %s) AND kind IN ('event','life','promise','photo')
         ORDER BY id DESC LIMIT %s
     """, (tid, STATE_TARGET, limit))
     return list(c.fetchall())
 
 
-def add_event_to_db(tid, event_summary, tags="", kind="event", importance=3, due_date=None):
+def add_event_to_db(tid, summary, tags="", kind="event", importance=3, due_date=None):
     """写入一条记忆（v7-B15）
 
     - 7 天窗口内命中同一 dedupe_key → 只累加 hit_count、更新 last_seen
     - 否则插入新行，并按 kind 的上限裁剪最旧的
     """
-    if not event_summary:
+    if not summary:
         return None
     c = get_cursor()
-    key = dedupe_key(tid, kind, event_summary)
+    key = dedupe_key(tid, kind, summary)
     now = datetime.now(CST)
 
     c.execute("""
@@ -502,7 +502,7 @@ def add_event_to_db(tid, event_summary, tags="", kind="event", importance=3, due
         "INSERT INTO memories(target_id, kind, summary, tags, importance, weight, tier, "
         "source, dedupe_key, due_date, last_seen) "
         "VALUES(%s,%s,%s,%s,%s,0.5,'medium','chat',%s,%s,%s)",
-        (tid, kind, event_summary, tags, importance, key, due_date, now),
+        (tid, kind, summary, tags, importance, key, due_date, now),
     )
     new_id = getattr(c, "lastrowid", None)
     # 按 kind 分别保留

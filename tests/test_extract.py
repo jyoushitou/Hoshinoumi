@@ -122,7 +122,7 @@ class TestExtract(unittest.TestCase):
             return 42
 
         tid, data = self.E.create_from_text(
-            "明天七点叫我", "822891053", now=self.now, add_func=fake_add)
+            "明天七点提醒我喝水", "822891053", now=self.now, add_func=fake_add)
         self.assertEqual(tid, 42)
         self.assertEqual(added["type"], "once")
         self.assertEqual(added["source"], "chat")

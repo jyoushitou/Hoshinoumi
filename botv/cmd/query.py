@@ -1,4 +1,4 @@
-# ===================== 查询类命令 =====================
+﻿# ===================== 查询类命令 =====================
 # ping / uptime / log / db / usage：只读，返回文本
 # 迁移自 commands.py（v5-R5）
 
@@ -6,7 +6,7 @@ from datetime import datetime
 
 from ..infra.conn import get_cursor
 from ..infra.repo_ai import get_recent_usage  # 数据库
-from ..log import get_recent_logs  # 日志
+from ..infra.log_sink import get_recent_logs  # 日志
 from .registry import command
 from ..core import clock
 
@@ -132,3 +132,4 @@ async def cmd_usage(ctx):
         return "\n".join(lines)
     except Exception as e:
         return f"❌ 查询token用量失败: {e}"
+

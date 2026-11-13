@@ -19,7 +19,7 @@ from ..ai.prompt import load_personality_supplement
 def _wire_life():
     """v17.15：注册生活能力端口；失败不阻断启动（ai 侧有默认值）"""
     try:
-        from ..core.lifeport import setup_life_bridge
+        from .life_bridge import setup_life_bridge
 
         names = setup_life_bridge()
         log_system(f"[端口] 生活能力已注册：{len(names)} 项")
@@ -132,8 +132,20 @@ def _ensure_cron_schema():
         log_err(f"[定时] 场景规则迁移失败: {e}")
 
 
+def _wire_logging():
+    """v19.4：把 DB writer 注入 log；log 本身不 import infra/db"""
+    try:
+        from .. import log as log_mod
+        from ..infra.log_sink import write_log_to_db
+
+        log_mod.register_db_writer(write_log_to_db)
+    except Exception as e:
+        log_err(f"[日志] DB writer 注入失败：{e}")
+
+
 def bootstrap():
     """同步初始化：加载密钥/记忆/表情包/CLIP/人设，建表，初始化运行时状态"""
+    _wire_logging()
     _configure_db()  # v17.14：先把数据库配置注入 infra.conn
     _wire_life()     # v17.15：把 life 能力注册进端口（ai 不 import life）
     reload_api_keys()  # 必须先于 load_memories（追溯日记需要 API key）

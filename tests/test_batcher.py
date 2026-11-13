@@ -87,15 +87,12 @@ class TestBatchHandler(unittest.TestCase):
         async def fake_reply(d, ws, text, img_md5s=None):
             calls.append(text)
 
-        orig = batcher._handle_batch.__globals__.get("_reply_and_send")
-        import botv.chat.handler as H
-
-        H_reply = H._reply_and_send
-        H._reply_and_send = fake_reply
+        old = batcher._handler
+        batcher.set_handler(fake_reply)
         try:
             asyncio.run(batcher._handle_batch("1", [({"message_type": "private"}, None, "在吗", [])]))
         finally:
-            H._reply_and_send = H_reply
+            batcher.set_handler(old)
 
         self.assertEqual(calls, ["在吗"])
 
@@ -108,8 +105,8 @@ class TestBatchHandler(unittest.TestCase):
         async def fake_reply(d, ws, text, img_md5s=None):
             calls.append(text)
 
-        orig = H._reply_and_send
-        H._reply_and_send = fake_reply
+        old = batcher._handler
+        batcher.set_handler(fake_reply)
         try:
             items = [
                 ({"message_type": "private"}, None, "在吗", []),
@@ -117,7 +114,7 @@ class TestBatchHandler(unittest.TestCase):
             ]
             asyncio.run(batcher._handle_batch("1", items))
         finally:
-            H._reply_and_send = orig
+            batcher.set_handler(old)
 
         self.assertEqual(calls, ["在吗\n问你个事"], "多句应合并成一段")
 

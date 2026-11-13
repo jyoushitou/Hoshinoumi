@@ -7,7 +7,7 @@ from collections import Counter
 
 import jieba
 
-from .context import extract_keywords
+from .text import extract_keywords
 
 
 def tokenize(text, cut=None):

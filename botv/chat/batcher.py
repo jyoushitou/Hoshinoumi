@@ -36,10 +36,17 @@ def batchable(message_type, text):
     return True
 
 
-async def _handle_batch(target, items):
-    """一批消息到齐：拼成一段，交给 _reply_and_send 处理一次"""
-    from .handler import _reply_and_send
+_handler = None
 
+
+def set_handler(fn):
+    """由 handler 注入回复函数，避免 batcher → handler 反向 import"""
+    global _handler
+    _handler = fn
+
+
+async def _handle_batch(target, items):
+    """一批消息到齐：拼成一段，交给注入的回复函数处理一次"""
     d, ws, first_text, img_md5s = items[0]
     texts = [t for _, _, t, _ in items if (t or "").strip()]
 
@@ -50,7 +57,9 @@ async def _handle_batch(target, items):
     else:
         merged = first_text
 
-    await _reply_and_send(d, ws, merged, img_md5s)
+    if _handler is None:
+        return
+    await _handler(d, ws, merged, img_md5s)
 
 
 _batcher = None
@@ -66,3 +75,4 @@ def get_batcher():
 def set_batcher(b):
     global _batcher
     _batcher = b
+

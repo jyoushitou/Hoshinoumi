@@ -23,11 +23,16 @@ def _stamp():
     return clock.fmt_hms()
 
 
-def _db_writer():
-    """延迟导入数据库写入（只在刷库线程里调）"""
-    from .db import write_log_to_db
+_writer = {"fn": None}
 
-    return write_log_to_db
+
+def register_db_writer(fn):
+    """由启动装配注入 DB writer；log 本身不 import infra/db"""
+    _writer["fn"] = fn
+
+
+def _db_writer():
+    return _writer["fn"]
 
 
 def _flusher_loop():
@@ -136,20 +141,4 @@ def log_err(m):
     _emit("异常", m, f"【异常】{_stamp()}|{m}")
 
 
-def get_recent_logs(limit=20):
-    """从数据库获取最近日志（用于!log命令）"""
-    try:
-        from .db import get_cursor
 
-        c = get_cursor()
-        c.execute("SELECT level, message, created_at FROM logs ORDER BY id DESC LIMIT %s",
-                  (limit,))
-        rows = c.fetchall()
-        if not rows:
-            return "暂无日志记录"
-        lines = []
-        for r in reversed(rows):
-            lines.append(f"[{r['created_at']}] [{r['level']}] {r['message']}")
-        return "\n".join(lines)
-    except Exception as e:
-        return f"获取日志失败: {e}"
