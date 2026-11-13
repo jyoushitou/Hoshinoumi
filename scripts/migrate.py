@@ -75,6 +75,14 @@ def main():
             print("[X] 迁移中断，先别启动")
             return rc
 
+        # v21.4：events 已迁到 memories；旧库若还留着兼容视图，迁移时删掉
+        try:
+            c.execute("DROP VIEW IF EXISTS events")
+            c.connection.commit()
+            print("        events 兼容视图已移除")
+        except Exception as e:
+            print(f"        events 视图清理跳过：{e}")
+
         print("  [4/5] 索引")
         try:
             migrate_indexes.apply(c)
