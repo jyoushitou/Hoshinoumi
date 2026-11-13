@@ -1,10 +1,10 @@
-﻿# 架构图（v18.20.0）
+# 架构图（v20.5）
 
 > 配套阅读：**[ARCH-REVIEW.md](ARCH-REVIEW.md)**（量化审查、问题与修复顺序）
 >
-> v18 已完成；当前 v19 试运行，本图仍以 **v18.20.0 的实际运行结构**为基线；v19 的架构/对话底座、v20–v22 网关、v23 多用户目标见
-> [v19](versions/v19.md)、[v20](versions/v20.md)、[v21](versions/v21.md)、[v22](versions/v22.md)、
-> [v23](versions/v23.md)。图中 ⚠ 是已知架构债，不代表当前不能用。
+> **当前后端 v20.5，网关 v20.5（Docker/网关验证）。** 已部署试运行。 本图以 v18.20 的分层为基线，v19 已加入 `conversation_messages`、
+> 迁移单一入口与语音分段；网关在 `gateway/`（C++，v20 核心），内部契约骨架在 `proto/nao/v1/`。
+> 开发计划见 [ROADMAP](ROADMAP.md) 与 [versions/](versions/)；图中 ⚠ 是已知架构债，不代表当前不能用。
 
 ---
 
@@ -64,7 +64,7 @@
                        │
               ┌────────▼─────────────────────────┐
               │ MySQL（默认）/ SQLite（自动降级）  │
-              │ memories / 新表 / events 只读视图  │
+              │ 25 张表 + v_bot_meta 只读视图       │
               │ + data/ 文件 + backups/            │
               └──────────────────────────────────┘
 ```
@@ -78,6 +78,17 @@
 （`schedule.planner` 已在 v18.9 删除）。
 
 ---
+
+## 1.1 当前入口（v20.5）
+
+| 入口 | 代码 | 端口 | 说明 |
+|---|---|---|---|
+| QQ | `bot.chat.handler` | `3001` | bot 是 WebSocket 服务端，NapCat 连入 |
+| 本机 HTTP | `bot.server.http_api` | `27004` | `/api/*` 用 Bearer Token；`/api/health` 与 `/internal/*` 免鉴权 |
+| 网关 | `gateway/`（C++） | `27005` | `/api/*` → 本机 `27004`；v20.5，无 JWT/限流/TLS |
+| 定时/主动 | `bot.scheduler` / `bot.executors` | — | `call_at` 钩子 + 三档队列 |
+
+> 网关不替代 NapCat：NapCat 仍是 QQ 通道；网关只服务自有客户端/公网 HTTP。
 
 ## 2. 一条消息的生命周期（v18.6 起异步派发）
 
@@ -247,7 +258,7 @@ v17.1 的三档队列仍然是底座；但**到点触发**已经从 `minute_tick
 
 ---
 
-## 5. 已知架构债（v18.20）
+## 5. 已知架构债（v18.20 审查，v20.5 仍未清完）
 
 1. **`events` 兼容视图是过渡态**  
    写路径已切 `memories`，但 `repo_memory`、`store_v2`、`diary/store` 仍有 `FROM events` 读查询。
@@ -282,7 +293,7 @@ v17.1 的三档队列仍然是底座；但**到点触发**已经从 `minute_tick
 
 ---
 
-## 6. 包职责一览（v18.20 有效行数）
+## 6. 包职责一览（v18.20 审查时行数，当前以代码为准）
 
 > 数据来自 `.tmp/arch_deep.py`：AST 有效行，不含空行/注释；154 个文件，13,859 行，885 个函数。
 

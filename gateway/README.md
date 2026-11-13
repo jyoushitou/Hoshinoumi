@@ -1,4 +1,4 @@
-# Hoshinoumi（REC）Gateway v20
+# Hoshinoumi（REC）Gateway v20.5
 
 基于用户自己的 **NetWorkCommunication / CommonNet**（Boost.Asio + Boost.Beast）实现的 C++ 网关。
 
@@ -7,7 +7,9 @@
 - 依赖：vcpkg overlay ports（`commonnet` + `utils`）
 - 部署：Docker 镜像，部署机不编译
 
-## v20.0 范围
+## 当前范围（v20.0 起，v20.5 验证）
+
+> 当前 **v20.5** 处于 Docker/网关验证，已部署试运行；鉴权/限流/TLS/多用户仍未实现（v21/v22/v23）。
 
 | 有 | 没有（后续） |
 |---|---|
@@ -77,32 +79,32 @@ curl -s http://127.0.0.1:27005/readyz
 ## Docker（推荐部署方式）
 
 ```bash
-docker build -f gateway/Dockerfile -t hoshinoumi-gateway:20.0.0 .
+docker build -f gateway/Dockerfile -t hoshinoumi-gateway:20.5.0 .
 # 国内网络拉不到 Docker Hub 时：
 # docker build --build-arg BASE_IMAGE=docker.m.daocloud.io/library/ubuntu:24.04 \
-#   -f gateway/Dockerfile -t hoshinoumi-gateway:20.0.0 .
+#   -f gateway/Dockerfile -t hoshinoumi-gateway:20.5.0 .
 
 # 导出给部署机
-python3 scripts/build_gateway.py --version 20.0.0
-# release/REC-v20.0.0-docker.tar.gz
+python3 scripts/build_gateway.py --version 20.5.0
+# release/REC-v20.5.0-docker.tar.gz
 
 # 部署机
-docker load -i REC-v20.0.0-docker.tar.gz
+docker load -i REC-v20.5.0-docker.tar.gz
 mkdir -p config
 cp gateway/config.example.json config/gateway.json
 docker run -d --name hoshinoumi-gateway \
   --network host \
   -v "$PWD/config:/app/config:ro" \
-  hoshinoumi-gateway:20.0.0
+  hoshinoumi-gateway:20.5.0
 ```
 
 > 构建机访问不了 GitHub / vcpkg 时，用离线版（系统 Boost/OpenSSL，不走 vcpkg）：
 >
 > ```bash
 > docker build --build-arg BASE_IMAGE=docker.m.daocloud.io/library/ubuntu:24.04 \
->   -f gateway/Dockerfile.offline -t hoshinoumi-gateway:20.0.0-offline .
+>   -f gateway/Dockerfile.offline -t hoshinoumi-gateway:20.5.0-offline .
 >
-> python3 scripts/build_gateway.py --version 20.0.0 --offline \
+> python3 scripts/build_gateway.py --version 20.5.0 --offline \
 >   --base-image docker.m.daocloud.io/library/ubuntu:24.04
 > ```
 

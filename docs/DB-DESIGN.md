@@ -1,9 +1,20 @@
-# 数据库设计（纯粹版）
+# 数据库设计（当前 v20.5）
+
+> **当前事实**：v17.5 已完成拆表，`events` 不再承担多种语义；当前是 **25 张表 + 1 个只读视图 `v_bot_meta`**。
+> 完整 DDL 以 [`bot/infra/schema.py`](../bot/infra/schema.py) 为准，本文保留设计理由与字段规范。
+>
+> 表清单：`targets` / `relations` / `conversation_messages` / `memories` / `keywords` / `digests` / `facts` /
+> `bot_states` / `friction_states` / `habits` / `reading_progress` / `diaries` / `images` / `acg_images` /
+> `ai_raw_responses` / `logs` / `ai_logs` / `ops_audit` / `cron_tasks` / `cron_overrides` / `api_keys` /
+> `global_keywords` / `user_memory` / `bot_meta` / `settings`；视图 `v_bot_meta`。
+>
+> 下面“现状问题”是 v17 之前的背景，保留作设计依据，不代表当前表结构。
+
 
 > 目标：**一表一职责**。配置是配置、数据是数据、日志是日志。
 > 现状把 8 种语义塞进 `events` 一张表（用 `kind` 区分），查询要带过滤、字段没约束、清理时互相牵连。
 
-## 一、现状问题
+## 一、v17 之前的问题（历史）
 
 | 问题 | 表现 |
 |---|---|
