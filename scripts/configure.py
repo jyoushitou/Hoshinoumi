@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """Hoshinoumi（REC）网关配置向导（v20.0）
 
     python3 scripts/configure.py            # 交互配置

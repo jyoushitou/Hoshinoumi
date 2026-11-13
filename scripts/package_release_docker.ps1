@@ -1,4 +1,4 @@
-﻿# Hoshinoumi（REC）本机打完整 Docker 发布包
+# Hoshinoumi（REC）本机打完整 Docker 发布包
 # 用法：
 #   pwsh -File scripts/package_release_docker.ps1 -Version 20.0.0 `
 #     -BotBase docker.m.daocloud.io/library/python:3.12-slim `

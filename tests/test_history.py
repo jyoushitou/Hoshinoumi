@@ -1,4 +1,4 @@
-﻿# ===================== v19.2 !history =====================
+# ===================== v19.2 !history =====================
 import unittest
 
 from bot.cmd import history_cmd as H

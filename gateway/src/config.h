@@ -1,4 +1,4 @@
-﻿/// @file        config.h
+/// @file        config.h
 /// @brief       网关配置（config/gateway.json）
 /// @author      jyoushitou
 /// @date        2026-11-13

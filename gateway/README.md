@@ -1,4 +1,4 @@
-﻿# Hoshinoumi（REC）Gateway v20
+# Hoshinoumi（REC）Gateway v20
 
 基于用户自己的 **NetWorkCommunication / CommonNet**（Boost.Asio + Boost.Beast）实现的 C++ 网关。
 
