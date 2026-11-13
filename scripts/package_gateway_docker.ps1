@@ -1,4 +1,4 @@
-# 只打包 C++ 网关镜像（不含 Python bot）
+﻿# 只打包 C++ 网关镜像（不含 Python bot）
 # 用法：
 #   .\scripts\package_gateway_docker.ps1 -Version 20.0.0 `
 #     -GatewayBase docker.m.daocloud.io/library/ubuntu:24.04
