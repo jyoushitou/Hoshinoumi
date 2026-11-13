@@ -1,6 +1,16 @@
 # Hoshinoumi（REC） v19.5.7
 
+[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Database](https://img.shields.io/badge/Database-MySQL%20%7C%20SQLite-4479A1)](#)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-5C2D91)](#)
+[![NapCat](https://img.shields.io/badge/NapCat-QQ-12B7F5)](#)
+[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
+[![Version](https://img.shields.io/badge/Version-v19.5.7-orange)](docs/RELEASE-NOTES.md)
+[![Tests](https://img.shields.io/badge/Tests-962%20passing-brightgreen)](#)
+
 > **Hoshinoumi（REC，记录）** · 友利奈绪 · 星之海学园学生会室
+>
+> 一个以 QQ 为入口、带长期记忆与情绪状态的 AI 陪伴后端；支持多端 API、定时主动、语音、图像与小说阅读。
 >
 > 仓库：<https://github.com/jyoushitou/Hoshinoumi>
 >
@@ -1065,6 +1075,28 @@ python3 checks/env_check.py --init-db   # 环境监测时自动建
 | [`docs/V6-功能.md`](docs/V6-功能.md) | v6 时代的功能总表（74 项，封版） |
 | [`docs/RELEASE-NOTES.md`](docs/RELEASE-NOTES.md) | 最近一次发布说明 |
 
+## 联系方式
 
+- 项目维护者：[jyoushitou](https://github.com/jyoushitou)
+- 邮箱：[xzt98948364@outlook.com](mailto:xzt98948364@outlook.com)
+- 博客地址：<https://jyoushitou.github.io/>
+- 项目地址：<https://github.com/jyoushitou/Hoshinoumi>
+- 旧仓库（v18 及以前）：<https://github.com/jyoushitou/NapCat-Pyhon>
 
+## 开源协议与致谢
+
+### 仓库代码许可
+
+本项目自身代码采用 **MIT License** 开源，详见 [LICENSE](LICENSE)。
+
+### 致谢
+
+- **《Charlotte》**：角色「友利奈绪」与世界观原型；本项目是非官方同人 / 个人项目。
+- **NapCat**：QQ 协议端。
+- **DeepSeek / 豆包**：对话模型。
+- **edge-tts**：语音合成。
+- **tesseract / Playwright**：番茄小说截图与 OCR。
+- 以及所有依赖库和测试工具的作者。
+
+第三方组件遵循其各自许可证；本项目不包含《Charlotte》的官方素材。
 
