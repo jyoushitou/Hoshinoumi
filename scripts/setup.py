@@ -20,6 +20,9 @@ import argparse
 import os
 import subprocess
 import sys
+from pathlib import Path
+import subprocess
+import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
@@ -321,41 +324,26 @@ def main():
         return 1
 
     if args.skip_tables or dry:
-        print("  [--] 跳过建表（" + ("--check" if dry else "--skip-tables") + "）")
+        print("  [--] 跳过数据库迁移（" + ("--check" if dry else "--skip-tables") + "）")
         return 0
 
+    # v21.3：setup 不再建表/补列，统一交给 migrate.py
     print()
-    print("建表：")
-    ok_tables = init_tables()
-    if not ok_tables:
+    print("数据库迁移（唯一入口 scripts/migrate.py）：")
+    migrate = Path(__file__).resolve().parent / "migrate.py"
+    rc = subprocess.call([sys.executable, str(migrate), "--apply"])
+    if rc != 0:
         print()
-        print("建表没完成，修完再跑一次。")
-        return 1
-
-    print()
-    print("迁移旧数据：")
-    migrate_data()
-
-    print()
-    print("补定时表结构：")
-    ensure_cron_schema()
-
-    print()
-    print("导入内置场景：")
-    seed_scenes()
+        print("迁移没完成，修完再跑一次。")
+        return rc
 
     print()
     print("=" * 60)
     print("  环境就绪，直接启动：")
     print("      python3 run.py")
-    print()
-    print("  需要单独排查时（都可选，正常部署不用跑）：")
-    print("      python3 scripts/preflight.py    # 13 项环境自检")
-    print("      python3 scripts/init_db.py      # 只建表（加 --apply）")
-    print("      python3 scripts/migrate_v17.py  # 只迁移（加 --apply）")
-    print("      python3 scripts/migrate_v18.py  # v18.17 events→memories（加 --apply）")
-    print("      python3 scripts/seed_scenes.py  # 只导入场景（加 --apply）")
-    print("      python3 scripts/run_tests.py    # 全量测试（968 条）")
+    print("  迁移/检查：")
+    print("      python3 scripts/migrate.py --apply")
+    print("      python3 scripts/run_tests.py")
     print("=" * 60)
     return 0
     print("建表没完成，修完再跑一次。")

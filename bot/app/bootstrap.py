@@ -50,87 +50,24 @@ def _configure_db():
         return None
 
 
-def _ensure_tables():
-    """确保 acg_images / diaries 表存在，并给 ai_raw_responses 补 token 字段"""
-    # 确保 ACG 图片表存在（用于缓存 ACG 二次元图片）
+def _check_schema():
+    """v21.3：启动只校验 schema_version，绝不建表/改表。"""
+    expected = "19"
     try:
         c = get_cursor()
-        c.execute("""
-            CREATE TABLE IF NOT EXISTS acg_images (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                md5_hash VARCHAR(32) NOT NULL UNIQUE,
-                image_data MEDIUMBLOB,
-                tags VARCHAR(255) DEFAULT '',
-                source_url VARCHAR(512) DEFAULT '',
-                file_path VARCHAR(255) DEFAULT '',
-                ext VARCHAR(10) DEFAULT 'jpg',
-                use_count INT DEFAULT 0,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-        """)
-        c.connection.commit()
-        log_system("acg_images 表已就绪")
+        c.execute("SELECT v FROM bot_meta WHERE k='schema_version'")
+        row = c.fetchone()
+        actual = str(row["v"]) if row else ""
     except Exception as e:
-        log_err(f"建表失败: {e}")
-
-    # 确保 diaries 日记表存在（用于存储自动生成的日记）
-    try:
-        c = get_cursor()
-        c.execute("""
-            CREATE TABLE IF NOT EXISTS diaries (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                target_id VARCHAR(50) NOT NULL,
-                diary_date DATE NOT NULL,
-                content TEXT,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                INDEX idx_target_date (target_id, diary_date)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-        """)
-        c.connection.commit()
-        log_system("diaries 表已就绪")
-    except Exception as e:
-        log_err(f"创建 diaries 表失败: {e}")
-
-    # 确保 ai_raw_responses 表有 token 用量字段（数据库迁移）
-    try:
-        c = get_cursor()
-        c.execute("SHOW COLUMNS FROM ai_raw_responses LIKE 'prompt_tokens'")
-        if not c.fetchone():  # 字段不存在，执行迁移
-            c.execute("ALTER TABLE ai_raw_responses ADD COLUMN prompt_tokens INT DEFAULT 0")
-            c.execute("ALTER TABLE ai_raw_responses ADD COLUMN completion_tokens INT DEFAULT 0")
-            c.execute("ALTER TABLE ai_raw_responses ADD COLUMN total_tokens INT DEFAULT 0")
-            c.connection.commit()
-            log_system("ai_raw_responses 表已升级，添加token用量字段")
-        else:
-            log_system("ai_raw_responses 表token字段已存在")
-    except Exception as e:
-        log_err(f"升级ai_raw_responses表失败: {e}")
-
-
-def _ensure_cron_schema():
-    """v18.7：老库补 rule / timing 列 + cron_overrides 表"""
-    try:
-        from ..infra import schema
-        schema.ensure_tables(names=["cron_overrides"])
-    except Exception as e:
-        log_err(f"[定时] 建 cron_overrides 失败: {e}")
-    try:
-        c = get_cursor()
-        for name, ddl in (("rule", "VARCHAR(16) NULL"),
-                          ("timing", "VARCHAR(8) NOT NULL DEFAULT 'exact'")):
-            try:
-                c.execute(f"ALTER TABLE cron_tasks ADD COLUMN {name} {ddl}")
-            except Exception:
-                pass  # 已存在
-        c.connection.commit()
-    except Exception as e:
-        log_err(f"[定时] 补 cron_tasks 列失败: {e}")
-    try:
-        from ..schedule import cron as cron_mod
-        cron_mod.migrate_scene_rules()
-    except Exception as e:
-        log_err(f"[定时] 场景规则迁移失败: {e}")
-
+        raise RuntimeError(
+            "数据库结构未初始化或不可读；先运行：python3 scripts/migrate.py --apply"
+        ) from e
+    if actual != expected:
+        raise RuntimeError(
+            f"数据库 schema_version={actual or '缺失'}，需要 {expected}；"
+            "先运行：python3 scripts/migrate.py --apply"
+        )
+    log_system(f"[存储] schema_version={actual}")
 
 def _wire_logging():
     """v19.4：把 DB writer 注入 log；log 本身不 import infra/db"""
@@ -147,6 +84,7 @@ def bootstrap():
     """同步初始化：加载密钥/记忆/表情包/CLIP/人设，建表，初始化运行时状态"""
     _wire_logging()
     _configure_db()  # v17.14：先把数据库配置注入 infra.conn
+    _check_schema()  # v21.3：启动只校验，不建表/改表
     _wire_life()     # v17.15：把 life 能力注册进端口（ai 不 import life）
     reload_api_keys()  # 必须先于 load_memories（追溯日记需要 API key）
     load_memories()  # 从数据库加载对话记忆和全局关键词
