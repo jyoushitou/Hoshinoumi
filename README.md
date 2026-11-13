@@ -86,29 +86,33 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | v21 | 网关（二）owner 鉴权：JWT/刷新/失败锁定 | 📋 已规划 | [v21.md](docs/versions/v21.md) |
 | v22 | 网关（三）安全：限流/审计/TLS/`!gw` | 📋 已规划 | [v22.md](docs/versions/v22.md) |
 | v23 | 多用户：users/identities/roles + 全表 user_id 隔离 | 📋 已规划 | [v23.md](docs/versions/v23.md) |
-| v24 | 模型层插件：ModelProvider + 注册表 + 降级链 | 📋 已规划 | [v24.md](docs/versions/v24.md) |
-| v25 | 记忆层插件：MemoryStore / Retriever / Embedding | 📋 已规划 | [v25.md](docs/versions/v25.md) |
-| v26 | 通道层插件：Channel + QQ/Web 适配器 | 📋 已规划 | [v26.md](docs/versions/v26.md) |
-| v27 | 工具层插件：manifest + 权限 + 超时 + 审计 | 📋 已规划 | [v27.md](docs/versions/v27.md) |
-| v28 | 多端推送：主动消息扇出到所有接入口 | 📋 已规划 | [v28.md](docs/versions/v28.md) |
-| v29 | DSH / Qoder / WorkBuddy 插件：她成为你所有工具的记忆层 | 📋 已规划 | [v29.md](docs/versions/v29.md) |
-| v30 | 电脑 Web：聊天 + 历史 + 功能面板 | 📋 已规划 | [v30.md](docs/versions/v30.md) |
-| v31 | 桌面端（一）Linux：Tauri + Web UI | 📋 已规划 | [v31.md](docs/versions/v31.md) |
-| v32 | 桌面端（二）Windows：Tauri + WebView2 | 📋 已规划 | [v32.md](docs/versions/v32.md) |
-| v33 | 手机 App（Flutter）+ 推送通知 | 📋 已规划 | [v33.md](docs/versions/v33.md) |
-| v34 | QQ 空间：发说说 + 只对熟人点赞/评论 | 📋 已规划 | [v34.md](docs/versions/v34.md) |
-| v35 | 运维（一）bash 只读 | 📋 已规划 | [v35.md](docs/versions/v35.md) |
-| v36 | 运维（二）agent | 📋 已规划 | [v36.md](docs/versions/v36.md) |
-| v37 | 运维（三）有限写 | 📋 已规划 | [v37.md](docs/versions/v37.md) |
-| v38 | 运维（四）可写体系 | 📋 已规划 | [v38.md](docs/versions/v38.md) |
-| v39 | 视频（一）B 站 | 📋 已规划 | [v39.md](docs/versions/v39.md) |
-| v40 | 视频（二）抖音 | 📋 已规划 | [v40.md](docs/versions/v40.md) |
-| v41 | 微信接入（OpenClaw） | 📋 已规划 | [v41.md](docs/versions/v41.md) |
-| v42 | 语音通话 | 📋 已规划 | [v42.md](docs/versions/v42.md) |
-| v43 | 视频通话 | 📋 已规划 | [v43.md](docs/versions/v43.md) |
-| v44 | 微服务接入：融进自有 Web，探网关 5 次 + 池复用 | 📋 已规划 | [v44.md](docs/versions/v44.md) |
-| v45 | 常驻（后端）systemd / 看门狗 | 📋 已规划 | [v45.md](docs/versions/v45.md) |
-| v46 | 嵌入式前端（Linux 后端）：树莓派/平板显示对话 | 📋 已规划 | [v46.md](docs/versions/v46.md) |
+| v24 | 插件管理：manifest / 生命周期 / 权限 / 健康 | 📋 已规划 | [v24.md](docs/versions/v24.md) |
+| v25 | 模型层插件：ModelProvider + 注册表 + 降级链 | 📋 已规划 | [v25.md](docs/versions/v25.md) |
+| v26 | 记忆层插件：MemoryStore / Retriever / Embedding | 📋 已规划 | [v26.md](docs/versions/v26.md) |
+| v27 | 通道层插件：Channel + QQ/Web 适配器 | 📋 已规划 | [v27.md](docs/versions/v27.md) |
+| v28 | 工具层插件：manifest + 权限 + 超时 + 审计 | 📋 已规划 | [v28.md](docs/versions/v28.md) |
+| v29 | 存储层插件：StorageBackend + Repository | 📋 已规划 | [v29.md](docs/versions/v29.md) |
+| v30 | 调度层插件：Scheduler + Trigger | 📋 已规划 | [v30.md](docs/versions/v30.md) |
+| v31 | 出站层插件：Transport + WS/HTTP 适配器 | 📋 已规划 | [v31.md](docs/versions/v31.md) |
+| v32 | 多端推送：主动消息扇出到所有接入口 | 📋 已规划 | [v32.md](docs/versions/v32.md) |
+| v33 | DSH / Qoder / WorkBuddy 插件：她成为你所有工具的记忆层 | 📋 已规划 | [v33.md](docs/versions/v33.md) |
+| v34 | 电脑 Web：聊天 + 历史 + 功能面板 | 📋 已规划 | [v34.md](docs/versions/v34.md) |
+| v35 | 桌面端（一）Linux：Tauri + Web UI | 📋 已规划 | [v35.md](docs/versions/v35.md) |
+| v36 | 桌面端（二）Windows：Tauri + WebView2 | 📋 已规划 | [v36.md](docs/versions/v36.md) |
+| v37 | 手机 App（Flutter）+ 推送通知 | 📋 已规划 | [v37.md](docs/versions/v37.md) |
+| v38 | QQ 空间：发说说 + 只对熟人点赞/评论 | 📋 已规划 | [v38.md](docs/versions/v38.md) |
+| v39 | 运维（一）bash 只读 | 📋 已规划 | [v39.md](docs/versions/v39.md) |
+| v40 | 运维（二）agent | 📋 已规划 | [v40.md](docs/versions/v40.md) |
+| v41 | 运维（三）有限写 | 📋 已规划 | [v41.md](docs/versions/v41.md) |
+| v42 | 运维（四）可写体系 | 📋 已规划 | [v42.md](docs/versions/v42.md) |
+| v43 | 视频（一）B 站 | 📋 已规划 | [v43.md](docs/versions/v43.md) |
+| v44 | 视频（二）抖音 | 📋 已规划 | [v44.md](docs/versions/v44.md) |
+| v45 | 微信接入（OpenClaw） | 📋 已规划 | [v45.md](docs/versions/v45.md) |
+| v46 | 语音通话 | 📋 已规划 | [v46.md](docs/versions/v46.md) |
+| v47 | 视频通话 | 📋 已规划 | [v47.md](docs/versions/v47.md) |
+| v48 | 微服务接入：融进自有 Web，探网关 5 次 + 池复用 | 📋 已规划 | [v48.md](docs/versions/v48.md) |
+| v49 | 常驻（后端）systemd / 看门狗 | 📋 已规划 | [v49.md](docs/versions/v49.md) |
+| v50 | 嵌入式前端（Linux 后端）：树莓派/平板显示对话 | 📋 已规划 | [v50.md](docs/versions/v50.md) |
 
 > **约定**：每个大版本的**最后一个次版本**用来收尾修 bug 和技术债，不堆新功能。
 
@@ -1128,7 +1132,7 @@ python3 checks/env_check.py --init-db   # 环境监测时自动建
 |---|---|
 | **番茄正文有 OCR 错字** | 约 5%（`神谨`→`神龛`），对摘要够用，逐字引用不可靠 |
 | **起点抓不了** | 章节页对机房 IP + 未登录双重限制，已放弃 |
-| **抖音未实现** | 规划在 v25.1，且只做看和转发，发评论不可行 |
+| **抖音未实现** | 规划在 v40，且只做看和转发，发评论不可行 |
 | 群聊记忆按群号 | 同一个人在私聊和群里是两份记忆 |
 | 语义检索靠关键词 | 无外网装不了 embedding，BM25 + 关键词双路 |
 | 视觉/ASR 依赖外部接口 | 失败静默降级，不影响聊天 |
@@ -1157,10 +1161,10 @@ python3 checks/env_check.py --init-db   # 环境监测时自动建
 | 文档 | 内容 |
 |---|---|
 | [`docs/README.md`](docs/README.md) | 文档总索引（版本 → 条目 → 状态） |
-| [`docs/ROADMAP.md`](docs/ROADMAP.md) | 发布路线图：v17~v24 每个小版本的拆解与验收点 |
+| [`docs/ROADMAP.md`](docs/ROADMAP.md) | 发布路线图：v17~v46 每个小版本的拆解与验收点 |
 | [`docs/DB-DESIGN.md`](docs/DB-DESIGN.md) | 数据库设计（一表一职责） |
 | [`docs/发布检查清单.md`](docs/发布检查清单.md) | 5 组检查项 + 环境变量表 + 发布流程 |
-| [`docs/versions/`](docs/versions/) | 各版本设计文档（v6 ~ v24） |
+| [`docs/versions/`](docs/versions/) | 各版本设计文档（v6 ~ v46） |
 | [`docs/V14-后续清单.md`](docs/V14-后续清单.md) | 未排期需求（A~E 组） |
 | [`docs/V6-功能.md`](docs/V6-功能.md) | v6 时代的功能总表（74 项，封版） |
 | [`docs/RELEASE-NOTES.md`](docs/RELEASE-NOTES.md) | 最近一次发布说明 |
