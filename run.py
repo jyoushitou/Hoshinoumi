@@ -48,6 +48,59 @@ def _lock_timezone():
         print(f"[启动] 时区设置失败：{e}")
 
 
+def _runtime_gate():
+    """v19.0：只读功能清单 + 环境监测报告；只保留网络/人设运行时探测"""
+    from botv.core import features
+
+    try:
+        data = features.load()
+    except Exception as e:
+        print(f"❌ 功能清单不可用：{e}")
+        return False
+
+    ok, reason, report = features.read_report(data)
+    if not ok:
+        print("=" * 60)
+        print(f"❌ 还没有有效的环境监测报告：{reason}")
+        print("先运行：python3 checks/env_check.py")
+        print("=" * 60)
+        return False
+
+    feats = report.get("features") or {}
+    for name, conf in (data.get("features") or {}).items():
+        if not conf.get("enabled"):
+            continue
+        available = bool((feats.get(name) or {}).get("available"))
+        if conf.get("required") and not available:
+            detail = (feats.get(name) or {}).get("reason") or "不可用"
+            print(f"❌ 必需能力 {name} 不可用：{detail}")
+            return False
+        if not available:
+            print(f"⚠️ 能力 {name} 不可用，已降级：{(feats.get(name) or {}).get('reason', '')}")
+
+    try:
+        from botv.app.runtime_checks import check_network, check_persona
+
+        try:
+            detail = check_network()
+            print(f"[启动] {detail}")
+        except Exception as e:
+            if (data.get("environment") or {}).get("network_required", True):
+                print(f"❌ {e}")
+                return False
+            print(f"⚠️ {e}（network_required=false，继续）")
+        try:
+            detail = check_persona()
+            print(f"[启动] {detail}")
+        except Exception as e:
+            print(f"❌ {e}")
+            return False
+    except Exception as e:
+        print(f"❌ 运行时探测失败：{e}")
+        return False
+    return True
+
+
 def check_and_install(package_name, optional=False, allow_install=False):
     """检查包是否已安装，未安装则优先用 Ubuntu apt 命令自动安装，失败回退 pip"""
     # 特殊处理：某些 pip 包名 ≠ 导入模块名
@@ -249,33 +302,11 @@ async def check_diary():
 import asyncio  # 异步 IO：运行主函数
 
 if __name__ == "__main__":  # 直接运行本文件时
-    # v16：配置检查（数据库/QQ 号不再写死在代码里）
-    try:
-        from botv.core import settings as _settings
-        _missing = _settings.missing_keys()
-        if _missing:
-            print("=" * 60)
-            print("❌ 配置不完整：数据库连接信息还没填")
-            print("=" * 60)
-            print("缺这些：")
-            for item in _missing:
-                print("  - " + item)
-            print("\n两种填法（任选一种）：")
-            print("  ① 配置文件：cp config.example.json config.local.json 然后改")
-            print("     这个文件不会进版本库，随便写密码。")
-            print("  ② 环境变量：NAO_DB_HOST / NAO_DB_USER / NAO_DB_PASS / NAO_DB_NAME")
-            print("\n当前配置来源：", _settings.describe_source())
-            sys.exit(1)
-        if not _settings.get("master_qq"):
-            print("⚠️ 没配 NAO_MASTER_QQ：所有 !命令 都不会生效")
-    except SystemExit:
-        raise
-    except Exception as _e:
-        print(f"⚠️ 配置检查跳过（{_e}）")
+    # v19.0：环境监测报告 + 网络/人设运行时探测；不再扫依赖/建表/查密钥
+    if not _runtime_gate():
+        sys.exit(1)
+    _lock_timezone()
 
-    # 先检查依赖
-    if not check_all_dependencies():
-        sys.exit(1)  # 依赖缺失 → 退出
     # v7-E32：单实例锁——同一时刻只允许一个进程连 NapCat
     from botv.core.single_instance import acquire, release, holder_pid
     if not acquire():

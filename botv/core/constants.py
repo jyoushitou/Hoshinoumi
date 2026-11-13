@@ -32,7 +32,10 @@ DS_TIMEOUT = 60  # 兼容旧配置，实际不再使用
 DOUBAO_API_URL = "https://ark.cn-beijing.volces.com/api/v3/chat/completions"  # 豆包API地址
 DOUBAO_MODEL = "ep-20260524110944-g7vqr"  # 豆包模型名
 DOUBAO_TIMEOUT = 60  # 豆包超时（秒）
-STICKER_KEYWORDS = ["表情包", "发个表情", "来个表情", "给我表情", "要表情包", "表情"]  # 触发表情包回复的关键词
+# 注意：不要放裸「表情」——表情消息会被归一化成「（他发了个 QQ 表情…）」，
+# 裸关键词会把「对方发表情」误判成「对方要求发表情」。
+STICKER_KEYWORDS = ["表情包", "发个表情", "来个表情", "来点表情",
+                    "发表情", "给我表情", "要表情包"]  # 触发表情包回复的关键词
 STICKER_FACE_IDS = [14, 91, 99, 176, 179, 183, 196, 202, 211]  # QQ表情ID列表（兜底用）
 STICKER_ARCHIVE_DIR = "sticker_archive"  # 旧表情包存档目录
 MAX_USER_STICKERS = 30  # 每个用户最大收藏表情包数

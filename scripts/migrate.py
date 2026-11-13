@@ -83,7 +83,11 @@ def main():
 
         print("  [5/5] 内置场景")
         setup.seed_scenes()
-        print("\n[OK] 迁移完成，下一步：python3 scripts/preflight.py")
+
+        from botv.infra import repo_meta
+        repo_meta.set_value("schema_version", "19")
+        print("        schema_version=19")
+        print("\n[OK] 迁移完成，下一步：python3 checks/env_check.py")
         return 0
     finally:
         try:

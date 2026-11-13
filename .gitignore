@@ -30,3 +30,4 @@ docs/HANDOFF.md
 data/nao.db
 data/nao.db-shm
 data/nao.db-wal
+data/env_report.json

@@ -849,6 +849,11 @@ class TestPureEmoji(unittest.TestCase):
         self.assertFalse(contains_sticker_key("[表情5]"),
                          "[表情5] 是占位符，不该当请求")
         self.assertFalse(contains_sticker_key("[图][表情3]"))
+        self.assertFalse(
+            contains_sticker_key("（他发了个 QQ 表情，没说话，你用一句话接住）"),
+            "对方发表情不是要求发表情")
+        self.assertFalse(contains_sticker_key("表情"),
+                         "裸「表情」不能当请求")
 
     def test_real_request_still_works(self):
         from botv.chat.inbound import contains_sticker_key

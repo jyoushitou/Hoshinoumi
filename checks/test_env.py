@@ -188,6 +188,7 @@ class TestEnvironment(unittest.TestCase):
     # 代码里允许出现的环境变量白名单；新增时必须同步 docs/发布检查清单.md
     EXPECTED_ENV = {
         "NAO_CLIP",
+        "NAO_FEATURES",
         "NAO_VOICE",
         "NAO_VISION_MODEL",
         "NAO_VISION_URL",

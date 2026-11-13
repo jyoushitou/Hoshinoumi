@@ -208,20 +208,26 @@ def ensure_cron_schema():
     try:
         schema.ensure_tables(names=["cron_overrides"])
         c = get_cursor()
-        for name, ddl in (("rule", "VARCHAR(16) NULL"),
-                          ("timing", "VARCHAR(8) NOT NULL DEFAULT 'exact'")):
-            try:
-                c.execute(f"ALTER TABLE cron_tasks ADD COLUMN {name} {ddl}")
-                print(f"  [OK] cron_tasks 补列 {name}")
-            except Exception:
-                pass  # 已存在
-        c.connection.commit()
         try:
-            from botv.schedule import cron
-            cron.migrate_scene_rules()
-        except Exception as e:
-            print(f"  [!]  场景规则迁移失败（启动时会再试）：{e}")
-        return True
+            for name, ddl in (("rule", "VARCHAR(16) NULL"),
+                              ("timing", "VARCHAR(8) NOT NULL DEFAULT 'exact'")):
+                try:
+                    c.execute(f"ALTER TABLE cron_tasks ADD COLUMN {name} {ddl}")
+                    print(f"  [OK] cron_tasks 补列 {name}")
+                except Exception:
+                    pass  # 已存在
+            c.connection.commit()
+            try:
+                from botv.schedule import cron
+                cron.migrate_scene_rules()
+            except Exception as e:
+                print(f"  [!]  场景规则迁移失败（启动时会再试）：{e}")
+            return True
+        finally:
+            try:
+                c.close()
+            except Exception:
+                pass
     except Exception as e:
         print(f"  [!]  定时表补列失败（启动时会再试）：{e}")
         return True

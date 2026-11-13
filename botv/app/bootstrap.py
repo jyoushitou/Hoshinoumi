@@ -144,8 +144,8 @@ def bootstrap():
     init_clip_model()
     load_personality_supplement()  # 人设补充文本（远程 > 本地）
 
-    _ensure_tables()
-    _ensure_cron_schema()  # v18.7：rule/timing + 当天覆盖表
+    # v19.0：启动不再改表；schema 只由 scripts/migrate.py --apply 负责。
+    # 缺结构时让后续 SQL 直接报错，由环境监测提前拦住。
     _mark_start()    # v18.5：记录首次启动时间（!uptime 用，不受日志 TTL 影响）
 
     cfg.PROCESS_LOCK = asyncio.Lock()  # 消息处理锁

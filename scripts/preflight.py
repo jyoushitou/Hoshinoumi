@@ -6,9 +6,12 @@
 # 退出码：0 = 全部通过；1 = 有阻塞项
 
 import importlib
+import json
 import os
 import pkgutil
+import shutil
 import sys
+from datetime import datetime, timezone
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
@@ -284,6 +287,50 @@ def step_memory_schema():
     return f"memories {n} 行 · v18 列齐全 · cron_overrides 存在"
 
 
+def step_vision():
+    """v19.0：生成测试图真实调用视觉模型；失败 WARN，不阻塞"""
+    import asyncio
+
+    from botv.ai.vision import self_test
+
+    report = asyncio.run(self_test())
+    if "✅" not in report:
+        raise RuntimeError(report.replace("\n", " | ")[:500])
+    return report.replace("\n", " | ")[:300]
+
+
+def step_voice():
+    try:
+        import edge_tts  # noqa: F401
+    except Exception:
+        raise RuntimeError("未安装 edge-tts（语音会降级为纯文字）")
+    return "edge-tts 可用"
+
+
+def step_reading():
+    try:
+        import playwright  # noqa: F401
+    except Exception:
+        raise RuntimeError("未安装 playwright（小说抓取会降级）")
+    if not shutil.which("tesseract"):
+        raise RuntimeError("未安装 tesseract（OCR 会降级）")
+    return "playwright + tesseract 可用"
+
+
+def step_ocr():
+    return step_reading()
+
+
+def step_backup():
+    if shutil.which("mysqldump"):
+        return "mysqldump 可用"
+    try:
+        import sqlite3  # noqa: F401
+        return "SQLite 可用（MySQL 备份需 mysqldump）"
+    except Exception:
+        raise RuntimeError("没有可用的备份工具")
+
+
 def step_keys():
     from botv.infra.repo_key import get_api_key_from_db
     keys = {name: bool(get_api_key_from_db(name)) for name in ("DS_API_KEY", "ARK_API_KEY", "ALAPI_TOKEN")}
@@ -302,12 +349,76 @@ def step_prompt():
     return f"system prompt {len(p)} 字"
 
 
+def step_schema_version():
+    from botv.infra.repo_meta import get_value
+
+    v = str(get_value("schema_version") or "")
+    if v != "19":
+        raise RuntimeError(f"schema_version={v or '空'}，应为 19（先跑 scripts/migrate.py --apply）")
+    return "schema_version=19"
+
+
+_FEATURE_LABELS = {
+    "chat": None,
+    "vision": "视觉识图",
+    "voice": "语音能力",
+    "reading": "读书能力",
+    "ocr": "OCR 能力",
+    "backup": "备份能力",
+    "proactive": "人设提示词",
+}
+
+
+def _feature_report(data):
+    by_label = {label: (icon, detail) for icon, label, detail in results}
+    fatal_fail = any(icon == FAIL for icon, _label, _detail in results)
+    out = {}
+    for name, conf in (data.get("features") or {}).items():
+        if not conf.get("enabled"):
+            out[name] = {"enabled": False, "available": False, "reason": "disabled"}
+            continue
+        if name == "chat":
+            out[name] = {"enabled": True, "available": not fatal_fail,
+                         "reason": "" if not fatal_fail else "核心检查未通过"}
+            continue
+        label = _FEATURE_LABELS.get(name)
+        icon, detail = by_label.get(label, (WARN, "未检查"))
+        ok = icon == OK
+        out[name] = {"enabled": True, "available": ok,
+                     "reason": "" if ok else str(detail)[:300]}
+    return out
+
+
+def _build_report(data, skip_vision=False):
+    failed = [r for r in results if r[0] == FAIL]
+    return {
+        "schema_version": 1,
+        "checked_at": datetime.now(timezone.utc).isoformat(),
+        "config_hash": None,  # main 填
+        "ok": not failed,
+        "checks": {label: {"ok": icon == OK, "detail": detail}
+                   for icon, label, detail in results},
+        "features": _feature_report(data),
+        "skipped": ["vision"] if skip_vision else [],
+    }
+
+
 def main():
     import argparse
     ap = argparse.ArgumentParser()
     ap.add_argument("--init-db", action="store_true",
                     help="缺表时自动建（等同 scripts/init_db.py --apply）")
+    ap.add_argument("--skip-vision", action="store_true", help="不跑视觉实测")
+    ap.add_argument("--no-report", action="store_true", help="不写 data/env_report.json")
     args, _unknown = ap.parse_known_args()
+
+    results.clear()
+    try:
+        from botv.core import features
+        feature_data = features.load()
+    except Exception as e:
+        print(f"❌ 功能清单不可用：{e}")
+        return 1
 
     try:
         from botv.core.version import VERSION
@@ -327,14 +438,14 @@ def main():
         except Exception as _e:
             print(f"  [!] 自动建表失败: {_e}")
 
-    ok_python = check("Python 版本", step_python)
+    check("Python 版本", step_python)
     check("机器时间", step_clock)
     ok_deps = check("必需依赖", step_deps)
     check("代码静态检查", step_names)
     check("环境变量", step_env)
     check("配置", step_config)
     check("能力自检", step_capabilities)
-    check("网络连通", step_network, fatal=False)
+    check("网络连通", step_network)          # v19.0：网络是核心
     check("可选依赖", step_optional, fatal=False)
     ok_import = check("全模块导入", step_import_all)
     if ok_deps and ok_import:
@@ -342,8 +453,19 @@ def main():
         check("表结构", step_tables)
         check("v18 表结构", step_memory_schema)
         check("全部表", step_tables_extra)
+        check("schema 版本", step_schema_version)
         check("API 密钥", step_keys)
         check("人设提示词", step_prompt)
+        if features.enabled(feature_data, "vision") and not args.skip_vision:
+            check("视觉识图", step_vision, fatal=False)
+        if features.enabled(feature_data, "voice"):
+            check("语音能力", step_voice, fatal=False)
+        if features.enabled(feature_data, "reading"):
+            check("读书能力", step_reading, fatal=False)
+        if features.enabled(feature_data, "ocr"):
+            check("OCR 能力", step_ocr, fatal=False)
+        if features.enabled(feature_data, "backup"):
+            check("备份能力", step_backup, fatal=False)
     else:
         results.append((WARN, "数据库等", "依赖或导入未通过，后续检查已跳过"))
 
@@ -352,6 +474,15 @@ def main():
         print(f"{icon} {label:<10} {detail}")
 
     failed = [r for r in results if r[0] == FAIL]
+    if not args.no_report:
+        report = _build_report(feature_data, args.skip_vision)
+        report["config_hash"] = features.config_hash(feature_data)
+        try:
+            path = features.write_report(feature_data, report)
+            print(f"\n环境监测报告：{path}")
+        except Exception as e:
+            print(f"\n[!] 环境监测报告写入失败：{e}")
+
     print()
     if failed:
         print(f"共 {len(failed)} 项阻塞，修完再启动。")

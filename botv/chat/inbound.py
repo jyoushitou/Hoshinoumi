@@ -65,6 +65,10 @@ def contains_sticker_key(text):
     """
     import re
 
+    # 纯表情消息被归一化成「（他发了个 QQ 表情…）」——这是“对方发表情”，
+    # 不是“对方要求发表情”，不能走表情包快捷回复。
+    if (text or "").lstrip().startswith("（他发了个 QQ 表情"):
+        return False
     plain = re.sub(r"\[[^\]]{1,8}\]", "", text or "")
     for kw in cfg.STICKER_KEYWORDS:  # 遍历表情包关键词列表
         if kw in plain:  # 文本包含该关键词

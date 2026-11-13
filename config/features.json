@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "environment": {
+    "required": true,
+    "report": "data/env_report.json",
+    "max_age_hours": 24,
+    "network_required": true
+  },
+  "features": {
+    "chat": { "enabled": true, "required": true },
+    "vision": { "enabled": true },
+    "voice": { "enabled": true },
+    "reading": { "enabled": true },
+    "ocr": { "enabled": true },
+    "backup": { "enabled": true },
+    "proactive": { "enabled": true }
+  }
+}
