@@ -1,4 +1,4 @@
-# 友利奈绪 QQ 机器人 v19.5.6
+# 友利奈绪 QQ 机器人 v19.5.7
 
 > 世界观取自原作结局之后：能力消失，回归普通生活；**乙坂有宇已经意外去世**。
 > 提到他需要克制，可以打哑谜，但不能假装他还活着。
@@ -29,15 +29,15 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | 能备份 | 每月 1 号 04:30 自动备份，保留 6 份；`!backup` 看清单/立即备份 |
 | 查版本 | `!version` 看版本号、提交、运行时长 |
 
-**961 条测试**（功能 924 + 环境/迁移 37），静态检查零未定义名字。
+**962 条测试**（功能 925 + 环境/迁移 37），静态检查零未定义名字。
 
 ---
 
 ## 开发计划
 
-**当前：v19.5.6（架构重构 + 对话底座）**｜下一站 v20–v22 网关、v23 多用户。
+**当前：v19.5.7（架构重构 + 对话底座）**｜下一站 v20–v22 网关、v23 多用户。
 
-> v18 封存后不再打补丁；观察期出现的 bug 统一记入 [v19 观察表](docs/versions/v19.md#v18-封存后的-1-天观察期)。
+> v18 已完成；当前 v19 试运行，试运行期间的问题统一记入 [v19 文档](docs/versions/v19.md)。
 
 | 系列 | 主题 | 状态 | 文档 |
 |---|---|---|---|
@@ -45,9 +45,9 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | v14 ~ v15 | 可换角色 / 调参与观测 | ✅ 已发布 | [v14.md](docs/versions/v14.md) |
 | **v16** | **读小说（番茄 OCR + HTML 合并）** | ✅ 已发布 | [v16.md](docs/versions/v16.md) |
 | v17 | 执行模型重构：阻塞池 → 事件/调度 → 出站层 → 主循环瘦身 | ✅ 已发布（v17.17） | [v17.md](docs/versions/v17.md) |
-| v18 | 情感的深刻度：记忆分轻重、情绪跨天、时间与日志修复 | 🔒 已封存（v18.20.0） | [v18.md](docs/versions/v18.md) |
-| v19 | 架构重构 + 对话同步底座：迁移单一入口、`conversation_messages`、`!history`、语音分段 | ✅ 已完成（v19.5.6） | [v19.md](docs/versions/v19.md) |
-| v20 | 网关（一）核心：C++/Drogon + REST↔gRPC 代理 | 📋 已规划 | [v20.md](docs/versions/v20.md) |
+| v18 | 情感的深刻度：记忆分轻重、情绪跨天、时间与日志修复 | ✅ 已完成（v18.20.0） | [v18.md](docs/versions/v18.md) |
+| v19 | 架构重构 + 对话同步底座：迁移单一入口、`conversation_messages`、`!history`、语音分段 | 🚧 试运行（v19.5.7） | [v19.md](docs/versions/v19.md) |
+| v20 | 网关（一）核心：C++/Drogon + REST↔gRPC 代理 + 配置向导 | 📋 已规划 | [v20.md](docs/versions/v20.md) |
 | v21 | 网关（二）owner 鉴权：JWT/刷新/失败锁定 | 📋 已规划 | [v21.md](docs/versions/v21.md) |
 | v22 | 网关（三）安全：限流/审计/TLS/`!gw` | 📋 已规划 | [v22.md](docs/versions/v22.md) |
 | v23 | 多用户：users/identities/roles + 全表 user_id 隔离 | 📋 已规划 | [v23.md](docs/versions/v23.md) |
@@ -91,7 +91,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 ```
 项目根/
 ├── botv/            机器人代码（分层包）
-├── tests/           功能测试（分模块 + 冒烟，924 条）
+├── tests/           功能测试（分模块 + 冒烟，925 条）
 ├── checks/          前置环境监测 + 迁移检查（37 条，与 botv 同级）
 ├── scripts/         迁移 / 打包 / 发布 / 自检脚本
 ├── docs/            版本计划、架构图、数据库设计、发布清单
@@ -106,12 +106,12 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 
 ```
 release/
-  nao-v19.5.6.bundle       git 包（传服务器用）
-  nao-v19.5.6-src.zip      源码包（给别人）
-  nao-v19.5.6-SHA256.txt   校验和
-  nao-v19.5.6-src-SHA256.txt 源码包校验和
-  nao-v19.5.6-full.zip     整包（带依赖，可选）
-  nao-bot-19.5.6.tar.gz    Docker 镜像（可选）
+  nao-v19.5.7.bundle       git 包（传服务器用）
+  nao-v19.5.7-src.zip      源码包（给别人）
+  nao-v19.5.7-SHA256.txt   校验和
+  nao-v19.5.7-src-SHA256.txt 源码包校验和
+  nao-v19.5.7-full.zip     整包（带依赖，可选）
+  nao-bot-19.5.7.tar.gz    Docker 镜像（可选）
   old/                      历史包（保留最近 5 个，其余归档到这里）
 ```
 
@@ -302,6 +302,23 @@ sudo python3 -m playwright install-deps chromium
 
 ### 启动
 
+**一键启动（推荐）**
+
+```bash
+python3 start.py
+```
+
+顺序固定：
+
+```text
+1. 数据库迁移（升级时第一步，幂等）
+2. 检查 API；缺失则询问是否运行 configure_api.py
+3. 环境监测（API/依赖/数据库/表结构/视觉）
+4. run.py
+```
+
+**手动分步**
+
 ```bash
 # 1. 数据库迁移（首次/升级都跑；幂等）
 python3 scripts/migrate.py --apply
@@ -317,6 +334,7 @@ python3 run.py
 ```
 
 预检逐项打勾，退出码 0 才算通过；任何 **FAIL** 都别启动。
+环境监测会检查 API 密钥；缺失时直接提示运行 `python3 scripts/configure_api.py`。
 **迁移必须先于启动**——新代码会查 `kind`、`target_id`，列不存在直接报 `Unknown column`。
 
 ### 停止
@@ -623,7 +641,7 @@ AI 摘要（≤100 字）→ 记进度
 ### 测试
 
 ```bash
-python3 scripts/run_tests.py             # 961 条（tests 924 + checks 37）
+python3 scripts/run_tests.py             # 962 条（tests 925 + checks 37）
 python3 scripts/check_names.py            # 静态检查：未定义名字 / 先用后赋值
 ```
 
@@ -657,8 +675,8 @@ python3 scripts/release.py --version v16.1.0 --apply
 源码包和完整 bundle 用一键打包：
 
 ```bash
-python3 scripts/build_all.py --version 19.5.6 --skip full,exe,docker
-# release/nao-v19.5.6-src.zip + release/nao-v19.5.6.bundle
+python3 scripts/build_all.py --version 19.5.7 --skip full,exe,docker
+# release/nao-v19.5.7-src.zip + release/nao-v19.5.7.bundle
 ```
 
 **版本号必须三段式**（`v17.0.0`），两段会直接拒绝。
@@ -669,14 +687,14 @@ python3 scripts/build_all.py --version 19.5.6 --skip full,exe,docker
 
 ```bash
 cd ~/NapCat-Python
-mysqldump -h 127.0.0.1 -u 用户 -p 库名 > ~/nao-before-v19.5.6.sql
-# 或 SQLite：sqlite3 data/nao.db ".backup '$HOME/nao-before-v19.5.6.db'"
+mysqldump -h 127.0.0.1 -u 用户 -p 库名 > ~/nao-before-v19.5.7.sql
+# 或 SQLite：sqlite3 data/nao.db ".backup '$HOME/nao-before-v19.5.7.db'"
 ```
 
 取代码并迁移：
 
 ```bash
-git fetch ./nao-v19.5.6.bundle main
+git fetch ./nao-v19.5.7.bundle main
 git reset --hard FETCH_HEAD
 
 python3 scripts/migrate.py --apply      # 建表 + 补列 + events→memories + 场景
@@ -787,7 +805,7 @@ data/           运行时数据（tunables、digests、cookies、凭据）——
 | v18.19 | 备份 | 每月 1 号 04:30，保留 6 份，`!backup` |
 | v18.20 | 封版 | `!exit` 5 秒看门狗、全角命令归一化、18.20.0 |
 | v19.0–v19.5 | 架构重构 | 功能清单/环境报告、conversation_messages、`!history`、语音分段、拆环、events 视图删除 |
-| v19.5.6 | 视觉配置 | 支持 `config.local.json` 的 `vision.*` 回退 |
+| v19.5.7 | 视觉配置 | 支持 `config.local.json` 的 `vision.*` 回退 |
 
 ---
 
