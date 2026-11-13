@@ -79,7 +79,7 @@ def read_state(target_id):
     try:
         c = get_cursor()
         c.execute(
-            "SELECT event_summary FROM memories WHERE target_id=%s AND kind='state' "
+            "SELECT summary FROM memories WHERE target_id=%s AND kind='state' "
             "ORDER BY id DESC LIMIT 1", (tid,))
         row = c.fetchone()
         if row and (row.get("summary") or row.get("event_summary")):
