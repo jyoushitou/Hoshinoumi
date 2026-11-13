@@ -1,4 +1,4 @@
-﻿# 友利奈绪 QQ 机器人 v18.20.0 —— v18 封版
+# 友利奈绪 QQ 机器人 v19.5.5
 
 > 世界观取自原作结局之后：能力消失，回归普通生活；**乙坂有宇已经意外去世**。
 > 提到他需要克制，可以打哑谜，但不能假装他还活着。
@@ -29,13 +29,13 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | 能备份 | 每月 1 号 04:30 自动备份，保留 6 份；`!backup` 看清单/立即备份 |
 | 查版本 | `!version` 看版本号、提交、运行时长 |
 
-**931 条测试**（功能 894 + 环境/迁移 37），静态检查零未定义名字。
+**959 条测试**（功能 922 + 环境/迁移 37），静态检查零未定义名字。
 
 ---
 
 ## 开发计划
 
-**当前：v19.5.4（架构重构 + 对话底座）**｜下一站 v20–v22 网关、v23 多用户。
+**当前：v19.5.5（架构重构 + 对话底座）**｜下一站 v20–v22 网关、v23 多用户。
 
 > v18 封存后不再打补丁；观察期出现的 bug 统一记入 [v19 观察表](docs/versions/v19.md#v18-封存后的-1-天观察期)。
 
@@ -46,7 +46,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | **v16** | **读小说（番茄 OCR + HTML 合并）** | ✅ 已发布 | [v16.md](docs/versions/v16.md) |
 | v17 | 执行模型重构：阻塞池 → 事件/调度 → 出站层 → 主循环瘦身 | ✅ 已发布（v17.17） | [v17.md](docs/versions/v17.md) |
 | v18 | 情感的深刻度：记忆分轻重、情绪跨天、时间与日志修复 | 🔒 已封存（v18.20.0） | [v18.md](docs/versions/v18.md) |
-| v19 | 架构重构 + 对话同步底座：迁移单一入口、`conversation_messages`、`!history`、语音分段 | ✅ 已完成（v19.5.4） | [v19.md](docs/versions/v19.md) |
+| v19 | 架构重构 + 对话同步底座：迁移单一入口、`conversation_messages`、`!history`、语音分段 | ✅ 已完成（v19.5.5） | [v19.md](docs/versions/v19.md) |
 | v20 | 网关（一）核心：C++/Drogon + REST↔gRPC 代理 | 📋 已规划 | [v20.md](docs/versions/v20.md) |
 | v21 | 网关（二）owner 鉴权：JWT/刷新/失败锁定 | 📋 已规划 | [v21.md](docs/versions/v21.md) |
 | v22 | 网关（三）安全：限流/审计/TLS/`!gw` | 📋 已规划 | [v22.md](docs/versions/v22.md) |
@@ -91,7 +91,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 ```
 项目根/
 ├── botv/            机器人代码（分层包）
-├── tests/           功能测试（分模块 + 冒烟，894 条）
+├── tests/           功能测试（分模块 + 冒烟，922 条）
 ├── checks/          前置环境监测 + 迁移检查（37 条，与 botv 同级）
 ├── scripts/         迁移 / 打包 / 发布 / 自检脚本
 ├── docs/            版本计划、架构图、数据库设计、发布清单
@@ -106,11 +106,12 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 
 ```
 release/
-  nao-v18.20.0.bundle       git 包（传服务器用）
-  nao-v18.20.0-src.zip      源码包（给别人）
-  nao-v18.20.0-SHA256SUMS.txt  校验和
-  nao-v18.20.0-full.zip     整包（带依赖，可选）
-  nao-bot-18.20.0.tar.gz    Docker 镜像（可选）
+  nao-v19.5.5.bundle       git 包（传服务器用）
+  nao-v19.5.5-src.zip      源码包（给别人）
+  nao-v19.5.5-SHA256.txt   校验和
+  nao-v19.5.5-src-SHA256.txt 源码包校验和
+  nao-v19.5.5-full.zip     整包（带依赖，可选）
+  nao-bot-19.5.5.tar.gz    Docker 镜像（可选）
   old/                      历史包（保留最近 5 个，其余归档到这里）
 ```
 
@@ -156,12 +157,12 @@ run.py → app.bootstrap → app.loop
 >
 > ```bash
 > python3 scripts/migrate.py --apply   # 1. 迁移（首次/升级；幂等，没东西可迁也会跳过）
-> python3 scripts/preflight.py         # 2. 严格环境检测（任何 FAIL 都不启动）
+> python3 checks/env_check.py          # 2. 严格环境监测（任何 FAIL 都不启动）
 > python3 run.py                       # 3. 启动
 > ```
 >
 > 首次机器先 `python3 -m pip install -r requirements.txt`。完整升级/回滚：
-> [升级到 v18.20.0](docs/升级到v18.20.md)。
+> [v19 开发记录](docs/versions/v19.md)。
 
 ## 快速开始
 
@@ -210,6 +211,72 @@ export NAO_DB_NAME=TomoriNaoBotData
 
 优先级：**环境变量 > config.local.json > 空默认值**。没配齐时启动会直接退出并列出缺哪几项。
 
+### API 配置（先配这个）
+
+API 密钥读取顺序：**数据库 `api_keys` > 环境变量**；推荐环境变量，换机器不用改库。
+
+| 用途 | 环境变量 | 必填 | 说明 |
+|---|---|---|---|
+| 主对话 DeepSeek | `DS_API_KEY` | 是 | DeepSeek 的 `sk-...` |
+| 视觉 豆包/方舟 | `ARK_API_KEY` | 要视觉就填 | 方舟 **API Key**，不是 Access Key |
+| 搜图 ALAPI | `ALAPI_TOKEN` | 否 | 没有就少一个搜图来源 |
+| 视觉接入点 | `NAO_VISION_MODEL` | 否 | 推荐填 `ep-...` 接入点 ID；也可写 `config.local.json` 的 `vision.model` |
+| 视觉地址 | `NAO_VISION_URL` | 否 | 默认 `https://ark.cn-beijing.volces.com/api/v3/chat/completions` |
+| 专用视觉 key | `NAO_VISION_KEY` | 否 | 不填就用 `ARK_API_KEY` |
+| 语音转写 | `NAO_ASR_URL` / `NAO_ASR_MODEL` | 否 | OpenAI 兼容的 `/audio/transcriptions` |
+
+```bash
+export DS_API_KEY=sk-...
+export ARK_API_KEY=...
+export ALAPI_TOKEN=...
+
+# 方舟视觉接入点 ID（推荐）
+export NAO_VISION_MODEL=ep-xxxxxxxx
+```
+
+systemd 用文件保存：
+
+```ini
+# /etc/systemd/system/nao.service
+EnvironmentFile=/home/jyoushitou/NapCat-Python/.env
+```
+
+```bash
+# .env
+DS_API_KEY=sk-...
+ARK_API_KEY=...
+ALAPI_TOKEN=...
+NAO_VISION_MODEL=ep-xxxxxxxx
+```
+
+> 密钥只走环境变量/数据库，**不要写进 `config.example.json`、README 或 git**。
+> `config.local.json` 只放数据库/主人 QQ/视觉接入点等非密钥配置；`chmod 600 config.local.json`。
+
+**其他配置走程序，不再堆环境变量：**
+
+| 配置 | 放哪 |
+|---|---|
+| 数据库、主人 QQ、端口、视觉接入点 | `config.local.json` |
+| 功能开关（vision/voice/reading/ocr/backup…） | `config/features.json` |
+| 运行时概率/频率（`image_prob`、`voice_prob`…） | QQ 里 `!config` |
+| 密钥状态 / 重载 | `!apikeys` / `!reload` |
+| 环境是否检查过、哪些能力可用 | `data/env_report.json` + `!features` |
+
+`config.local.json` 的视觉段：
+
+```json
+{
+  "vision": {
+    "model": "ep-xxxxxxxx",
+    "url": "",
+    "key": "",
+    "fallback_model": ""
+  }
+}
+```
+
+`NAO_VISION_*` 环境变量优先；没有环境变量时才读这里的配置。
+
 ### 可选依赖（读书功能要用）
 
 ```bash
@@ -231,8 +298,8 @@ sudo python3 -m playwright install-deps chromium
 # 1. 数据库迁移（首次/升级都跑；幂等）
 python3 scripts/migrate.py --apply
 
-# 2. 严格环境检测（依赖 / 配置 / 时区 / 数据库 / 表结构 / 密钥 / 人设）
-python3 scripts/preflight.py
+# 2. 严格环境监测（依赖 / 配置 / 时区 / 数据库 / 表结构 / 密钥 / 人设 / 视觉）
+python3 checks/env_check.py
 
 # 3. 启动
 python3 run.py
@@ -545,7 +612,7 @@ AI 摘要（≤100 字）→ 记进度
 ### 测试
 
 ```bash
-python3 scripts/run_tests.py             # 931 条（tests 894 + checks 37）
+python3 scripts/run_tests.py             # 959 条（tests 922 + checks 37）
 python3 scripts/check_names.py            # 静态检查：未定义名字 / 先用后赋值
 ```
 
@@ -553,7 +620,7 @@ python3 scripts/check_names.py            # 静态检查：未定义名字 / 先
 
 ```bash
 python3 scripts/migrate.py --apply   # 迁移：建表 + 补列 + v18.17 events→memories + 场景
-python3 scripts/preflight.py         # 严格自检，任何 FAIL 都不启动
+python3 checks/env_check.py          # 严格环境监测，任何 FAIL 都不启动
 ```
 
 检查项：Python / 依赖 / 静态检查 / 环境变量 / 配置 / 能力 / 网络 / 数据库连接 /
@@ -577,8 +644,8 @@ python3 scripts/release.py --version v16.1.0 --apply
 源码包和完整 bundle 用一键打包：
 
 ```bash
-python3 scripts/build_all.py --version 18.20.0 --skip full,exe,docker
-# release/nao-v18.20.0-src.zip + release/nao-v18.20.0.bundle
+python3 scripts/build_all.py --version 19.5.5 --skip full,exe,docker
+# release/nao-v19.5.5-src.zip + release/nao-v19.5.5.bundle
 ```
 
 **版本号必须三段式**（`v17.0.0`），两段会直接拒绝。
@@ -588,25 +655,23 @@ python3 scripts/build_all.py --version 18.20.0 --skip full,exe,docker
 **先备份数据库**（迁移不可逆，回滚要靠它）：
 
 ```bash
-cd ~/NapCat-Pyhon
-mysqldump -h 127.0.0.1 -u 用户 -p 库名 > ~/nao-before-v18.20.sql
-# 或 SQLite：sqlite3 data/nao.db ".backup '$HOME/nao-before-v18.20.db'"
+cd ~/NapCat-Python
+mysqldump -h 127.0.0.1 -u 用户 -p 库名 > ~/nao-before-v19.5.5.sql
+# 或 SQLite：sqlite3 data/nao.db ".backup '$HOME/nao-before-v19.5.5.db'"
 ```
 
 取代码并迁移：
 
 ```bash
-git fetch ./nao-v18.20.0.bundle \
-  refs/heads/main:refs/remotes/bundle/main \
-  refs/tags/v18.20.0:refs/tags/v18.20.0
-git checkout v18.20.0
+git fetch ./nao-v19.5.5.bundle main
+git reset --hard FETCH_HEAD
 
 python3 scripts/migrate.py --apply      # 建表 + 补列 + events→memories + 场景
-python3 scripts/preflight.py            # 严格自检（FAIL 不启动）
+python3 checks/env_check.py             # 严格监测（FAIL 不启动）
 python3 run.py
 ```
 
-完整清单（依赖、systemd、验证、回滚）：[升级到 v18.20.0](docs/升级到v18.20.md)。
+完整清单（依赖、systemd、验证、回滚）：[v19 开发记录](docs/versions/v19.md)。
 
 ### 打包（四种形式）
 
@@ -708,6 +773,8 @@ data/           运行时数据（tunables、digests、cookies、凭据）——
 | v18.18 | OCR | tesseract + 可选 PaddleOCR 双引擎 |
 | v18.19 | 备份 | 每月 1 号 04:30，保留 6 份，`!backup` |
 | v18.20 | 封版 | `!exit` 5 秒看门狗、全角命令归一化、18.20.0 |
+| v19.0–v19.5 | 架构重构 | 功能清单/环境报告、conversation_messages、`!history`、语音分段、拆环、events 视图删除 |
+| v19.5.5 | 视觉配置 | 支持 `config.local.json` 的 `vision.*` 回退 |
 
 ---
 
@@ -905,7 +972,7 @@ r = await run_blocking(requests.post, url, json=payload, timeout=60, name="deeps
 ```bash
 python3 scripts/init_db.py            # 看缺哪些表
 python3 scripts/init_db.py --apply    # 建缺的（不会动已有表）
-python3 scripts/preflight.py --init-db   # 前置检查时自动建
+python3 checks/env_check.py --init-db   # 环境监测时自动建
 ```
 
 **只建不存在的表，永不修改已有表结构**——加列/改类型仍走 `scripts/migrate_*.py`。

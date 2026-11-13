@@ -332,8 +332,11 @@ def step_backup():
 
 
 def step_keys():
+    import os
+
     from botv.infra.repo_key import get_api_key_from_db, reload_api_keys
-    keys = {name: bool(get_api_key_from_db(name)) for name in ("DS_API_KEY", "ARK_API_KEY", "ALAPI_TOKEN")}
+    keys = {name: bool(get_api_key_from_db(name) or os.getenv(name, ""))
+            for name in ("DS_API_KEY", "ARK_API_KEY", "ALAPI_TOKEN")}
     missing = [k for k, v in keys.items() if not v]
     if missing:
         raise RuntimeError("缺密钥: " + ", ".join(missing))
