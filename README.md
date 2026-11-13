@@ -1,4 +1,4 @@
-# Hoshinoumi（REC） v19.5.7
+﻿# Hoshinoumi（REC） v19.5.7
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![Database](https://img.shields.io/badge/Database-MySQL%20%7C%20SQLite-4479A1)](#)
@@ -6,7 +6,7 @@
 [![NapCat](https://img.shields.io/badge/NapCat-QQ-12B7F5)](#)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 [![Version](https://img.shields.io/badge/Version-v19.5.7-orange)](docs/RELEASE-NOTES.md)
-[![Tests](https://img.shields.io/badge/Tests-962%20passing-brightgreen)](#)
+[![Tests](https://img.shields.io/badge/Tests-964%20passing-brightgreen)](#)
 
 > **Hoshinoumi（REC，记录）** · 友利奈绪 · 星之海学园学生会室
 >
@@ -43,7 +43,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | 能备份 | 每月 1 号 04:30 自动备份，保留 6 份；`!backup` 看清单/立即备份 |
 | 查版本 | `!version` 看版本号、提交、运行时长 |
 
-**962 条测试**（功能 925 + 环境/迁移 37），静态检查零未定义名字。
+**964 条测试**（功能 927 + 环境/迁移 37），静态检查零未定义名字。
 
 ---
 
@@ -105,7 +105,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 ```
 项目根/
 ├── bot/            机器人代码（分层包）
-├── tests/           功能测试（分模块 + 冒烟，925 条）
+├── tests/           功能测试（分模块 + 冒烟，927 条）
 ├── checks/          前置环境监测 + 迁移检查（37 条，与 bot 同级）
 ├── scripts/         迁移 / 打包 / 发布 / 自检脚本
 ├── docs/            版本计划、架构图、数据库设计、发布清单
@@ -656,7 +656,7 @@ AI 摘要（≤100 字）→ 记进度
 ### 测试
 
 ```bash
-python3 scripts/run_tests.py             # 962 条（tests 925 + checks 37）
+python3 scripts/run_tests.py             # 964 条（tests 927 + checks 37）
 python3 scripts/check_names.py            # 静态检查：未定义名字 / 先用后赋值
 ```
 
@@ -1112,4 +1112,5 @@ python3 checks/env_check.py --init-db   # 环境监测时自动建
 所以有了 Hoshinoumi。算是给“故事结束之后”补的一间学生会室：让她继续上学、开会、喂猫、弹琴，也让她在 QQ、Web、桌面和手机那边，记得你随口说过的话。
 
 > 故事结束以后，她还在。
+
 
