@@ -305,6 +305,54 @@ async def send_short_reply(tid, text, ws, uid, is_group=False, kws=None):
     log_send(f"回复:{text[:40]}")  # 日志记录发送
 
 
+async def send_segmented_reply(tid, text, ws, uid, is_group=False, kws=None):
+    """v19.3：按【语音】/[文字] 分段发送；无标记时等同 send_short_reply"""
+    from .segments import parse, strip_markers, to_text
+    from ..core import state as _cfg
+
+    if is_group or _cfg.CODE_MODE:
+        return await send_short_reply(tid, to_text(text), ws, uid, is_group, kws)
+
+    segs = parse(text)
+    if not any(kind == "voice" for kind, _body in segs):
+        return await send_short_reply(tid, strip_markers(text), ws, uid, is_group, kws)
+
+    sent_any = False
+    first_text = True
+    for kind, body in segs:
+        if kind == "text":
+            await send_short_reply(tid, body, ws, uid, is_group,
+                                   kws if first_text else None)
+            first_text = False
+            sent_any = True
+            continue
+        # 语音段：过长/合成失败都降级文字
+        if len(body) > 120:
+            await send_short_reply(tid, body, ws, uid, is_group,
+                                   kws if first_text else None)
+            first_text = False
+            sent_any = True
+            continue
+        try:
+            from ..speech.voice import detect_emotion, emotion_params
+            from ..speech.tts import synth as tts_synth
+            params = emotion_params(detect_emotion())
+            params.pop("emotion", None)
+            mp3 = await tts_synth(body, **params)
+        except Exception as e:
+            log_api(f"[语音] 分段合成失败，降级文字: {e}")
+            mp3 = None
+        if not mp3:
+            await send_short_reply(tid, body, ws, uid, is_group,
+                                   kws if first_text else None)
+            first_text = False
+            sent_any = True
+            continue
+        await send_voice(tid, mp3, ws, is_group)
+        sent_any = True
+    return sent_any
+
+
 async def send_sticker_private(qq, ws, uid, ctx=""):
     """发送私聊表情包"""
     s = select_best_sticker(uid, ctx)  # 选择最佳表情包（带上下文，避免甩无关图）

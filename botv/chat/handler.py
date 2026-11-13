@@ -328,7 +328,8 @@ async def _reply_and_send(d, ws, text, img_md5s=None):
             except Exception:
                 pass
 
-        await send_short_reply(target, reply_text, ws, uid, is_group, ck)
+        from ..chat.send import send_segmented_reply
+        await send_segmented_reply(target, reply_text, ws, uid, is_group, ck)
         try:
             from ..core import metrics
             metrics.inc("replies")
@@ -336,13 +337,7 @@ async def _reply_and_send(d, ws, text, img_md5s=None):
             pass
         if is_group:  # v6-E29：记录这次群回复
             note_group_reply(gid)
-        else:  # v11-A10：私聊有概率把第一句念出来
-            try:
-                from ..chat.send import maybe_send_voice
-                first_line = (reply_text or "").split("\n")[0]
-                await maybe_send_voice(first_line, target, ws, False)
-            except Exception:
-                pass
+        else:
             try:  # v12-A18：偶尔补一句自己的事
                 await maybe_share_something(target, ws)
             except Exception:
