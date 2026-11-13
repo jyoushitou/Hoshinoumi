@@ -17,10 +17,35 @@ from .routes_meta import (
 from .routes_chat import handle_chat, handle_command
 
 
+async def handle_internal_history(request):
+    """v19.2：本机内部历史接口，读 conversation_messages"""
+    from ..infra import repo_conversation
+
+    target = (request.query.get("target_id") or "").strip()
+    if not target:
+        return json_response({"ok": False, "error": "target_id required"}, status=400)
+    try:
+        limit = int(request.query.get("limit") or 20)
+        before = int(request.query["before"]) if request.query.get("before") else None
+    except ValueError:
+        return json_response({"ok": False, "error": "bad limit/before"}, status=400)
+    rows = repo_conversation.recent(
+        target, limit=limit, before_id=before,
+        user_id=request.query.get("user_id") or "__owner__",
+    )
+    data = []
+    for r in rows:
+        item = dict(r)
+        if item.get("created_at") is not None:
+            item["created_at"] = str(item["created_at"])
+        data.append(item)
+    return json_response({"ok": True, "data": data})
+
+
 @web.middleware
 async def auth_middleware(request, handler):
-    """Bearer Token 鉴权；/api/health 免鉴权"""
-    if request.path == "/api/health":
+    """Bearer Token 鉴权；/api/health 与 /internal/history 免鉴权"""
+    if request.path in ("/api/health", "/internal/history"):
         return await handler(request)
 
     auth_header = request.headers.get("Authorization", "")
@@ -52,6 +77,7 @@ async def start_api_server():
     app.router.add_get("/api/token", handle_get_token)
     app.router.add_post("/api/chat", handle_chat)
     app.router.add_post("/api/command", handle_command)
+    app.router.add_get("/internal/history", handle_internal_history)
 
     runner = web.AppRunner(app, handle_signals=False)
     await runner.setup()
