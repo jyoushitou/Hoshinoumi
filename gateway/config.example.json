@@ -4,7 +4,7 @@
     "port": 8080
   },
   "backend": {
-    "base": "http://127.0.0.1:7070",
+    "base": "http://127.0.0.1:60908",
     "timeout_ms": 5000
   },
   "log_level": "info"

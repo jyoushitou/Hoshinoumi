@@ -15,7 +15,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEFAULT_PATH = os.path.join(ROOT, "config", "gateway.json")
 DEFAULTS = {
     "listen": {"host": "127.0.0.1", "port": 8080},
-    "backend": {"base": "http://127.0.0.1:7070", "timeout_ms": 5000},
+    "backend": {"base": "http://127.0.0.1:60908", "timeout_ms": 5000},
     "log_level": "info",
 }
 
@@ -43,7 +43,7 @@ def _validate(cfg):
         raise SystemExit("listen.port 必须是整数")
     if not (1 <= port <= 65535):
         raise SystemExit("listen.port 必须在 1..65535")
-    base = str(backend.get("base") or "http://127.0.0.1:7070").rstrip("/")
+    base = str(backend.get("base") or "http://127.0.0.1:60908").rstrip("/")
     if not (base.startswith("http://127.0.0.1:") or base.startswith("http://localhost:")):
         raise SystemExit("backend.base 只允许 http://127.0.0.1:... 或 http://localhost:...")
     try:
@@ -81,7 +81,7 @@ def _run_wizard(path):
     backend = cfg.setdefault("backend", {})
     listen["host"] = _ask("监听地址（默认只本机；对外填 0.0.0.0）", listen.get("host", "127.0.0.1"))
     listen["port"] = int(_ask("监听端口", listen.get("port", 8080)))
-    backend["base"] = _ask("后端 API 地址", backend.get("base", "http://127.0.0.1:7070"))
+    backend["base"] = _ask("后端 API 地址", backend.get("base", "http://127.0.0.1:60908"))
     backend["timeout_ms"] = int(_ask("后端超时（毫秒）", backend.get("timeout_ms", 5000)))
     cfg["log_level"] = _ask("日志级别（info/debug）", cfg.get("log_level", "info"))
     cfg = _validate(cfg)

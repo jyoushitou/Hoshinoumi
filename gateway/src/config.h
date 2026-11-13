@@ -20,7 +20,7 @@ namespace Gateway
         unsigned short listenPort = 8080;
 
         /// @brief 后端 API 基地址（v20 只允许 127.0.0.1 / localhost）
-        std::string backendBase = "http://127.0.0.1:7070";
+        std::string backendBase = "http://127.0.0.1:60908";
 
         /// @brief 调后端的超时（毫秒）
         int backendTimeoutMs = 5000;
