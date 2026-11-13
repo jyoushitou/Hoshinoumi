@@ -26,6 +26,7 @@ from artifact_names import full as full_name, src as src_name  # noqa: E402
 # 不进包的东西
 EXCLUDE_DIRS = {
     ".git", ".venv", "venv", ".vendor", "vendor", ".tmp", "dist", "data",
+    "release", "logs", "build",
     "__pycache__", ".pytest_cache", ".mypy_cache", ".idea", ".vscode",
     ".playwright-browsers", "node_modules",
 }
