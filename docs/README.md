@@ -1,4 +1,4 @@
-# Hoshinoumi（REC）· 文档索引
+﻿# Hoshinoumi（REC）· 文档索引
 
 > **当前事实：后端 v20.5，网关 v20.5（Docker / 网关验证）**（2026-11-13）
 > 已部署试运行；v19 与 v20.0–v20.4 已完成。
@@ -138,7 +138,7 @@ v6：P1 会说话 → P2 说实话 → P2.5 长感官 → P3 有生活 → P4 �
 | **v36** | [versions/v36.md](versions/v36.md) | 桌面端（一）Linux：Tauri + Web UI | 规划中 |
 | **v37** | [versions/v37.md](versions/v37.md) | 桌面端（二）Windows：Tauri + WebView2 | 规划中 |
 | **v38** | [versions/v38.md](versions/v38.md) | 手机 App（Flutter）+ 推送通知 | 规划中 |
-| **v39** | [versions/v39.md](versions/v39.md) | 手机 App 独立模式：后端不可达时直连 DeepSeek | 规划中 |
+| **v39** | [versions/v39.md](versions/v39.md) | 手机 App 独立模式：后端不可达直连 DeepSeek，恢复立即同步 | 规划中 |
 | **v40** | [versions/v40.md](versions/v40.md) | QQ 空间：发说说 + 只对熟人点赞/评论 | 规划中 |
 | **v41** | [versions/v41.md](versions/v41.md) | 运维（一）bash 只读 | 规划中 |
 | **v42** | [versions/v42.md](versions/v42.md) | 运维（二）agent | 规划中 |
@@ -165,6 +165,7 @@ v6：P1 会说话 → P2 说实话 → P2.5 长感官 → P3 有生活 → P4 �
 > 数据库设计见 **[DB-DESIGN.md](DB-DESIGN.md)**（一表一职责）。
 > 架构审查见 **[ARCH-REVIEW.md](ARCH-REVIEW.md)**（分层/环/巨石函数，含修复顺序）。
 > 架构图见 **[ARCHITECTURE.md](ARCHITECTURE.md)**（分层/消息流/调度模型/架构债）。
+
 
 
 
