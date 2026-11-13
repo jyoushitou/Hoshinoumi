@@ -10,14 +10,12 @@ from datetime import datetime, timedelta
 from ..config import MASTER_QQ, CST
 from bot.core import state as cfg
 from ..log import log_system, log_err, log_api
-from ..ai.client import get_character_reply
 from ..core.types import Fallback  # v16：判断兜底文案
 from ..memory import add_target_memory
 from ..chat.send import send_short_reply, send_private_msg
 from ..image import fetch_and_save_acg_image, search_local_image_by_tags, get_best_image
 from ..utils import make_image_msg
 from ..ai.parse import parse_ai_reply
-from ..diary import generate_diary
 from ..infra.repo_memory import load_events_from_db, load_today_life, load_old_events
 from ..life.impulse import should_reach_out, note_proactive  # v10-U9
 from ..life.pending import due as pending_due, finish as finish_pending, describe as describe_pending  # v10-U9b

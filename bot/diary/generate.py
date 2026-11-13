@@ -6,7 +6,7 @@ import re
 from datetime import datetime
 
 from ..log import log_system, log_err, log_api
-from ..ai.client import call_deepseek, call_doubao
+from ..core import ai_port
 from . import cache
 from .store import (
     get_diary_from_db, save_diary_to_db, get_events_by_date,
@@ -121,10 +121,8 @@ async def generate_diary(target_id: str, date_str: str, force: bool = False):
 
     # ---- 6. 调用 AI 生成（双模型兜底，max_tokens 1500 保证 200 字以上） ----
     log_system(f"日记({date_str}): 开始 AI 生成（事件{len(events)}条，对话{len(dialogs)}条）")
-    diary_text = await call_deepseek(msgs, max_tokens=1500, target_id=target_id)
-    if not diary_text:
-        log_api("[diary] DeepSeek 无回复，切换豆包")
-        diary_text = await call_doubao(msgs, max_tokens=1500, target_id=target_id)
+    diary_text = await ai_port.generate_text(
+        msgs, max_tokens=1500, target_id=target_id)
 
     # ---- 7. 清理 AI 输出 ----
     diary_text = _clean_diary_text(diary_text)
@@ -184,3 +182,4 @@ async def generate_missing_7day_diaries(target_id: str):
 
     log_system(f"日记追溯完成：生成 {len(generated)} 篇，跳过 {len(skipped)} 篇")
     return generated, skipped
+

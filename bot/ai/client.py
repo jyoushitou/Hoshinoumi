@@ -372,3 +372,20 @@ async def get_character_reply(txt, tid, current_kws=None,
 
     log_api(f"[get_character_reply] 最终回复: {r[:60] if r else 'None'}")  # 日志记录最终回复
     return r  # 返回回复文本
+
+# v21.6：给 diary 用的文本生成端口，避免 diary 直接 import ai.client
+from ..core import ai_port as _ai_port  # noqa: E402
+
+
+async def _diary_text(messages, max_tokens=1500, target_id=None):
+    text = await call_deepseek(messages, max_tokens=max_tokens, target_id=target_id)
+    if text:
+        return text
+    return await call_doubao(messages, max_tokens=max_tokens, target_id=target_id)
+
+
+def register_diary_text():
+    _ai_port.register_text(_diary_text)
+
+
+register_diary_text()
