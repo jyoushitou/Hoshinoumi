@@ -38,7 +38,7 @@ class TestProfile(unittest.TestCase):
     """声纹档案：读写、缺失回落、坏文件不炸"""
 
     def setUp(self):
-        from botv.speech import voice
+        from bot.speech import voice
 
         self.V = voice
         self.dir = os.path.join(
@@ -86,7 +86,7 @@ class TestEmotion(unittest.TestCase):
     """情绪 → 参数：五档、基线是平静、摩擦优先"""
 
     def setUp(self):
-        from botv.speech import voice
+        from bot.speech import voice
 
         self.V = voice
 
@@ -132,10 +132,10 @@ class TestVoiceCommand(unittest.TestCase):
     """!voice：查看 / 调参 / 试听 / 合成"""
 
     def setUp(self):
-        import botv.commands  # noqa: F401
-        from botv.cmd import registry
-        from botv.speech import tts as T
-        from botv.speech import voice
+        import bot.commands  # noqa: F401
+        from bot.cmd import registry
+        from bot.speech import tts as T
+        from bot.speech import voice
 
         self.cmd = registry.COMMANDS["voice"]
         self.V = voice
@@ -155,7 +155,7 @@ class TestVoiceCommand(unittest.TestCase):
          self.T.synth, self.T.available) = self._orig
 
     def _run(self, text):
-        from botv.cmd.registry import CommandContext
+        from bot.cmd.registry import CommandContext
 
         ctx = CommandContext(parts=[p for p in text.split() if p],
                              uid="1", ws=None, is_group=False, gid=0)
@@ -203,7 +203,7 @@ class TestVoiceCommand(unittest.TestCase):
             sent.append({"sent": mp3})
 
         T.synth = fake_synth
-        import botv.chat.send as chat_send
+        import bot.chat.send as chat_send
 
         orig = chat_send.send_voice
         chat_send.send_voice = fake_send_voice

@@ -43,14 +43,16 @@ REC 取「Record / 录制」：
 
 ## 兼容边界（先不改的东西）
 
+新仓库地址：<https://github.com/jyoushitou/Hoshinoumi>
+
 这些旧名字**暂时保留**，避免现有部署和 import 断裂：
 
 | 旧名 | 处理 |
 |---|---|
-| 目录 `NapCat+Pyhon` | 暂留；服务路径仍指向它 |
-| Python 包 `botv` | 暂留；作为内部命名空间 |
+| 本地目录 `NapCat+Pyhon` | 工作区暂留；新服务器可直接 clone 到 `Hoshinoumi`，旧服务路径按需改 |
+| Python 包 `bot` | 暂留；作为内部命名空间 |
 | 服务 `nao-bot` | 保留旧 unit；新增 `hoshinoumi.service` 可切换 |
 | 发布物 `nao-v*` | 历史产物不改名；新打包逐步用 `hoshinoumi-v*` |
 
 迁移顺序：先改可见品牌（README / 服务 / 版本输出 / 文档），再改目录和包名。
-改包名时保留 `botv` 兼容层，不要一次性全仓替换。
+改包名时保留 `bot` 兼容层，不要一次性全仓替换。

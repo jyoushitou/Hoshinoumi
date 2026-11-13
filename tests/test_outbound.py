@@ -56,7 +56,7 @@ class FakeWS:
 
 
 def _out(ws, lock=None):
-    from botv.egress.outbound import Outbound
+    from bot.egress.outbound import Outbound
 
     return Outbound(ws=ws, lock=lock)
 
@@ -65,13 +65,13 @@ class TestOutbound(unittest.TestCase):
     """发送、锁、断线入队、echo 等待、计数"""
 
     def setUp(self):
-        from botv.core import state as cfg
+        from bot.core import state as cfg
 
         cfg.pending_outbox.clear()
         cfg.pending_echo.clear()
 
     def tearDown(self):
-        from botv.core import state as cfg
+        from bot.core import state as cfg
 
         cfg.pending_outbox.clear()
         cfg.pending_echo.clear()
@@ -103,7 +103,7 @@ class TestOutbound(unittest.TestCase):
         out = _out(None)
         ok = asyncio.run(out.send("a", {}, label="断线"))
         self.assertFalse(ok)
-        from botv.core import state as cfg
+        from bot.core import state as cfg
 
         self.assertEqual(len(cfg.pending_outbox), 1)
         self.assertEqual(out.stats()["queued"], 1)
@@ -113,7 +113,7 @@ class TestOutbound(unittest.TestCase):
         out = _out(ws)
         ok = asyncio.run(out.send("a", {}, label="失败"))
         self.assertFalse(ok)
-        from botv.core import state as cfg
+        from bot.core import state as cfg
 
         self.assertEqual(len(cfg.pending_outbox), 1)
         self.assertEqual(out.stats()["failed"], 1)
@@ -126,8 +126,8 @@ class TestOutbound(unittest.TestCase):
             task = asyncio.create_task(
                 out.send("get_msg", {"message_id": 1}, want_response=True, timeout=1))
             await asyncio.sleep(0.02)
-            echo = list(__import__("botv.core.state", fromlist=["cfg"]).pending_echo)[0]
-            __import__("botv.core.state", fromlist=["cfg"]).pending_echo[echo].set_result(
+            echo = list(__import__("bot.core.state", fromlist=["cfg"]).pending_echo)[0]
+            __import__("bot.core.state", fromlist=["cfg"]).pending_echo[echo].set_result(
                 {"message_id": 42})
             return await task
 
@@ -142,7 +142,7 @@ class TestOutbound(unittest.TestCase):
         self.assertEqual(out.stats()["echo_timeout"], 1)
 
     def test_flush(self):
-        from botv.core import state as cfg
+        from bot.core import state as cfg
 
         cfg.pending_outbox.append('{"action":"a","params":{}}')
         cfg.pending_outbox.append('{"action":"b","params":{}}')
@@ -154,7 +154,7 @@ class TestOutbound(unittest.TestCase):
         self.assertEqual(len(ws.sent), 2)
 
     def test_flush_noop_when_offline(self):
-        from botv.core import state as cfg
+        from bot.core import state as cfg
 
         cfg.pending_outbox.append("x")
         out = _out(None)

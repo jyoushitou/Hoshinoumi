@@ -6,7 +6,7 @@
 # 于是某个名字在函数里被引用却不存在——只有运行到那行才炸，测试未必覆盖。
 #
 # 用法：
-#     python3 scripts/check_names.py            # 扫 botv/ 和 run.py
+#     python3 scripts/check_names.py            # 扫 bot/ 和 run.py
 #     python3 scripts/check_names.py 路径 ...
 
 import builtins
@@ -76,7 +76,7 @@ def scan(paths):
 
 def main():
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    targets = sys.argv[1:] or [os.path.join(root, "botv"), os.path.join(root, "run.py")]
+    targets = sys.argv[1:] or [os.path.join(root, "bot"), os.path.join(root, "run.py")]
     problems = scan(targets)
     if not problems:
         print("✅ 没有发现未定义的名字")

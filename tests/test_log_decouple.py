@@ -39,7 +39,7 @@ class TestLogDecoupled(unittest.TestCase):
     """日志：文件优先，数据库异步刷；数据库挂了不影响日志"""
 
     def setUp(self):
-        import botv.log as L
+        import bot.log as L
 
         self.L = L
         self.dir = os.path.join(
@@ -49,7 +49,7 @@ class TestLogDecoupled(unittest.TestCase):
         os.makedirs(self.dir, exist_ok=True)
         os.environ["NAO_LOG_DIR"] = self.dir
         os.environ["NAO_LOG_TXT"] = "1"
-        from botv.infra import txtlog
+        from bot.infra import txtlog
 
         self.T = txtlog
         txtlog._state.update({"day": None, "path": None, "size": 0, "inited": False})
@@ -129,7 +129,7 @@ class TestNoImportCycle(unittest.TestCase):
     def test_no_top_level_db_import(self):
         import ast
 
-        from botv import log as L
+        from bot import log as L
 
         path = L.__file__
         with io.open(path, encoding="utf-8") as f:
@@ -149,7 +149,7 @@ class TestNoImportCycle(unittest.TestCase):
 
     def test_db_writer_is_lazy(self):
         """写库函数是运行时才导入的"""
-        from botv import log as L
+        from bot import log as L
 
         self.assertTrue(callable(L._db_writer))
 

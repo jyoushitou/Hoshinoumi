@@ -104,8 +104,8 @@ def check_optional():
 def init_tables():
     """建缺的表（幂等）"""
     try:
-        from botv.infra import schema
-        from botv.infra.conn import get_cursor
+        from bot.infra import schema
+        from bot.infra.conn import get_cursor
     except Exception as e:
         print(f"  [X] 无法导入数据库模块：{e}")
         return False
@@ -140,8 +140,8 @@ def init_tables():
 def migrate_data():
     """把旧表里的数据搬进新表（幂等：搬过就不会重复搬）"""
     try:
-        from botv.infra import schema
-        from botv.infra.conn import get_cursor
+        from bot.infra import schema
+        from bot.infra.conn import get_cursor
     except Exception as e:
         print(f"  [!]  跳过迁移（导入失败）：{e}")
         return True
@@ -199,8 +199,8 @@ def ensure_cron_schema():
     不能只依赖 bootstrap：seed_scenes 在 run.py 之前跑，旧库还没补列。
     """
     try:
-        from botv.infra import schema
-        from botv.infra.conn import get_cursor
+        from bot.infra import schema
+        from bot.infra.conn import get_cursor
     except Exception as e:
         print(f"  [!]  跳过定时表补列（导入失败）：{e}")
         return True
@@ -218,7 +218,7 @@ def ensure_cron_schema():
                     pass  # 已存在
             c.connection.commit()
             try:
-                from botv.schedule import cron
+                from bot.schedule import cron
                 cron.migrate_scene_rules()
             except Exception as e:
                 print(f"  [!]  场景规则迁移失败（启动时会再试）：{e}")
@@ -236,8 +236,8 @@ def ensure_cron_schema():
 def seed_scenes():
     """把内置 8 个场景写进 cron_tasks（幂等：按内容去重）"""
     try:
-        from botv.core import state as cfg
-        from botv.schedule import cron
+        from bot.core import state as cfg
+        from bot.schedule import cron
     except Exception as e:
         print(f"  [!]  跳过场景导入（导入失败）：{e}")
         return True

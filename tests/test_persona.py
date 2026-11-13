@@ -6,7 +6,7 @@ import unittest
 
 
 def _stub_missing_deps():
-    """缺依赖就打个桩（必须在导入 botv 之前调用）"""
+    """缺依赖就打个桩（必须在导入 bot 之前调用）"""
     def module(name, **attrs):
         m = types.ModuleType(name)
         for k, v in attrs.items():
@@ -42,24 +42,24 @@ import sys
 import types
 import unittest
 from datetime import datetime
-from botv.config import CST
+from bot.config import CST
 import asyncio
 import time
 import os
 import re
 import threading
 import json
-from botv.ports import ChatModel, Transport  # noqa: E402
-from botv.ports.models import ChatRequest, ChatReply  # noqa: E402
-from botv.ports.transport import Target, Segment  # noqa: E402
-from botv.ai import models as model_mod  # noqa: E402
-from botv.ai.chain import FallbackChain  # noqa: E402
-from botv.chat.transport import QqTransport  # noqa: E402
-from botv.core import state as cfg             # noqa: E402  运行时状态（常量也在里面）
-import botv.commands as commands               # noqa: E402
-import botv.chat.reply as reply_mod            # noqa: E402
-from botv.ai.parse import parse_ai_reply       # noqa: E402
-from botv.cmd import registry                  # noqa: E402
+from bot.ports import ChatModel, Transport  # noqa: E402
+from bot.ports.models import ChatRequest, ChatReply  # noqa: E402
+from bot.ports.transport import Target, Segment  # noqa: E402
+from bot.ai import models as model_mod  # noqa: E402
+from bot.ai.chain import FallbackChain  # noqa: E402
+from bot.chat.transport import QqTransport  # noqa: E402
+from bot.core import state as cfg             # noqa: E402  运行时状态（常量也在里面）
+import bot.commands as commands               # noqa: E402
+import bot.chat.reply as reply_mod            # noqa: E402
+from bot.ai.parse import parse_ai_reply       # noqa: E402
+from bot.cmd import registry                  # noqa: E402
 
 
 class FakeConn:
@@ -163,34 +163,34 @@ class TestPersonaCard(unittest.TestCase):
     """v14-A1/A2：角色卡加载与回退"""
 
     def test_card_loaded(self):
-        from botv.ai.persona_loader import card_dir, describe
+        from bot.ai.persona_loader import card_dir, describe
         self.assertIsNotNone(card_dir())
         self.assertEqual(describe(), "nao")
 
     def test_prompt_from_card(self):
-        from botv.ai.persona_loader import load_text
+        from bot.ai.persona_loader import load_text
         text = load_text("prompt.txt")
         self.assertTrue(text)
         self.assertIn("{now}", text, "占位符必须保留")
 
     def test_life_from_card(self):
-        from botv.ai.persona_loader import load_life
+        from bot.ai.persona_loader import load_life
         pools = load_life()
         self.assertTrue(pools)
         self.assertGreaterEqual(sum(len(t) for _w, t in pools), 100)
 
     def test_state_from_card(self):
-        from botv.ai.persona_loader import load_state_base
+        from bot.ai.persona_loader import load_state_base
         base = load_state_base()
         self.assertIn("mood", base)
 
     def test_missing_file_returns_none(self):
-        from botv.ai.persona_loader import load_text
+        from bot.ai.persona_loader import load_text
         self.assertIsNone(load_text("no_such_file.txt"))
 
     def test_env_selects_card(self):
         import os
-        from botv.ai import persona_loader as L
+        from bot.ai import persona_loader as L
         old = os.environ.get("NAO_PERSONA")
         os.environ["NAO_PERSONA"] = "not_exist_card"
         try:
@@ -202,8 +202,8 @@ class TestPersonaCard(unittest.TestCase):
                 os.environ["NAO_PERSONA"] = old
 
     def test_prompt_uses_card(self):
-        from botv.ai.prompt import get_system_prompt
-        from botv.core import state as cfg
+        from bot.ai.prompt import get_system_prompt
+        from bot.core import state as cfg
         cfg.CODE_MODE = False
         text = get_system_prompt()
         self.assertIn("友利奈绪", text)
@@ -212,7 +212,7 @@ class TestPersonaSwitch(unittest.TestCase):
     """v14-A3：多角色切换"""
 
     def setUp(self):
-        from botv.core import state as cfg
+        from bot.core import state as cfg
         self.cfg = cfg
         cfg.persona_name = ""
 
@@ -220,16 +220,16 @@ class TestPersonaSwitch(unittest.TestCase):
         self.cfg.persona_name = ""
 
     def test_lists_cards(self):
-        from botv.ai.persona_loader import available_cards
+        from bot.ai.persona_loader import available_cards
         self.assertIn("nao", available_cards())
 
     def test_default_active(self):
-        from botv.ai.persona_loader import active_name
+        from bot.ai.persona_loader import active_name
         self.assertEqual(active_name(), "nao")
 
     def test_runtime_switch(self):
         import os
-        from botv.ai import persona_loader as L
+        from bot.ai import persona_loader as L
         os.makedirs(os.path.join(L.CARD_ROOT, "testcard"), exist_ok=True)
         try:
             self.cfg.persona_name = "testcard"
@@ -240,13 +240,13 @@ class TestPersonaSwitch(unittest.TestCase):
             shutil.rmtree(os.path.join(L.CARD_ROOT, "testcard"), ignore_errors=True)
 
     def test_unknown_falls_back(self):
-        from botv.ai import persona_loader as L
+        from bot.ai import persona_loader as L
         self.cfg.persona_name = "根本没有这张卡"
         self.assertEqual(L.active_name(), "nao")
 
     def test_reload_supplement(self):
-        from botv.ai.prompt import reload_personality_supplement
-        import botv.ai.prompt as P
+        from bot.ai.prompt import reload_personality_supplement
+        import bot.ai.prompt as P
         reload_personality_supplement()
         self.assertTrue(P.PERSONALITY_SUPPLEMENT)
 

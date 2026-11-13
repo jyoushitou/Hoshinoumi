@@ -35,7 +35,7 @@ class TestAdaptDdl(unittest.TestCase):
     """MySQL DDL → SQLite"""
 
     def _one(self, ddl):
-        from botv.infra.schema import adapt_ddl
+        from bot.infra.schema import adapt_ddl
 
         return adapt_ddl(ddl, "sqlite")[0]
 
@@ -75,7 +75,7 @@ class TestAdaptDdl(unittest.TestCase):
         self.assertNotIn("COMMENT", out)
 
     def test_key_becomes_index(self):
-        from botv.infra.schema import adapt_ddl
+        from bot.infra.schema import adapt_ddl
 
         stmts = adapt_ddl(
             "CREATE TABLE t (a INT, b INT, KEY idx_a (a), "
@@ -86,14 +86,14 @@ class TestAdaptDdl(unittest.TestCase):
         self.assertNotIn("KEY idx_a", stmts[0])
 
     def test_mysql_passthrough(self):
-        from botv.infra.schema import adapt_ddl
+        from bot.infra.schema import adapt_ddl
 
         ddl = "CREATE TABLE t (id BIGINT AUTO_INCREMENT PRIMARY KEY) ENGINE=InnoDB"
         self.assertEqual(adapt_ddl(ddl, "mysql"), [ddl], "mysql 原样返回")
 
     def test_all_real_tables_parse(self):
         """仓库里 22 张表都能翻译，且不残留 MySQL 关键字"""
-        from botv.infra import schema
+        from bot.infra import schema
 
         for name, ddl in schema.TABLES.items():
             stmts = schema.adapt_ddl(ddl, "sqlite")
@@ -110,7 +110,7 @@ class TestSqliteSchema(unittest.TestCase):
         import os
         import shutil
 
-        from botv.core import settings
+        from bot.core import settings
 
         root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         d = os.path.join(root, ".tmp", f"schema-{os.getpid()}")
@@ -123,7 +123,7 @@ class TestSqliteSchema(unittest.TestCase):
         settings._cache = None
         settings._backend_cache["value"] = None
 
-        from botv.infra import conn, schema
+        from bot.infra import conn, schema
 
         conn._local.__dict__.clear()
         try:

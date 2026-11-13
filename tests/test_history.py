@@ -1,8 +1,8 @@
 # ===================== v19.2 !history =====================
 import unittest
 
-from botv.cmd import history_cmd as H
-from botv.cmd.registry import CommandContext
+from bot.cmd import history_cmd as H
+from bot.cmd.registry import CommandContext
 
 
 class TestHistoryCommand(unittest.TestCase):
@@ -31,7 +31,7 @@ class TestHistoryCommand(unittest.TestCase):
         seen = {}
         orig = H.repo_conversation if hasattr(H, "repo_conversation") else None
         # import inside command; patch module directly
-        from botv.infra import repo_conversation
+        from bot.infra import repo_conversation
         old = repo_conversation.recent
         repo_conversation.recent = lambda target, limit=20, **kw: (
             seen.update(target=target, limit=limit) or [])

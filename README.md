@@ -2,6 +2,8 @@
 
 > **Hoshinoumi（REC，记录）** · 友利奈绪 · 星之海学园学生会室
 >
+> 仓库：<https://github.com/jyoushitou/Hoshinoumi>
+>
 > 世界观取自原作结局之后：能力消失，回归普通生活；**乙坂有宇已经意外去世**。
 > 提到他需要克制，可以打哑谜，但不能假装他还活着。
 
@@ -92,9 +94,9 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 
 ```
 项目根/
-├── botv/            机器人代码（分层包）
+├── bot/            机器人代码（分层包）
 ├── tests/           功能测试（分模块 + 冒烟，925 条）
-├── checks/          前置环境监测 + 迁移检查（37 条，与 botv 同级）
+├── checks/          前置环境监测 + 迁移检查（37 条，与 bot 同级）
 ├── scripts/         迁移 / 打包 / 发布 / 自检脚本
 ├── docs/            版本计划、架构图、数据库设计、发布清单
 ├── personas/        角色卡（可换人设）
@@ -247,8 +249,8 @@ export NAO_VISION_MODEL=ep-xxxxxxxx
 systemd 用文件保存：
 
 ```ini
-# /etc/systemd/system/nao.service
-EnvironmentFile=/home/jyoushitou/NapCat-Python/.env
+# /etc/systemd/system/hoshinoumi.service
+EnvironmentFile=/home/jyoushitou/Hoshinoumi/.env
 ```
 
 ```bash
@@ -347,7 +349,7 @@ python3 run.py
 
 ### 单实例
 
-启动时自动抢 `.botv.lock`，已有实例在跑会直接退出并打印对方 PID。
+启动时自动抢 `.bot.lock`，已有实例在跑会直接退出并打印对方 PID。
 锁由操作系统维护，进程死了自动释放。
 
 ---
@@ -731,7 +733,7 @@ Docker 镜像里自带 Chromium，抓小说可用。
 ## 架构
 
 ```
-botv/
+bot/
 ├── core/       常量、运行时状态、锁、单实例、参数中心、统计
 ├── infra/      数据库连接与仓储（记忆 / 画像 / 密钥 / 日志 / AI 原文）
 ├── memory/     上下文、检索（BM25+RRF）、分层预算、时间线、浓缩
@@ -1009,7 +1011,7 @@ r = await run_blocking(requests.post, url, json=payload, timeout=60, name="deeps
 
 ## 数据库表
 
-表定义集中在 `botv/infra/schema.py`（现状表 + 未来纯表），全部 `CREATE TABLE IF NOT EXISTS`。
+表定义集中在 `bot/infra/schema.py`（现状表 + 未来纯表），全部 `CREATE TABLE IF NOT EXISTS`。
 
 ```bash
 python3 scripts/init_db.py            # 看缺哪些表

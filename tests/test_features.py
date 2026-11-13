@@ -4,7 +4,7 @@ import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from botv.core import features
+from bot.core import features
 
 
 def _testdir():

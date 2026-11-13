@@ -33,7 +33,7 @@ def _stub_missing_deps():
 
 _stub_missing_deps()
 
-from botv.infra import backup  # noqa: E402
+from bot.infra import backup  # noqa: E402
 
 
 class TestBackup(unittest.TestCase):

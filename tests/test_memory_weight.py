@@ -35,7 +35,7 @@ class TestClassify(unittest.TestCase):
     """三档判定：规则优先，默认轻"""
 
     def setUp(self):
-        from botv.memory import weight
+        from bot.memory import weight
 
         self.W = weight
 

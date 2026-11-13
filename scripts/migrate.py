@@ -20,7 +20,7 @@ except Exception:
 
 
 def _preview(c):
-    from botv.infra import schema
+    from bot.infra import schema
     from scripts import migrate_v18
 
     missing = schema.missing_tables(c)
@@ -48,7 +48,7 @@ def main():
     ap.add_argument("--apply", action="store_true", help="真的执行（默认只看）")
     args = ap.parse_args()
 
-    from botv.infra.conn import get_cursor
+    from bot.infra.conn import get_cursor
 
     c = get_cursor()
     try:
@@ -59,7 +59,7 @@ def main():
         if not args.apply:
             return _preview(c)
 
-        from botv.infra import schema
+        from bot.infra import schema
         from scripts import migrate_indexes, migrate_v18, setup
 
         print("  [1/5] 建缺表")
@@ -84,7 +84,7 @@ def main():
         print("  [5/5] 内置场景")
         setup.seed_scenes()
 
-        from botv.infra import repo_meta
+        from bot.infra import repo_meta
         repo_meta.set_value("schema_version", "19")
         print("        schema_version=19")
         print("\n[OK] 迁移完成，下一步：python3 checks/env_check.py")

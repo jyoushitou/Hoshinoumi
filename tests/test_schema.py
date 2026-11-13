@@ -59,7 +59,7 @@ class TestSchema(unittest.TestCase):
     """表定义齐全、幂等建表、缺表检测"""
 
     def test_tables_defined(self):
-        from botv.infra import schema
+        from bot.infra import schema
 
         for name in ("user_memory", "logs", "api_keys"):
             self.assertIn(name, schema.TABLES, f"缺现状表 {name}")
@@ -68,13 +68,13 @@ class TestSchema(unittest.TestCase):
             self.assertIn(name, schema.TABLES, f"缺纯表 {name}")
 
     def test_required_present(self):
-        from botv.infra import schema
+        from bot.infra import schema
 
         for name in schema.REQUIRED:
             self.assertIn(name, schema.TABLES)
 
     def test_missing_detects(self):
-        from botv.infra import schema
+        from bot.infra import schema
 
         c = FakeCursor(tables=["logs"])
         miss = schema.missing_tables(c)
@@ -82,7 +82,7 @@ class TestSchema(unittest.TestCase):
         self.assertNotIn("logs", miss)
 
     def test_ensure_creates_only_missing(self):
-        from botv.infra import schema
+        from bot.infra import schema
 
         c = FakeCursor(tables=["logs", "api_keys"])
         created = schema.ensure_tables(cursor=c)
@@ -91,7 +91,7 @@ class TestSchema(unittest.TestCase):
         self.assertIn("targets", created, "新表也该建")
 
     def test_ensure_idempotent(self):
-        from botv.infra import schema
+        from bot.infra import schema
 
         c = FakeCursor(tables=[])
         first = schema.ensure_tables(cursor=c)
@@ -100,13 +100,13 @@ class TestSchema(unittest.TestCase):
         self.assertEqual(second, [], "第二次不该再建")
 
     def test_all_ddl_are_if_not_exists(self):
-        from botv.infra import schema
+        from bot.infra import schema
 
         for name, ddl in schema.TABLES.items():
             self.assertIn("IF NOT EXISTS", ddl.upper(), f"{name} 的 DDL 不是幂等的")
 
     def test_describe(self):
-        from botv.infra import schema
+        from bot.infra import schema
 
         c = FakeCursor(tables=list(schema.TABLES))
         self.assertIn("齐全", schema.describe(c))

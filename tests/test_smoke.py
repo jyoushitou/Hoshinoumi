@@ -6,7 +6,7 @@ import unittest
 
 
 def _stub_missing_deps():
-    """缺依赖就打个桩（必须在导入 botv 之前调用）"""
+    """缺依赖就打个桩（必须在导入 bot 之前调用）"""
     def module(name, **attrs):
         m = types.ModuleType(name)
         for k, v in attrs.items():
@@ -42,24 +42,24 @@ import sys
 import types
 import unittest
 from datetime import datetime
-from botv.config import CST
+from bot.config import CST
 import asyncio
 import time
 import os
 import re
 import threading
 import json
-from botv.ports import ChatModel, Transport  # noqa: E402
-from botv.ports.models import ChatRequest, ChatReply  # noqa: E402
-from botv.ports.transport import Target, Segment  # noqa: E402
-from botv.ai import models as model_mod  # noqa: E402
-from botv.ai.chain import FallbackChain  # noqa: E402
-from botv.chat.transport import QqTransport  # noqa: E402
-from botv.core import state as cfg             # noqa: E402  运行时状态（常量也在里面）
-import botv.commands as commands               # noqa: E402
-import botv.chat.reply as reply_mod            # noqa: E402
-from botv.ai.parse import parse_ai_reply       # noqa: E402
-from botv.cmd import registry                  # noqa: E402
+from bot.ports import ChatModel, Transport  # noqa: E402
+from bot.ports.models import ChatRequest, ChatReply  # noqa: E402
+from bot.ports.transport import Target, Segment  # noqa: E402
+from bot.ai import models as model_mod  # noqa: E402
+from bot.ai.chain import FallbackChain  # noqa: E402
+from bot.chat.transport import QqTransport  # noqa: E402
+from bot.core import state as cfg             # noqa: E402  运行时状态（常量也在里面）
+import bot.commands as commands               # noqa: E402
+import bot.chat.reply as reply_mod            # noqa: E402
+from bot.ai.parse import parse_ai_reply       # noqa: E402
+from bot.cmd import registry                  # noqa: E402
 
 
 class FakeConn:
@@ -226,7 +226,7 @@ class TestConcurrency(unittest.TestCase):
         cfg.target_locks.clear()
 
     def test_same_target_serialized(self):
-        from botv.core.locks import get_target_lock
+        from bot.core.locks import get_target_lock
         st = {"active": 0, "peak": 0}
 
         async def run():
@@ -242,7 +242,7 @@ class TestConcurrency(unittest.TestCase):
         self.assertEqual(st["peak"], 1, "同一个人必须串行")
 
     def test_different_targets_parallel(self):
-        from botv.core.locks import get_target_lock
+        from bot.core.locks import get_target_lock
         st = {"active": 0, "peak": 0}
 
         async def run():
@@ -258,7 +258,7 @@ class TestConcurrency(unittest.TestCase):
         self.assertEqual(st["peak"], 3, "三个人应该能并行")
 
     def test_cleanup_idle_locks(self):
-        from botv.core import locks
+        from bot.core import locks
         locks.get_target_lock("old")
         locks._last_used["old"] -= 700
         removed = locks.cleanup_idle_locks()
@@ -266,7 +266,7 @@ class TestConcurrency(unittest.TestCase):
         self.assertNotIn("old", cfg.target_locks)
 
     def test_model_semaphore_limit(self):
-        from botv.core import locks
+        from bot.core import locks
         locks._model_sem = None  # 每个用例用新的信号量，避免跨事件循环
         st = {"active": 0, "peak": 0}
 
@@ -288,7 +288,7 @@ class TestHeartbeatWatchdog(unittest.TestCase):
     """F6：心跳连续失败要主动断开"""
 
     def test_closes_after_failures(self):
-        from botv import heartbeat as hb
+        from bot import heartbeat as hb
 
         class BadWS:
             closed = False
@@ -322,7 +322,7 @@ class TestImageGateRegression(unittest.TestCase):
 
     def _run(self, text, allow):
         import asyncio
-        import botv.chat.reply as R
+        import bot.chat.reply as R
         calls = []
         orig = (R.get_best_image, R.extract_keywords, R.image_allowed, R.materialize_image)
 
@@ -371,16 +371,16 @@ class TestOnlineNotice(unittest.TestCase):
         cfg.last_online_notice_ts = 0.0
 
     def test_first_call_claims(self):
-        from botv.chat.handler import claim_online_notice
+        from bot.chat.handler import claim_online_notice
         self.assertTrue(claim_online_notice())
 
     def test_second_call_blocked(self):
-        from botv.chat.handler import claim_online_notice
+        from bot.chat.handler import claim_online_notice
         self.assertTrue(claim_online_notice())
         self.assertFalse(claim_online_notice())
 
     def test_after_cooldown_allowed(self):
-        from botv.chat.handler import claim_online_notice
+        from bot.chat.handler import claim_online_notice
         self.assertTrue(claim_online_notice())
         cfg.last_online_notice_ts -= 61  # 模拟 61 秒前
         self.assertTrue(claim_online_notice())
@@ -395,13 +395,13 @@ class TestOutbox(unittest.TestCase):
         cfg.pending_outbox.clear()
 
     def test_queue_when_disconnected(self):
-        from botv.chat.send import send_private_msg
+        from bot.chat.send import send_private_msg
         ok = asyncio.run(send_private_msg(123, [{"type": "text", "data": {"text": "hi"}}], None))
         self.assertFalse(ok)
         self.assertEqual(len(cfg.pending_outbox), 1)
 
     def test_flush_after_reconnect(self):
-        from botv.chat.send import send_private_msg, flush_outbox
+        from bot.chat.send import send_private_msg, flush_outbox
         ws = FakeWS()
         asyncio.run(send_private_msg(123, [{"type": "text", "data": {"text": "a"}}], None))
         asyncio.run(send_private_msg(456, [{"type": "text", "data": {"text": "b"}}], None))
@@ -411,24 +411,24 @@ class TestOutbox(unittest.TestCase):
         self.assertEqual(len(ws.sent), 2)
 
     def test_flush_noop_when_empty(self):
-        from botv.chat.send import flush_outbox
+        from bot.chat.send import flush_outbox
         self.assertEqual(asyncio.run(flush_outbox(FakeWS())), 0)
 
 class TestPhotoMemory(unittest.TestCase):
     """v11-A9：她记住你发过的图"""
 
     def test_kind_registered(self):
-        from botv.infra.repo_memory import KIND_LIMITS, DEFAULT_KINDS
+        from bot.infra.repo_memory import KIND_LIMITS, DEFAULT_KINDS
         self.assertIn("photo", KIND_LIMITS, "photo 要有独立保留上限")
         self.assertIn("photo", DEFAULT_KINDS, "检索要能召回图片记忆")
 
     def test_photo_event_written_with_tags(self):
-        import botv.infra.repo_memory as rm
-        import botv.chat.inbound as inbound
+        import bot.infra.repo_memory as rm
+        import bot.chat.inbound as inbound
         self.assertTrue(hasattr(inbound, "add_event_to_db"), "inbound 应导入 add_event_to_db")
 
     def test_kind_limit_value(self):
-        from botv.infra.repo_memory import KIND_LIMITS
+        from bot.infra.repo_memory import KIND_LIMITS
         self.assertGreaterEqual(KIND_LIMITS["photo"], 20)
 
 
@@ -445,8 +445,8 @@ class TestScheduleTick(unittest.TestCase):
 
     def setUp(self):
         from datetime import datetime
-        from botv.config import CST
-        import botv.schedule.runner as R
+        from bot.config import CST
+        import bot.schedule.runner as R
         self.R = R
         self.now = datetime(2026, 11, 9, 20, 0, tzinfo=CST)
         self.sent = []
@@ -458,11 +458,11 @@ class TestScheduleTick(unittest.TestCase):
     def tearDown(self):
         for name, fn in self._orig.items():
             if name.startswith("impulse."):
-                import botv.life.impulse as IMP
+                import bot.life.impulse as IMP
                 IMP.should_chat = fn
             else:
                 setattr(self.R, name, fn)
-        from botv.core import state as cfg
+        from bot.core import state as cfg
         cfg.daily_chat_trigger_times = []
         cfg.triggered_today.clear()
 
@@ -490,7 +490,7 @@ class TestScheduleTick(unittest.TestCase):
     def test_process_due_submits_agenda(self):
         """v17.1：process_due 只投递事件，生成由 worker 做"""
         import asyncio
-        from botv.scheduler.dispatcher import Scheduler, set_scheduler
+        from bot.scheduler.dispatcher import Scheduler, set_scheduler
 
         sched = Scheduler()
         set_scheduler(sched)
@@ -527,7 +527,7 @@ class TestScheduleTick(unittest.TestCase):
         self.assertEqual(n, 1)
 
     def _patch_should_chat(self, result):
-        import botv.life.impulse as IMP
+        import bot.life.impulse as IMP
         self._orig["impulse.should_chat"] = IMP.should_chat
         IMP.should_chat = lambda **kw: result
         self._patch("load_today_life", lambda: [])
@@ -537,19 +537,19 @@ class TestScheduleTick(unittest.TestCase):
         """跑一次 proactive_tick（新执行器，v17.3）"""
         import asyncio
 
-        import botv.executors.proactive as P
-        from botv.scheduler.dispatcher import Scheduler, set_scheduler
+        import bot.executors.proactive as P
+        from bot.scheduler.dispatcher import Scheduler, set_scheduler
 
         sched = Scheduler()
         set_scheduler(sched)
         orig = P.should_chat if hasattr(P, "should_chat") else None
-        import botv.life.impulse as IMP
+        import bot.life.impulse as IMP
 
         orig_gate = IMP.should_chat
         IMP.should_chat = lambda **kw: gate_result
         orig_life = None
         try:
-            import botv.infra.repo_memory as rm
+            import bot.infra.repo_memory as rm
 
             orig_life = rm.load_today_life
             rm.load_today_life = lambda: []
@@ -560,7 +560,7 @@ class TestScheduleTick(unittest.TestCase):
         finally:
             IMP.should_chat = orig_gate
             if orig_life is not None:
-                import botv.infra.repo_memory as rm
+                import bot.infra.repo_memory as rm
 
                 rm.load_today_life = orig_life
             set_scheduler(None)
@@ -581,9 +581,9 @@ class TestScheduleTick(unittest.TestCase):
         """已在飞时第二次 tick 不会重复投递"""
         import asyncio
 
-        import botv.executors.proactive as P
-        from botv.scheduler.dispatcher import Scheduler, set_scheduler
-        import botv.life.impulse as IMP
+        import bot.executors.proactive as P
+        from bot.scheduler.dispatcher import Scheduler, set_scheduler
+        import bot.life.impulse as IMP
 
         sched = Scheduler()
         set_scheduler(sched)
@@ -612,7 +612,7 @@ class TestSingleInstance(unittest.TestCase):
 
     def tearDown(self):
         import os
-        from botv.core import single_instance as si
+        from bot.core import single_instance as si
         si.release()
         try:
             os.remove(self.path)
@@ -620,7 +620,7 @@ class TestSingleInstance(unittest.TestCase):
             pass
 
     def test_second_acquire_fails_then_release_works(self):
-        from botv.core import single_instance as si
+        from bot.core import single_instance as si
         self.assertTrue(si.acquire(self.path))
         self.assertFalse(si.acquire(self.path), "同一文件第二次必须拿不到")
         si.release()
@@ -628,7 +628,7 @@ class TestSingleInstance(unittest.TestCase):
 
     def test_holder_pid_written(self):
         import os
-        from botv.core import single_instance as si
+        from bot.core import single_instance as si
         self.assertTrue(si.acquire(self.path))
         self.assertEqual(si.holder_pid(self.path), str(os.getpid()))
 
@@ -636,16 +636,16 @@ class TestStateInPrompt(unittest.TestCase):
     """v9-U4：状态渲染进 prompt"""
 
     def test_prompt_carries_state(self):
-        import botv.ai.client as client
-        import botv.memory.context as mem
-        from botv.core import locks
+        import bot.ai.client as client
+        import bot.memory.context as mem
+        from bot.core import locks
         captured = {}
 
         async def fake_ds(msgs, max_tokens=None, target_id=None):
             captured["sys"] = msgs[0]["content"]
             return "好"
 
-        from botv.core import lifeport
+        from bot.core import lifeport
 
         orig = (client.call_deepseek, mem.load_events_from_db)
         client.call_deepseek = fake_ds
@@ -671,8 +671,8 @@ class TestTimePerception(unittest.TestCase):
 
     def test_now_text_format(self):
         from datetime import datetime
-        from botv.ai.prompt import now_text
-        from botv.config import CST
+        from bot.ai.prompt import now_text
+        from bot.config import CST
         s = now_text(datetime(2026, 11, 8, 23, 30, tzinfo=CST))
         self.assertIn("2026年11月8日", s)
         self.assertIn("23:30", s)
@@ -680,14 +680,14 @@ class TestTimePerception(unittest.TestCase):
 
     def test_morning_period(self):
         from datetime import datetime
-        from botv.ai.prompt import now_text
-        from botv.config import CST
+        from bot.ai.prompt import now_text
+        from bot.config import CST
         s = now_text(datetime(2026, 11, 9, 7, 15, tzinfo=CST))
         self.assertIn("早上", s)
 
     def test_prompt_contains_now(self):
-        import botv.ai.client as client
-        import botv.memory.context as mem
+        import bot.ai.client as client
+        import bot.memory.context as mem
 
         captured = {}
 
@@ -712,11 +712,11 @@ class TestV14Frequency(unittest.TestCase):
     """v14：发图择时 / @ 判断 / 主动频率自适应"""
 
     def setUp(self):
-        from botv.core import state as cfg
+        from bot.core import state as cfg
         self.cfg = cfg
         cfg.proactive_adjust = 1.0
         cfg.proactive_pending = False
-        import botv.chat.reply as R
+        import bot.chat.reply as R
         R._last_image_ts.clear()
         self.R = R
 
@@ -749,18 +749,18 @@ class TestV14Frequency(unittest.TestCase):
         self.assertFalse(self.R.image_allowed("3", False, R(0.0)), "10 分钟内同一人只一张")
 
     def test_group_more_conservative(self):
-        from botv.chat.reply import IMAGE_PROB, IMAGE_PROB_GROUP
+        from bot.chat.reply import IMAGE_PROB, IMAGE_PROB_GROUP
         self.assertLess(IMAGE_PROB_GROUP, IMAGE_PROB)
 
     # ---- B2 主动频率自适应 ----
     def test_no_reply_lowers_frequency(self):
         import time
-        from botv.life import impulse as I
+        from bot.life import impulse as I
         self.cfg.proactive_adjust = 1.0
         self.cfg.proactive_pending = True
         from datetime import datetime
 
-        from botv.config import CST
+        from bot.config import CST
 
         # 固定到白天：深夜会提前返回，测不到频率调整
         I.should_chat(now=datetime(2026, 11, 10, 15, 0, tzinfo=CST),
@@ -771,7 +771,7 @@ class TestV14Frequency(unittest.TestCase):
         self.assertEqual(self.cfg.proactive_pending, False)
 
     def test_reply_raises_frequency_back(self):
-        from botv.life import impulse as I
+        from bot.life import impulse as I
         self.cfg.proactive_adjust = 0.5
         self.cfg.proactive_pending = True
         I.note_user_message()
@@ -780,7 +780,7 @@ class TestV14Frequency(unittest.TestCase):
 
     def test_adjust_floor(self):
         import time
-        from botv.life import impulse as I
+        from bot.life import impulse as I
         self.cfg.proactive_adjust = 0.5
         for _ in range(5):
             self.cfg.proactive_pending = True
@@ -794,11 +794,11 @@ class TestV14Parsing(unittest.TestCase):
 
     def setUp(self):
         from datetime import datetime
-        from botv.config import CST
+        from bot.config import CST
         self.now = datetime(2026, 11, 9, 10, 30, tzinfo=CST)  # 周一
 
     def _when(self, text):
-        from botv.life.agenda import parse_when
+        from bot.life.agenda import parse_when
         return parse_when(text, self.now)
 
     def test_month_end(self):
@@ -814,8 +814,8 @@ class TestV14Parsing(unittest.TestCase):
         self.assertEqual(self._when("下周末考试").strftime("%m-%d"), "11-21")
 
     def test_clip_disabled_text(self):
-        from botv.cmd.formatters import format_clip_status
-        from botv.core import state as cfg
+        from bot.cmd.formatters import format_clip_status
+        from bot.core import state as cfg
         cfg.CLIP_ENABLED = False
         text = format_clip_status()
         self.assertIn("停用", text)

@@ -6,7 +6,7 @@ from tests.test_chat import _stub_missing_deps
 
 _stub_missing_deps()
 
-from botv.schedule import items
+from bot.schedule import items
 
 
 class _Handle:

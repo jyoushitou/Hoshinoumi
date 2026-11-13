@@ -46,7 +46,7 @@ class TestTxtLog(unittest.TestCase):
         os.environ["NAO_LOG_TXT"] = "1"
         os.environ["NAO_LOG_KEEP_DAYS"] = "180"
 
-        from botv.infra import txtlog
+        from bot.infra import txtlog
 
         self.T = txtlog
         self.T._state.update({"day": None, "path": None, "size": 0, "inited": False})
@@ -114,7 +114,7 @@ class TestTxtLog(unittest.TestCase):
         self.assertFalse(self.T.write("系统", "x"))
 
     def test_purge_db_logs_batches(self):
-        import botv.infra.conn as conn
+        import bot.infra.conn as conn
 
         class Cur:
             def __init__(self):
@@ -141,7 +141,7 @@ class TestTxtLog(unittest.TestCase):
         self.assertEqual(cur.sqls[0][1], (180,))
 
     def test_log_module_calls_txt(self):
-        import botv.log as L
+        import bot.log as L
 
         written = []
         orig = self.T.write

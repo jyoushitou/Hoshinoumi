@@ -1,7 +1,7 @@
 # ===================== v19.1 对话消息仓储 =====================
 import unittest
 
-from botv.infra import repo_conversation as R
+from bot.infra import repo_conversation as R
 
 
 class _Cursor:
@@ -27,7 +27,7 @@ class _Cursor:
 
 class TestConversationRepo(unittest.TestCase):
     def test_schema_has_table(self):
-        from botv.infra import schema
+        from bot.infra import schema
 
         self.assertIn("conversation_messages", schema.TABLES)
         ddl = schema.TABLES["conversation_messages"]

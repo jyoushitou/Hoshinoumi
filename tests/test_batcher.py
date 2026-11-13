@@ -36,7 +36,7 @@ class TestBatchable(unittest.TestCase):
     """哪些消息能进合并窗口"""
 
     def setUp(self):
-        from botv.chat import batcher
+        from bot.chat import batcher
 
         self.B = batcher
         self._enabled = batcher.ENABLED
@@ -66,7 +66,7 @@ class TestBatchable(unittest.TestCase):
 
     def test_code_mode_no(self):
         self.B.ENABLED = True
-        from botv.core import state as cfg
+        from bot.core import state as cfg
 
         orig = cfg.CODE_MODE
         cfg.CODE_MODE = True
@@ -80,7 +80,7 @@ class TestBatchHandler(unittest.TestCase):
     """一批消息合并成一次回复"""
 
     def test_single_uses_original_text(self):
-        from botv.chat import batcher
+        from bot.chat import batcher
 
         calls = []
 
@@ -97,8 +97,8 @@ class TestBatchHandler(unittest.TestCase):
         self.assertEqual(calls, ["在吗"])
 
     def test_multi_merges_with_newline(self):
-        from botv.chat import batcher
-        import botv.chat.handler as H
+        from bot.chat import batcher
+        import bot.chat.handler as H
 
         calls = []
 
@@ -119,7 +119,7 @@ class TestBatchHandler(unittest.TestCase):
         self.assertEqual(calls, ["在吗\n问你个事"], "多句应合并成一段")
 
     def test_batcher_singleton(self):
-        from botv.chat.batcher import get_batcher, set_batcher
+        from bot.chat.batcher import get_batcher, set_batcher
 
         orig = get_batcher()
         set_batcher(None)

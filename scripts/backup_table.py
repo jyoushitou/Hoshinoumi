@@ -31,7 +31,7 @@ def sql_literal(v):
 
 
 def backup(table):
-    from botv.infra.conn import get_cursor
+    from bot.infra.conn import get_cursor
     c = get_cursor()
     c.execute(f"SHOW COLUMNS FROM {table}")
     cols = [r["Field"] for r in c.fetchall()]
@@ -53,7 +53,7 @@ def backup(table):
 
 
 def restore(wipe=False):
-    from botv.infra.conn import get_cursor
+    from bot.infra.conn import get_cursor
     c = get_cursor()
     n = 0
     table = None

@@ -40,7 +40,7 @@ class TestCommandChannel(unittest.TestCase):
     """执行、超时、错误、并发上限、统计"""
 
     def test_run_ok(self):
-        from botv.cmd.channel import CommandChannel
+        from bot.cmd.channel import CommandChannel
 
         ch = CommandChannel(timeout=1)
         ok, out = asyncio.run(ch.run("ping", _ok))
@@ -49,7 +49,7 @@ class TestCommandChannel(unittest.TestCase):
         self.assertEqual(ch.stats()["count"], 1)
 
     def test_timeout(self):
-        from botv.cmd.channel import CommandChannel
+        from bot.cmd.channel import CommandChannel
 
         async def slow(*a):
             await asyncio.sleep(1)
@@ -61,7 +61,7 @@ class TestCommandChannel(unittest.TestCase):
         self.assertEqual(ch.stats()["timeouts"], 1)
 
     def test_error(self):
-        from botv.cmd.channel import CommandChannel
+        from bot.cmd.channel import CommandChannel
 
         async def boom(*a):
             raise RuntimeError("炸了")
@@ -73,7 +73,7 @@ class TestCommandChannel(unittest.TestCase):
         self.assertEqual(ch.stats()["errors"], 1)
 
     def test_concurrency_limited(self):
-        from botv.cmd.channel import CommandChannel
+        from bot.cmd.channel import CommandChannel
 
         running = {"now": 0, "max": 0}
 
@@ -92,7 +92,7 @@ class TestCommandChannel(unittest.TestCase):
         self.assertLessEqual(running["max"], 2, "并发度应受信号量限制")
 
     def test_stats_slowest(self):
-        from botv.cmd.channel import CommandChannel
+        from bot.cmd.channel import CommandChannel
 
         async def fast(*a):
             return 1
@@ -110,13 +110,13 @@ class TestCommandChannel(unittest.TestCase):
         self.assertEqual(ch.stats()["slowest"]["name"], "slow")
 
     def test_describe_before_any(self):
-        from botv.cmd.channel import CommandChannel
+        from bot.cmd.channel import CommandChannel
 
         ch = CommandChannel()
         self.assertIn("还没执行", ch.describe())
 
     def test_describe_after(self):
-        from botv.cmd.channel import CommandChannel
+        from bot.cmd.channel import CommandChannel
 
         ch = CommandChannel(timeout=1)
         asyncio.run(ch.run("ping", _ok))

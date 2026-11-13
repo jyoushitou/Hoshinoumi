@@ -37,7 +37,7 @@ class TestLifePort(unittest.TestCase):
     """端口：注册/注销、缺实现给默认值、未知名字直接报错"""
 
     def setUp(self):
-        from botv.core import lifeport
+        from bot.core import lifeport
 
         self.LP = lifeport
         self._saved = dict(lifeport._impl)
@@ -77,7 +77,7 @@ class TestLifePort(unittest.TestCase):
         self.assertIsNone(fn("1"))
 
     def test_bridge_registers_all(self):
-        from botv.app.life_bridge import setup_life_bridge
+        from bot.app.life_bridge import setup_life_bridge
         names = setup_life_bridge()
         self.assertGreaterEqual(len(names), 10)
         self.assertIn("state_line", names)
@@ -88,7 +88,7 @@ class TestAiNoLifeImport(unittest.TestCase):
     """ai 层顶层不能再 import life"""
 
     def test_no_top_level_life_import(self):
-        from botv.ai import client
+        from bot.ai import client
 
         with io.open(client.__file__, encoding="utf-8") as f:
             tree = ast.parse(f.read())
@@ -101,7 +101,7 @@ class TestAiNoLifeImport(unittest.TestCase):
         self.assertEqual(bad, [], f"顶层仍 import life：{bad}")
 
     def test_client_uses_port(self):
-        from botv.ai import client
+        from bot.ai import client
 
         self.assertTrue(hasattr(client, "life"))
 

@@ -6,7 +6,7 @@ import unittest
 
 
 def _stub_missing_deps():
-    """缺依赖就打个桩（必须在导入 botv 之前调用）"""
+    """缺依赖就打个桩（必须在导入 bot 之前调用）"""
     def module(name, **attrs):
         m = types.ModuleType(name)
         for k, v in attrs.items():
@@ -38,7 +38,7 @@ def _stub_missing_deps():
 _stub_missing_deps()
 
 from datetime import datetime
-from botv.config import CST
+from bot.config import CST
 
 
 import unittest
@@ -48,7 +48,7 @@ class TestBaselineBubble(unittest.TestCase):
 
     def test_bubble_delay_range(self):
         """气泡间隔：落在 1.5~3.0 秒"""
-        from botv.chat.send import bubble_delay
+        from bot.chat.send import bubble_delay
 
         samples = [bubble_delay() for _ in range(300)]
         self.assertGreaterEqual(min(samples), 1.5)
@@ -57,7 +57,7 @@ class TestBaselineBubble(unittest.TestCase):
 
     def test_bubble_delay_uniform(self):
         """气泡间隔是均匀分布（均值接近中点 2.25）"""
-        from botv.chat.send import bubble_delay
+        from bot.chat.send import bubble_delay
 
         samples = [bubble_delay() for _ in range(2000)]
         avg = sum(samples) / len(samples)
@@ -65,7 +65,7 @@ class TestBaselineBubble(unittest.TestCase):
 
     def test_max_reply_lines(self):
         """v18.10：一次回复最多 4 个气泡（超出合并）"""
-        from botv.chat.reply import MAX_REPLY_LINES
+        from bot.chat.reply import MAX_REPLY_LINES
 
         self.assertEqual(MAX_REPLY_LINES, 4)
 
@@ -78,7 +78,7 @@ class TestBaselineDelay(unittest.TestCase):
 
     def test_delay_range_bands(self):
         """每个时段的区间必须与 BANDS 一致"""
-        from botv.chat.timing import delay_range
+        from bot.chat.timing import delay_range
 
         expected = {
             3: (20, 180),    # 凌晨
@@ -93,7 +93,7 @@ class TestBaselineDelay(unittest.TestCase):
 
     def test_delay_range_boundaries(self):
         """时段边界：6 点属于清晨，9 点属于白天，18 点属于晚上"""
-        from botv.chat.timing import delay_range
+        from bot.chat.timing import delay_range
 
         self.assertEqual(delay_range(_at(6)), (10, 60))
         self.assertEqual(delay_range(_at(9)), (5, 30))
@@ -102,7 +102,7 @@ class TestBaselineDelay(unittest.TestCase):
 
     def test_reply_delay_stays_in_band(self):
         """200 次采样都要落在当前时段的区间内"""
-        from botv.chat.timing import reply_delay, delay_range
+        from bot.chat.timing import reply_delay, delay_range
 
         now = _at(13)                      # 白天：5~30 秒
         lo, hi = delay_range(now)
@@ -114,7 +114,7 @@ class TestBaselineDelay(unittest.TestCase):
 
     def test_reply_delay_skewed_short(self):
         """平方分布：大多数延迟靠近下界，中位数明显小于区间中点"""
-        from botv.chat.timing import reply_delay, delay_range
+        from bot.chat.timing import reply_delay, delay_range
 
         now = _at(13)
         lo, hi = delay_range(now)
@@ -133,7 +133,7 @@ class TestBaselineGroupGate(unittest.TestCase):
 
     def test_gate_constants(self):
         """冷却 20 秒、窗口 60 秒、窗口内最多 6 条、@ 最小间隔 3 秒"""
-        from botv.chat import handler as H
+        from bot.chat import handler as H
 
         self.assertEqual(H.GROUP_COOLDOWN, 20)
         self.assertEqual(H.GROUP_WINDOW, 60)
@@ -142,8 +142,8 @@ class TestBaselineGroupGate(unittest.TestCase):
 
     def test_probability_clamped(self):
         """概率始终落在 0.05~0.45 之间"""
-        from botv.chat.handler import group_reply_probability
-        from botv.chat import handler as H
+        from bot.chat.handler import group_reply_probability
+        from bot.chat import handler as H
 
         for lonely in (0.0, 0.5, 1.0):
             for streak in (0, 2, 5, 20):
@@ -153,14 +153,14 @@ class TestBaselineGroupGate(unittest.TestCase):
 
     def test_base_probability(self):
         """没有情绪加成、没有连说时，基础概率是 0.20"""
-        from botv.chat.handler import group_reply_probability
+        from bot.chat.handler import group_reply_probability
 
         p = group_reply_probability({"lonely": 0.0, "mood": 0.0}, 0)
         self.assertAlmostEqual(p, 0.20, delta=0.001)
 
     def test_streak_halves(self):
         """连说 3 句没人接，概率减半"""
-        from botv.chat.handler import group_reply_probability
+        from bot.chat.handler import group_reply_probability
 
         base = group_reply_probability({"lonely": 0.0, "mood": 0.0}, 0)
         decayed = group_reply_probability({"lonely": 0.0, "mood": 0.0}, 3)
@@ -168,8 +168,8 @@ class TestBaselineGroupGate(unittest.TestCase):
 
     def test_cooldown_blocks(self):
         """刚回过（<20 秒）时，没被 @ 一律不接"""
-        from botv.chat.handler import should_answer_group, note_group_reply
-        from botv.core import state as cfg
+        from bot.chat.handler import should_answer_group, note_group_reply
+        from bot.core import state as cfg
 
         cfg.group_last_reply_ts.clear()
         cfg.group_msg_window.clear()
@@ -184,13 +184,13 @@ class TestBaselineMemoryAndCommands(unittest.TestCase):
 
     def test_memory_rounds(self):
         """每个对象最多保留 30 轮对话"""
-        from botv.core.constants import MAX_USER_ROUND
+        from bot.core.constants import MAX_USER_ROUND
 
         self.assertEqual(MAX_USER_ROUND, 30)
 
     def test_memory_budget(self):
         """分层预算：profile 120 / dialogue 700 / memories 250 / keywords 120 / timeline 200"""
-        from botv.memory.inject import BUDGET
+        from bot.memory.inject import BUDGET
 
         self.assertEqual(BUDGET, {
             "profile": 120,
@@ -203,15 +203,15 @@ class TestBaselineMemoryAndCommands(unittest.TestCase):
 
     def test_command_count(self):
         """命令数量不少于 26 个（v5 基线）"""
-        import botv.commands  # noqa: F401
-        from botv.cmd import registry
+        import bot.commands  # noqa: F401
+        from bot.cmd import registry
 
         self.assertGreaterEqual(len(registry.COMMANDS), 26)
 
     def test_core_commands_exist(self):
         """核心命令一个都不能少"""
-        import botv.commands  # noqa: F401
-        from botv.cmd import registry
+        import bot.commands  # noqa: F401
+        from bot.cmd import registry
 
         for name in ("help", "status", "memory", "diary", "todo",
                      "persona", "stats", "config", "memorybook", "growth"):
@@ -219,8 +219,8 @@ class TestBaselineMemoryAndCommands(unittest.TestCase):
 
     def test_commands_are_callable(self):
         """每个命令都挂了可调用的 handler"""
-        import botv.commands  # noqa: F401
-        from botv.cmd import registry
+        import bot.commands  # noqa: F401
+        from bot.cmd import registry
 
         for name, cmd in registry.COMMANDS.items():
             self.assertTrue(callable(cmd.handler), f"{name} 的 handler 不可调用")

@@ -80,11 +80,11 @@ class TestHealthAndStatus(unittest.TestCase):
     """health / status：结构、字段、不泄漏密钥"""
 
     def setUp(self):
-        from botv.server import routes_meta
+        from bot.server import routes_meta
 
         self.R = routes_meta
         self._orig = routes_meta.counts if hasattr(routes_meta, "counts") else None
-        import botv.infra.repo_query as RQ
+        import bot.infra.repo_query as RQ
 
         self.RQ = RQ
         self._orig_counts = RQ.counts
@@ -147,7 +147,7 @@ class TestUsageAndToken(unittest.TestCase):
     """usage / token：参数边界、token 不回显整串"""
 
     def setUp(self):
-        from botv.server import routes_meta
+        from bot.server import routes_meta
 
         self.R = routes_meta
         # routes_meta 里是 from ... import，要 patch 它自己的名字
@@ -183,7 +183,7 @@ class TestUsageAndToken(unittest.TestCase):
         self.assertEqual(seen[0], 100, "上限应钳到 100")
 
     def test_token_masked(self):
-        from botv.server import config as apicfg
+        from bot.server import config as apicfg
 
         text = apicfg.format_api_token_info()
         self.assertIn("API", text)
@@ -194,14 +194,14 @@ class TestRouteWiring(unittest.TestCase):
     """路由装配：http_api 里应挂上 health/status/usage/chat"""
 
     def test_handlers_wired(self):
-        import botv.server.http_api as api
+        import bot.server.http_api as api
 
         src = open(api.__file__, encoding="utf-8").read()
         for path in ("/health", "/status", "/usage", "/chat"):
             self.assertIn(path, src, f"路由里应有 {path}")
 
     def test_meta_handlers_callable(self):
-        from botv.server import routes_meta
+        from bot.server import routes_meta
 
         for fn in (routes_meta.handle_health, routes_meta.handle_status,
                    routes_meta.handle_usage):

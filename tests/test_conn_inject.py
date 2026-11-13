@@ -37,7 +37,7 @@ class TestConnInjection(unittest.TestCase):
     """注入配置后，conn 不再回头读 settings"""
 
     def setUp(self):
-        from botv.infra import conn
+        from bot.infra import conn
 
         self.C = conn
         self.dir = os.path.join(
@@ -60,7 +60,7 @@ class TestConnInjection(unittest.TestCase):
     def test_injected_backend_wins(self):
         """注入 sqlite 时，即使 settings 说 mysql 也用 sqlite"""
         self.C.configure(backend="sqlite", sqlite_path=os.path.join(self.dir, "a.db"))
-        orig = sys.modules.get("botv.core.settings")
+        orig = sys.modules.get("bot.core.settings")
         self.assertEqual(self.C._resolve_backend(), "sqlite")
 
     def test_injected_path_used(self):
@@ -97,13 +97,13 @@ class TestBootstrapInjects(unittest.TestCase):
     def test_bootstrap_calls_configure(self):
         import inspect
 
-        from botv.app import bootstrap
+        from bot.app import bootstrap
 
         src = inspect.getsource(bootstrap.bootstrap)
         self.assertIn("_configure_db", src, "bootstrap 必须先注入配置")
 
     def test_configure_db_returns_backend(self):
-        from botv.app import bootstrap
+        from bot.app import bootstrap
 
         self.assertTrue(callable(bootstrap._configure_db))
 

@@ -36,7 +36,7 @@ class TestExtract(unittest.TestCase):
     """规则提取：三档 slot + 极性 + 时效"""
 
     def setUp(self):
-        from botv.life import facts
+        from bot.life import facts
 
         self.F = facts
         self.now = datetime(2026, 11, 12, 9, 0)   # 周四
@@ -94,7 +94,7 @@ class TestPromptBlock(unittest.TestCase):
     """注入格式：带日期语境"""
 
     def test_block_format(self):
-        from botv.life import facts
+        from bot.life import facts
 
         orig = facts.active
         facts.active = lambda tid, now=None, limit=10, cursor=None, group=False: [
@@ -112,7 +112,7 @@ class TestPromptBlock(unittest.TestCase):
         self.assertIn("没有香菜", text)
 
     def test_empty_returns_blank(self):
-        from botv.life import facts
+        from bot.life import facts
 
         orig = facts.active
         facts.active = lambda *a, **k: []
@@ -128,7 +128,7 @@ class TestPrivacy(unittest.TestCase):
     """v18.4：事实的归属与隐私"""
 
     def setUp(self):
-        from botv.life import facts
+        from bot.life import facts
         from datetime import datetime
 
         self.F = facts

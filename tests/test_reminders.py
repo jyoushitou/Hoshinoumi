@@ -42,8 +42,8 @@ class TestReminders(unittest.TestCase):
     """日程提醒与待办回访：生成 → 发送 → 标记完成"""
 
     def setUp(self):
-        import botv.executors.reminders as RM
-        from botv.scheduler.dispatcher import Scheduler, set_scheduler
+        import bot.executors.reminders as RM
+        from bot.scheduler.dispatcher import Scheduler, set_scheduler
 
         self.RM = RM
         self.sched = Scheduler()
@@ -51,23 +51,23 @@ class TestReminders(unittest.TestCase):
         self.sent = []
         self.marked = []
 
-        from botv.ai import client as C
-        from botv.chat import send as SEND
+        from bot.ai import client as C
+        from bot.chat import send as SEND
 
         self._orig = (C.get_character_reply, SEND.send_short_reply)
         C.get_character_reply = lambda prompt, tid: _async("提醒一句")
         SEND.send_short_reply = lambda *a, **k: _async(self.sent.append(a))
 
     def tearDown(self):
-        from botv.ai import client as C
-        from botv.chat import send as SEND
-        from botv.scheduler.dispatcher import set_scheduler
+        from bot.ai import client as C
+        from bot.chat import send as SEND
+        from bot.scheduler.dispatcher import set_scheduler
 
         C.get_character_reply, SEND.send_short_reply = self._orig
         set_scheduler(None)
 
     def test_agenda_handler_sends(self):
-        from botv.life import agenda
+        from bot.life import agenda
 
         orig = agenda.mark_reminded
         agenda.mark_reminded = lambda i: self.marked.append(i)
@@ -91,7 +91,7 @@ class TestReminders(unittest.TestCase):
         self.assertTrue(self.RM.submit_pending("吃饭", 3))
 
     def test_empty_reply_not_sent(self):
-        from botv.ai import client as C
+        from bot.ai import client as C
 
         C.get_character_reply = lambda prompt, tid: _async("")
         out = asyncio.run(self.RM.handle_agenda(_Ev(args=("面试", 7))))

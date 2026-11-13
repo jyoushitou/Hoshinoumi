@@ -124,7 +124,7 @@ def step_names():
     """静态检查：有没有「用了但没定义」的名字（v10.2）"""
     sys.path.insert(0, os.path.join(ROOT, "scripts"))
     import check_names
-    problems = check_names.scan([os.path.join(ROOT, "botv")])
+    problems = check_names.scan([os.path.join(ROOT, "bot")])
     if problems:
         path, line, name, scope = problems[0]
         raise RuntimeError(
@@ -175,9 +175,9 @@ def step_optional():
 
 
 def step_import_all():
-    import botv
-    mods = ["botv"]
-    for m in pkgutil.walk_packages(botv.__path__, "botv."):
+    import bot
+    mods = ["bot"]
+    for m in pkgutil.walk_packages(bot.__path__, "bot."):
         mods.append(m.name)
     failed = []
     for name in mods:
@@ -191,20 +191,20 @@ def step_import_all():
 
 
 def step_db():
-    from botv.infra.conn import get_cursor
+    from bot.infra.conn import get_cursor
     c = get_cursor()
     c.execute("SELECT 1 AS ok")
     r = c.fetchone()
     if not r or r.get("ok") != 1:
         raise RuntimeError("SELECT 1 返回异常")
-    from botv.core.constants import DB_CONFIG
+    from bot.core.constants import DB_CONFIG
     return f"{DB_CONFIG['user']}@{DB_CONFIG['host']}:{DB_CONFIG['port']}/{DB_CONFIG['database']}"
 
 
 def step_tables():
     """表是否齐全（v17.5：用 schema.py 的统一表定义）"""
-    from botv.infra.conn import get_cursor
-    from botv.infra import schema
+    from bot.infra.conn import get_cursor
+    from bot.infra import schema
 
     c = get_cursor()
     missing = schema.missing_tables(c, schema.REQUIRED)
@@ -217,8 +217,8 @@ def step_tables():
 
 def step_tables_extra():
     """新表（v17.5 纯表）是否存在——缺了只警告，不阻塞"""
-    from botv.infra.conn import get_cursor
-    from botv.infra import schema
+    from bot.infra.conn import get_cursor
+    from bot.infra import schema
 
     c = get_cursor()
     missing = schema.missing_tables(c)
@@ -231,7 +231,7 @@ def step_tables_extra():
 
 def step_config():
     """严格检查配置：缺 DB/QQ 直接阻塞"""
-    from botv.core import settings
+    from bot.core import settings
 
     missing = settings.missing_keys()
     if missing:
@@ -243,7 +243,7 @@ def step_config():
 
 def step_memory_schema():
     """v18.17：检查 memories / cron_tasks / reading_progress 的最终结构"""
-    from botv.infra.conn import get_cursor
+    from bot.infra.conn import get_cursor
 
     c = get_cursor()
     checks = [
@@ -291,7 +291,7 @@ def step_vision():
     """v19.0：生成测试图真实调用视觉模型；失败 WARN，不阻塞"""
     import asyncio
 
-    from botv.ai.vision import self_test
+    from bot.ai.vision import self_test
 
     report = asyncio.run(self_test())
     if "✅" not in report:
@@ -334,7 +334,7 @@ def step_backup():
 def step_keys():
     import os
 
-    from botv.infra.repo_key import get_api_key_from_db, reload_api_keys
+    from bot.infra.repo_key import get_api_key_from_db, reload_api_keys
     keys = {name: bool(get_api_key_from_db(name) or os.getenv(name, ""))
             for name in ("DS_API_KEY", "ARK_API_KEY", "ALAPI_TOKEN")}
     missing = [k for k, v in keys.items() if not v]
@@ -346,7 +346,7 @@ def step_keys():
 
 
 def step_prompt():
-    from botv.ai.prompt import get_system_prompt, load_personality_supplement
+    from bot.ai.prompt import get_system_prompt, load_personality_supplement
     load_personality_supplement()
     p = get_system_prompt()
     if "{available_tags}" in p:
@@ -355,7 +355,7 @@ def step_prompt():
 
 
 def step_schema_version():
-    from botv.infra.repo_meta import get_value
+    from bot.infra.repo_meta import get_value
 
     v = str(get_value("schema_version") or "")
     if v != "19":
@@ -419,14 +419,14 @@ def main():
 
     results.clear()
     try:
-        from botv.core import features
+        from bot.core import features
         feature_data = features.load()
     except Exception as e:
         print(f"❌ 功能清单不可用：{e}")
         return 1
 
     try:
-        from botv.core.version import VERSION
+        from bot.core.version import VERSION
         _ver = f"v{VERSION}"
     except Exception:
         _ver = "?"
@@ -436,7 +436,7 @@ def main():
 
     if args.init_db:
         try:
-            from botv.infra import schema
+            from bot.infra import schema
             made = schema.ensure_tables(log=lambda m: print("  " + m))
             if made:
                 print(f"  已自动建表 {len(made)} 张")

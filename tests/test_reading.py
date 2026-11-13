@@ -6,7 +6,7 @@ import unittest
 
 
 def _stub_missing_deps():
-    """缺依赖就打个桩（必须在导入 botv 之前调用）"""
+    """缺依赖就打个桩（必须在导入 bot 之前调用）"""
     def module(name, **attrs):
         m = types.ModuleType(name)
         for k, v in attrs.items():
@@ -42,24 +42,24 @@ import sys
 import types
 import unittest
 from datetime import datetime
-from botv.config import CST
+from bot.config import CST
 import asyncio
 import time
 import os
 import re
 import threading
 import json
-from botv.ports import ChatModel, Transport  # noqa: E402
-from botv.ports.models import ChatRequest, ChatReply  # noqa: E402
-from botv.ports.transport import Target, Segment  # noqa: E402
-from botv.ai import models as model_mod  # noqa: E402
-from botv.ai.chain import FallbackChain  # noqa: E402
-from botv.chat.transport import QqTransport  # noqa: E402
-from botv.core import state as cfg             # noqa: E402  运行时状态（常量也在里面）
-import botv.commands as commands               # noqa: E402
-import botv.chat.reply as reply_mod            # noqa: E402
-from botv.ai.parse import parse_ai_reply       # noqa: E402
-from botv.cmd import registry                  # noqa: E402
+from bot.ports import ChatModel, Transport  # noqa: E402
+from bot.ports.models import ChatRequest, ChatReply  # noqa: E402
+from bot.ports.transport import Target, Segment  # noqa: E402
+from bot.ai import models as model_mod  # noqa: E402
+from bot.ai.chain import FallbackChain  # noqa: E402
+from bot.chat.transport import QqTransport  # noqa: E402
+from bot.core import state as cfg             # noqa: E402  运行时状态（常量也在里面）
+import bot.commands as commands               # noqa: E402
+import bot.chat.reply as reply_mod            # noqa: E402
+from bot.ai.parse import parse_ai_reply       # noqa: E402
+from bot.cmd import registry                  # noqa: E402
 
 
 class FakeConn:
@@ -163,8 +163,8 @@ class TestBareTitleRequest(unittest.TestCase):
     """v16.0.4：没有书名号也能认出来 + 按书名搜索"""
 
     def setUp(self):
-        import botv.infra.repo_memory as rm
-        import botv.life.reading as R
+        import bot.infra.repo_memory as rm
+        import bot.life.reading as R
         self.R = R
         self.store = {}
         self._orig = (rm.load_reading, rm.save_reading)
@@ -172,7 +172,7 @@ class TestBareTitleRequest(unittest.TestCase):
         rm.save_reading = lambda tid, p: self.store.__setitem__(str(tid), p) or True
 
     def tearDown(self):
-        import botv.infra.repo_memory as rm
+        import bot.infra.repo_memory as rm
         rm.load_reading, rm.save_reading = self._orig
 
     def test_detect_bare_title(self):
@@ -223,7 +223,7 @@ class TestCookies(unittest.TestCase):
 
     def setUp(self):
         import os
-        import botv.life.cookies as C
+        import bot.life.cookies as C
         self.C = C
         self.orig = C.FALLBACKS
         root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -285,9 +285,9 @@ class TestReadOnce(unittest.TestCase):
     """v16：空闲读书（v17.3 起测 life.reading.read_once，不再测 runner.maybe_read）"""
 
     def setUp(self):
-        import botv.infra.repo_memory as rm
-        import botv.life.novel as N
-        from botv.life import reading as LR
+        import bot.infra.repo_memory as rm
+        import bot.life.novel as N
+        from bot.life import reading as LR
 
         self.N, self.LR = N, LR
         self.store = {}
@@ -295,14 +295,14 @@ class TestReadOnce(unittest.TestCase):
         rm.load_reading = lambda tid: self.store.get(str(tid), "")
         rm.save_reading = lambda tid, p: self.store.__setitem__(str(tid), p) or True
         self._orig_novel = (N.fetch_book, N.fetch_chapter)
-        from botv.core import state as cfg
+        from bot.core import state as cfg
 
         self._cfg = cfg
         self._orig_cfg = cfg.last_user_msg_ts
         cfg.last_user_msg_ts = 0.0
 
     def tearDown(self):
-        import botv.infra.repo_memory as rm
+        import bot.infra.repo_memory as rm
 
         rm.load_reading, rm.save_reading = self._orig
         self.N.fetch_book, self.N.fetch_chapter = self._orig_novel
@@ -322,7 +322,7 @@ class TestReadOnce(unittest.TestCase):
         import asyncio
         from datetime import datetime
 
-        from botv.config import CST
+        from bot.config import CST
 
         self._patch_novel()
         import json
@@ -340,7 +340,7 @@ class TestReadOnce(unittest.TestCase):
     def test_night_skips(self):
         from datetime import datetime
 
-        from botv.config import CST
+        from bot.config import CST
 
         ok, why = self.LR.should_read(0.0, now=datetime(2026, 11, 9, 3, 0, tzinfo=CST))
         self.assertFalse(ok, why)
@@ -368,60 +368,60 @@ class TestNovelParse(unittest.TestCase):
     """
 
     def test_parse_book(self):
-        from botv.life.novel import parse_book
+        from bot.life.novel import parse_book
         info = parse_book(self.BOOK_HTML)
         self.assertEqual(info["title"], "天外玉")
         self.assertEqual(info["author"], "世沄玊靑")
         self.assertEqual(len(info["chapters"]), 3)
 
     def test_parse_chapter_content(self):
-        from botv.life.novel import parse_chapter
+        from bot.life.novel import parse_chapter
         html = '<div class="muye-reader-content">' + ("正文一行\n" * 40) + "</div>"
         text = parse_chapter(html)
         self.assertGreater(len(text), 100)
         self.assertNotIn("<", text)
 
     def test_parse_chapter_fallback(self):
-        from botv.life.novel import parse_chapter
+        from bot.life.novel import parse_chapter
         html = "<html><body><p>" + ("很长的一段正文内容。" * 30) + "</p></body></html>"
         self.assertGreater(len(parse_chapter(html)), 100)
 
     def test_parse_empty(self):
-        from botv.life.novel import parse_book, parse_chapter
+        from bot.life.novel import parse_book, parse_chapter
         self.assertIsNone(parse_book(""))
         self.assertEqual(parse_chapter(""), "")
 
     def test_chapter_no(self):
-        from botv.life.novel import chapter_no
+        from bot.life.novel import chapter_no
         self.assertEqual(chapter_no("第12章 测试"), 12)
         self.assertEqual(chapter_no("没有章号"), 0)
 
     def test_strip_tags(self):
-        from botv.life.novel import strip_tags
+        from bot.life.novel import strip_tags
         self.assertEqual(strip_tags("<p>你好<br>世界</p>"), "你好\n世界")
 
 class TestOCR(unittest.TestCase):
     """v16：番茄正文 OCR 兜底"""
 
     def test_pua_ratio(self):
-        from botv.life.ocr import pua_ratio
+        from bot.life.ocr import pua_ratio
         self.assertEqual(pua_ratio("正常文本"), 0.0)
         self.assertGreater(pua_ratio("\ue000\ue001\ue002"), 0.9)
         self.assertEqual(pua_ratio(""), 0.0)
 
     def test_clean_removes_cjk_spaces(self):
-        from botv.life.ocr import clean
+        from bot.life.ocr import clean
         self.assertEqual(clean("云 千 珩 说 话"), "云千珩说话")
         self.assertEqual(clean("hello world"), "hello world", "英文空格要留")
 
     def test_clean_collapses_blank(self):
-        from botv.life.ocr import clean
+        from bot.life.ocr import clean
         self.assertEqual(clean("第一段\n\n\n\n第二段"), "第一段\n\n第二段")
 
     def test_fetch_chapter_prefers_ocr_on_pua(self):
         import asyncio
-        import botv.life.novel as N
-        import botv.life.ocr as O
+        import bot.life.novel as N
+        import bot.life.ocr as O
 
         async def fake_html(url):
             return '<div class="muye-reader-content">' + ("\ue000" * 100) + "</div>"
@@ -440,8 +440,8 @@ class TestOCR(unittest.TestCase):
 
     def test_fetch_chapter_keeps_clean_html(self):
         import asyncio
-        import botv.life.novel as N
-        import botv.life.ocr as O
+        import bot.life.novel as N
+        import bot.life.ocr as O
 
         async def fake_html(url):
             return '<div class="muye-reader-content">' + ("正常正文" * 100) + "</div>"
@@ -461,8 +461,8 @@ class TestReadingFlow(unittest.TestCase):
     """v16：读书流程（注入假抓取器，不联网）"""
 
     def setUp(self):
-        import botv.life.reading as R
-        import botv.infra.repo_memory as rm
+        import bot.life.reading as R
+        import bot.infra.repo_memory as rm
         self.R = R
         self.store = {}
         self._orig = (rm.load_reading, rm.save_reading)
@@ -470,7 +470,7 @@ class TestReadingFlow(unittest.TestCase):
         rm.save_reading = lambda tid, p: self.store.__setitem__(str(tid), p) or True
 
     def tearDown(self):
-        import botv.infra.repo_memory as rm
+        import bot.infra.repo_memory as rm
         rm.load_reading, rm.save_reading = self._orig
 
     def _seed_book(self, tid="1"):
@@ -517,14 +517,14 @@ class TestReadingFlow(unittest.TestCase):
 
     def test_night_blocks(self):
         from datetime import datetime
-        from botv.config import CST
+        from bot.config import CST
         ok, why = self.R.should_read(None, datetime(2026, 11, 9, 3, 0, tzinfo=CST))
         self.assertFalse(ok)
         self.assertEqual(why, "深夜")
 
     def test_idle_gate(self):
         from datetime import datetime
-        from botv.config import CST
+        from bot.config import CST
         now = datetime(2026, 11, 9, 15, 0, tzinfo=CST)
         recent = now.timestamp() - 60          # 1 分钟前
         ok, why = self.R.should_read(recent, now)
@@ -650,7 +650,7 @@ class TestReadingFlow(unittest.TestCase):
 
 
     def test_parse_rank(self):
-        from botv.life.novel import parse_rank
+        from bot.life.novel import parse_rank
         html = ('<a href="/page/111"><h3>部族荣光</h3><p>丧狐</p></a>'
                 '<a href="/page/222"><h3>莫若凌霄</h3></a>'
                 '<a href="/page/111"><h3>重复的</h3></a>'
@@ -660,12 +660,12 @@ class TestReadingFlow(unittest.TestCase):
         self.assertEqual(len(items), 2, "去重且只收 /page/ 链接")
 
     def test_parse_rank_limit(self):
-        from botv.life.novel import parse_rank
+        from bot.life.novel import parse_rank
         html = "".join(f'<a href="/page/{i}"><h3>书{i}</h3></a>' for i in range(30))
         self.assertEqual(len(parse_rank(html, limit=5)), 5)
 
     def test_parse_rank_empty(self):
-        from botv.life.novel import parse_rank
+        from bot.life.novel import parse_rank
         self.assertEqual(parse_rank(""), [])
         self.assertEqual(parse_rank("<div>没有书</div>"), [])
 
@@ -796,37 +796,37 @@ class TestReadingPrompt(unittest.TestCase):
     """v16：把「她在看什么」注入 prompt"""
 
     def setUp(self):
-        import botv.infra.repo_memory as rm
+        import bot.infra.repo_memory as rm
         self.store = {}
         self._orig = (rm.load_reading, rm.save_reading)
         rm.load_reading = lambda tid: self.store.get(str(tid), "")
         rm.save_reading = lambda tid, p: self.store.__setitem__(str(tid), p) or True
 
     def tearDown(self):
-        import botv.infra.repo_memory as rm
+        import bot.infra.repo_memory as rm
         rm.load_reading, rm.save_reading = self._orig
 
     def test_describe_empty(self):
-        from botv.life.reading import describe
+        from bot.life.reading import describe
         self.assertEqual(describe("nobody"), "")
 
     def test_describe_with_book(self):
         import json
-        from botv.life.reading import describe
+        from bot.life.reading import describe
         self.store["1"] = json.dumps({"books": [{"title": "天外玉", "url": "u", "last_no": 12}]})
         text = describe("1")
         self.assertIn("天外玉", text)
         self.assertIn("12", text)
 
     def test_prompt_has_reading_slot(self):
-        from botv.ai.prompt import get_system_prompt
-        from botv.core import state as cfg
+        from bot.ai.prompt import get_system_prompt
+        from bot.core import state as cfg
         cfg.CODE_MODE = False
         text = get_system_prompt()
         self.assertIn("你最近在看", text)
 
     def test_prompt_uses_placeholder(self):
-        from botv.ai.persona import LOCAL_SYSTEM_PROMPT
+        from bot.ai.persona import LOCAL_SYSTEM_PROMPT
         self.assertIn("{reading}", LOCAL_SYSTEM_PROMPT)
 
 class TestSharePoints(unittest.TestCase):
@@ -837,19 +837,19 @@ class TestSharePoints(unittest.TestCase):
                      "pending": [], "day": "", "chapters": 0}
 
     def test_not_ready_before_three(self):
-        self.R = __import__("botv.life.reading", fromlist=["x"])
+        self.R = __import__("bot.life.reading", fromlist=["x"])
         for i in range(2):
             self.R.note_summary(self.data, f"第{i}个点")
         self.assertFalse(self.R.share_ready(self.data))
 
     def test_ready_after_three(self):
-        from botv.life.reading import note_summary, share_ready
+        from bot.life.reading import note_summary, share_ready
         for i in range(3):
             note_summary(self.data, f"第{i}个点")
         self.assertTrue(share_ready(self.data))
 
     def test_build_share_has_title(self):
-        from botv.life.reading import note_summary, build_share
+        from bot.life.reading import note_summary, build_share
         for i in range(3):
             note_summary(self.data, f"第{i}个点")
         text = build_share(self.data)
@@ -857,7 +857,7 @@ class TestSharePoints(unittest.TestCase):
         self.assertIn("第0个点", text)
 
     def test_mark_shared_clears(self):
-        from botv.life.reading import note_summary, mark_shared
+        from bot.life.reading import note_summary, mark_shared
         for i in range(4):
             note_summary(self.data, f"第{i}个点")
         mark_shared(self.data)
@@ -866,14 +866,14 @@ class TestSharePoints(unittest.TestCase):
 
     def test_cooldown(self):
         import time
-        from botv.life.reading import note_summary, share_ready
+        from bot.life.reading import note_summary, share_ready
         for i in range(3):
             note_summary(self.data, f"点{i}")
         self.data["last_share_ts"] = time.time() - 60
         self.assertFalse(share_ready(self.data), "3 小时内不重复分享")
 
     def test_summary_capped(self):
-        from botv.life.reading import note_summary
+        from bot.life.reading import note_summary
         note_summary(self.data, "长" * 500)
         self.assertLessEqual(len(self.data["pending"][0]), 100)
 
@@ -881,7 +881,7 @@ class TestShareReading(unittest.TestCase):
     """v16-E8：攒够点后主动分享（v17.3 起测 share_ready / build_share）"""
 
     def setUp(self):
-        from botv.life import reading as LR
+        from bot.life import reading as LR
 
         self.LR = LR
         self.data = {"books": [{"title": "天外玉", "url": "u", "last_no": 5}],
@@ -910,7 +910,7 @@ class TestForceRead(unittest.TestCase):
     """v17.9：被明确要求读书 → 跳过「闲着」闸门，真读正文"""
 
     def setUp(self):
-        import botv.life.reading as R
+        import bot.life.reading as R
 
         self.R = R
         self.seed = {}
@@ -928,7 +928,7 @@ class TestForceRead(unittest.TestCase):
         import asyncio
         from datetime import datetime
 
-        from botv.config import CST
+        from bot.config import CST
 
         async def fetch_book(url):
             return {"title": "天外玉", "intro": "",
@@ -946,7 +946,7 @@ class TestForceRead(unittest.TestCase):
         import asyncio
         from datetime import datetime
 
-        from botv.config import CST
+        from bot.config import CST
 
         now = datetime(2026, 11, 9, 3, 0, tzinfo=CST)
         out = asyncio.run(self.R.read_once("1", None, None, None,

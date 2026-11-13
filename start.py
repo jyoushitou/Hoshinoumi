@@ -24,7 +24,7 @@ def _run(script, *args):
 
 def _api_missing():
     try:
-        from botv.infra import repo_key
+        from bot.infra import repo_key
         names = ("DS_API_KEY", "ARK_API_KEY")  # ALAPI 可选
         return [n for n in names if not (repo_key.get_api_key_from_db(n)
                                          or os.getenv(n, ""))]

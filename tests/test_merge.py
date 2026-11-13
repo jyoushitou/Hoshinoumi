@@ -36,7 +36,7 @@ class TestMerger(unittest.TestCase):
     """窗口内合并、不同目标分开、聊天不合并、到量立刻发"""
 
     def setUp(self):
-        from botv.egress.merge import Merger
+        from bot.egress.merge import Merger
 
         self.sent = []
 

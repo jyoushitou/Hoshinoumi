@@ -6,7 +6,7 @@ from tests.test_chat import _stub_missing_deps
 
 _stub_missing_deps()
 
-from botv.ai import vision
+from bot.ai import vision
 
 
 class TestVisionConfig(unittest.TestCase):
@@ -14,7 +14,7 @@ class TestVisionConfig(unittest.TestCase):
         self._env = {k: os.environ.pop(k, None) for k in
                      ("NAO_VISION_MODEL", "NAO_VISION_URL", "NAO_VISION_KEY")}
         self._orig_get = None
-        from botv.core import settings
+        from bot.core import settings
         self.settings = settings
         self._orig_get = settings.get
 
@@ -47,7 +47,7 @@ class TestVisionConfig(unittest.TestCase):
 
     def test_missing_key_skips_provider(self):
         self.settings.get = lambda path, default=None: default
-        from botv.core import state as cfg
+        from bot.core import state as cfg
         old = (cfg.DOUBAO_API_KEY, cfg.DS_API_KEY)
         cfg.DOUBAO_API_KEY = cfg.DS_API_KEY = ""
         try:

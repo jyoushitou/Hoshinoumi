@@ -3,7 +3,7 @@
 import unittest
 from unittest.mock import patch
 
-from botv.infra import cache
+from bot.infra import cache
 
 
 class TestCache(unittest.TestCase):
@@ -43,7 +43,7 @@ class TestCache(unittest.TestCase):
 
 class TestCountsCache(unittest.TestCase):
     def test_counts_cached(self):
-        from botv.infra import repo_query
+        from bot.infra import repo_query
 
         cache.invalidate()
         calls = []
@@ -60,7 +60,7 @@ class TestCountsCache(unittest.TestCase):
         self.assertEqual(len(calls), 2, "第二次应命中缓存")
 
     def test_cursor_bypasses_cache(self):
-        from botv.infra import repo_query
+        from bot.infra import repo_query
 
         cache.invalidate()
         calls = []

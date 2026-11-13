@@ -29,7 +29,7 @@ def _stub_missing_deps():
 
 _stub_missing_deps()
 
-from botv.life import ocr  # noqa: E402
+from bot.life import ocr  # noqa: E402
 
 
 class TestDualOCR(unittest.TestCase):

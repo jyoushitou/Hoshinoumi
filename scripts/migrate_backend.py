@@ -30,7 +30,7 @@ BATCH = 500
 def _mysql_conn():
     import pymysql
 
-    from botv.core.constants import DB_CONFIG
+    from bot.core.constants import DB_CONFIG
 
     return pymysql.connect(**DB_CONFIG, cursorclass=pymysql.cursors.DictCursor)
 
@@ -144,8 +144,8 @@ def main():
     ap.add_argument("--apply", action="store_true", help="真写（默认 dry-run）")
     args = ap.parse_args()
 
-    from botv.core.settings import sqlite_path
-    from botv.infra import schema
+    from bot.core.settings import sqlite_path
+    from bot.infra import schema
 
     path = args.sqlite_path or sqlite_path()
     print("=" * 60)

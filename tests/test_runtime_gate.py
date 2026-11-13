@@ -6,8 +6,8 @@ import run as R
 
 class TestRuntimeGate(unittest.TestCase):
     def setUp(self):
-        from botv.core import features
-        from botv.app import runtime_checks
+        from bot.core import features
+        from bot.app import runtime_checks
 
         self.f = features
         self.rc = runtime_checks

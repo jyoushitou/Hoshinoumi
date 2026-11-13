@@ -1,6 +1,6 @@
 # 架构审查（v18.20.0）
 
-> 审查范围：`botv/` 154 个文件、13,859 行有效代码（AST 有效行，不含空行/注释）、885 个函数；
+> 审查范围：`bot/` 154 个文件、13,859 行有效代码（AST 有效行，不含空行/注释）、885 个函数；
 > `tests/` + `checks/` 当前 **932 条测试**（功能 895 + 环境/迁移 37，最后验证：全绿）。
 >
 > 方法：AST 解析导入图 → Tarjan 求强连通分量 → 分层倒置检测 → 规模/函数长度统计。
@@ -62,14 +62,14 @@
 
 | 模块 | 被依赖 | 评价 |
 |---|---:|---|
-| `botv.log` | 79 | 偏高，且仍依赖 db（环的根因之一） |
-| `botv.core` | 55 | 合理（状态/配置/时钟） |
-| `botv.config` | 41 | 合理 |
-| `botv.infra.repo_memory` | 24 | **偏高**：465 行、30 函数，职责过载 |
-| `botv.infra.conn` | 23 | 合理，但 `conn → settings → log` 形成环 |
-| `botv.schedule` | 14 | 合理 |
-| `botv.ai.client` | 12 | 合理 |
-| `botv.infra.blocking` | 12 | 合理（统一阻塞入口） |
+| `bot.log` | 79 | 偏高，且仍依赖 db（环的根因之一） |
+| `bot.core` | 55 | 合理（状态/配置/时钟） |
+| `bot.config` | 41 | 合理 |
+| `bot.infra.repo_memory` | 24 | **偏高**：465 行、30 函数，职责过载 |
+| `bot.infra.conn` | 23 | 合理，但 `conn → settings → log` 形成环 |
+| `bot.schedule` | 14 | 合理 |
+| `bot.ai.client` | 12 | 合理 |
+| `bot.infra.blocking` | 12 | 合理（统一阻塞入口） |
 
 ---
 
@@ -122,7 +122,7 @@
 
 ```text
 run.py
-  └→ botv.main → app.bootstrap
+  └→ bot.main → app.bootstrap
        ├→ _ensure_tables()        # 建 acg_images / diaries，补 token 列
        └→ _ensure_cron_schema()   # 建 cron_overrides，补 rule/timing
 scripts/migrate.py                 # 新的统一入口
@@ -328,4 +328,4 @@ python .tmp/arch_deep.py
 python .tmp/arch_cycles2.py
 ```
 
-统计口径：`botv/` 下 AST 有效行；测试数来自 `python scripts/run_tests.py`（932 条全绿）。
+统计口径：`bot/` 下 AST 有效行；测试数来自 `python scripts/run_tests.py`（932 条全绿）。

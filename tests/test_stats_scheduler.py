@@ -36,24 +36,24 @@ class TestStatsWithScheduler(unittest.TestCase):
     """!stats 要能看到调度器状态"""
 
     def _run(self):
-        import botv.commands  # noqa: F401
-        from botv.cmd import registry
-        from botv.cmd.registry import CommandContext
+        import bot.commands  # noqa: F401
+        from bot.cmd import registry
+        from bot.cmd.registry import CommandContext
 
         cmd = registry.COMMANDS["stats"]
         ctx = CommandContext(parts=["stats"], uid="1", ws=None, is_group=False, gid=0)
         return asyncio.run(cmd.handler(ctx))
 
     def test_not_started_line(self):
-        from botv.scheduler.dispatcher import set_scheduler
+        from bot.scheduler.dispatcher import set_scheduler
 
         set_scheduler(None)
         out = self._run()
         self.assertIn("调度", out)
 
     def test_started_shows_queue(self):
-        from botv.events import registry as R
-        from botv.scheduler.dispatcher import Scheduler, set_scheduler
+        from bot.events import registry as R
+        from bot.scheduler.dispatcher import Scheduler, set_scheduler
 
         snapshot = dict(R._handlers)
         if R.get("demo_stats") is None:

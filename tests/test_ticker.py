@@ -41,8 +41,8 @@ class TestTicker(unittest.TestCase):
     """注册、跨天初始化、代码模式超时、场景派发"""
 
     def setUp(self):
-        import botv.executors.ticker as T
-        from botv.scheduler.dispatcher import Scheduler, set_scheduler
+        import bot.executors.ticker as T
+        from bot.scheduler.dispatcher import Scheduler, set_scheduler
 
         self.T = T
         self.sched = Scheduler()
@@ -50,19 +50,19 @@ class TestTicker(unittest.TestCase):
         T._state["day"] = None
         T._state["count"] = 0
         T._state["last_due"] = 0.0
-        from botv.core import state as cfg
+        from bot.core import state as cfg
 
         cfg.daily_trigger.clear()
         self.cfg = cfg
 
     def tearDown(self):
-        from botv.scheduler.dispatcher import set_scheduler
+        from bot.scheduler.dispatcher import set_scheduler
 
         set_scheduler(None)
         self.cfg.CODE_MODE = False
 
     def test_registered(self):
-        from botv.events import registry
+        from bot.events import registry
 
         self.assertIsNotNone(registry.get("minute_tick"))
 

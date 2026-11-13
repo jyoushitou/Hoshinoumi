@@ -36,7 +36,7 @@ class TestPoolMonitor(unittest.TestCase):
     """一个线程看两个池：启动/停止、快照、告警"""
 
     def setUp(self):
-        from botv.infra.monitor import PoolMonitor
+        from bot.infra.monitor import PoolMonitor
 
         self.alerts = []
         self.M = PoolMonitor(interval=0.05, on_alert=self.alerts.append)
@@ -81,7 +81,7 @@ class TestPoolMonitor(unittest.TestCase):
         self.assertEqual(self.alerts, [])
 
     def test_global_start_stop(self):
-        from botv.infra import monitor
+        from bot.infra import monitor
 
         monitor.stop_monitor()
         monitor.start_monitor(interval=0.05)
@@ -93,8 +93,8 @@ class TestPoolMonitor(unittest.TestCase):
 
     def test_default_pool_sizes(self):
         """v17.8：线程池 5 / 连接池 6"""
-        from botv.infra.blocking import thread_stats
-        from botv.infra.pool import ConnPool
+        from bot.infra.blocking import thread_stats
+        from bot.infra.pool import ConnPool
 
         self.assertEqual(thread_stats()["size"], 5)
         self.assertEqual(ConnPool().size, 6)

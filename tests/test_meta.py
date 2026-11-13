@@ -53,7 +53,7 @@ class _MetaDB(unittest.TestCase):
     """临时库夹具：每个用例独立，跑完删掉"""
 
     def setUp(self):
-        from botv.core import settings
+        from bot.core import settings
 
         self.dir = os.path.join(ROOT, ".tmp", f"meta-{os.getpid()}-{id(self)}")
         shutil.rmtree(self.dir, ignore_errors=True)
@@ -65,14 +65,14 @@ class _MetaDB(unittest.TestCase):
         settings._cache = None
         settings._backend_cache["value"] = None
 
-        from botv.infra import conn, schema
+        from bot.infra import conn, schema
 
         conn._local.__dict__.clear()
         schema.ensure_tables()
 
     def tearDown(self):
-        from botv.core import settings
-        from botv.infra import conn
+        from bot.core import settings
+        from bot.infra import conn
 
         _close_thread_conn(conn)
         for k, v in zip(("NAO_DB_BACKEND", "NAO_DB_PATH"), self._old_env):
@@ -89,7 +89,7 @@ class TestRepoMeta(_MetaDB):
     """v18.5：启动时间存 bot_meta，不靠 logs 表"""
 
     def test_mark_start_idempotent(self):
-        from botv.infra import repo_meta
+        from bot.infra import repo_meta
 
         first = repo_meta.mark_start("18.5.0")
         again = repo_meta.mark_start("18.5.1")
@@ -98,7 +98,7 @@ class TestRepoMeta(_MetaDB):
         self.assertEqual(repo_meta.get_value("version"), "18.5.1", "版本要跟着刷新")
 
     def test_first_start_ts_written(self):
-        from botv.infra import repo_meta
+        from bot.infra import repo_meta
 
         repo_meta.mark_start("18.5.0")
         ts = repo_meta.get_value("first_start_ts")
@@ -106,7 +106,7 @@ class TestRepoMeta(_MetaDB):
 
     def test_backfill_ts_for_old_db(self):
         """老库只有 first_start 字符串：启动时要补 epoch，视图才算得出来"""
-        from botv.infra import repo_meta
+        from bot.infra import repo_meta
 
         repo_meta.set_value("first_start", "2026-11-01 08:00:00")
         repo_meta.mark_start("18.5.0")
@@ -117,7 +117,7 @@ class TestRepoMeta(_MetaDB):
         self.assertEqual(info["first_start"], "2026-11-01 08:00:00")
 
     def test_uptime_reads_view(self):
-        from botv.infra import repo_meta
+        from bot.infra import repo_meta
 
         repo_meta.mark_start("18.5.0")
         info = repo_meta.uptime()
@@ -128,7 +128,7 @@ class TestRepoMeta(_MetaDB):
 
     def test_clear_logs_keeps_uptime(self):
         """验收（L6）：logs 清了，uptime 不变"""
-        from botv.infra import conn, repo_meta
+        from bot.infra import conn, repo_meta
 
         repo_meta.mark_start("18.5.0")
         before = repo_meta.uptime()
@@ -155,7 +155,7 @@ class TestRepoMeta(_MetaDB):
         self.assertEqual(after["days_since"], 0, "不该按日志算出 10 天")
 
     def test_uptime_text_format(self):
-        from botv.infra import repo_meta
+        from bot.infra import repo_meta
 
         repo_meta.mark_start("18.5.0")
         text, start = repo_meta.uptime_text()
@@ -165,12 +165,12 @@ class TestRepoMeta(_MetaDB):
         self.assertIsNotNone(start.year)
 
     def test_get_missing_returns_default(self):
-        from botv.infra import repo_meta
+        from bot.infra import repo_meta
 
         self.assertEqual(repo_meta.get_value("不存在的键", "默认"), "默认")
 
     def test_view_columns(self):
-        from botv.infra import conn, repo_meta
+        from bot.infra import conn, repo_meta
 
         repo_meta.mark_start("18.5.0")
         c = conn.get_cursor()
@@ -185,7 +185,7 @@ class TestRepoMeta(_MetaDB):
         self.assertIsNotNone(row["uptime_seconds"])
 
     def test_meta_describe(self):
-        from botv.infra import repo_meta
+        from bot.infra import repo_meta
 
         repo_meta.mark_start("18.5.0")
         out = repo_meta.describe()
@@ -198,14 +198,14 @@ class TestCommands(_MetaDB):
     """!uptime / !meta 真的能出话"""
 
     def _ctx(self, name):
-        from botv.cmd.registry import CommandContext
+        from bot.cmd.registry import CommandContext
 
         return CommandContext(parts=[name], uid="10001", ws=None,
                               is_group=False, gid=0)
 
     def test_uptime_command(self):
-        from botv.cmd import query
-        from botv.infra import repo_meta
+        from bot.cmd import query
+        from bot.infra import repo_meta
 
         repo_meta.mark_start("18.5.0")
         out = asyncio.run(query.cmd_uptime(self._ctx("uptime")))
@@ -214,8 +214,8 @@ class TestCommands(_MetaDB):
         self.assertIn("v_bot_meta", out)
 
     def test_meta_command(self):
-        from botv.cmd import query
-        from botv.infra import repo_meta
+        from bot.cmd import query
+        from bot.infra import repo_meta
 
         repo_meta.mark_start("18.5.0")
         out = asyncio.run(query.cmd_meta(self._ctx("meta")))
@@ -227,8 +227,8 @@ class TestViews(unittest.TestCase):
     """v18.5：视图方言适配 + 老视图会被重建"""
 
     def _adapt(self, backend):
-        import botv.infra.conn as conn
-        from botv.infra import schema
+        import bot.infra.conn as conn
+        from bot.infra import schema
 
         orig = conn._resolve_backend
         conn._resolve_backend = lambda: backend
@@ -256,7 +256,7 @@ class TestViews(unittest.TestCase):
 
     def test_view_has_no_index(self):
         """红线：视图里不能出现 KEY/INDEX"""
-        from botv.infra import schema
+        from bot.infra import schema
 
         for name, ddl in schema.VIEWS.items():
             self.assertNotIn("KEY ", ddl.upper(), f"视图 {name} 不应有索引")
@@ -266,7 +266,7 @@ class TestViews(unittest.TestCase):
         import os
         import shutil
 
-        from botv.core import settings
+        from bot.core import settings
 
         d = os.path.join(ROOT, ".tmp", f"view-{os.getpid()}")
         shutil.rmtree(d, ignore_errors=True)
@@ -277,7 +277,7 @@ class TestViews(unittest.TestCase):
         settings._cache = None
         settings._backend_cache["value"] = None
 
-        from botv.infra import conn, schema
+        from bot.infra import conn, schema
 
         conn._local.__dict__.clear()
         try:

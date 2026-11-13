@@ -45,7 +45,7 @@ def _existing(c, table="memories"):
 
 def _is_sqlite(c):
     try:
-        from botv.infra.conn import _SQLiteCursor
+        from bot.infra.conn import _SQLiteCursor
         if isinstance(c, _SQLiteCursor):
             return True
     except Exception:
@@ -185,7 +185,7 @@ def main():
     ap.add_argument("--apply", action="store_true", help="真的改表（默认只看）")
     args = ap.parse_args()
 
-    from botv.infra.conn import get_cursor
+    from bot.infra.conn import get_cursor
 
     c = get_cursor()
     try:

@@ -90,7 +90,7 @@ def main():
     ap.add_argument("--apply", action="store_true", help="真的建索引")
     args = ap.parse_args()
 
-    from botv.infra.conn import get_cursor
+    from bot.infra.conn import get_cursor
 
     c = get_cursor()
     try:

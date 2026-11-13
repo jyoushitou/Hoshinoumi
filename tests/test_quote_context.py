@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 
 def _stub_missing_deps():
-    """缺依赖就打桩（必须在导入 botv 之前）"""
+    """缺依赖就打桩（必须在导入 bot 之前）"""
     try:
         import jieba  # noqa: F401
     except ImportError:
@@ -25,9 +25,9 @@ def _stub_missing_deps():
 
 _stub_missing_deps()
 
-from botv.chat import cache  # noqa: E402
-from botv.chat.inbound import parse_message_content  # noqa: E402
-from botv.memory.text import extract_keywords  # noqa: E402
+from bot.chat import cache  # noqa: E402
+from bot.chat.inbound import parse_message_content  # noqa: E402
+from bot.memory.text import extract_keywords  # noqa: E402
 
 
 def _raw(mid, text="这个"):
@@ -54,7 +54,7 @@ class TestQuoteContext(unittest.TestCase):
             return {"data": {"raw_message": "原话在这里",
                              "sender": {"nickname": "友利奈绪"}}}
 
-        with patch("botv.chat.send.request_action", fake):
+        with patch("bot.chat.send.request_action", fake):
             text, _ = asyncio.run(parse_message_content(_raw(999), "1", object()))
         self.assertIn("【引用 友利奈绪】原话：原话在这里", text)
         self.assertEqual(calls, [("get_msg", 999, 2)])
@@ -64,13 +64,13 @@ class TestQuoteContext(unittest.TestCase):
         async def boom(*args, **kwargs):
             raise asyncio.TimeoutError()
 
-        with patch("botv.chat.send.request_action", boom):
+        with patch("bot.chat.send.request_action", boom):
             text, _ = asyncio.run(parse_message_content(_raw(1000), "1", object()))
         self.assertIn("（他引用了一条较早的消息，你看不到，别装懂）", text)
         self.assertNotIn("[引用]", text)
 
     def test_quote_metrics(self):
-        from botv.core import metrics
+        from bot.core import metrics
         before = metrics.snapshot()[0].get("quote_hit", 0)
         cache.remember(456, "友利奈绪", "原话")
         asyncio.run(parse_message_content(_raw(456), "1", None))

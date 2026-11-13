@@ -31,7 +31,7 @@ def _stub_missing_deps():
 
 _stub_missing_deps()
 
-from botv.infra import repo_memory  # noqa: E402
+from bot.infra import repo_memory  # noqa: E402
 
 
 class TestReadingProgress(unittest.TestCase):

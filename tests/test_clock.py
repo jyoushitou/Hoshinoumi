@@ -36,7 +36,7 @@ class TestClock(unittest.TestCase):
     """时钟必须固定东八区，不受服务器 TZ 影响"""
 
     def setUp(self):
-        from botv.core import clock
+        from bot.core import clock
 
         self.C = clock
 
@@ -80,13 +80,13 @@ class TestCronUsesCst(unittest.TestCase):
     """cron 算下次触发要用东八区，否则整体偏 8 小时"""
 
     def test_cron_now_is_cst(self):
-        from botv.schedule import cron
+        from bot.schedule import cron
 
         diff = (cron._now() - datetime.now(timezone.utc).replace(tzinfo=None)).total_seconds() / 3600
         self.assertAlmostEqual(diff, 8, delta=0.1)
 
     def test_compute_next_daily(self):
-        from botv.schedule import cron
+        from bot.schedule import cron
 
         now = datetime(2026, 11, 12, 9, 0)
         task = {"schedule_type": "daily", "at_time": "07:30", "jitter_min": 0}
@@ -94,7 +94,7 @@ class TestCronUsesCst(unittest.TestCase):
                          datetime(2026, 11, 13, 7, 30))
 
     def test_compute_next_tonight(self):
-        from botv.schedule import cron
+        from bot.schedule import cron
 
         now = datetime(2026, 11, 12, 9, 0)
         task = {"schedule_type": "daily", "at_time": "23:00", "jitter_min": 0}
@@ -106,15 +106,15 @@ class TestLogAndTxtlogUseCst(unittest.TestCase):
     """日志时间戳与按天文件名都用东八区"""
 
     def test_log_stamp(self):
-        import botv.log as L
+        import bot.log as L
 
         self.assertRegex(L._stamp(), r"^\d\d:\d\d:\d\d$")
 
     def test_txtlog_dir_is_repo_root(self):
-        """v18.0 U3：日志目录是仓库根，不是 botv/ 下面"""
+        """v18.0 U3：日志目录是仓库根，不是 bot/ 下面"""
         import os
 
-        from botv.infra import txtlog
+        from bot.infra import txtlog
 
         d = txtlog._dir()
         root = os.path.dirname(os.path.dirname(os.path.dirname(
@@ -128,7 +128,7 @@ class TestCustomClock(unittest.TestCase):
     """v18.0 U8：时区可配、可冻结、可偏移"""
 
     def setUp(self):
-        from botv.core import clock
+        from bot.core import clock
 
         self.C = clock
         clock.reset()
@@ -173,7 +173,7 @@ class TestCustomClock(unittest.TestCase):
 
 class TestVersionShowsTimezone(unittest.TestCase):
     def test_version_line(self):
-        from botv.core import version
+        from bot.core import version
 
         text = version.describe()
         self.assertIn("时区", text)

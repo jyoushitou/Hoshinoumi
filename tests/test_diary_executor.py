@@ -42,25 +42,25 @@ class TestDiaryExecutor(unittest.TestCase):
     """日记走独立事件：tick 只投递，生成在 worker 里"""
 
     def setUp(self):
-        import botv.executors.diary as D
-        from botv.scheduler.dispatcher import Scheduler, set_scheduler
+        import bot.executors.diary as D
+        from bot.scheduler.dispatcher import Scheduler, set_scheduler
 
         self.D = D
         self.sched = Scheduler()
         set_scheduler(self.sched)
-        import botv.schedule.runner as R
+        import bot.schedule.runner as R
 
         self.R = R
         self._orig = R.generate_diary
 
     def tearDown(self):
-        from botv.scheduler.dispatcher import set_scheduler
+        from bot.scheduler.dispatcher import set_scheduler
 
         self.R.generate_diary = self._orig
         set_scheduler(None)
 
     def test_registered(self):
-        from botv.events import registry
+        from bot.events import registry
 
         self.assertIsNotNone(registry.get("diary_write"))
 
@@ -96,11 +96,11 @@ class TestDiaryExecutor(unittest.TestCase):
 
     def test_tick_submits_instead_of_awaiting(self):
         """3 点整：tick 只投递，不自己生成"""
-        import botv.executors.ticker as T
-        from botv.core import state as cfg
+        import bot.executors.ticker as T
+        from bot.core import state as cfg
         from datetime import datetime
 
-        from botv.config import CST
+        from bot.config import CST
 
         called = []
 

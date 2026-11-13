@@ -64,8 +64,8 @@ def run_migration():
 
     与命令行 `--apply` 等价，但不打印大段表格。
     """
-    from botv.infra import schema
-    from botv.infra.conn import get_cursor
+    from bot.infra import schema
+    from bot.infra.conn import get_cursor
 
     c = get_cursor()
     try:
@@ -106,8 +106,8 @@ def main():
     ap.add_argument("--yes", action="store_true", help="跳过确认")
     args = ap.parse_args()
 
-    from botv.infra.conn import get_cursor
-    from botv.infra import schema
+    from bot.infra.conn import get_cursor
+    from bot.infra import schema
 
     c = get_cursor()
     try:

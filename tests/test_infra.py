@@ -6,7 +6,7 @@ import unittest
 
 
 def _stub_missing_deps():
-    """缺依赖就打个桩（必须在导入 botv 之前调用）"""
+    """缺依赖就打个桩（必须在导入 bot 之前调用）"""
     def module(name, **attrs):
         m = types.ModuleType(name)
         for k, v in attrs.items():
@@ -42,24 +42,24 @@ import sys
 import types
 import unittest
 from datetime import datetime
-from botv.config import CST
+from bot.config import CST
 import asyncio
 import time
 import os
 import re
 import threading
 import json
-from botv.ports import ChatModel, Transport  # noqa: E402
-from botv.ports.models import ChatRequest, ChatReply  # noqa: E402
-from botv.ports.transport import Target, Segment  # noqa: E402
-from botv.ai import models as model_mod  # noqa: E402
-from botv.ai.chain import FallbackChain  # noqa: E402
-from botv.chat.transport import QqTransport  # noqa: E402
-from botv.core import state as cfg             # noqa: E402  运行时状态（常量也在里面）
-import botv.commands as commands               # noqa: E402
-import botv.chat.reply as reply_mod            # noqa: E402
-from botv.ai.parse import parse_ai_reply       # noqa: E402
-from botv.cmd import registry                  # noqa: E402
+from bot.ports import ChatModel, Transport  # noqa: E402
+from bot.ports.models import ChatRequest, ChatReply  # noqa: E402
+from bot.ports.transport import Target, Segment  # noqa: E402
+from bot.ai import models as model_mod  # noqa: E402
+from bot.ai.chain import FallbackChain  # noqa: E402
+from bot.chat.transport import QqTransport  # noqa: E402
+from bot.core import state as cfg             # noqa: E402  运行时状态（常量也在里面）
+import bot.commands as commands               # noqa: E402
+import bot.chat.reply as reply_mod            # noqa: E402
+from bot.ai.parse import parse_ai_reply       # noqa: E402
+from bot.cmd import registry                  # noqa: E402
 
 
 class FakeConn:
@@ -163,7 +163,7 @@ class TestConnPool(unittest.TestCase):
     """连接池：复用、上限、断线重建、借还平衡"""
 
     def setUp(self):
-        from botv.infra.pool import ConnPool
+        from bot.infra.pool import ConnPool
 
         self.created = []
 
@@ -218,7 +218,7 @@ class TestConnStats(unittest.TestCase):
     """连接池状态只由 pool.py 提供"""
 
     def setUp(self):
-        from botv.infra import pool as P
+        from bot.infra import pool as P
 
         self.P = P
 
@@ -255,7 +255,7 @@ class TestDeepseekUsesBlocking(unittest.TestCase):
     """call_deepseek 必须走 run_blocking（统一线程池 + 超时 + 日志）"""
 
     def test_uses_run_blocking(self):
-        import botv.ai.client as C
+        import bot.ai.client as C
 
         calls = []
 
@@ -284,7 +284,7 @@ class TestDoubaoUsesBlocking(unittest.TestCase):
     """call_doubao 也必须走 run_blocking"""
 
     def test_uses_run_blocking(self):
-        import botv.ai.client as C
+        import bot.ai.client as C
 
         calls = []
 
@@ -312,7 +312,7 @@ class TestEvent(unittest.TestCase):
     """Event：去重键、优先级、存活时间、默认值"""
 
     def _make(self, **kw):
-        from botv.events.base import Event
+        from bot.events.base import Event
 
         async def noop():
             return None
@@ -322,7 +322,7 @@ class TestEvent(unittest.TestCase):
         return Event(**params)
 
     def test_defaults(self):
-        from botv.events.base import DEFAULT_TIMEOUT, Priority
+        from bot.events.base import DEFAULT_TIMEOUT, Priority
 
         ev = self._make()
         self.assertEqual(ev.priority, Priority.IDLE)
@@ -344,7 +344,7 @@ class TestEvent(unittest.TestCase):
         self.assertGreaterEqual(ev.age(later), 10)
 
     def test_priority_order(self):
-        from botv.events.base import Priority
+        from bot.events.base import Priority
 
         self.assertLess(Priority.CHAT, Priority.EVENT)
         self.assertLess(Priority.EVENT, Priority.IDLE)
@@ -364,7 +364,7 @@ class TestMetrics(unittest.TestCase):
     """v15：今日统计"""
 
     def setUp(self):
-        from botv.core import metrics
+        from bot.core import metrics
         self.m = metrics
         metrics.reset()
 
@@ -397,7 +397,7 @@ class TestNoRawToThread(unittest.TestCase):
     ALLOW_FILES = {"blocking.py"}          # 统一入口自己可以调 to_thread
 
     def test_no_raw_to_thread(self):
-        root = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "botv")
+        root = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "bot")
         offenders = []
         for base, _dirs, files in os.walk(root):
             for name in files:
@@ -420,7 +420,7 @@ class TestNovelUsesBlocking(unittest.TestCase):
     """fetch_html 必须走 run_blocking（浏览器最慢）"""
 
     def test_uses_run_blocking(self):
-        import botv.life.novel as N
+        import bot.life.novel as N
 
         calls = []
 
@@ -430,7 +430,7 @@ class TestNovelUsesBlocking(unittest.TestCase):
 
         orig = N._render
         N._render = lambda url: "<html>fake</html>"
-        import botv.infra.blocking as B
+        import bot.infra.blocking as B
         orig_rb = B.run_blocking
         B.run_blocking = fake_run_blocking
         try:
@@ -448,8 +448,8 @@ class TestOcrUsesBlocking(unittest.TestCase):
     """ocr_url 必须走 run_blocking（截图 + 识别都慢）"""
 
     def test_uses_run_blocking(self):
-        import botv.life.ocr as O
-        import botv.infra.blocking as B
+        import bot.life.ocr as O
+        import bot.infra.blocking as B
 
         calls = []
 
@@ -476,8 +476,8 @@ class TestOpsCommands(unittest.TestCase):
     """v15：!stats / !config"""
 
     def test_registered(self):
-        import botv.commands  # noqa: F401
-        from botv.cmd import registry
+        import bot.commands  # noqa: F401
+        from bot.cmd import registry
         self.assertIn("stats", registry.COMMANDS)
         self.assertIn("config", registry.COMMANDS)
 
@@ -485,7 +485,7 @@ class TestPooledCursor(unittest.TestCase):
     """with pooled_cursor 自动借还（异常也要还）"""
 
     def setUp(self):
-        from botv.infra import pool as P
+        from bot.infra import pool as P
 
         self.P = P
         self.created = []
@@ -502,14 +502,14 @@ class TestPooledCursor(unittest.TestCase):
         self.P.set_pool(self.orig)
 
     def test_auto_release(self):
-        from botv.infra.pool import pooled_cursor
+        from bot.infra.pool import pooled_cursor
 
         with pooled_cursor() as c:
             self.assertIsNotNone(c)
         self.assertEqual(self.P.get_pool().stats()["borrowed"], 0)
 
     def test_release_on_exception(self):
-        from botv.infra.pool import pooled_cursor
+        from bot.infra.pool import pooled_cursor
 
         with self.assertRaises(ValueError):
             with pooled_cursor():
@@ -523,7 +523,7 @@ class TestRegistry(unittest.TestCase):
     """
 
     def setUp(self):
-        from botv.events import registry
+        from bot.events import registry
 
         self.R = registry
         self._snapshot = dict(registry._handlers)   # 先存别人的注册
@@ -534,7 +534,7 @@ class TestRegistry(unittest.TestCase):
         self.R._handlers.update(self._snapshot)     # 原样恢复
 
     def test_register_and_get(self):
-        Priority = __import__("botv.events.base", fromlist=["Priority"]).Priority
+        Priority = __import__("bot.events.base", fromlist=["Priority"]).Priority
 
         @self.R.register("idle_read", priority=Priority.IDLE, timeout=180)
         async def handler(ev):
@@ -575,7 +575,7 @@ class TestRegistry(unittest.TestCase):
         self.assertEqual(self.R.kinds(), ["a", "b"])
 
     def test_snapshot(self):
-        from botv.events.base import Priority
+        from bot.events.base import Priority
 
         @self.R.register("chat", priority=Priority.CHAT, description="聊天")
         async def chat(ev):
@@ -596,7 +596,7 @@ class TestRegistry(unittest.TestCase):
         self.assertEqual(asyncio.run(h.fn(None)), 42)
 
     def test_default_priority_and_timeout(self):
-        from botv.events.base import DEFAULT_TIMEOUT, Priority
+        from bot.events.base import DEFAULT_TIMEOUT, Priority
 
         @self.R.register("plain")
         async def plain(ev):
@@ -610,13 +610,13 @@ class TestRunBlocking(unittest.TestCase):
     """阻塞调用丢线程池：结果正确、异常透传、超时不卡循环、并发真的并行"""
 
     def test_returns_value(self):
-        from botv.infra.blocking import run_blocking
+        from bot.infra.blocking import run_blocking
 
         out = asyncio.run(run_blocking(lambda: 42))
         self.assertEqual(out, 42)
 
     def test_passes_args_and_kwargs(self):
-        from botv.infra.blocking import run_blocking
+        from bot.infra.blocking import run_blocking
 
         def add(a, b=0):
             return a + b
@@ -625,7 +625,7 @@ class TestRunBlocking(unittest.TestCase):
         self.assertEqual(out, 3)
 
     def test_exception_propagates(self):
-        from botv.infra.blocking import run_blocking
+        from bot.infra.blocking import run_blocking
 
         def boom():
             raise ValueError("炸了")
@@ -634,7 +634,7 @@ class TestRunBlocking(unittest.TestCase):
             asyncio.run(run_blocking(boom))
 
     def test_timeout_raises(self):
-        from botv.infra.blocking import run_blocking
+        from bot.infra.blocking import run_blocking
 
         def slow():
             time.sleep(0.5)
@@ -648,7 +648,7 @@ class TestRunBlocking(unittest.TestCase):
 
     def test_loop_not_blocked(self):
         """阻塞函数执行期间，事件循环还能跑别的协程"""
-        from botv.infra.blocking import run_blocking
+        from bot.infra.blocking import run_blocking
 
         ticks = []
 
@@ -668,7 +668,7 @@ class TestRunBlocking(unittest.TestCase):
 
     def test_true_parallel(self):
         """两个 0.2 秒的阻塞任务，总耗时应该接近 0.2 而不是 0.4"""
-        from botv.infra.blocking import run_blocking
+        from bot.infra.blocking import run_blocking
 
         async def main():
             started = time.time()
@@ -684,7 +684,7 @@ class TestRunBlocking(unittest.TestCase):
 
     def test_shutdown_and_reuse(self):
         """关闭线程池后还能继续用（池会重建）"""
-        from botv.infra.blocking import run_blocking, shutdown_pool
+        from bot.infra.blocking import run_blocking, shutdown_pool
 
         self.assertEqual(asyncio.run(run_blocking(lambda: "before")), "before")
         self.assertTrue(shutdown_pool(wait=True))
@@ -696,7 +696,7 @@ class TestSettings(unittest.TestCase):
 
     def setUp(self):
         import os
-        from botv.core import settings as S
+        from bot.core import settings as S
         self.S = S
         self._env_backup = {k: os.environ.get(k) for k in S.ENV_MAP}
         for k in S.ENV_MAP:
@@ -760,7 +760,7 @@ class TestSettings(unittest.TestCase):
         """constants.py 里不能再出现密码字面量"""
         import os
         path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                            "botv", "core", "constants.py")
+                            "bot", "core", "constants.py")
         text = open(path, encoding="utf-8").read()
         self.assertNotIn('"TNB"', text)
         self.assertNotIn("TomoriNaoBot", text)
@@ -769,7 +769,7 @@ class TestThreadStats(unittest.TestCase):
     """线程池状态只由 blocking.py 提供"""
 
     def test_thread_stats_shape(self):
-        from botv.infra.blocking import thread_stats
+        from bot.infra.blocking import thread_stats
 
         s = thread_stats()
         self.assertIn("size", s)
@@ -777,14 +777,14 @@ class TestThreadStats(unittest.TestCase):
         self.assertEqual(s["size"], 5)   # v17.8：线程池 3 → 5
 
     def test_describe_threads(self):
-        from botv.infra.blocking import describe_threads
+        from bot.infra.blocking import describe_threads
 
         text = describe_threads()
         self.assertIn("线程池", text)
 
     def test_no_conn_leak_into_blocking(self):
         """blocking 模块不该导出连接池相关的名字"""
-        import botv.infra.blocking as B
+        import bot.infra.blocking as B
 
         self.assertFalse(hasattr(B, "pool_stats"))
         self.assertFalse(hasattr(B, "describe_pools"))
@@ -794,7 +794,7 @@ class TestTunables(unittest.TestCase):
 
     def setUp(self):
         import os
-        from botv.core import tunables as T
+        from bot.core import tunables as T
         self.T = T
         root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         self.orig_store = T.STORE
@@ -849,17 +849,17 @@ class TestVersionCommand(unittest.TestCase):
     """!version 注册且能返回内容"""
 
     def test_registered(self):
-        import botv.commands  # noqa: F401
-        from botv.cmd import registry
+        import bot.commands  # noqa: F401
+        from bot.cmd import registry
 
         self.assertIn("version", registry.COMMANDS)
 
     def test_returns_text(self):
         import asyncio
 
-        import botv.commands  # noqa: F401
-        from botv.cmd.registry import CommandContext
-        from botv.cmd import registry
+        import bot.commands  # noqa: F401
+        from bot.cmd.registry import CommandContext
+        from bot.cmd import registry
 
         cmd = registry.COMMANDS["version"]
         ctx = CommandContext(parts=["version"], uid="1", ws=None, is_group=False, gid=0)
@@ -872,7 +872,7 @@ class TestVersionInfo(unittest.TestCase):
     def setUp(self):
         import os
 
-        from botv.core import version as V
+        from bot.core import version as V
 
         self.V = V
         self._env = os.environ.pop("NAO_VERSION", None)
@@ -924,7 +924,7 @@ class TestVisionUsesBlocking(unittest.TestCase):
     """describe_image 必须走 run_blocking（视觉最慢，超时放宽）"""
 
     def test_uses_run_blocking(self):
-        import botv.ai.vision as V
+        import bot.ai.vision as V
 
         calls = []
 
@@ -977,7 +977,7 @@ class TestRetriesClamp(unittest.TestCase):
     """v17.10：Event.retries 上限 5，防止传错值占着 worker 很久"""
 
     def _ev(self, retries):
-        from botv.events.base import Event
+        from bot.events.base import Event
 
         async def noop():
             return None

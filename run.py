@@ -1,7 +1,7 @@
 # ===================== 模块入口 =====================
 # Hoshinoumi（REC）· 友利奈绪 — CLIP视觉识图 + 简短动作回复 + HTTP API 服务
 # 不导入任何模块，避免循环依赖
-# 所有子模块通过 botv.xxx 方式导入
+# 所有子模块通过 bot.xxx 方式导入
 
 import os               # 环境变量开关
 import sys              # 系统模块：退出程序、获取解释器路径
@@ -39,7 +39,7 @@ INSTALL_TIMEOUT = 120
 def _lock_timezone():
     """v18.0：把进程时区锁到东八区（服务器常是 UTC，会差 8 小时）"""
     try:
-        from botv.core import clock
+        from bot.core import clock
 
         changed = clock.ensure_tz()
         print(f"[启动] 时区 Asia/Shanghai（{'已纠正' if changed else '原本正确'}）"
@@ -50,7 +50,7 @@ def _lock_timezone():
 
 def _runtime_gate():
     """v19.0：只读功能清单 + 环境监测报告；只保留网络/人设运行时探测"""
-    from botv.core import features
+    from bot.core import features
 
     try:
         data = features.load()
@@ -79,7 +79,7 @@ def _runtime_gate():
             print(f"⚠️ 能力 {name} 不可用，已降级：{(feats.get(name) or {}).get('reason', '')}")
 
     try:
-        from botv.app.runtime_checks import check_network, check_persona
+        from bot.app.runtime_checks import check_network, check_persona
 
         try:
             detail = check_network()
@@ -255,10 +255,10 @@ async def check_diary():
     """
     try:
         # 延迟导入，避免循环依赖
-        from botv.db import get_cursor
-        from botv.config import MASTER_QQ
-        from botv.diary import generate_missing_7day_diaries
-        from botv.log import log_system
+        from bot.db import get_cursor
+        from bot.config import MASTER_QQ
+        from bot.diary import generate_missing_7day_diaries
+        from bot.log import log_system
 
         tid = str(MASTER_QQ)
 
@@ -308,13 +308,13 @@ if __name__ == "__main__":  # 直接运行本文件时
     _lock_timezone()
 
     # v7-E32：单实例锁——同一时刻只允许一个进程连 NapCat
-    from botv.core.single_instance import acquire, release, holder_pid
+    from bot.core.single_instance import acquire, release, holder_pid
     if not acquire():
         print(f"❌ 已有实例在运行（PID {holder_pid()}），本次退出")
         sys.exit(1)
 
     # 依赖检查通过后再导入主模块（延迟导入，避免依赖缺失时崩溃）
-    from botv.main import main
+    from bot.main import main
     # 启动机器人（先运行主程序，上线消息发出10分钟后再追溯日记）
     async def _start():
         main_task = asyncio.create_task(main())  # 启动主程序（异步，不阻塞后续延迟任务）

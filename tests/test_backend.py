@@ -37,7 +37,7 @@ class TestBackendChoice(unittest.TestCase):
     """选后端：默认 mysql，配了 sqlite 就走 sqlite"""
 
     def setUp(self):
-        from botv.core import settings
+        from bot.core import settings
 
         self.S = settings
         settings._cache = None     # 每次测试重新读配置
@@ -56,7 +56,7 @@ class TestBackendChoice(unittest.TestCase):
             else:
                 os.environ[k] = v
         # 重置线程本地连接
-        from botv.infra import conn
+        from bot.infra import conn
 
         conn._local.__dict__.clear()
         shutil.rmtree(self.dir, ignore_errors=True)
@@ -132,7 +132,7 @@ class TestBackendChoice(unittest.TestCase):
         """真连一次：建表 / 插入 / 查询 / 计数"""
         os.environ["NAO_DB_BACKEND"] = "sqlite"
         os.environ["NAO_DB_PATH"] = os.path.join(self.dir, "nao.db")
-        from botv.infra import conn
+        from bot.infra import conn
 
         conn._local.__dict__.clear()
         c = conn.get_cursor()
@@ -149,7 +149,7 @@ class TestBackendChoice(unittest.TestCase):
         """%s 要能翻译成 ?（多个参数也要对）"""
         os.environ["NAO_DB_BACKEND"] = "sqlite"
         os.environ["NAO_DB_PATH"] = os.path.join(self.dir, "p.db")
-        from botv.infra import conn
+        from bot.infra import conn
 
         conn._local.__dict__.clear()
         c = conn.get_cursor()
@@ -162,7 +162,7 @@ class TestBackendChoice(unittest.TestCase):
     def test_wal_enabled(self):
         os.environ["NAO_DB_BACKEND"] = "sqlite"
         os.environ["NAO_DB_PATH"] = os.path.join(self.dir, "w.db")
-        from botv.infra import conn
+        from bot.infra import conn
 
         conn._local.__dict__.clear()
         c = conn.get_cursor()

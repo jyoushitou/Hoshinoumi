@@ -36,8 +36,8 @@ class TestIdleExecutors(unittest.TestCase):
     """tick 只判断、read 才执行；闸门生效"""
 
     def setUp(self):
-        from botv.events import registry
-        import botv.executors.idle as idle   # 触发注册
+        from bot.events import registry
+        import bot.executors.idle as idle   # 触发注册
 
         self.R = registry
         self.idle = idle
@@ -61,8 +61,8 @@ class TestIdleExecutors(unittest.TestCase):
 
     def test_tick_skips_at_night(self):
         """深夜：tick 不投递任何事件"""
-        from botv.scheduler.dispatcher import Scheduler, set_scheduler
-        from botv.life import reading as R
+        from bot.scheduler.dispatcher import Scheduler, set_scheduler
+        from bot.life import reading as R
 
         orig = R.should_read
         R.should_read = lambda last, now=None: (False, "深夜")
@@ -79,8 +79,8 @@ class TestIdleExecutors(unittest.TestCase):
         self.assertEqual(sched.stats()["queue"]["total"], 0, "不该投递事件")
 
     def test_tick_submits_read_when_book_exists(self):
-        from botv.scheduler.dispatcher import Scheduler, set_scheduler
-        from botv.life import reading as R
+        from bot.scheduler.dispatcher import Scheduler, set_scheduler
+        from bot.life import reading as R
 
         orig = (R.should_read, R.load, R.current_book)
         R.should_read = lambda last, now=None: (True, "ok")

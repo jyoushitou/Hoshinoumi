@@ -11,7 +11,7 @@ class TestOnlyOutboundSends(unittest.TestCase):
     ALLOW = {"outbound.py"}
 
     def test_no_raw_ws_send(self):
-        root = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "botv")
+        root = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "bot")
         offenders = []
         for base, _dirs, files in os.walk(root):
             for name in files:
@@ -35,14 +35,14 @@ class TestSendGoesThroughOutbound(unittest.TestCase):
     def test_send_or_queue_uses_outbound(self):
         src = open(os.path.join(
             os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-            "botv", "chat", "send.py"), encoding="utf-8").read()
+            "bot", "chat", "send.py"), encoding="utf-8").read()
         self.assertIn("get_outbound", src)
         self.assertNotIn("async with cfg.send_lock", src)
 
     def test_flush_uses_outbound(self):
         src = open(os.path.join(
             os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-            "botv", "chat", "send.py"), encoding="utf-8").read()
+            "bot", "chat", "send.py"), encoding="utf-8").read()
         m = re.search(r"async def flush_outbox\(ws\):(?:.|\n)*?(?=\nasync def |\ndef )", src)
         self.assertIsNotNone(m)
         self.assertIn("out.flush()", m.group(0))

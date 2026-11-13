@@ -6,9 +6,9 @@ __pycache__/
 .vscode
 
 *.bundle
-.botv.lock
+.bot.lock
 .test-lock-*
-.botv.lock.pid
+.bot.lock.pid
 *.pyc
 data/digests/
 .test-digest*

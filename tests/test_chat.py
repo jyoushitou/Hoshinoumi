@@ -6,7 +6,7 @@ import unittest
 
 
 def _stub_missing_deps():
-    """缺依赖就打个桩（必须在导入 botv 之前调用）"""
+    """缺依赖就打个桩（必须在导入 bot 之前调用）"""
     def module(name, **attrs):
         m = types.ModuleType(name)
         for k, v in attrs.items():
@@ -42,24 +42,24 @@ import sys
 import types
 import unittest
 from datetime import datetime
-from botv.config import CST
+from bot.config import CST
 import asyncio
 import time
 import os
 import re
 import threading
 import json
-from botv.ports import ChatModel, Transport  # noqa: E402
-from botv.ports.models import ChatRequest, ChatReply  # noqa: E402
-from botv.ports.transport import Target, Segment  # noqa: E402
-from botv.ai import models as model_mod  # noqa: E402
-from botv.ai.chain import FallbackChain  # noqa: E402
-from botv.chat.transport import QqTransport  # noqa: E402
-from botv.core import state as cfg             # noqa: E402  运行时状态（常量也在里面）
-import botv.commands as commands               # noqa: E402
-import botv.chat.reply as reply_mod            # noqa: E402
-from botv.ai.parse import parse_ai_reply       # noqa: E402
-from botv.cmd import registry                  # noqa: E402
+from bot.ports import ChatModel, Transport  # noqa: E402
+from bot.ports.models import ChatRequest, ChatReply  # noqa: E402
+from bot.ports.transport import Target, Segment  # noqa: E402
+from bot.ai import models as model_mod  # noqa: E402
+from bot.ai.chain import FallbackChain  # noqa: E402
+from bot.chat.transport import QqTransport  # noqa: E402
+from bot.core import state as cfg             # noqa: E402  运行时状态（常量也在里面）
+import bot.commands as commands               # noqa: E402
+import bot.chat.reply as reply_mod            # noqa: E402
+from bot.ai.parse import parse_ai_reply       # noqa: E402
+from bot.cmd import registry                  # noqa: E402
 
 
 class FakeConn:
@@ -163,7 +163,7 @@ class TestAtDetection(unittest.TestCase):
     """v6-E29：@ 判断"""
 
     def test_at_me(self):
-        from botv.chat.inbound import is_at_me
+        from bot.chat.inbound import is_at_me
         msg = [{"type": "text", "data": {"text": "hi"}},
                {"type": "at", "data": {"qq": "12345"}}]
         self.assertTrue(is_at_me(msg, 12345))
@@ -171,7 +171,7 @@ class TestAtDetection(unittest.TestCase):
         self.assertFalse(is_at_me("plain text", 12345))
 
     def test_no_self_qq(self):
-        from botv.chat.inbound import is_at_me
+        from bot.chat.inbound import is_at_me
         msg = [{"type": "at", "data": {"qq": "12345"}}]
         self.assertFalse(is_at_me(msg, 0))
 
@@ -179,7 +179,7 @@ class TestBubbleDelay(unittest.TestCase):
     """v6-A12：气泡间隔随机，不是固定值"""
 
     def test_range(self):
-        from botv.chat.send import bubble_delay, BUBBLE_DELAY_RANGE
+        from bot.chat.send import bubble_delay, BUBBLE_DELAY_RANGE
         lo, hi = BUBBLE_DELAY_RANGE
         samples = [bubble_delay() for _ in range(200)]
         self.assertTrue(all(lo <= d <= hi for d in samples))
@@ -197,22 +197,22 @@ class TestChatImpulse(unittest.TestCase):
 
     def _now(self, hour, minute=0):
         from datetime import datetime
-        from botv.config import CST
+        from bot.config import CST
         return datetime(2026, 11, 9, hour, minute, tzinfo=CST)
 
     def test_night_is_zero(self):
-        from botv.life.impulse import chat_probability
+        from bot.life.impulse import chat_probability
         self.assertEqual(chat_probability(self._now(3), 5, {"lonely": 1, "mood": 1}), 0.0)
 
     def test_silence_raises(self):
-        from botv.life.impulse import chat_probability
+        from bot.life.impulse import chat_probability
         st = {"lonely": 0.3, "mood": 0.0}
         short = chat_probability(self._now(19), 0.5, st)
         long = chat_probability(self._now(19), 4, st)
         self.assertGreater(long, short)
 
     def test_life_event_boosts(self):
-        from botv.life.impulse import chat_probability
+        from bot.life.impulse import chat_probability
         st = {"lonely": 0.3, "mood": 0.0}
         plain = chat_probability(self._now(19), 3, st, has_life_event=False)
         boosted = chat_probability(self._now(19), 3, st, has_life_event=True)
@@ -220,18 +220,18 @@ class TestChatImpulse(unittest.TestCase):
         self.assertAlmostEqual(boosted / plain, 1.8, places=2)
 
     def test_probability_capped(self):
-        from botv.life.impulse import chat_probability, CHAT_MAX_P
+        from bot.life.impulse import chat_probability, CHAT_MAX_P
         st = {"lonely": 1.0, "mood": 1.0}
         self.assertLessEqual(chat_probability(self._now(19), 99, st, True), CHAT_MAX_P)
 
     def test_should_chat_blocks(self):
-        from botv.life.impulse import should_chat
+        from bot.life.impulse import should_chat
         ok, why, _p = should_chat(now=self._now(3), state={"lonely": 1}, rng=self._R(0.0))
         self.assertFalse(ok)
         self.assertEqual(why, "深夜")
 
     def test_should_chat_roll(self):
-        from botv.life.impulse import should_chat
+        from bot.life.impulse import should_chat
         st = {"lonely": 0.3, "mood": 0.0}
         miss, _w, _p = should_chat(now=self._now(19), state=st, rng=self._R(0.99),
                                    silent_hours=4, last_user_ts=0.0,
@@ -246,15 +246,15 @@ class TestFallback(unittest.TestCase):
     """F2：兜底文案不得入库、不得污染关键词"""
 
     def test_fallback_is_str(self):
-        from botv.core.types import Fallback
+        from bot.core.types import Fallback
         f = Fallback("哼")
         self.assertIsInstance(f, str)
         self.assertEqual(f, "哼")
 
     def test_get_character_reply_marks_fallback(self):
-        import botv.ai.client as client
-        import botv.memory.context as mem
-        from botv.core.types import Fallback
+        import bot.ai.client as client
+        import bot.memory.context as mem
+        from bot.core.types import Fallback
 
         async def no_ds(*a, **k):
             return None
@@ -274,8 +274,8 @@ class TestFallback(unittest.TestCase):
         self.assertIsInstance(r, Fallback)
 
     def test_add_memory_skips_fallback(self):
-        import botv.memory.context as mem
-        from botv.core.types import Fallback
+        import bot.memory.context as mem
+        from bot.core.types import Fallback
 
         calls = []
         orig = mem.add_user_memory_to_db
@@ -296,8 +296,8 @@ class TestGateBypass(unittest.TestCase):
 
     def test_bypass_lonely(self):
         from datetime import datetime
-        from botv.config import CST
-        from botv.life.impulse import should_reach_out
+        from bot.config import CST
+        from bot.life.impulse import should_reach_out
 
         class R:
             def random(self):
@@ -310,8 +310,8 @@ class TestGateBypass(unittest.TestCase):
 
     def test_still_blocked_at_night(self):
         from datetime import datetime
-        from botv.config import CST
-        from botv.life.impulse import should_reach_out
+        from bot.config import CST
+        from bot.life.impulse import should_reach_out
 
         class R:
             def random(self):
@@ -334,7 +334,7 @@ class TestGroupGate(unittest.TestCase):
         cfg.group_msg_window.clear()
 
     def test_addressed_passes(self):
-        from botv.chat import handler as h
+        from bot.chat import handler as h
         orig = h.random.random
         h.random.random = lambda: 0.0  # v14-B4：被@ 也要掷骰，测试要压到必中
         try:
@@ -345,14 +345,14 @@ class TestGroupGate(unittest.TestCase):
         self.assertTrue(why.startswith("被@"), why)
 
     def test_cooldown_blocks_unaddressed(self):
-        from botv.chat.handler import should_answer_group, note_group_reply
+        from bot.chat.handler import should_answer_group, note_group_reply
         note_group_reply(111)
         ok, why = should_answer_group(111, False)
         self.assertFalse(ok)
         self.assertIn("冷却", why)
 
     def test_window_full_blocks_even_addressed(self):
-        from botv.chat import handler as h
+        from bot.chat import handler as h
         for _ in range(h.GROUP_WINDOW_MAX):
             h.note_group_reply(222)
         ok, why = h.should_answer_group(222, True)
@@ -360,7 +360,7 @@ class TestGroupGate(unittest.TestCase):
         self.assertIn("60秒内", why)
 
     def test_probability_gate(self):
-        from botv.chat import handler as h
+        from bot.chat import handler as h
         orig = h.random
         try:
             h.random = _FakeRandom(0.0)  # 一定命中
@@ -380,31 +380,31 @@ class TestGroupProbability(unittest.TestCase):
     """v10：群聊回话概率随状态浮动"""
 
     def test_base(self):
-        from botv.chat.handler import group_reply_probability, GROUP_BASE_PROB
+        from bot.chat.handler import group_reply_probability, GROUP_BASE_PROB
         p = group_reply_probability({"lonely": 0.2, "mood": 0.1}, 0)
         self.assertAlmostEqual(p, GROUP_BASE_PROB, places=3)
 
     def test_lonely_raises(self):
-        from botv.chat.handler import group_reply_probability
+        from bot.chat.handler import group_reply_probability
         quiet = group_reply_probability({"lonely": 0.2, "mood": 0.0}, 0)
         lonely = group_reply_probability({"lonely": 0.9, "mood": 0.0}, 0)
         self.assertGreater(lonely, quiet)
 
     def test_bad_mood_lowers(self):
-        from botv.chat.handler import group_reply_probability
+        from bot.chat.handler import group_reply_probability
         good = group_reply_probability({"lonely": 0.9, "mood": 0.5}, 0)
         bad = group_reply_probability({"lonely": 0.9, "mood": -0.5}, 0)
         self.assertLess(bad, good)
 
     def test_unanswered_halves(self):
-        from botv.chat.handler import (group_reply_probability,
+        from bot.chat.handler import (group_reply_probability,
                                        GROUP_UNANSWERED_LIMIT, GROUP_UNANSWERED_DECAY)
         normal = group_reply_probability({"lonely": 0.9, "mood": 0.0}, 0)
         quiet = group_reply_probability({"lonely": 0.9, "mood": 0.0}, GROUP_UNANSWERED_LIMIT)
         self.assertAlmostEqual(quiet, normal * GROUP_UNANSWERED_DECAY, places=3)
 
     def test_clamped(self):
-        from botv.chat.handler import (group_reply_probability, GROUP_PROB_MIN, GROUP_PROB_MAX)
+        from bot.chat.handler import (group_reply_probability, GROUP_PROB_MIN, GROUP_PROB_MAX)
         for lonely in (0.0, 0.5, 1.0):
             for mood in (-1.0, 0.0, 1.0):
                 p = group_reply_probability({"lonely": lonely, "mood": mood}, 0)
@@ -412,7 +412,7 @@ class TestGroupProbability(unittest.TestCase):
                 self.assertLessEqual(p, GROUP_PROB_MAX)
 
     def test_streak_increments_and_resets(self):
-        from botv.chat import handler as h
+        from bot.chat import handler as h
         cfg.group_streak.clear()
         h.note_group_reply(555)
         h.note_group_reply(555)
@@ -423,41 +423,41 @@ class TestMerge(unittest.TestCase):
     """v16：HTML 骨架 + OCR 补字"""
 
     def test_merge_fills_pua(self):
-        from botv.life.ocr import merge_html_ocr
+        from bot.life.ocr import merge_html_ocr
         html = "一座\ue000旧的道观里，黑夜带来了阳光\ue001曾给过的冷寂。"
         ocr = "一座破旧的道观里，黑夜带来了阳光未曾给过的冷寂。"
         self.assertEqual(merge_html_ocr(html, ocr),
                          "一座破旧的道观里，黑夜带来了阳光未曾给过的冷寂。")
 
     def test_merge_keeps_html_when_clean(self):
-        from botv.life.ocr import merge_html_ocr
+        from bot.life.ocr import merge_html_ocr
         html = "他推开门。外面在下雨。"
         ocr = "他推开门。外面在下兩。"   # OCR 错字
         self.assertIn("下雨", merge_html_ocr(html, ocr), "已知字用 HTML，别被 OCR 带错")
 
     def test_merge_without_inputs(self):
-        from botv.life.ocr import merge_html_ocr
+        from bot.life.ocr import merge_html_ocr
         self.assertEqual(merge_html_ocr("", "abc"), "abc")
         self.assertEqual(merge_html_ocr("abc", ""), "abc")
         self.assertEqual(merge_html_ocr("", ""), "")
 
     def test_merge_drops_leftover_pua(self):
-        from botv.life.ocr import merge_html_ocr, pua_ratio
+        from bot.life.ocr import merge_html_ocr, pua_ratio
         html = "开头\ue000\ue001结尾"
         ocr = "开头结尾"          # OCR 也没认出来
         merged = merge_html_ocr(html, ocr)
         self.assertEqual(pua_ratio(merged), 0.0)
 
     def test_best_text_prefers_merged(self):
-        from botv.life.ocr import best_text
+        from bot.life.ocr import best_text
         html = "一座\ue000旧的道观" + "很长的正文内容" * 20
         ocr = "一座破旧的道观" + "很长的正文内容" * 20
         self.assertIn("破旧", best_text(html, ocr))
 
     def test_fetch_chapter_merges(self):
         import asyncio
-        import botv.life.ocr as O
-        import botv.life.novel as N
+        import bot.life.ocr as O
+        import bot.life.novel as N
 
         async def fake_html(url):
             return '<div class="muye-reader-content">一座\ue000旧的道观' + ("正文" * 200) + "</div>"
@@ -503,14 +503,14 @@ class TestPoke(unittest.TestCase):
     """v12-A16：戳一戳回戳"""
 
     def test_detect(self):
-        from botv.chat.notice import is_poke
+        from bot.chat.notice import is_poke
         self.assertTrue(is_poke({"post_type": "notice", "notice_type": "notify", "sub_type": "poke"}))
         self.assertFalse(is_poke({"post_type": "message"}))
         self.assertFalse(is_poke({"post_type": "notice", "notice_type": "notify", "sub_type": "other"}))
 
     def test_reply_back_in_group(self):
         import asyncio
-        from botv.chat.notice import handle_notice
+        from bot.chat.notice import handle_notice
         calls = []
 
         async def fake(action, params, ws, label):
@@ -525,7 +525,7 @@ class TestPoke(unittest.TestCase):
 
     def test_reply_back_private(self):
         import asyncio
-        from botv.chat.notice import handle_notice
+        from bot.chat.notice import handle_notice
         calls = []
 
         async def fake(action, params, ws, label):
@@ -538,7 +538,7 @@ class TestPoke(unittest.TestCase):
 
     def test_ignore_poke_others(self):
         import asyncio
-        from botv.chat.notice import handle_notice
+        from bot.chat.notice import handle_notice
         calls = []
 
         async def fake(action, params, ws, label):
@@ -555,7 +555,7 @@ class TestQuotedReply(unittest.TestCase):
 
     def test_marker_without_ws(self):
         import asyncio
-        from botv.chat.inbound import parse_message_content
+        from bot.chat.inbound import parse_message_content
         raw = [{"type": "reply", "data": {"id": 123}},
                {"type": "text", "data": {"text": "这个咋样"}}]
         text, _md5 = asyncio.run(parse_message_content(raw, "1", None))
@@ -633,8 +633,8 @@ class TestReplyTiming(unittest.TestCase):
 
     def test_bands(self):
         from datetime import datetime
-        from botv.chat.timing import delay_range
-        from botv.config import CST
+        from bot.chat.timing import delay_range
+        from bot.config import CST
         self.assertEqual(delay_range(datetime(2026, 1, 1, 2, tzinfo=CST)), (20, 180))
         self.assertEqual(delay_range(datetime(2026, 1, 1, 10, tzinfo=CST)), (5, 30))
         self.assertEqual(delay_range(datetime(2026, 1, 1, 20, tzinfo=CST)), (8, 60))
@@ -642,8 +642,8 @@ class TestReplyTiming(unittest.TestCase):
 
     def test_within_range(self):
         from datetime import datetime
-        from botv.chat.timing import reply_delay
-        from botv.config import CST
+        from bot.chat.timing import reply_delay
+        from bot.config import CST
         now = datetime(2026, 1, 1, 10, tzinfo=CST)
         for v in (0.0, 0.5, 0.999):
             d = reply_delay(now, self._R(v))
@@ -652,8 +652,8 @@ class TestReplyTiming(unittest.TestCase):
 
     def test_biased_short(self):
         from datetime import datetime
-        from botv.chat.timing import reply_delay
-        from botv.config import CST
+        from bot.chat.timing import reply_delay
+        from bot.config import CST
         now = datetime(2026, 1, 1, 10, tzinfo=CST)
         vals = [reply_delay(now, self._R(i / 100)) for i in range(100)]
         mean = sum(vals) / len(vals)
@@ -663,7 +663,7 @@ class TestShare(unittest.TestCase):
     """v12-A18：分享欲（偶尔补一句自己的事）"""
 
     def setUp(self):
-        import botv.chat.handler as h
+        import bot.chat.handler as h
         self.h = h
         self.sent = []
         self._orig = {}
@@ -671,12 +671,12 @@ class TestShare(unittest.TestCase):
         self._patch("send_short_reply", self._fake_send)
         h._last_share_ts.clear()
 
-        import botv.infra.repo_memory as rm
+        import bot.infra.repo_memory as rm
         self._orig["load_today_life"] = rm.load_today_life
         rm.load_today_life = lambda: ["小咪把多肉推下去了"]
 
     def tearDown(self):
-        import botv.infra.repo_memory as rm
+        import bot.infra.repo_memory as rm
         for name, fn in self._orig.items():
             setattr(self.h, name, fn) if hasattr(self.h, name) else None
         if "load_today_life" in self._orig:
@@ -715,7 +715,7 @@ class TestShare(unittest.TestCase):
         self.assertFalse(self._run(), "40 分钟内不该再分享")
 
     def test_no_life_event(self):
-        import botv.infra.repo_memory as rm
+        import bot.infra.repo_memory as rm
         rm.load_today_life = lambda: []
         self.assertFalse(self._run())
 
@@ -723,9 +723,9 @@ class TestTypoRecall(unittest.TestCase):
     """v12-A13：打错字 → 撤回 → 重发"""
 
     def setUp(self):
-        import botv.chat.send as S
+        import bot.chat.send as S
         self.S = S
-        from botv.core import state as cfg
+        from bot.core import state as cfg
         self.cfg = cfg
         cfg.typo_history.clear()
         self.deleted = []
@@ -750,14 +750,14 @@ class TestTypoRecall(unittest.TestCase):
         return True
 
     def test_make_typo_differs(self):
-        from botv.chat.send import make_typo
+        from bot.chat.send import make_typo
         text = "明天下午三点面试"
         typo = make_typo(text)
         self.assertNotEqual(typo, text)
         self.assertEqual(len(typo), len(text))
 
     def test_short_text_no_typo(self):
-        from botv.chat.send import make_typo
+        from bot.chat.send import make_typo
         self.assertEqual(make_typo("在吗"), "在吗")
 
     def _run(self, text="明天下午三点面试", prob=0.0):
@@ -803,7 +803,7 @@ class TestImageFallbackWording(unittest.TestCase):
 
     def _run_parse(self, desc, tags, download_ok=True):
         import asyncio
-        import botv.chat.inbound as I
+        import bot.chat.inbound as I
 
         orig = (I.download_url, I.process_and_save_image, I.describe_image)
         # download_url 跑在 run_blocking 的线程里，必须是同步函数
@@ -844,7 +844,7 @@ class TestPureEmoji(unittest.TestCase):
     """v17.9：用户发表情 → 正常对话，不是「她要发表情包」"""
 
     def test_placeholder_not_sticker_request(self):
-        from botv.chat.inbound import contains_sticker_key
+        from bot.chat.inbound import contains_sticker_key
 
         self.assertFalse(contains_sticker_key("[表情5]"),
                          "[表情5] 是占位符，不该当请求")
@@ -856,14 +856,14 @@ class TestPureEmoji(unittest.TestCase):
                          "裸「表情」不能当请求")
 
     def test_real_request_still_works(self):
-        from botv.chat.inbound import contains_sticker_key
+        from bot.chat.inbound import contains_sticker_key
 
         self.assertTrue(contains_sticker_key("发个表情包"))
         self.assertTrue(contains_sticker_key("来个表情"))
 
     def test_pure_emoji_becomes_sentence(self):
         import asyncio
-        import botv.chat.inbound as I
+        import bot.chat.inbound as I
 
         orig = I.download_url
         I.download_url = lambda url: b"x"
@@ -882,7 +882,7 @@ class TestVoiceSkipsTypoRecall(unittest.TestCase):
     """v17.9：语音念过了就别再撤文字（说写不一致）"""
 
     def setUp(self):
-        import botv.chat.send as S
+        import bot.chat.send as S
 
         self.S = S
         self.S._last_voice_ts.clear()

@@ -36,7 +36,7 @@ class TestProviders(unittest.TestCase):
     """key 取值顺序 + 默认端点"""
 
     def setUp(self):
-        from botv.ai import vision
+        from bot.ai import vision
 
         self.V = vision
         self._orig = (self.V.cfg.DS_API_KEY, self.V.cfg.DOUBAO_API_KEY)
@@ -82,7 +82,7 @@ class TestDescribeFallback(unittest.TestCase):
     """第一段失败自动降级第二段；全失败返回 None"""
 
     def setUp(self):
-        from botv.ai import vision
+        from bot.ai import vision
 
         self.V = vision
         self.V.cfg.DOUBAO_API_KEY = "d"

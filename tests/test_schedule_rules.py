@@ -33,7 +33,7 @@ def _stub_missing_deps():
 
 _stub_missing_deps()
 
-from botv.schedule import cron  # noqa: E402
+from bot.schedule import cron  # noqa: E402
 
 
 class _Rng:
@@ -125,7 +125,7 @@ class TestRules(unittest.TestCase):
 
 class TestOverrides(unittest.TestCase):
     def setUp(self):
-        from botv.schedule import extract
+        from bot.schedule import extract
         self.E = extract
         self.now = datetime(2026, 11, 13, 6, 0)  # 周五
 

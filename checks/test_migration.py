@@ -6,7 +6,7 @@ import unittest
 
 
 def _stub_missing_deps():
-    """缺依赖就打个桩（必须在导入 botv 之前调用）"""
+    """缺依赖就打个桩（必须在导入 bot 之前调用）"""
     def module(name, **attrs):
         m = types.ModuleType(name)
         for k, v in attrs.items():
@@ -42,24 +42,24 @@ import sys
 import types
 import unittest
 from datetime import datetime
-from botv.config import CST
+from bot.config import CST
 import asyncio
 import time
 import os
 import re
 import threading
 import json
-from botv.ports import ChatModel, Transport  # noqa: E402
-from botv.ports.models import ChatRequest, ChatReply  # noqa: E402
-from botv.ports.transport import Target, Segment  # noqa: E402
-from botv.ai import models as model_mod  # noqa: E402
-from botv.ai.chain import FallbackChain  # noqa: E402
-from botv.chat.transport import QqTransport  # noqa: E402
-from botv.core import state as cfg             # noqa: E402  运行时状态（常量也在里面）
-import botv.commands as commands               # noqa: E402
-import botv.chat.reply as reply_mod            # noqa: E402
-from botv.ai.parse import parse_ai_reply       # noqa: E402
-from botv.cmd import registry                  # noqa: E402
+from bot.ports import ChatModel, Transport  # noqa: E402
+from bot.ports.models import ChatRequest, ChatReply  # noqa: E402
+from bot.ports.transport import Target, Segment  # noqa: E402
+from bot.ai import models as model_mod  # noqa: E402
+from bot.ai.chain import FallbackChain  # noqa: E402
+from bot.chat.transport import QqTransport  # noqa: E402
+from bot.core import state as cfg             # noqa: E402  运行时状态（常量也在里面）
+import bot.commands as commands               # noqa: E402
+import bot.chat.reply as reply_mod            # noqa: E402
+from bot.ai.parse import parse_ai_reply       # noqa: E402
+from bot.cmd import registry                  # noqa: E402
 
 
 class FakeConn:
@@ -198,27 +198,27 @@ class TestDedupeKey(unittest.TestCase):
         pass
 
     def test_punctuation_and_space_ignored(self):
-        from botv.infra import dedupe as m
+        from bot.infra import dedupe as m
         a = m.dedupe_key("1", "event", "主人 明天要答辩！")
         b = m.dedupe_key("1", "event", "主人明天要答辩")
         self.assertEqual(a, b)
 
     def test_target_matters(self):
-        from botv.infra import dedupe as m
+        from bot.infra import dedupe as m
         self.assertNotEqual(
             m.dedupe_key("1", "event", "同一句话"),
             m.dedupe_key("2", "event", "同一句话"),
         )
 
     def test_kind_matters(self):
-        from botv.infra import dedupe as m
+        from bot.infra import dedupe as m
         self.assertNotEqual(
             m.dedupe_key("1", "event", "同一句话"),
             m.dedupe_key("1", "life", "同一句话"),
         )
 
     def test_different_text_differs(self):
-        from botv.infra import dedupe as m
+        from bot.infra import dedupe as m
         self.assertNotEqual(
             m.dedupe_key("1", "event", "今天加班"),
             m.dedupe_key("1", "event", "今天加班到十点"),
@@ -228,7 +228,7 @@ class TestMemoryWriteDedupe(unittest.TestCase):
     """v7-B15：7 天内同键只累加，不新增"""
 
     def _run(self, existing):
-        import botv.infra.repo_memory as rm
+        import bot.infra.repo_memory as rm
         cur = _FakeCursor(existing)
         orig = rm.get_cursor
         rm.get_cursor = lambda: cur
@@ -249,7 +249,7 @@ class TestMemoryWriteDedupe(unittest.TestCase):
         self.assertIn("DELETE", cur.verbs())  # 插入后按 kind 裁剪
 
     def test_empty_summary_skipped(self):
-        import botv.infra.repo_memory as rm
+        import bot.infra.repo_memory as rm
         cur = _FakeCursor(None)
         orig = rm.get_cursor
         rm.get_cursor = lambda: cur

@@ -37,7 +37,7 @@ class TestComputeNext(unittest.TestCase):
     """daily / weekly / once / interval 的下次触发计算"""
 
     def setUp(self):
-        from botv.schedule import cron
+        from bot.schedule import cron
 
         self.C = cron
         self.now = datetime(2026, 11, 11, 8, 0)      # 周三
@@ -101,7 +101,7 @@ class TestHooks(unittest.TestCase):
     """钩子：挂上、取消、触发后重排"""
 
     def setUp(self):
-        from botv.schedule import cron
+        from bot.schedule import cron
 
         self.C = cron
         self.C.cancel_all()

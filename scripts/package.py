@@ -30,7 +30,7 @@ EXCLUDE_SUFFIX = (".pyc", ".pyo", ".bundle", ".log", ".pid", ".zip")
 EXCLUDE_FILES = {".DS_Store", "Thumbs.db", ".nao-ref-glyphs.json"}
 
 # 整包要带上的运行目录
-RUNTIME_DIRS = ("botv", "personas", "scripts", "docs")
+RUNTIME_DIRS = ("bot", "personas", "scripts", "docs")
 RUNTIME_FILES = ("run.py", "README.md", "requirements.txt", "botsetting.yaml")
 
 START_SH = """#!/usr/bin/env bash

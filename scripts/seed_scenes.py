@@ -39,8 +39,8 @@ def main():
     args = ap.parse_args()
 
     try:
-        from botv.core import state as cfg
-        from botv.schedule import cron
+        from bot.core import state as cfg
+        from bot.schedule import cron
     except Exception as e:
         print(f"[X] 导入失败：{e}")
         return 1

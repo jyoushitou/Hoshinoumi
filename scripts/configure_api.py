@@ -67,7 +67,7 @@ def main():
     print("密钥写入数据库 api_keys；视觉接入点写入 config.local.json。")
     print("直接回车 = 保留当前值；输入 - = 清空该项。\n")
 
-    from botv.infra import repo_key
+    from bot.infra import repo_key
 
     # 当前值：DB > 环境变量；数据库还没迁移时明确提示，不直接崩
     try:

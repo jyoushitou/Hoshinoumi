@@ -6,7 +6,7 @@ import unittest
 
 
 def _stub_missing_deps():
-    """缺依赖就打个桩（必须在导入 botv 之前调用）"""
+    """缺依赖就打个桩（必须在导入 bot 之前调用）"""
     def module(name, **attrs):
         m = types.ModuleType(name)
         for k, v in attrs.items():
@@ -42,24 +42,24 @@ import sys
 import types
 import unittest
 from datetime import datetime
-from botv.config import CST
+from bot.config import CST
 import asyncio
 import time
 import os
 import re
 import threading
 import json
-from botv.ports import ChatModel, Transport  # noqa: E402
-from botv.ports.models import ChatRequest, ChatReply  # noqa: E402
-from botv.ports.transport import Target, Segment  # noqa: E402
-from botv.ai import models as model_mod  # noqa: E402
-from botv.ai.chain import FallbackChain  # noqa: E402
-from botv.chat.transport import QqTransport  # noqa: E402
-from botv.core import state as cfg             # noqa: E402  运行时状态（常量也在里面）
-import botv.commands as commands               # noqa: E402
-import botv.chat.reply as reply_mod            # noqa: E402
-from botv.ai.parse import parse_ai_reply       # noqa: E402
-from botv.cmd import registry                  # noqa: E402
+from bot.ports import ChatModel, Transport  # noqa: E402
+from bot.ports.models import ChatRequest, ChatReply  # noqa: E402
+from bot.ports.transport import Target, Segment  # noqa: E402
+from bot.ai import models as model_mod  # noqa: E402
+from bot.ai.chain import FallbackChain  # noqa: E402
+from bot.chat.transport import QqTransport  # noqa: E402
+from bot.core import state as cfg             # noqa: E402  运行时状态（常量也在里面）
+import bot.commands as commands               # noqa: E402
+import bot.chat.reply as reply_mod            # noqa: E402
+from bot.ai.parse import parse_ai_reply       # noqa: E402
+from bot.cmd import registry                  # noqa: E402
 
 
 class FakeConn:
@@ -166,11 +166,11 @@ class TestAgenda(unittest.TestCase):
 
     def setUp(self):
         from datetime import datetime
-        from botv.config import CST
+        from bot.config import CST
         self.now = datetime(2026, 11, 9, 10, 30, tzinfo=CST)  # 周一
 
     def _when(self, text):
-        from botv.life.agenda import parse_when
+        from bot.life.agenda import parse_when
         return parse_when(text, self.now)
 
     def test_tomorrow(self):
@@ -192,16 +192,16 @@ class TestAgenda(unittest.TestCase):
         self.assertIsNone(self._when("你好呀"))
 
     def test_extract_needs_event_word(self):
-        from botv.life.agenda import extract
+        from bot.life.agenda import extract
         self.assertIsNone(extract("明天出去玩", self.now), "没有事件词不该记")
         self.assertIsNotNone(extract("明天面试", self.now))
 
     def test_extract_ignores_past(self):
-        from botv.life.agenda import extract
+        from bot.life.agenda import extract
         self.assertIsNone(extract("昨天面试", self.now))
 
     def test_past_today_ignored(self):
-        from botv.life.agenda import extract
+        from bot.life.agenda import extract
         self.assertIsNone(extract("今天上午九点开会", self.now), "已经过去的今天不记")
 
 class TestDiaryReflow(unittest.TestCase):
@@ -211,29 +211,29 @@ class TestDiaryReflow(unittest.TestCase):
              "回家路上买了关东煮，小咪在门口等我。其实有点累，但还行。")
 
     def test_split_count(self):
-        from botv.life.reflow import split_memories
+        from bot.life.reflow import split_memories
         items = split_memories(self.DIARY)
         self.assertGreaterEqual(len(items), 2)
         self.assertLessEqual(len(items), 3)
 
     def test_split_truncates_long(self):
-        from botv.life.reflow import split_memories
+        from bot.life.reflow import split_memories
         items = split_memories("啊" * 200 + "。")
         self.assertTrue(items)
         self.assertTrue(all(len(i) <= 61 for i in items))
 
     def test_sentiment_signs(self):
-        from botv.life.reflow import sentiment_bias
+        from bot.life.reflow import sentiment_bias
         self.assertLess(sentiment_bias("很累，很烦，什么都做错"), 0)
         self.assertGreater(sentiment_bias("很开心，顺利完成"), 0)
 
     def test_sentiment_capped(self):
-        from botv.life.reflow import sentiment_bias
+        from bot.life.reflow import sentiment_bias
         self.assertLessEqual(abs(sentiment_bias("累烦难过冷" * 100)), 0.15)
 
     def test_reflow_writes_to_self(self):
-        import botv.life.reflow as R
-        import botv.infra.repo_memory as rm
+        import bot.life.reflow as R
+        import bot.infra.repo_memory as rm
         calls = []
         orig_add, orig_apply = rm.add_event_to_db, R._apply_bias
         rm.add_event_to_db = lambda tid, text, **k: calls.append((tid, text, k.get("kind")))
@@ -250,10 +250,10 @@ class TestFriction(unittest.TestCase):
     """v13-U20：期待 → 失落 → 冷战 → 和好（有上限）"""
 
     def setUp(self):
-        from botv.core import state as cfg
+        from bot.core import state as cfg
         self.cfg = cfg
         cfg.friction_states.clear()
-        import botv.infra.repo_memory as rm
+        import bot.infra.repo_memory as rm
         self.rm = rm
         self._orig = (rm.load_friction, rm.save_friction)
         self.store = {}
@@ -266,18 +266,18 @@ class TestFriction(unittest.TestCase):
 
     def _t(self, n=0):
         from datetime import datetime, timedelta
-        from botv.config import CST
+        from bot.config import CST
         return datetime(2026, 11, 9, 12, tzinfo=CST) + timedelta(hours=n)
 
     def test_expectation_and_letdown(self):
-        from botv.life import friction as F
+        from bot.life import friction as F
         F.note_expectation("1", "早点睡吧", self._t())
         self.assertEqual(F.phase("1", self._t()), "waiting")
         F.refresh("1", now=self._t(9))  # 超过 8 小时
         self.assertEqual(F.phase("1", self._t(9)), "letdown")
 
     def test_three_letdowns_start_cold_war(self):
-        from botv.life import friction as F
+        from bot.life import friction as F
         st = F.load("1")
         st["disappoint"] = 3
         F.save("1")
@@ -285,7 +285,7 @@ class TestFriction(unittest.TestCase):
         self.assertEqual(F.phase("1", self._t()), "cold")
 
     def test_cold_war_auto_ends_in_a_day(self):
-        from botv.life import friction as F
+        from bot.life import friction as F
         st = F.load("1")
         st["disappoint"] = 3
         st["cold_ts"] = self._t().timestamp()
@@ -295,7 +295,7 @@ class TestFriction(unittest.TestCase):
         self.assertEqual(F.phase("1", self._t(25)), "calm", "24 小时后必须自动和好")
 
     def test_apologize_ends_it(self):
-        from botv.life import friction as F
+        from bot.life import friction as F
         st = F.load("1")
         st["disappoint"] = 3
         st["cold_ts"] = self._t().timestamp()
@@ -304,7 +304,7 @@ class TestFriction(unittest.TestCase):
         self.assertEqual(F.phase("1"), "calm")
 
     def test_three_messages_end_cold_war(self):
-        from botv.life import friction as F
+        from bot.life import friction as F
         st = F.load("1")
         st["disappoint"] = 3
         st["cold_ts"] = self._t().timestamp()
@@ -314,20 +314,20 @@ class TestFriction(unittest.TestCase):
         self.assertEqual(F.phase("1"), "calm")
 
     def test_grudge_weekly_limit(self):
-        from botv.life import friction as F
+        from bot.life import friction as F
         self.assertTrue(F.grudge_allowed("1", self._t()))
         self.assertFalse(F.grudge_allowed("1", self._t(24)), "一周只能一次")
         self.assertTrue(F.grudge_allowed("1", self._t(24 * 8)))
 
     def test_prompt_line_cold(self):
-        from botv.life import friction as F
+        from bot.life import friction as F
         st = F.load("1")
         st["cold_ts"] = self._t().timestamp()
         F.save("1")
         self.assertIn("生闷气", F.prompt_line("1", self._t()))
 
     def test_trail_off(self):
-        from botv.life.friction import maybe_trail_off
+        from bot.life.friction import maybe_trail_off
 
         class R:
             def __init__(self, v):
@@ -344,7 +344,7 @@ class TestFriction(unittest.TestCase):
         self.assertEqual(maybe_trail_off("只有一句", R(0.0)), "只有一句")
 
     def test_is_sorry(self):
-        from botv.life.friction import is_sorry
+        from bot.life.friction import is_sorry
         self.assertTrue(is_sorry("对不起嘛"))
         self.assertFalse(is_sorry("在吗"))
 
@@ -352,12 +352,12 @@ class TestGrowth(unittest.TestCase):
     """v13-U21：成长轨迹 / 称呼演化 / 管你 / 惊喜"""
 
     def test_growth_registered(self):
-        import botv.commands  # noqa: F401
-        from botv.cmd import registry
+        import bot.commands  # noqa: F401
+        from bot.cmd import registry
         self.assertIn("growth", registry.COMMANDS)
 
     def test_addressing_changes_with_tier(self):
-        import botv.life.relation as R
+        import bot.life.relation as R
         orig = R.get
         try:
             R.get = lambda tid: 0.9
@@ -372,12 +372,12 @@ class TestGrowth(unittest.TestCase):
 
     def test_pick_seed_surprise(self):
         """心情不差、没有生活事件、掷骰 < 0.05 → 惊喜分支（v17.3：测新执行器）"""
-        import botv.executors.proactive as P
+        import bot.executors.proactive as P
 
         orig_random = P.random.random
         orig_life = None
         try:
-            import botv.infra.repo_memory as rm
+            import bot.infra.repo_memory as rm
 
             orig_life = rm.load_today_life
             rm.load_today_life = lambda: []
@@ -389,7 +389,7 @@ class TestGrowth(unittest.TestCase):
         finally:
             P.random.random = orig_random
             if orig_life is not None:
-                import botv.infra.repo_memory as rm
+                import bot.infra.repo_memory as rm
 
                 rm.load_today_life = orig_life
 
@@ -398,11 +398,11 @@ class TestGrowth(unittest.TestCase):
 
     def test_pick_seed_shares_life(self):
         """有生活事件且掷骰命中 → 分享生活分支"""
-        import botv.executors.proactive as P
+        import bot.executors.proactive as P
 
         orig_random = P.random.random
         try:
-            import botv.infra.repo_memory as rm
+            import bot.infra.repo_memory as rm
 
             orig_life = rm.load_today_life
             rm.load_today_life = lambda: ["今天下雨了"]
@@ -414,7 +414,7 @@ class TestGrowth(unittest.TestCase):
         finally:
             P.random.random = orig_random
             if orig_life is not None:
-                import botv.infra.repo_memory as rm
+                import bot.infra.repo_memory as rm
 
                 rm.load_today_life = orig_life
 
@@ -426,27 +426,27 @@ class TestHabit(unittest.TestCase):
     """v12-A17：学口头禅"""
 
     def setUp(self):
-        from botv.core import state as cfg
+        from bot.core import state as cfg
         cfg.habit_counters.clear()
 
     def tearDown(self):
-        from botv.core import state as cfg
+        from bot.core import state as cfg
         cfg.habit_counters.clear()
 
     def test_ngrams_filters_stopwords(self):
-        from botv.life.habit import ngrams
+        from bot.life.habit import ngrams
         pieces = ngrams("就是这样的")
         self.assertNotIn("就是", pieces)
         self.assertNotIn("这样", pieces)
 
     def test_ngrams_lengths(self):
-        from botv.life.habit import ngrams
+        from bot.life.habit import ngrams
         for piece in ngrams("绝了绝了"):
             self.assertTrue(2 <= len(piece) <= 4, piece)
 
     def test_top_needs_three(self):
         from collections import Counter
-        from botv.life.habit import top
+        from bot.life.habit import top
         c = Counter()
         c["绝了"] = 2
         self.assertEqual(top(c), [], "不够 3 次不算")
@@ -454,7 +454,7 @@ class TestHabit(unittest.TestCase):
     def test_top_prefers_short(self):
         """次数相同时优先短词，避免学出跨词边界的废词"""
         from collections import Counter
-        from botv.life.habit import top
+        from bot.life.habit import top
         c = Counter({"草了": 5, "草了草了": 5})
         picked = top(c)
         self.assertIn("草了", picked)
@@ -462,24 +462,24 @@ class TestHabit(unittest.TestCase):
 
     def test_top_limits_three(self):
         from collections import Counter
-        from botv.life.habit import top
+        from bot.life.habit import top
         c = Counter({"甲甲": 5, "乙乙": 5, "丙丙": 5, "丁丁": 5})
         self.assertEqual(len(top(c)), 3)
 
     def test_learn_accumulates(self):
-        import botv.life.habit as H
+        import bot.life.habit as H
         for _ in range(4):
             H.learn("100", "绝了这也太草了")
         self.assertIn("绝了", H.phrases_for("100"))
 
     def test_describe(self):
-        from botv.life.habit import describe
+        from bot.life.habit import describe
         self.assertEqual(describe([]), "")
         self.assertIn("绝了", describe(["绝了"]))
 
     def test_profile_with_habit(self):
-        import botv.ai.client as client
-        from botv.core import lifeport
+        import bot.ai.client as client
+        from bot.core import lifeport
 
         orig_build = client.build_profile_text
         lifeport.register("habit_line", lambda tid: "口头禅：绝了")
@@ -506,16 +506,16 @@ class TestImpulse(unittest.TestCase):
 
     def setUp(self):
         from datetime import datetime
-        from botv.config import CST
+        from bot.config import CST
         self.now = datetime.now(CST).replace(hour=20, minute=0, second=0)
-        self.cfg = __import__("botv.core.state", fromlist=["x"])
+        self.cfg = __import__("bot.core.state", fromlist=["x"])
         self.cfg.last_user_msg_ts = 0.0
         self.cfg.last_proactive_ts = 0.0
         self.cfg.proactive_count_today = 0
         self.cfg.proactive_unanswered = 0
 
     def test_quiet_hours(self):
-        from botv.life.impulse import should_reach_out
+        from bot.life.impulse import should_reach_out
         ok, why = should_reach_out(now=self.now.replace(hour=2), state={"lonely": 0.9},
                                    rng=self._R(0.01))
         self.assertFalse(ok)
@@ -523,19 +523,19 @@ class TestImpulse(unittest.TestCase):
 
     def test_just_talked(self):
         import time
-        from botv.life.impulse import should_reach_out
+        from bot.life.impulse import should_reach_out
         ok, why = should_reach_out(now=self.now, state={"lonely": 0.9},
                                    rng=self._R(0.01), last_user_ts=time.time() - 60)
         self.assertFalse(ok)
         self.assertEqual(why, "刚聊过")
 
     def test_not_lonely_enough(self):
-        from botv.life.impulse import should_reach_out
+        from bot.life.impulse import should_reach_out
         ok, _why = should_reach_out(now=self.now, state={"lonely": 0.2}, rng=self._R(0.01))
         self.assertFalse(ok)
 
     def test_probability_gate(self):
-        from botv.life.impulse import should_reach_out
+        from bot.life.impulse import should_reach_out
         ok_no, _ = should_reach_out(now=self.now, state={"lonely": 0.9}, rng=self._R(0.99))
         ok_yes, _ = should_reach_out(now=self.now, state={"lonely": 0.9}, rng=self._R(0.01))
         self.assertFalse(ok_no)
@@ -543,21 +543,21 @@ class TestImpulse(unittest.TestCase):
 
     def test_daily_cap(self):
         import time
-        from botv.life.impulse import should_reach_out
+        from bot.life.impulse import should_reach_out
         ok, why = should_reach_out(now=self.now, state={"lonely": 0.9}, rng=self._R(0.01),
                                    last_proactive_ts=time.time() - 3600, proactive_count=3)
         self.assertFalse(ok)
         self.assertEqual(why, "今日配额用完")
 
     def test_unanswered_backoff(self):
-        from botv.life.impulse import should_reach_out
+        from bot.life.impulse import should_reach_out
         ok, why = should_reach_out(now=self.now, state={"lonely": 0.9}, rng=self._R(0.01),
                                    unanswered=2)
         self.assertFalse(ok)
         self.assertEqual(why, "连续没回应")
 
     def test_note_counters(self):
-        from botv.life.impulse import note_proactive, note_user_message
+        from bot.life.impulse import note_proactive, note_user_message
         note_proactive()
         note_proactive()
         self.assertEqual(self.cfg.proactive_count_today, 2)
@@ -569,62 +569,62 @@ class TestInsideJokes(unittest.TestCase):
     """v12-G37：内部梗（按标签频次）"""
 
     def test_counts_and_picks(self):
-        from botv.life.inside_jokes import count_tags, pick_jokes
+        from bot.life.inside_jokes import count_tags, pick_jokes
         rows = [{"tags": "猫,加班"}, {"tags": "猫"}, {"tags": "猫,加班"}, {"tags": "加班"}]
         jokes = pick_jokes(count_tags(rows))
         self.assertIn("猫", jokes)
         self.assertIn("加班", jokes)
 
     def test_threshold(self):
-        from botv.life.inside_jokes import count_tags, pick_jokes
+        from bot.life.inside_jokes import count_tags, pick_jokes
         rows = [{"tags": "面试"}, {"tags": "面试"}]
         self.assertEqual(pick_jokes(count_tags(rows)), [])
 
     def test_describe(self):
-        from botv.life.inside_jokes import describe
+        from bot.life.inside_jokes import describe
         self.assertEqual(describe([]), "")
         self.assertIn("猫", describe(["猫"]))
 
     def test_bad_rows(self):
-        from botv.life.inside_jokes import count_tags
+        from bot.life.inside_jokes import count_tags
         self.assertEqual(len(count_tags([{}, None, {"tags": ""}])), 0)
 
 class TestLifeEvents(unittest.TestCase):
     """v9-U7：每日生活事件"""
 
     def test_count_in_range(self):
-        from botv.life.events import generate, MIN_EVENTS, MAX_EVENTS
+        from bot.life.events import generate, MIN_EVENTS, MAX_EVENTS
         for _ in range(30):
             n = len(generate())
             self.assertGreaterEqual(n, MIN_EVENTS)
             self.assertLessEqual(n, MAX_EVENTS)
 
     def test_no_dup_within_day(self):
-        from botv.life.events import generate
+        from bot.life.events import generate
         for _ in range(20):
             items = generate()
             self.assertEqual(len(items), len(set(items)))
 
     def test_all_from_pools(self):
-        from botv.life.events import generate, POOLS
+        from bot.life.events import generate, POOLS
         all_texts = {t for _w, pool in POOLS for t in pool}
         for _ in range(20):
             for t in generate():
                 self.assertIn(t, all_texts)
 
     def test_template_count(self):
-        from botv.life.events import total_templates
+        from bot.life.events import total_templates
         self.assertGreaterEqual(total_templates(), 100, "模板至少要 100 条")
 
     def test_grief_pool_is_low_weight(self):
-        from botv.life.events import POOLS
+        from bot.life.events import POOLS
         weights = [w for w, _pool in POOLS]
         self.assertEqual(POOLS[-1][0], min(weights), "关于他的模板权重应最低")
 
     def test_ensure_once_per_day(self):
-        import botv.life.events as ev
-        import botv.infra.repo_memory as rm
-        from botv.core import state as cfg
+        import bot.life.events as ev
+        import bot.infra.repo_memory as rm
+        from bot.core import state as cfg
         calls = []
         orig = rm.add_event_to_db
         rm.add_event_to_db = lambda tid, text, **k: calls.append((tid, text, k.get("kind")))
@@ -643,51 +643,51 @@ class TestLifeState(unittest.TestCase):
     """v9-U4：状态向量"""
 
     def test_default_in_range(self):
-        from botv.life.state import default_state, CLAMP
+        from bot.life.state import default_state, CLAMP
         s = default_state()
         for k, (lo, hi) in CLAMP.items():
             self.assertGreaterEqual(s[k], lo)
             self.assertLessEqual(s[k], hi)
 
     def test_tick_moves_toward_base(self):
-        from botv.life.state import tick, BASE
+        from bot.life.state import tick, BASE
         s = {"mood": 0.9, "energy": 0.1, "lonely": 0.1}
         out = tick(s, 1)
         self.assertLess(out["mood"], 0.9)          # 高情绪向基线回落
         self.assertGreater(out["energy"], 0.1)     # 低精力向基线回升
 
     def test_tick_alone_increases_lonely(self):
-        from botv.life.state import tick
+        from bot.life.state import tick
         out = tick({"mood": 0.1, "energy": 0.7, "lonely": 0.2}, 5)
         self.assertGreater(out["lonely"], 0.2)
 
     def test_clamp_bounds(self):
-        from botv.life.state import clamp
+        from bot.life.state import clamp
         s = clamp({"mood": 5, "energy": -3, "lonely": 99})
         self.assertLessEqual(s["mood"], 1.0)
         self.assertGreaterEqual(s["energy"], 0.0)
         self.assertLessEqual(s["lonely"], 1.0)
 
     def test_talk_relieves_lonely(self):
-        from botv.life.state import on_talk
+        from bot.life.state import on_talk
         s = {"mood": 0.0, "energy": 0.5, "lonely": 0.8}
         self.assertLess(on_talk(s)["lonely"], 0.8)
 
     def test_describe_has_no_numbers(self):
-        from botv.life.state import describe
+        from bot.life.state import describe
         text = describe({"mood": -0.7, "energy": 0.1, "lonely": 0.9})
         self.assertTrue(text.endswith("。"))
         self.assertFalse(any(ch.isdigit() for ch in text), f"不该出现数字: {text}")
 
     def test_json_roundtrip(self):
-        from botv.life.state import to_json, from_json
+        from bot.life.state import to_json, from_json
         s = {"mood": 0.3, "energy": 0.6, "lonely": 0.2}
         back = from_json(to_json(s))
         for k, v in s.items():
             self.assertEqual(back[k], v)
 
     def test_from_json_garbage(self):
-        from botv.life.state import from_json, default_state
+        from bot.life.state import from_json, default_state
         self.assertEqual(from_json("not json"), default_state())
         self.assertEqual(from_json(""), default_state())
 
@@ -695,8 +695,8 @@ class TestMilestone(unittest.TestCase):
     """v12-G38：认识第几天"""
 
     def setUp(self):
-        import botv.life.milestone as M
-        import botv.infra.repo_memory as rm
+        import bot.life.milestone as M
+        import bot.infra.repo_memory as rm
         self.M = M
         self.rm = rm
         self.store = {}
@@ -709,7 +709,7 @@ class TestMilestone(unittest.TestCase):
 
     def _day(self, n):
         from datetime import datetime, timedelta
-        from botv.config import CST
+        from bot.config import CST
         base = datetime(2026, 1, 1, tzinfo=CST)
         return base, base + timedelta(days=n)
 
@@ -739,8 +739,8 @@ class TestMilestone(unittest.TestCase):
         self.assertEqual(self.M.milestone_text("u1", now), "")
 
     def test_profile_includes_milestone(self):
-        import botv.ai.client as client
-        from botv.core import lifeport
+        import bot.ai.client as client
+        from bot.core import lifeport
 
         orig_build = client.build_profile_text
         lifeport.register("habit_line", lambda tid: "")
@@ -759,46 +759,46 @@ class TestPending(unittest.TestCase):
     """v10-U9b：承诺与时间锚点识别"""
 
     def test_promise(self):
-        from botv.life.pending import detect
+        from bot.life.pending import detect
         items = detect("今天有点累，回头再说吧")
         self.assertEqual(len(items), 1)
         self.assertEqual(items[0]["k"], "promise")
 
     def test_anchor(self):
-        from botv.life.pending import detect
+        from bot.life.pending import detect
         items = detect("我先去吃饭了，等下聊")
         self.assertEqual(len(items), 1)
         self.assertEqual(items[0]["k"], "anchor")
         self.assertEqual(items[0]["t"], "吃饭")
 
     def test_anchor_delay(self):
-        from botv.life.pending import detect
+        from bot.life.pending import detect
         from datetime import datetime
-        from botv.config import CST
+        from bot.config import CST
         now = datetime(2026, 11, 9, 12, 0, tzinfo=CST)
         it = detect("去洗澡", now)[0]
         self.assertAlmostEqual(it["due"] - now.timestamp(), 25 * 60, delta=5)
 
     def test_promise_delay(self):
-        from botv.life.pending import detect
+        from bot.life.pending import detect
         from datetime import datetime
-        from botv.config import CST
+        from bot.config import CST
         now = datetime(2026, 11, 9, 22, 0, tzinfo=CST)
         it = detect("改天聊", now)[0]
         self.assertAlmostEqual((it["due"] - now.timestamp()) / 3600, 20, delta=0.1)
 
     def test_plain_text_no_item(self):
-        from botv.life.pending import detect
+        from bot.life.pending import detect
         self.assertEqual(detect("你好呀，在干嘛"), [])
 
     def test_not_both(self):
         """同一句话不该既记承诺又记锚点"""
-        from botv.life.pending import detect
+        from bot.life.pending import detect
         items = detect("我去吃饭了，回头再说")
         self.assertLessEqual(len(items), 2)
 
     def test_describe(self):
-        from botv.life.pending import describe
+        from bot.life.pending import describe
         self.assertIn("答应过", describe({"k": "promise", "s": "回头再说"}))
         self.assertIn("吃饭", describe({"k": "anchor", "t": "吃饭", "s": "去吃饭"}))
 
@@ -806,7 +806,7 @@ class TestRapport(unittest.TestCase):
     """v12-G51：够熟才允许接半句"""
 
     def _describe(self, aff):
-        import botv.life.relation as R
+        import bot.life.relation as R
         orig = R.get
         R.get = lambda tid: aff
         try:
@@ -828,16 +828,16 @@ class TestRelation(unittest.TestCase):
     """v10-U8：关系分档"""
 
     def test_tiers(self):
-        from botv.life.relation import tier_of
+        from bot.life.relation import tier_of
         self.assertEqual(tier_of(0.9)[0], "亲近")
         self.assertEqual(tier_of(0.5)[0], "熟")
         self.assertEqual(tier_of(0.3)[0], "认识")
         self.assertEqual(tier_of(0.0)[0], "陌生")
 
     def test_master_starts_higher(self):
-        import botv.life.relation as R
-        import botv.infra.repo_memory as rm
-        from botv.config import MASTER_QQ
+        import bot.life.relation as R
+        import bot.infra.repo_memory as rm
+        from bot.config import MASTER_QQ
         orig = rm.load_relation
         rm.load_relation = lambda tid: ""
         try:
@@ -848,7 +848,7 @@ class TestRelation(unittest.TestCase):
         self.assertGreater(a_master, a_other)
 
     def test_describe_contains_tier(self):
-        import botv.life.relation as R
+        import bot.life.relation as R
         orig = R.get
         R.get = lambda tid: 0.8
         try:
@@ -859,7 +859,7 @@ class TestRelation(unittest.TestCase):
         self.assertNotIn("0.8", s, "数值不该出现在描述里")
 
     def test_tier_bounds(self):
-        from botv.life.relation import TIERS
+        from bot.life.relation import TIERS
         lows = [lo for lo, _n, _d in TIERS]
         self.assertEqual(lows, sorted(lows, reverse=True))
         self.assertEqual(lows[-1], 0.0)
@@ -868,21 +868,21 @@ class TestV12Extras(unittest.TestCase):
     """v12：仪式 / 记忆本 / 旧事重提"""
 
     def test_sunday_ritual_task(self):
-        from botv.executors.schedule import SCENES
+        from bot.executors.schedule import SCENES
         self.assertIn("周日复盘", SCENES, "周日晚上要有一次复盘仪式")
 
     def test_memorybook_registered(self):
-        import botv.commands  # noqa: F401
-        from botv.cmd import registry
+        import bot.commands  # noqa: F401
+        from bot.cmd import registry
         self.assertIn("memorybook", registry.COMMANDS)
     def test_pick_seed_old_event(self):
         """有旧事 → 旧事重提分支（v17.3：测新执行器的 _pick_seed）"""
-        import botv.executors.proactive as P
+        import bot.executors.proactive as P
 
         orig_random = P.random.random
         orig_life, orig_old = None, None
         try:
-            import botv.infra.repo_memory as rm
+            import bot.infra.repo_memory as rm
 
             orig_life = rm.load_today_life
             orig_old = rm.load_old_events
@@ -897,7 +897,7 @@ class TestV12Extras(unittest.TestCase):
         finally:
             P.random.random = orig_random
             if orig_life is not None:
-                import botv.infra.repo_memory as rm
+                import bot.infra.repo_memory as rm
 
                 rm.load_today_life = orig_life
                 rm.load_old_events = orig_old
@@ -910,25 +910,25 @@ class TestWeather(unittest.TestCase):
     """v12-A21：天气（没配城市就完全跳过）"""
 
     def test_parse(self):
-        from botv.life.weather import parse_j1
+        from bot.life.weather import parse_j1
         data = {"current_condition": [{"temp_C": "12", "weatherDesc": [{"value": "小雨"}]}]}
         info = parse_j1(data)
         self.assertEqual(info["temp"], 12)
         self.assertEqual(info["desc"], "小雨")
 
     def test_parse_bad(self):
-        from botv.life.weather import parse_j1
+        from bot.life.weather import parse_j1
         self.assertIsNone(parse_j1({}))
         self.assertIsNone(parse_j1({"current_condition": []}))
 
     def test_describe(self):
-        from botv.life.weather import describe
+        from bot.life.weather import describe
         self.assertEqual(describe(None), "")
         self.assertIn("12", describe({"temp": 12, "desc": "小雨"}))
 
     def test_no_city_returns_none(self):
         import asyncio
-        from botv.life.weather import current
+        from bot.life.weather import current
         import os
         old = os.environ.pop("NAO_CITY", None)
         try:

@@ -34,8 +34,8 @@ _stub_missing_deps()
 
 class TestRecall(unittest.TestCase):
     def setUp(self):
-        from botv.life import recall
-        from botv.core import state as cfg
+        from bot.life import recall
+        from bot.core import state as cfg
 
         self.R = recall
         self.cfg = cfg
@@ -48,8 +48,8 @@ class TestRecall(unittest.TestCase):
                  "last_seen": None}]
 
     def test_pick_once_per_day(self):
-        with patch("botv.life.state.current", return_value={"mood": 0.1}), \
-                patch("botv.infra.repo_memory.load_heavy_memories", return_value=self._rows()):
+        with patch("bot.life.state.current", return_value={"mood": 0.1}), \
+                patch("bot.infra.repo_memory.load_heavy_memories", return_value=self._rows()):
             first = self.R.pick(now=self.now)
             second = self.R.pick(now=self.now)
         self.assertIsNotNone(first)
@@ -57,15 +57,15 @@ class TestRecall(unittest.TestCase):
         self.assertIsNone(second, "一天只提一次")
 
     def test_skip_when_sad(self):
-        with patch("botv.life.state.current", return_value={"mood": -0.8}), \
-                patch("botv.infra.repo_memory.load_heavy_memories", return_value=self._rows()):
+        with patch("bot.life.state.current", return_value={"mood": -0.8}), \
+                patch("bot.infra.repo_memory.load_heavy_memories", return_value=self._rows()):
             self.assertIsNone(self.R.pick(now=self.now))
 
     def test_skip_recently_mentioned(self):
         rows = self._rows()
         rows[0]["last_seen"] = (self.now - timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
-        with patch("botv.life.state.current", return_value={"mood": 0.1}), \
-                patch("botv.infra.repo_memory.load_heavy_memories", return_value=rows):
+        with patch("bot.life.state.current", return_value={"mood": 0.1}), \
+                patch("bot.infra.repo_memory.load_heavy_memories", return_value=rows):
             self.assertIsNone(self.R.pick(now=self.now))
 
 

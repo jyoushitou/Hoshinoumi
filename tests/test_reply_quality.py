@@ -5,7 +5,7 @@ import unittest
 
 class TestDuplicateReply(unittest.TestCase):
     def setUp(self):
-        import botv.chat.send as S
+        import bot.chat.send as S
         self.S = S
         S._recent_replies.clear()
 
@@ -32,7 +32,7 @@ class TestDuplicateReply(unittest.TestCase):
 
     def test_send_short_reply_skips_duplicate(self):
         import asyncio
-        import botv.chat.send as S
+        import bot.chat.send as S
 
         sent = []
         orig = S.send_private_msg
@@ -51,26 +51,26 @@ class TestDuplicateReply(unittest.TestCase):
 
 class TestVoiceWorthy(unittest.TestCase):
     def test_punctuation_only(self):
-        import botv.chat.send as S
+        import bot.chat.send as S
         self.assertFalse(S._voice_worthy("……"))
         self.assertFalse(S._voice_worthy("？？？"))
         self.assertFalse(S._voice_worthy(""))
 
     def test_normal_text(self):
-        import botv.chat.send as S
+        import bot.chat.send as S
         self.assertTrue(S._voice_worthy("今天好累啊"))
 
 
 class TestStickerContext(unittest.TestCase):
     def test_no_ctx_returns_face(self):
         """没有上下文 → 退 QQ 表情，不随机甩存档图"""
-        import botv.chat.send as S
+        import bot.chat.send as S
         out = S.select_best_sticker("123", "")
         self.assertTrue(str(out).isdigit(), f"应该是表情 ID，实际 {out}")
 
     def test_archive_ignored_without_ctx(self):
-        import botv.chat.send as S
-        from botv.core import state as cfg
+        import bot.chat.send as S
+        from bot.core import state as cfg
         cfg.USER_STICKER_ARCHIVE["999"] = ["deadbeef"]
         cfg.STICKER_DATA["deadbeef"] = {"path": "x"}
         out = S.select_best_sticker("999", "")
@@ -78,7 +78,7 @@ class TestStickerContext(unittest.TestCase):
 
     def test_signature_accepts_ctx(self):
         import inspect
-        import botv.chat.send as S
+        import bot.chat.send as S
         for fn in (S.send_sticker_private, S.send_sticker_group):
             params = inspect.signature(fn).parameters
             self.assertIn("ctx", params, f"{fn.__name__} 应接受 ctx")
@@ -91,7 +91,7 @@ class TestVoiceGateWired(unittest.TestCase):
 
     def test_maybe_send_voice_rejects_punctuation(self):
         import asyncio
-        import botv.chat.send as S
+        import bot.chat.send as S
 
         class Boom(Exception):
             pass
@@ -114,7 +114,7 @@ class TestVoiceGateWired(unittest.TestCase):
     def test_sticker_ctx_from_handler(self):
         """handler 贴图时应把用户原话传下去"""
         import inspect
-        import botv.chat.handler as H
+        import bot.chat.handler as H
 
         src = inspect.getsource(H)
         self.assertIn("send_sticker_private(uid, ws, uid, text)", src)

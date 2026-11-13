@@ -6,7 +6,7 @@ from tests.test_chat import _stub_missing_deps
 
 _stub_missing_deps()
 
-from botv.chat import segments
+from bot.chat import segments
 
 
 class TestSegments(unittest.TestCase):
@@ -32,7 +32,7 @@ class TestSegments(unittest.TestCase):
 
 class TestSendSegmented(unittest.TestCase):
     def test_voice_then_text_order_and_fallback(self):
-        from botv.chat import send as S
+        from bot.chat import send as S
 
         calls = []
         orig = (S.send_short_reply, S.send_voice, S.__dict__.get("tts_synth"))
@@ -41,7 +41,7 @@ class TestSendSegmented(unittest.TestCase):
         S.send_voice = lambda tid, mp3, ws, is_group=False: (
             calls.append(("voice", mp3)) or _true())
         try:
-            from botv.speech import tts
+            from bot.speech import tts
             orig_synth = tts.synth
             tts.synth = lambda text, **kw: _bytes()
             try:

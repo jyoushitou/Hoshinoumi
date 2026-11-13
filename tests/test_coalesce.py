@@ -36,7 +36,7 @@ class TestCoalescer(unittest.TestCase):
     """连发合并、单条不变、窗口上限、目标隔离"""
 
     def setUp(self):
-        from botv.chat.coalesce import Coalescer
+        from bot.chat.coalesce import Coalescer
 
         self.got = []
 
@@ -116,7 +116,7 @@ class TestCoalescer(unittest.TestCase):
         self.assertEqual(self.C.stats()["pending"], 0)
 
     def test_handler_error_does_not_crash(self):
-        from botv.chat.coalesce import Coalescer
+        from bot.chat.coalesce import Coalescer
 
         async def boom(target, items):
             raise RuntimeError("炸了")

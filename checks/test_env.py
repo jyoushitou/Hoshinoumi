@@ -6,7 +6,7 @@ import unittest
 
 
 def _stub_missing_deps():
-    """缺依赖就打个桩（必须在导入 botv 之前调用）"""
+    """缺依赖就打个桩（必须在导入 bot 之前调用）"""
     def module(name, **attrs):
         m = types.ModuleType(name)
         for k, v in attrs.items():
@@ -42,24 +42,24 @@ import sys
 import types
 import unittest
 from datetime import datetime
-from botv.config import CST
+from bot.config import CST
 import asyncio
 import time
 import os
 import re
 import threading
 import json
-from botv.ports import ChatModel, Transport  # noqa: E402
-from botv.ports.models import ChatRequest, ChatReply  # noqa: E402
-from botv.ports.transport import Target, Segment  # noqa: E402
-from botv.ai import models as model_mod  # noqa: E402
-from botv.ai.chain import FallbackChain  # noqa: E402
-from botv.chat.transport import QqTransport  # noqa: E402
-from botv.core import state as cfg             # noqa: E402  运行时状态（常量也在里面）
-import botv.commands as commands               # noqa: E402
-import botv.chat.reply as reply_mod            # noqa: E402
-from botv.ai.parse import parse_ai_reply       # noqa: E402
-from botv.cmd import registry                  # noqa: E402
+from bot.ports import ChatModel, Transport  # noqa: E402
+from bot.ports.models import ChatRequest, ChatReply  # noqa: E402
+from bot.ports.transport import Target, Segment  # noqa: E402
+from bot.ai import models as model_mod  # noqa: E402
+from bot.ai.chain import FallbackChain  # noqa: E402
+from bot.chat.transport import QqTransport  # noqa: E402
+from bot.core import state as cfg             # noqa: E402  运行时状态（常量也在里面）
+import bot.commands as commands               # noqa: E402
+import bot.chat.reply as reply_mod            # noqa: E402
+from bot.ai.parse import parse_ai_reply       # noqa: E402
+from bot.cmd import registry                  # noqa: E402
 
 
 class FakeConn:
@@ -245,7 +245,7 @@ class TestEnvironment(unittest.TestCase):
         root = self._root()
         pattern = re.compile(r"os\.getenv\(\s*[\"']([A-Za-z0-9_]+)")
         found = set()
-        for p in list((root / "botv").rglob("*.py")) + [root / "run.py"]:
+        for p in list((root / "bot").rglob("*.py")) + [root / "run.py"]:
             found |= set(pattern.findall(p.read_text(encoding="utf-8")))
         unknown = found - self.EXPECTED_ENV
         self.assertFalse(unknown, f"未登记的环境变量: {sorted(unknown)}")
@@ -275,11 +275,11 @@ class TestEnvironment(unittest.TestCase):
             self.assertIn(name, preflight.OPTIONAL, f"自动安装的 {pkg} 不在预检可选依赖里")
 
     def test_no_absolute_paths_in_botv(self):
-        """botv 里不该出现硬编码的绝对路径"""
+        """bot 里不该出现硬编码的绝对路径"""
         import re
         root = self._root()
         bad = []
-        for p in (root / "botv").rglob("*.py"):
+        for p in (root / "bot").rglob("*.py"):
             text = p.read_text(encoding="utf-8")
             for m in re.finditer(r"[\"'](/home/|/root/|C:\\\\Users)", text):
                 bad.append(f"{p.name}: {m.group(0)}")
@@ -360,7 +360,7 @@ class TestPreflightSteps(unittest.TestCase):
 
     def test_animated_hint(self):
         """动图要让模型知道「你只看到一帧」"""
-        from botv.ai.vision import prompt_with_hint, PROMPT
+        from bot.ai.vision import prompt_with_hint, PROMPT
         self.assertEqual(prompt_with_hint(False), PROMPT)
         self.assertIn("动图", prompt_with_hint(True))
 
@@ -373,7 +373,7 @@ class TestPreflightSteps(unittest.TestCase):
 
     def test_frame_indices_even(self):
         """抽帧要均匀且含首尾"""
-        from botv.ai.vision import frame_indices, MAX_FRAMES
+        from bot.ai.vision import frame_indices, MAX_FRAMES
         idx = frame_indices(60)
         self.assertEqual(len(idx), MAX_FRAMES)
         self.assertEqual(idx[0], 0)
@@ -383,16 +383,16 @@ class TestPreflightSteps(unittest.TestCase):
 
     def test_frame_indices_short_gif(self):
         """帧数不够就全要"""
-        from botv.ai.vision import frame_indices
+        from bot.ai.vision import frame_indices
         self.assertEqual(frame_indices(5), [0, 1, 2, 3, 4])
 
     def test_frame_indices_edge(self):
-        from botv.ai.vision import frame_indices
+        from bot.ai.vision import frame_indices
         self.assertEqual(frame_indices(0), [])
         self.assertEqual(frame_indices(1), [0])
 
     def test_prompt_mentions_frame_count(self):
-        from botv.ai.vision import prompt_with_hint
+        from bot.ai.vision import prompt_with_hint
         text = prompt_with_hint(True, 24)
         self.assertIn("24 帧", text)
         self.assertIn("网格", text)
@@ -401,17 +401,17 @@ class TestStructure(unittest.TestCase):
     """结构约定：迁移后这些东西必须还在原位"""
 
     def test_api_shim_reexports_same_objects(self):
-        import botv.api as api
-        import botv.ai.client as client
+        import bot.api as api
+        import bot.ai.client as client
         self.assertIs(api.get_character_reply, client.get_character_reply)
         self.assertIs(api.call_deepseek, client.call_deepseek)
 
     def test_send_reexports_build_reply(self):
-        import botv.send as send
+        import bot.send as send
         self.assertIs(send.build_reply_message, reply_mod.build_reply_message)
 
     def test_http_session_factory(self):
-        from botv.core.http import create_http_session
+        from bot.core.http import create_http_session
         import requests
         session = create_http_session()
         self.assertIsInstance(session, requests.Session)

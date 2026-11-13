@@ -36,8 +36,8 @@ class TestFireWithoutScheduler(unittest.TestCase):
     """L15：命令建的钩子没传 scheduler，到点也必须投递"""
 
     def setUp(self):
-        from botv.schedule import cron
-        from botv.scheduler import dispatcher
+        from bot.schedule import cron
+        from bot.scheduler import dispatcher
 
         self.C = cron
         self.D = dispatcher

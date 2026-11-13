@@ -36,7 +36,7 @@ class TestExtract(unittest.TestCase):
     """从聊天里提取定时任务"""
 
     def setUp(self):
-        from botv.schedule import extract as E
+        from bot.schedule import extract as E
 
         self.E = E
         self.now = datetime(2026, 11, 11, 9, 0)      # 周三 9 点

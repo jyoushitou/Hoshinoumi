@@ -42,9 +42,9 @@ class TestProactiveExecutors(unittest.TestCase):
     """tick 只判断，say 才生成；闸门拦住时不投递"""
 
     def setUp(self):
-        import botv.executors.proactive as P
-        from botv.events import registry
-        from botv.scheduler.dispatcher import Scheduler, set_scheduler
+        import bot.executors.proactive as P
+        from bot.events import registry
+        from bot.scheduler.dispatcher import Scheduler, set_scheduler
 
         self.P = P
         self.R = registry
@@ -52,11 +52,11 @@ class TestProactiveExecutors(unittest.TestCase):
         set_scheduler(self.sched)
 
     def tearDown(self):
-        from botv.scheduler.dispatcher import set_scheduler
+        from bot.scheduler.dispatcher import set_scheduler
         set_scheduler(None)
 
     def test_tick_blocked_does_not_submit(self):
-        from botv.life import impulse as I
+        from bot.life import impulse as I
 
         orig = I.should_chat
         I.should_chat = lambda **kw: (False, "深夜", 0.0)
@@ -70,7 +70,7 @@ class TestProactiveExecutors(unittest.TestCase):
         self.assertEqual(self.sched.stats()["queue"]["total"], 0)
 
     def test_tick_pass_submits_say(self):
-        from botv.life import impulse as I
+        from bot.life import impulse as I
 
         orig = I.should_chat
         I.should_chat = lambda **kw: (True, "ok", 0.3)
@@ -94,14 +94,14 @@ class TestProactiveExecutors(unittest.TestCase):
 
         orig_reply = None
         try:
-            from botv.ai import client as C
+            from bot.ai import client as C
             orig_reply = C.get_character_reply
             C.get_character_reply = lambda prompt, tid: _async("她主动说了一句")
         except Exception:
             pass
 
         try:
-            from botv.chat import send as S
+            from bot.chat import send as S
             orig_send = S.send_short_reply
             S.send_short_reply = lambda *a, **k: _async(sent.append(a))
         except Exception:

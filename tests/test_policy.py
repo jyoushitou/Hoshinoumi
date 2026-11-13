@@ -30,7 +30,7 @@ class TestRetryDelay(unittest.TestCase):
     """退避：2, 4, 8, 16… 封顶 30"""
 
     def test_progression(self):
-        from botv.scheduler.policy import retry_delay
+        from bot.scheduler.policy import retry_delay
 
         self.assertEqual(retry_delay(1), 2.0)
         self.assertEqual(retry_delay(2), 4.0)
@@ -38,12 +38,12 @@ class TestRetryDelay(unittest.TestCase):
         self.assertEqual(retry_delay(4), 16.0)
 
     def test_cap(self):
-        from botv.scheduler.policy import retry_delay
+        from bot.scheduler.policy import retry_delay
 
         self.assertLessEqual(retry_delay(10), 30.0)
 
     def test_zero_attempt(self):
-        from botv.scheduler.policy import retry_delay
+        from bot.scheduler.policy import retry_delay
 
         self.assertEqual(retry_delay(0), 0.0)
 
@@ -52,7 +52,7 @@ class TestShouldRetry(unittest.TestCase):
     """超时不重试；次数用完不重试；其余可重试"""
 
     def _ev(self, retries=1):
-        from botv.events.base import Event
+        from bot.events.base import Event
 
         async def noop():
             return None
@@ -60,30 +60,30 @@ class TestShouldRetry(unittest.TestCase):
         return Event(kind="k", key="x", fn=noop, retries=retries)
 
     def test_timeout_not_retried(self):
-        from botv.scheduler.policy import should_retry
+        from bot.scheduler.policy import should_retry
 
         self.assertFalse(should_retry(self._ev(3), asyncio.TimeoutError(), 1))
 
     def test_normal_error_retried(self):
-        from botv.scheduler.policy import should_retry
+        from bot.scheduler.policy import should_retry
 
         self.assertTrue(should_retry(self._ev(2), RuntimeError("x"), 1))
 
     def test_exhausted(self):
-        from botv.scheduler.policy import should_retry
+        from bot.scheduler.policy import should_retry
 
         ev = self._ev(1)
         self.assertFalse(should_retry(ev, RuntimeError("x"), 1))
 
     def test_zero_retries(self):
-        from botv.scheduler.policy import should_retry
+        from bot.scheduler.policy import should_retry
 
         self.assertFalse(should_retry(self._ev(0), RuntimeError("x"), 1))
 
 
 class TestClassify(unittest.TestCase):
     def test_kinds(self):
-        from botv.scheduler.policy import classify
+        from bot.scheduler.policy import classify
 
         self.assertEqual(classify(asyncio.TimeoutError()), "timeout")
         self.assertEqual(classify(ValueError("x")), "bad_input")
@@ -94,7 +94,7 @@ class TestBreaker(unittest.TestCase):
     """熔断：连续 3 次失败 → 停 1 小时 → 自动恢复"""
 
     def setUp(self):
-        from botv.scheduler.policy import Breaker
+        from bot.scheduler.policy import Breaker
 
         self.B = Breaker()
 

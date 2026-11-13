@@ -18,7 +18,7 @@ import os
 import re
 import sys
 
-# 允许直接 `python3 scripts/xxx.py` 运行时也能 import botv
+# 允许直接 `python3 scripts/xxx.py` 运行时也能 import bot
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.stdout.reconfigure(encoding="utf-8")
 
@@ -202,7 +202,7 @@ def main():
     total = hit + miss
     print(f"  私有区字形 {total} 个，匹配成功 {hit}，失败 {miss}，命中率 {hit/max(1,total):.1%}")
 
-    from botv.life.novel import parse_chapter
+    from bot.life.novel import parse_chapter
     body = parse_chapter(html) if False else None
 
     # 直接对整章做替换，看效果

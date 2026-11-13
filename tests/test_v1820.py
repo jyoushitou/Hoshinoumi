@@ -32,19 +32,19 @@ _stub_missing_deps()
 
 class TestV1820(unittest.TestCase):
     def test_fullwidth_command(self):
-        from botv.commands import normalize_command
+        from bot.commands import normalize_command
 
         self.assertEqual(normalize_command("！version"), "!version")
         self.assertEqual(normalize_command("！cron：list，x"), "!cron:list,x")
 
     def test_normal_chat_untouched(self):
-        from botv.commands import normalize_command
+        from bot.commands import normalize_command
 
         self.assertEqual(normalize_command("今天好累，想睡"), "今天好累，想睡")
         self.assertEqual(normalize_command("！？"), "!?")
 
     def test_version_bumped(self):
-        from botv.core import version
+        from bot.core import version
 
         self.assertEqual(version.VERSION, "19.5.7")
 

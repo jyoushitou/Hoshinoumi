@@ -9,8 +9,8 @@ _stub_missing_deps()
 
 class TestApiKeyEnv(unittest.TestCase):
     def test_env_used_when_db_empty(self):
-        from botv.infra import repo_key
-        from botv.core import state as cfg
+        from bot.infra import repo_key
+        from bot.core import state as cfg
 
         old_get = repo_key.get_api_key_from_db
         old_env = {k: os.environ.get(k) for k in ("DS_API_KEY", "ARK_API_KEY", "ALAPI_TOKEN")}

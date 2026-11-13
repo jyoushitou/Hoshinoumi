@@ -14,7 +14,7 @@
                         ┌──────────────────────────────────┐
      启动              │  run.py                          │
                         │   ├→ 配置检查 / 依赖检查          │
-                        │   └→ botv.main                    │
+                        │   └→ bot.main                    │
                         │        ├→ app.bootstrap           │  加载密钥/状态/人设
                         │        │   ├→ _ensure_tables()    │  ⚠ 启动时改表
                         │        │   └→ _ensure_cron_schema()│  ⚠ 启动时补列
@@ -126,7 +126,7 @@
 
 | 维度 | NapCat | v20–v22 网关 |
 |---|---|---|
-| 位置 | **南向**：QQ ↔ botv | **北向**：公网 ↔ botv |
+| 位置 | **南向**：QQ ↔ bot | **北向**：公网 ↔ bot |
 | 角色 | QQ 协议适配器 / 通道网关 | 体系网关 / 公网唯一入口 |
 | 协议 | OneBot v11（WS/HTTP） | HTTPS/WSS + JSON ↔ gRPC |
 | 鉴权 | QQ 登录（一个 bot 账号） | JWT `sub=user_id` + 角色 |
@@ -138,8 +138,8 @@
 
 | 方案 | 做法 | 结论 |
 |---|---|---|
-| **A. 直连 + 进程内限流**（默认） | NapCat → botv loopback；`chat/inbound` / `egress/outbound` 做令牌桶 + 有界队列 | ✅ 少一跳、低延迟 |
-| **B. 独立 QQ 通道网关** | NapCat → channel-gw → botv；mTLS、按 QQ 号配额 | 🟡 多 QQ 号 / NapCat 不在本机时 |
+| **A. 直连 + 进程内限流**（默认） | NapCat → bot loopback；`chat/inbound` / `egress/outbound` 做令牌桶 + 有界队列 | ✅ 少一跳、低延迟 |
+| **B. 独立 QQ 通道网关** | NapCat → channel-gw → bot；mTLS、按 QQ 号配额 | 🟡 多 QQ 号 / NapCat 不在本机时 |
 | **C. 走 v20–v22 体系网关** | v20–v22 同时说 OneBot/JWT，代理 NapCat | ❌ 协议/鉴权/信任边界全混 |
 
 v20 **不接** OneBot；QQ 限流在 channel adapter，不在 v20。

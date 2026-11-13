@@ -42,25 +42,25 @@ class TestScheduleExecutor(unittest.TestCase):
     """场景表完整、执行会发消息、未知场景有兜底、一天一次靠 key 去重"""
 
     def setUp(self):
-        import botv.executors.schedule as S
-        from botv.scheduler.dispatcher import Scheduler, set_scheduler
+        import bot.executors.schedule as S
+        from bot.scheduler.dispatcher import Scheduler, set_scheduler
 
         self.S = S
         self.sched = Scheduler()
         set_scheduler(self.sched)
         self.sent = []
 
-        from botv.ai import client as C
-        from botv.chat import send as SEND
+        from bot.ai import client as C
+        from bot.chat import send as SEND
 
         self._orig = (C.get_character_reply, SEND.send_short_reply)
         C.get_character_reply = lambda prompt, tid: _async("定时的一句")
         SEND.send_short_reply = lambda *a, **k: _async(self.sent.append(a))
 
     def tearDown(self):
-        from botv.ai import client as C
-        from botv.chat import send as SEND
-        from botv.scheduler.dispatcher import set_scheduler
+        from bot.ai import client as C
+        from bot.chat import send as SEND
+        from bot.scheduler.dispatcher import set_scheduler
 
         C.get_character_reply, SEND.send_short_reply = self._orig
         set_scheduler(None)
@@ -80,7 +80,7 @@ class TestScheduleExecutor(unittest.TestCase):
 
     def test_execute_sends(self):
         """v17.2：执行后进合并窗口，flush 才真正发出"""
-        from botv.egress.merge import Merger, set_merger
+        from bot.egress.merge import Merger, set_merger
 
         got = []
 

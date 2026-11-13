@@ -33,7 +33,7 @@ _stub_missing_deps()
 
 class TestEmotionPersist(unittest.TestCase):
     def test_tick_half_life(self):
-        from botv.life import state
+        from bot.life import state
 
         s = state.default_state()
         s["emotion"] = "难过"
@@ -42,7 +42,7 @@ class TestEmotionPersist(unittest.TestCase):
         self.assertAlmostEqual(s["emotion_power"], 0.25, places=2)
 
     def test_strong_half_life_five_days(self):
-        from botv.life import state
+        from bot.life import state
 
         s = state.default_state()
         s["emotion"] = "生气"
@@ -51,18 +51,18 @@ class TestEmotionPersist(unittest.TestCase):
         self.assertGreater(s["emotion_power"], 0.6)
 
     def test_detect_prefers_stored(self):
-        from botv.speech import voice
+        from bot.speech import voice
 
         fake = {"mood": 0.9, "emotion": "难过", "emotion_power": 0.5}
-        with patch("botv.life.state.current", return_value=fake):
+        with patch("bot.life.state.current", return_value=fake):
             self.assertEqual(voice.detect_emotion(), "难过")
 
     def test_detect_reinfers_when_weak(self):
-        from botv.speech import voice
+        from bot.speech import voice
 
         fake = {"mood": 0.9, "emotion": "难过", "emotion_power": 0.05}
-        with patch("botv.life.state.current", return_value=fake), \
-                patch("botv.life.state.remember_emotion", return_value=fake):
+        with patch("bot.life.state.current", return_value=fake), \
+                patch("bot.life.state.remember_emotion", return_value=fake):
             self.assertEqual(voice.detect_emotion(), "开心")
 
 

@@ -63,8 +63,8 @@ class TestRestartBreaker(unittest.TestCase):
     """连续失败 N 次 → 退出；成功一次 → 计数清零"""
 
     def setUp(self):
-        import botv.app.loop as L
-        from botv.core import state as cfg
+        import bot.app.loop as L
+        from bot.core import state as cfg
 
         self.L = L
         self.cfg = cfg

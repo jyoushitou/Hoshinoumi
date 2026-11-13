@@ -39,7 +39,7 @@ NEW_INDEXES = [
     ("idx_dedupe", "dedupe_key"),
 ]
 
-from botv.infra.dedupe import normalize, dedupe_key  # noqa: E402  共用实现
+from bot.infra.dedupe import normalize, dedupe_key  # noqa: E402  共用实现
 
 
 def column_exists(c, table, column):
@@ -65,7 +65,7 @@ def main():
     args = ap.parse_args()
 
     try:
-        from botv.infra.conn import get_cursor
+        from bot.infra.conn import get_cursor
         c = get_cursor()
         c.execute("SELECT 1 AS ok")
         c.fetchone()

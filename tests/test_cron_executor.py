@@ -42,8 +42,8 @@ class TestCronExecutor(unittest.TestCase):
     """到点：读任务 → 生成 → 发送 → 记 last_fire"""
 
     def setUp(self):
-        import botv.executors.cron as X
-        from botv.schedule import cron
+        import bot.executors.cron as X
+        from bot.schedule import cron
 
         self.X = X
         self.cron = cron
@@ -58,8 +58,8 @@ class TestCronExecutor(unittest.TestCase):
         cron.get = lambda tid: self.task if int(tid) == 7 else None
         X._mark = lambda tid, ok=True: self.marked.append((tid, ok))
 
-        from botv.ai import client as C
-        from botv.chat import send as S
+        from bot.ai import client as C
+        from bot.chat import send as S
 
         self._ai = (C.get_character_reply, S.send_short_reply)
         C.get_character_reply = self._fake_reply
@@ -67,8 +67,8 @@ class TestCronExecutor(unittest.TestCase):
 
     def tearDown(self):
         self.cron.get, self.X._mark = self._orig
-        from botv.ai import client as C
-        from botv.chat import send as S
+        from bot.ai import client as C
+        from bot.chat import send as S
 
         C.get_character_reply, S.send_short_reply = self._ai
 
@@ -107,7 +107,7 @@ class TestCronExecutor(unittest.TestCase):
         self.assertFalse(out["ok"])
 
     def test_empty_reply_marks_failure(self):
-        from botv.ai import client as C
+        from bot.ai import client as C
 
         C.get_character_reply = lambda p, t: _async("")
         out = asyncio.run(self.X.handle_cron_task(_Ev(args=(7,))))
@@ -122,8 +122,8 @@ async def _async(v):
 
     def test_scene_prefix_routes_to_scene_executor(self):
         """content 以 scene: 开头 → 走场景执行器（带提示词/配图）"""
-        from botv.executors import schedule as S
-        import botv.executors.cron as X
+        from bot.executors import schedule as S
+        import bot.executors.cron as X
 
         called = []
 

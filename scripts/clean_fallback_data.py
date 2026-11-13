@@ -56,7 +56,7 @@ def main():
     args = ap.parse_args()
 
     try:
-        from botv.infra.conn import get_cursor
+        from bot.infra.conn import get_cursor
         c = get_cursor()
         c.execute("SELECT 1 AS ok")
         c.fetchone()

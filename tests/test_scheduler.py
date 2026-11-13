@@ -30,8 +30,8 @@ class TestScheduler(unittest.TestCase):
     """投递、继承默认值、未注册报错、去重、统计"""
 
     def setUp(self):
-        from botv.events import registry
-        from botv.scheduler.dispatcher import Scheduler
+        from bot.events import registry
+        from bot.scheduler.dispatcher import Scheduler
 
         self.R = registry
         self._snapshot = dict(registry._handlers)
@@ -65,7 +65,7 @@ class TestScheduler(unittest.TestCase):
         self.assertEqual(self.S.stats()["done"], 1)
 
     def test_priority_inherited_from_registry(self):
-        from botv.events.base import Priority
+        from bot.events.base import Priority
 
         @self.R.register("chatty", priority=Priority.CHAT, timeout=5)
         async def chatty(ev):
@@ -77,7 +77,7 @@ class TestScheduler(unittest.TestCase):
         self.assertEqual(s["queue"]["idle"], 0)
 
     def test_priority_override(self):
-        from botv.events.base import Priority
+        from bot.events.base import Priority
 
         self.S.submit("demo", "k2", priority=Priority.CHAT)
         self.assertEqual(self.S.stats()["queue"]["chat"], 1)

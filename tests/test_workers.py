@@ -27,15 +27,15 @@ _stub_missing_deps()
 
 
 def _make_pool(idle=2, event=1):
-    from botv.scheduler.queue import EventQueue
-    from botv.scheduler.workers import WorkerPool
+    from bot.scheduler.queue import EventQueue
+    from bot.scheduler.workers import WorkerPool
 
     q = EventQueue(idle_limit=20)
     return q, WorkerPool(q, idle_workers=idle, event_workers=event)
 
 
 def _ev(kind="read", key=None, fn=None, priority=None, timeout=2.0, retries=1):
-    from botv.events.base import Event, Priority
+    from bot.events.base import Event, Priority
 
     async def noop():
         return None
@@ -67,7 +67,7 @@ class TestWorkerPool(unittest.TestCase):
 
     def test_chat_before_idle(self):
         """快车道先取 CHAT，慢车道不会抢走它"""
-        from botv.events.base import Priority
+        from bot.events.base import Priority
 
         q, pool = _make_pool(idle=0, event=1)
         order = []
@@ -103,7 +103,7 @@ class TestWorkerPool(unittest.TestCase):
         self.assertEqual(timeline, [], "超时的任务不该跑完")
 
     def test_retry_then_success(self):
-        from botv.scheduler import policy
+        from bot.scheduler import policy
         orig = policy.RETRY_BASE_DELAY
         policy.RETRY_BASE_DELAY = 0.01
         self.addCleanup(lambda: setattr(policy, "RETRY_BASE_DELAY", orig))

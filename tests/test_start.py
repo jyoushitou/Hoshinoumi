@@ -7,7 +7,7 @@ import start
 
 class TestStart(unittest.TestCase):
     def test_api_missing(self):
-        from botv.infra import repo_key
+        from bot.infra import repo_key
         old = repo_key.get_api_key_from_db
         old_env = {k: os.environ.get(k) for k in ("DS_API_KEY", "ARK_API_KEY")}
         repo_key.get_api_key_from_db = lambda name: ""

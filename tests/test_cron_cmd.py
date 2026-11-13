@@ -36,9 +36,9 @@ class TestCronCommand(unittest.TestCase):
     """命令层：建任务、列任务、删/启停、参数校验"""
 
     def setUp(self):
-        import botv.commands  # noqa: F401  确保注册
-        from botv.cmd import registry
-        from botv.schedule import cron
+        import bot.commands  # noqa: F401  确保注册
+        from bot.cmd import registry
+        from bot.schedule import cron
 
         self.cmd = registry.COMMANDS["cron"]
         self.cron = cron
@@ -74,7 +74,7 @@ class TestCronCommand(unittest.TestCase):
          self.cron.set_enabled, self.cron.schedule_one, self.cron.cancel) = self._orig
 
     def _run(self, text):
-        from botv.cmd.registry import CommandContext
+        from bot.cmd.registry import CommandContext
 
         ctx = CommandContext(parts=text.split(), uid="822891053",
                              ws=None, is_group=False, gid=0)

@@ -26,7 +26,7 @@ _stub_missing_deps()
 
 
 def _ev(kind="idle_read", key="k1", priority=None):
-    from botv.events.base import Event, Priority
+    from bot.events.base import Event, Priority
 
     async def noop():
         return None
@@ -39,7 +39,7 @@ class TestEventQueue(unittest.TestCase):
     """三档优先级、去重、容量、统计"""
 
     def setUp(self):
-        from botv.scheduler.queue import EventQueue
+        from bot.scheduler.queue import EventQueue
 
         self.Q = EventQueue(idle_limit=3)
 
@@ -51,7 +51,7 @@ class TestEventQueue(unittest.TestCase):
         self.assertIsNone(self.Q.get_nowait())
 
     def test_priority_order(self):
-        from botv.events.base import Priority
+        from bot.events.base import Priority
 
         idle = _ev(priority=Priority.IDLE, key="i")
         event = _ev(priority=Priority.EVENT, key="e")
@@ -79,7 +79,7 @@ class TestEventQueue(unittest.TestCase):
         self.assertTrue(self.Q.put(_ev(kind="read", key="book:1")), "done 之后可再次入队")
 
     def test_idle_capacity_drops_oldest(self):
-        from botv.events.base import Priority
+        from bot.events.base import Priority
 
         for i in range(4):
             self.Q.put(_ev(kind="read", key=f"b{i}", priority=Priority.IDLE))
@@ -95,7 +95,7 @@ class TestEventQueue(unittest.TestCase):
         self.assertIn("b3", keys)
 
     def test_chat_never_dropped_by_capacity(self):
-        from botv.events.base import Priority
+        from bot.events.base import Priority
 
         for i in range(10):
             self.Q.put(_ev(kind="chat", key=f"c{i}", priority=Priority.CHAT))
