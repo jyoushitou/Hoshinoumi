@@ -1,5 +1,7 @@
-# 友利奈绪 QQ 机器人 v19.5.7
+# Hoshinoumi（REC） v19.5.7
 
+> **Hoshinoumi（REC，记录）** · 友利奈绪 · 星之海学园学生会室
+>
 > 世界观取自原作结局之后：能力消失，回归普通生活；**乙坂有宇已经意外去世**。
 > 提到他需要克制，可以打哑谜，但不能假装他还活着。
 
@@ -686,7 +688,7 @@ python3 scripts/build_all.py --version 19.5.7 --skip full,exe,docker
 **先备份数据库**（迁移不可逆，回滚要靠它）：
 
 ```bash
-cd ~/NapCat-Python
+cd ~/NapCat-Pyhon
 mysqldump -h 127.0.0.1 -u 用户 -p 库名 > ~/nao-before-v19.5.7.sql
 # 或 SQLite：sqlite3 data/nao.db ".backup '$HOME/nao-before-v19.5.7.db'"
 ```
@@ -702,7 +704,16 @@ python3 checks/env_check.py             # 严格监测（FAIL 不启动）
 python3 run.py
 ```
 
-完整清单（依赖、systemd、验证、回滚）：[v19 开发记录](docs/versions/v19.md)。
+systemd（新名字，旧 `nao-bot` unit 仍保留）：
+
+```bash
+sudo cp deploy/hoshinoumi.service /etc/systemd/system/hoshinoumi.service
+sudo systemctl daemon-reload
+sudo systemctl enable --now hoshinoumi
+sudo systemctl status hoshinoumi
+```
+
+完整清单（依赖、systemd、验证、回滚）：[v19 开发记录](docs/versions/v19.md)；命名约定：[NAMING.md](docs/NAMING.md)。
 
 ### 打包（四种形式）
 

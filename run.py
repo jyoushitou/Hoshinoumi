@@ -1,5 +1,5 @@
 # ===================== 模块入口 =====================
-# 友利奈绪 QQ 机器人 v2.0 — CLIP视觉识图 + 简短动作回复 + HTTP API 服务
+# Hoshinoumi（REC）· 友利奈绪 — CLIP视觉识图 + 简短动作回复 + HTTP API 服务
 # 不导入任何模块，避免循环依赖
 # 所有子模块通过 botv.xxx 方式导入
 
@@ -201,7 +201,7 @@ def check_and_install(package_name, optional=False, allow_install=False):
 def check_all_dependencies():
     """检查并安装所有依赖"""
     print("=" * 50)
-    print("  🤖 友利奈绪 QQ 机器人 — 依赖检查")
+    print("  🤖 Hoshinoumi（REC）· 友利奈绪 — 依赖检查")
     print("=" * 50)
     print()
     

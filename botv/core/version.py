@@ -85,7 +85,7 @@ def describe():
     else:
         up = f"{minutes} 分"
 
-    lines = [f"🏷️ 版本：{ver}"]
+    lines = [f"🏷️ Hoshinoumi（REC） · 版本：{ver}"]
     if commit:
         lines.append(f"🔀 提交：{commit}" + (f"（{branch}）" if branch and branch != "HEAD" else ""))
     lines.append(f"⏱️ 已运行：{up}")

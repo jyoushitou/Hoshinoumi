@@ -1,5 +1,6 @@
+# 旧服务名，兼容保留；新部署请用 deploy/hoshinoumi.service
 [Unit]
-Description=TomoriNao QQ Bot (NapCat + Python)
+Description=TomoriNao QQ Bot (legacy nao-bot unit)
 After=network-online.target
 Wants=network-online.target
 

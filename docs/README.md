@@ -1,4 +1,4 @@
-﻿# 文档索引
+# Hoshinoumi（REC）· 文档索引
 
 > **当前：v19.5.7 试运行** → 试运行结束后进入 v20 网关（一）。
 
@@ -20,6 +20,7 @@
 | **v6 拆解** | 已归档 | 74 项 → **22 个可独立交付的功能单元**，含依赖图与推进顺序 | 已完成 |
 | **v6~v13 路线图** | [ROADMAP.md](ROADMAP.md) | 版本主题、单元分配、验收与排期（当前以 ROADMAP 为准） | 现行 |
 | **发布检查** | [发布检查清单.md](发布检查清单.md) | 每版必过的 5 组检查（代码 / 环境 / 文档 / 打包 / 部署） | 常用 |
+| **命名** | [NAMING.md](NAMING.md) | Hoshinoumi（REC）的正式写法、缩写与兼容边界 | 现行 |
 | **v14+ 后续** | [V14-后续清单.md](V14-后续清单.md) | 13 项后续需求（A~D 分组，v14+ 独立编号体系） | 待排期 |
 | **单版计划** | [versions/](versions/) | 每版一个文件：[v6](versions/v6.md) · [v7](versions/v7.md) · [v8](versions/v8.md) · [v9](versions/v9.md) · [v10](versions/v10.md) · [v11](versions/v11.md) · [v12](versions/v12.md) · [v13](versions/v13.md) · [v14](versions/v14.md) | 方案稿 |
 

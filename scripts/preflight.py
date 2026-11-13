@@ -431,7 +431,7 @@ def main():
     except Exception:
         _ver = "?"
     print("=" * 56)
-    print(f"  友利奈绪 {_ver} 部署预检")
+    print(f"  Hoshinoumi（REC）· 友利奈绪 {_ver} 部署预检")
     print("=" * 56)
 
     if args.init_db:
