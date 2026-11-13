@@ -224,14 +224,14 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | v22 | 网关（三）安全：限流/审计/TLS/`!gw` | 📋 已规划 | [v22.md](docs/versions/v22.md) |
 | v23 | 多用户：users/identities/roles + 全表 user_id 隔离 | 📋 已规划 | [v23.md](docs/versions/v23.md) |
 | v24 | 外部插件管理：manifest / 生命周期 / 权限 / 健康 | 📋 已规划 | [v24.md](docs/versions/v24.md) |
-| v25 | 模型层扩展点：ModelProvider + 注册表 + 降级链 | 📋 已规划 | [v25.md](docs/versions/v25.md) |
-| v26 | 记忆层扩展点：MemoryStore / Retriever / Embedding | 📋 已规划 | [v26.md](docs/versions/v26.md) |
-| v27 | 通道层扩展点：Channel + QQ/Web 适配器 | 📋 已规划 | [v27.md](docs/versions/v27.md) |
-| v28 | 工具层扩展点：manifest + 权限 + 超时 + 审计 | 📋 已规划 | [v28.md](docs/versions/v28.md) |
-| v29 | 存储层扩展点：StorageBackend + Repository | 📋 已规划 | [v29.md](docs/versions/v29.md) |
-| v30 | 调度层扩展点：Scheduler + Trigger | 📋 已规划 | [v30.md](docs/versions/v30.md) |
-| v31 | 出站层扩展点：Transport + WS/HTTP 适配器 | 📋 已规划 | [v31.md](docs/versions/v31.md) |
-| v32 | 跨层扩展接口与回退契约：只留接口，不实现插件 | 📋 已规划 | [v32.md](docs/versions/v32.md) |
+| v25 | 模型层接口：ModelProvider + 注册表 + 降级链 | 📋 已规划 | [v25.md](docs/versions/v25.md) |
+| v26 | 记忆层接口：MemoryStore / Retriever / Embedding | 📋 已规划 | [v26.md](docs/versions/v26.md) |
+| v27 | 通道层接口：Channel + QQ/Web 适配器 | 📋 已规划 | [v27.md](docs/versions/v27.md) |
+| v28 | 工具层接口：manifest + 权限 + 超时 + 审计 | 📋 已规划 | [v28.md](docs/versions/v28.md) |
+| v29 | 存储层接口：StorageBackend + Repository | 📋 已规划 | [v29.md](docs/versions/v29.md) |
+| v30 | 调度层接口：Scheduler + Trigger | 📋 已规划 | [v30.md](docs/versions/v30.md) |
+| v31 | 出站层接口：Transport + WS/HTTP 适配器 | 📋 已规划 | [v31.md](docs/versions/v31.md) |
+| v32 | 跨层接口与回退契约：只留接口，不实现插件 | 📋 已规划 | [v32.md](docs/versions/v32.md) |
 | v33 | 多端推送：主动消息扇出到所有接入口 | 📋 已规划 | [v33.md](docs/versions/v33.md) |
 | v34 | DSH / Qoder / WorkBuddy 插件：她成为你所有工具的记忆层 | 📋 已规划 | [v34.md](docs/versions/v34.md) |
 | v35 | 电脑 Web：聊天 + 历史 + 功能面板 | 📋 已规划 | [v35.md](docs/versions/v35.md) |
@@ -252,17 +252,18 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | v50 | 常驻（后端）systemd / 看门狗 | 📋 已规划 | [v50.md](docs/versions/v50.md) |
 | v51 | 嵌入式前端（Linux 后端）：树莓派/平板显示对话 | 📋 已规划 | [v51.md](docs/versions/v51.md) |
 
-> **插件接口原则**：v24–v32 暴露的是各架构层的扩展点，不是把现有功能插件化。
+> **插件接口原则**：v24–v32 暴露的是各架构层的接口，不是把现有功能插件化。
 > DeepSeek/豆包、BM25、QQ/NapCat、现有工具/命令、MySQL/SQLite、asyncio 调度、
 > WebSocket 出站都保持核心 native；外部插件只能 extend / enhance / 显式 replace 路由，
 > 禁用/卸载/失败时回退核心。
 >
-> **核心功能范围**：v23 之前（含当前 bot）的聊天、记忆、命令、定时、语音、视觉、
-> 读书、OCR、备份、主动消息等全部是核心功能，不插件化。
-> v24–v32 本身也是核心开发计划（插件管理器、七层接口、路由/回退），不是插件；
-> 第三方只能通过这些接口添加自己的实现。
-> 它们只能在启动前通过 `config/features.json`（或 `NAO_FEATURES`）关闭；
-> 没有对应开关的核心功能默认常开。插件管理器不能 disable/uninstall 核心功能。
+> **核心范围**：文档里所有 **vXXX 功能都是核心功能**，包括 v23 之前的聊天、记忆、
+> 命令、定时、语音、视觉、读书、OCR、备份、主动消息，以及 v24–v32 的插件管理器、
+> 七层接口、路由/回退。它们不是插件，后续版本也不会用插件接口实现功能。
+>
+> **插件接口只给第三方做优化/性能扩展**：例如更快的模型 provider、外部向量检索、
+> 自定义通道；核心实现始终保留。核心功能只能在启动前通过 `config/features.json`
+> （或 `NAO_FEATURES`）关闭；没有对应开关的默认常开。插件管理器不能 disable/uninstall 核心功能。
 
 > **约定**：每个大版本的**最后一个次版本**用来收尾修 bug 和技术债，不堆新功能。
 

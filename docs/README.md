@@ -124,14 +124,14 @@ v6：P1 会说话 → P2 说实话 → P2.5 长感官 → P3 有生活 → P4 �
 | **v22** | [versions/v22.md](versions/v22.md) | 网关（三）安全：限流/审计/TLS/`!gw` | 规划中 |
 | **v23** | [versions/v23.md](versions/v23.md) | 多用户：users/identities/roles + 全表 `user_id` 隔离 | 规划中 |
 | **v24** | [versions/v24.md](versions/v24.md) | 外部插件管理：manifest / 生命周期 / 权限 / 健康 | 规划中 |
-| **v25** | [versions/v25.md](versions/v25.md) | 模型层扩展点：ModelProvider + 注册表 + 降级链 | 规划中 |
-| **v26** | [versions/v26.md](versions/v26.md) | 记忆层扩展点：MemoryStore / Retriever / Embedding | 规划中 |
-| **v27** | [versions/v27.md](versions/v27.md) | 通道层扩展点：Channel + QQ/Web 适配器 | 规划中 |
-| **v28** | [versions/v28.md](versions/v28.md) | 工具层扩展点：manifest + 权限 + 超时 + 审计 | 规划中 |
-| **v29** | [versions/v29.md](versions/v29.md) | 存储层扩展点：StorageBackend + Repository | 规划中 |
-| **v30** | [versions/v30.md](versions/v30.md) | 调度层扩展点：Scheduler + Trigger | 规划中 |
-| **v31** | [versions/v31.md](versions/v31.md) | 出站层扩展点：Transport + WS/HTTP 适配器 | 规划中 |
-| **v32** | [versions/v32.md](versions/v32.md) | 跨层扩展接口与回退契约：只留接口，不实现插件 | 规划中 |
+| **v25** | [versions/v25.md](versions/v25.md) | 模型层接口：ModelProvider + 注册表 + 降级链 | 规划中 |
+| **v26** | [versions/v26.md](versions/v26.md) | 记忆层接口：MemoryStore / Retriever / Embedding | 规划中 |
+| **v27** | [versions/v27.md](versions/v27.md) | 通道层接口：Channel + QQ/Web 适配器 | 规划中 |
+| **v28** | [versions/v28.md](versions/v28.md) | 工具层接口：manifest + 权限 + 超时 + 审计 | 规划中 |
+| **v29** | [versions/v29.md](versions/v29.md) | 存储层接口：StorageBackend + Repository | 规划中 |
+| **v30** | [versions/v30.md](versions/v30.md) | 调度层接口：Scheduler + Trigger | 规划中 |
+| **v31** | [versions/v31.md](versions/v31.md) | 出站层接口：Transport + WS/HTTP 适配器 | 规划中 |
+| **v32** | [versions/v32.md](versions/v32.md) | 跨层接口与回退契约：只留接口，不实现插件 | 规划中 |
 | **v33** | [versions/v33.md](versions/v33.md) | 多端推送：主动消息扇出到所有接入口 | 规划中 |
 | **v34** | [versions/v34.md](versions/v34.md) | DSH / Qoder / WorkBuddy 插件：她成为你所有工具的记忆层 | 规划中 |
 | **v35** | [versions/v35.md](versions/v35.md) | 电脑 Web：聊天 + 历史 + 功能面板 | 规划中 |
@@ -154,9 +154,10 @@ v6：P1 会说话 → P2 说实话 → P2.5 长感官 → P3 有生活 → P4 �
 
 
 
-> v24–v32 本身是核心开发计划（插件管理器、分层接口、路由/回退），不是插件；
-> 核心功能保持 native、不注册为插件；第三方插件只能通过这些接口添加实现。
-> v23 之前的全部功能是核心，只能在启动前通过 `config/features.json` / `NAO_FEATURES` 关闭。
+> 文档里所有 vXXX 功能都是核心功能；v24–v32 本身也是核心开发计划
+> （插件管理器、分层接口、路由/回退），不是插件。
+> 插件接口只给第三方做优化/性能扩展，后续版本不会用插件接口实现功能。
+> 核心功能只能在启动前通过 `config/features.json` / `NAO_FEATURES` 关闭。
 
 > 完整发布计划（次版本/小版本拆分）见 **[ROADMAP.md](ROADMAP.md)**。
 
