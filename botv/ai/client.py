@@ -223,6 +223,60 @@ async def _digest_summary(convo):
             {"role": "user", "content": convo}]
     return await call_deepseek(msgs, max_tokens=60) or await call_doubao(msgs, max_tokens=60)
 
+async def _build_tone_line(tid):
+    """v19.5：状态/别扭/天气/日常从 get_character_reply 拆出"""
+    try:
+        state_line = life.state_line(tid)
+    except Exception:
+        state_line = ""
+    try:
+        tone_line = (state_line + tone_hint()) if state_line else tone_hint()
+    except Exception:
+        tone_line = state_line or ""
+
+    try:
+        life.friction_refresh(tid)
+        _f = life.friction_line(tid)
+        if _f:
+            tone_line += " " + _f
+    except Exception:
+        pass
+
+    try:
+        from ..life.weather import current as weather_now, describe as weather_desc
+        _w = await weather_now()
+        if _w:
+            tone_line += weather_desc(_w)
+    except Exception:
+        pass
+
+    try:
+        life.ensure_daily()
+    except Exception:
+        pass
+    return tone_line
+
+
+async def _maybe_run_tool(r, msgs, tid):
+    """v19.5：工具调用从 get_character_reply 拆出（最多一轮）"""
+    if not r or isinstance(r, Fallback):
+        return r
+    try:
+        from .tools import parse_call, run_tool
+        _name, _arg, _body = parse_call(r)
+        if _name:
+            _result = await run_tool(_name, _arg, tid)
+            msgs.append({"role": "assistant", "content": r})
+            msgs.append({"role": "user",
+                         "content": f"（工具 {_name} 返回：{_result}）"
+                                    f"现在用正常的话回他，不要再输出 @tool。"})
+            _r2 = await call_deepseek(msgs) or await call_doubao(msgs)
+            r = _r2 or _body or r
+    except Exception as e:
+        log_api(f"[工具] 调用失败: {e}")
+    return r
+
+
 async def get_character_reply(txt, tid, current_kws=None,
                              speaker=None, is_group=False):
     """核心函数：获取角色回复，优先DeepSeek，失败时降级到豆包"""
@@ -241,39 +295,7 @@ async def get_character_reply(txt, tid, current_kws=None,
         log_api(f"[事实] 注入失败（忽略）：{_e}")  # 上下文（关键词、对话历史、检索到的记忆）
     log_api(f"[get_character_reply] 记忆: kw_len={len(kw)}, dia_len={len(dia)}, events={events[:40]}")  # 日志记录上下文信息
     cur_kw_str = "、".join(current_kws) if current_kws else "无"  # 当前话题关键词（顿号分隔）
-    # v9-U4：她的真实状态 + 当前时段，拼成一句"她现在什么感觉"
-    try:
-        state_line = life.state_line(tid)
-    except Exception:
-        state_line = ""
-    try:
-        tone_line = (state_line + tone_hint()) if state_line else tone_hint()
-    except Exception:
-        tone_line = state_line or ""
-
-    # v13-U20：她现在在不在闹别扭
-    try:
-        life.friction_refresh(tid)
-        _f = life.friction_line(tid)
-        if _f:
-            tone_line += " " + _f
-    except Exception:
-        pass
-
-    # v12-A21：知道外面什么天气（没配 NAO_CITY 就跳过）
-    try:
-        from ..life.weather import current as weather_now, describe as weather_desc
-        _w = await weather_now()
-        if _w:
-            tone_line += weather_desc(_w)
-    except Exception:
-        pass
-
-    # v9-U7：她今天过得怎么样——每天第一次对话时生成，之后不再写
-    try:
-        life.ensure_daily()
-    except Exception:
-        pass
+    tone_line = await _build_tone_line(tid)
 
     sys_p = get_system_prompt().format(
         global_keywords=kw,
@@ -314,21 +336,7 @@ async def get_character_reply(txt, tid, current_kws=None,
                 pass
             log_err("[空回复] DeepSeek 与豆包均未返回可用内容（空/超时/HTTP 失败）")
 
-    # v13-U22：她自己决定要不要用工具（最多一轮）
-    if r and not isinstance(r, Fallback):
-        try:
-            from .tools import parse_call, run_tool
-            _name, _arg, _body = parse_call(r)
-            if _name:
-                _result = await run_tool(_name, _arg, tid)
-                msgs.append({"role": "assistant", "content": r})
-                msgs.append({"role": "user",
-                             "content": f"（工具 {_name} 返回：{_result}）"
-                                        f"现在用正常的话回他，不要再输出 @tool。"})
-                _r2 = await call_deepseek(msgs) or await call_doubao(msgs)
-                r = _r2 or _body or r
-        except Exception as e:
-            log_api(f"[工具] 调用失败: {e}")
+    r = await _maybe_run_tool(r, msgs, tid)
 
     # v9-U4：她真的回话了，算一次"被陪着"——缓解孤独
     if r and not isinstance(r, Fallback):

@@ -87,6 +87,64 @@ def is_at_me(raw_content, self_qq):
     return False
 
 
+async def _handle_image_segment(url, user_id):
+    """v19.5：图片片段处理从 parse_message_content 拆出"""
+    log_api(f"[消息解析] 收到图片: {str(url)[:60]}")
+    img_data = await run_blocking(download_url, url, timeout=60, name="image")
+    if not img_data:
+        log_api(f"[消息解析] 图片下载失败: {str(url)[:60]}")
+        return ["[图]"], "", None
+
+    is_gif = img_data[:6] in (b"GIF89a", b"GIF87a")
+    md5, tags_str, fp = await process_and_save_image(
+        img_data, url, user_id, keywords=["用户发图"])
+    log_api(f"[消息解析] 图片处理结果: md5={md5}, tags={tags_str}, fp={fp}")
+
+    desc, vt = None, []
+    try:
+        desc, vt = await describe_image(img_data)
+    except Exception as e:
+        log_api(f"[消息解析] 视觉失败: {e}")
+
+    if vt:
+        tags_str = ",".join(vt)
+        if md5:
+            try:
+                update_image_tags([md5], vt)
+            except Exception:
+                pass
+    if md5:
+        try:
+            memo = f"发来一张图（{desc}）" if desc else f"发来一张图（{tags_str}）"
+            add_event_to_db(user_id, memo, tags=tags_str[:40],
+                            kind="photo", importance=2)
+        except Exception:
+            pass
+
+    if desc:
+        return (["[图]"],
+                " " + desc + ("（这是一张动图，你只看到其中一帧）" if is_gif else ""),
+                md5)
+    if vt:
+        return [f"[{vt[0]}]"], " " + " ".join(vt[:5]), md5
+    return (["[图]"],
+            " （他发了一张图，你看清了轮廓但说不出细节，别让他重发）",
+            md5)
+
+
+def _normalize_placeholders(input_text, img_info):
+    """v17.9/v19.5：纯表情/纯图片换成一句人话，避免模型只回表情"""
+    plain = re.sub(r"\[[^\]]{1,8}\]", "", input_text).strip()
+    if not plain and img_info:
+        if any(x.startswith("[表情") for x in img_info):
+            input_text = "（他发了个 QQ 表情，没说话，你用一句话接住）"
+            img_info = [x for x in img_info if not x.startswith("[表情")]
+        elif "[图]" in img_info:
+            input_text = "（他发了一张图，没说话）"
+            img_info = [x for x in img_info if x != "[图]"]
+    return input_text, img_info
+
+
 async def parse_message_content(raw_content, user_id, ws=None):
     """解析消息内容：提取文本、处理图片、记录表情
 
@@ -103,50 +161,13 @@ async def parse_message_content(raw_content, user_id, ws=None):
             if t == "text":  # 文本类型
                 input_text += d.get("text", "")  # 追加文本
             elif t == "image":  # 图片类型
-                url = d.get("url") or d.get("file")  # 获取图片URL
-                log_api(f"[消息解析] 收到图片: {url[:60]}")  # 日志记录
-                img_data = await run_blocking(download_url, url, timeout=60, name="image")  # v17.0.3：统一线程池
-                if img_data:  # 下载成功
-                    is_gif = img_data[:6] in (b"GIF89a", b"GIF87a")  # v11：动图只能看到一帧
-                    md5, tags_str, fp = await process_and_save_image(img_data, url, user_id, keywords=["用户发图"])  # 先存下来
-                    log_api(f"[消息解析] 图片处理结果: md5={md5}, tags={tags_str}, fp={fp}")
+                url = d.get("url") or d.get("file")
+                info, add, md5 = await _handle_image_segment(url, user_id)
+                img_info.extend(info)
+                input_text += add
+                if md5:
+                    img_md5s.append(md5)
 
-                    # v11-A8/A6：交给多模态模型看一眼，拿回描述 + 标签
-                    desc, vt = None, []
-                    try:
-                        desc, vt = await describe_image(img_data)
-                    except Exception as e:
-                        log_api(f"[消息解析] 视觉失败: {e}")
-
-                    if vt:
-                        tags_str = ",".join(vt)
-                        if md5:
-                            try:
-                                update_image_tags([md5], vt)
-                            except Exception:
-                                pass
-
-                    if md5:
-                        img_md5s.append(md5)
-                        try:  # v11-A9：她记住「你发过一张什么样的图」
-                            memo = f"发来一张图（{desc}）" if desc else f"发来一张图（{tags_str}）"
-                            add_event_to_db(user_id, memo, tags=tags_str[:40],
-                                            kind="photo", importance=2)
-                        except Exception:
-                            pass
-
-                    if desc:  # 有描述就直接给模型「看到了什么」
-                        img_info.append("[图]")
-                        input_text += " " + desc + ("（这是一张动图，你只看到其中一帧）" if is_gif else "")
-                    elif vt:  # 只有标签
-                        img_info.append(f"[{vt[0]}]")
-                        input_text += " " + " ".join(vt[:5])
-                    else:  # v17.9：图收到了，只是没看清——别说成「没加载出来」
-                        img_info.append("[图]")
-                        input_text += " （他发了一张图，你看清了轮廓但说不出细节，别让他重发）"
-                else:  # 下载失败
-                    img_info.append("[图]")  # 添加通用图片标识
-                    log_api(f"[消息解析] 图片下载失败: {url[:60]}")  # 日志记录
             elif t == "reply":  # 引用某条消息（v12-A15 / v18.6）
                 quoted = d.get("id")
                 detail = ""
@@ -210,15 +231,7 @@ async def parse_message_content(raw_content, user_id, ws=None):
                 img_info.append(f"[表情{fid}]")  # 添加表情标识
     else:  # 消息是纯文本
         input_text = str(raw_content).strip()  # 直接转为字符串
-    # v17.9：整条消息只有表情/占位符 → 换成一句人话，让模型正常接
-    _plain = re.sub(r"\[[^\]]{1,8}\]", "", input_text).strip()
-    if not _plain and img_info:
-        if any(x.startswith("[表情") for x in img_info):
-            input_text = "（他发了个 QQ 表情，没说话，你用一句话接住）"
-            img_info = [x for x in img_info if not x.startswith("[表情")]
-        elif "[图]" in img_info:
-            input_text = "（他发了一张图，没说话）"
-            img_info = [x for x in img_info if x != "[图]"]
+    input_text, img_info = _normalize_placeholders(input_text, img_info)
 
     if img_info:  # 有图片/表情信息
         input_text = f"{input_text} {' '.join(img_info)}"  # 追加到文本末尾
