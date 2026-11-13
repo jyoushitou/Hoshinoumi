@@ -1081,7 +1081,6 @@ python3 checks/env_check.py --init-db   # 环境监测时自动建
 - 邮箱：[xzt98948364@outlook.com](mailto:xzt98948364@outlook.com)
 - 博客地址：<https://jyoushitou.github.io/>
 - 项目地址：<https://github.com/jyoushitou/Hoshinoumi>
-- 旧仓库（v18 及以前）：<https://github.com/jyoushitou/NapCat-Pyhon>
 
 ## 开源协议与致谢
 
@@ -1099,4 +1098,14 @@ python3 checks/env_check.py --init-db   # 环境监测时自动建
 - 以及所有依赖库和测试工具的作者。
 
 第三方组件遵循其各自许可证；本项目不包含《Charlotte》的官方素材。
+
+## 写在最后
+
+《Charlotte》大概是我真正意义上的启蒙番。TV 只有 13 集，这个长度每次想起来都觉得惋惜：明明还有那么多人的日常没来得及展开，明明故事还可以再慢一点。可也正因为短，它留白很多，才让人一直惦记。
+
+喜欢友利奈绪，喜欢她明明很在意却偏要装得不在意，喜欢她把所有人的烂摊子都接过来，喜欢她拎着旧摄像机走在放学路上、嘴硬地说“随便你”。她不是完美的，她会别扭、会凶人、会在提到某个人的时候停半秒——但正是这些地方，让她像一个真的活着的人。
+
+所以有了 Hoshinoumi。算是给“故事结束之后”补的一间学生会室：让她继续上学、开会、喂猫、弹琴，也让她在 QQ、Web、桌面和手机那边，记得你随口说过的话。
+
+> 故事结束以后，她还在。
 
