@@ -82,7 +82,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | v17 | 执行模型重构：阻塞池 → 事件/调度 → 出站层 → 主循环瘦身 | ✅ 已发布（v17.17） | [v17.md](docs/versions/v17.md) |
 | v18 | 情感的深刻度：记忆分轻重、情绪跨天、时间与日志修复 | ✅ 已完成（v18.20.0） | [v18.md](docs/versions/v18.md) |
 | v19 | 架构重构 + 对话同步底座：迁移单一入口、`conversation_messages`、`!history`、语音分段 | 🚧 试运行（v19.5.7） | [v19.md](docs/versions/v19.md) |
-| v20 | 网关（一）核心：C++/CommonNet + REST↔后端 HTTP + Docker | ✅ 已完成（v20.5） | [v20.md](docs/versions/v20.md) |
+| v20 | 网关（一）核心：C++/CommonNet + REST↔后端 HTTP + Docker + 配置向导 | 🚧 v20.0–v20.6 已完成；v20.7 规划 | [v20.md](docs/versions/v20.md) |
 | v21 | 网关（二）owner 鉴权：JWT/刷新/失败锁定 | 📋 已规划 | [v21.md](docs/versions/v21.md) |
 | v22 | 网关（三）安全：限流/审计/TLS/`!gw` | 📋 已规划 | [v22.md](docs/versions/v22.md) |
 | v23 | 多用户：users/identities/roles + 全表 user_id 隔离 | 📋 已规划 | [v23.md](docs/versions/v23.md) |

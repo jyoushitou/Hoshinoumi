@@ -17,6 +17,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 CONFIG = ROOT / "config.local.json"
+SHOW_INPUT = False
 
 
 def _mask(value):
@@ -31,8 +32,11 @@ def _mask(value):
 def _ask(label, current="", secret=False):
     shown = _mask(current) if secret else (current or "（未配置）")
     prompt = f"{label}\n  当前：{shown}\n  新值（回车保留）："
+    if secret and not SHOW_INPUT:
+        print("   （输入不回显：粘贴 Key 后直接回车，屏幕不显示是正常的）")
     try:
-        value = getpass.getpass(prompt) if secret else input(prompt)
+        value = (input(prompt) if (secret and SHOW_INPUT)
+                 else getpass.getpass(prompt) if secret else input(prompt))
     except (EOFError, KeyboardInterrupt):
         print("\n已取消。")
         raise SystemExit(1)
@@ -61,10 +65,15 @@ def _write_config(data):
 
 
 def main():
+    global SHOW_INPUT
+    if "--show-input" in sys.argv:
+        SHOW_INPUT = True
+
     print("=" * 60)
     print("  友利奈绪 API 配置向导")
     print("=" * 60)
     print("密钥写入数据库 api_keys；视觉接入点写入 config.local.json。")
+    print("密钥默认不回显（安全）；终端不支持隐藏输入时加 --show-input。")
     print("直接回车 = 保留当前值；输入 - = 清空该项。\n")
 
     from bot.infra import repo_key
