@@ -75,8 +75,8 @@ v6：P1 会说话 → P2 说实话 → P2.5 长感官 → P3 有生活 → P4 �
 | **v37** | [versions/v37.md](versions/v37.md) | 语音通话 | 规划中 |
 | **v38** | [versions/v38.md](versions/v38.md) | 视频通话 | 规划中 |
 | **v39** | [versions/v39.md](versions/v39.md) | 微服务接入：融进自有 Web，探网关 5 次 + 池复用 | 规划中 |
-| **v40** | [versions/v40.md](versions/v40.md) | 常驻（一）systemd / 看门狗 | 规划中 |
-| **v41** | [versions/v41.md](versions/v41.md) | 常驻（二）LITE / ARM / 一键安装 | 规划中 |
+| **v40** | [versions/v40.md](versions/v40.md) | 常驻（后端）systemd / 看门狗 | 规划中 |
+| **v41** | [versions/v41.md](versions/v41.md) | 嵌入式前端（Linux 后端）：树莓派/平板显示对话 | 规划中 |
 
 
 

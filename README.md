@@ -1,4 +1,4 @@
-﻿# Hoshinoumi（REC） v20.5
+# Hoshinoumi（REC） v20.5
 
 > 后端 [v19.5.7](docs/versions/v19.md)（v19 试运行）· 网关 [v20.0](docs/versions/v20.md)（v20 核心，Docker 交付）
 
@@ -102,8 +102,8 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | v37 | 语音通话 | 📋 已规划 | [v37.md](docs/versions/v37.md) |
 | v38 | 视频通话 | 📋 已规划 | [v38.md](docs/versions/v38.md) |
 | v39 | 微服务接入：融进自有 Web，探网关 5 次 + 池复用 | 📋 已规划 | [v39.md](docs/versions/v39.md) |
-| v40 | 常驻（一）systemd / 看门狗 | 📋 已规划 | [v40.md](docs/versions/v40.md) |
-| v41 | 常驻（二）LITE / ARM / 一键安装 | 📋 已规划 | [v41.md](docs/versions/v41.md) |
+| v40 | 常驻（后端）systemd / 看门狗 | 📋 已规划 | [v40.md](docs/versions/v40.md) |
+| v41 | 嵌入式前端（Linux 后端）：树莓派/平板显示对话 | 📋 已规划 | [v41.md](docs/versions/v41.md) |
 
 > **约定**：每个大版本的**最后一个次版本**用来收尾修 bug 和技术债，不堆新功能。
 
