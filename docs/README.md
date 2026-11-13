@@ -131,30 +131,32 @@ v6：P1 会说话 → P2 说实话 → P2.5 长感官 → P3 有生活 → P4 �
 | **v29** | [versions/v29.md](versions/v29.md) | 存储层扩展点：StorageBackend + Repository | 规划中 |
 | **v30** | [versions/v30.md](versions/v30.md) | 调度层扩展点：Scheduler + Trigger | 规划中 |
 | **v31** | [versions/v31.md](versions/v31.md) | 出站层扩展点：Transport + WS/HTTP 适配器 | 规划中 |
-
-> v24–v31 暴露的是分层扩展点。核心功能保持 native、不注册为插件；
-> 外部插件只 extend / enhance / 显式 replace 路由，禁用/卸载/失败回退核心。
-| **v32** | [versions/v32.md](versions/v32.md) | 多端推送：主动消息扇出到所有接入口 | 规划中 |
-| **v33** | [versions/v33.md](versions/v33.md) | DSH / Qoder / WorkBuddy 插件：她成为你所有工具的记忆层 | 规划中 |
-| **v34** | [versions/v34.md](versions/v34.md) | 电脑 Web：聊天 + 历史 + 功能面板 | 规划中 |
-| **v35** | [versions/v35.md](versions/v35.md) | 桌面端（一）Linux：Tauri + Web UI | 规划中 |
-| **v36** | [versions/v36.md](versions/v36.md) | 桌面端（二）Windows：Tauri + WebView2 | 规划中 |
-| **v37** | [versions/v37.md](versions/v37.md) | 手机 App（Flutter）+ 推送通知 | 规划中 |
-| **v38** | [versions/v38.md](versions/v38.md) | QQ 空间：发说说 + 只对熟人点赞/评论 | 规划中 |
-| **v39** | [versions/v39.md](versions/v39.md) | 运维（一）bash 只读 | 规划中 |
-| **v40** | [versions/v40.md](versions/v40.md) | 运维（二）agent | 规划中 |
-| **v41** | [versions/v41.md](versions/v41.md) | 运维（三）有限写 | 规划中 |
-| **v42** | [versions/v42.md](versions/v42.md) | 运维（四）可写体系 | 规划中 |
-| **v43** | [versions/v43.md](versions/v43.md) | 视频（一）B 站 | 规划中 |
-| **v44** | [versions/v44.md](versions/v44.md) | 视频（二）抖音 | 规划中 |
-| **v45** | [versions/v45.md](versions/v45.md) | 微信接入（OpenClaw） | 规划中 |
-| **v46** | [versions/v46.md](versions/v46.md) | 语音通话 | 规划中 |
-| **v47** | [versions/v47.md](versions/v47.md) | 视频通话 | 规划中 |
-| **v48** | [versions/v48.md](versions/v48.md) | 微服务接入：融进自有 Web，探网关 5 次 + 池复用 | 规划中 |
-| **v49** | [versions/v49.md](versions/v49.md) | 常驻（后端）systemd / 看门狗 | 规划中 |
-| **v50** | [versions/v50.md](versions/v50.md) | 嵌入式前端（Linux 后端）：树莓派/平板显示对话 | 规划中 |
+| **v32** | [versions/v32.md](versions/v32.md) | 跨层扩展接口与回退契约：只留接口，不实现插件 | 规划中 |
+| **v33** | [versions/v33.md](versions/v33.md) | 多端推送：主动消息扇出到所有接入口 | 规划中 |
+| **v34** | [versions/v34.md](versions/v34.md) | DSH / Qoder / WorkBuddy 插件：她成为你所有工具的记忆层 | 规划中 |
+| **v35** | [versions/v35.md](versions/v35.md) | 电脑 Web：聊天 + 历史 + 功能面板 | 规划中 |
+| **v36** | [versions/v36.md](versions/v36.md) | 桌面端（一）Linux：Tauri + Web UI | 规划中 |
+| **v37** | [versions/v37.md](versions/v37.md) | 桌面端（二）Windows：Tauri + WebView2 | 规划中 |
+| **v38** | [versions/v38.md](versions/v38.md) | 手机 App（Flutter）+ 推送通知 | 规划中 |
+| **v39** | [versions/v39.md](versions/v39.md) | QQ 空间：发说说 + 只对熟人点赞/评论 | 规划中 |
+| **v40** | [versions/v40.md](versions/v40.md) | 运维（一）bash 只读 | 规划中 |
+| **v41** | [versions/v41.md](versions/v41.md) | 运维（二）agent | 规划中 |
+| **v42** | [versions/v42.md](versions/v42.md) | 运维（三）有限写 | 规划中 |
+| **v43** | [versions/v43.md](versions/v43.md) | 运维（四）可写体系 | 规划中 |
+| **v44** | [versions/v44.md](versions/v44.md) | 视频（一）B 站 | 规划中 |
+| **v45** | [versions/v45.md](versions/v45.md) | 视频（二）抖音 | 规划中 |
+| **v46** | [versions/v46.md](versions/v46.md) | 微信接入（OpenClaw） | 规划中 |
+| **v47** | [versions/v47.md](versions/v47.md) | 语音通话 | 规划中 |
+| **v48** | [versions/v48.md](versions/v48.md) | 视频通话 | 规划中 |
+| **v49** | [versions/v49.md](versions/v49.md) | 微服务接入：融进自有 Web，探网关 5 次 + 池复用 | 规划中 |
+| **v50** | [versions/v50.md](versions/v50.md) | 常驻（后端）systemd / 看门狗 | 规划中 |
+| **v51** | [versions/v51.md](versions/v51.md) | 嵌入式前端（Linux 后端）：树莓派/平板显示对话 | 规划中 |
 
 
+
+> v24–v32 本身是核心开发计划（插件管理器、分层接口、路由/回退），不是插件；
+> 核心功能保持 native、不注册为插件；第三方插件只能通过这些接口添加实现。
+> v23 之前的全部功能是核心，只能在启动前通过 `config/features.json` / `NAO_FEATURES` 关闭。
 
 > 完整发布计划（次版本/小版本拆分）见 **[ROADMAP.md](ROADMAP.md)**。
 

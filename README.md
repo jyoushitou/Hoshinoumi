@@ -231,30 +231,38 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | v29 | 存储层扩展点：StorageBackend + Repository | 📋 已规划 | [v29.md](docs/versions/v29.md) |
 | v30 | 调度层扩展点：Scheduler + Trigger | 📋 已规划 | [v30.md](docs/versions/v30.md) |
 | v31 | 出站层扩展点：Transport + WS/HTTP 适配器 | 📋 已规划 | [v31.md](docs/versions/v31.md) |
+| v32 | 跨层扩展接口与回退契约：只留接口，不实现插件 | 📋 已规划 | [v32.md](docs/versions/v32.md) |
+| v33 | 多端推送：主动消息扇出到所有接入口 | 📋 已规划 | [v33.md](docs/versions/v33.md) |
+| v34 | DSH / Qoder / WorkBuddy 插件：她成为你所有工具的记忆层 | 📋 已规划 | [v34.md](docs/versions/v34.md) |
+| v35 | 电脑 Web：聊天 + 历史 + 功能面板 | 📋 已规划 | [v35.md](docs/versions/v35.md) |
+| v36 | 桌面端（一）Linux：Tauri + Web UI | 📋 已规划 | [v36.md](docs/versions/v36.md) |
+| v37 | 桌面端（二）Windows：Tauri + WebView2 | 📋 已规划 | [v37.md](docs/versions/v37.md) |
+| v38 | 手机 App（Flutter）+ 推送通知 | 📋 已规划 | [v38.md](docs/versions/v38.md) |
+| v39 | QQ 空间：发说说 + 只对熟人点赞/评论 | 📋 已规划 | [v39.md](docs/versions/v39.md) |
+| v40 | 运维（一）bash 只读 | 📋 已规划 | [v40.md](docs/versions/v40.md) |
+| v41 | 运维（二）agent | 📋 已规划 | [v41.md](docs/versions/v41.md) |
+| v42 | 运维（三）有限写 | 📋 已规划 | [v42.md](docs/versions/v42.md) |
+| v43 | 运维（四）可写体系 | 📋 已规划 | [v43.md](docs/versions/v43.md) |
+| v44 | 视频（一）B 站 | 📋 已规划 | [v44.md](docs/versions/v44.md) |
+| v45 | 视频（二）抖音 | 📋 已规划 | [v45.md](docs/versions/v45.md) |
+| v46 | 微信接入（OpenClaw） | 📋 已规划 | [v46.md](docs/versions/v46.md) |
+| v47 | 语音通话 | 📋 已规划 | [v47.md](docs/versions/v47.md) |
+| v48 | 视频通话 | 📋 已规划 | [v48.md](docs/versions/v48.md) |
+| v49 | 微服务接入：融进自有 Web，探网关 5 次 + 池复用 | 📋 已规划 | [v49.md](docs/versions/v49.md) |
+| v50 | 常驻（后端）systemd / 看门狗 | 📋 已规划 | [v50.md](docs/versions/v50.md) |
+| v51 | 嵌入式前端（Linux 后端）：树莓派/平板显示对话 | 📋 已规划 | [v51.md](docs/versions/v51.md) |
 
-> **插件接口原则**：v24–v31 暴露的是各架构层的扩展点，不是把现有功能插件化。
+> **插件接口原则**：v24–v32 暴露的是各架构层的扩展点，不是把现有功能插件化。
 > DeepSeek/豆包、BM25、QQ/NapCat、现有工具/命令、MySQL/SQLite、asyncio 调度、
 > WebSocket 出站都保持核心 native；外部插件只能 extend / enhance / 显式 replace 路由，
 > 禁用/卸载/失败时回退核心。
-| v32 | 多端推送：主动消息扇出到所有接入口 | 📋 已规划 | [v32.md](docs/versions/v32.md) |
-| v33 | DSH / Qoder / WorkBuddy 插件：她成为你所有工具的记忆层 | 📋 已规划 | [v33.md](docs/versions/v33.md) |
-| v34 | 电脑 Web：聊天 + 历史 + 功能面板 | 📋 已规划 | [v34.md](docs/versions/v34.md) |
-| v35 | 桌面端（一）Linux：Tauri + Web UI | 📋 已规划 | [v35.md](docs/versions/v35.md) |
-| v36 | 桌面端（二）Windows：Tauri + WebView2 | 📋 已规划 | [v36.md](docs/versions/v36.md) |
-| v37 | 手机 App（Flutter）+ 推送通知 | 📋 已规划 | [v37.md](docs/versions/v37.md) |
-| v38 | QQ 空间：发说说 + 只对熟人点赞/评论 | 📋 已规划 | [v38.md](docs/versions/v38.md) |
-| v39 | 运维（一）bash 只读 | 📋 已规划 | [v39.md](docs/versions/v39.md) |
-| v40 | 运维（二）agent | 📋 已规划 | [v40.md](docs/versions/v40.md) |
-| v41 | 运维（三）有限写 | 📋 已规划 | [v41.md](docs/versions/v41.md) |
-| v42 | 运维（四）可写体系 | 📋 已规划 | [v42.md](docs/versions/v42.md) |
-| v43 | 视频（一）B 站 | 📋 已规划 | [v43.md](docs/versions/v43.md) |
-| v44 | 视频（二）抖音 | 📋 已规划 | [v44.md](docs/versions/v44.md) |
-| v45 | 微信接入（OpenClaw） | 📋 已规划 | [v45.md](docs/versions/v45.md) |
-| v46 | 语音通话 | 📋 已规划 | [v46.md](docs/versions/v46.md) |
-| v47 | 视频通话 | 📋 已规划 | [v47.md](docs/versions/v47.md) |
-| v48 | 微服务接入：融进自有 Web，探网关 5 次 + 池复用 | 📋 已规划 | [v48.md](docs/versions/v48.md) |
-| v49 | 常驻（后端）systemd / 看门狗 | 📋 已规划 | [v49.md](docs/versions/v49.md) |
-| v50 | 嵌入式前端（Linux 后端）：树莓派/平板显示对话 | 📋 已规划 | [v50.md](docs/versions/v50.md) |
+>
+> **核心功能范围**：v23 之前（含当前 bot）的聊天、记忆、命令、定时、语音、视觉、
+> 读书、OCR、备份、主动消息等全部是核心功能，不插件化。
+> v24–v32 本身也是核心开发计划（插件管理器、七层接口、路由/回退），不是插件；
+> 第三方只能通过这些接口添加自己的实现。
+> 它们只能在启动前通过 `config/features.json`（或 `NAO_FEATURES`）关闭；
+> 没有对应开关的核心功能默认常开。插件管理器不能 disable/uninstall 核心功能。
 
 > **约定**：每个大版本的**最后一个次版本**用来收尾修 bug 和技术债，不堆新功能。
 
@@ -1275,7 +1283,7 @@ python3 checks/env_check.py --init-db   # 环境监测时自动建
 |---|---|
 | **番茄正文有 OCR 错字** | 约 5%（`神谨`→`神龛`），对摘要够用，逐字引用不可靠 |
 | **起点抓不了** | 章节页对机房 IP + 未登录双重限制，已放弃 |
-| **抖音未实现** | 规划在 v40，且只做看和转发，发评论不可行 |
+| **抖音未实现** | 规划在 v41，且只做看和转发，发评论不可行 |
 | 群聊记忆按群号 | 同一个人在私聊和群里是两份记忆 |
 | 语义检索靠关键词 | 无外网装不了 embedding，BM25 + 关键词双路 |
 | 视觉/ASR 依赖外部接口 | 失败静默降级，不影响聊天 |
@@ -1304,10 +1312,10 @@ python3 checks/env_check.py --init-db   # 环境监测时自动建
 | 文档 | 内容 |
 |---|---|
 | [`docs/README.md`](docs/README.md) | 文档总索引（版本 → 条目 → 状态） |
-| [`docs/ROADMAP.md`](docs/ROADMAP.md) | 发布路线图：v17~v46 每个小版本的拆解与验收点 |
+| [`docs/ROADMAP.md`](docs/ROADMAP.md) | 发布路线图：v17~v47 每个小版本的拆解与验收点 |
 | [`docs/DB-DESIGN.md`](docs/DB-DESIGN.md) | 数据库设计（一表一职责） |
 | [`docs/发布检查清单.md`](docs/发布检查清单.md) | 5 组检查项 + 环境变量表 + 发布流程 |
-| [`docs/versions/`](docs/versions/) | 各版本设计文档（v6 ~ v46） |
+| [`docs/versions/`](docs/versions/) | 各版本设计文档（v6 ~ v47） |
 | [`docs/V14-后续清单.md`](docs/V14-后续清单.md) | 未排期需求（A~E 组） |
 | [`docs/V6-功能.md`](docs/V6-功能.md) | v6 时代的功能总表（74 项，封版） |
 | [`docs/RELEASE-NOTES.md`](docs/RELEASE-NOTES.md) | 最近一次发布说明 |
