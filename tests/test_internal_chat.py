@@ -1,4 +1,4 @@
-# ===================== v21.2 网关对话入库 =====================
+﻿# ===================== v21.2 网关对话入库 =====================
 import asyncio
 import json
 import sys
@@ -120,7 +120,7 @@ class TestInternalChatHistory(unittest.TestCase):
         self.assertEqual(len(self.appended), 2)
         self.assertEqual(self.appended[0]["role"], "user")
         self.assertEqual(self.appended[0]["channel"], "gateway")
-        self.assertEqual(self.appended[0]["user_id"], "owner")
+        self.assertEqual(self.appended[0]["user_id"], "__owner__")
         self.assertEqual(self.appended[0]["target_id"], "__owner__")
         self.assertEqual(self.appended[1]["role"], "assistant")
         self.assertIn("gw-user:c1", self.appended[0]["message_id"])
@@ -146,3 +146,4 @@ class TestInternalChatHistory(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

@@ -29,9 +29,12 @@ async def handle_internal_history(request):
         before = int(request.query["before"]) if request.query.get("before") else None
     except ValueError:
         return json_response({"ok": False, "error": "bad limit/before"}, status=400)
+    owner = request.headers.get("X-Owner-Id") or request.query.get("user_id") or "__owner__"
+    if owner == "owner":
+        owner = "__owner__"
     rows = repo_conversation.recent(
         target, limit=limit, before_id=before,
-        user_id=request.query.get("user_id") or "__owner__",
+        user_id=owner,
     )
     data = []
     for r in rows:
@@ -70,6 +73,9 @@ async def handle_internal_chat(request):
         return json_response({"error": "missing_target_id", "message": "target_id 不能为空"}, 400)
 
     user_id = _internal_uid(request)
+    # v21 单用户：JWT sub=owner，但历史/QQ 统一存 __owner__
+    if user_id == "owner":
+        user_id = "__owner__"
     client_id = str(body.get("client_message_id") or uuid.uuid4().hex)
     try:
         reply = await get_character_reply(message, target_id, body.get("keywords"))
