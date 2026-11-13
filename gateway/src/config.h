@@ -1,4 +1,4 @@
-/// @file        config.h
+﻿/// @file        config.h
 /// @brief       网关配置（config/gateway.json）
 /// @author      jyoushitou
 /// @date        2026-11-13
@@ -17,10 +17,10 @@ namespace Gateway
         std::string listenHost = "127.0.0.1";
 
         /// @brief HTTP 监听端口
-        unsigned short listenPort = 8080;
+        unsigned short listenPort = 27005;
 
         /// @brief 后端 API 基地址（v20 只允许 127.0.0.1 / localhost）
-        std::string backendBase = "http://127.0.0.1:60908";
+        std::string backendBase = "http://127.0.0.1:27004";
 
         /// @brief 调后端的超时（毫秒）
         int backendTimeoutMs = 5000;
@@ -47,3 +47,4 @@ namespace Gateway
         std::string Describe() const;
     };
 } // namespace Gateway
+

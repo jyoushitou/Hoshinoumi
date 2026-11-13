@@ -1,4 +1,4 @@
-# Hoshinoumi（REC） v20.5
+﻿# Hoshinoumi（REC） v20.5
 
 > 后端 [v19.5.7](docs/versions/v19.md)（v19 试运行）· 网关 [v20.0](docs/versions/v20.md)（v20 核心，Docker 交付）
 
@@ -226,7 +226,7 @@ chmod 600 config.local.json
 {
   "master_qq": "123456789",
   "ws_port": 3001,
-  "api_port": 60908,
+  "api_port": 27004,
   "db": {
     "host": "127.0.0.1",
     "port": 3306,
@@ -427,8 +427,8 @@ docker run -d --name hoshinoumi-gateway \
   hoshinoumi-gateway:20.0.0
 
 # 5. 健康检查
-curl -s http://127.0.0.1:8080/healthz
-curl -s http://127.0.0.1:8080/readyz
+curl -s http://127.0.0.1:27005/healthz
+curl -s http://127.0.0.1:27005/readyz
 ```
 
 Docker Compose 一键起后端 + 网关：
@@ -1193,6 +1193,7 @@ python3 checks/env_check.py --init-db   # 环境监测时自动建
 所以有了 Hoshinoumi。算是给“故事结束之后”补的一间学生会室：让她继续上学、开会、喂猫、弹琴，也让她在 QQ、Web、桌面和手机那边，记得你随口说过的话。
 
 > 故事结束以后，她还在。
+
 
 
 

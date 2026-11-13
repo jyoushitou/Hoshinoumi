@@ -1,4 +1,4 @@
-# ===================== 配置加载（v16） =====================
+﻿# ===================== 配置加载（v16） =====================
 # 敏感配置不再写死在代码里。优先级：
 #
 #   1. 环境变量（NAO_*）
@@ -19,7 +19,7 @@ CONFIG_FILE = os.path.join(ROOT, "config.local.json")
 DEFAULTS = {
     "master_qq": "",
     "ws_port": 3001,
-    "api_port": 60908,
+    "api_port": 27004,
     "db": {
         "backend": "auto",         # auto：能用 MySQL 就用，连不上退 SQLite
         "path": "data/nao.db",     # sqlite 文件位置
@@ -199,3 +199,4 @@ def describe_source():
     if any(os.getenv(k) for k in ENV_MAP):
         parts.append("环境变量")
     return " + ".join(parts) if parts else "默认值（未配置）"
+

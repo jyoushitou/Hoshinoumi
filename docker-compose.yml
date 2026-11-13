@@ -26,7 +26,7 @@ services:
       NAO_MASTER_QQ: "${NAO_MASTER_QQ:?请先设置主人QQ}"
       # ---- WebSocket / API 端口 ----
       NAO_WS_PORT: "3001"
-      NAO_API_PORT: "60908"
+      NAO_API_PORT: "27004"
       # ---- 数据库 ----
       NAO_DB_HOST: "${NAO_DB_HOST:?请先在 .env 里设置数据库地址}"
       NAO_DB_PORT: "3306"
@@ -48,5 +48,6 @@ services:
     # bridge 网络写法（把 network_mode 删掉，取消下面注释）：
     # ports:
     #   - "3001:3001"
-    #   - "60908:60908"
+    #   - "27004:27004"
+
 

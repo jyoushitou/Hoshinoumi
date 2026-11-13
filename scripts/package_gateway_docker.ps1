@@ -38,5 +38,6 @@ Write-Host "部署机："
 Write-Host "  docker load -i REC-v${Version}-gateway-docker.tar.gz"
 Write-Host "  docker run -d --name hoshinoumi-gateway --network host hoshinoumi-gateway:${Version}"
 Write-Host ""
-Write-Host "如果 bot API 不是 127.0.0.1:60908，先挂载 config/gateway.json 覆盖。"
+Write-Host "如果 bot API 不是 127.0.0.1:27004，先挂载 config/gateway.json 覆盖。"
+
 

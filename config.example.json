@@ -1,8 +1,8 @@
-{
+﻿{
   "_说明": "复制成 config.local.json 再改。这个文件不会进版本库（.gitignore 已排除）。",
   "master_qq": "123456789",
   "ws_port": 3001,
-  "api_port": 60908,
+  "api_port": 27004,
   "vision": {
     "_说明": "环境变量 NAO_VISION_* 优先；这里作为本地文件回退。model 可填 ep-xxx 接入点 ID。",
     "model": "",
@@ -20,3 +20,4 @@
     "name": "TomoriNaoBotData"
   }
 }
+

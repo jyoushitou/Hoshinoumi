@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """Hoshinoumi（REC）网关配置向导（v20.0）
 
     python3 scripts/configure.py            # 交互配置
@@ -14,9 +14,9 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEFAULT_PATH = os.path.join(ROOT, "config", "gateway.json")
 DEFAULTS = {
-    "listen": {"host": "127.0.0.1", "port": 8080},
+    "listen": {"host": "127.0.0.1", "port": 27005},
     "backend": {
-        "base": "http://127.0.0.1:60908",
+        "base": "http://127.0.0.1:27004",
         "timeout_ms": 5000,
         "startup_wait": True,
         "startup_retry_interval_sec": 30,
@@ -44,12 +44,12 @@ def _validate(cfg):
     backend = cfg.get("backend") if isinstance(cfg.get("backend"), dict) else {}
     host = str(listen.get("host") or "127.0.0.1")
     try:
-        port = int(listen.get("port") or 8080)
+        port = int(listen.get("port") or 27005)
     except ValueError:
         raise SystemExit("listen.port 必须是整数")
     if not (1 <= port <= 65535):
         raise SystemExit("listen.port 必须在 1..65535")
-    base = str(backend.get("base") or "http://127.0.0.1:60908").rstrip("/")
+    base = str(backend.get("base") or "http://127.0.0.1:27004").rstrip("/")
     if not (base.startswith("http://127.0.0.1:") or base.startswith("http://localhost:")):
         raise SystemExit("backend.base 只允许 http://127.0.0.1:... 或 http://localhost:...")
     try:
@@ -109,8 +109,8 @@ def _run_wizard(path):
     listen = cfg.setdefault("listen", {})
     backend = cfg.setdefault("backend", {})
     listen["host"] = _ask("监听地址（默认只本机；对外填 0.0.0.0）", listen.get("host", "127.0.0.1"))
-    listen["port"] = int(_ask("监听端口", listen.get("port", 8080)))
-    backend["base"] = _ask("后端 API 地址", backend.get("base", "http://127.0.0.1:60908"))
+    listen["port"] = int(_ask("监听端口", listen.get("port", 27005)))
+    backend["base"] = _ask("后端 API 地址", backend.get("base", "http://127.0.0.1:27004"))
     backend["timeout_ms"] = int(_ask("后端超时（毫秒）", backend.get("timeout_ms", 5000)))
     backend["startup_wait"] = _ask_bool(
         "启动时等待后端（30s 间隔，最多 5 次）",
@@ -155,3 +155,4 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
+

@@ -1,4 +1,4 @@
-# ===================== 发布版 docker compose =====================
+﻿# ===================== 发布版 docker compose =====================
 # 部署机只需要：
 #   docker load -i REC-v20.0.0-docker.tar.gz
 #   cp .env.example .env && vi .env      # 只填隐私项
@@ -17,7 +17,7 @@ services:
     environment:
       TZ: Asia/Shanghai
       NAO_API_HOST: "127.0.0.1"
-      NAO_API_PORT: "60908"
+      NAO_API_PORT: "27004"
     volumes:
       - ./data:/app/data
       - ./personas:/app/personas
@@ -32,3 +32,4 @@ services:
       - bot
     volumes:
       - ./config/gateway.json:/app/config/gateway.json:ro
+

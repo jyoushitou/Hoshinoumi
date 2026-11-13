@@ -1,4 +1,4 @@
-# Hoshinoumi（REC）Gateway v20
+﻿# Hoshinoumi（REC）Gateway v20
 
 基于用户自己的 **NetWorkCommunication / CommonNet**（Boost.Asio + Boost.Beast）实现的 C++ 网关。
 
@@ -70,8 +70,8 @@ python3 scripts/configure.py
 ```bash
 ./gateway/build/rec_gateway --config config/gateway.json
 
-curl -s http://127.0.0.1:8080/healthz
-curl -s http://127.0.0.1:8080/readyz
+curl -s http://127.0.0.1:27005/healthz
+curl -s http://127.0.0.1:27005/readyz
 ```
 
 ## Docker（推荐部署方式）
@@ -107,4 +107,5 @@ docker run -d --name hoshinoumi-gateway \
 > ```
 
 > v20 后端只允许 `127.0.0.1` / `localhost`；容器里用 `--network host` 让
-> `127.0.0.1:60908` 指向宿主机后端（v19 API 默认端口）。不要给后端配公网地址。
+> `127.0.0.1:27004` 指向宿主机后端（v19 API 默认端口）。不要给后端配公网地址。
+

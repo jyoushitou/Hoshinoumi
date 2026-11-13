@@ -1,4 +1,4 @@
-# ===================== API 服务器配置 =====================
+﻿# ===================== API 服务器配置 =====================
 # 常量 + Token 加载（迁移自 api_server.py，v5-R5）
 
 import os
@@ -11,7 +11,7 @@ from ..infra.repo_key import get_api_key_from_db, save_api_key
 API_HOST = os.getenv("NAO_API_HOST", "127.0.0.1")
 from ..core import settings as _settings
 
-API_PORT = int(_settings.get("api_port") or 60908)  # v16：可被 NAO_API_PORT / 配置文件覆盖
+API_PORT = int(_settings.get("api_port") or 27004)  # v16：可被 NAO_API_PORT / 配置文件覆盖
 API_TOKEN = ""
 API_TOKEN_KEY_NAME = "API_SERVER_TOKEN"
 MAX_CONCURRENT_REQUESTS = 20
@@ -56,3 +56,4 @@ def format_api_token_info():
         f"    POST /api/chat     - AI对话"
         f"    POST /api/command  - 执行命令"
     )
+

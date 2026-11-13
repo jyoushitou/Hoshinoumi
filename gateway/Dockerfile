@@ -47,6 +47,7 @@ RUN ldconfig
 RUN mkdir -p /app/config
 COPY gateway/config.docker.json /app/config/gateway.json
 
-EXPOSE 8080
+EXPOSE 27005
 ENTRYPOINT ["/usr/local/bin/rec_gateway", "--config", "/app/config/gateway.json"]
+
 
