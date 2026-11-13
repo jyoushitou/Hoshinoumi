@@ -104,7 +104,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | v24–v32 | 第三方开发者：写模型 provider、检索器、通道、工具、存储、调度、传输适配器 |
 | v33 | 需要多端主动消息的人：QQ、Web、桌面、手机、嵌入式屏 |
 | v34 | 用 DSH / Qoder / WorkBuddy 的开发者：希望 IDE 里也能调用同一个“她” |
-| v35–v51 | 想要 Web / Linux 桌面 / Windows 桌面 / 手机 App / 嵌入式屏的人 |
+| v35–v52 | 想要 Web / Linux 桌面 / Windows 桌面 / 手机 App / 嵌入式屏的人 |
 | 长期 | 写作辅助、跑团/角色扮演、个人知识陪伴、AI 角色研究、小社区自托管 |
 
 仍然不适合的方向：
@@ -290,19 +290,20 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | v36 | 桌面端（一）Linux：Tauri + Web UI | 📋 已规划 | [v36.md](docs/versions/v36.md) |
 | v37 | 桌面端（二）Windows：Tauri + WebView2 | 📋 已规划 | [v37.md](docs/versions/v37.md) |
 | v38 | 手机 App（Flutter）+ 推送通知 | 📋 已规划 | [v38.md](docs/versions/v38.md) |
-| v39 | QQ 空间：发说说 + 只对熟人点赞/评论 | 📋 已规划 | [v39.md](docs/versions/v39.md) |
-| v40 | 运维（一）bash 只读 | 📋 已规划 | [v40.md](docs/versions/v40.md) |
-| v41 | 运维（二）agent | 📋 已规划 | [v41.md](docs/versions/v41.md) |
-| v42 | 运维（三）有限写 | 📋 已规划 | [v42.md](docs/versions/v42.md) |
-| v43 | 运维（四）可写体系 | 📋 已规划 | [v43.md](docs/versions/v43.md) |
-| v44 | 视频（一）B 站 | 📋 已规划 | [v44.md](docs/versions/v44.md) |
-| v45 | 视频（二）抖音 | 📋 已规划 | [v45.md](docs/versions/v45.md) |
-| v46 | 微信接入（OpenClaw） | 📋 已规划 | [v46.md](docs/versions/v46.md) |
-| v47 | 语音通话 | 📋 已规划 | [v47.md](docs/versions/v47.md) |
-| v48 | 视频通话 | 📋 已规划 | [v48.md](docs/versions/v48.md) |
-| v49 | 微服务接入：融进自有 Web，探网关 5 次 + 池复用 | 📋 已规划 | [v49.md](docs/versions/v49.md) |
-| v50 | 常驻（后端）systemd / 看门狗 | 📋 已规划 | [v50.md](docs/versions/v50.md) |
-| v51 | 嵌入式前端（Linux 后端）：树莓派/平板显示对话 | 📋 已规划 | [v51.md](docs/versions/v51.md) |
+| v39 | 手机 App 独立模式：后端不可达时直连 DeepSeek | 📋 已规划 | [v39.md](docs/versions/v39.md) |
+| v40 | QQ 空间：发说说 + 只对熟人点赞/评论 | 📋 已规划 | [v40.md](docs/versions/v40.md) |
+| v41 | 运维（一）bash 只读 | 📋 已规划 | [v41.md](docs/versions/v41.md) |
+| v42 | 运维（二）agent | 📋 已规划 | [v42.md](docs/versions/v42.md) |
+| v43 | 运维（三）有限写 | 📋 已规划 | [v43.md](docs/versions/v43.md) |
+| v44 | 运维（四）可写体系 | 📋 已规划 | [v44.md](docs/versions/v44.md) |
+| v45 | 视频（一）B 站 | 📋 已规划 | [v45.md](docs/versions/v45.md) |
+| v46 | 视频（二）抖音 | 📋 已规划 | [v46.md](docs/versions/v46.md) |
+| v47 | 微信接入（OpenClaw） | 📋 已规划 | [v47.md](docs/versions/v47.md) |
+| v48 | 语音通话 | 📋 已规划 | [v48.md](docs/versions/v48.md) |
+| v49 | 视频通话 | 📋 已规划 | [v49.md](docs/versions/v49.md) |
+| v50 | 微服务接入：融进自有 Web，探网关 5 次 + 池复用 | 📋 已规划 | [v50.md](docs/versions/v50.md) |
+| v51 | 常驻（后端）systemd / 看门狗 | 📋 已规划 | [v51.md](docs/versions/v51.md) |
+| v52 | 嵌入式前端（Linux 后端）：树莓派/平板显示对话 | 📋 已规划 | [v52.md](docs/versions/v52.md) |
 
 > **插件接口原则**：v24–v32 暴露的是各架构层的接口，不是把现有功能插件化。
 > DeepSeek/豆包、BM25、QQ/NapCat、现有工具/命令、MySQL/SQLite、asyncio 调度、
@@ -1336,7 +1337,7 @@ python3 checks/env_check.py --init-db   # 环境监测时自动建
 |---|---|
 | **番茄正文有 OCR 错字** | 约 5%（`神谨`→`神龛`），对摘要够用，逐字引用不可靠 |
 | **起点抓不了** | 章节页对机房 IP + 未登录双重限制，已放弃 |
-| **抖音未实现** | 规划在 v41，且只做看和转发，发评论不可行 |
+| **抖音未实现** | 规划在 v42，且只做看和转发，发评论不可行 |
 | 群聊记忆按群号 | 同一个人在私聊和群里是两份记忆 |
 | 语义检索靠关键词 | 无外网装不了 embedding，BM25 + 关键词双路 |
 | 视觉/ASR 依赖外部接口 | 失败静默降级，不影响聊天 |
@@ -1365,10 +1366,10 @@ python3 checks/env_check.py --init-db   # 环境监测时自动建
 | 文档 | 内容 |
 |---|---|
 | [`docs/README.md`](docs/README.md) | 文档总索引（版本 → 条目 → 状态） |
-| [`docs/ROADMAP.md`](docs/ROADMAP.md) | 发布路线图：v17~v47 每个小版本的拆解与验收点 |
+| [`docs/ROADMAP.md`](docs/ROADMAP.md) | 发布路线图：v17~v48 每个小版本的拆解与验收点 |
 | [`docs/DB-DESIGN.md`](docs/DB-DESIGN.md) | 数据库设计（一表一职责） |
 | [`docs/发布检查清单.md`](docs/发布检查清单.md) | 5 组检查项 + 环境变量表 + 发布流程 |
-| [`docs/versions/`](docs/versions/) | 各版本设计文档（v6 ~ v47） |
+| [`docs/versions/`](docs/versions/) | 各版本设计文档（v6 ~ v48） |
 | [`docs/V14-后续清单.md`](docs/V14-后续清单.md) | 未排期需求（A~E 组） |
 | [`docs/V6-功能.md`](docs/V6-功能.md) | v6 时代的功能总表（74 项，封版） |
 | [`docs/RELEASE-NOTES.md`](docs/RELEASE-NOTES.md) | 最近一次发布说明 |
