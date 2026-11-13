@@ -16,6 +16,8 @@ _WEEK = {"mon": 1, "tue": 2, "wed": 3, "thu": 4, "fri": 5, "sat": 6, "sun": 7}
 
 handles = {}          # task_id -> TimerHandle
 _prepare_handles = {} # v19.5：task_id -> 提前 30 秒预生成 TimerHandle
+_generation = {}      # v21.7：task_id -> 代数；旧回调看到代数不匹配就退出
+_prepare_generation = {}
 _clock = {"now": None}  # 测试注入
 
 
@@ -425,8 +427,14 @@ def migrate_scene_rules():
 
 # ===================== 钩子管理 =====================
 
+def _bump(task_id):
+    _generation[task_id] = _generation.get(task_id, 0) + 1
+    return _generation[task_id]
+
+
 def _make_handle(task, loop, scheduler):
     task_id = int(task["id"])
+    gen = _bump(task_id)
     nxt = compute_next(task)
 
     if nxt is None:
@@ -437,6 +445,8 @@ def _make_handle(task, loop, scheduler):
     set_next(task_id, nxt)
 
     def _fire():
+        if _generation.get(task_id) != gen:
+            return  # 已被重排/取消，旧回调不再执行
         handles.pop(task_id, None)
         try:
             sched = scheduler
@@ -463,6 +473,8 @@ def _make_handle(task, loop, scheduler):
         p_delay = (nxt - timedelta(seconds=30) - _now()).total_seconds()
         if p_delay > 0:
             def _fire_prepare():
+                if _prepare_generation.get(task_id) != gen:
+                    return
                 _prepare_handles.pop(task_id, None)
                 if task_id not in handles:
                     return
@@ -475,6 +487,7 @@ def _make_handle(task, loop, scheduler):
                 except Exception as e:
                     log_err(f"[定时] 预生成投递失败({task_id}): {e}")
             _prepare_handles[task_id] = loop.call_at(loop.time() + p_delay, _fire_prepare)
+            _prepare_generation[task_id] = gen
 
     handle = loop.call_at(
         loop.time() + max(0.0, (nxt - _now()).total_seconds()), _fire)
@@ -499,8 +512,10 @@ def schedule_one(task, loop=None, scheduler=None):
 
 def cancel(task_id):
     task_id = int(task_id)
+    _bump(task_id)  # 让已排队的旧 prepare/fire 回调失效
     cancelled = False
     ph = _prepare_handles.pop(task_id, None)
+    _prepare_generation.pop(task_id, None)
     if ph is not None:
         cancelled = True
         try:
@@ -620,4 +635,9 @@ def next_summary():
 
 
 def stats():
-    return {"hooked": len(handles), "ids": sorted(handles)}
+    return {
+        "hooked": len(handles),
+        "prepare": len(_prepare_handles),
+        "ids": sorted(handles),
+        "generations": dict(_generation),
+    }

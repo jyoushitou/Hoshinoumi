@@ -174,6 +174,26 @@ class TestExtraction(unittest.TestCase):
         self.assertFalse(self.E.should_extract("group", text, "1", "1", addressed=True))
 
 
+class TestHookLifecycle(unittest.TestCase):
+    def setUp(self):
+        from bot.schedule import cron
+        self.cron = cron
+        cron._generation.clear()
+        cron._prepare_generation.clear()
+
+    def test_generation_bumps_on_cancel(self):
+        g1 = self.cron._bump(42)
+        self.cron.cancel(42)
+        g2 = self.cron._bump(42)
+        self.assertGreater(g2, g1)
+
+    def test_stats_reports_prepare_and_generation(self):
+        self.cron._bump(7)
+        s = self.cron.stats()
+        self.assertIn("prepare", s)
+        self.assertEqual(s["generations"].get(7), 1)
+
+
 class TestNextSummary(unittest.TestCase):
     def test_next_summary(self):
         task = {"id": 1, "content": "scene:提醒晚餐",
