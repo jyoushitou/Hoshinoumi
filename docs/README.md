@@ -53,7 +53,7 @@ v6：P1 会说话 → P2 说实话 → P2.5 长感官 → P3 有生活 → P4 �
 | **v16** | [versions/v16.md](versions/v16.md) | 空闲时自己读小说（番茄/起点，记进度、聊剧情） | 规划中 |
 | **v17** | [versions/v17.md](versions/v17.md) | 执行模型重构（16 个次版本，v17.17.0 已发布） | ✅ 已发布 |
 | **v18** | [versions/v18.md](versions/v18.md) | 情感的深刻度：记忆分量 → 事实卡 → 情绪跨天 …（21 个次版本，18.0–18.20） | 🔒 已封存（v18.20.0） |
-| **v19** | [versions/v19.md](versions/v19.md) | 架构重构 + 对话同步底座：迁移单一入口、`conversation_messages`、`!history` | 规划中 |
+| **v19** | [versions/v19.md](versions/v19.md) | 架构重构 + 对话同步底座：迁移单一入口、`conversation_messages`、`!history`、语音分段 | ✅ 已完成（v19.0.0） |
 | **v20** | [versions/v20.md](versions/v20.md) | 网关（一）核心：C++/Drogon + REST↔gRPC 代理 | 规划中 |
 | **v21** | [versions/v21.md](versions/v21.md) | 网关（二）owner 鉴权：JWT/刷新/失败锁定 | 规划中 |
 | **v22** | [versions/v22.md](versions/v22.md) | 网关（三）安全：限流/审计/TLS/`!gw` | 规划中 |

@@ -38,6 +38,41 @@ def _clean_diary_text(text: str) -> str:
     return cleaned
 
 
+def _build_diary_prompt(date_str, events, dialogs):
+    """把当天事件/对话拼成日记提示词（v19.5 从 generate_diary 拆出）"""
+    event_lines = []
+    for summary, tags in events:
+        tag_str = f" [{tags}]" if tags else ""
+        event_lines.append(f"- {summary}{tag_str}")
+    event_text = "\n".join(event_lines)
+
+    dialog_lines = []
+    for user_msg, response_text in dialogs[:8]:
+        if user_msg:
+            dialog_lines.append(f"主人: {user_msg[:100]}")
+        if response_text:
+            dialog_lines.append(f"奈绪: {response_text[:100]}")
+    dialog_text = "\n".join(dialog_lines)
+
+    user_prompt = (
+        f"日期：{date_str}\n"
+        f"\n【当天事件记录】\n{event_text}\n"
+        f"\n【当天对话片段】\n{dialog_text if dialog_text else '（无对话记录）'}"
+    )
+    system_prompt = (
+        "你是友利奈绪（Tomori Nao），一个傲娇毒舌但内心温柔的二次元少女。\n"
+        "请根据下面提供的事件记录和对话片段，以第一人称视角写一篇完整的日记。\n"
+        "要求：\n"
+        "1. 以日期自然开头（如'今天''X月X日'），像人类日记一样叙事\n"
+        "2. 全文至少200字，是一篇有开头、正文、结尾的完整文章\n"
+        "3. 自然地融入事件和对话细节，不要列清单\n"
+        "4. 偶尔带出性格特点（'哼''笨蛋主人'等），但不要过度\n"
+        "5. 行文流畅、口语化、有温度，体现对主人的关心\n"
+        "6. 直接输出日记正文，不要任何前缀、标题、格式行、表情符号"
+    )
+    return system_prompt, user_prompt
+
+
 async def generate_diary(target_id: str, date_str: str, force: bool = False):
     """生成指定日期的奈绪视角日记（一篇文章样式，200字以上）
 
@@ -78,44 +113,7 @@ async def generate_diary(target_id: str, date_str: str, force: bool = False):
         return f"📭 {date_str} 没有事件记录，暂时无法生成日记。"
 
     # ---- 5. 构造 AI 提示词 ----
-    event_lines = []
-    for summary, tags in events:
-        tag_str = f" [{tags}]" if tags else ""
-        event_lines.append(f"- {summary}{tag_str}")
-    event_text = "\n".join(event_lines)
-
-    dialog_lines = []
-    for user_msg, response_text in dialogs[:8]:  # 最多 8 组对话素材
-        if user_msg:
-            dialog_lines.append(f"主人: {user_msg[:100]}")
-        if response_text:
-            dialog_lines.append(f"奈绪: {response_text[:100]}")
-    dialog_text = "\n".join(dialog_lines)
-
-    # 组装 AI 用户输入
-    user_prompt = (
-        f"日期：{date_str}\n"
-        f"\n【当天事件记录】\n{event_text}\n"
-        f"\n【当天对话片段】\n{dialog_text if dialog_text else '（无对话记录）'}"
-    )
-
-    # 系统提示词：要求以奈绪视角写一篇 ≥200 字的文章样式日记
-    system_prompt = (
-        "你是友利奈绪（Tomori Nao），一个傲娇毒舌但内心温柔的二次元少女。\n"
-        "请根据下面提供的事件记录和对话片段，以第一人称视角写一篇完整的日记。\n"
-        "要求：\n"
-        "1. 以日期自然开头（如'今天''X月X日'），像人类日记一样叙事\n"
-        "2. 全文至少200字，是一篇有开头、正文、结尾的完整文章\n"
-        "3. 自然地融入事件和对话细节，不要列清单\n"
-        "4. 偶尔带出性格特点（'哼''笨蛋主人'等），但不要过度\n"
-        "5. 行文流畅、口语化、有温度，体现对主人的关心\n"
-        "6. 直接输出日记正文，不要任何前缀、标题、格式行、表情符号"
-    )
-
-    msgs = [
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": user_prompt},
-    ]
+    system_prompt, user_prompt = _build_diary_prompt(date_str, events, dialogs)
 
     # ---- 6. 调用 AI 生成（双模型兜底，max_tokens 1500 保证 200 字以上） ----
     log_system(f"日记({date_str}): 开始 AI 生成（事件{len(events)}条，对话{len(dialogs)}条）")
