@@ -327,8 +327,9 @@ namespace Utils
         SetConsoleCtrlHandler(Exit::ConsoleCtrlHandler, TRUE);
 #else
         // Linux/macOS：注册信号处理器，Ctrl+C 或 kill 时触发优雅退出
-        std::signal(SIGINT, Exit::onsignal);
-        std::signal(SIGTERM, Exit::onsignal);
+        // std::signal 要求 void(int)；onsignal() 是无参 API，用无捕获 lambda 适配
+        std::signal(SIGINT, [](int) { Exit::onsignal(); });
+        std::signal(SIGTERM, [](int) { Exit::onsignal(); });
         // 可选：忽略 SIGPIPE 防止写入已关闭 socket 导致进程崩溃
         std::signal(SIGPIPE, SIG_IGN);
 #endif
