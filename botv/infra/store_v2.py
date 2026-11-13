@@ -42,8 +42,8 @@ def _fallback_events(tid, limit):
     """旧表回退（kind 三类）"""
     try:
         c = get_cursor()
-        base = ("SELECT event_summary AS summary, tags, importance, created_at, "
-                "0.5 AS weight, 'medium' AS tier FROM events WHERE target_id=%s ")
+        base = ("SELECT summary, tags, importance, created_at, "
+                "0.5 AS weight, 'medium' AS tier FROM memories WHERE target_id=%s ")
         kind = "AND kind IN ('event','life','photo') "
         order = "ORDER BY created_at DESC LIMIT %s"
         try:
@@ -79,11 +79,11 @@ def read_state(target_id):
     try:
         c = get_cursor()
         c.execute(
-            "SELECT event_summary FROM events WHERE target_id=%s AND kind='state' "
+            "SELECT event_summary FROM memories WHERE target_id=%s AND kind='state' "
             "ORDER BY id DESC LIMIT 1", (tid,))
         row = c.fetchone()
-        if row and row["event_summary"]:
-            data = json.loads(row["event_summary"])
+        if row and (row.get("summary") or row.get("event_summary")):
+            data = json.loads((row.get("summary") or row.get("event_summary")))
             if isinstance(data, dict):
                 return data
     except Exception as e:

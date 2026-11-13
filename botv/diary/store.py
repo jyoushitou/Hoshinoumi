@@ -61,14 +61,14 @@ def save_diary_to_db(target_id: str, date_str: str, content: str):
 
 
 def get_events_by_date(target_id: str, date_str: str):
-    """查询指定日期的所有事件记录，返回 [(event_summary, tags)] 列表"""
+    """查询指定日期的所有事件记录，返回 [(summary, tags)] 列表"""
     try:
         c = get_cursor()
         c.execute(
-            "SELECT event_summary, tags FROM events WHERE target_id=%s AND DATE(created_at)=%s ORDER BY id",
+            "SELECT summary, tags FROM memories WHERE target_id=%s AND DATE(created_at)=%s ORDER BY id",
             (target_id, date_str)
         )
-        return [(r["event_summary"], r.get("tags") or "") for r in c.fetchall()]
+        return [(r["summary"], r.get("tags") or "") for r in c.fetchall()]
     except Exception as e:
         log_err(f"查询事件失败({target_id}, {date_str}): {e}")
         return []
@@ -96,7 +96,7 @@ def get_dates_with_events(target_id: str, limit=7):
         c = get_cursor()
         c.execute("""
             SELECT DISTINCT DATE(created_at) AS d
-            FROM events
+            FROM memories
             WHERE target_id=%s
             ORDER BY d DESC
             LIMIT %s

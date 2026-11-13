@@ -91,17 +91,13 @@ class TestStoreV2(unittest.TestCase):
         self.assertEqual(rows[0]["summary"], "去打了疫苗")
         self.assertEqual(rows[0]["tags"], ["生活", "健康"])
 
-    def test_memories_fallback_to_events(self):
-        self._patch({
-            "from memories": [],
-            "from events": [{"summary": "旧记忆", "tags": "", "importance": 3,
-                             "created_at": None}],
-        })
+    def test_memories_no_events_fallback(self):
+        """v19.4：events 不再作为读路径；memories 空就是空"""
+        self._patch({"from memories": []})
         from botv.infra.store_v2 import read_memories
 
         rows = read_memories("1")
-        self.assertEqual(rows[0]["summary"], "旧记忆")
-        self.assertEqual(rows[0]["tags"], [], "空 tags 应归一成空列表")
+        self.assertEqual(rows, [])
 
     def test_state_from_new_table(self):
         self._patch({"from bot_states": {"mood": 0.3, "energy": 0.8, "lonely": 0.1}})
