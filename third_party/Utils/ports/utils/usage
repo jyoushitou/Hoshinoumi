@@ -1,0 +1,14 @@
+utils 提供 CMake 包配置文件，使用 find_package 即可引入：
+
+    find_package(Utils CONFIG REQUIRED)
+    target_link_libraries(main PRIVATE Utils::Utils)
+
+导入目标 Utils::Utils 已自带：
+  - 包含目录（Utils.h / Message.h / UtilsExport.h）
+  - C++17 语言标准要求
+  - 静态库场景的 Utils_STATIC_DEFINE 宏
+  - 线程库依赖 Threads::Threads
+
+本包同时支持静态与动态链接：
+  - 用经典三元组 x64-windows 安装即得动态库（Utils.dll）
+  - 用 x64-windows-static 安装即得静态库

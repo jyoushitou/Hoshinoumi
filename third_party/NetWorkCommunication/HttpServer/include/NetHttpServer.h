@@ -1,0 +1,424 @@
+/// @file        NetHttpServer.h
+/// @brief       HTTP 服务端（基于 Boost.Beast，只做报文收发，不含路由）
+/// @details     在 TCP 的 Session / Server 之上叠加一层 HTTP 协议处理：
+///              解析请求 → 交给业务回调 → 业务通过会话接口回包。
+///              路由、鉴权、业务分发一律不做：方法、目标（含 query）、请求体原样交给业务层。
+/// @author      jyoushitou
+/// @date        2026-09-16
+/// @copyright   Copyright (c) 2026
+#pragma once
+
+#include <array>
+#include <atomic>
+#include <condition_variable>
+#include <functional>
+#include <memory>
+#include <mutex>
+#include <string>
+#include <thread>
+#include <utility>
+#include <vector>
+
+#include <boost/asio.hpp>
+#include <boost/beast/core.hpp>
+#include <boost/beast/http.hpp>
+
+#include "NetConnection.h"
+#include "NetServer.h"
+
+/// @namespace  HttpServer
+/// @brief      HTTP 服务端子模块
+/// @details    在 TCP 的 Session / Server 之上叠加一层 HTTP 协议处理
+/// @note
+namespace Net::Server::HttpServer
+{
+
+    /// @brief 响应头列表（名值对，按顺序追加到响应报文）
+    /// @details 供业务设置 Set-Cookie / X-Request-Id / X-Cache 这类头；
+    ///          与库内已有的头同名时以这里为准（Beast 的 set() 会覆盖同名项）
+    /// @note 头名按规范写法书写，值原样输出，不做任何转义
+    using ResponseHeaders = std::vector<std::pair<std::string, std::string>>;
+
+    /// @brief 存储一次请求的上下文
+    /// @details 名字沿用历史（最早只放 url）；路由删掉之后，这里只保留协议层信息：
+    ///          方法、目标、版本、请求体、复用意愿
+    /// @warning 每条请求开始时会整体清空，业务层若要异步使用请自行拷贝
+    /// @note
+    struct Url
+    {
+        /// @brief 原始请求头（起始行 + 所有头部字段 + 结尾空行，CRLF 分隔；不含消息体）
+        /// @details 由 Beast 的解析结果重建，字段顺序与客户端发送顺序一致。
+        ///          需要鉴权头 / Cookie / 自定义头时直接在这串里找，或自己按 CRLF 切分。
+        /// @note 只有在「请求头读完之后」才有值（body 读取不会改动它）；
+        ///       每条请求开始时随 Url 一起清空。
+        std::string headers;
+
+        /// @brief 请求方法（"GET" / "POST" / "PUT" / "DELETE" ...）
+        std::string method;
+
+        /// @brief 请求目标（如 "/api/user?id=1"，含 query，未做百分号解码）
+        std::string target;
+
+        /// @brief HTTP 版本（10 / 11）
+        unsigned version = 11;
+
+        /// @brief 请求体（chunked 已由 Beast 解码成明文）
+        std::string body;
+
+        /// @brief 客户端是否希望复用连接（HTTP/1.1 默认 true）
+        bool keep_alive = true;
+
+        /// @brief 本次请求的请求号（与 httpAsyncReplay 的 seq 参数配对，防止迟到回包串请求）
+        unsigned long long seq = 0;
+
+        /// @brief 发起本次请求的客户端 IP（点分十进制，例如 "192.168.1.20"）
+        /// @details 默认取 socket 的对端地址（remote_endpoint）；若 HttpServer 打开了
+        ///          setTrustProxy(true)，则优先用 X-Forwarded-For（取最左一段）或 X-Real-IP，
+        ///          两者都没有时才回退到对端地址
+        /// @note 默认 "0.0.0.0"；取不到（连接已断）时保留默认值。
+        ///       每条请求开始时随 Url 一起重置，随后由 readHead 重新填入
+        std::string requestIP = "0.0.0.0";
+    };
+
+    /// @brief HTTP 会话前向声明
+    class HttpSession;
+
+    /// @brief 业务回调类型
+    /// @details 与前端无关，是通用业务回调
+    /// @param[in] session 当前会话（业务层用它回包）
+    /// @param[in] url 请求上下文（方法/目标/版本/请求体/复用意愿）
+    /// @warning 回调在 IO 线程内执行，禁止长时间阻塞；慢业务请切到工作线程，
+    ///          算完后用 session->httpAsyncReplay(body) 回包（该接口线程安全）
+    /// @note 返回值为 void，与 TCP 侧的 HandleFunction 保持一致：回包一律走会话接口。
+    ///       在回调内直接调用 httpAsyncReplay 也安全——内部是投递到 IO 线程，
+    ///       本回调返回后立刻发送；若回调返回时还没回包，会话保持忙状态等着业务层补发
+    using HttpHandleFunction = std::function<void(const std::shared_ptr<HttpSession>&, const Url&)>;
+
+    /// @brief      HTTP 会话
+    /// @details    一条 TCP 连接上的 HTTP 请求循环：
+    ///             读请求头 → （有 body 时）读请求体 → 业务回调 → 业务回包 →
+    ///             keep-alive 则回到读请求头，否则关闭连接
+    /// @warning    禁止持有裸指针，必须通过 shared_ptr 管理生命周期
+    /// @warning    同一个 io_context 只允许由一个线程 run()：会话内部状态按单线程 IO 设计
+    /// @note
+    class HttpSession : public Net::Server::Session
+    {
+    public:
+        /// @brief      构造函数
+        /// @details    接管 socket，并把空闲超时与发送上限交给基类；随后记一次活动时间
+        /// @param[in] io 存储 io_context
+        /// @param[in] sock 已 accept 的连接 socket（内部 move 给基类）
+        /// @param[in] HF TCP 侧回调（HTTP 链路不走基类的二进制消息，本模块不使用，
+        ///            传 nullptr 即可；保留该参数只为与 Session 的构造签名保持对称）
+        /// @param[in] timeout 空闲超时时间（秒，传 0 时基类回退为 60）
+        /// @param[in] maxSendBufLen 发送队列积压上限（HTTP 不使用基类发送队列，仅为满足基类构造）
+        /// @param[in] maxHttpSendBufLen 请求头 / 请求体的长度上限（非正数回退为 10MB）
+        /// @warning    构造完成后必须马上交给 shared_ptr 持有，否则 start() 里的
+        ///             shared_from_this() 会抛 std::bad_weak_ptr
+        /// @param[in] trustProxy 是否信任代理头来判定客户端 IP（见 HttpServer::setTrustProxy）
+        /// @note
+        HttpSession(boost::asio::io_context& io, boost::asio::ip::tcp::socket sock,
+                    std::shared_ptr<HttpHandleFunction> HF, long long timeout, int maxSendBufLen, int maxHttpHeaderLen,
+                    int maxHttpSendBufLen, bool trustProxy = false);
+
+        /// @brief      开始（或继续）读取下一条 HTTP 请求
+        /// @details    重建解析器 → 清空请求上下文 → 异步读请求头；
+        ///             响应写完且允许 keep-alive 时会被再次调用，构成请求循环
+        /// @warning    须在连接建立后、且对象已由 shared_ptr 持有时调用
+        /// @note       重写基类虚函数：不走基类「读 12 字节二进制头」的链路
+        void start() override;
+
+        /// @brief      发送 HTTP 响应报文
+        /// @details    构造响应并异步写入 socket；写完按 keep-alive 决定复用连接还是关闭
+        /// @param[in] body 响应体
+        /// @param[in] st 状态码（默认 200）
+        /// @return     报文已交给 socket 返回 true；本条请求已经回过包、本次被丢弃返回 false
+        /// @warning    必须在 IO 线程内调用；业务线程请用 httpAsyncReplay
+        /// @note       每条请求只回一次包，重复调用会被丢弃；
+        ///             请求体没读完时不会复用连接（提前拒绝也走这里）。
+        ///             返回 false 时调用方可以据此关掉卡住的连接（空闲巡检就是这么做的）
+        bool httpReplay(const std::string& body, boost::beast::http::status st = boost::beast::http::status::ok);
+
+        /// @brief      发送响应（可带自定义响应头）
+        /// @details    与上面两参版本完全相同，只是在写报文时额外追加 headers；
+        ///              典型用途：Set-Cookie、X-Request-Id、X-Cache
+        /// @param[in] body 响应体
+        /// @param[in] st 状态码
+        /// @param[in] headers 额外响应头（同名的库内默认头会被覆盖）
+        /// @return     报文已交给 socket 返回 true；本条请求已经回过包、本次被丢弃返回 false
+        /// @warning    必须在 IO 线程内调用；业务线程请用带 headers 的 httpAsyncReplay
+        /// @note        每条请求只回一次包，重复调用会被丢弃
+        bool httpReplay(const std::string& body, boost::beast::http::status st, const ResponseHeaders& headers);
+
+        /// @brief      线程安全地发送响应
+        /// @details    任意线程均可调用，内部 post 到 IO 线程执行；
+        ///             用于业务回调返回后，业务完成时主动回包
+        /// @param[in] body 响应体（空串会原样发送，得到 Content-Length: 0 的响应）
+        /// @warning    会话已关闭、或当前没有请求在等回包时，本次调用被丢弃
+        /// @note
+        void httpAsyncReplay(unsigned long long seq, const std::string& body,
+                             boost::beast::http::status st = boost::beast::http::status::ok);
+
+        /// @brief      线程安全地发送响应（可带自定义响应头）
+        /// @details    任意线程均可调用，内部 post 到 IO 线程执行；用法同上面的三参版本，
+        ///              只是额外把 headers 写进报文
+        /// @param[in] seq 请求号（必须用回调里给的 url.seq）
+        /// @param[in] body 响应体
+        /// @param[in] st 状态码
+        /// @param[in] headers 额外响应头（Set-Cookie / X-Request-Id / X-Cache ...）
+        /// @warning    会话已关闭、或当前没有请求在等回包时，本次调用被丢弃
+        /// @note
+        void httpAsyncReplay(unsigned long long seq, const std::string& body, boost::beast::http::status st,
+                             const ResponseHeaders& headers);
+
+        /// @brief 兼容接口：按"当前请求"回包（等价于 httpAsyncReplay(reqSeq, body, 200)）
+        /// @param[in] body 响应体（空串会原样发送）
+        /// @warning 迟到回包有串请求风险，新代码请用带 seq 的版本
+        /// @note
+        void httpAsyncReplay(const std::string& body);
+
+        /// @brief      标记「本次响应发完就关闭连接」
+        /// @details    供服务器空闲巡检使用：既能把 408 之类的报文回给客户端，
+        ///             又能保证回完就断开，不会把连接留在半死不活的状态
+        /// @warning    只影响下一次 httpReplay 复不复用连接，不影响已经开始写出的报文
+        /// @note       线程安全（原子标志）
+        void markCloseAfterReply();
+
+        /// @brief 正常的关闭连接
+        /// @details 走基类的优雅关闭；会话表里的清理由服务器的巡检线程按 isClosed() 回收
+        /// @warning 线程安全（内部 post 到 IO 线程）
+        /// @note
+        void closeSession() override;
+
+        /// @brief 错误的关闭连接
+        /// @details 走基类的出错关闭（不等发送队列，直接断开）
+        /// @warning 线程安全（内部 post 到 IO 线程，与实现一致）
+        /// @note
+        void errCloseSession();
+
+    private:
+        /// @brief      处理请求
+        /// @details    置忙标记后调用业务回调；回调是否已同步回包由 replied 标记判断
+        /// @warning    回调在 IO 线程内执行，业务里禁止阻塞
+        /// @note       仅 IO 线程内调用；回调返回后不再做任何事（回包与关闭都由回调触发）
+        void handleToWork();
+
+        /// @brief 实际组报文并异步写出的实现（带自定义响应头）
+        /// @param[in] body 响应体
+        /// @param[in] st 状态码
+        /// @param[in] headers 额外响应头
+        /// @return 报文已交给 socket 返回 true；重复回包被丢弃返回 false
+        /// @note   仅 IO 线程内调用
+        bool httpReplayImpl(const std::string& body, boost::beast::http::status st, const ResponseHeaders& headers);
+
+        /// @brief 响应写完后「先排空残余请求数据、再关连接」的开关
+        /// @details 提前拒绝（413 请求体超限 / 431 请求头超限）时，对端可能还在灌数据；
+        ///          此时直接 close 会因为接收缓冲里有未读字节而让内核回 RST，
+        ///          客户端常常只看到连接被重置，看不到我们刚发出的状态码。
+        bool drainAfterReply = false;
+
+        /// @brief 排空阶段还能再丢弃多少字节（防止对端无限灌数据把内存/时间拖死）
+        std::size_t drainRemaining = 0;
+
+        /// @brief 排空阶段用的读缓冲
+        std::array<char, 8192> drainBuf{};
+
+        /// @brief 半关闭发送方向，然后把对端残余数据读掉，最后关连接
+        /// @note 仅 IO 线程内调用
+        void drainThenClose();
+
+        /// @brief 排空的一步：读一块丢弃，继续；读到 EOF / 出错 / 到上限就真正关闭
+        /// @note 仅 IO 线程内调用
+        void drainStep();
+
+        /// @brief      读取请求体
+        /// @details    两段式读取的第二段：在同一个 parser 上续读，读完（含 chunked 解码）后进业务
+        /// @warning    判断「要不要读 body」必须用 parser->is_done()，不能用 Content-Length ——
+        ///             chunked 请求根本没有这个头
+        /// @note       仅 IO 线程内调用
+        void readBody();
+
+        /// @brief 出错关闭的实际执行体
+        void closeWithError();
+
+        /// @brief 获得自身指针
+        /// @return 返回自己的共享指针
+        /// @warning 仅在对象由 shared_ptr 持有时可用
+        /// @note
+        std::shared_ptr<HttpSession> getSession();
+
+        /// @brief 请求解析器（每条请求重建，避免上一条请求的状态残留）
+        std::unique_ptr<boost::beast::http::request_parser<boost::beast::http::string_body>> parser;
+
+        /// @brief 读缓冲（跟随连接复用，保存半包与多读的字节，任何时候都不要手动清空）
+        boost::beast::flat_buffer buffer;
+
+        /// @brief 本条请求是否已经回过包
+        /// @details 一条请求只允许写出一条响应报文：重复写会把两条响应拼到同一条流上
+        std::atomic<bool> replied = false;
+
+        /// @brief 本次响应发完后是否关闭连接（空闲超时通知业务层用）
+        std::atomic<bool> closeAfterReply = false;
+
+        /// @brief 当前请求的上下文（业务层只读）
+        Url url = Url{};
+
+        /// @brief 是否信任 X-Forwarded-For / X-Real-IP（由 HttpServer 创建会话时传入）
+        /// @details 关闭时 requestIP 一律取 TCP 对端地址；打开后优先取代理头
+        bool trustProxy = false;
+
+        /// @brief 业务回调
+        std::shared_ptr<HttpHandleFunction> HHF = nullptr;
+
+        /// @brief 请求体的长度上限
+        int maxHttpSendBufLen = 0;
+
+        /// @brief 记录请求头的长度上限（默认 8KB；请求头正常只有 1~2KB）
+        int maxHttpHeadLen = 1024 * 8;
+
+        /// @brief 该发送的请求
+        std::atomic<unsigned long long> reqSeq{0};
+    };
+
+    /// @brief      HTTP 接收服务端
+    /// @details    只负责 accept 与生命周期管理，协议处理全部在 HttpSession 内完成：
+    ///             accept 新连接 → 创建 HttpSession → 启动读循环；
+    ///             另有一个巡检线程周期性关闭空闲超时的会话、回收已关闭的会话
+    /// @warning    必须由 shared_ptr 持有（内部使用 shared_from_this() 保活异步回调）
+    /// @warning    ep 只用于满足基类 Server 的构造（基类的 acceptor 本模块不使用）：
+    ///             传给基类的端点端口被改成 0，由系统分配临时端口，因此 ep 的端口
+    ///             与 http_port 相同也不会冲突
+    /// @note
+    class HttpServer : public Net::Server::Server
+    {
+    public:
+        /// @brief      构造函数
+        /// @details    完成 HTTP 监听器的 open / reuse_address / bind / listen
+        /// @param[in] io 存储 io_context
+        /// @param[in] ep 监听地址（只有地址部分生效，基类只把它当作地址来源）
+        /// @param[in] epHttp HTTP 监听端点（地址与端口都生效）
+        /// @param[in] HHF HTTP 业务回调（为空时所有请求回 500）
+        /// @param[in] HF TCP 侧回调（HTTP 链路不使用，仅为兼容基类构造保留）
+        /// @param[in] timeOut 基类会话的空闲超时（秒）
+        /// @param[in] httpTimeOut HTTP 会话的空闲超时（秒）
+        /// @param[in] checkTime 基类巡检周期（秒）
+        /// @param[in] httpCheckTime HTTP 巡检周期（秒）
+        /// @param[in] maxSendBufLen 基类发送队列上限（HTTP 链路不使用）
+        /// @param[in] maxHttpSendBufLen 每个 HTTP 会话的请求头 / 请求体上限（字节）
+        /// @warning    open / bind / listen 失败会抛 boost::system::system_error（与基类一致）；
+        ///             非正数入参会回退为默认值并打印错误日志
+        /// @note
+        HttpServer(boost::asio::io_context& io, boost::asio::ip::tcp::endpoint ep,
+                   boost::asio::ip::tcp::endpoint epHttp, std::shared_ptr<HttpHandleFunction> HHF = nullptr,
+                   std::shared_ptr<HandleFunction> HF = nullptr, long long timeOut = 60, long long httpTimeOut = 60,
+                   long long checkTime = 60, long long httpCheckTime = 60, int maxSendBufLen = 1024 * 1024 * 10,
+                   int maxHttpSendBufLen = 1024 * 1024 * 10, long long sessionTimeOut = 60,
+                   long long httpSessionTimeOut = 60, int maxHttpHeaderLen = 1024 * 8, int maxConnections = 1024);
+
+        /// @brief 析构函数
+        /// @details 置停止标志、关闭监听器与全部会话，再 join 巡检线程
+        /// @note
+        ~HttpServer() override;
+
+        /// @brief  启动
+        /// @details 等价于「开启 accept + 启动巡检线程」。这里故意隐藏基类的 start()（非虚），
+        ///          避免有人误启动基类「二进制协议」的 accept 循环
+        /// @warning 调用者必须已经用 shared_ptr 持有本对象
+        /// @note    幂等：已在运行时只打印提示；stop() 后重启会先 join 掉上一轮的巡检线程
+        void start() override;
+
+        /// @brief      停止服务
+        /// @details    置停止标志并 notify 唤醒巡检线程，再 post 到 IO 线程关闭监听器与全部会话
+        /// @warning    调用后服务器不再接受新连接，须重新构造使用
+        /// @note       幂等，可重复调用
+        void stop() override;
+
+        /// @brief      设置「是否用代理头判定客户端 IP」
+        /// @details    默认 false：Url::requestIP 一律取 TCP 对端地址（直连场景，最可靠）。
+        ///              设为 true 后，请求带 X-Forwarded-For 时取它最左边一段（原始客户端），
+        ///              否则看 X-Real-IP，两个头都没有才回退到对端地址。
+        /// @param[in] trust true = 信任 X-Forwarded-For / X-Real-IP
+        /// @warning     **只有服务确实部署在可信反向代理之后才打开**：这两个头客户端可以随便伪造，
+        ///              直接暴露公网时打开等于让任何人自报 IP（可用于刷限流、伪造审计日志）
+        /// @note        在 start() 之前设置；对已 accept 的会话不生效（每个会话创建时快照一次）
+        void setTrustProxy(bool trust) { trustProxy = trust; }
+
+    private:
+        /// @brief 关闭所有的Http
+        void closeHttpAll();
+
+        /// @brief 打开 HTTP 监听器（open / reuse_address / bind / listen）
+        /// @details 构造与 start() 共用：stop() 关掉监听器后，start() 靠它重新打开
+        /// @param[out] ec 失败原因
+        /// @return 已打开（或本次打开成功）返回 true
+        /// @note 幂等：已经打开时直接返回 true
+        bool openHttpAcceptor(boost::system::error_code& ec);
+
+        /// @brief HTTP 监听端点（构造时保存，重启时要用）
+        boost::asio::ip::tcp::endpoint epHttp;
+
+        /// @brief 是否信任代理头（X-Forwarded-For / X-Real-IP）来判定客户端 IP
+        /// @details 由 setTrustProxy() 设置，默认关闭；创建新会话时传给 HttpSession
+        bool trustProxy = false;
+
+        /// @brief      发起一次异步 accept
+        /// @details    成功则创建会话、放进会话表并启动读循环；无论成败都会续接下一次 accept
+        /// @warning    须在 io_context 运行后调用；acceptor 被关闭导致的取消错误会静默忽略
+        /// @note       仅 IO 线程内调用
+        void startAccept();
+
+        /// @brief      巡检线程主体
+        /// @details    按 httpCheckTime 周期睡眠（可被 stop() 立即唤醒），醒来后 post 到 io_context：
+        ///             给空闲超时的会话回 408 并关闭，随后移除已关闭的会话
+        /// @warning    在独立线程中运行，禁止直接访问只在 IO 线程内读写的 httpSessions
+        /// @note       每轮都通过 selfWeak 取保活指针，取不到说明 HttpServer 已析构，直接退出
+        void clearHttpSession();
+
+        /// @brief HTTP 监听器
+        boost::asio::ip::tcp::acceptor httpAcceptor;
+
+        /// @brief HTTP 会话集合（仅在 IO 线程内读写）
+        std::vector<std::shared_ptr<HttpSession>> httpSessions;
+
+        /// @brief 存储http的回调
+        std::shared_ptr<HttpHandleFunction> HHF = nullptr;
+
+        /// @brief 存储 HTTP 会话的空闲超时时间（秒）
+        long long httpTimeOut = 0;
+
+        /// @brief 存储巡检线程的轮询时间（秒）
+        long long httpCheckTime = 0;
+
+        /// @brief 记录每个 http session的请求体上限（字节，非正数时回退为 10MB）
+        int maxHttpSendBufLen = 0;
+
+        /// @brief 记录每个 http session的请求体上限（字节，非正数时回退为 8KB）
+        int maxHttpHeaderLen = 1024 * 8;
+
+        /// @brief 记录当前的运行状态
+        std::atomic<bool> httpRunning = false;
+
+        /// @brief 用于http巡检线程
+        std::thread httpClearSessionThread;
+
+        /// @brief 巡检线程互斥锁
+        /// @details 与 queueHttpCV 配合保护 httpRunning 标志，并保证巡检线程的等待可被打断
+        /// @note
+        std::mutex queueHttpMutex;
+
+        /// @brief 巡检线程条件变量
+        /// @details 巡检线程按 httpCheckTime 周期等待；stop() 时 notify_all 立即唤醒它退出
+        /// @note
+        std::condition_variable queueHttpCV;
+
+        /// @brief httpAcceptor重连错误
+        unsigned int httpAcceptorConnectionCount = 0;
+
+        /// @brief 记录忙时的时间，超时自动踢
+        long long httpSessionTimeOut = 60;
+
+        /// @brief 最大并发连接数（<=0 表示不限制）
+        /// @details 达到上限后新连接会被立刻关闭，避免句柄/内存被吃光
+        int maxConnections = 1024;
+    };
+} // namespace Net::Server::HttpServer

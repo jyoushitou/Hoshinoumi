@@ -1,4 +1,4 @@
-﻿# Hoshinoumi（REC） v19.5.7
+# Hoshinoumi（REC） v19.5.7
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![Database](https://img.shields.io/badge/Database-MySQL%20%7C%20SQLite-4479A1)](#)
@@ -105,6 +105,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 ```
 项目根/
 ├── bot/            机器人代码（分层包）
+├── gateway/        C++ 网关（v20，CommonNet + Docker）
 ├── tests/           功能测试（分模块 + 冒烟，927 条）
 ├── checks/          前置环境监测 + 迁移检查（37 条，与 bot 同级）
 ├── scripts/         迁移 / 打包 / 发布 / 自检脚本

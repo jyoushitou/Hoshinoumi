@@ -1,0 +1,11 @@
+{
+  "listen": {
+    "host": "127.0.0.1",
+    "port": 8080
+  },
+  "backend": {
+    "base": "http://127.0.0.1:7070",
+    "timeout_ms": 5000
+  },
+  "log_level": "info"
+}

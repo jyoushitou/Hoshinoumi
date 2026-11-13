@@ -1,4 +1,4 @@
-.git
+﻿.git
 .gitignore
 .venv
 venv
@@ -21,3 +21,4 @@ tests
 docs
 *.md
 !README.md
+gateway/build

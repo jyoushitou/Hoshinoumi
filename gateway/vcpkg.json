@@ -1,0 +1,12 @@
+{
+  "name": "hoshinoumi-gateway",
+  "version-string": "20.0.0",
+  "description": "Hoshinoumi (REC) REST gateway built on CommonNet",
+  "dependencies": [
+    "commonnet",
+    "boost-asio",
+    "boost-system",
+    "boost-beast",
+    "boost-json"
+  ]
+}

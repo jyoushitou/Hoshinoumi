@@ -1,0 +1,13 @@
+build/
+
+.vscode/
+
+Release/
+
+CMakeLists.template.txt
+
+# 运行测试/示例时生成的日志目录
+logs/
+
+# vcpkg 二进制缓存与构建产物
+vcpkg_installed/

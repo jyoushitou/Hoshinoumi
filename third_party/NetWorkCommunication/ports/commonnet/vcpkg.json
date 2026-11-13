@@ -1,0 +1,20 @@
+{
+  "name": "commonnet",
+  "version": "1.0.0",
+  "description": "Boost.Asio based C++ network communication library: asynchronous TCP client/server plus an HTTP server layer, exported as the CMake targets Common::Net::Core / Server / Client / HttpServer.",
+  "homepage": "https://github.com/jyoushitou/NetWorkCommunication",
+  "documentation": "https://github.com/jyoushitou/NetWorkCommunication#readme",
+  "license": "MIT",
+  "dependencies": [
+    "utils",
+    "openssl",
+    {
+      "name": "vcpkg-cmake",
+      "host": true
+    },
+    {
+      "name": "vcpkg-cmake-config",
+      "host": true
+    }
+  ]
+}
