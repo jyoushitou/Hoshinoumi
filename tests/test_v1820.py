@@ -46,7 +46,7 @@ class TestV1820(unittest.TestCase):
     def test_version_bumped(self):
         from botv.core import version
 
-        self.assertEqual(version.VERSION, "19.5.0")
+        self.assertEqual(version.VERSION, "19.5.1")
 
 
 if __name__ == "__main__":

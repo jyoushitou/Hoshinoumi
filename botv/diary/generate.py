@@ -70,7 +70,7 @@ def _build_diary_prompt(date_str, events, dialogs):
         "5. 行文流畅、口语化、有温度，体现对主人的关心\n"
         "6. 直接输出日记正文，不要任何前缀、标题、格式行、表情符号"
     )
-    return system_prompt, user_prompt
+    return system_prompt, user_prompt, event_text
 
 
 async def generate_diary(target_id: str, date_str: str, force: bool = False):
@@ -113,7 +113,11 @@ async def generate_diary(target_id: str, date_str: str, force: bool = False):
         return f"📭 {date_str} 没有事件记录，暂时无法生成日记。"
 
     # ---- 5. 构造 AI 提示词 ----
-    system_prompt, user_prompt = _build_diary_prompt(date_str, events, dialogs)
+    system_prompt, user_prompt, event_text = _build_diary_prompt(date_str, events, dialogs)
+    msgs = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_prompt},
+    ]
 
     # ---- 6. 调用 AI 生成（双模型兜底，max_tokens 1500 保证 200 字以上） ----
     log_system(f"日记({date_str}): 开始 AI 生成（事件{len(events)}条，对话{len(dialogs)}条）")
