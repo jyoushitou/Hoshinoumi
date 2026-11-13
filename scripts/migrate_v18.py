@@ -151,19 +151,12 @@ def migrate_events(c):
     except Exception as e:
         print(f"[!] 旧表改名失败（可能已改名）：{e}")
 
+    # v19.5：不再建 events 兼容视图；应用读路径已全部切 memories
     try:
-        from botv.infra import schema
-        ddl = schema.VIEWS["events"]
-        if _is_sqlite(c):
-            c.execute("DROP VIEW IF EXISTS events")
-            c.execute(schema._adapt_view(ddl))
-        else:
-            c.execute(ddl)
+        c.execute("DROP VIEW IF EXISTS events")
         c.connection.commit()
-        print("[OK] 已建只读兼容视图 events")
-    except Exception as e:
-        print(f"[!] 建 events 视图失败：{e}")
-        return 1
+    except Exception:
+        pass
     return 0
 
 

@@ -542,14 +542,6 @@ def adapt_ddl(ddl, backend=None):
 # 两者一减就多 8 小时（L11 同源）。所以另存一份 first_start_ts（epoch），
 # 用「当前 epoch − 启动 epoch」算，跨时区、跨方言都对得上。
 VIEWS = {
-    # v18.17：旧 events 表迁到 memories；保留只读兼容视图，写路径已切 memories
-    "events": """
-        CREATE OR REPLACE VIEW events AS
-        SELECT id, target_id, summary AS event_summary, tags, kind,
-               dedupe_key, importance, due_date, last_seen, hit_count,
-               created_at, deleted_at, NULL AS embedding
-        FROM memories
-    """,
     # 元数据一览：首次启动 / 版本 / 已运行秒数 / 第几天
     "v_bot_meta": """
         CREATE OR REPLACE VIEW v_bot_meta AS

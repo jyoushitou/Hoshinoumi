@@ -63,7 +63,7 @@ class TestSchema(unittest.TestCase):
 
         for name in ("user_memory", "logs", "api_keys"):
             self.assertIn(name, schema.TABLES, f"缺现状表 {name}")
-        self.assertIn("events", schema.VIEWS, "v18.17：events 改为兼容视图")
+        self.assertNotIn("events", schema.VIEWS, "v19.5：events 兼容视图已删除")
         for name in ("targets", "relations", "memories", "settings"):
             self.assertIn(name, schema.TABLES, f"缺纯表 {name}")
 

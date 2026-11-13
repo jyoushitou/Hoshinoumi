@@ -52,19 +52,19 @@ class TestMigrateEvents(unittest.TestCase):
         self.c.execute("SELECT COUNT(*) AS n FROM memories")
         self.assertEqual(self.c.fetchone()["n"], 2)
 
-    def test_copy_and_view(self):
+    def test_copy_and_drop_view(self):
         rc = migrate_events(self.c)
         self.assertEqual(rc, 0)
         self.c.execute("SELECT COUNT(*) AS n FROM memories")
         self.assertEqual(self.c.fetchone()["n"], 2)
-        self.c.execute("SELECT event_summary, kind FROM events ORDER BY id")
+        self.c.execute("SELECT summary, kind FROM memories ORDER BY id")
         rows = self.c.fetchall()
-        self.assertEqual(rows[0]["event_summary"], "妈妈住院了")
+        self.assertEqual(rows[0]["summary"], "妈妈住院了")
         self.assertEqual(rows[1]["kind"], "agenda")
-        # 旧名字只剩视图
-        self.c.execute("SELECT type FROM sqlite_master WHERE name='events'")
-        self.assertEqual(self.c.fetchone()["type"], "view")
-        # 重复跑必须安全：视图不算待迁表
+        # v19.5：events 名字不再存在（基表已改名，兼容视图已删）
+        self.c.execute("SELECT name FROM sqlite_master WHERE name='events'")
+        self.assertIsNone(self.c.fetchone())
+        # 重复跑必须安全
         self.assertEqual(migrate_events(self.c), 0)
         self.c.execute("SELECT COUNT(*) AS n FROM memories")
         self.assertEqual(self.c.fetchone()["n"], 2)
