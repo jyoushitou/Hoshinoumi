@@ -4,9 +4,13 @@
 
 
 def __getattr__(name):
-    """兼容 from botv.server import start_api_server，但不在导入时形成环"""
+    """兼容旧的 from botv.server import ...，但不在导入时形成环"""
     if name == "start_api_server":
         from .http_api import start_api_server
 
         return start_api_server
+    if name in ("format_api_token_info", "load_api_token"):
+        from . import config
+
+        return getattr(config, name)
     raise AttributeError(name)
