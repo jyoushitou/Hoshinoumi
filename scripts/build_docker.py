@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 # ===================== Docker 镜像构建 =====================
 #     python3 scripts/build_docker.py --version 16.0.0
 #     python3 scripts/build_docker.py --version 16.0.0 --browser   # 带 Chromium
@@ -63,7 +63,7 @@ def main():
     if args.compose:
         rc = run(["docker", "compose", "build"])
         if rc == 0:
-            rc = run(["docker", "tag", "nao-bot:16.0.0", tag])
+            rc = run(["docker", "tag", "hoshinoumi:19.5.7", tag])
     else:
         cmd = ["docker", "build", "-t", tag, "--build-arg",
                f"WITH_BROWSER={'1' if args.browser else '0'}", "."]

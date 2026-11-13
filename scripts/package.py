@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 # ===================== 程序打包 =====================
 # 产出「能直接跑的 Python 程序包」，跟 .bundle（git 运输用）是两回事。
 #
@@ -47,7 +47,7 @@ exec python3 run.py "$@"
 
 
 def _ver(v):
-    """版本号去掉开头的 v（避免打成 nao-vv17.1.1）"""
+    """版本号去掉开头的 v（避免打成 REC-vv17.1.1）"""
     return str(v).lstrip("vV")
 
 
@@ -175,7 +175,7 @@ def main():
     src_zip = os.path.join(DIST, src_name(version))
     build_zip(src_zip, files, extra={
         "启动说明.txt": (
-            f"友利奈绪 QQ 机器人 {version}（源码包）\n\n"
+            f"Hoshinoumi（REC）· 友利奈绪 {version}（源码包）\n\n"
             "1. 安装依赖：pip install -r requirements.txt\n"
             "2. 确认 MySQL 可用，并先跑过 scripts/migrate_v7.py / migrate_v8.py\n"
             "3. 启动：python3 run.py\n\n"
@@ -220,7 +220,7 @@ def main():
     build_zip(full_zip, full_files, extra={
         "start.sh": START_SH,
         "启动说明.txt": (
-            f"友利奈绪 QQ 机器人 {version}（整包，依赖已内置）\n\n"
+            f"Hoshinoumi（REC）· 友利奈绪 {version}（整包，依赖已内置）\n\n"
             "1. 解压\n"
             "2. chmod +x start.sh\n"
             "3. ./start.sh\n\n"
@@ -234,3 +234,4 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
+

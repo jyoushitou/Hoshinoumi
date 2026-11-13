@@ -35,7 +35,7 @@ IS_WIN = platform.system() == "Windows"
 
 
 def _ver(v):
-    """版本号去掉开头的 v（避免打成 nao-vv17.1.1）"""
+    """版本号去掉开头的 v（避免打成 REC-vv17.1.1）"""
     return str(v).lstrip("vV")
 
 
