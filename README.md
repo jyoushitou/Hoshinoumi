@@ -259,7 +259,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 
 ## 开发计划
 
-**当前：v21 已完成（owner 鉴权 / refresh / 架构收口）**｜下一站 v22 网关安全：限流/审计/TLS。
+**当前：v21 试运行（owner 鉴权 / refresh / 架构收口）**｜下一站 v22 网关安全：限流/审计/TLS。
 
 > v18 已完成；当前 v19 试运行，试运行期间的问题统一记入 [v19 文档](docs/versions/v19.md)。
 
@@ -272,7 +272,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | v18 | 情感的深刻度：记忆分轻重、情绪跨天、时间与日志修复 | ✅ 已完成（v18.20.0） | [v18.md](docs/versions/v18.md) |
 | v19 | 架构重构 + 对话同步底座：迁移单一入口、`conversation_messages`、`!history`、语音分段 | ✅ 已完成（v19.5.7） | [v19.md](docs/versions/v19.md) |
 | v20 | 网关（一）核心：C++/CommonNet + REST↔后端 HTTP + Docker + 配置向导 | ✅ 已完成（v20.6） | [v20.md](docs/versions/v20.md) |
-| v21 | 网关（二）owner 鉴权：JWT/刷新/失败锁定 + 架构收口 | ✅ 已完成 | [v21.md](docs/versions/v21.md) |
+| v21 | 网关（二）owner 鉴权：JWT/刷新/失败锁定 + 架构收口 | 🚧 v21 试运行 | [v21.md](docs/versions/v21.md) |
 | v22 | 网关（三）安全：限流/审计/TLS/`!gw` | 📋 已规划 | [v22.md](docs/versions/v22.md) |
 | v23 | 多用户 + 亲密度可骤降/负值/修复，归零降私聊回复：users/roles + user_id 隔离 | 📋 已规划 | [v23.md](docs/versions/v23.md) |
 | v24 | 插件接口实现 | 📋 已规划 | [v24.md](docs/versions/v24.md) |
@@ -1873,6 +1873,7 @@ python3 scripts/check_names.py        # 未定义名字
 所以有了 Hoshinoumi。算是给“故事结束之后”补的一间学生会室：让她继续上学、开会、喂猫、弹琴，也让她在 QQ、Web、桌面和手机那边，记得你随口说过的话。
 
 > 故事结束以后，她还在。
+
 
 
 
