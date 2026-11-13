@@ -288,7 +288,7 @@ cron.watchdog()  → 重排丢失任务 + 清过期 override
 
 | 顺序 | 版本 | 动作 | 验收 |
 |---:|---|---|---|
-| 1 | v19.0 | 迁移单一入口：`bootstrap` 只读 schema；`setup.py` 不再建表；加 schema_version | 启动不改表；缺结构直接报错 |
+| 1 | v19.0 | 迁移单一入口：`bootstrap` 只读 schema；`setup.py` 不再建表；加 schema_version；`features.json` + 复用 `scripts/preflight.py` 生成报告 | 启动不改表；无报告拒绝启动；无第二套检查 |
 | 2 | v19.4 | 去掉 `events` 视图读路径；`events_old` 归档 | `grep FROM events` 仅迁移脚本 |
 | 3 | v19.4 | 解持久层 9 环：`log` 不依赖 db，`settings` 不依赖 log | Tarjan 持久层环消失 |
 | 4 | v19.4 | 解 ai/diary/life 11 环：lifeport 补 agenda/diary 能力 | 包级仍 0 环；精确环 ≤2 |
@@ -311,6 +311,7 @@ cron.watchdog()  → 重排丢失任务 + 清过期 override
 | 测试里未 import 的模块 | 43 | ≤20 |
 | 测试总数 | 932 | ≥1000 |
 | 启动时 schema 写入 | 有 | 0 |
+| `run.py` 环境探测 | 有 | 仅网络/人设（运行必需），其余 0 |
 
 ---
 
