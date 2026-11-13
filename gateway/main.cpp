@@ -1,5 +1,5 @@
-/// @file        main.cpp
-/// @brief       Hoshinoumi（REC）网关入口（v20.0）
+﻿/// @file        main.cpp
+/// @brief       Hoshinoumi（REC）网关入口（v21.0）
 /// @author      jyoushitou
 /// @date        2026-11-13
 /// @copyright   Copyright (c) 2026
@@ -50,7 +50,7 @@ int main(int argc, char **argv)
 
         Utils::init();
         Utils::serviceID = RPCGateway;
-        Utils::Out::outMsg("Hoshinoumi（REC）网关 v20.0.0");
+        Utils::Out::outMsg("Hoshinoumi（REC）网关 v21.0.0");
         Utils::Out::outMsg("配置: " + cfg.Describe());
 
         boost::asio::io_context io;
@@ -103,3 +103,4 @@ int main(int argc, char **argv)
         return 1;
     }
 }
+

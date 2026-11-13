@@ -1,4 +1,4 @@
-/// @file        router.cpp
+﻿/// @file        router.cpp
 /// @brief       网关路由实现
 /// @author      jyoushitou
 /// @date        2026-11-13
@@ -26,7 +26,7 @@ namespace Gateway
             return {
                 {"Content-Type", "application/json; charset=utf-8"},
                 {"X-Request-Id", requestId},
-                {"X-Gateway", "hoshinoumi-gateway/20.0.0"},
+                {"X-Gateway", "hoshinoumi-gateway/21.0.0"},
             };
         }
     } // namespace
@@ -125,7 +125,7 @@ namespace Gateway
         boost::json::object body;
         body["ok"] = true;
         body["service"] = "hoshinoumi-gateway";
-        body["version"] = "20.0.0";
+        body["version"] = "21.0.0";
         session->httpReplay(boost::json::serialize(body),
                             boost::beast::http::status::ok,
                             JsonHeaders(NextRequestId()));
@@ -469,3 +469,4 @@ namespace Gateway
                             JsonHeaders(NextRequestId()));
     }
 } // namespace Gateway
+
