@@ -452,7 +452,16 @@ async def _handle_message(d, ws):
                     await send_short_reply(uid, extract_mod.describe(_data, _tid or 0),
                                            ws, uid, False, None)
                 except Exception as _e:
-                    log_api(f"[定时] 确认回复失败（忽略）: {_e}")
+                    log_err(f"[定时] 确认回复失败: {_e}")
+            elif (mt == "group" and addressed
+                  and str(uid) == str(cfg.MASTER_QQ)
+                  and extract_mod.is_timer_request(text)):
+                log_system("[定时] 群聊里不建钩子，已明确拒绝")
+                try:
+                    from ..chat.send import send_short_reply
+                    await send_short_reply(gid, "群里不记闹钟，私聊我。", ws, gid, True, None)
+                except Exception as _e:
+                    log_api(f"[定时] 群聊拒绝回复失败（忽略）: {_e}")
     except Exception as _e:
         log_api(f"[定时] 提取失败（忽略）: {_e}")
 

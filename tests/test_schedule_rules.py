@@ -154,6 +154,26 @@ class TestOverrides(unittest.TestCase):
         self.assertIsNone(self.E.parse_override("每天 7:30 叫我", now=self.now))
 
 
+class TestExtraction(unittest.TestCase):
+    def setUp(self):
+        from bot.schedule import extract
+        self.E = extract
+        self.now = datetime(2026, 11, 13, 15, 6)
+
+    def test_visit_doctor_content(self):
+        data = self.E.extract("明天早上我要去看病，所以7点钟把我叫起来", now=self.now)
+        self.assertIsNotNone(data)
+        self.assertEqual(data["schedule_type"], "once")
+        self.assertTrue(data["once_at"].startswith("2026-11-14 07:00"))
+        self.assertEqual(data["content"], "去看病")
+
+    def test_group_policy(self):
+        text = "明天早上七点叫我"
+        self.assertTrue(self.E.is_timer_request(text, now=self.now))
+        self.assertTrue(self.E.should_extract("private", text, "1", "1"))
+        self.assertFalse(self.E.should_extract("group", text, "1", "1", addressed=True))
+
+
 class TestNextSummary(unittest.TestCase):
     def test_next_summary(self):
         task = {"id": 1, "content": "scene:提醒晚餐",

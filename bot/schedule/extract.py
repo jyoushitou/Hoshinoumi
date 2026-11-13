@@ -13,6 +13,7 @@ import time
 from datetime import datetime, timedelta
 
 from ..core import clock
+from ..log import log_err
 
 # 时间词
 _CN_NUM = {"零": 0, "一": 1, "二": 2, "两": 2, "三": 3, "四": 4,
@@ -96,7 +97,7 @@ def parse_time(text, now=None):
     if m:
         hour, minute = _norm_num(m.group(1)), int(m.group(2))
     else:
-        m = re.search(r"([0-9]{1,2}|十[一二]?|[零一二两三四五六七八九])\s*点\s*(半|[0-9]{1,2}\s*分)?", text)
+        m = re.search(r"([0-9]{1,2}|十[一二]?|[零一二两三四五六七八九])\s*点\s*(?:钟)?\s*(半|[0-9]{1,2}\s*分)?", text)
         if m:
             hour = _norm_num(m.group(1))
             if m.group(2) == "半":
@@ -150,26 +151,31 @@ def parse_content(text):
     s = (text or "").strip()
     # 去时间描述
     s = re.sub(r"[下这本]\s*(?=周|星期)", "", s)
-    s = re.sub(r"(明天|今晚|每天晚上|每晚|每天|天天|周[一二三四五六日天]|星期[一二三四五六日天])", "", s)
+    s = re.sub(r"(明天|明早|明儿|今早|今晚|每天早上|每晚|每天|天天|周[一二三四五六日天]|星期[一二三四五六日天])", "", s)
     s = re.sub(r"[0-9]{1,2}\s*[:：]\s*[0-9]{2}", "", s)
-    s = re.sub(r"([0-9]{1,2}|十[一二]?|[零一二两三四五六七八九])\s*点(半|[0-9]{1,2}\s*分)?", "", s)
+    s = re.sub(r"([0-9]{1,2}|十[一二]?|[零一二两三四五六七八九])\s*点\s*(?:钟)?\s*(半|[0-9]{1,2}\s*分)?", "", s)
     s = re.sub(r"([0-9]+|[一二两三四五六七八九十]+|半)\s*分钟后|半小时后", "", s)
     s = re.sub(r"[下这本]\s*(?=周|星期)", "", s)
+    # 「把我叫起来」这类动作整段去掉，别留下「把起来」碎片
+    s = re.sub(r"把(?:我)?(?:叫|喊|弄)?(?:起|醒)来", "", s)
+    s = re.sub(r"(?:叫|喊|提醒|通知)(?:我)?(?:起来|起床)?", "", s)
     # 去动作词
     for w in _ACTION:
         s = s.replace(w, "")
-    s = s.replace("我", "").replace("你", "")
+    s = s.replace("我", "").replace("你", "").replace("所以", "")
+    s = re.sub(r"^(早上|上午|中午|下午|晚上|今晚|明早|明天)+", "", s)
+    s = re.sub(r"^要(?=去|来|回)", "", s)
     s = re.sub(r"^[，。,.！!\s]+|[，。,.！!\s]+$", "", s)
     s = re.sub(r"\s+", " ", s).strip()
     if s:
         return s
     # 兜底：原句里只剥时间词，保留「叫我」这种动词
-    fb = re.sub(r"(明天|今晚|每天晚上|每晚|每天|天天|周[一二三四五六日天]|"
+    fb = re.sub(r"(明天|明早|明儿|今早|今晚|每天晚上|每晚|每天|天天|周[一二三四五六日天]|"
                 r"星期[一二三四五六日天]|[下这本]\s*(?=周|星期)|"
                 r"[0-9]+\s*分钟后|"
                 r"([一二两三四五六七八九十]+|半)\s*分钟后|半小时后|"
                 r"[0-9]{1,2}\s*[:：]\s*[0-9]{2}|"
-                r"([0-9]{1,2}|十[一二]?|[零一二两三四五六七八九])\s*点(半|[0-9]{1,2}\s*分)?)",
+                r"([0-9]{1,2}|十[一二]?|[零一二两三四五六七八九])\s*点\s*(?:钟)?\s*(半|[0-9]{1,2}\s*分)?)",
                 "", text or "")
     fb = re.sub(r"^[，。,.！!\s]+|[，。,.！!\s]+$", "", fb)
     return fb or "提醒你"
@@ -196,8 +202,19 @@ def extract(text, now=None):
     return kwargs
 
 
-def should_extract(message_type, text, uid=None, master=None):
-    """哪些消息值得尝试提取"""
+def is_timer_request(text, now=None):
+    """像不像「让我在某个时间做事」——用于群聊里明确拒绝，不静默装懂"""
+    text = (text or "").strip()
+    if not text or not any(w in text for w in _ACTION):
+        return False
+    return parse_time(text, now) is not None
+
+
+def should_extract(message_type, text, uid=None, master=None, addressed=False):
+    """哪些消息值得尝试提取
+
+    v20.2 策略：只私聊建钩子；群聊即使 @ 她也不建，由 handler 明确回一句。
+    """
     if message_type != "private":
         return False
     if master and str(uid) != str(master):
@@ -288,11 +305,12 @@ def create_from_text(text, uid, now=None, add_func=None):
                 }
                 try:
                     cron.schedule_all()
-                except Exception:
-                    pass
+                except Exception as e:
+                    log_err(f"[定时] 当天微调已写库，但重排钩子失败: {e}")
                 return 0, data
-        except Exception:
-            pass
+            log_err(f"[定时] 当天微调写库失败: {text[:60]}")
+        except Exception as e:
+            log_err(f"[定时] 当天微调异常: {e}")
 
     data = extract(text, now)
     if not data:
@@ -309,10 +327,13 @@ def create_from_text(text, uid, now=None, add_func=None):
         if tid:
             try:
                 cron.schedule_one(cron.get(tid))
-            except Exception:
-                pass
+            except Exception as e:
+                log_err(f"[定时] 任务 #{tid} 已写库，但挂钩子失败: {e}")
+        else:
+            log_err(f"[定时] 写库失败（add 返回空）: {data.get('content')}")
         return tid, data
-    except Exception:
+    except Exception as e:
+        log_err(f"[定时] 创建任务异常: {e}")
         return None, data
 
 def describe(data, task_id=None):
