@@ -289,12 +289,12 @@ cron.watchdog()  → 重排丢失任务 + 清过期 override
 | 顺序 | 版本 | 动作 | 验收 |
 |---:|---|---|---|
 | 1 | v19.0 | 迁移单一入口：`bootstrap` 只读 schema；`setup.py` 不再建表；加 schema_version | 启动不改表；缺结构直接报错 |
-| 2 | v19.3 | 去掉 `events` 视图读路径；`events_old` 归档 | `grep FROM events` 仅迁移脚本 |
-| 3 | v19.3 | 解持久层 9 环：`log` 不依赖 db，`settings` 不依赖 log | Tarjan 持久层环消失 |
-| 4 | v20.3 | 解 ai/diary/life 11 环：lifeport 补 agenda/diary 能力 | 包级仍 0 环；精确环 ≤2 |
-| 5 | v20.3 | 钩子注册表 + 看门狗按差量补；不再整批重挂 | 删除任务无残留 prepare；watchdog 不重排全部 |
-| 6 | v20.3 | 缓存统一失效；`cron` 写路径集中 invalidate | 连点 `!stats`/`!cron` 不脏读 |
-| 7 | v20.3 | 拆 2 个 100+ 行函数；补 migrate/preflight/bootstrap 测试 | 43 个未覆盖模块降到 <20 |
+| 2 | v19.4 | 去掉 `events` 视图读路径；`events_old` 归档 | `grep FROM events` 仅迁移脚本 |
+| 3 | v19.4 | 解持久层 9 环：`log` 不依赖 db，`settings` 不依赖 log | Tarjan 持久层环消失 |
+| 4 | v19.4 | 解 ai/diary/life 11 环：lifeport 补 agenda/diary 能力 | 包级仍 0 环；精确环 ≤2 |
+| 5 | v19.5 | 钩子注册表 + 看门狗按差量补；不再整批重挂 | 删除任务无残留 prepare；watchdog 不重排全部 |
+| 6 | v19.5 | 缓存统一失效；`cron` 写路径集中 invalidate | 连点 `!stats`/`!cron` 不脏读 |
+| 7 | v19.5 | 拆 2 个 100+ 行函数；补 migrate/preflight/bootstrap 测试 | 43 个未覆盖模块降到 <20 |
 
 ---
 
@@ -303,7 +303,7 @@ cron.watchdog()  → 重排丢失任务 + 清过期 override
 | 指标 | 当前 | 目标 |
 |---|---:|---:|
 | 包级环 | 0 | 0 |
-| 模块级精确环 | 5 | ≤1 |
+| 模块级精确环 | 5 | ≤2（v19.4），v20 再 ≤1 |
 | 分层倒置 | 48（含合理工具依赖） | 真实问题 ≤5 |
 | 函数 >60 行 | 24 | ≤15 |
 | 函数 ≥100 行 | 4 | ≤1 |
