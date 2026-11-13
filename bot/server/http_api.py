@@ -1,4 +1,4 @@
-﻿# ===================== HTTP 服务器装配 =====================
+# ===================== HTTP 服务器装配 =====================
 # 鉴权中间件 + 路由注册 + 启动
 # 迁移自 api_server.py（v5-R5）
 
@@ -50,8 +50,51 @@ def _internal_uid(request):
 
 
 async def handle_internal_chat(request):
-    """POST /internal/chat：网关转发用，复用 /api/chat 逻辑"""
-    return await handle_chat(request)
+    """POST /internal/chat：网关转发 + 写入网关对话历史（v21.2）"""
+    import uuid
+
+    from ..ai.client import get_character_reply
+    from ..infra import repo_conversation
+    from ..log import log_err
+
+    try:
+        body = await request.json()
+    except Exception:
+        return json_response({"error": "invalid_json", "message": "请求体必须是 JSON 格式"}, 400)
+
+    message = body.get("message", "").strip()
+    target_id = str(body.get("target_id", "")).strip()
+    if not message:
+        return json_response({"error": "empty_message", "message": "message 不能为空"}, 400)
+    if not target_id:
+        return json_response({"error": "missing_target_id", "message": "target_id 不能为空"}, 400)
+
+    user_id = _internal_uid(request)
+    client_id = str(body.get("client_message_id") or uuid.uuid4().hex)
+    try:
+        reply = await get_character_reply(message, target_id, body.get("keywords"))
+        if not isinstance(reply, str) or not reply.strip():
+            return json_response({"error": "empty_reply", "message": "AI 返回空回复"}, 500)
+
+        # 只写成功的一轮；user/assistant 各自稳定 id，重试不会重复
+        repo_conversation.append(
+            user_id=user_id, target_id=target_id, content=message,
+            role="user", channel="gateway", thread_id=f"gateway:{target_id}",
+            message_id=f"gw-user:{client_id}", meta={"source": "gateway"},
+        )
+        repo_conversation.append(
+            user_id=user_id, target_id=target_id, content=reply,
+            role="assistant", channel="gateway", thread_id=f"gateway:{target_id}",
+            message_id=f"gw-assistant:{client_id}", meta={"source": "gateway"},
+        )
+        return json_response({
+            "success": True,
+            "reply": reply,
+            "target_id": target_id,
+        })
+    except Exception as e:
+        log_err(f"网关对话失败: {e}")
+        return json_response({"error": "ai_call_failed", "message": str(e)}, 500)
 
 
 async def handle_internal_state(request):
