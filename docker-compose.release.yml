@@ -1,0 +1,34 @@
+# ===================== 发布版 docker compose =====================
+# 部署机只需要：
+#   docker load -i REC-v20.0.0-docker.tar.gz
+#   cp .env.example .env && vi .env      # 只填隐私项
+#   docker compose -f docker-compose.release.yml up -d
+#
+# 镜像里已经装好 Python 依赖 / C++ 网关，部署机不 build、不 pip、不编译。
+
+services:
+  bot:
+    image: hoshinoumi-bot:20.0.0
+    container_name: hoshinoumi
+    restart: unless-stopped
+    network_mode: host
+    env_file:
+      - .env
+    environment:
+      TZ: Asia/Shanghai
+      NAO_API_HOST: "127.0.0.1"
+      NAO_API_PORT: "60908"
+    volumes:
+      - ./data:/app/data
+      - ./personas:/app/personas
+      - ./config:/app/config:ro
+
+  gateway:
+    image: hoshinoumi-gateway:20.0.0
+    container_name: hoshinoumi-gateway
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      - bot
+    volumes:
+      - ./config/gateway.json:/app/config/gateway.json:ro

@@ -9,7 +9,11 @@
 #       -v $PWD/data:/app/data -v $PWD/personas:/app/personas \
 #       --restart unless-stopped nao-bot:16.0.0
 
-FROM python:3.12-slim
+ARG BASE_IMAGE=python:3.12-slim
+FROM ${BASE_IMAGE}
+
+# 国内网络可传 --build-arg PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple
+ARG PIP_INDEX_URL=https://pypi.org/simple
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONIOENCODING=utf-8 \
@@ -29,8 +33,8 @@ WORKDIR /app
 
 # 先装依赖（利用层缓存）
 COPY requirements.txt ./
-RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --index-url "$PIP_INDEX_URL" --upgrade pip \
+    && pip install --no-cache-dir --index-url "$PIP_INDEX_URL" -r requirements.txt
 
 # 可选：把 Chromium 也打进来（镜像会大 ~400MB）
 ARG WITH_BROWSER=0
