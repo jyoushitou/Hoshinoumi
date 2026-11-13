@@ -122,7 +122,7 @@ v6：P1 会说话 → P2 说实话 → P2.5 长感官 → P3 有生活 → P4 �
 | **v20** | [versions/v20.md](versions/v20.md) | 网关（一）核心：C++/Drogon + REST↔gRPC 代理 | 规划中 |
 | **v21** | [versions/v21.md](versions/v21.md) | 网关（二）owner 鉴权：JWT/刷新/失败锁定 | 规划中 |
 | **v22** | [versions/v22.md](versions/v22.md) | 网关（三）安全：限流/审计/TLS/`!gw` | 规划中 |
-| **v23** | [versions/v23.md](versions/v23.md) | 多用户 + 亲密度下降/修复：users/roles + `user_id` 隔离 | 规划中 |
+| **v23** | [versions/v23.md](versions/v23.md) | 多用户 + 亲密度可骤降/负值/修复，归零降私聊回复 | 规划中 |
 | **v24** | [versions/v24.md](versions/v24.md) | 插件接口实现 | 规划中 |
 | **v25** | [versions/v25.md](versions/v25.md) | 模型层接口实现 | 规划中 |
 | **v26** | [versions/v26.md](versions/v26.md) | 记忆层接口实现 | 规划中 |
@@ -165,6 +165,8 @@ v6：P1 会说话 → P2 说实话 → P2.5 长感官 → P3 有生活 → P4 �
 > 数据库设计见 **[DB-DESIGN.md](DB-DESIGN.md)**（一表一职责）。
 > 架构审查见 **[ARCH-REVIEW.md](ARCH-REVIEW.md)**（分层/环/巨石函数，含修复顺序）。
 > 架构图见 **[ARCHITECTURE.md](ARCHITECTURE.md)**（分层/消息流/调度模型/架构债）。
+
+
 
 
 
