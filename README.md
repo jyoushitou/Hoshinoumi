@@ -86,24 +86,25 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | v21 | 网关（二）owner 鉴权：JWT/刷新/失败锁定 | 📋 已规划 | [v21.md](docs/versions/v21.md) |
 | v22 | 网关（三）安全：限流/审计/TLS/`!gw` | 📋 已规划 | [v22.md](docs/versions/v22.md) |
 | v23 | 多用户：users/identities/roles + 全表 user_id 隔离 | 📋 已规划 | [v23.md](docs/versions/v23.md) |
-| v24 | DSH / Qoder / WorkBuddy 插件：她成为你所有工具的记忆层 | 📋 已规划 | [v24.md](docs/versions/v24.md) |
-| v25 | 电脑 Web：聊天 + 历史 + 功能面板 | 📋 已规划 | [v25.md](docs/versions/v25.md) |
-| v26 | 桌面端（一）Linux：Tauri + Web UI | 📋 已规划 | [v26.md](docs/versions/v26.md) |
-| v27 | 桌面端（二）Windows：Tauri + WebView2 | 📋 已规划 | [v27.md](docs/versions/v27.md) |
-| v28 | 手机 App（Flutter）+ 推送通知 | 📋 已规划 | [v28.md](docs/versions/v28.md) |
-| v29 | QQ 空间：发说说 + 只对熟人点赞/评论 | 📋 已规划 | [v29.md](docs/versions/v29.md) |
-| v30 | 运维（一）bash 只读 | 📋 已规划 | [v30.md](docs/versions/v30.md) |
-| v31 | 运维（二）agent | 📋 已规划 | [v31.md](docs/versions/v31.md) |
-| v32 | 运维（三）有限写 | 📋 已规划 | [v32.md](docs/versions/v32.md) |
-| v33 | 运维（四）可写体系 | 📋 已规划 | [v33.md](docs/versions/v33.md) |
-| v34 | 视频（一）B 站 | 📋 已规划 | [v34.md](docs/versions/v34.md) |
-| v35 | 视频（二）抖音 | 📋 已规划 | [v35.md](docs/versions/v35.md) |
-| v36 | 微信接入（OpenClaw） | 📋 已规划 | [v36.md](docs/versions/v36.md) |
-| v37 | 语音通话 | 📋 已规划 | [v37.md](docs/versions/v37.md) |
-| v38 | 视频通话 | 📋 已规划 | [v38.md](docs/versions/v38.md) |
-| v39 | 微服务接入：融进自有 Web，探网关 5 次 + 池复用 | 📋 已规划 | [v39.md](docs/versions/v39.md) |
-| v40 | 常驻（后端）systemd / 看门狗 | 📋 已规划 | [v40.md](docs/versions/v40.md) |
-| v41 | 嵌入式前端（Linux 后端）：树莓派/平板显示对话 | 📋 已规划 | [v41.md](docs/versions/v41.md) |
+| v24 | 多端推送：主动消息扇出到所有接入口 | 📋 已规划 | [v24.md](docs/versions/v24.md) |
+| v25 | DSH / Qoder / WorkBuddy 插件：她成为你所有工具的记忆层 | 📋 已规划 | [v25.md](docs/versions/v25.md) |
+| v26 | 电脑 Web：聊天 + 历史 + 功能面板 | 📋 已规划 | [v26.md](docs/versions/v26.md) |
+| v27 | 桌面端（一）Linux：Tauri + Web UI | 📋 已规划 | [v27.md](docs/versions/v27.md) |
+| v28 | 桌面端（二）Windows：Tauri + WebView2 | 📋 已规划 | [v28.md](docs/versions/v28.md) |
+| v29 | 手机 App（Flutter）+ 推送通知 | 📋 已规划 | [v29.md](docs/versions/v29.md) |
+| v30 | QQ 空间：发说说 + 只对熟人点赞/评论 | 📋 已规划 | [v30.md](docs/versions/v30.md) |
+| v31 | 运维（一）bash 只读 | 📋 已规划 | [v31.md](docs/versions/v31.md) |
+| v32 | 运维（二）agent | 📋 已规划 | [v32.md](docs/versions/v32.md) |
+| v33 | 运维（三）有限写 | 📋 已规划 | [v33.md](docs/versions/v33.md) |
+| v34 | 运维（四）可写体系 | 📋 已规划 | [v34.md](docs/versions/v34.md) |
+| v35 | 视频（一）B 站 | 📋 已规划 | [v35.md](docs/versions/v35.md) |
+| v36 | 视频（二）抖音 | 📋 已规划 | [v36.md](docs/versions/v36.md) |
+| v37 | 微信接入（OpenClaw） | 📋 已规划 | [v37.md](docs/versions/v37.md) |
+| v38 | 语音通话 | 📋 已规划 | [v38.md](docs/versions/v38.md) |
+| v39 | 视频通话 | 📋 已规划 | [v39.md](docs/versions/v39.md) |
+| v40 | 微服务接入：融进自有 Web，探网关 5 次 + 池复用 | 📋 已规划 | [v40.md](docs/versions/v40.md) |
+| v41 | 常驻（后端）systemd / 看门狗 | 📋 已规划 | [v41.md](docs/versions/v41.md) |
+| v42 | 嵌入式前端（Linux 后端）：树莓派/平板显示对话 | 📋 已规划 | [v42.md](docs/versions/v42.md) |
 
 > **约定**：每个大版本的**最后一个次版本**用来收尾修 bug 和技术债，不堆新功能。
 
