@@ -217,6 +217,12 @@ class TestAntiAIStyle(unittest.TestCase):
             cfg.CODE_MODE = False
         self.assertIn("总而言之", p)
 
+    def test_timer_capability_hint(self):
+        from bot.ai.prompt import get_system_prompt
+        p = get_system_prompt()
+        self.assertIn("定时能力", p)
+        self.assertIn("不是闹钟", p)
+
 class TestFewShot(unittest.TestCase):
     """v6-A22：示例对话要进 prompt，且不带 AI 腔"""
 

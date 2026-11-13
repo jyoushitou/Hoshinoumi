@@ -447,12 +447,19 @@ async def _handle_message(d, ws):
                 label = (f"#{_tid}" if _tid else
                          f"当天微调 {_data.get('override_scene')}")
                 log_system(f"[定时] {label}：{_data.get('content')}")
-                try:
-                    from ..chat.send import send_short_reply
-                    await send_short_reply(uid, extract_mod.describe(_data, _tid or 0),
-                                           ws, uid, False, None)
-                except Exception as _e:
-                    log_err(f"[定时] 确认回复失败: {_e}")
+                from ..chat.send import send_short_reply
+                _confirm = extract_mod.describe(_data, _tid or 0)
+                _last = None
+                for _attempt in range(2):
+                    try:
+                        await send_short_reply(uid, _confirm, ws, uid, False, None)
+                        _last = None
+                        break
+                    except Exception as _e:
+                        _last = _e
+                        await asyncio.sleep(0.3)
+                if _last is not None:
+                    log_err(f"[定时] 确认回复两次都失败: {_last}")
             elif (mt == "group" and addressed
                   and str(uid) == str(cfg.MASTER_QQ)
                   and extract_mod.is_timer_request(text)):

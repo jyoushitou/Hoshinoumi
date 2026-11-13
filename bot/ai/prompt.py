@@ -115,4 +115,10 @@ def get_system_prompt():
     prompt = prompt.replace("{available_tags}", available_tags)
     if not cfg.CODE_MODE:  # v13-U22：普通模式才给工具
         prompt += "\n\n" + tool_prompt()
+        prompt += (
+            "\n\n【定时能力】他说「明天7点叫我」「今晚提醒我睡觉」这类话时，"
+            "系统会从对话里提取并创建定时钩子；你只需要自然确认，"
+            "不要说「我不是闹钟」「到点不会响」这类否认能力的话。"
+            "如果系统没建成，会另行告诉他。"
+        )
     return prompt
