@@ -214,6 +214,33 @@ def claim_online_notice():
     return True
 
 
+async def _group_gate(mt, gid, addressed, text):
+    """群聊节奏闸门；返回 False 表示本次不回复"""
+    if mt != "group" or text.startswith("!"):
+        return True
+    ok, why = should_answer_group(gid, addressed)
+    if not ok:
+        log_api(f"[群聊] 跳过 {gid}: {why}")
+        try:
+            from ..core import metrics
+            metrics.inc("group_skip")
+        except Exception:
+            pass
+        await asyncio.sleep(LOCK_RELEASE_DELAY)
+        return False
+    log_api(f"[群聊] 接话 {gid}: {why}")
+    try:
+        from ..core import metrics
+        metrics.inc("group_answer")
+    except Exception:
+        pass
+    if not addressed and random.random() < GROUP_SILENCE_PROB:
+        log_api(f"[群聊] 这次选择沉默 {gid}")
+        await asyncio.sleep(LOCK_RELEASE_DELAY)
+        return False
+    return True
+
+
 async def _reply_and_send(d, ws, text, img_md5s=None):
     """生成回复并发送（v17.3：从 _handle_message 抽出来，便于连发后统一回一次）"""
     mt = d.get("message_type")
@@ -231,27 +258,8 @@ async def _reply_and_send(d, ws, text, img_md5s=None):
         pending = None  # 待发送内容（锁外延迟发送，v6-A1）
 
         # v6-E29：群聊先过节奏闸门（命令不受限）
-        if mt == "group" and not text.startswith("!"):
-            ok, why = should_answer_group(gid, addressed)
-            if not ok:
-                log_api(f"[群聊] 跳过 {gid}: {why}")
-                try:
-                    from ..core import metrics
-                    metrics.inc("group_skip")
-                except Exception:
-                    pass
-                await asyncio.sleep(LOCK_RELEASE_DELAY)
-                return
-            log_api(f"[群聊] 接话 {gid}: {why}")
-            try:
-                from ..core import metrics
-                metrics.inc("group_answer")
-            except Exception:
-                pass
-            if not addressed and random.random() < GROUP_SILENCE_PROB:  # v6-A19：偶尔选择沉默
-                log_api(f"[群聊] 这次选择沉默 {gid}")
-                await asyncio.sleep(LOCK_RELEASE_DELAY)
-                return
+        if not await _group_gate(mt, gid, addressed, text):
+            return
 
         # 先检查是否是命令（仅主人有效，立即回复不走延迟）
         if await handle_command(text, uid, ws, mt == "group", gid):  # 是命令
@@ -298,50 +306,55 @@ async def _reply_and_send(d, ws, text, img_md5s=None):
 
         await asyncio.sleep(LOCK_RELEASE_DELAY)  # 锁释放延迟，防止消息处理过快
 
-    # ===================== 锁外：延迟 + 发送（v6-A1） =====================
+    await _deliver_pending(pending, mt, uid, gid, ws, text, ck)
+
+
+async def _deliver_pending(pending, mt, uid, gid, ws, text, ck):
+    """锁外发送：延迟、摩擦、手滑、分条、分享（v21.9 从 _reply_and_send 抽出）"""
     if pending and pending[0] == "sticker":
         if mt == "group":
             await send_sticker_group(gid, ws, uid, text)
         else:
             await send_sticker_private(uid, ws, uid, text)
-    elif pending:
-        _, target, reply_text, is_group = pending
-        delay = reply_delay()  # 按时段 + 随机
-        log_api(f"[延迟] {delay:.1f} 秒后回复 {target}")
-        await asyncio.sleep(delay)
-        # v13-G47：偶尔欲言又止
+        return
+    if not pending:
+        return
+
+    _, target, reply_text, is_group = pending
+    delay = reply_delay()
+    log_api(f"[延迟] {delay:.1f} 秒后回复 {target}")
+    await asyncio.sleep(delay)
+    try:
+        modified = life_friction.maybe_trail_off(reply_text)
+        if modified != reply_text:
+            log_api("[摩擦] 欲言又止")
+            reply_text = modified
+    except Exception:
+        pass
+
+    if not is_group:
         try:
-            modified = life_friction.maybe_trail_off(reply_text)
-            if modified != reply_text:
-                log_api("[摩擦] 欲言又止")
-                reply_text = modified
-                pending = ("reply", target, reply_text, is_group)
+            from ..chat.send import try_typo_recall
+            first_line = (reply_text or "").split("\n")[0]
+            await try_typo_recall(target, first_line, ws)
         except Exception:
             pass
 
-        # v12-A13：小概率先「手滑」一次
-        if not is_group:
-            try:
-                from ..chat.send import try_typo_recall
-                first_line = (reply_text or "").split("\n")[0]
-                await try_typo_recall(target, first_line, ws)
-            except Exception:
-                pass
-
-        from ..chat.send import send_segmented_reply
-        await send_segmented_reply(target, reply_text, ws, uid, is_group, ck)
+    from ..chat.send import send_segmented_reply
+    await send_segmented_reply(target, reply_text, ws, uid, is_group, ck)
+    try:
+        from ..core import metrics
+        metrics.inc("replies")
+    except Exception:
+        pass
+    if is_group:
+        note_group_reply(gid)
+    else:
         try:
-            from ..core import metrics
-            metrics.inc("replies")
+            await maybe_share_something(target, ws)
         except Exception:
             pass
-        if is_group:  # v6-E29：记录这次群回复
-            note_group_reply(gid)
-        else:
-            try:  # v12-A18：偶尔补一句自己的事
-                await maybe_share_something(target, ws)
-            except Exception:
-                pass
+
 
 async def _read_after_request(uid, ws):
     """点名之后真的读一章，读完回一句（失败也说明原因）"""
@@ -365,6 +378,42 @@ async def _read_after_request(uid, ws):
         await send_short_reply(str(uid), rep[:400], ws, str(uid), False, None)
     except Exception as e:
         log_api(f"[读书] 结果发送失败: {e}")
+
+
+async def _maybe_extract_timer(mt, text, uid, gid, ws, addressed):
+    """从对话提取定时任务（v21.9 从 _handle_message 抽出）"""
+    try:
+        from ..schedule import extract as extract_mod
+        if extract_mod.should_extract(mt, text, uid, cfg.MASTER_QQ):
+            _tid, _data = extract_mod.create_from_text(text, uid)
+            if _data and (_tid or _data.get("override_scene")):
+                label = (f"#{_tid}" if _tid else
+                         f"当天微调 {_data.get('override_scene')}")
+                log_system(f"[定时] {label}：{_data.get('content')}")
+                from ..chat.send import send_short_reply
+                _confirm = extract_mod.describe(_data, _tid or 0)
+                _last = None
+                for _attempt in range(2):
+                    try:
+                        await send_short_reply(uid, _confirm, ws, uid, False, None)
+                        _last = None
+                        break
+                    except Exception as _e:
+                        _last = _e
+                        await asyncio.sleep(0.3)
+                if _last is not None:
+                    log_err(f"[定时] 确认回复两次都失败: {_last}")
+            elif (mt == "group" and addressed
+                  and str(uid) == str(cfg.MASTER_QQ)
+                  and extract_mod.is_timer_request(text)):
+                log_system("[定时] 群聊里不建钩子，已明确拒绝")
+                try:
+                    from ..chat.send import send_short_reply
+                    await send_short_reply(gid, "群里不记闹钟，私聊我。", ws, gid, True, None)
+                except Exception as _e:
+                    log_api(f"[定时] 群聊拒绝回复失败（忽略）: {_e}")
+    except Exception as _e:
+        log_api(f"[定时] 提取失败（忽略）: {_e}")
 
 
 async def _handle_message(d, ws):
@@ -439,38 +488,7 @@ async def _handle_message(d, ws):
         log_api(f"[事实] 提取失败（忽略）: {_e}")
 
     # v17.7：从对话里提取定时任务（只私聊 + 只主人）
-    try:
-        from ..schedule import extract as extract_mod
-        if extract_mod.should_extract(mt, text, uid, cfg.MASTER_QQ):
-            _tid, _data = extract_mod.create_from_text(text, uid)
-            if _data and (_tid or _data.get("override_scene")):
-                label = (f"#{_tid}" if _tid else
-                         f"当天微调 {_data.get('override_scene')}")
-                log_system(f"[定时] {label}：{_data.get('content')}")
-                from ..chat.send import send_short_reply
-                _confirm = extract_mod.describe(_data, _tid or 0)
-                _last = None
-                for _attempt in range(2):
-                    try:
-                        await send_short_reply(uid, _confirm, ws, uid, False, None)
-                        _last = None
-                        break
-                    except Exception as _e:
-                        _last = _e
-                        await asyncio.sleep(0.3)
-                if _last is not None:
-                    log_err(f"[定时] 确认回复两次都失败: {_last}")
-            elif (mt == "group" and addressed
-                  and str(uid) == str(cfg.MASTER_QQ)
-                  and extract_mod.is_timer_request(text)):
-                log_system("[定时] 群聊里不建钩子，已明确拒绝")
-                try:
-                    from ..chat.send import send_short_reply
-                    await send_short_reply(gid, "群里不记闹钟，私聊我。", ws, gid, True, None)
-                except Exception as _e:
-                    log_api(f"[定时] 群聊拒绝回复失败（忽略）: {_e}")
-    except Exception as _e:
-        log_api(f"[定时] 提取失败（忽略）: {_e}")
+    await _maybe_extract_timer(mt, text, uid, gid, ws, addressed)
 
     # 代码模式：每次收到消息更新最后活跃时间戳
     if cfg.CODE_MODE:

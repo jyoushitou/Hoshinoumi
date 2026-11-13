@@ -1,4 +1,4 @@
-# ===================== 版本信息（v17.1） =====================
+﻿# ===================== 版本信息（v17.1） =====================
 # 对话里用 `!version` 查当前跑的是哪个版本。
 #
 # 版本号来源（优先级从高到低）：
@@ -14,7 +14,7 @@ import subprocess
 import sys
 import time
 
-VERSION = "20.5.0"         # 与 README / tag 对齐；发版时改这里
+VERSION = "21.0.0"         # 与 README / tag 对齐；发版时改这里
 _started_at = time.time()
 _cache = {}
 
@@ -97,3 +97,4 @@ def describe():
     except Exception:
         pass
     return "\n".join(lines)
+

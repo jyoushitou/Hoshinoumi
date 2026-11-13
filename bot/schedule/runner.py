@@ -120,3 +120,18 @@ async def cycle_task_run():
 
 READ_CHECK_INTERVAL = 1800   # 30 分钟最多检查一次
 _last_read_check = 0.0
+
+
+async def generate_diary(*args, **kwargs):
+    """v21.9 兼容导出：执行器/测试仍可从 runner 取；实现延迟到 diary。"""
+    import importlib
+    _generate = importlib.import_module("..diary", __package__).generate_diary
+    return await _generate(*args, **kwargs)
+
+
+async def get_character_reply(*args, **kwargs):
+    """v21.9 兼容导出：测试/旧调用可从 runner 取，实现延迟到 ai.client。"""
+    import importlib
+    _reply = importlib.import_module("..ai.client", __package__).get_character_reply
+    return await _reply(*args, **kwargs)
+
