@@ -40,6 +40,8 @@ class TestDuplicateReply(unittest.TestCase):
         async def fake_send(*a, **k):
             sent.append(a)
 
+        from bot.core import metrics
+        before = metrics.snapshot()[0].get("duplicate_reply", 0)
         S.send_private_msg = fake_send
         try:
             asyncio.run(S.send_short_reply("9", "烦什么。", None, "9"))
@@ -47,6 +49,8 @@ class TestDuplicateReply(unittest.TestCase):
         finally:
             S.send_private_msg = orig
         self.assertEqual(len(sent), 1, "第二次重复应被跳过")
+        after = metrics.snapshot()[0].get("duplicate_reply", 0)
+        self.assertEqual(after, before + 1, "重复回复应计入 duplicate_reply")
 
 
 class TestVoiceWorthy(unittest.TestCase):

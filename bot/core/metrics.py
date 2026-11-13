@@ -15,6 +15,7 @@ COUNTERS = (
     "quote_miss",     # 引用没取到
     "quote_timeout",  # 引用 get_msg 超时
     "empty_reply",    # v18.16：模型空回复
+    "duplicate_reply",  # v20.4：重复回复被去重拦截
 )
 
 _data = {}
@@ -63,6 +64,7 @@ def describe():
         "quote_miss": "引用未命中",
         "quote_timeout": "引用超时",
         "empty_reply": "空回复",
+        "duplicate_reply": "回复去重",
     }
     lines = [f"📊 今日统计（{day}）"]
     for k in COUNTERS:

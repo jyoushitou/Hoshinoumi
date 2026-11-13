@@ -267,6 +267,11 @@ async def send_short_reply(tid, text, ws, uid, is_group=False, kws=None):
     """发送完整回复：构建消息→逐条发送（文本+图片）"""
     if is_duplicate_reply(tid, text):  # v16.0.5：同一句话短时间内不重复发
         log_api("[发送] 与上一条重复，跳过")
+        try:
+            from ..core import metrics
+            metrics.inc("duplicate_reply")
+        except Exception:
+            pass
         return False
     parts = await build_reply_message(text, uid, kws, is_group)  # 构建回复消息列表（带发图择时）
     log_api(f"[发送] 共{len(parts)}条消息: {[p[0] for p in parts]}")  # 日志记录消息数量

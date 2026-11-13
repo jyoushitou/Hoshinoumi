@@ -58,5 +58,5 @@ def reset_stats():
 
 def describe():
     s = stats()
-    return (f"🧠 缓存：{s['size']} 条 | 命中 {s['hits']} | 未命中 {s['misses']} | "
-            f"命中率 {s['hit_rate']:.0%}")
+    return (f"🧠 查询缓存（TTL）：{s['size']} 条 | 命中 {s['hits']} | "
+            f"未命中 {s['misses']} | 命中率 {s['hit_rate']:.0%}")
