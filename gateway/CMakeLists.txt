@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20)
+﻿cmake_minimum_required(VERSION 3.20)
 
 project(rec_gateway VERSION 20.0.0 LANGUAGES CXX)
 
@@ -10,7 +10,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 find_package(CommonNet CONFIG REQUIRED)
 
 add_executable(rec_gateway
-    src/main.cpp
+    main.cpp
     src/config.cpp
     src/router.cpp
     src/backend.cpp

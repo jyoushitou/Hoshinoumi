@@ -15,7 +15,13 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEFAULT_PATH = os.path.join(ROOT, "config", "gateway.json")
 DEFAULTS = {
     "listen": {"host": "127.0.0.1", "port": 8080},
-    "backend": {"base": "http://127.0.0.1:60908", "timeout_ms": 5000},
+    "backend": {
+        "base": "http://127.0.0.1:60908",
+        "timeout_ms": 5000,
+        "startup_wait": True,
+        "startup_retry_interval_sec": 30,
+        "startup_max_attempts": 5,
+    },
     "log_level": "info",
 }
 
@@ -52,12 +58,30 @@ def _validate(cfg):
         raise SystemExit("backend.timeout_ms 必须是整数")
     if timeout <= 0:
         raise SystemExit("backend.timeout_ms 必须大于 0")
+    wait = backend.get("startup_wait", True)
+    if isinstance(wait, str):
+        wait = wait.strip().lower() in ("1", "true", "yes", "y", "on")
+    try:
+        retry_sec = int(backend.get("startup_retry_interval_sec") or 30)
+        max_attempts = int(backend.get("startup_max_attempts") or 5)
+    except ValueError:
+        raise SystemExit("startup_retry_interval_sec / startup_max_attempts 必须是整数")
+    if not (1 <= retry_sec <= 3600):
+        raise SystemExit("backend.startup_retry_interval_sec 必须在 1..3600")
+    if not (1 <= max_attempts <= 100):
+        raise SystemExit("backend.startup_max_attempts 必须在 1..100")
     level = str(cfg.get("log_level") or "info")
     if level not in ("info", "debug"):
         raise SystemExit("log_level 只支持 info / debug")
     return {
         "listen": {"host": host, "port": port},
-        "backend": {"base": base, "timeout_ms": timeout},
+        "backend": {
+            "base": base,
+            "timeout_ms": timeout,
+            "startup_wait": bool(wait),
+            "startup_retry_interval_sec": retry_sec,
+            "startup_max_attempts": max_attempts,
+        },
         "log_level": level,
     }
 
@@ -68,6 +92,11 @@ def _ask(label, default):
     except EOFError:
         raw = ""
     return raw or default
+
+
+def _ask_bool(label, default):
+    raw = _ask(label + "（y/n）", "y" if default else "n")
+    return str(raw).strip().lower() in ("1", "true", "yes", "y", "on")
 
 
 def _run_wizard(path):
@@ -83,6 +112,13 @@ def _run_wizard(path):
     listen["port"] = int(_ask("监听端口", listen.get("port", 8080)))
     backend["base"] = _ask("后端 API 地址", backend.get("base", "http://127.0.0.1:60908"))
     backend["timeout_ms"] = int(_ask("后端超时（毫秒）", backend.get("timeout_ms", 5000)))
+    backend["startup_wait"] = _ask_bool(
+        "启动时等待后端（30s 间隔，最多 5 次）",
+        bool(backend.get("startup_wait", True)))
+    backend["startup_retry_interval_sec"] = int(_ask(
+        "启动等待间隔（秒）", backend.get("startup_retry_interval_sec", 30)))
+    backend["startup_max_attempts"] = int(_ask(
+        "启动等待次数", backend.get("startup_max_attempts", 5)))
     cfg["log_level"] = _ask("日志级别（info/debug）", cfg.get("log_level", "info"))
     cfg = _validate(cfg)
 

@@ -25,6 +25,15 @@ namespace Gateway
         /// @brief 调后端的超时（毫秒）
         int backendTimeoutMs = 5000;
 
+        /// @brief 启动时是否等待后端（默认开启）
+        bool startupWait = true;
+
+        /// @brief 启动等待重试间隔（秒）
+        int startupRetryIntervalSec = 30;
+
+        /// @brief 一轮启动等待最多尝试次数
+        int startupMaxAttempts = 5;
+
         /// @brief 日志级别（info / debug）
         std::string logLevel = "info";
 

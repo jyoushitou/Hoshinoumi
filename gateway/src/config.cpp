@@ -64,6 +64,20 @@ namespace Gateway
             }
             return static_cast<int>(value->as_int64());
         }
+
+        bool GetBool(const boost::json::object& obj, const char* key, bool fallback)
+        {
+            const auto* value = obj.if_contains(key);
+            if (value == nullptr)
+            {
+                return fallback;
+            }
+            if (!value->is_bool())
+            {
+                throw std::runtime_error(std::string("配置字段不是布尔值: ") + key);
+            }
+            return value->as_bool();
+        }
     } // namespace
 
     Config Config::Load(const std::string& path)
@@ -96,6 +110,11 @@ namespace Gateway
             const auto& b = backend->as_object();
             cfg.backendBase = GetString(b, "base", cfg.backendBase);
             cfg.backendTimeoutMs = GetInt(b, "timeout_ms", cfg.backendTimeoutMs);
+            cfg.startupWait = GetBool(b, "startup_wait", cfg.startupWait);
+            cfg.startupRetryIntervalSec = GetInt(b, "startup_retry_interval_sec",
+                                                cfg.startupRetryIntervalSec);
+            cfg.startupMaxAttempts = GetInt(b, "startup_max_attempts",
+                                            cfg.startupMaxAttempts);
         }
         cfg.logLevel = GetString(obj, "log_level", cfg.logLevel);
         cfg.Validate();
@@ -115,6 +134,14 @@ namespace Gateway
         if (backendTimeoutMs <= 0)
         {
             throw std::runtime_error("backend.timeout_ms 必须大于 0");
+        }
+        if (startupRetryIntervalSec <= 0 || startupRetryIntervalSec > 3600)
+        {
+            throw std::runtime_error("backend.startup_retry_interval_sec 必须在 1..3600");
+        }
+        if (startupMaxAttempts <= 0 || startupMaxAttempts > 100)
+        {
+            throw std::runtime_error("backend.startup_max_attempts 必须在 1..100");
         }
         if (logLevel != "info" && logLevel != "debug")
         {
@@ -139,6 +166,9 @@ namespace Gateway
         return "listen=" + listenHost + ":" + std::to_string(listenPort) +
                " backend=" + backendBase +
                " timeout_ms=" + std::to_string(backendTimeoutMs) +
+               " startup_wait=" + (startupWait ? "true" : "false") +
+               " startup_interval=" + std::to_string(startupRetryIntervalSec) + "s" +
+               " startup_attempts=" + std::to_string(startupMaxAttempts) +
                " log_level=" + logLevel;
     }
 } // namespace Gateway

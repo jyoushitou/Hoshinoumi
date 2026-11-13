@@ -6,8 +6,11 @@
 
 #include "router.h"
 
+#include "Utils.h"
+
 #include <boost/json.hpp>
 
+#include <chrono>
 #include <thread>
 #include <utility>
 
@@ -27,8 +30,13 @@ namespace Gateway
         }
     } // namespace
 
-    Router::Router(Config cfg) : cfg_(std::move(cfg)), backend_(cfg_)
+    Router::Router(Config cfg)
+        : cfg_(std::move(cfg)), backend_(cfg_), probe_(std::make_shared<ProbeState>())
     {
+        if (cfg_.startupWait)
+        {
+            StartProbe(true);  // 立即第 1 次；失败后 30s × 5
+        }
     }
 
     std::string Router::NextRequestId()
@@ -101,6 +109,52 @@ namespace Gateway
                             JsonHeaders(NextRequestId()));
     }
 
+    void Router::StartProbe(bool fullCycle)
+    {
+        if (probe_->running.exchange(true))
+        {
+            return;  // 已有探测在跑，别叠加线程
+        }
+
+        const int maxAttempts = fullCycle ? cfg_.startupMaxAttempts : 1;
+        const int intervalSec = cfg_.startupRetryIntervalSec;
+        auto probe = probe_;
+        BackendClient backend = backend_;
+        std::thread([probe, backend, maxAttempts, intervalSec, fullCycle]()
+                    {
+                        for (int attempt = 1; attempt <= maxAttempts; ++attempt)
+                        {
+                            std::string detail;
+                            const bool ok = backend.CheckHealth(detail);
+                            if (ok)
+                            {
+                                probe->ready = true;
+                                Utils::Out::outMsg("[网关] 后端探测成功，/readyz 可用");
+                                break;
+                            }
+                            Utils::Out::outErr("[网关] 后端探测 " + std::to_string(attempt) +
+                                               "/" + std::to_string(maxAttempts) +
+                                               " 失败: " + detail);
+                            if (attempt < maxAttempts)
+                            {
+                                std::this_thread::sleep_for(
+                                    std::chrono::seconds(intervalSec));
+                            }
+                        }
+                        if (!probe->ready.load())
+                        {
+                            probe->ready = false;
+                            if (fullCycle)
+                            {
+                                Utils::Out::outErr("[网关] 启动等待结束，后端仍未就绪；"
+                                                   "网关保持运行，/readyz 返回 503");
+                            }
+                        }
+                        probe->running = false;
+                    })
+            .detach();
+    }
+
     void Router::Ready(const std::shared_ptr<Net::Server::HttpServer::HttpSession>& session,
                        const Net::Server::HttpServer::Url& url)
     {
@@ -112,13 +166,28 @@ namespace Gateway
             return;
         }
 
+        // v20.6：启动等待期间不阻塞 IO 线程，先回 503；后续请求再触发一次探测
+        if (cfg_.startupWait && !probe_->ready.load())
+        {
+            StartProbe(false);
+            boost::json::object body;
+            body["ok"] = false;
+            body["backend"] = probe_->running.load() ? "starting" : "not_ready";
+            session->httpReplay(boost::json::serialize(body),
+                                boost::beast::http::status::service_unavailable,
+                                JsonHeaders(NextRequestId()));
+            return;
+        }
+
         const auto seq = url.seq;
         const std::string requestId = NextRequestId();
         BackendClient backend = backend_;
-        std::thread([session, seq, backend, requestId]()
+        auto probe = probe_;
+        std::thread([session, seq, backend, requestId, probe]()
                     {
                         std::string detail;
                         const bool ok = backend.CheckHealth(detail);
+                        probe->ready = ok;
                         boost::json::object body;
                         body["ok"] = ok;
                         body["backend"] = detail;

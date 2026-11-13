@@ -24,6 +24,13 @@ namespace Gateway
     public:
         explicit Router(Config cfg);
 
+        /// @brief 启动时的后端等待状态（v20.6）
+        struct ProbeState
+        {
+            std::atomic<bool> ready{false};
+            std::atomic<bool> running{false};
+        };
+
         /// @brief CommonNet HTTP 回调入口
         void Handle(const std::shared_ptr<Net::Server::HttpServer::HttpSession>& session,
                     const Net::Server::HttpServer::Url& url);
@@ -33,6 +40,7 @@ namespace Gateway
                     const Net::Server::HttpServer::Url& url);
         void Ready(const std::shared_ptr<Net::Server::HttpServer::HttpSession>& session,
                    const Net::Server::HttpServer::Url& url);
+        void StartProbe(bool fullCycle);
         void Proxy(const std::shared_ptr<Net::Server::HttpServer::HttpSession>& session,
                    const Net::Server::HttpServer::Url& url,
                    const std::string& backendPath, const std::string& method);
@@ -43,6 +51,7 @@ namespace Gateway
 
         Config cfg_;
         BackendClient backend_;
+        std::shared_ptr<ProbeState> probe_;
         static std::atomic<unsigned long long> requestSeq_;
     };
 } // namespace Gateway

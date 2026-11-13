@@ -5,7 +5,10 @@
   },
   "backend": {
     "base": "http://127.0.0.1:60908",
-    "timeout_ms": 5000
+    "timeout_ms": 5000,
+    "startup_wait": true,
+    "startup_retry_interval_sec": 30,
+    "startup_max_attempts": 5
   },
   "log_level": "info"
 }

@@ -19,6 +19,25 @@
 | 配置向导 `scripts/configure.py` | |
 | Dockerfile 多阶段构建 | |
 
+## 启动等待（v20.6）
+
+网关先启动、后端还没起来时：
+
+- `/healthz` 立即 200
+- `/readyz` 返回 503
+- 每 30 秒探测一次，一轮最多 5 次；5 次都失败后网关继续运行
+- 后端起来后再请求 `/readyz` 会补一次探测，成功后返回 200
+
+配置：
+
+```json
+"backend": {
+  "startup_wait": true,
+  "startup_retry_interval_sec": 30,
+  "startup_max_attempts": 5
+}
+```
+
 ## 本机构建
 
 ```bash
