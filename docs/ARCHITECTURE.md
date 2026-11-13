@@ -2,8 +2,8 @@
 
 > 配套阅读：**[ARCH-REVIEW.md](ARCH-REVIEW.md)**（量化审查、问题与修复顺序）
 >
-> v18 已封存，本图描述 **v18.20.0 的实际运行结构**；v19 的多用户 / API / gRPC 目标见
-> [versions/v19.md](versions/v19.md)。图中 ⚠ 是已知架构债，不代表当前不能用。
+> v18 已封存，本图描述 **v18.20.0 的实际运行结构**；v19 的架构/对话底座、v20 的多用户 / API / gRPC 目标见
+> [versions/v19.md](versions/v19.md) 与 [versions/v20.md](versions/v20.md)。图中 ⚠ 是已知架构债，不代表当前不能用。
 
 ---
 
@@ -121,9 +121,9 @@
  NapCat → QQ
 ```
 
-**NapCat 的定位：QQ 通道网关，不是 v20 体系网关。**
+**NapCat 的定位：QQ 通道网关，不是 v21 体系网关。**
 
-| 维度 | NapCat | v20 网关 |
+| 维度 | NapCat | v21 网关 |
 |---|---|---|
 | 位置 | **南向**：QQ ↔ botv | **北向**：公网 ↔ botv |
 | 角色 | QQ 协议适配器 / 通道网关 | 体系网关 / 公网唯一入口 |
@@ -139,9 +139,9 @@
 |---|---|---|
 | **A. 直连 + 进程内限流**（默认） | NapCat → botv loopback；`chat/inbound` / `egress/outbound` 做令牌桶 + 有界队列 | ✅ 少一跳、低延迟 |
 | **B. 独立 QQ 通道网关** | NapCat → channel-gw → botv；mTLS、按 QQ 号配额 | 🟡 多 QQ 号 / NapCat 不在本机时 |
-| **C. 走 v20 体系网关** | v20 同时说 OneBot/JWT，代理 NapCat | ❌ 协议/鉴权/信任边界全混 |
+| **C. 走 v21 体系网关** | v21 同时说 OneBot/JWT，代理 NapCat | ❌ 协议/鉴权/信任边界全混 |
 
-v20 **不接** OneBot；QQ 限流在 channel adapter，不在 v20。
+v21 **不接** OneBot；QQ 限流在 channel adapter，不在 v21。
 
 ---
 

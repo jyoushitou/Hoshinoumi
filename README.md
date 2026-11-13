@@ -35,7 +35,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 
 ## 开发计划
 
-**当前：v18.20.0 已封存（v18 只读）｜v19 观察期第 1 天** → 24 小时观察结束后进 v19.0 多用户底座。
+**当前：v18.20.0 已封存（v18 只读）｜v19 观察期第 1 天** → 24 小时观察结束后进 v19.0 架构基线；多用户从 v20 开始。
 
 > v18 封存后不再打补丁；观察期出现的 bug 统一记入 [v19 观察表](docs/versions/v19.md#v18-封存后的-1-天观察期)。
 
@@ -46,26 +46,27 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | **v16** | **读小说（番茄 OCR + HTML 合并）** | ✅ 已发布 | [v16.md](docs/versions/v16.md) |
 | v17 | 执行模型重构：阻塞池 → 事件/调度 → 出站层 → 主循环瘦身 | ✅ 已发布（v17.17） | [v17.md](docs/versions/v17.md) |
 | v18 | 情感的深刻度：记忆分轻重、情绪跨天、时间与日志修复 | 🔒 已封存（v18.20.0） | [v18.md](docs/versions/v18.md) |
-| v19 | 多用户后端 API：users/identity/隔离 + 服务化 | 🚧 观察期（1 天）→ v19.0 | [v19.md](docs/versions/v19.md) |
-| v20 | 网关：自有软件与 Web 的**唯一入口**（鉴权/限流/审计） | 📋 已规划 | [v20.md](docs/versions/v20.md) |
-| v21 | DSH / Qoder / WorkBuddy 插件：她成为你所有工具的记忆层 | 📋 已规划 | [v21.md](docs/versions/v21.md) |
-| v22 | 电脑 Web：聊天 + 历史 + 功能面板 | 📋 已规划 | [v22.md](docs/versions/v22.md) |
-| v23 | 桌面端（一）Linux：Tauri + Web UI | 📋 已规划 | [v23.md](docs/versions/v23.md) |
-| v24 | 桌面端（二）Windows：Tauri + WebView2 | 📋 已规划 | [v24.md](docs/versions/v24.md) |
-| v25 | 手机 App（Flutter）+ 推送通知 | 📋 已规划 | [v25.md](docs/versions/v25.md) |
-| v26 | QQ 空间：发说说 + 只对熟人点赞/评论 | 📋 已规划 | [v26.md](docs/versions/v26.md) |
-| v27 | 运维（一）bash 只读 | 📋 已规划 | [v27.md](docs/versions/v27.md) |
-| v28 | 运维（二）agent | 📋 已规划 | [v28.md](docs/versions/v28.md) |
-| v29 | 运维（三）有限写 | 📋 已规划 | [v29.md](docs/versions/v29.md) |
-| v30 | 运维（四）可写体系 | 📋 已规划 | [v30.md](docs/versions/v30.md) |
-| v31 | 视频（一）B 站 | 📋 已规划 | [v31.md](docs/versions/v31.md) |
-| v32 | 视频（二）抖音 | 📋 已规划 | [v32.md](docs/versions/v32.md) |
-| v33 | 微信接入（OpenClaw） | 📋 已规划 | [v33.md](docs/versions/v33.md) |
-| v34 | 语音通话 | 📋 已规划 | [v34.md](docs/versions/v34.md) |
-| v35 | 视频通话 | 📋 已规划 | [v35.md](docs/versions/v35.md) |
-| v36 | 微服务接入：融进自有 Web，探网关 5 次 + 池复用 | 📋 已规划 | [v36.md](docs/versions/v36.md) |
-| v37 | 常驻（一）systemd / 看门狗 | 📋 已规划 | [v37.md](docs/versions/v37.md) |
-| v38 | 常驻（二）LITE / ARM / 一键安装 | 📋 已规划 | [v38.md](docs/versions/v38.md) |
+| v19 | 架构重构 + 对话同步底座：迁移单一入口、`conversation_messages`、`!history` | 🚧 观察期（1 天）→ v19.0 | [v19.md](docs/versions/v19.md) |
+| v20 | 多用户：users/identities/roles + 全表 user_id 隔离 | 📋 已规划（v20） | [v20.md](docs/versions/v20.md) |
+| v21 | 网关：自有软件与 Web 的**唯一入口**（鉴权/限流/审计） | 📋 已规划 | [v21.md](docs/versions/v21.md) |
+| v22 | DSH / Qoder / WorkBuddy 插件：她成为你所有工具的记忆层 | 📋 已规划 | [v22.md](docs/versions/v22.md) |
+| v23 | 电脑 Web：聊天 + 历史 + 功能面板 | 📋 已规划 | [v23.md](docs/versions/v23.md) |
+| v24 | 桌面端（一）Linux：Tauri + Web UI | 📋 已规划 | [v24.md](docs/versions/v24.md) |
+| v25 | 桌面端（二）Windows：Tauri + WebView2 | 📋 已规划 | [v25.md](docs/versions/v25.md) |
+| v26 | 手机 App（Flutter）+ 推送通知 | 📋 已规划 | [v26.md](docs/versions/v26.md) |
+| v27 | QQ 空间：发说说 + 只对熟人点赞/评论 | 📋 已规划 | [v27.md](docs/versions/v27.md) |
+| v28 | 运维（一）bash 只读 | 📋 已规划 | [v28.md](docs/versions/v28.md) |
+| v29 | 运维（二）agent | 📋 已规划 | [v29.md](docs/versions/v29.md) |
+| v30 | 运维（三）有限写 | 📋 已规划 | [v30.md](docs/versions/v30.md) |
+| v31 | 运维（四）可写体系 | 📋 已规划 | [v31.md](docs/versions/v31.md) |
+| v32 | 视频（一）B 站 | 📋 已规划 | [v32.md](docs/versions/v32.md) |
+| v33 | 视频（二）抖音 | 📋 已规划 | [v33.md](docs/versions/v33.md) |
+| v34 | 微信接入（OpenClaw） | 📋 已规划 | [v34.md](docs/versions/v34.md) |
+| v35 | 语音通话 | 📋 已规划 | [v35.md](docs/versions/v35.md) |
+| v36 | 视频通话 | 📋 已规划 | [v36.md](docs/versions/v36.md) |
+| v37 | 微服务接入：融进自有 Web，探网关 5 次 + 池复用 | 📋 已规划 | [v37.md](docs/versions/v37.md) |
+| v38 | 常驻（一）systemd / 看门狗 | 📋 已规划 | [v38.md](docs/versions/v38.md) |
+| v39 | 常驻（二）LITE / ARM / 一键安装 | 📋 已规划 | [v39.md](docs/versions/v39.md) |
 
 > **约定**：每个大版本的**最后一个次版本**用来收尾修 bug 和技术债，不堆新功能。
 
@@ -914,7 +915,7 @@ python3 scripts/preflight.py --init-db   # 前置检查时自动建
 |---|---|
 | **番茄正文有 OCR 错字** | 约 5%（`神谨`→`神龛`），对摘要够用，逐字引用不可靠 |
 | **起点抓不了** | 章节页对机房 IP + 未登录双重限制，已放弃 |
-| **抖音未实现** | 规划在 v22.1，且只做看和转发，发评论不可行 |
+| **抖音未实现** | 规划在 v23.1，且只做看和转发，发评论不可行 |
 | 群聊记忆按群号 | 同一个人在私聊和群里是两份记忆 |
 | 语义检索靠关键词 | 无外网装不了 embedding，BM25 + 关键词双路 |
 | 视觉/ASR 依赖外部接口 | 失败静默降级，不影响聊天 |
@@ -943,10 +944,10 @@ python3 scripts/preflight.py --init-db   # 前置检查时自动建
 | 文档 | 内容 |
 |---|---|
 | [`docs/README.md`](docs/README.md) | 文档总索引（版本 → 条目 → 状态） |
-| [`docs/ROADMAP.md`](docs/ROADMAP.md) | 发布路线图：v17~v21 每个小版本的拆解与验收点 |
+| [`docs/ROADMAP.md`](docs/ROADMAP.md) | 发布路线图：v17~v22 每个小版本的拆解与验收点 |
 | [`docs/DB-DESIGN.md`](docs/DB-DESIGN.md) | 数据库设计（一表一职责） |
 | [`docs/发布检查清单.md`](docs/发布检查清单.md) | 5 组检查项 + 环境变量表 + 发布流程 |
-| [`docs/versions/`](docs/versions/) | 各版本设计文档（v6 ~ v21） |
+| [`docs/versions/`](docs/versions/) | 各版本设计文档（v6 ~ v22） |
 | [`docs/V14-后续清单.md`](docs/V14-后续清单.md) | 未排期需求（A~E 组） |
 | [`docs/V6-功能.md`](docs/V6-功能.md) | v6 时代的功能总表（74 项，封版） |
 | [`docs/RELEASE-NOTES.md`](docs/RELEASE-NOTES.md) | 最近一次发布说明 |
