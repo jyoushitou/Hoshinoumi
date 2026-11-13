@@ -3,6 +3,13 @@
   "master_qq": "123456789",
   "ws_port": 3001,
   "api_port": 60908,
+  "vision": {
+    "_说明": "环境变量 NAO_VISION_* 优先；这里作为本地文件回退。model 可填 ep-xxx 接入点 ID。",
+    "model": "",
+    "url": "",
+    "key": "",
+    "fallback_model": ""
+  },
   "db": {
     "backend": "mysql",
     "path": "data/nao.db",

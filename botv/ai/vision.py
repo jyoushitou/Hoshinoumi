@@ -27,20 +27,31 @@ DEFAULT_VISION_MODEL = os.getenv("NAO_VISION_MODEL", DOUBAO_VISION_MODEL)
 DEFAULT_VISION_URL = os.getenv("NAO_VISION_URL", DOUBAO_VISION_URL)
 
 
+def _local(name, default=""):
+    """从 config.local.json 的 vision.* 读取；环境变量优先"""
+    try:
+        from ..core import settings
+        return settings.get("vision." + name, default) or default
+    except Exception:
+        return default
+
+
 def vision_key():
     """视觉用哪个 key：专用 key → 豆包 key → DeepSeek key（兜底）"""
     return (os.getenv("NAO_VISION_KEY")
+            or _local("key")
             or getattr(cfg, "DOUBAO_API_KEY", "")
             or getattr(cfg, "DS_API_KEY", ""))
 
 
 def providers():
-    """按顺序尝试的后端；环境变量可覆盖第一个
+    """按顺序尝试的后端；环境变量 > config.local.json > 默认
 
     返回 [{"name","url","model","key"}]，跳过没有 key 的。
     """
-    custom_url = os.getenv("NAO_VISION_URL")
-    custom_model = os.getenv("NAO_VISION_MODEL")
+    custom_url = os.getenv("NAO_VISION_URL") or _local("url")
+    custom_model = os.getenv("NAO_VISION_MODEL") or _local("model")
+    custom_key = os.getenv("NAO_VISION_KEY") or _local("key")
     out = []
     if custom_url:
         out.append({"name": "自定义", "url": custom_url,
@@ -49,12 +60,12 @@ def providers():
     else:
         out.append({"name": "豆包", "url": DOUBAO_VISION_URL,
                     "model": custom_model or DOUBAO_VISION_MODEL,
-                    "key": (os.getenv("NAO_VISION_KEY")
+                    "key": (custom_key
                             or getattr(cfg, "DOUBAO_API_KEY", ""))})
         if getattr(cfg, "DS_API_KEY", ""):
             out.append({"name": "DeepSeek", "url": DEEPSEEK_VISION_URL,
-                        "model": os.getenv("NAO_VISION_FALLBACK_MODEL",
-                                           DEEPSEEK_VISION_MODEL),
+                        "model": os.getenv("NAO_VISION_FALLBACK_MODEL")
+                        or _local("fallback_model") or DEEPSEEK_VISION_MODEL,
                         "key": cfg.DS_API_KEY})
     return [p for p in out if p.get("key")]
 MAX_SIDE = 1024

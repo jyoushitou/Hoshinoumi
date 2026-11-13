@@ -35,7 +35,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 
 ## 开发计划
 
-**当前：v19.5.3（架构重构 + 对话底座）**｜下一站 v20–v22 网关、v23 多用户。
+**当前：v19.5.4（架构重构 + 对话底座）**｜下一站 v20–v22 网关、v23 多用户。
 
 > v18 封存后不再打补丁；观察期出现的 bug 统一记入 [v19 观察表](docs/versions/v19.md#v18-封存后的-1-天观察期)。
 
@@ -46,7 +46,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | **v16** | **读小说（番茄 OCR + HTML 合并）** | ✅ 已发布 | [v16.md](docs/versions/v16.md) |
 | v17 | 执行模型重构：阻塞池 → 事件/调度 → 出站层 → 主循环瘦身 | ✅ 已发布（v17.17） | [v17.md](docs/versions/v17.md) |
 | v18 | 情感的深刻度：记忆分轻重、情绪跨天、时间与日志修复 | 🔒 已封存（v18.20.0） | [v18.md](docs/versions/v18.md) |
-| v19 | 架构重构 + 对话同步底座：迁移单一入口、`conversation_messages`、`!history`、语音分段 | ✅ 已完成（v19.5.3） | [v19.md](docs/versions/v19.md) |
+| v19 | 架构重构 + 对话同步底座：迁移单一入口、`conversation_messages`、`!history`、语音分段 | ✅ 已完成（v19.5.4） | [v19.md](docs/versions/v19.md) |
 | v20 | 网关（一）核心：C++/Drogon + REST↔gRPC 代理 | 📋 已规划 | [v20.md](docs/versions/v20.md) |
 | v21 | 网关（二）owner 鉴权：JWT/刷新/失败锁定 | 📋 已规划 | [v21.md](docs/versions/v21.md) |
 | v22 | 网关（三）安全：限流/审计/TLS/`!gw` | 📋 已规划 | [v22.md](docs/versions/v22.md) |
