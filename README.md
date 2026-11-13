@@ -1,4 +1,4 @@
-# 友利奈绪 QQ 机器人 v18.20.0 —— v18 封版
+﻿# 友利奈绪 QQ 机器人 v18.20.0 —— v18 封版
 
 > 世界观取自原作结局之后：能力消失，回归普通生活；**乙坂有宇已经意外去世**。
 > 提到他需要克制，可以打哑谜，但不能假装他还活着。
@@ -47,8 +47,8 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | v17 | 执行模型重构：阻塞池 → 事件/调度 → 出站层 → 主循环瘦身 | ✅ 已发布（v17.17） | [v17.md](docs/versions/v17.md) |
 | v18 | 情感的深刻度：记忆分轻重、情绪跨天、时间与日志修复 | 🔒 已封存（v18.20.0） | [v18.md](docs/versions/v18.md) |
 | v19 | 架构重构 + 对话同步底座：迁移单一入口、`conversation_messages`、`!history` | 🚧 观察期（1 天）→ v19.0 | [v19.md](docs/versions/v19.md) |
-| v20 | 多用户：users/identities/roles + 全表 user_id 隔离 | 📋 已规划（v20） | [v20.md](docs/versions/v20.md) |
-| v21 | 网关：自有软件与 Web 的**唯一入口**（鉴权/限流/审计） | 📋 已规划 | [v21.md](docs/versions/v21.md) |
+| v20 | 网关：自有软件与 Web 的**唯一入口**（owner-only 起步） | 📋 已规划 | [v20.md](docs/versions/v20.md) |
+| v21 | 多用户：users/identities/roles + 全表 user_id 隔离 | 📋 已规划 | [v21.md](docs/versions/v21.md) |
 | v22 | DSH / Qoder / WorkBuddy 插件：她成为你所有工具的记忆层 | 📋 已规划 | [v22.md](docs/versions/v22.md) |
 | v23 | 电脑 Web：聊天 + 历史 + 功能面板 | 📋 已规划 | [v23.md](docs/versions/v23.md) |
 | v24 | 桌面端（一）Linux：Tauri + Web UI | 📋 已规划 | [v24.md](docs/versions/v24.md) |
@@ -951,5 +951,6 @@ python3 scripts/preflight.py --init-db   # 前置检查时自动建
 | [`docs/V14-后续清单.md`](docs/V14-后续清单.md) | 未排期需求（A~E 组） |
 | [`docs/V6-功能.md`](docs/V6-功能.md) | v6 时代的功能总表（74 项，封版） |
 | [`docs/RELEASE-NOTES.md`](docs/RELEASE-NOTES.md) | 最近一次发布说明 |
+
 
 

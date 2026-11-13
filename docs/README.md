@@ -1,4 +1,4 @@
-# 文档索引
+﻿# 文档索引
 
 > **当前：v18.5.0（uptime 与元数据视图）已实现** → 下一步：**v18.6 引用上下文（L21）**。
 
@@ -54,8 +54,8 @@ v6：P1 会说话 → P2 说实话 → P2.5 长感官 → P3 有生活 → P4 �
 | **v17** | [versions/v17.md](versions/v17.md) | 执行模型重构（16 个次版本，v17.17.0 已发布） | ✅ 已发布 |
 | **v18** | [versions/v18.md](versions/v18.md) | 情感的深刻度：记忆分量 → 事实卡 → 情绪跨天 …（21 个次版本，18.0–18.20） | 🔒 已封存（v18.20.0） |
 | **v19** | [versions/v19.md](versions/v19.md) | 架构重构 + 对话同步底座：迁移单一入口、`conversation_messages`、`!history` | 规划中 |
-| **v20** | [versions/v20.md](versions/v20.md) | 多用户：users/identities/roles + 全表 `user_id` 隔离 | 规划中 |
-| **v21** | [versions/v21.md](versions/v21.md) | 网关：自有软件与 Web 的**唯一入口**（鉴权/限流/审计） | 规划中 |
+| **v20** | [versions/v20.md](versions/v20.md) | 网关：自有软件与 Web 的唯一入口（owner-only 起步） | 规划中 |
+| **v21** | [versions/v21.md](versions/v21.md) | 多用户：users/identities/roles + 全表 `user_id` 隔离 | 规划中 |
 | **v22** | [versions/v22.md](versions/v22.md) | DSH / Qoder / WorkBuddy 插件：她成为你所有工具的记忆层 | 规划中 |
 | **v23** | [versions/v23.md](versions/v23.md) | 电脑 Web：聊天 + 历史 + 功能面板 | 规划中 |
 | **v24** | [versions/v24.md](versions/v24.md) | 桌面端（一）Linux：Tauri + Web UI | 规划中 |
@@ -82,3 +82,4 @@ v6：P1 会说话 → P2 说实话 → P2.5 长感官 → P3 有生活 → P4 �
 > 数据库设计见 **[DB-DESIGN.md](DB-DESIGN.md)**（一表一职责）。
 > 架构审查见 **[ARCH-REVIEW.md](ARCH-REVIEW.md)**（分层/环/巨石函数，含修复顺序）。
 > 架构图见 **[ARCHITECTURE.md](ARCHITECTURE.md)**（分层/消息流/调度模型/架构债）。
+

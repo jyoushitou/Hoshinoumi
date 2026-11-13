@@ -71,7 +71,7 @@ CREATE TABLE conversation_messages (
 
 - 每个 `(user_id, target_id)` 保留最近 **1 天**、最多 **100 条**；04:00 清理。
 - 只存短期可重放消息；长期记忆仍走 `memories`。
-- v20 多用户时 `user_id` 变真实账号；v19 默认 `__owner__`。
+- v21 多用户时 `user_id` 变真实账号；v19 默认 `__owner__`。
 
 ### 3.2 记忆
 
@@ -272,6 +272,6 @@ CREATE TABLE settings (
 | v17.4.0 | `cron_tasks`（第一张按新规范建的表） |
 | **v17.5.0** | 数据模型重建：本文件全部表 + 迁移脚本 |
 | v19.1 | `conversation_messages`（1 天 / 100 条短期对话，多端同步用） |
-| v20.1 | 全表 `user_id` 回填 + `(user_id, ...)` 索引 |
+| v21.1 | 全表 `user_id` 回填 + `(user_id, ...)` 索引 |
 
 **先有 v17.4 的 `cron_tasks` 做出样板，再整体搬迁。**
