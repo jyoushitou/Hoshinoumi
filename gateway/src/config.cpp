@@ -8,6 +8,7 @@
 
 #include <boost/json.hpp>
 
+#include <cstdlib>
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
@@ -116,6 +117,18 @@ namespace Gateway
             cfg.startupMaxAttempts = GetInt(b, "startup_max_attempts",
                                             cfg.startupMaxAttempts);
         }
+        if (const auto* auth = obj.if_contains("auth"); auth != nullptr && auth->is_object())
+        {
+            const auto& a = auth->as_object();
+            cfg.ownerSecret = GetString(a, "secret", cfg.ownerSecret);
+            cfg.accessTtlSec = GetInt(a, "access_ttl_sec", cfg.accessTtlSec);
+            cfg.refreshTtlSec = GetInt(a, "refresh_ttl_sec", cfg.refreshTtlSec);
+        }
+        if (const char* envSecret = std::getenv("NAO_GATEWAY_OWNER_SECRET");
+            envSecret != nullptr && *envSecret != '\0')
+        {
+            cfg.ownerSecret = envSecret;
+        }
         cfg.logLevel = GetString(obj, "log_level", cfg.logLevel);
         cfg.Validate();
         return cfg;
@@ -143,6 +156,14 @@ namespace Gateway
         {
             throw std::runtime_error("backend.startup_max_attempts 必须在 1..100");
         }
+        if (accessTtlSec < 60 || accessTtlSec > 604800)
+        {
+            throw std::runtime_error("auth.access_ttl_sec 必须在 60..604800");
+        }
+        if (refreshTtlSec < 300 || refreshTtlSec > 31536000)
+        {
+            throw std::runtime_error("auth.refresh_ttl_sec 必须在 300..31536000");
+        }
         if (logLevel != "info" && logLevel != "debug")
         {
             throw std::runtime_error("log_level 只支持 info / debug");
@@ -169,6 +190,8 @@ namespace Gateway
                " startup_wait=" + (startupWait ? "true" : "false") +
                " startup_interval=" + std::to_string(startupRetryIntervalSec) + "s" +
                " startup_attempts=" + std::to_string(startupMaxAttempts) +
+               " auth=" + (ownerSecret.empty() ? "off" : "on") +
+               " access_ttl=" + std::to_string(accessTtlSec) + "s" +
                " log_level=" + logLevel;
     }
 } // namespace Gateway

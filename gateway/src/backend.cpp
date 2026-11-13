@@ -32,7 +32,8 @@ namespace Gateway
 
     BackendClient::Result BackendClient::Request(const std::string& method,
                                                  const std::string& path,
-                                                 const std::string& body) const
+                                                 const std::string& body,
+                                                 const std::string& owner) const
     {
         boost::asio::io_context io;
         Net::Client::Http::HttpClient client(io);
@@ -45,6 +46,10 @@ namespace Gateway
         if (!body.empty())
         {
             req.headers.emplace_back("Content-Type", "application/json");
+        }
+        if (!owner.empty())
+        {
+            req.headers.emplace_back("X-Owner-Id", owner);
         }
 
         boost::system::error_code ec;

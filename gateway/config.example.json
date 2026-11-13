@@ -10,6 +10,10 @@
     "startup_retry_interval_sec": 30,
     "startup_max_attempts": 5
   },
+  "auth": {
+    "access_ttl_sec": 86400,
+    "refresh_ttl_sec": 2592000
+  },
   "log_level": "info"
 }
 

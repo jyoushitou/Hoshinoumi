@@ -5,6 +5,7 @@
 /// @copyright   Copyright (c) 2026
 #pragma once
 
+#include "auth.h"
 #include "backend.h"
 #include "config.h"
 
@@ -40,16 +41,21 @@ namespace Gateway
                     const Net::Server::HttpServer::Url& url);
         void Ready(const std::shared_ptr<Net::Server::HttpServer::HttpSession>& session,
                    const Net::Server::HttpServer::Url& url);
+        void Login(const std::shared_ptr<Net::Server::HttpServer::HttpSession>& session,
+                   const Net::Server::HttpServer::Url& url);
         void StartProbe(bool fullCycle);
+        bool Authenticate(const Net::Server::HttpServer::Url& url, Claims& claims);
         void Proxy(const std::shared_ptr<Net::Server::HttpServer::HttpSession>& session,
                    const Net::Server::HttpServer::Url& url,
-                   const std::string& backendPath, const std::string& method);
+                   const std::string& backendPath, const std::string& method,
+                   const std::string& owner);
         void NotFound(const std::shared_ptr<Net::Server::HttpServer::HttpSession>& session,
                       const Net::Server::HttpServer::Url& url);
 
         static std::string NextRequestId();
 
         Config cfg_;
+        Auth auth_;
         BackendClient backend_;
         std::shared_ptr<ProbeState> probe_;
         static std::atomic<unsigned long long> requestSeq_;

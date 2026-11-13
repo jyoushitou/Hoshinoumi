@@ -32,8 +32,9 @@ namespace Gateway
         bool CheckHealth(std::string& detail) const;
 
         /// @brief 发一次 JSON 请求（同步，必须在工作线程调用）
+        /// @param[in] owner 已鉴权的 owner；非空时写入 X-Owner-Id
         Result Request(const std::string& method, const std::string& path,
-                       const std::string& body) const;
+                       const std::string& body, const std::string& owner = "") const;
 
     private:
         Config cfg_;

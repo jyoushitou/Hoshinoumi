@@ -1,4 +1,4 @@
-# ===================== HTTP 服务器装配 =====================
+﻿# ===================== HTTP 服务器装配 =====================
 # 鉴权中间件 + 路由注册 + 启动
 # 迁移自 api_server.py（v5-R5）
 
@@ -42,6 +42,13 @@ async def handle_internal_history(request):
     return json_response({"ok": True, "data": data})
 
 
+def _internal_uid(request):
+    """网关已鉴权时用 X-Owner-Id；本机直连才回退 query。"""
+    return (request.headers.get("X-Owner-Id")
+            or request.query.get("user_id")
+            or "__owner__").strip()
+
+
 async def handle_internal_chat(request):
     """POST /internal/chat：网关转发用，复用 /api/chat 逻辑"""
     return await handle_chat(request)
@@ -54,7 +61,7 @@ async def handle_internal_state(request):
     from ..life import relation as life_relation
     from ..life import state as life_state
 
-    uid = (request.query.get("user_id") or "__owner__").strip()
+    uid = _internal_uid(request)
     tid = str(cfg.MASTER_QQ) if uid == "__owner__" else uid
     st = life_state.current(tid=None if uid == "__owner__" else uid) or {}
     try:
@@ -84,7 +91,7 @@ async def handle_internal_cron(request):
     from ..core import state as cfg
     from ..schedule import cron
 
-    uid = (request.query.get("user_id") or "__owner__").strip()
+    uid = _internal_uid(request)
     target = str(cfg.MASTER_QQ) if uid == "__owner__" else uid
     rows = []
     for task in cron.list_tasks(target):
@@ -108,7 +115,7 @@ async def handle_internal_diary(request):
     from ..core import state as cfg
     from ..infra.conn import get_cursor
 
-    uid = (request.query.get("user_id") or "__owner__").strip()
+    uid = _internal_uid(request)
     target = str(cfg.MASTER_QQ) if uid == "__owner__" else uid
     try:
         limit = max(1, min(int(request.query.get("limit") or 20), 100))
@@ -133,7 +140,7 @@ async def handle_internal_shelf(request):
     from ..core import state as cfg
     from ..life import reading as life_reading
 
-    uid = (request.query.get("user_id") or "__owner__").strip()
+    uid = _internal_uid(request)
     target = str(cfg.MASTER_QQ) if uid == "__owner__" else uid
     return json_response({"ok": True, "data": life_reading.load(target)})
 
@@ -190,3 +197,4 @@ async def start_api_server():
     log_system(f"最大并发: {apicfg.MAX_CONCURRENT_REQUESTS}")
 
     return runner
+

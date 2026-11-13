@@ -11,6 +11,7 @@
 #include <boost/json.hpp>
 
 #include <chrono>
+#include <stdexcept>
 #include <thread>
 #include <utility>
 
@@ -31,7 +32,7 @@ namespace Gateway
     } // namespace
 
     Router::Router(Config cfg)
-        : cfg_(std::move(cfg)), backend_(cfg_), probe_(std::make_shared<ProbeState>())
+        : cfg_(std::move(cfg)), auth_(cfg_), backend_(cfg_), probe_(std::make_shared<ProbeState>())
     {
         if (cfg_.startupWait)
         {
@@ -57,34 +58,57 @@ namespace Gateway
             Ready(session, url);
             return;
         }
+        if (url.target == "/api/login")
+        {
+            Login(session, url);
+            return;
+        }
+        if (url.target == "/api/refresh")
+        {
+            session->httpReplay(R"({"ok":false,"error":"not_implemented"})",
+                                boost::beast::http::status::not_implemented,
+                                JsonHeaders(NextRequestId()));
+            return;
+        }
+
+        Claims claims;
+        if (url.target.rfind("/api/", 0) == 0 && !Authenticate(url, claims))
+        {
+            session->httpReplay(R"({"ok":false,"error":"unauthorized"})",
+                                boost::beast::http::status::unauthorized,
+                                JsonHeaders(NextRequestId()));
+            return;
+        }
+        const std::string owner = claims.sub;
+
         if (url.target.rfind("/api/chat", 0) == 0)
         {
-            Proxy(session, url, "/internal/chat", "POST");
+            Proxy(session, url, "/internal/chat", "POST", owner);
             return;
         }
         if (url.target.rfind("/api/history", 0) == 0)
         {
-            Proxy(session, url, "/internal/history", "GET");
+            Proxy(session, url, "/internal/history", "GET", owner);
             return;
         }
         if (url.target.rfind("/api/state", 0) == 0)
         {
-            Proxy(session, url, "/internal/state", "GET");
+            Proxy(session, url, "/internal/state", "GET", owner);
             return;
         }
         if (url.target.rfind("/api/cron", 0) == 0)
         {
-            Proxy(session, url, "/internal/cron", "GET");
+            Proxy(session, url, "/internal/cron", "GET", owner);
             return;
         }
         if (url.target.rfind("/api/diary", 0) == 0)
         {
-            Proxy(session, url, "/internal/diary", "GET");
+            Proxy(session, url, "/internal/diary", "GET", owner);
             return;
         }
         if (url.target.rfind("/api/shelf", 0) == 0)
         {
-            Proxy(session, url, "/internal/shelf", "GET");
+            Proxy(session, url, "/internal/shelf", "GET", owner);
             return;
         }
         NotFound(session, url);
@@ -199,9 +223,83 @@ namespace Gateway
             .detach();
     }
 
+    void Router::Login(const std::shared_ptr<Net::Server::HttpServer::HttpSession>& session,
+                       const Net::Server::HttpServer::Url& url)
+    {
+        if (url.method != "POST")
+        {
+            session->httpReplay("{\"ok\":false,\"error\":\"method_not_allowed\"}",
+                                boost::beast::http::status::method_not_allowed,
+                                JsonHeaders(NextRequestId()));
+            return;
+        }
+        if (cfg_.ownerSecret.empty())
+        {
+            session->httpReplay("{\"ok\":false,\"error\":\"owner_secret_not_configured\"}",
+                                boost::beast::http::status::service_unavailable,
+                                JsonHeaders(NextRequestId()));
+            return;
+        }
+
+        std::string secret;
+        try
+        {
+            const auto parsed = boost::json::parse(url.body);
+            if (!parsed.is_object())
+            {
+                throw std::runtime_error("body");
+            }
+            secret = std::string(parsed.as_object().at("secret").as_string());
+        }
+        catch (const std::exception&)
+        {
+            session->httpReplay("{\"ok\":false,\"error\":\"invalid_json\"}",
+                                boost::beast::http::status::bad_request,
+                                JsonHeaders(NextRequestId()));
+            return;
+        }
+
+        if (!auth_.CheckSecret(secret))
+        {
+            session->httpReplay("{\"ok\":false,\"error\":\"invalid_secret\"}",
+                                boost::beast::http::status::unauthorized,
+                                JsonHeaders(NextRequestId()));
+            return;
+        }
+
+        try
+        {
+            boost::json::object data;
+            data["access"] = auth_.IssueAccess();
+            data["refresh"] = auth_.IssueRefresh();
+            data["token_type"] = "Bearer";
+            data["expires_in"] = auth_.AccessTtl();
+            boost::json::object body;
+            body["ok"] = true;
+            body["data"] = data;
+            session->httpReplay(boost::json::serialize(body),
+                                boost::beast::http::status::ok,
+                                JsonHeaders(NextRequestId()));
+        }
+        catch (const std::exception& e)
+        {
+            Utils::Out::outErr(std::string("[网关] 签发 token 失败: ") + e.what());
+            session->httpReplay("{\"ok\":false,\"error\":\"token_issue_failed\"}",
+                                boost::beast::http::status::internal_server_error,
+                                JsonHeaders(NextRequestId()));
+        }
+    }
+
+    bool Router::Authenticate(const Net::Server::HttpServer::Url& url, Claims& claims)
+    {
+        const std::string token = Auth::Bearer(url.headers);
+        return auth_.Verify(token, "access", claims);
+    }
+
     void Router::Proxy(const std::shared_ptr<Net::Server::HttpServer::HttpSession>& session,
                        const Net::Server::HttpServer::Url& url,
-                       const std::string& backendPath, const std::string& method)
+                       const std::string& backendPath, const std::string& method,
+                       const std::string& owner)
     {
         if (url.method != method)
         {
@@ -222,9 +320,9 @@ namespace Gateway
         const std::string requestId = NextRequestId();
         const std::string body = url.body;
         BackendClient backend = backend_;
-        std::thread([session, seq, backend, path, method, body, requestId]()
+        std::thread([session, seq, backend, path, method, body, owner, requestId]()
                     {
-                        const auto result = backend.Request(method, path, body);
+                        const auto result = backend.Request(method, path, body, owner);
                         boost::json::object out;
                         boost::beast::http::status status = boost::beast::http::status::ok;
                         if (result.ok)

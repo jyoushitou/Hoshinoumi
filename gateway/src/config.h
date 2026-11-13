@@ -34,6 +34,15 @@ namespace Gateway
         /// @brief 一轮启动等待最多尝试次数
         int startupMaxAttempts = 5;
 
+        /// @brief owner 登录 secret（优先读 NAO_GATEWAY_OWNER_SECRET）
+        std::string ownerSecret;
+
+        /// @brief access token 有效期（秒）
+        int accessTtlSec = 86400;
+
+        /// @brief refresh token 有效期（秒）
+        int refreshTtlSec = 2592000;
+
         /// @brief 日志级别（info / debug）
         std::string logLevel = "info";
 
