@@ -120,12 +120,13 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 
 ```
 release/
-  nao-v19.5.7.bundle       git 包（传服务器用）
-  nao-v19.5.7-src.zip      源码包（给别人）
-  nao-v19.5.7-SHA256.txt   校验和
-  nao-v19.5.7-src-SHA256.txt 源码包校验和
-  nao-v19.5.7-full.zip     整包（带依赖，可选）
-  nao-bot-19.5.7.tar.gz    Docker 镜像（可选）
+  REC-v19.5.7-bundle.bundle  git 包（传服务器用）
+  REC-v19.5.7-src.zip        源码包（给别人）
+  REC-v19.5.7-full.zip       整包（带依赖，可选）
+  REC-v19.5.7-exe[.exe]      单文件可执行（可选）
+  REC-v19.5.7-docker.tar.gz  Docker 镜像（可选）
+  REC-v19.5.7-SHA256SUMS.txt 校验和
+  # 历史 nao-v* / nao-bot-* 产物保留，不再由脚本生成
   old/                      历史包（保留最近 5 个，其余归档到这里）
 ```
 
@@ -684,14 +685,17 @@ python3 scripts/release.py --version v16.1.0
 python3 scripts/release.py --version v16.1.0 --apply
 ```
 
-脚本会：检查工作区 → 跑测试 → 打 tag `vX.Y.Z` → 移动 `正式版` → 打包 `release/nao-vX.Y.Z.bundle` → 生成 `docs/RELEASE-NOTES.md`。
+脚本会：检查工作区 → 跑测试 → 打 tag `vX.Y.Z` → 移动 `正式版` → 打包 `release/REC-vX.Y.Z-bundle.bundle` → 生成 `docs/RELEASE-NOTES.md`。
 
 源码包和完整 bundle 用一键打包：
 
 ```bash
 python3 scripts/build_all.py --version 19.5.7 --skip full,exe,docker
-# release/nao-v19.5.7-src.zip + release/nao-v19.5.7.bundle
+# release/REC-v19.5.7-src.zip + release/REC-v19.5.7-bundle.bundle
 ```
+
+> 命名声明：v19.5.7 之前已生成的 `nao-v*` / `nao-bot-*` 产物保留原样、不删除；
+> 新脚本只生成 `REC-v*`。
 
 **版本号必须三段式**（`v17.0.0`），两段会直接拒绝。
 
@@ -708,7 +712,7 @@ mysqldump -h 127.0.0.1 -u 用户 -p 库名 > ~/nao-before-v19.5.7.sql
 取代码并迁移：
 
 ```bash
-git fetch ./nao-v19.5.7.bundle main
+git fetch ./REC-v19.5.7-bundle.bundle main
 git reset --hard FETCH_HEAD
 
 python3 scripts/migrate.py --apply      # 建表 + 补列 + events→memories + 场景
@@ -731,7 +735,7 @@ sudo systemctl status hoshinoumi
 
 | 形式 | 命令 | 产物 |
 |---|---|---|
-| git bundle | `python3 scripts/release.py --apply` | `release/nao-vX.Y.Z.bundle` |
+| git bundle | `python3 scripts/release.py --apply` | `release/REC-vX.Y.Z-bundle.bundle` |
 | 源码 zip | `python3 scripts/package.py` | 含依赖清单 |
 | 可执行 | `python3 scripts/build_exe.py` | PyInstaller |
 | Docker | `python3 scripts/build_docker.py` | 镜像 |

@@ -7,7 +7,7 @@
 # 注意：**不能跨平台交叉编译**——要 Linux 版就得在 Linux 上跑这个脚本。
 #
 # 目标机效果：
-#     ./nao-16.0.0            # 直接启动，不用装 python、不用装依赖
+#     ./REC-v16.0.0-exe       # 直接启动，不用装 python、不用装依赖
 #
 # 代价：
 #     - 体积 ~60 MB（Python 解释器 + 依赖都打进去了）
@@ -23,6 +23,9 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DIST = os.path.join(ROOT, "dist")
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from artifact_names import exe as exe_name  # noqa: E402
 
 # 这些包 PyInstaller 有时找不到，显式声明
 HIDDEN_IMPORTS = [
@@ -59,7 +62,7 @@ def main():
         return 1
 
     os.makedirs(DIST, exist_ok=True)
-    name = f"nao-{version}"
+    name = exe_name(version, False)  # PyInstaller 自己会补 .exe
 
     cmd = [
         sys.executable, "-m", "PyInstaller",

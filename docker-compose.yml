@@ -1,4 +1,4 @@
-# ===================== docker compose =====================
+﻿# ===================== docker compose =====================
 # 用法：
 #     docker compose up -d --build
 #     docker compose logs -f
@@ -10,13 +10,13 @@
 #   如果你必须用 bridge 网络，把 network_mode 换成 ports 映射（见文件末尾注释）。
 
 services:
-  nao-bot:
+  hoshinoumi:
     build:
       context: .
       args:
         WITH_BROWSER: "0"        # 改成 "1" 把 Chromium 打进来（+400MB）
-    image: nao-bot:16.0.0
-    container_name: nao-bot
+    image: hoshinoumi:19.5.7
+    container_name: hoshinoumi
     restart: unless-stopped
     network_mode: host
 
@@ -49,3 +49,4 @@ services:
     # ports:
     #   - "3001:3001"
     #   - "60908:60908"
+

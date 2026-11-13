@@ -1,12 +1,12 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 # ===================== Docker 镜像构建 =====================
 #     python3 scripts/build_docker.py --version 16.0.0
 #     python3 scripts/build_docker.py --version 16.0.0 --browser   # 带 Chromium
 #     python3 scripts/build_docker.py --version 16.0.0 --save      # 导出 tar.gz
 #
 # 产物：
-#     nao-bot:16.0.0            本地镜像
-#     release/nao-bot-16.0.0.tar.gz  可拷到别的机器 docker load 的整包
+#     hoshinoumi:16.0.0         本地镜像
+#     release/REC-v16.0.0-docker.tar.gz  可拷到别的机器 docker load 的整包
 
 import argparse
 import os
@@ -16,6 +16,9 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DIST = os.path.join(ROOT, "release")   # v17.x：打包产物集中放这里
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from artifact_names import docker as docker_name  # noqa: E402
 
 
 def run(cmd):
@@ -33,7 +36,7 @@ def main():
     args = ap.parse_args()
 
     version = args.version.strip().lstrip("v")
-    tag = f"nao-bot:{version}"
+    tag = f"hoshinoumi:{version}"
     if args.browser:
         tag += "-browser"
 
@@ -76,7 +79,7 @@ def main():
         return 0
 
     os.makedirs(DIST, exist_ok=True)
-    out = os.path.join(DIST, f"nao-bot-{version}{'-browser' if args.browser else ''}.tar.gz")
+    out = os.path.join(DIST, docker_name(version, args.browser))
     print(f"\n>> 导出 {os.path.relpath(out, ROOT)}")
     with open(out, "wb") as f:
         p1 = subprocess.Popen(["docker", "save", tag], stdout=subprocess.PIPE)
@@ -96,3 +99,4 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
+

@@ -41,6 +41,21 @@ REC 取「Record / 录制」：
 不要写：REC Bot、Hoshinoumi Bot
 ```
 
+## 产物命名（v19.5.7 起）
+
+新产物统一为：
+
+```text
+REC-vX.Y.Z-src.zip
+REC-vX.Y.Z-full.zip
+REC-vX.Y.Z-exe[.exe]
+REC-vX.Y.Z-docker.tar.gz
+REC-vX.Y.Z-bundle.bundle
+```
+
+声明：**v19.5.7 之前已打出的 `nao-v*` / `nao-bot-*` 产物保留原样，不移动、不删除、不改名**；
+旧产物只作为历史归档，新脚本不再生成这些旧名字。
+
 ## 兼容边界（先不改的东西）
 
 新仓库地址：<https://github.com/jyoushitou/Hoshinoumi>

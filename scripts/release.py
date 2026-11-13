@@ -9,7 +9,7 @@
 #   1. 检查工作区干净
 #   2. 跑静态检查 + 全部测试
 #   3. 打附注 tag（vX.Y），并把「正式版」移到最新
-#   4. 生成 release/nao-vX.Y.Z.bundle（**带 tag**）
+#   4. 生成 release/REC-vX.Y.Z-bundle.bundle（**带 tag**）
 #   5. 写 docs/RELEASE-NOTES.md（相对上一个版本的提交列表）
 
 import argparse
@@ -21,6 +21,9 @@ from datetime import datetime
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DIST = os.path.join(ROOT, "release")   # v17.x：打包产物集中放这里
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from artifact_names import bundle as bundle_name  # noqa: E402
 NOTES = os.path.join(ROOT, "docs", "RELEASE-NOTES.md")
 
 
@@ -106,7 +109,7 @@ def write_notes(version, prev, commits):
         "## 升级步骤",
         "",
         "```bash",
-        f"git pull ./nao-v{_ver(version)}.bundle main",
+        f"git pull ./{bundle_name(version)} main",
         "python3 scripts/preflight.py",
         "python3 -m unittest discover -s tests",
         "# 重启进程",
@@ -180,7 +183,7 @@ def main():
 
     # 打包（带 tag）
     os.makedirs(DIST, exist_ok=True)
-    bundle = os.path.join(DIST, f"nao-v{_ver(version)}.bundle")
+    bundle = os.path.join(DIST, bundle_name(version))
     run(["git", "bundle", "create", bundle, "main", "--tags"])
     size = os.path.getsize(bundle) / 1024
     print(f"   ✅ {os.path.relpath(bundle, ROOT)}（{size:.0f} KB）")
