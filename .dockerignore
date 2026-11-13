@@ -22,3 +22,10 @@ docs
 *.md
 !README.md
 gateway/build
+.env
+.env.*
+config.local.json
+config/
+logs/
+release/
+.test-lock-*.pid

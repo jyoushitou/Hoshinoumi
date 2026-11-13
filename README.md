@@ -1,12 +1,16 @@
-﻿# Hoshinoumi（REC） v19.5.7
+# Hoshinoumi（REC） v20.5
+
+> 后端 [v19.5.7](docs/versions/v19.md)（v19 试运行）· 网关 [v20.0](docs/versions/v20.md)（v20 核心，Docker 交付）
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![Database](https://img.shields.io/badge/Database-MySQL%20%7C%20SQLite-4479A1)](#)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-5C2D91)](#)
 [![NapCat](https://img.shields.io/badge/NapCat-QQ-12B7F5)](#)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-v19.5.7-orange)](docs/RELEASE-NOTES.md)
-[![Tests](https://img.shields.io/badge/Tests-968%20passing-brightgreen)](#)
+![Backend](https://img.shields.io/badge/Backend-v19.5.7-yellow)
+![Gateway](https://img.shields.io/badge/Gateway-v20.0-blue)
+![Version](https://img.shields.io/badge/Version-v20.5-orange)
+![Tests](https://img.shields.io/badge/Tests-968%20passing-brightgreen)
 
 > **Hoshinoumi（REC，记录）** · 友利奈绪 · 星之海学园学生会室
 >
@@ -40,7 +44,8 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | 引用上下文 | 引用消息直接带原话；缓存未命中 2 秒超时，不卡 8 秒 |
 | 定时更准 | 规则化起床/睡觉/晚餐；`今天 7:40 叫我` 只改当天；准点提醒预生成 |
 | 会回忆 | 重记忆会自己冒出来（每天最多一次，心情差时不提旧伤口） |
-| 能备份 | 每月 1 号 04:30 自动备份，保留 6 份；`!backup` 看清单/立即备份 |\n| C++ 网关 | 用户自己的 CommonNet（Boost.Asio/Beast）；后端只监听本机，Docker 交付 |
+| 能备份 | 每月 1 号 04:30 自动备份，保留 6 份；`!backup` 看清单/立即备份 |
+| C++ 网关 | 用户自己的 CommonNet（Boost.Asio/Beast）；后端只监听本机，Docker 交付 |
 | 查版本 | `!version` 看版本号、提交、运行时长 |
 
 **968 条测试**（功能 931 + 环境/迁移 37），静态检查零未定义名字。
@@ -125,7 +130,8 @@ release/
   REC-v19.5.7-src.zip        源码包（给别人）
   REC-v19.5.7-full.zip       整包（带依赖，可选）
   REC-v19.5.7-exe[.exe]      单文件可执行（可选）
-  REC-v19.5.7-docker.tar.gz  Docker 镜像（可选）
+  REC-v19.5.7-docker.tar.gz  后端 Docker 镜像（可选）
+  REC-v20.0.0-docker.tar.gz  网关 Docker 镜像
   REC-v19.5.7-SHA256SUMS.txt 校验和
   # 历史 nao-v* / nao-bot-* 产物保留，不再由脚本生成
   old/                      历史包（保留最近 5 个，其余归档到这里）
@@ -327,11 +333,23 @@ python3 start.py
 顺序固定：
 
 ```text
-1. 数据库迁移（升级时第一步，幂等）
-2. 检查 API；缺失则询问是否运行 configure_api.py
-3. 环境监测（API/依赖/数据库/表结构/视觉）
-4. run.py
+1. 数据库迁移（有迁移脚本时执行，幂等）
+2. 第一次启动 / API 缺失时，运行 configure_api.py
+3. 环境监测（checks/env_check.py）
+4. 需要对外服务时启动网关（可选）
+5. run.py
 ```
+
+需要网关时：
+
+```bash
+python3 start.py --gateway
+# 或 NAO_GATEWAY=1 python3 start.py
+```
+
+网关需要先有 `gateway/build/rec_gateway` 和 `config/gateway.json`；
+本地只跑 bot 用 `python3 start.py --no-gateway` 即可。网关退出时会随
+`run.py` 一起被回收。
 
 **手动分步**
 
@@ -345,7 +363,10 @@ python3 scripts/configure_api.py
 # 3. 严格环境监测（依赖 / 配置 / 时区 / 数据库 / 表结构 / 密钥 / 人设 / 视觉）
 python3 checks/env_check.py
 
-# 4. 启动
+# 4. 可选：需要对外服务时先启动网关
+./gateway/build/rec_gateway --config config/gateway.json &
+
+# 5. 启动 bot
 python3 run.py
 ```
 
@@ -365,6 +386,49 @@ python3 run.py
 锁由操作系统维护，进程死了自动释放。
 
 ---
+
+## 网关（v20，可选）
+
+v20 网关负责公网/多端入口，后端仍只监听 `127.0.0.1`。v20 还没有登录/JWT/限流，只适合本机或内网验证。
+
+```bash
+# 1. 配置后端地址 / 网关端口
+python3 scripts/configure.py
+
+# 2. 构建（开发机）
+python3 scripts/build_gateway.py --version 20.0.0
+# 或直接 Docker 构建
+docker build -f gateway/Dockerfile -t hoshinoumi-gateway:20.0.0 .
+
+# 3. 导出到部署机
+# release/REC-v20.0.0-docker.tar.gz
+docker load -i REC-v20.0.0-docker.tar.gz
+
+# 4. 运行（必须 host 网络，后端只允许 127.0.0.1）
+docker run -d --name hoshinoumi-gateway \
+  --network host \
+  -v "$PWD/config:/app/config:ro" \
+  hoshinoumi-gateway:20.0.0
+
+# 5. 健康检查
+curl -s http://127.0.0.1:8080/healthz
+curl -s http://127.0.0.1:8080/readyz
+```
+
+Docker Compose 一键起后端 + 网关：
+
+```bash
+cp .env.example .env      # 只填隐私项
+docker compose -f docker-compose.release.yml up -d
+```
+
+说明：
+
+- `.env` 只放数据库/主人 QQ/API Key 等隐私项，不进 git
+- API Key 可用 `.env` 环境变量，或 `python3 scripts/configure_api.py`
+- 网关配置在 `config/gateway.json`，由 `scripts/configure.py` 生成
+- 后端地址只允许 `127.0.0.1` / `localhost`；不要给后端配公网地址
+- v20 网关不替代 NapCat；NapCat 仍是 QQ 通道
 
 ## 角色卡：换一个人设（重点）
 

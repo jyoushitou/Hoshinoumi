@@ -57,4 +57,5 @@ HEALTHCHECK --interval=60s --timeout=5s --start-period=20s --retries=3 \
     CMD python3 -c "import socket,sys; s=socket.socket(); s.settimeout(3); \
 sys.exit(0 if s.connect_ex(('127.0.0.1', 3001)) == 0 else 1)"
 
-CMD ["python3", "run.py"]
+# Docker 里网关是独立容器，bot 只跑启动流程的前四步和 run.py
+CMD ["python3", "start.py", "--no-gateway"]
