@@ -282,6 +282,25 @@ async def send_short_reply(tid, text, ws, uid, is_group=False, kws=None):
             resp = await send_private_msg(tid, msg, ws, want_response=want)  # 发送私聊消息
         if want:
             _remember_outgoing(resp, msg)
+        if ptype == "text":
+            try:  # v19.1：出站写短期对话流；失败不阻塞发送
+                from ..infra import repo_conversation
+                _txt = ""
+                if isinstance(msg, list):
+                    _txt = "".join(str((x.get("data") or {}).get("text", ""))
+                                   for x in msg if isinstance(x, dict) and x.get("type") == "text")
+                else:
+                    _txt = str(msg or "")
+                _mid = None
+                if isinstance(resp, dict):
+                    _mid = (resp.get("data") or {}).get("message_id")
+                repo_conversation.append(
+                    target_id=str(tid), content=_txt, role="assistant", channel="qq",
+                    thread_id=f"qq:{'group' if is_group else 'private'}:{tid}",
+                    message_id=_mid,
+                )
+            except Exception as _e:
+                log_api(f"[对话] 出站写入失败（忽略）: {_e}")
         await asyncio.sleep(bubble_delay())  # 每条间隔随机 1.5~3 秒，像真人打字
     log_send(f"回复:{text[:40]}")  # 日志记录发送
 

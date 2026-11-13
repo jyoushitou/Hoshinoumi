@@ -416,6 +416,19 @@ async def _handle_message(d, ws):
     if not text:  # 解析后文本为空
         return  # 跳过
 
+    # v19.1：短期对话流（群聊只记与机器人相关的消息）
+    if mt == "private" or addressed:
+        try:
+            from ..infra import repo_conversation
+            _tid = uid if mt == "private" else str(gid)
+            repo_conversation.append(
+                target_id=_tid, content=text, role="user", channel="qq",
+                thread_id=f"qq:{mt}:{_tid}", message_id=mid,
+                meta={"images": img_md5s} if img_md5s else None,
+            )
+        except Exception as _e:
+            log_api(f"[对话] 写入失败（忽略）: {_e}")
+
     # v18.3 U2：从对话里抽事实卡（只私聊 + 只主人）
     try:
         from ..life import facts as facts_mod

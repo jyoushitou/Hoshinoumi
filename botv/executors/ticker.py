@@ -109,6 +109,18 @@ async def handle_minute_tick(ev):
             except Exception as e:
                 log_err(f"[定时] 对账失败: {e}")
 
+    # ---------- v19.1：04:00 清理短期对话（1 天 / 100 条） ----------
+    if now.hour == 4 and now.minute == 0:
+        key = f"conversation_cleanup_{today}"
+        if key not in cfg.daily_trigger:
+            cfg.daily_trigger.add(key)
+            try:
+                from ..infra import repo_conversation
+                n = repo_conversation.cleanup()
+                log_system(f"[对话] 04:00 清理 {n} 条")
+            except Exception as e:
+                log_err(f"[对话] 清理失败: {e}")
+
     # ---------- 生日 ----------
     await _maybe_birthday(now, today)
 

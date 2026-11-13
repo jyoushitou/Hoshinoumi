@@ -107,6 +107,24 @@ CURRENT = {
             INDEX idx_target_date (target_id, diary_date)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """,
+    # v19.1：短期对话消息流（1 天 / 100 条），长期记忆仍走 memories
+    "conversation_messages": """
+        CREATE TABLE IF NOT EXISTS conversation_messages (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            user_id VARCHAR(64) NOT NULL DEFAULT '__owner__',
+            target_id VARCHAR(64) NOT NULL,
+            thread_id VARCHAR(64) NULL,
+            channel VARCHAR(16) NOT NULL DEFAULT 'qq',
+            role VARCHAR(16) NOT NULL,
+            content TEXT NOT NULL,
+            message_id VARCHAR(64) NULL,
+            meta TEXT NULL,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY uk_channel_msg (channel, message_id),
+            KEY idx_target_time (target_id, created_at),
+            KEY idx_user_time (user_id, created_at)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
 }
 
 # ---------- 新表（docs/DB-DESIGN.md 的纯表，v17.5 逐步切过去） ----------
