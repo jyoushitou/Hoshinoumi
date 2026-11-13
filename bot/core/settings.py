@@ -11,6 +11,7 @@
 
 import copy
 import json
+import logging
 import os
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -116,8 +117,6 @@ _backend_cache = {"value": None}
 
 def mysql_reachable(timeout=3.0):
     """MySQL 能不能连（连不上就返回 False，不抛异常）"""
-    from ..log import log_api
-
     try:
         import pymysql
 
@@ -132,7 +131,9 @@ def mysql_reachable(timeout=3.0):
         conn.close()
         return True
     except Exception as e:
-        log_api(f"[存储] MySQL 不可用（{type(e).__name__}），改用 SQLite")
+        # v21.5：settings 不再反向 import log；用标准库日志打断持久层环
+        logging.getLogger("settings").warning(
+            "[存储] MySQL 不可用（%s），改用 SQLite", type(e).__name__)
         return False
 
 
@@ -199,4 +200,5 @@ def describe_source():
     if any(os.getenv(k) for k in ENV_MAP):
         parts.append("环境变量")
     return " + ".join(parts) if parts else "默认值（未配置）"
+
 
