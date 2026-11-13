@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 # ===================== 兜底数据清理 =====================
 # v5-F2 配套：清掉历史上写进数据库的兜底文案
 #
@@ -117,7 +117,7 @@ def main():
     c.execute(f"DELETE FROM user_memory WHERE bot_msg IN ({_placeholders(FALLBACK_TEXTS)})", FALLBACK_TEXTS)
     print(f"  ✅ user_memory 删除兜底行: {c.rowcount}")
 
-    c.execute(f"DELETE FROM events WHERE event_summary IN ({_placeholders(FALLBACK_TEXTS)})", FALLBACK_TEXTS)
+    c.execute(f"DELETE FROM memories WHERE summary IN ({_placeholders(FALLBACK_TEXTS)})", FALLBACK_TEXTS)
     print(f"  ✅ events 删除兜底行: {c.rowcount}")
 
     c.execute(f"DELETE FROM global_keywords WHERE keyword IN ({_placeholders(JUNK_KEYWORDS)})", JUNK_KEYWORDS)
@@ -147,3 +147,4 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
+

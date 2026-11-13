@@ -160,8 +160,8 @@ def migrate_data():
             print("  [!]  新表不全，跳过数据迁移")
             return True
 
-        c.execute("SELECT COUNT(*) AS n FROM events")
-        legacy = list(c.fetchone().values())[0] if c.rowcount != 0 else 0
+        # v19.5：events 兼容视图已删除；旧数据迁移由 scripts/migrate.py 负责
+        legacy = 0
         c.execute("SELECT COUNT(*) AS n FROM memories")
         migrated = list(c.fetchone().values())[0]
 
