@@ -295,7 +295,7 @@ def step_vision():
 
     report = asyncio.run(self_test())
     if "✅" not in report:
-        raise RuntimeError(report.replace("\n", " | ")[:500])
+        raise RuntimeError(report.replace("\n", " | ")[:500] + "（先运行 python3 scripts/configure_api.py）")
     return report.replace("\n", " | ")[:300]
 
 
@@ -339,7 +339,7 @@ def step_keys():
             for name in ("DS_API_KEY", "ARK_API_KEY", "ALAPI_TOKEN")}
     missing = [k for k, v in keys.items() if not v]
     if missing:
-        raise RuntimeError("缺密钥: " + ", ".join(missing))
+        raise RuntimeError("缺密钥: " + ", ".join(missing) + "（先运行 python3 scripts/configure_api.py）")
     # v19.5.3：把 DB 密钥注入运行时，视觉自检才能拿到 key
     reload_api_keys()
     return "DS / 豆包 / ALAPI 均已配置"
@@ -497,7 +497,8 @@ def main():
 
 
 def _hint():
-    print("\n[提示] 固定三步：migrate.py --apply → preflight.py → run.py")
+    print("\n[提示] 配置 API：python3 scripts/configure_api.py")
+    print("     固定四步：migrate.py --apply → configure_api.py → checks/env_check.py → run.py")
 
 
 if __name__ == "__main__":
