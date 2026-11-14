@@ -27,6 +27,20 @@ CURRENT = {
             KEY idx_time (created_at)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """,
+    "gateway_log": """
+        CREATE TABLE IF NOT EXISTS gateway_log (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            owner VARCHAR(64) NULL,
+            path VARCHAR(255) NOT NULL,
+            status INT NOT NULL,
+            cost_ms INT NOT NULL DEFAULT 0,
+            ip VARCHAR(64) NOT NULL DEFAULT '',
+            request_id VARCHAR(64) NOT NULL DEFAULT '',
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            KEY idx_gw_owner_time (owner, created_at),
+            KEY idx_gw_status_time (status, created_at)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
     "api_keys": """
         CREATE TABLE IF NOT EXISTS api_keys (
             key_name VARCHAR(64) PRIMARY KEY,

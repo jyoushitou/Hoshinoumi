@@ -103,6 +103,31 @@ async def handle_internal_chat(request):
         return json_response({"error": "ai_call_failed", "message": str(e)}, 500)
 
 
+async def handle_internal_audit(request):
+    """POST /internal/audit：网关审计落库（只存元数据，不存 body/token）"""
+    from ..infra.conn import get_cursor
+    from ..log import log_err
+
+    try:
+        body = await request.json()
+        c = get_cursor()
+        c.execute(
+            "INSERT INTO gateway_log(owner,path,status,cost_ms,ip,request_id) "
+            "VALUES(%s,%s,%s,%s,%s,%s)",
+            (str(body.get("owner") or "")[:64],
+             str(body.get("path") or "")[:255],
+             int(body.get("status") or 0),
+             int(body.get("cost_ms") or 0),
+             str(body.get("ip") or "")[:64],
+             str(body.get("request_id") or "")[:64]),
+        )
+        c.connection.commit()
+        return json_response({"ok": True})
+    except Exception as e:
+        log_err(f"网关审计写入失败: {e}")
+        return json_response({"ok": False, "error": "audit_failed"}, 500)
+
+
 async def handle_internal_state(request):
     """GET /internal/state：情绪 / 关系 / 书架摘要"""
     from ..core import state as cfg
@@ -231,6 +256,7 @@ async def start_api_server():
     app.router.add_post("/api/command", handle_command)
     app.router.add_get("/internal/history", handle_internal_history)
     app.router.add_post("/internal/chat", handle_internal_chat)
+    app.router.add_post("/internal/audit", handle_internal_audit)
     app.router.add_get("/internal/state", handle_internal_state)
     app.router.add_get("/internal/cron", handle_internal_cron)
     app.router.add_get("/internal/diary", handle_internal_diary)

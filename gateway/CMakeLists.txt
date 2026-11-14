@@ -1,4 +1,4 @@
-﻿cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.20)
 
 project(rec_gateway VERSION 21.0.0 LANGUAGES CXX)
 
@@ -18,6 +18,7 @@ add_executable(rec_gateway
     src/router.cpp
     src/backend.cpp
     src/auth.cpp
+    src/rate_limit.cpp
 )
 
 target_include_directories(rec_gateway PRIVATE src)

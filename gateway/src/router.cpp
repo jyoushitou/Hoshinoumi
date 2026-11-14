@@ -1,4 +1,4 @@
-﻿/// @file        router.cpp
+/// @file        router.cpp
 /// @brief       网关路由实现
 /// @author      jyoushitou
 /// @date        2026-11-13
@@ -48,6 +48,31 @@ namespace Gateway
     void Router::Handle(const std::shared_ptr<Net::Server::HttpServer::HttpSession>& session,
                         const Net::Server::HttpServer::Url& url)
     {
+        const auto started = std::chrono::steady_clock::now();
+        auto cost_ms = [&started]()
+        {
+            return std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::steady_clock::now() - started).count();
+        };
+
+        if (url.target.rfind("/api/", 0) == 0)
+        {
+            const std::string ip = url.requestIP.empty() ? "0.0.0.0" : url.requestIP;
+            if (!limiter_.Allow(ip))
+            {
+                const std::string rid = NextRequestId();
+                Audit("", url.target, 429, cost_ms(), ip, rid);
+                auto headers = JsonHeaders(rid);
+                headers.emplace_back("X-RateLimit-Limit", "60");
+                headers.emplace_back("X-RateLimit-Remaining", "0");
+                headers.emplace_back("Retry-After", "1");
+                session->httpReplay("{\"ok\":false,\"error\":\"rate_limited\"}",
+                                    boost::beast::http::status::too_many_requests,
+                                    headers);
+                return;
+            }
+        }
+
         if (url.target == "/healthz")
         {
             Health(session, url);
@@ -72,9 +97,12 @@ namespace Gateway
         Claims claims;
         if (url.target.rfind("/api/", 0) == 0 && !Authenticate(url, claims))
         {
+            const std::string rid = NextRequestId();
+            Audit("", url.target, 401, cost_ms(),
+                  url.requestIP.empty() ? "0.0.0.0" : url.requestIP, rid);
             session->httpReplay(R"({"ok":false,"error":"unauthorized"})",
                                 boost::beast::http::status::unauthorized,
-                                JsonHeaders(NextRequestId()));
+                                JsonHeaders(rid));
             return;
         }
         const std::string owner = claims.sub;
@@ -221,6 +249,24 @@ namespace Gateway
             .detach();
     }
 
+    void Router::Audit(const std::string& owner, const std::string& path, int status,
+                       long long costMs, const std::string& ip, const std::string& requestId)
+    {
+        BackendClient backend = backend_;
+        std::thread([backend, owner, path, status, costMs, ip, requestId]()
+                    {
+                        boost::json::object body;
+                        body["owner"] = owner;
+                        body["path"] = path;
+                        body["status"] = status;
+                        body["cost_ms"] = costMs;
+                        body["ip"] = ip;
+                        body["request_id"] = requestId;
+                        backend.Request("POST", "/internal/audit", boost::json::serialize(body), "");
+                    })
+            .detach();
+    }
+
     void Router::Login(const std::shared_ptr<Net::Server::HttpServer::HttpSession>& session,
                        const Net::Server::HttpServer::Url& url)
     {
@@ -295,6 +341,7 @@ namespace Gateway
             {
                 Utils::Out::outErr("[网关] 登录失败 3 次，IP " + ip + " 锁定 5 分钟");
             }
+            Audit("", url.target, 401, 0, ip, NextRequestId());
             session->httpReplay("{\"ok\":false,\"error\":\"invalid_secret\"}",
                                 boost::beast::http::status::unauthorized,
                                 JsonHeaders(NextRequestId()));
@@ -316,6 +363,7 @@ namespace Gateway
             boost::json::object body;
             body["ok"] = true;
             body["data"] = data;
+            Audit("owner", url.target, 200, 0, ip, NextRequestId());
             session->httpReplay(boost::json::serialize(body),
                                 boost::beast::http::status::ok,
                                 JsonHeaders(NextRequestId()));
@@ -359,6 +407,8 @@ namespace Gateway
         Claims claims;
         if (!auth_.Verify(token, "refresh", claims))
         {
+            Audit("", url.target, 401, 0,
+                  url.requestIP.empty() ? "0.0.0.0" : url.requestIP, NextRequestId());
             session->httpReplay("{\"ok\":false,\"error\":\"invalid_refresh\"}",
                                 boost::beast::http::status::unauthorized,
                                 JsonHeaders(NextRequestId()));
@@ -375,6 +425,8 @@ namespace Gateway
             boost::json::object body;
             body["ok"] = true;
             body["data"] = data;
+            Audit("owner", url.target, 200, 0,
+                  url.requestIP.empty() ? "0.0.0.0" : url.requestIP, NextRequestId());
             session->httpReplay(boost::json::serialize(body),
                                 boost::beast::http::status::ok,
                                 JsonHeaders(NextRequestId()));
@@ -417,12 +469,27 @@ namespace Gateway
         const auto seq = url.seq;
         const std::string requestId = NextRequestId();
         const std::string body = url.body;
+        const std::string ip = url.requestIP.empty() ? "0.0.0.0" : url.requestIP;
+        const auto started = std::chrono::steady_clock::now();
         BackendClient backend = backend_;
-        std::thread([session, seq, backend, path, method, body, owner, requestId]()
+        std::thread([session, seq, backend, path, method, body, owner, requestId, ip, started]()
                     {
                         const auto result = backend.Request(method, path, body, owner);
                         boost::json::object out;
                         boost::beast::http::status status = boost::beast::http::status::ok;
+                        auto audit = [&](int code)
+                        {
+                            boost::json::object entry;
+                            entry["owner"] = owner;
+                            entry["path"] = path;
+                            entry["status"] = code;
+                            entry["cost_ms"] = std::chrono::duration_cast<std::chrono::milliseconds>(
+                                std::chrono::steady_clock::now() - started).count();
+                            entry["ip"] = ip;
+                            entry["request_id"] = requestId;
+                            backend.Request("POST", "/internal/audit",
+                                            boost::json::serialize(entry), "");
+                        };
                         if (result.ok)
                         {
                             try
@@ -430,6 +497,7 @@ namespace Gateway
                                 const auto parsed = boost::json::parse(result.body);
                                 if (parsed.is_object() && parsed.as_object().contains("ok"))
                                 {
+                                    audit(200);
                                     session->httpAsyncReplay(seq, result.body, status,
                                                              JsonHeaders(requestId));
                                     return;
@@ -451,6 +519,7 @@ namespace Gateway
                                          ? static_cast<boost::beast::http::status>(result.status)
                                          : boost::beast::http::status::bad_gateway;
                         }
+                        audit(static_cast<int>(status));
                         session->httpAsyncReplay(seq, boost::json::serialize(out), status,
                                                  JsonHeaders(requestId));
                     })

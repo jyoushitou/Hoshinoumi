@@ -8,6 +8,7 @@
 #include "auth.h"
 #include "backend.h"
 #include "config.h"
+#include "rate_limit.h"
 
 #include "NetHttpServer.h"
 
@@ -54,6 +55,8 @@ namespace Gateway
                    const Net::Server::HttpServer::Url& url,
                    const std::string& backendPath, const std::string& method,
                    const std::string& owner);
+        void Audit(const std::string& owner, const std::string& path, int status,
+                   long long costMs, const std::string& ip, const std::string& requestId);
         void NotFound(const std::shared_ptr<Net::Server::HttpServer::HttpSession>& session,
                       const Net::Server::HttpServer::Url& url);
 
@@ -62,6 +65,7 @@ namespace Gateway
         Config cfg_;
         Auth auth_;
         BackendClient backend_;
+        RateLimiter limiter_;
         std::shared_ptr<ProbeState> probe_;
 
         struct LoginState

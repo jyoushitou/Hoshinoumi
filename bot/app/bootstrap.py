@@ -52,7 +52,7 @@ def _configure_db():
 
 def _check_schema():
     """v21.3：启动只校验 schema_version，绝不建表/改表。"""
-    expected = "19"
+    expected = "20"
     try:
         c = get_cursor()
         c.execute("SELECT v FROM bot_meta WHERE k='schema_version'")

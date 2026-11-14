@@ -48,7 +48,7 @@ class TestBootstrapSchema(unittest.TestCase):
     def test_version_ok(self):
         from bot.app import bootstrap
 
-        with patch.object(bootstrap, "get_cursor", return_value=_Cursor({"v": "19"})):
+        with patch.object(bootstrap, "get_cursor", return_value=_Cursor({"v": "20"})):
             bootstrap._check_schema()
 
     def test_version_missing_raises(self):
