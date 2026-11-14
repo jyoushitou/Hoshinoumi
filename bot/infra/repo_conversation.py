@@ -26,7 +26,7 @@ def _cursor(cursor=None):
 
 def append(user_id="__owner__", target_id="", content="", role="user",
            channel="qq", thread_id=None, message_id=None, meta=None,
-           cursor=None):
+           speaker_id=None, cursor=None):
     """写一条消息；同一 channel+message_id 只写一次"""
     content = (content or "").strip()
     if not content or not target_id:
@@ -35,11 +35,11 @@ def append(user_id="__owner__", target_id="", content="", role="user",
     sqlite = _backend() == "sqlite"
     head = "INSERT OR IGNORE" if sqlite else "INSERT IGNORE"
     sql = (f"{head} INTO conversation_messages "
-           "(user_id,target_id,thread_id,channel,role,content,message_id,meta) "
-           "VALUES(%s,%s,%s,%s,%s,%s,%s,%s)")
+           "(user_id,target_id,thread_id,channel,role,speaker_id,content,message_id,meta) "
+           "VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)")
     payload = (
         str(user_id or "__owner__"), str(target_id), thread_id,
-        str(channel or "qq"), str(role), content,
+        str(channel or "qq"), str(role), str(speaker_id) if speaker_id else None, content,
         str(message_id) if message_id else None,
         json.dumps(meta, ensure_ascii=False) if meta else None,
     )
@@ -69,7 +69,7 @@ def recent(target_id, limit=100, before_id=None, user_id=None, cursor=None):
         where.append("id < %s")
         params.append(int(before_id))
     sql = ("SELECT id,user_id,target_id,thread_id,channel,role,content,"
-           "message_id,meta,created_at FROM conversation_messages WHERE "
+           "speaker_id,message_id,meta,created_at FROM conversation_messages WHERE "
            + " AND ".join(where) + " ORDER BY id DESC LIMIT %s")
     params.append(limit)
     c.execute(sql, tuple(params))

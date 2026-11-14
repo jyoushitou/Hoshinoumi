@@ -171,6 +171,7 @@ CURRENT = {
             thread_id VARCHAR(64) NULL,
             channel VARCHAR(16) NOT NULL DEFAULT 'qq',
             role VARCHAR(16) NOT NULL,
+            speaker_id VARCHAR(64) NULL,
             content TEXT NOT NULL,
             message_id VARCHAR(64) NULL,
             meta TEXT NULL,
