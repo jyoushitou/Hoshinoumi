@@ -45,3 +45,28 @@ def require_owner(user_id):
 def scoped(user_id):
     """把可能为空的旧调用规范成 owner；仅供旧代码迁移期使用。"""
     return str(user_id).strip() if user_id and str(user_id).strip() else owner_id()
+
+
+# v23.5.1：入站/批处理期间设置当前用户，旧仓储用 current_user_id() 兜底。
+from contextvars import ContextVar  # noqa: E402
+
+_current = ContextVar("nao_current_user", default=None)
+
+
+def current_user_id():
+    return _current.get() or owner_id()
+
+
+def use_user(user_id):
+    return _current.set(str(user_id))
+
+
+def reset_user(token):
+    try:
+        _current.reset(token)
+    except Exception:
+        pass
+
+
+def resolve(user_id):
+    return str(user_id).strip() if user_id and str(user_id).strip() else current_user_id()

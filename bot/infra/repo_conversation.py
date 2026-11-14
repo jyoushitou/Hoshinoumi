@@ -28,6 +28,9 @@ def append(user_id="__owner__", target_id="", content="", role="user",
            channel="qq", thread_id=None, message_id=None, meta=None,
            speaker_id=None, cursor=None):
     """写一条消息；同一 channel+message_id 只写一次"""
+    from . import tenant
+    if user_id in (None, "", "__owner__"):
+        user_id = tenant.current_user_id()
     content = (content or "").strip()
     if not content or not target_id:
         return False
@@ -58,6 +61,9 @@ def append(user_id="__owner__", target_id="", content="", role="user",
 
 def recent(target_id, limit=100, before_id=None, user_id=None, cursor=None):
     """按 target 取最近消息，返回时间正序；before_id 用于游标分页"""
+    from . import tenant
+    if user_id is None:
+        user_id = tenant.current_user_id()
     limit = max(1, min(int(limit or 100), MAX_PER_THREAD))
     c = _cursor(cursor)
     where = ["target_id=%s"]

@@ -21,6 +21,11 @@ _prepare_generation = {}
 _clock = {"now": None}  # 测试注入
 
 
+def _uid(user_id):
+    from ..infra import tenant
+    return tenant.current_user_id() if user_id in (None, "", "__owner__") else str(user_id)
+
+
 def _now():
     if _clock["now"]:
         return _clock["now"]()
@@ -35,6 +40,7 @@ _COLS = ("id, user_id, target_id, schedule_type, at_time, weekdays, once_at, "
 
 
 def list_tasks(target_id=None, enabled_only=False, user_id="__owner__"):
+    user_id = _uid(user_id)
     from ..infra import cache
     from ..infra.conn import get_cursor
 
@@ -58,6 +64,7 @@ def list_tasks(target_id=None, enabled_only=False, user_id="__owner__"):
 
 
 def get(task_id, user_id="__owner__"):
+    user_id = _uid(user_id)
     from ..infra.conn import get_cursor
 
     c = get_cursor()
@@ -69,6 +76,7 @@ def get(task_id, user_id="__owner__"):
 def add(target_id, schedule_type, content, at_time=None, weekdays=None,
         once_at=None, interval_min=None, source="command", jitter_min=10,
         rule=None, timing=None, user_id="__owner__"):
+    user_id = _uid(user_id)
     """新增一条；返回新 id（失败返回 None）"""
     from ..infra.conn import get_cursor
 
@@ -94,6 +102,7 @@ def add(target_id, schedule_type, content, at_time=None, weekdays=None,
 
 
 def remove(task_id, user_id="__owner__"):
+    user_id = _uid(user_id)
     from ..infra.conn import get_cursor
 
     try:
@@ -113,6 +122,7 @@ def remove(task_id, user_id="__owner__"):
 
 
 def set_enabled(task_id, on, user_id="__owner__"):
+    user_id = _uid(user_id)
     from ..infra.conn import get_cursor
 
     try:
@@ -132,6 +142,7 @@ def set_enabled(task_id, on, user_id="__owner__"):
 
 
 def set_next(task_id, ts, user_id="__owner__"):
+    user_id = _uid(user_id)
     from ..infra.conn import get_cursor
 
     try:

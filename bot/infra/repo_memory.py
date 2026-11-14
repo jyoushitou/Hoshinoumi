@@ -21,6 +21,12 @@ DEFAULT_KINDS = ("event", "life", "promise", "photo")
 
 # ===================== 对话记忆 =====================
 
+def _uid(user_id):
+    """旧调用默认 owner 时，优先用入站上下文里的当前用户。"""
+    from . import tenant
+    return tenant.current_user_id() if user_id in (None, "", "__owner__") else str(user_id)
+
+
 def load_user_memories_from_db():
     """从数据库加载所有用户的对话记忆"""
     c = get_cursor()
@@ -85,6 +91,7 @@ def add_global_keywords_to_db(kws, target_id=""):
 # ===================== 事件记忆 =====================
 
 def load_events_from_db(tid, tag_keywords=None, limit=5, kinds=None, user_id="__owner__"):
+    user_id = _uid(user_id)
     """加载记忆，可按标签或 kind 过滤（默认排除 profile）
 
     v7-B8：多了 kind 维度；旧数据 kind 默认 'event'，兼容。
@@ -92,7 +99,7 @@ def load_events_from_db(tid, tag_keywords=None, limit=5, kinds=None, user_id="__
     c = get_cursor()
     kinds = tuple(kinds) if kinds is not None else DEFAULT_KINDS
     kind_ph = ",".join(["%s"] * len(kinds))
-    params = list(kinds)
+    params = [tid] + list(kinds)
 
     # v17.4：先读新表 memories；空则回退 events
     try:
@@ -129,6 +136,7 @@ STATE_TARGET = "__self__"  # 状态行用固定 target，不占任何人的记�
 
 
 def load_state_json(target=None, user_id="__owner__"):
+    user_id = _uid(user_id)
     """读某个对象的状态；不传就是机器人自己（v14.1-D1 按人分开）
 
     v17.4：先读新表 bot_states；没有就回退 events 的 JSON。
@@ -170,6 +178,7 @@ def load_state_json(target=None, user_id="__owner__"):
 
 
 def _replace_kind_row(tid, kind, payload, key_tag, user_id="__owner__"):
+    user_id = _uid(user_id)
     """v18.17：在 memories 里保留一行 JSON（state/rel/friction 这类单行状态）"""
     c = get_cursor()
     c.execute("DELETE FROM memories WHERE user_id=%s AND target_id=%s AND kind=%s",
@@ -183,6 +192,7 @@ def _replace_kind_row(tid, kind, payload, key_tag, user_id="__owner__"):
 
 
 def save_state_json(payload, target=None, user_id="__owner__"):
+    user_id = _uid(user_id)
     """覆盖写某个对象的状态（一人一行；memories 保留完整 JSON）"""
     tid = str(target) if target else STATE_TARGET
     dual_write("state", tid, payload)
@@ -262,6 +272,7 @@ def save_friction(tid, payload):
     _replace_kind_row(tid, "friction", payload, "friction")
 
 def load_reading(tid, user_id="__owner__"):
+    user_id = _uid(user_id)
     """读小说进度（v18.16：优先 reading_progress，一台设备多本书）"""
     import json
 
@@ -296,6 +307,7 @@ def load_reading(tid, user_id="__owner__"):
 
 
 def save_reading(tid, payload, user_id="__owner__"):
+    user_id = _uid(user_id)
     """覆盖写小说进度；v18.16 按书拆到 reading_progress"""
     import json
 
@@ -367,6 +379,7 @@ def save_habit(tid, payload):
 
 
 def load_relation(tid, user_id="__owner__"):
+    user_id = _uid(user_id)
     """读某人的亲密度（v10-U8）
 
     v17.4：先读新表 relations；没有就回退 events 的 rel JSON。
@@ -415,6 +428,7 @@ def load_relation(tid, user_id="__owner__"):
 
 
 def save_relation(tid, payload, user_id="__owner__"):
+    user_id = _uid(user_id)
     """覆盖写亲密度（一人一行）"""
     if user_id == "__owner__":
         dual_write("rel", str(tid), payload)
@@ -466,6 +480,7 @@ def load_timeline(tid, days=7, limit=12):
 
 
 def load_heavy_memories(tid, min_weight=0.7, limit=20, user_id="__owner__"):
+    user_id = _uid(user_id)
     """v18.12：取重记忆（memories.weight ≥ 阈值）"""
     try:
         c = get_cursor()
@@ -480,6 +495,7 @@ def load_heavy_memories(tid, min_weight=0.7, limit=20, user_id="__owner__"):
 
 
 def load_memories_for_search(tid, limit=300, user_id="__owner__"):
+    user_id = _uid(user_id)
     """取一批候选记忆喂给检索器（v8-B11）"""
     c = get_cursor()
     c.execute("""
@@ -495,6 +511,7 @@ def load_memories_for_search(tid, limit=300, user_id="__owner__"):
 
 def add_event_to_db(tid, summary, tags="", kind="event", importance=3, due_date=None,
                     user_id="__owner__"):
+    user_id = _uid(user_id)
     """写入一条记忆（v7-B15）
 
     - 7 天窗口内命中同一 dedupe_key → 只累加 hit_count、更新 last_seen
@@ -560,6 +577,7 @@ def dual_write_stats():
 
 
 def dual_write(kind, tid, payload, user_id="__owner__"):
+    user_id = _uid(user_id)
     """把 JSON payload 拆到新表；失败静默"""
     conf = _JSON_TABLES.get(kind)
     if not conf:
@@ -593,5 +611,6 @@ def dual_write(kind, tid, payload, user_id="__owner__"):
             _dual_last_log = now
             log_api(f"[双写] 失败累计 {_dual_fail} 次；最近：{kind} → {table}：{e}")
         return False
+
 
 

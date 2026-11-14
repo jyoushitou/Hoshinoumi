@@ -7,6 +7,11 @@ from ..infra.conn import get_cursor
 from ..log import log_err
 
 
+def _uid(user_id):
+    from ..infra import tenant
+    return tenant.current_user_id() if user_id in (None, "", "__owner__") else str(user_id)
+
+
 def ensure_diaries_table():
     """确保 diaries 表存在（启动时调用，失败不致命）"""
     try:
@@ -29,6 +34,7 @@ def ensure_diaries_table():
 
 
 def get_diary_from_db(target_id: str, date_str: str, user_id="__owner__"):
+    user_id = _uid(user_id)
     """从 diaries 表查询已保存的日记，不存在返回 None"""
     try:
         c = get_cursor()
@@ -45,6 +51,7 @@ def get_diary_from_db(target_id: str, date_str: str, user_id="__owner__"):
 
 
 def save_diary_to_db(target_id: str, date_str: str, content: str, user_id="__owner__"):
+    user_id = _uid(user_id)
     """保存日记到 diaries 表（已存在则更新）"""
     try:
         c = get_cursor()
@@ -61,6 +68,7 @@ def save_diary_to_db(target_id: str, date_str: str, content: str, user_id="__own
 
 
 def get_events_by_date(target_id: str, date_str: str, user_id="__owner__"):
+    user_id = _uid(user_id)
     """查询指定日期的所有事件记录，返回 [(summary, tags)] 列表"""
     try:
         c = get_cursor()
@@ -76,6 +84,7 @@ def get_events_by_date(target_id: str, date_str: str, user_id="__owner__"):
 
 
 def get_dialogs_by_date(target_id: str, date_str: str, limit=10, user_id="__owner__"):
+    user_id = _uid(user_id)
     """查询指定日期的 AI 调用记录（对话素材），返回 [(user_msg, response_text)] 列表"""
     try:
         c = get_cursor()
@@ -92,6 +101,7 @@ def get_dialogs_by_date(target_id: str, date_str: str, limit=10, user_id="__owne
 
 
 def get_dates_with_events(target_id: str, limit=7, user_id="__owner__"):
+    user_id = _uid(user_id)
     """追溯查询最近有事件记录的 N 个日期（按日期倒序）"""
     try:
         c = get_cursor()
@@ -117,6 +127,7 @@ def get_dates_with_events(target_id: str, limit=7, user_id="__owner__"):
 
 
 def count_diaries_of_target(target_id: str, user_id="__owner__") -> int:
+    user_id = _uid(user_id)
     """统计某个目标在 diaries 表中已有的日记数量"""
     try:
         c = get_cursor()

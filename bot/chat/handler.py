@@ -243,6 +243,10 @@ async def _group_gate(mt, gid, addressed, text):
 
 async def _reply_and_send(d, ws, text, img_md5s=None):
     """生成回复并发送（v17.3：从 _handle_message 抽出来，便于连发后统一回一次）"""
+    from ..infra import tenant
+    _uid = str(d.get("user_id") or "")
+    if _uid:
+        tenant.use_user(_uid if d.get("message_type") == "private" else tenant.owner_id())
     mt = d.get("message_type")
     uid = str(d.get("user_id"))
     gid = d.get("group_id", 0)
@@ -430,6 +434,19 @@ async def _maybe_extract_timer(mt, text, uid, gid, ws, addressed):
 
 
 async def _handle_message(d, ws):
+    from ..infra import repo_users, tenant
+    uid = str(d.get("user_id") or "")
+    user_id = uid if d.get("message_type") == "private" else tenant.owner_id()
+    token = tenant.use_user(user_id)
+    try:
+        if d.get("message_type") == "private" and uid:
+            repo_users.ensure_qq_user(uid)
+        return await _handle_message_impl(d, ws)
+    finally:
+        tenant.reset_user(token)
+
+
+async def _handle_message_impl(d, ws):
     """处理一条消息（v17.3 U1：从接收循环里抽出来，便于以后投递/合并）"""
 
     mt = d.get("message_type")  # 消息类型：private/group

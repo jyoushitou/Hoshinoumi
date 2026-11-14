@@ -263,3 +263,24 @@ def create_with_password(user_id, password, nickname="", role="user", cursor=Non
 
 
 
+
+# ===================== v23.5.1 QQ 入站身份 =====================
+def ensure_qq_user(qq, cursor=None):
+    """QQ 入站：有 identity 返回用户；没有就建 user_id=QQ、role=user。"""
+    qq = str(qq)
+    uid = resolve_identity("qq", qq, cursor)
+    if uid:
+        return get(uid, cursor)
+    from . import tenant
+    role = "owner" if tenant.is_owner(qq) else "user"
+    user = create(qq, nickname=qq, role=role, cursor=cursor)
+    bind_identity(qq, "qq", qq, cursor=cursor)
+    return user
+
+
+def is_owner_row(row):
+    try:
+        from . import tenant
+        return bool(row) and tenant.is_owner(row.get("id"))
+    except Exception:
+        return bool(row) and row.get("role") == "owner"
