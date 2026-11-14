@@ -106,8 +106,8 @@ def main():
         setup.seed_scenes()
 
         from bot.infra import repo_meta
-        repo_meta.set_value("schema_version", "26")
-        print("        schema_version=26")
+        repo_meta.set_value("schema_version", "27")
+        print("        schema_version=27")
         print("\n[OK] 迁移完成，下一步：python3 checks/env_check.py")
         return 0
     finally:

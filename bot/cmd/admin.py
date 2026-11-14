@@ -124,3 +124,25 @@ async def cmd_exit(ctx):
 
 # quit 是 exit 的别名，注册同一个处理器
 COMMANDS["quit"] = Command(name="quit", handler=cmd_exit, help_text="!quit - 同 !exit")
+
+@command("adduser")
+async def cmd_adduser(ctx):
+    """!adduser <QQ> - 预建客户端账号，生成一次性 setup code"""
+    import secrets
+    from ..infra import repo_users, tenant
+
+    if not ctx.args:
+        return "用法：!adduser <QQ>"
+    qq = str(ctx.args[0]).strip()
+    if not qq.isdigit():
+        return "QQ 号必须是数字。"
+    if tenant.is_owner(qq):
+        return "主人账号不需要创建客户端 setup code。"
+    row = repo_users.get(qq)
+    if row and row.get("password_hash"):
+        return f"{qq} 已经设过密码，不需要 setup code。"
+    code = secrets.token_hex(2).upper() + "-" + secrets.token_hex(2).upper()
+    repo_users.create_client_user(qq, code)
+    return (f"已创建客户端账号 {qq}\n"
+            f"一次性 setup code：{code}\n"
+            "24 小时内有效；首次登录后作废。")

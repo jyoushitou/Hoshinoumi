@@ -83,7 +83,7 @@ def ensure_defaults(cursor=None):
 def get(user_id, cursor=None):
     c, owned = _get_cursor(cursor)
     try:
-        return _one(c, "SELECT id,nickname,password_hash,password_prompted,role,status,created_at FROM users WHERE id=%s",
+        return _one(c, "SELECT id,nickname,password_hash,password_prompted,setup_code_hash,setup_expires_at,role,status,created_at FROM users WHERE id=%s",
                     (str(user_id),))
     finally:
         if owned:
@@ -304,7 +304,8 @@ def mark_password_prompted(user_id, cursor=None):
 def finish_setup(user_id, password, cursor=None):
     c, owned = _get_cursor(cursor)
     try:
-        c.execute("UPDATE users SET password_hash=%s, password_prompted=0 WHERE id=%s",
+        c.execute("UPDATE users SET password_hash=%s, password_prompted=0, "
+                  "setup_code_hash=NULL, setup_expires_at=NULL WHERE id=%s",
                   (hash_password(password), str(user_id)))
         c.connection.commit()
         return True
@@ -312,3 +313,70 @@ def finish_setup(user_id, password, cursor=None):
         if owned:
             _close(c)
 
+
+
+# ===================== v23.5.3 客户端首次 setup =====================
+def create_client_user(qq, setup_code, ttl_sec=86400, cursor=None):
+    """owner 发创建命令：预建客户端用户，只存 setup code hash。"""
+    import datetime
+    from ..config import CST
+
+    uid = str(qq)
+    expires = (datetime.datetime.now(CST) + datetime.timedelta(seconds=int(ttl_sec))
+               ).strftime("%Y-%m-%d %H:%M:%S")
+    c, owned = _get_cursor(cursor)
+    try:
+        _insert_ignore(
+            c,
+            "INSERT IGNORE INTO users(id, nickname, password_hash, role, status, "
+            "setup_code_hash, setup_expires_at) VALUES(%s,%s,NULL,'user','active',%s,%s)",
+            (uid, uid, hash_password(setup_code), expires))
+        c.execute("UPDATE users SET setup_code_hash=%s, setup_expires_at=%s "
+                  "WHERE id=%s AND password_hash IS NULL",
+                  (hash_password(setup_code), expires, uid))
+        c.connection.commit()
+        bind_identity(uid, "qq", uid, c)
+        return uid
+    finally:
+        if owned:
+            _close(c)
+
+
+def verify_setup_code(user_id, code, row=None):
+    import datetime
+    from ..config import CST
+
+    row = row or get(user_id)
+    if not row or not row.get("setup_code_hash"):
+        return False
+    if row.get("setup_expires_at"):
+        try:
+            exp = row["setup_expires_at"]
+            if not isinstance(exp, datetime.datetime):
+                exp = datetime.datetime.fromisoformat(str(exp))
+            if exp.tzinfo is None:
+                exp = exp.replace(tzinfo=CST)
+            if exp < datetime.datetime.now(CST):
+                return False
+        except Exception:
+            pass
+    return verify_password(code, row["setup_code_hash"])
+
+
+def verify_login(user_id, password, setup_code=None):
+    """返回 (row, error)。首次无密码时必须 setup_code + 新密码。"""
+    row = get(user_id)
+    if not row:
+        return None, "invalid_credentials"
+    if row.get("status") != "active":
+        return None, "banned"
+    if needs_password(row):
+        if not setup_code or not verify_setup_code(user_id, setup_code, row):
+            return None, "password_setup_required"
+        if len(str(password or "")) < 8:
+            return None, "password_too_short"
+        finish_setup(user_id, password)
+        return get(user_id), None
+    if not verify_password(password, row.get("password_hash")):
+        return None, "invalid_credentials"
+    return row, None

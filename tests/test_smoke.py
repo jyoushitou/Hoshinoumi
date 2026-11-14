@@ -1,4 +1,4 @@
-# 冒烟测试：能启动、命令齐全、状态可注入
+﻿# 冒烟测试：能启动、命令齐全、状态可注入
 
 import sys
 import types
@@ -166,7 +166,7 @@ class TestCommandRegistry(unittest.TestCase):
         "acg", "apikeys", "clear", "clip", "code", "db", "diary", "event",
         "exit", "help", "img", "keywords", "log", "memory", "ping", "quit",
         "reload", "say", "sayg", "set", "status", "sticker", "task",
-        "uptime", "usage", "profile", "todo", "voice", "vision", "memorybook", "growth", "persona", "stats", "config", "version", "cron", "hooks", "backup", "meta", "history", "gw", "relation",
+        "uptime", "usage", "profile", "todo", "voice", "vision", "memorybook", "growth", "persona", "stats", "config", "version", "cron", "hooks", "backup", "meta", "history", "gw", "relation", "adduser",
     }
 
     def setUp(self):
@@ -825,5 +825,6 @@ if __name__ == "__main__":
 
 if __name__ == "__main__":
     unittest.main()
+
 
 

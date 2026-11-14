@@ -101,6 +101,20 @@ def _add_prompted(c):
     return True
 
 
+def _add_setup_columns(c):
+    table = "users"
+    if not _table_exists(c, table):
+        return False
+    cols = _columns(c, table)
+    changed = False
+    for name, ddl in (("setup_code_hash", "VARCHAR(255) NULL"),
+                      ("setup_expires_at", "DATETIME NULL")):
+        if name not in cols:
+            c.execute(f"ALTER TABLE {table} ADD COLUMN {name} {ddl}")
+            changed = True
+    return changed
+
+
 def apply(c):
     made = []
     for table, target_col in USER_TABLES:
@@ -119,5 +133,7 @@ def apply(c):
         made.append("users.password_hash")
     if _add_prompted(c):
         made.append("users.password_prompted")
+    if _add_setup_columns(c):
+        made.append("users.setup_columns")
     c.connection.commit()
     return made

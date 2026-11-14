@@ -112,11 +112,11 @@ async def handle_internal_auth_verify(request):
         body = await request.json()
         uid = str(body.get("user_id") or "").strip()
         password = str(body.get("password") or "")
-        row = repo_users.get(uid)
-        if not row or row.get("status") != "active":
-            return json_response({"ok": False, "error": "invalid_credentials"}, 401)
-        if not repo_users.verify_password(password, row.get("password_hash")):
-            return json_response({"ok": False, "error": "invalid_credentials"}, 401)
+        setup_code = str(body.get("setup_code") or "")
+        row, err = repo_users.verify_login(uid, password, setup_code)
+        if err:
+            code = 403 if err in ("password_setup_required", "banned") else 401
+            return json_response({"ok": False, "error": err}, code)
         return json_response({"ok": True, "data": {"user_id": row["id"], "role": row["role"]}})
     except Exception as e:
         return json_response({"ok": False, "error": "auth_failed", "message": str(e)}, 500)

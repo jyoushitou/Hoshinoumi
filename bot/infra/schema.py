@@ -33,6 +33,8 @@ CURRENT = {
             nickname VARCHAR(64) NOT NULL DEFAULT '',
             password_hash VARCHAR(255) NULL,
             password_prompted TINYINT NOT NULL DEFAULT 0,
+            setup_code_hash VARCHAR(255) NULL,
+            setup_expires_at DATETIME NULL,
             role VARCHAR(16) NOT NULL DEFAULT 'user',
             status VARCHAR(16) NOT NULL DEFAULT 'active',
             created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,

@@ -343,6 +343,7 @@ namespace Gateway
         std::string secret;
         std::string userId;
         std::string password;
+        std::string setupCode;
         try
         {
             const auto parsed = boost::json::parse(url.body);
@@ -363,6 +364,10 @@ namespace Gateway
             {
                 password = std::string(obj.at("password").as_string());
             }
+            if (obj.contains("setup_code"))
+            {
+                setupCode = std::string(obj.at("setup_code").as_string());
+            }
         }
         catch (const std::exception&)
         {
@@ -377,14 +382,19 @@ namespace Gateway
             boost::json::object req;
             req["user_id"] = userId;
             req["password"] = password;
+            req["setup_code"] = setupCode;
             const auto result = backend_.Request("POST", "/internal/auth/verify",
                                                  boost::json::serialize(req), "");
             if (!result.ok)
             {
-                Audit("", url.target, 401, 0, ip, NextRequestId());
-                session->httpReplay("{\"ok\":false,\"error\":\"invalid_credentials\"}",
-                                    boost::beast::http::status::unauthorized,
-                                    JsonHeaders(NextRequestId()));
+                Audit("", url.target, result.status ? result.status : 401, 0, ip, NextRequestId());
+                auto status = (result.status >= 400 && result.status < 600)
+                                  ? static_cast<boost::beast::http::status>(result.status)
+                                  : boost::beast::http::status::unauthorized;
+                session->httpReplay(result.body.empty()
+                                        ? "{\"ok\":false,\"error\":\"invalid_credentials\"}"
+                                        : result.body,
+                                    status, JsonHeaders(NextRequestId()));
                 return;
             }
             try
