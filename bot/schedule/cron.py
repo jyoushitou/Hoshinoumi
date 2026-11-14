@@ -29,22 +29,22 @@ def _now():
 
 # ===================== 表操作 =====================
 
-_COLS = ("id, target_id, schedule_type, at_time, weekdays, once_at, "
+_COLS = ("id, user_id, target_id, schedule_type, at_time, weekdays, once_at, "
          "interval_min, content, source, enabled, jitter_min, last_fire, next_ts, "
          "rule, timing")
 
 
-def list_tasks(target_id=None, enabled_only=False):
+def list_tasks(target_id=None, enabled_only=False, user_id="__owner__"):
     from ..infra import cache
     from ..infra.conn import get_cursor
 
-    key = f"cron:list:{target_id or ''}:{1 if enabled_only else 0}"
+    key = f"cron:list:{user_id}:{target_id or ''}:{1 if enabled_only else 0}"
     hit = cache.get(key)
     if hit is not None:
         return list(hit)
     c = get_cursor()
-    sql = f"SELECT {_COLS} FROM cron_tasks WHERE 1=1"
-    params = []
+    sql = f"SELECT {_COLS} FROM cron_tasks WHERE user_id=%s"
+    params = [str(user_id)]
     if target_id:
         sql += " AND target_id=%s"
         params.append(str(target_id))
@@ -57,27 +57,29 @@ def list_tasks(target_id=None, enabled_only=False):
     return rows
 
 
-def get(task_id):
+def get(task_id, user_id="__owner__"):
     from ..infra.conn import get_cursor
 
     c = get_cursor()
-    c.execute(f"SELECT {_COLS} FROM cron_tasks WHERE id=%s", (int(task_id),))
+    c.execute(f"SELECT {_COLS} FROM cron_tasks WHERE id=%s AND user_id=%s",
+                  (int(task_id), str(user_id)))
     return c.fetchone()
 
 
 def add(target_id, schedule_type, content, at_time=None, weekdays=None,
         once_at=None, interval_min=None, source="command", jitter_min=10,
-        rule=None, timing=None):
+        rule=None, timing=None, user_id="__owner__"):
     """新增一条；返回新 id（失败返回 None）"""
     from ..infra.conn import get_cursor
 
     try:
         c = get_cursor()
+        timing = timing or "exact"
         c.execute(
-            "INSERT INTO cron_tasks(target_id, schedule_type, at_time, weekdays, "
+            "INSERT INTO cron_tasks(user_id, target_id, schedule_type, at_time, weekdays, "
             "once_at, interval_min, content, source, jitter_min, rule, timing) "
-            "VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
-            (str(target_id), schedule_type, at_time, weekdays, once_at,
+            "VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+            (str(user_id), str(target_id), schedule_type, at_time, weekdays, once_at,
              interval_min, content, source, int(jitter_min), rule, timing))
         c.connection.commit()
         try:
@@ -91,12 +93,13 @@ def add(target_id, schedule_type, content, at_time=None, weekdays=None,
         return None
 
 
-def remove(task_id):
+def remove(task_id, user_id="__owner__"):
     from ..infra.conn import get_cursor
 
     try:
         c = get_cursor()
-        c.execute("DELETE FROM cron_tasks WHERE id=%s", (int(task_id),))
+        c.execute("DELETE FROM cron_tasks WHERE id=%s AND user_id=%s",
+                  (int(task_id), str(user_id)))
         c.connection.commit()
         try:
             from ..infra import cache
@@ -109,13 +112,13 @@ def remove(task_id):
         return False
 
 
-def set_enabled(task_id, on):
+def set_enabled(task_id, on, user_id="__owner__"):
     from ..infra.conn import get_cursor
 
     try:
         c = get_cursor()
-        c.execute("UPDATE cron_tasks SET enabled=%s WHERE id=%s",
-                  (1 if on else 0, int(task_id)))
+        c.execute("UPDATE cron_tasks SET enabled=%s WHERE id=%s AND user_id=%s",
+                  (1 if on else 0, int(task_id), str(user_id)))
         c.connection.commit()
         try:
             from ..infra import cache
@@ -128,12 +131,13 @@ def set_enabled(task_id, on):
         return False
 
 
-def set_next(task_id, ts):
+def set_next(task_id, ts, user_id="__owner__"):
     from ..infra.conn import get_cursor
 
     try:
         c = get_cursor()
-        c.execute("UPDATE cron_tasks SET next_ts=%s WHERE id=%s", (ts, int(task_id)))
+        c.execute("UPDATE cron_tasks SET next_ts=%s WHERE id=%s AND user_id=%s",
+                  (ts, int(task_id), str(user_id)))
         c.connection.commit()
         try:
             from ..infra import cache

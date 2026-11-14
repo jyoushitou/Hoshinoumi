@@ -84,7 +84,7 @@ def add_global_keywords_to_db(kws, target_id=""):
 
 # ===================== 事件记忆 =====================
 
-def load_events_from_db(tid, tag_keywords=None, limit=5, kinds=None):
+def load_events_from_db(tid, tag_keywords=None, limit=5, kinds=None, user_id="__owner__"):
     """加载记忆，可按标签或 kind 过滤（默认排除 profile）
 
     v7-B8：多了 kind 维度；旧数据 kind 默认 'event'，兼容。
@@ -92,18 +92,18 @@ def load_events_from_db(tid, tag_keywords=None, limit=5, kinds=None):
     c = get_cursor()
     kinds = tuple(kinds) if kinds is not None else DEFAULT_KINDS
     kind_ph = ",".join(["%s"] * len(kinds))
-    params = [tid] + list(kinds)
+    params = list(kinds)
 
     # v17.4：先读新表 memories；空则回退 events
     try:
         new_sql = ("SELECT summary AS summary, tags FROM memories "
-                   "WHERE target_id=%s AND deleted_at IS NULL ")
+                   "WHERE user_id=%s AND target_id=%s AND deleted_at IS NULL ")
         if tag_keywords:
             conds = " OR ".join(["tags LIKE %s" for _ in tag_keywords[:3]])
             c.execute(new_sql + f"AND ({conds}) ORDER BY id DESC LIMIT %s",
-                      [tid] + [f"%{kw}%" for kw in tag_keywords[:3]] + [int(limit)])
+                      [str(user_id), tid] + [f"%{kw}%" for kw in tag_keywords[:3]] + [int(limit)])
         else:
-            c.execute(new_sql + "ORDER BY id DESC LIMIT %s", [tid, int(limit)])
+            c.execute(new_sql + "ORDER BY id DESC LIMIT %s", [str(user_id), tid, int(limit)])
         rows = [(r["summary"], r["tags"]) for r in c.fetchall()]
         if rows:
             return rows
@@ -113,14 +113,14 @@ def load_events_from_db(tid, tag_keywords=None, limit=5, kinds=None):
     if tag_keywords:
         conds = " OR ".join(["tags LIKE %s" for _ in tag_keywords[:3]])  # 动态构建LIKE条件
         sql = (f"SELECT summary, tags FROM memories "
-               f"WHERE target_id=%s AND kind IN ({kind_ph}) AND ({conds}) "
+               f"WHERE user_id=%s AND target_id=%s AND kind IN ({kind_ph}) AND ({conds}) "
                f"ORDER BY id DESC LIMIT %s")
-        c.execute(sql, params + [f"%{kw}%" for kw in tag_keywords[:3]] + [limit])
+        c.execute(sql, [str(user_id)] + params + [f"%{kw}%" for kw in tag_keywords[:3]] + [limit])
     else:
         sql = (f"SELECT summary, tags FROM memories "
-               f"WHERE target_id=%s AND kind IN ({kind_ph}) "
+               f"WHERE user_id=%s AND target_id=%s AND kind IN ({kind_ph}) "
                f"ORDER BY id DESC LIMIT %s")
-        c.execute(sql, params + [limit])
+        c.execute(sql, [str(user_id)] + params + [limit])
     return [(r["summary"], r["tags"]) for r in c.fetchall()]
 
 
@@ -128,7 +128,7 @@ def load_events_from_db(tid, tag_keywords=None, limit=5, kinds=None):
 STATE_TARGET = "__self__"  # 状态行用固定 target，不占任何人的记忆
 
 
-def load_state_json(target=None):
+def load_state_json(target=None, user_id="__owner__"):
     """读某个对象的状态；不传就是机器人自己（v14.1-D1 按人分开）
 
     v17.4：先读新表 bot_states；没有就回退 events 的 JSON。
@@ -139,8 +139,9 @@ def load_state_json(target=None):
     # 旧表（作为底，保留新表没有的字段）
     c = get_cursor()
     c.execute(
-        "SELECT summary FROM memories WHERE target_id=%s AND kind='state' ORDER BY id DESC LIMIT 1",
-        (tid,),
+        "SELECT summary FROM memories WHERE user_id=%s AND target_id=%s "
+        "AND kind='state' ORDER BY id DESC LIMIT 1",
+        (str(user_id), tid),
     )
     row = c.fetchone()
     legacy = (row.get("summary") or row.get("event_summary") or "") if row else ""
@@ -168,23 +169,24 @@ def load_state_json(target=None):
         return legacy
 
 
-def _replace_kind_row(tid, kind, payload, key_tag):
+def _replace_kind_row(tid, kind, payload, key_tag, user_id="__owner__"):
     """v18.17：在 memories 里保留一行 JSON（state/rel/friction 这类单行状态）"""
     c = get_cursor()
-    c.execute("DELETE FROM memories WHERE target_id=%s AND kind=%s", (str(tid), kind))
+    c.execute("DELETE FROM memories WHERE user_id=%s AND target_id=%s AND kind=%s",
+              (str(user_id), str(tid), kind))
     c.execute(
-        "INSERT INTO memories(target_id, kind, summary, tags, importance, weight, tier, "
-        "source, dedupe_key, last_seen) VALUES(%s,%s,%s,'',3,0.5,'medium','chat',%s,NOW())",
-        (str(tid), kind, payload, dedupe_key(str(tid), kind, key_tag)),
+        "INSERT INTO memories(user_id, target_id, kind, summary, tags, importance, weight, tier, "
+        "source, dedupe_key, last_seen) VALUES(%s,%s,%s,%s,'',3,0.5,'medium','chat',%s,NOW())",
+        (str(user_id), str(tid), kind, payload, dedupe_key(str(tid), kind, key_tag)),
     )
     c.connection.commit()
 
 
-def save_state_json(payload, target=None):
+def save_state_json(payload, target=None, user_id="__owner__"):
     """覆盖写某个对象的状态（一人一行；memories 保留完整 JSON）"""
     tid = str(target) if target else STATE_TARGET
     dual_write("state", tid, payload)
-    _replace_kind_row(tid, "state", payload, "bot_state")
+    _replace_kind_row(tid, "state", payload, "bot_state", user_id=user_id)
 
 def load_todo_items():
     """所有日程（v10-U10）"""
@@ -447,34 +449,36 @@ def load_timeline(tid, days=7, limit=12):
     return list(c.fetchall())
 
 
-def load_heavy_memories(tid, min_weight=0.7, limit=20):
+def load_heavy_memories(tid, min_weight=0.7, limit=20, user_id="__owner__"):
     """v18.12：取重记忆（memories.weight ≥ 阈值）"""
     try:
         c = get_cursor()
         c.execute(
             "SELECT id, summary, weight, created_at, last_seen FROM memories "
-            "WHERE target_id=%s AND weight>=%s AND deleted_at IS NULL "
+            "WHERE user_id=%s AND target_id=%s AND weight>=%s AND deleted_at IS NULL "
             "ORDER BY weight DESC, id DESC LIMIT %s",
-            (str(tid), float(min_weight), int(limit)))
+            (str(user_id), str(tid), float(min_weight), int(limit)))
         return list(c.fetchall())
     except Exception:
         return []
 
 
-def load_memories_for_search(tid, limit=300):
+def load_memories_for_search(tid, limit=300, user_id="__owner__"):
     """取一批候选记忆喂给检索器（v8-B11）"""
     c = get_cursor()
     c.execute("""
         SELECT id, kind, summary AS summary, tags, importance, hit_count,
                created_at, last_seen
         FROM memories
-        WHERE target_id IN (%s, %s) AND kind IN ('event','life','promise','photo')
+        WHERE user_id=%s AND target_id IN (%s, %s)
+          AND kind IN ('event','life','promise','photo')
         ORDER BY id DESC LIMIT %s
-    """, (tid, STATE_TARGET, limit))
+    """, (str(user_id), tid, STATE_TARGET, limit))
     return list(c.fetchall())
 
 
-def add_event_to_db(tid, summary, tags="", kind="event", importance=3, due_date=None):
+def add_event_to_db(tid, summary, tags="", kind="event", importance=3, due_date=None,
+                    user_id="__owner__"):
     """写入一条记忆（v7-B15）
 
     - 7 天窗口内命中同一 dedupe_key → 只累加 hit_count、更新 last_seen
@@ -488,10 +492,10 @@ def add_event_to_db(tid, summary, tags="", kind="event", importance=3, due_date=
 
     c.execute("""
         SELECT id FROM memories
-        WHERE target_id=%s AND kind=%s AND dedupe_key=%s
+        WHERE user_id=%s AND target_id=%s AND kind=%s AND dedupe_key=%s
           AND COALESCE(last_seen, created_at) >= %s
         ORDER BY id LIMIT 1
-    """, (tid, kind, key, now - timedelta(days=DEDUPE_WINDOW_DAYS)))
+    """, (str(user_id), tid, kind, key, now - timedelta(days=DEDUPE_WINDOW_DAYS)))
     hit = c.fetchone()
     if hit:  # 命中：不新增，只记账
         c.execute("UPDATE memories SET hit_count=hit_count+1, last_seen=%s WHERE id=%s", (now, hit["id"]))
@@ -499,19 +503,20 @@ def add_event_to_db(tid, summary, tags="", kind="event", importance=3, due_date=
         return hit["id"]
 
     c.execute(
-        "INSERT INTO memories(target_id, kind, summary, tags, importance, weight, tier, "
+        "INSERT INTO memories(user_id, target_id, kind, summary, tags, importance, weight, tier, "
         "source, dedupe_key, due_date, last_seen) "
-        "VALUES(%s,%s,%s,%s,%s,0.5,'medium','chat',%s,%s,%s)",
-        (tid, kind, summary, tags, importance, key, due_date, now),
+        "VALUES(%s,%s,%s,%s,%s,%s,0.5,'medium','chat',%s,%s,%s)",
+        (str(user_id), tid, kind, summary, tags, importance, key, due_date, now),
     )
     new_id = getattr(c, "lastrowid", None)
     # 按 kind 分别保留
     keep = KIND_LIMITS.get(kind, KIND_LIMIT_DEFAULT)
     c.execute(
         "DELETE FROM memories WHERE id NOT IN("
-        "SELECT id FROM(SELECT id FROM memories WHERE target_id=%s AND kind=%s ORDER BY id DESC LIMIT %s)AS tmp"
-        ")AND target_id=%s AND kind=%s",
-        (tid, kind, keep, tid, kind),
+        "SELECT id FROM(SELECT id FROM memories WHERE user_id=%s AND target_id=%s "
+        "AND kind=%s ORDER BY id DESC LIMIT %s)AS tmp"
+        ")AND user_id=%s AND target_id=%s AND kind=%s",
+        (str(user_id), tid, kind, keep, str(user_id), tid, kind),
     )
     c.connection.commit()
     return new_id
