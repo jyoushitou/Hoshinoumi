@@ -1,4 +1,4 @@
-# Hoshinoumi（REC）Gateway v22
+# Hoshinoumi（REC）Gateway v23.5
 
 基于用户自己的 **NetWorkCommunication / CommonNet**（Boost.Asio + Boost.Beast）实现的 C++ 网关。
 
@@ -7,12 +7,12 @@
 - 依赖：vcpkg overlay ports（`commonnet` + `utils`）
 - 部署：Docker 镜像，部署机不编译
 
-## 当前范围（v22，试运行）
+## 当前范围（v23.5，试运行）
 
 | 有 | 没有（后续） |
 |---|---|
 | `/healthz` / `/readyz` | 多用户隔离（v23） |
-| `/api/login` / `/api/refresh` / JWT | 内置 TLS（用 tls_proxy.py 终止） |
+| `/api/login`（owner secret / user_id+password+setup_code） / `/api/refresh` / JWT | 内置 TLS（用 tls_proxy.py 终止） |
 | `/api/*` Bearer 鉴权 | 分布式限流（当前进程内） |
 | 每 IP 60/min 令牌桶，429 | |
 | `gateway_log` 审计（owner/path/status/耗时/IP） | |
