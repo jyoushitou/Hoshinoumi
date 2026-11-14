@@ -43,9 +43,17 @@ async def handle_command(text, uid, ws, is_group, gid):
     text = normalize_command(text)
     if not text.startswith(CMD_PREFIX):
         return False
-    # 只有主人才能用命令
-    if str(uid) != str(MASTER_QQ):
-        return False
+    # v23.5.2：只有 role=owner 才能用命令；非 owner 明确拒绝
+    owner = str(uid) == str(MASTER_QQ)
+    if not owner:
+        try:
+            from .infra import repo_users, tenant
+            owner = tenant.is_owner(uid) or (repo_users.get(str(uid)) or {}).get("role") == "owner"
+        except Exception:
+            owner = False
+    if not owner:
+        await _send_command_reply("这个命令只有主人能用。", uid, ws, is_group, gid)
+        return True
 
     cmd = text[1:].strip()
     parts = cmd.split()

@@ -206,10 +206,10 @@ class TestCommandRegistry(unittest.TestCase):
         self.assertTrue(handled)
         self.assertIn("未知命令", ws.texts()[0])
 
-    def test_non_master_ignored(self):
+    def test_non_master_rejected(self):
         handled, ws = self._run("!help", uid="123456")
-        self.assertFalse(handled)
-        self.assertEqual(ws.sent, [])
+        self.assertTrue(handled)
+        self.assertIn("只有主人", ws.texts()[0])
 
     def test_non_command_ignored(self):
         handled, ws = self._run("你好呀")
@@ -825,4 +825,5 @@ if __name__ == "__main__":
 
 if __name__ == "__main__":
     unittest.main()
+
 

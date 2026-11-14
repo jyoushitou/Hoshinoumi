@@ -91,6 +91,16 @@ def _add_password(c):
     return True
 
 
+def _add_prompted(c):
+    table = "users"
+    if not _table_exists(c, table):
+        return False
+    if "password_prompted" in _columns(c, table):
+        return False
+    c.execute(f"ALTER TABLE {table} ADD COLUMN password_prompted TINYINT NOT NULL DEFAULT 0")
+    return True
+
+
 def apply(c):
     made = []
     for table, target_col in USER_TABLES:
@@ -107,5 +117,7 @@ def apply(c):
         made.append("conversation_messages.speaker_id")
     if _add_password(c) and "users.password_hash" not in made:
         made.append("users.password_hash")
+    if _add_prompted(c):
+        made.append("users.password_prompted")
     c.connection.commit()
     return made

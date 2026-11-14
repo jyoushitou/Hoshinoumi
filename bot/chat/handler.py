@@ -440,7 +440,28 @@ async def _handle_message(d, ws):
     token = tenant.use_user(user_id)
     try:
         if d.get("message_type") == "private" and uid:
-            repo_users.ensure_qq_user(uid)
+            row = repo_users.ensure_qq_user(uid)
+            if not repo_users.is_owner_row(row):
+                if row.get("status") != "active":
+                    return
+                if repo_users.needs_password(row):
+                    from ..chat.send import send_short_reply
+                    if not row.get("password_prompted"):
+                        repo_users.mark_password_prompted(uid)
+                        await send_short_reply(
+                            uid, "第一次见面，先设个密码吧（至少 8 位，直接发给我）。",
+                            ws, uid, False, None)
+                        return
+                    text = str(d.get("message", "") or "").strip()
+                    if len(text) < 8:
+                        await send_short_reply(uid, "密码至少 8 位，再发一次。",
+                                               ws, uid, False, None)
+                        return
+                    repo_users.finish_setup(uid, text)
+                    await send_short_reply(
+                        uid, "密码设好了。以后用 QQ 号和这个密码登录。",
+                        ws, uid, False, None)
+                    return
         return await _handle_message_impl(d, ws)
     finally:
         tenant.reset_user(token)

@@ -83,7 +83,7 @@ def ensure_defaults(cursor=None):
 def get(user_id, cursor=None):
     c, owned = _get_cursor(cursor)
     try:
-        return _one(c, "SELECT id,nickname,password_hash,role,status,created_at FROM users WHERE id=%s",
+        return _one(c, "SELECT id,nickname,password_hash,password_prompted,role,status,created_at FROM users WHERE id=%s",
                     (str(user_id),))
     finally:
         if owned:
@@ -284,3 +284,31 @@ def is_owner_row(row):
         return bool(row) and tenant.is_owner(row.get("id"))
     except Exception:
         return bool(row) and row.get("role") == "owner"
+
+# ===================== v23.5.2 首次 QQ 密码 =====================
+def needs_password(row):
+    return bool(row) and not row.get("password_hash")
+
+
+def mark_password_prompted(user_id, cursor=None):
+    c, owned = _get_cursor(cursor)
+    try:
+        c.execute("UPDATE users SET password_prompted=1 WHERE id=%s", (str(user_id),))
+        c.connection.commit()
+        return True
+    finally:
+        if owned:
+            _close(c)
+
+
+def finish_setup(user_id, password, cursor=None):
+    c, owned = _get_cursor(cursor)
+    try:
+        c.execute("UPDATE users SET password_hash=%s, password_prompted=0 WHERE id=%s",
+                  (hash_password(password), str(user_id)))
+        c.connection.commit()
+        return True
+    finally:
+        if owned:
+            _close(c)
+

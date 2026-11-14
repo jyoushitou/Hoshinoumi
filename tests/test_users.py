@@ -54,6 +54,16 @@ class TestUsersBase(unittest.TestCase):
         self.assertEqual(self.R.consume_invite("inv-1", "u_i"), "user")
         self.assertIsNone(self.R.consume_invite("inv-1", "u_i"))
 
+    def test_qq_first_password(self):
+        row = self.R.ensure_qq_user("123456")
+        self.assertTrue(self.R.needs_password(row))
+        self.R.mark_password_prompted("123456")
+        self.assertTrue(self.R.get("123456")["password_prompted"])
+        self.R.finish_setup("123456", "abcdefgh")
+        row = self.R.get("123456")
+        self.assertFalse(self.R.needs_password(row))
+        self.assertTrue(self.R.verify_password("abcdefgh", row["password_hash"]))
+
     def test_identity_unique(self):
         self.R.create("u_a")
         self.R.create("u_b")

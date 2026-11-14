@@ -32,6 +32,7 @@ CURRENT = {
             id VARCHAR(64) PRIMARY KEY,
             nickname VARCHAR(64) NOT NULL DEFAULT '',
             password_hash VARCHAR(255) NULL,
+            password_prompted TINYINT NOT NULL DEFAULT 0,
             role VARCHAR(16) NOT NULL DEFAULT 'user',
             status VARCHAR(16) NOT NULL DEFAULT 'active',
             created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
