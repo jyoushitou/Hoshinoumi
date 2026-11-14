@@ -288,6 +288,19 @@ async def _reply_and_send(d, ws, text, img_md5s=None):
                 except Exception as _e:
                     log_api(f"[读书] 后台读书启动失败: {_e}")
             else:
+                if mt == "private":
+                    try:
+                        from ..life import relation as _relation
+                        if not _relation.should_answer_private(tid, text):
+                            log_api(f"[关系] 归零/负值，跳过普通私聊 {tid}")
+                            try:
+                                from ..core import metrics
+                                metrics.inc("private_skip_low_affinity")
+                            except Exception:
+                                pass
+                            return
+                    except Exception:
+                        pass
                 ans = await get_character_reply(text, tid, ck,
                                         speaker=uid,
                                         is_group=(mt == "group"))  # 获取AI回复

@@ -114,7 +114,7 @@ def on_user_message(tid, now=None):
 
 
 def apologize(tid, now=None):
-    """他说了软话：立刻和好"""
+    """他说了软话：立刻和好，并进入慢修复"""
     st = load(tid)
     if not st["cold_ts"]:
         return False
@@ -122,6 +122,11 @@ def apologize(tid, now=None):
     st["ignored_replies"] = 0
     st["disappoint"] = 0
     save(tid)
+    try:
+        from . import relation
+        relation.repair(tid, reason="道歉")
+    except Exception:
+        pass
     log_system(f"和好: {tid} 被哄好了")
     return True
 
@@ -137,6 +142,11 @@ def refresh(tid, last_user_ts=None, now=None):
         st["expect_ts"] = 0.0
         st["disappoint"] = min(DISAPPOINT_MAX, st["disappoint"] + 1)
         log_system(f"失落: {tid} 他 {st['expect_text']} 没回，失望 {st['disappoint']}")
+        try:
+            from . import relation
+            relation.apply_delta(tid, -0.03, "期待超时", "minor")
+        except Exception:
+            pass
         changed = True
 
     # 2) 失望到顶 → 冷战
@@ -144,6 +154,11 @@ def refresh(tid, last_user_ts=None, now=None):
         st["cold_ts"] = now_ts
         st["ignored_replies"] = 0
         log_system(f"冷战: {tid} 开始（最多 24 小时）")
+        try:
+            from . import relation
+            relation.apply_delta(tid, -0.08, "进入冷战", "major")
+        except Exception:
+            pass
         changed = True
 
     # 3) 冷战到期 → 自动和好
@@ -167,6 +182,11 @@ def grudge_allowed(tid, now=None):
         return False
     st["last_grudge"] = now_ts
     save(tid)
+    try:
+        from . import relation
+        relation.apply_delta(tid, -0.15, "长期怨念", "major")
+    except Exception:
+        pass
     return True
 
 

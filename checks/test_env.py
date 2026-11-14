@@ -233,6 +233,7 @@ class TestEnvironment(unittest.TestCase):
         "NAO_DB_BACKEND",
         "NAO_LOG_KEEP_DAYS",
         "NAO_LOG_DIR",
+        "NAO_MIN_REPLY_PROB",
     }
 
     @staticmethod
@@ -423,3 +424,4 @@ if __name__ == "__main__":
 
 if __name__ == "__main__":
     unittest.main()
+

@@ -134,6 +134,32 @@ async def cmd_memorybook(ctx):
         lines.append("  记忆读取失败")
 
     return "\n".join(lines)
+@command("relation")
+async def cmd_relation(ctx):
+    """!relation [uid] - 亲密度、档位、最近变化、修复状态"""
+    from ..config import MASTER_QQ
+    from ..life import relation
+
+    tid = ctx.args[0] if ctx.args else str(MASTER_QQ)
+    aff = relation.get(tid)
+    name, _desc = relation.tier_of(aff)
+    lines = [f"💗 关系：{name}（{aff:+.3f}）"]
+    events = relation.recent_events(tid, limit=5)
+    if events:
+        lines.append("  最近变化：")
+        for e in events:
+            delta = float(e.get("delta") or 0)
+            reason = e.get("reason") or "-"
+            when = str(e.get("created_at") or "")[:16]
+            lines.append(f"    {when} {delta:+.3f} {reason}")
+    else:
+        lines.append("  最近变化：无")
+    if aff < 0:
+        lines.append("  修复中：道歉/持续关心 +0.02/天，最多慢慢恢复")
+    elif aff == 0:
+        lines.append("  普通私聊回复概率最低；道歉/求助仍会回应")
+    return "\n".join(lines)
+
 @command("growth")
 async def cmd_growth(ctx):
     """!growth - 成长轨迹：认识多久、关系、口头禅、一起经历过多少事"""

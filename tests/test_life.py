@@ -1,4 +1,4 @@
-# 她自己的生活：状态、事件、日记、关系、摩擦、习惯
+﻿# 她自己的生活：状态、事件、日记、关系、摩擦、习惯
 
 import sys
 import types
@@ -832,7 +832,7 @@ class TestRelation(unittest.TestCase):
         self.assertEqual(tier_of(0.9)[0], "亲近")
         self.assertEqual(tier_of(0.5)[0], "熟")
         self.assertEqual(tier_of(0.3)[0], "认识")
-        self.assertEqual(tier_of(0.0)[0], "陌生")
+        self.assertEqual(tier_of(0.0)[0], "归零")
 
     def test_master_starts_higher(self):
         import bot.life.relation as R
@@ -862,7 +862,7 @@ class TestRelation(unittest.TestCase):
         from bot.life.relation import TIERS
         lows = [lo for lo, _n, _d in TIERS]
         self.assertEqual(lows, sorted(lows, reverse=True))
-        self.assertEqual(lows[-1], 0.0)
+        self.assertEqual(lows[-1], -1.0)
 
 class TestV12Extras(unittest.TestCase):
     """v12：仪式 / 记忆本 / 旧事重提"""
@@ -942,3 +942,4 @@ if __name__ == "__main__":
 
 if __name__ == "__main__":
     unittest.main()
+

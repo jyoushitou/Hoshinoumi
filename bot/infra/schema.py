@@ -209,6 +209,18 @@ PURE = {
                        ON UPDATE CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """,
+    "relation_events": """
+        CREATE TABLE IF NOT EXISTS relation_events (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            user_id VARCHAR(64) NOT NULL DEFAULT '__owner__',
+            target_id VARCHAR(64) NOT NULL,
+            delta DECIMAL(5,3) NOT NULL DEFAULT 0,
+            reason VARCHAR(64) NOT NULL DEFAULT '',
+            severity VARCHAR(16) NOT NULL DEFAULT 'minor',
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            KEY idx_rel_user_time (user_id, target_id, created_at)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
     "memories": """
         CREATE TABLE IF NOT EXISTS memories (
             id BIGINT AUTO_INCREMENT PRIMARY KEY,

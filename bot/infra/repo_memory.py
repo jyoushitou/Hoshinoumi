@@ -1,4 +1,4 @@
-# ===================== 记忆仓储 =====================
+﻿# ===================== 记忆仓储 =====================
 # 对话记忆 / 全局关键词 / 事件记忆
 # 迁移自 db.py（v5-R6），SQL 逐字未改
 
@@ -176,7 +176,7 @@ def _replace_kind_row(tid, kind, payload, key_tag, user_id="__owner__"):
               (str(user_id), str(tid), kind))
     c.execute(
         "INSERT INTO memories(user_id, target_id, kind, summary, tags, importance, weight, tier, "
-        "source, dedupe_key, last_seen) VALUES(%s,%s,%s,%s,'',3,0.5,'medium','chat',%s,NOW())",
+        "source, dedupe_key, last_seen) VALUES(%s,%s,%s,%s,'',3,0.5,'medium','chat',%s,CURRENT_TIMESTAMP)",
         (str(user_id), str(tid), kind, payload, dedupe_key(str(tid), kind, key_tag)),
     )
     c.connection.commit()
@@ -593,4 +593,5 @@ def dual_write(kind, tid, payload, user_id="__owner__"):
             _dual_last_log = now
             log_api(f"[双写] 失败累计 {_dual_fail} 次；最近：{kind} → {table}：{e}")
         return False
+
 

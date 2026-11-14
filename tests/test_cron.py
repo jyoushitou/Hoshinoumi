@@ -104,6 +104,8 @@ class TestHooks(unittest.TestCase):
         from bot.schedule import cron
 
         self.C = cron
+        for name in ("get", "set_next", "set_enabled", "list_tasks"):
+            setattr(self, "_orig_" + name, getattr(self.C, name))
         self.C.cancel_all()
         self.tasks = {1: {"id": 1, "schedule_type": "daily", "at_time": "23:59",
                           "jitter_min": 0, "enabled": 1, "target_id": "1"}}
