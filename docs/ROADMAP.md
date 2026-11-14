@@ -260,7 +260,7 @@
 
 ## v33 系列 · 命令收敛与专用前端通道（新插入）
 
-> 详见 [versions/v33-command-convergence.md](versions/v33-command-convergence.md)
+> 详见 [versions/v33.md](versions/v33.md)
 > 插在 v24–v32 插件接口完成之后。QQ 只保留必要短命令；详细配置、日志、用量、数据库、插件、定时、记忆全部走自研专属前端。
 > **编号说明：原 v33 及以后版本整体顺延为 v34+；下方旧编号待文档迁移时统一改号。**
 

@@ -298,7 +298,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | v30 | 调度层接口实现 | 📋 已规划 | [v30.md](docs/versions/v30.md) |
 | v31 | 出站层接口实现 | 📋 已规划 | [v31.md](docs/versions/v31.md) |
 | v32 | 默认链路选择实现 | 📋 已规划 | [v32.md](docs/versions/v32.md) |
-| v33 | 命令收敛：QQ 只保留短命令，详细配置走专属前端 | 📋 已规划 | [v33-command-convergence.md](docs/versions/v33-command-convergence.md) |
+| v33 | 命令收敛：QQ 只保留短命令，详细配置走专属前端 | 📋 已规划 | [v33.md](docs/versions/v33.md) |
 | v34 | 多端推送：主动消息扇出到所有接入口 | 📋 已规划 | [v34.md](docs/versions/v34.md) |
 | v35 | 本机服务化：常驻 / 自启 / 健康检查 | 📋 已规划 | [v35.md](docs/versions/v35.md) |
 | v36 | DSH 插件：本机工具注册与调用 | 📋 已规划 | [v36.md](docs/versions/v36.md) |
@@ -322,7 +322,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | v54 | 常驻（后端）systemd / 看门狗 | 📋 已规划 | [v54.md](docs/versions/v54.md) |
 | v55 | 嵌入式前端（Linux 后端）：树莓派/平板显示对话 | 📋 已规划 | [v55.md](docs/versions/v55.md) |
 
-> **编号变更**：新增 **v33 命令收敛**（QQ 只保留短命令，详细配置走专属前端）；原 v33 及以后整体顺延为 **v34+**。详见 [v33-command-convergence.md](docs/versions/v33-command-convergence.md)。
+> **编号变更**：新增 **v33 命令收敛**（QQ 只保留短命令，详细配置走专属前端）；原 v33 及以后整体顺延为 **v34+**。详见 [v33.md](docs/versions/v33.md)。
 >
 > **插件接口原则**：v24–v32 暴露的是各架构层的接口，不是把现有功能插件化。
 > **接口层不实现任何功能**：v24–v32 只定义契约和注册表，不提供任何实现；真实 provider / channel / tool / storage 由核心或第三方开发者实现。欢迎按契约提交实现。
