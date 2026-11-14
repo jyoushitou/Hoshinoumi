@@ -7,7 +7,8 @@ from .config import MASTER_QQ
 from .log import log_send
 from .send import send_private_msg, send_group_msg
 from .cmd import registry
-from .cmd import basic, query, admin, media, memory_cmd, diary_cmd, ops, cron_cmd, history_cmd  # noqa: F401  导入即注册
+from .cmd import (basic, query, admin, media, memory_cmd, diary_cmd, ops,
+                   cron_cmd, history_cmd, gw_cmd)  # noqa: F401  导入即注册
 
 CMD_PREFIX = "!"  # 命令前缀
 

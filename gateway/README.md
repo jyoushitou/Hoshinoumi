@@ -1,4 +1,4 @@
-# Hoshinoumi（REC）Gateway v20.5
+# Hoshinoumi（REC）Gateway v22
 
 基于用户自己的 **NetWorkCommunication / CommonNet**（Boost.Asio + Boost.Beast）实现的 C++ 网关。
 
@@ -7,19 +7,51 @@
 - 依赖：vcpkg overlay ports（`commonnet` + `utils`）
 - 部署：Docker 镜像，部署机不编译
 
-## 当前范围（v20.0 起，v20.5 验证）
-
-> 当前 **v20.5** 处于 Docker/网关验证，已部署试运行；鉴权/限流/TLS/多用户仍未实现（v21/v22/v23）。
+## 当前范围（v22，试运行）
 
 | 有 | 没有（后续） |
 |---|---|
-| `/healthz` | 登录 / JWT |
-| `/readyz`（探后端 `/api/health`） | 限流 / 审计 |
-| `/api/chat` → `/internal/chat` | TLS |
-| `/api/history` → `/internal/history` | 多用户隔离（v23） |
-| `/api/state` / `/api/cron` / `/api/diary` / `/api/shelf` | |
-| 配置向导 `scripts/configure.py` | |
+| `/healthz` / `/readyz` | 多用户隔离（v23） |
+| `/api/login` / `/api/refresh` / JWT | 内置 TLS（用 tls_proxy.py 终止） |
+| `/api/*` Bearer 鉴权 | 分布式限流（当前进程内） |
+| 每 IP 60/min 令牌桶，429 | |
+| `gateway_log` 审计（owner/path/status/耗时/IP） | |
+| `!gw` 观测 | |
+| TLS 终止代理 `gateway/tls_proxy.py` | |
+| 压测 `scripts/gateway_load_test.py` | |
 | Dockerfile 多阶段构建 | |
+
+## v21 登录
+
+```bash
+curl -s -X POST http://127.0.0.1:27005/api/login \
+  -H 'Content-Type: application/json' \
+  -d '{"secret":"<NAO_GATEWAY_OWNER_SECRET>"}'
+```
+
+返回 `data.access` 后：
+
+```bash
+curl -s http://127.0.0.1:27005/api/state \
+  -H "Authorization: Bearer <access>"
+```
+
+## v22 限流 / 审计 / TLS
+
+- 同一 IP 每分钟 60 次；超限 429，带 `Retry-After`。
+- 每次 `/api/*` 异步写 `gateway_log`；不记 token/secret/body。
+- TLS 由独立代理终止：
+
+```bash
+python3 gateway/tls_proxy.py \
+  --cert /etc/nao/fullchain.pem \
+  --key  /etc/nao/privkey.pem \
+  --listen 0.0.0.0:27443 \
+  --backend 127.0.0.1:27005
+```
+
+- 证书不存在时不要启动代理；本地开发可继续 HTTP。
+- 回滚：停 TLS 代理和网关，插件仍可直连 `127.0.0.1:27004`。
 
 ## 启动等待（v20.6）
 
