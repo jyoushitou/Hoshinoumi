@@ -47,6 +47,8 @@ namespace Gateway
                    const Net::Server::HttpServer::Url& url);
         void Login(const std::shared_ptr<Net::Server::HttpServer::HttpSession>& session,
                    const Net::Server::HttpServer::Url& url);
+        void Register(const std::shared_ptr<Net::Server::HttpServer::HttpSession>& session,
+                      const Net::Server::HttpServer::Url& url);
         void Refresh(const std::shared_ptr<Net::Server::HttpServer::HttpSession>& session,
                      const Net::Server::HttpServer::Url& url);
         void StartProbe(bool fullCycle);

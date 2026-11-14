@@ -88,6 +88,11 @@ namespace Gateway
             Login(session, url);
             return;
         }
+        if (url.target == "/api/register")
+        {
+            Register(session, url);
+            return;
+        }
         if (url.target == "/api/refresh")
         {
             Refresh(session, url);
@@ -267,6 +272,36 @@ namespace Gateway
             .detach();
     }
 
+    void Router::Register(const std::shared_ptr<Net::Server::HttpServer::HttpSession>& session,
+                          const Net::Server::HttpServer::Url& url)
+    {
+        if (url.method != "POST")
+        {
+            session->httpReplay("{\"ok\":false,\"error\":\"method_not_allowed\"}",
+                                boost::beast::http::status::method_not_allowed,
+                                JsonHeaders(NextRequestId()));
+            return;
+        }
+        const auto result = backend_.Request("POST", "/internal/auth/register", url.body, "");
+        const std::string rid = NextRequestId();
+        Audit("", url.target, result.ok ? 200 : (result.status ? result.status : 503),
+              0, url.requestIP.empty() ? "0.0.0.0" : url.requestIP, rid);
+        if (result.ok)
+        {
+            session->httpReplay(result.body, boost::beast::http::status::ok, JsonHeaders(rid));
+        }
+        else
+        {
+            session->httpReplay(result.body.empty()
+                                    ? "{\"ok\":false,\"error\":\"register_failed\"}"
+                                    : result.body,
+                                result.status >= 400 && result.status < 600
+                                    ? static_cast<boost::beast::http::status>(result.status)
+                                    : boost::beast::http::status::service_unavailable,
+                                JsonHeaders(rid));
+        }
+    }
+
     void Router::Login(const std::shared_ptr<Net::Server::HttpServer::HttpSession>& session,
                        const Net::Server::HttpServer::Url& url)
     {
@@ -306,6 +341,8 @@ namespace Gateway
         }
 
         std::string secret;
+        std::string userId;
+        std::string password;
         try
         {
             const auto parsed = boost::json::parse(url.body);
@@ -313,7 +350,19 @@ namespace Gateway
             {
                 throw std::runtime_error("body");
             }
-            secret = std::string(parsed.as_object().at("secret").as_string());
+            const auto& obj = parsed.as_object();
+            if (obj.contains("secret"))
+            {
+                secret = std::string(obj.at("secret").as_string());
+            }
+            if (obj.contains("user_id"))
+            {
+                userId = std::string(obj.at("user_id").as_string());
+            }
+            if (obj.contains("password"))
+            {
+                password = std::string(obj.at("password").as_string());
+            }
         }
         catch (const std::exception&)
         {
@@ -321,6 +370,52 @@ namespace Gateway
                                 boost::beast::http::status::bad_request,
                                 JsonHeaders(NextRequestId()));
             return;
+        }
+
+        if (!userId.empty())
+        {
+            boost::json::object req;
+            req["user_id"] = userId;
+            req["password"] = password;
+            const auto result = backend_.Request("POST", "/internal/auth/verify",
+                                                 boost::json::serialize(req), "");
+            if (!result.ok)
+            {
+                Audit("", url.target, 401, 0, ip, NextRequestId());
+                session->httpReplay("{\"ok\":false,\"error\":\"invalid_credentials\"}",
+                                    boost::beast::http::status::unauthorized,
+                                    JsonHeaders(NextRequestId()));
+                return;
+            }
+            try
+            {
+                const auto parsed = boost::json::parse(result.body);
+                const auto& data = parsed.as_object().at("data").as_object();
+                const std::string sub = std::string(data.at("user_id").as_string());
+                const std::string role = std::string(data.at("role").as_string());
+                boost::json::object tokens;
+                tokens["access"] = auth_.IssueAccess(sub, role);
+                tokens["refresh"] = auth_.IssueRefresh(sub, role);
+                tokens["token_type"] = "Bearer";
+                tokens["expires_in"] = auth_.AccessTtl();
+                tokens["user_id"] = sub;
+                tokens["role"] = role;
+                boost::json::object body;
+                body["ok"] = true;
+                body["data"] = tokens;
+                Audit(sub, url.target, 200, 0, ip, NextRequestId());
+                session->httpReplay(boost::json::serialize(body),
+                                    boost::beast::http::status::ok,
+                                    JsonHeaders(NextRequestId()));
+                return;
+            }
+            catch (const std::exception&)
+            {
+                session->httpReplay("{\"ok\":false,\"error\":\"auth_failed\"}",
+                                    boost::beast::http::status::bad_gateway,
+                                    JsonHeaders(NextRequestId()));
+                return;
+            }
         }
 
         if (!auth_.CheckSecret(secret))
@@ -356,14 +451,16 @@ namespace Gateway
         try
         {
             boost::json::object data;
-            data["access"] = auth_.IssueAccess();
-            data["refresh"] = auth_.IssueRefresh();
+            data["access"] = auth_.IssueAccess("__owner__", "owner");
+            data["refresh"] = auth_.IssueRefresh("__owner__", "owner");
             data["token_type"] = "Bearer";
             data["expires_in"] = auth_.AccessTtl();
+            data["user_id"] = "__owner__";
+            data["role"] = "owner";
             boost::json::object body;
             body["ok"] = true;
             body["data"] = data;
-            Audit("owner", url.target, 200, 0, ip, NextRequestId());
+            Audit("__owner__", url.target, 200, 0, ip, NextRequestId());
             session->httpReplay(boost::json::serialize(body),
                                 boost::beast::http::status::ok,
                                 JsonHeaders(NextRequestId()));
@@ -418,14 +515,16 @@ namespace Gateway
         try
         {
             boost::json::object data;
-            data["access"] = auth_.IssueAccess();
-            data["refresh"] = auth_.IssueRefresh();
+            data["access"] = auth_.IssueAccess(claims.sub, claims.role);
+            data["refresh"] = auth_.IssueRefresh(claims.sub, claims.role);
             data["token_type"] = "Bearer";
             data["expires_in"] = auth_.AccessTtl();
+            data["user_id"] = claims.sub;
+            data["role"] = claims.role;
             boost::json::object body;
             body["ok"] = true;
             body["data"] = data;
-            Audit("owner", url.target, 200, 0,
+            Audit(claims.sub, url.target, 200, 0,
                   url.requestIP.empty() ? "0.0.0.0" : url.requestIP, NextRequestId());
             session->httpReplay(boost::json::serialize(body),
                                 boost::beast::http::status::ok,

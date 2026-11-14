@@ -31,6 +31,7 @@ CURRENT = {
         CREATE TABLE IF NOT EXISTS users (
             id VARCHAR(64) PRIMARY KEY,
             nickname VARCHAR(64) NOT NULL DEFAULT '',
+            password_hash VARCHAR(255) NULL,
             role VARCHAR(16) NOT NULL DEFAULT 'user',
             status VARCHAR(16) NOT NULL DEFAULT 'active',
             created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,

@@ -31,10 +31,11 @@ def _today_str(now=None):
 
 # ===================== 存取 =====================
 
-def load(tid):
+def load(tid, user_id="__owner__"):
     try:
         from ..infra.repo_memory import load_reading
-        raw = load_reading(str(tid))
+        raw = (load_reading(str(tid)) if user_id == "__owner__"
+                   else load_reading(str(tid), user_id=user_id))
         data = json.loads(raw) if raw else {}
     except Exception:
         data = {}
@@ -46,10 +47,14 @@ def load(tid):
     return data
 
 
-def save(tid, data):
+def save(tid, data, user_id="__owner__"):
     try:
         from ..infra.repo_memory import save_reading
-        save_reading(str(tid), json.dumps(data, ensure_ascii=False, separators=(",", ":")))
+        if user_id == "__owner__":
+            save_reading(str(tid), json.dumps(data, ensure_ascii=False, separators=(",", ":")))
+        else:
+            save_reading(str(tid), json.dumps(data, ensure_ascii=False, separators=(",", ":")),
+                         user_id=user_id)
         return True
     except Exception as e:
         log_api(f"[读书] 保存进度失败 tid={tid}: {e}")  # 别静默吞掉

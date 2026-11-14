@@ -81,6 +81,16 @@ def _add_speaker(c):
     return True
 
 
+def _add_password(c):
+    table = "users"
+    if not _table_exists(c, table):
+        return False
+    if "password_hash" in _columns(c, table):
+        return False
+    c.execute(f"ALTER TABLE {table} ADD COLUMN password_hash VARCHAR(255) NULL")
+    return True
+
+
 def apply(c):
     made = []
     for table, target_col in USER_TABLES:
@@ -95,5 +105,7 @@ def apply(c):
             "WHERE user_id IS NULL OR user_id=''", (OWNER,))
     if _add_speaker(c) and "conversation_messages" not in made:
         made.append("conversation_messages.speaker_id")
+    if _add_password(c) and "users.password_hash" not in made:
+        made.append("users.password_hash")
     c.connection.commit()
     return made

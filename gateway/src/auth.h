@@ -15,8 +15,8 @@ namespace Gateway
     /// @brief JWT 中本项目用到的声明
     struct Claims
     {
-        std::string sub;    ///< owner
-        std::string role;   ///< owner
+        std::string sub;    ///< user_id；owner 为 "__owner__"
+        std::string role;   ///< owner / admin / user
         std::string type;   ///< access / refresh
         std::int64_t exp = 0;
     };
@@ -31,11 +31,13 @@ namespace Gateway
         /// @brief 校验登录 secret（常量时间比较）
         bool CheckSecret(const std::string& secret) const;
 
-        /// @brief 签发 access token
-        std::string IssueAccess() const;
+        /// @brief 签发 access token（v23：sub=user_id, role）
+        std::string IssueAccess(const std::string& sub = "__owner__",
+                                const std::string& role = "owner") const;
 
-        /// @brief 签发 refresh token（v21.1 使用）
-        std::string IssueRefresh() const;
+        /// @brief 签发 refresh token
+        std::string IssueRefresh(const std::string& sub = "__owner__",
+                                 const std::string& role = "owner") const;
 
         /// @brief 校验 token 签名/过期/类型
         bool Verify(const std::string& token, const std::string& type, Claims& claims) const;
@@ -46,7 +48,8 @@ namespace Gateway
         int AccessTtl() const { return cfg_.accessTtlSec; }
 
     private:
-        std::string Issue(const std::string& type, int ttlSec) const;
+        std::string Issue(const std::string& type, int ttlSec,
+                          const std::string& sub, const std::string& role) const;
 
         Config cfg_;
     };

@@ -115,15 +115,16 @@ namespace Gateway
         return CRYPTO_memcmp(secret.data(), cfg_.ownerSecret.data(), secret.size()) == 0;
     }
 
-    std::string Auth::Issue(const std::string& type, int ttlSec) const
+    std::string Auth::Issue(const std::string& type, int ttlSec,
+                            const std::string& sub, const std::string& role) const
     {
         if (cfg_.ownerSecret.empty())
         {
             throw std::runtime_error("owner_secret 未配置");
         }
         boost::json::object payload;
-        payload["sub"] = "owner";
-        payload["role"] = "owner";
+        payload["sub"] = sub;
+        payload["role"] = role;
         payload["type"] = type;
         payload["iat"] = static_cast<std::int64_t>(std::time(nullptr));
         payload["exp"] = static_cast<std::int64_t>(std::time(nullptr)) + ttlSec;
@@ -135,14 +136,14 @@ namespace Gateway
         return signing + "." + sig;
     }
 
-    std::string Auth::IssueAccess() const
+    std::string Auth::IssueAccess(const std::string& sub, const std::string& role) const
     {
-        return Issue("access", cfg_.accessTtlSec);
+        return Issue("access", cfg_.accessTtlSec, sub, role);
     }
 
-    std::string Auth::IssueRefresh() const
+    std::string Auth::IssueRefresh(const std::string& sub, const std::string& role) const
     {
-        return Issue("refresh", cfg_.refreshTtlSec);
+        return Issue("refresh", cfg_.refreshTtlSec, sub, role);
     }
 
     bool Auth::Verify(const std::string& token, const std::string& type, Claims& claims) const
@@ -185,7 +186,7 @@ namespace Gateway
         {
             return false;
         }
-        if (claims.type != type || claims.sub != "owner" || claims.role != "owner")
+        if (claims.type != type || claims.sub.empty() || claims.role.empty())
         {
             return false;
         }

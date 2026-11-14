@@ -46,8 +46,9 @@ async def handle_internal_history(request):
 
 
 def _internal_uid(request):
-    """网关已鉴权时用 X-Owner-Id；本机直连才回退 query。"""
-    return (request.headers.get("X-Owner-Id")
+    """v23：网关注入 X-User-Id；兼容旧 X-Owner-Id / 本机 query。"""
+    return (request.headers.get("X-User-Id")
+            or request.headers.get("X-Owner-Id")
             or request.query.get("user_id")
             or "__owner__").strip()
 
@@ -103,6 +104,45 @@ async def handle_internal_chat(request):
         return json_response({"error": "ai_call_failed", "message": str(e)}, 500)
 
 
+async def handle_internal_auth_verify(request):
+    """POST /internal/auth/verify：网关登录用户（只返回 user_id/role）"""
+    from ..infra import repo_users
+
+    try:
+        body = await request.json()
+        uid = str(body.get("user_id") or "").strip()
+        password = str(body.get("password") or "")
+        row = repo_users.get(uid)
+        if not row or row.get("status") != "active":
+            return json_response({"ok": False, "error": "invalid_credentials"}, 401)
+        if not repo_users.verify_password(password, row.get("password_hash")):
+            return json_response({"ok": False, "error": "invalid_credentials"}, 401)
+        return json_response({"ok": True, "data": {"user_id": row["id"], "role": row["role"]}})
+    except Exception as e:
+        return json_response({"ok": False, "error": "auth_failed", "message": str(e)}, 500)
+
+
+async def handle_internal_auth_register(request):
+    """POST /internal/auth/register：邀请码注册"""
+    from ..infra import repo_users, tenant
+
+    try:
+        body = await request.json()
+        invite = str(body.get("invite") or "").strip()
+        uid = str(body.get("user_id") or "").strip()
+        password = str(body.get("password") or "")
+        nickname = str(body.get("nickname") or uid)
+        if not invite or not uid or len(password) < 8:
+            return json_response({"ok": False, "error": "invalid_input"}, 400)
+        role = repo_users.consume_invite(invite, uid)
+        if not role:
+            return json_response({"ok": False, "error": "invalid_invite"}, 403)
+        row = repo_users.create_with_password(uid, password, nickname, role)
+        return json_response({"ok": True, "data": {"user_id": row["id"], "role": row["role"]}})
+    except Exception as e:
+        return json_response({"ok": False, "error": "register_failed", "message": str(e)}, 500)
+
+
 async def handle_internal_audit(request):
     """POST /internal/audit：网关审计落库（只存元数据，不存 body/token）"""
     from ..infra.conn import get_cursor
@@ -139,11 +179,11 @@ async def handle_internal_state(request):
     tid = str(cfg.MASTER_QQ) if uid == "__owner__" else uid
     st = life_state.current(tid=None if uid == "__owner__" else uid) or {}
     try:
-        rel = life_relation.get(tid)
+        rel = life_relation.get(tid, user_id=uid)
     except Exception:
         rel = 0.0
     try:
-        shelf = life_reading.load(tid)
+        shelf = life_reading.load(tid, user_id=uid)
     except Exception:
         shelf = {"books": []}
     return json_response({
@@ -168,7 +208,7 @@ async def handle_internal_cron(request):
     uid = _internal_uid(request)
     target = str(cfg.MASTER_QQ) if uid == "__owner__" else uid
     rows = []
-    for task in cron.list_tasks(target):
+    for task in cron.list_tasks(target, user_id=uid):
         rows.append({
             "id": task.get("id"),
             "schedule_type": task.get("schedule_type"),
@@ -198,7 +238,8 @@ async def handle_internal_diary(request):
     c = get_cursor()
     c.execute(
         "SELECT diary_date, content, created_at FROM diaries "
-        "WHERE target_id=%s ORDER BY diary_date DESC LIMIT %s", (target, limit))
+        "WHERE user_id=%s AND target_id=%s ORDER BY diary_date DESC LIMIT %s",
+        (uid, target, limit))
     rows = []
     for r in c.fetchall():
         rows.append({
@@ -216,7 +257,7 @@ async def handle_internal_shelf(request):
 
     uid = _internal_uid(request)
     target = str(cfg.MASTER_QQ) if uid == "__owner__" else uid
-    return json_response({"ok": True, "data": life_reading.load(target)})
+    return json_response({"ok": True, "data": life_reading.load(target, user_id=uid)})
 
 
 @web.middleware
@@ -257,6 +298,8 @@ async def start_api_server():
     app.router.add_get("/internal/history", handle_internal_history)
     app.router.add_post("/internal/chat", handle_internal_chat)
     app.router.add_post("/internal/audit", handle_internal_audit)
+    app.router.add_post("/internal/auth/verify", handle_internal_auth_verify)
+    app.router.add_post("/internal/auth/register", handle_internal_auth_register)
     app.router.add_get("/internal/state", handle_internal_state)
     app.router.add_get("/internal/cron", handle_internal_cron)
     app.router.add_get("/internal/diary", handle_internal_diary)

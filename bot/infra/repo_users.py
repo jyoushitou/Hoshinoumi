@@ -1,4 +1,4 @@
-# ===================== 账号 / 身份 / 角色（v23.0） =====================
+﻿# ===================== 账号 / 身份 / 角色（v23.0） =====================
 # 单用户时代的主人是 __owner__；v23 引入 users/identities/roles。
 # 所有函数不依赖 MySQL 方言：用 SELECT + INSERT/UPDATE，SQLite/MySQL 都能跑。
 
@@ -81,7 +81,7 @@ def ensure_defaults(cursor=None):
 def get(user_id, cursor=None):
     c, owned = _get_cursor(cursor)
     try:
-        return _one(c, "SELECT id,nickname,role,status,created_at FROM users WHERE id=%s",
+        return _one(c, "SELECT id,nickname,password_hash,role,status,created_at FROM users WHERE id=%s",
                     (str(user_id),))
     finally:
         if owned:
@@ -206,3 +206,58 @@ def consume_invite(code, user_id, cursor=None):
     finally:
         if owned:
             _close(c)
+
+# ===================== 密码（v23.3） =====================
+def hash_password(password):
+    import hashlib
+    import secrets
+    salt = secrets.token_hex(16)
+    iterations = 120000
+    digest = hashlib.pbkdf2_hmac("sha256", str(password).encode("utf-8"),
+                                 salt.encode("ascii"), iterations).hex()
+    return f"pbkdf2${iterations}${salt}${digest}"
+
+
+def verify_password(password, stored):
+    import hashlib
+    import hmac
+    try:
+        algo, iterations, salt, expected = str(stored or "").split("$", 3)
+        if algo != "pbkdf2":
+            return False
+        digest = hashlib.pbkdf2_hmac("sha256", str(password).encode("utf-8"),
+                                     salt.encode("ascii"), int(iterations)).hex()
+        return hmac.compare_digest(digest, expected)
+    except Exception:
+        return False
+
+
+def set_password(user_id, password, cursor=None):
+    c, owned = _get_cursor(cursor)
+    try:
+        c.execute("UPDATE users SET password_hash=%s WHERE id=%s",
+                  (hash_password(password), str(user_id)))
+        c.connection.commit()
+        return c.rowcount > 0
+    finally:
+        if owned:
+            _close(c)
+
+
+def create_with_password(user_id, password, nickname="", role="user", cursor=None):
+    c, owned = _get_cursor(cursor)
+    try:
+        _insert_ignore(
+            c,
+            "INSERT IGNORE INTO users(id, nickname, password_hash, role, status) "
+            "VALUES(%s,%s,%s,%s,%s)",
+            (str(user_id), str(nickname or user_id), hash_password(password),
+             str(role), "active"))
+        c.connection.commit()
+        return get(user_id, c)
+    finally:
+        if owned:
+            _close(c)
+
+
+

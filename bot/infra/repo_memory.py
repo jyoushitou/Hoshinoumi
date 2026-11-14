@@ -261,7 +261,7 @@ def save_friction(tid, payload):
     dual_write("friction", str(tid), payload)
     _replace_kind_row(tid, "friction", payload, "friction")
 
-def load_reading(tid):
+def load_reading(tid, user_id="__owner__"):
     """读小说进度（v18.16：优先 reading_progress，一台设备多本书）"""
     import json
 
@@ -269,7 +269,8 @@ def load_reading(tid):
         c = get_cursor()
         c.execute(
             "SELECT book_url, title, intro, last_no, last_chapter FROM reading_progress "
-            "WHERE target_id=%s ORDER BY updated_at DESC", (str(tid),))
+            "WHERE user_id=%s AND target_id=%s ORDER BY updated_at DESC",
+            (str(user_id), str(tid)))
         rows = list(c.fetchall())
         if rows:
             books = []
@@ -288,13 +289,13 @@ def load_reading(tid):
     # 回退旧 events（迁移前数据）
     c = get_cursor()
     c.execute(
-        "SELECT summary FROM memories WHERE target_id=%s AND kind='reading' "
-        "ORDER BY id DESC LIMIT 1", (str(tid),))
+        "SELECT summary FROM memories WHERE user_id=%s AND target_id=%s AND kind='reading' "
+        "ORDER BY id DESC LIMIT 1", (str(user_id), str(tid)))
     row = c.fetchone()
     return (row["summary"] or "") if row else ""
 
 
-def save_reading(tid, payload):
+def save_reading(tid, payload, user_id="__owner__"):
     """覆盖写小说进度；v18.16 按书拆到 reading_progress"""
     import json
 
@@ -310,11 +311,21 @@ def save_reading(tid, payload):
                     "last_no": int(b.get("last_no") or 0),
                     "last_chapter": b.get("last_title") or b.get("last_chapter") or "",
                 }
-                dual_write("reading", str(tid), json.dumps(row, ensure_ascii=False))
+                if user_id == "__owner__":
+                    dual_write("reading", str(tid), json.dumps(row, ensure_ascii=False))
+                else:
+                    dual_write("reading", str(tid), json.dumps(row, ensure_ascii=False),
+                               user_id=user_id)
         else:
-            dual_write("reading", str(tid), payload)
+            if user_id == "__owner__":
+                dual_write("reading", str(tid), payload)
+            else:
+                dual_write("reading", str(tid), payload, user_id=user_id)
     except Exception:
-        dual_write("reading", str(tid), payload)
+        if user_id == "__owner__":
+            dual_write("reading", str(tid), payload)
+        else:
+            dual_write("reading", str(tid), payload, user_id=user_id)
 
 def load_habit(tid):
     """读某人的口头禅计数（v12-A17）"""
@@ -355,7 +366,7 @@ def save_habit(tid, payload):
     _replace_kind_row(tid, "habit", payload, "habit")
 
 
-def load_relation(tid):
+def load_relation(tid, user_id="__owner__"):
     """读某人的亲密度（v10-U8）
 
     v17.4：先读新表 relations；没有就回退 events 的 rel JSON。
@@ -364,14 +375,16 @@ def load_relation(tid):
     tid = str(tid)
     c = get_cursor()
     c.execute(
-        "SELECT summary FROM memories WHERE target_id=%s AND kind='rel' ORDER BY id DESC LIMIT 1",
-        (tid,),
+        "SELECT summary FROM memories WHERE user_id=%s AND target_id=%s "
+        "AND kind='rel' ORDER BY id DESC LIMIT 1",
+        (str(user_id), tid),
     )
     row = c.fetchone()
     legacy = (row.get("summary") or row.get("event_summary") or "") if row else ""
 
     try:
-        c.execute("SELECT affinity, since, tier FROM relations WHERE target_id=%s", (tid,))
+        c.execute("SELECT affinity, since, tier FROM relations "
+                  "WHERE user_id=%s AND target_id=%s", (str(user_id), tid))
         rel = c.fetchone()
     except Exception:
         rel = None
@@ -401,10 +414,13 @@ def load_relation(tid):
         return legacy
 
 
-def save_relation(tid, payload):
+def save_relation(tid, payload, user_id="__owner__"):
     """覆盖写亲密度（一人一行）"""
-    dual_write("rel", str(tid), payload)
-    _replace_kind_row(tid, "rel", payload, "relation")
+    if user_id == "__owner__":
+        dual_write("rel", str(tid), payload)
+    else:
+        dual_write("rel", str(tid), payload, user_id=user_id)
+    _replace_kind_row(tid, "rel", payload, "relation", user_id=user_id)
 
 def load_today_life():
     """取今天的生活事件（v10-U9b 分享生活用）"""
@@ -543,7 +559,7 @@ def dual_write_stats():
     return {"fail": _dual_fail}
 
 
-def dual_write(kind, tid, payload):
+def dual_write(kind, tid, payload, user_id="__owner__"):
     """把 JSON payload 拆到新表；失败静默"""
     conf = _JSON_TABLES.get(kind)
     if not conf:
@@ -555,13 +571,13 @@ def dual_write(kind, tid, payload):
         data = json.loads(payload) if payload else {}
         if not isinstance(data, dict):
             return False
-        row = {"target_id": str(tid)}
+        row = {"user_id": str(user_id), "target_id": str(tid)}
         row.update({k: v for k, v in data.items() if k in fields})
-        if len(row) <= 1:
+        if len(row) <= 2:
             return False
         cols = list(row)
         ph = ",".join(["%s"] * len(cols))
-        updates = ",".join(f"{k}=VALUES({k})" for k in cols if k != "target_id")
+        updates = ",".join(f"{k}=VALUES({k})" for k in cols if k not in ("target_id", "user_id"))
         sql = f"INSERT INTO {table}({','.join(cols)}) VALUES({ph})"
         if updates:
             sql += f" ON DUPLICATE KEY UPDATE {updates}"
@@ -577,3 +593,4 @@ def dual_write(kind, tid, payload):
             _dual_last_log = now
             log_api(f"[双写] 失败累计 {_dual_fail} 次；最近：{kind} → {table}：{e}")
         return False
+

@@ -36,13 +36,13 @@ def _today():
     return datetime.now(CST).strftime("%Y-%m-%d")
 
 
-def get(tid):
+def get(tid, user_id="__owner__"):
     """读亲密度；没有就按身份给初始值"""
     from ..infra.repo_memory import load_relation
     from ..config import MASTER_QQ
     default = MASTER_START if str(tid) == str(MASTER_QQ) else DEFAULT_START
     try:
-        raw = load_relation(str(tid))
+        raw = load_relation(str(tid), user_id=user_id)
         if not raw:
             return default
         data = json.loads(raw)

@@ -49,6 +49,7 @@ namespace Gateway
         }
         if (!owner.empty())
         {
+            req.headers.emplace_back("X-User-Id", owner);
             req.headers.emplace_back("X-Owner-Id", owner);
         }
 

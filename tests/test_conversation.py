@@ -1,4 +1,4 @@
-# ===================== v19.1 对话消息仓储 =====================
+﻿# ===================== v19.1 对话消息仓储 =====================
 import unittest
 
 from bot.infra import repo_conversation as R
@@ -47,8 +47,8 @@ class TestConversationRepo(unittest.TestCase):
         sql, params = c.statements[0]
         self.assertIn("INSERT OR IGNORE", sql)
         self.assertEqual(params[0], "__owner__")
-        self.assertEqual(params[5], "你好")
-        self.assertIn('"images"', params[7])
+        self.assertEqual(params[6], "你好")
+        self.assertIn('"images"', params[8])
 
     def test_recent_reverses_to_time_order(self):
         c = _Cursor(rows=[{"id": 3}, {"id": 2}, {"id": 1}])
@@ -88,3 +88,4 @@ class TestRecentDefault(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

@@ -41,6 +41,19 @@ class TestUsersBase(unittest.TestCase):
         self.assertTrue(self.R.set_role("u_a", "admin"))
         self.assertEqual(self.R.get("u_a")["role"], "admin")
 
+    def test_password_hash_and_verify(self):
+        self.R.create_with_password("u_p", "s3cret-pass", "P")
+        row = self.R.get("u_p")
+        self.assertNotIn("s3cret-pass", str(row))
+        self.assertTrue(self.R.verify_password("s3cret-pass", row["password_hash"]))
+        self.assertFalse(self.R.verify_password("wrong", row["password_hash"]))
+
+    def test_invite_consume_once(self):
+        self.R.create("u_i")
+        self.R.create_invite("inv-1", role="user")
+        self.assertEqual(self.R.consume_invite("inv-1", "u_i"), "user")
+        self.assertIsNone(self.R.consume_invite("inv-1", "u_i"))
+
     def test_identity_unique(self):
         self.R.create("u_a")
         self.R.create("u_b")
