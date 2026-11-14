@@ -322,6 +322,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | v54 | 嵌入式前端（Linux 后端）：树莓派/平板显示对话 | 📋 已规划 | [v54.md](docs/versions/v54.md) |
 
 > **插件接口原则**：v24–v32 暴露的是各架构层的接口，不是把现有功能插件化。
+> **接口层不实现任何功能**：v24–v32 只定义契约和注册表，不提供任何实现；真实 provider / channel / tool / storage 由核心或第三方开发者实现。欢迎按契约提交实现。
 > DeepSeek/豆包、BM25、QQ/NapCat、现有工具/命令、MySQL/SQLite、asyncio 调度、
 > WebSocket 出站都保持核心 native；外部插件只能 extend / enhance / 显式 replace 路由，
 > 禁用/卸载/失败时回退核心。
