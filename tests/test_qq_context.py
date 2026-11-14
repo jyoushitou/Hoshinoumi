@@ -40,6 +40,7 @@ class TestQqContext(unittest.TestCase):
         except Exception:
             pass
         from bot.infra import conn
+        self.tenant.clear_user()
         conn.configure(backend=None, sqlite_path=None, mysql_config=None)
         shutil.rmtree(self.tmp, ignore_errors=True)
 

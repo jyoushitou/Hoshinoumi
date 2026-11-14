@@ -68,5 +68,9 @@ def reset_user(token):
         pass
 
 
+def clear_user():
+    _current.set(None)
+
+
 def resolve(user_id):
     return str(user_id).strip() if user_id and str(user_id).strip() else current_user_id()
