@@ -36,3 +36,4 @@ data/env_report.json
 data/nao.db
 docs/video/
 .tmp_deco/
+obs_hdr_dark_compare.png
