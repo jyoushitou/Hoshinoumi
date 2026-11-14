@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 # ===================== 程序打包 =====================
 # 产出「能直接跑的 Python 程序包」，跟 .bundle（git 运输用）是两回事。
 #
@@ -25,7 +25,7 @@ from artifact_names import full as full_name, src as src_name  # noqa: E402
 
 # 不进包的东西
 EXCLUDE_DIRS = {
-    ".git", ".venv", "venv", ".vendor", "vendor", ".tmp", "dist", "data",
+    ".git", ".venv", "venv", ".vendor", "vendor", ".tmp", ".tmp_deco", "dist", "data",
     "release", "logs", "build",
     "__pycache__", ".pytest_cache", ".mypy_cache", ".idea", ".vscode",
     ".playwright-browsers", "node_modules",
@@ -235,4 +235,5 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
+
 
