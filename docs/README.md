@@ -1,7 +1,7 @@
 # Hoshinoumi（REC）· 文档索引
 
-> **当前事实：后端 v20.5，网关 v20.5（Docker / 网关验证）**（2026-11-13）
-> 已部署试运行；v19 与 v20.0–v20.4 已完成。
+> **当前事实：后端 v23.0，网关 v23.0（多用户 / user_id 隔离）**（2026-11-14）
+> v23 试运行；v22 及以前已完成。
 >
 > 这里只放“现在有效”的文档；开发计划单独维护，历史文档明确标注。
 > 如果文档与代码冲突，以代码和测试为准，并回来改文档。
@@ -124,7 +124,7 @@ v6：P1 会说话 → P2 说实话 → P2.5 长感官 → P3 有生活 → P4 �
 | **v20** | [versions/v20.md](versions/v20.md) | 网关（一）核心：C++/Drogon + REST↔gRPC 代理 | 规划中 |
 | **v21** | [versions/v21.md](versions/v21.md) | 网关（二）owner 鉴权：JWT/刷新/失败锁定 | 规划中 |
 | **v22** | [versions/v22.md](versions/v22.md) | 网关（三）安全：限流/审计/TLS/`!gw` | 规划中 |
-| **v23** | [versions/v23.md](versions/v23.md) | 多用户 + 亲密度可骤降/负值/修复，归零降私聊回复 | 规划中 |
+| **v23** | [versions/v23.md](versions/v23.md) | 多用户 + 亲密度负值/修复，归零降私聊回复 | 🚧 试运行 |
 | **v24** | [versions/v24.md](versions/v24.md) | 插件接口实现 | 规划中 |
 | **v25** | [versions/v25.md](versions/v25.md) | 模型层接口实现 | 规划中 |
 | **v26** | [versions/v26.md](versions/v26.md) | 记忆层接口实现 | 规划中 |

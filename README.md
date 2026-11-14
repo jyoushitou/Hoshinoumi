@@ -1,4 +1,4 @@
-# Hoshinoumi（REC） v22
+﻿# Hoshinoumi（REC） v23
 
 > 后端 **v21** · 网关 **v21**（owner 鉴权 / JWT / 架构收口）
 > v19 与 v20.0–v20.4 已完成，当前在做 Docker 与网关验证。
@@ -12,10 +12,10 @@
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-5C2D91)](#)
 [![NapCat](https://img.shields.io/badge/NapCat-QQ-12B7F5)](#)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
-![Backend](https://img.shields.io/badge/Backend-v22-yellow)
-![Gateway](https://img.shields.io/badge/Gateway-v22-blue)
-![Version](https://img.shields.io/badge/Version-v22-orange)
-![Tests](https://img.shields.io/badge/Tests-993%20passing-brightgreen)
+![Backend](https://img.shields.io/badge/Backend-v23-yellow)
+![Gateway](https://img.shields.io/badge/Gateway-v23-blue)
+![Version](https://img.shields.io/badge/Version-v23-orange)
+![Tests](https://img.shields.io/badge/Tests-1010%20passing-brightgreen)
 
 > **Hoshinoumi（REC，记录）** · 友利奈绪 · 星之海学园学生会室
 >
@@ -259,7 +259,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 
 ## 开发计划
 
-**当前：v22 试运行（限流 / 审计 / TLS 终止 / !gw）**｜下一站 v23 多用户。
+**当前：v23 试运行（多用户 / 邀请码 / user_id 隔离 / 亲密度负值）**｜下一站 v24 插件接口。
 
 > v22 试运行 1 天后，进入约 1 天的 v23 启动 + v22 介绍视频，再开始 v23 子版本开发。
 
@@ -287,8 +287,8 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | v19 | 架构重构 + 对话同步底座：迁移单一入口、`conversation_messages`、`!history`、语音分段 | ✅ 已完成（v19.5.7） | [v19.md](docs/versions/v19.md) |
 | v20 | 网关（一）核心：C++/CommonNet + REST↔后端 HTTP + Docker + 配置向导 | ✅ 已完成（v20.6） | [v20.md](docs/versions/v20.md) |
 | v21 | 网关（二）owner 鉴权：JWT/刷新/失败锁定 + 架构收口 | ✅ 已完成 | [v21.md](docs/versions/v21.md) |
-| v22 | 网关（三）安全：限流/审计/TLS/`!gw` | 🚧 v22 试运行 | [v22.md](docs/versions/v22.md) |
-| v23 | 多用户 + 亲密度可骤降/负值/修复，归零降私聊回复：users/roles + user_id 隔离 | 📋 已规划 | [v23.md](docs/versions/v23.md) |
+| v22 | 网关（三）安全：限流/审计/TLS/`!gw` | ✅ 已完成 | [v22.md](docs/versions/v22.md) |
+| v23 | 多用户 + 亲密度可骤降/负值/修复，归零降私聊回复：users/roles + user_id 隔离 | 🚧 v23 试运行 | [v23.md](docs/versions/v23.md) |
 | v24 | 插件接口实现 | 📋 已规划 | [v24.md](docs/versions/v24.md) |
 | v25 | 模型层接口实现 | 📋 已规划 | [v25.md](docs/versions/v25.md) |
 | v26 | 记忆层接口实现 | 📋 已规划 | [v26.md](docs/versions/v26.md) |
@@ -1913,6 +1913,7 @@ python3 scripts/check_names.py        # 未定义名字
 所以有了 Hoshinoumi。算是给“故事结束之后”补的一间学生会室：让她继续上学、开会、喂猫、弹琴，也让她在 QQ、Web、桌面和手机那边，记得你随口说过的话。
 
 > 故事结束以后，她还在。
+
 
 
 
