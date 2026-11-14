@@ -13,7 +13,8 @@
 | 1 | [../README.md](../README.md) | 项目是什么、怎么跑、命令、限制 |
 | 2 | [ARCHITECTURE.md](ARCHITECTURE.md) | 分层、一条消息的生命周期 |
 | 3 | [DB-DESIGN.md](DB-DESIGN.md) | 表职责、字段规范 |
-| 4 | [发布检查清单.md](发布检查清单.md) | 改完/发版前逐项过 |
+| 4 | [DEVELOPMENT-CADENCE.md](DEVELOPMENT-CADENCE.md) | 每个版本的试运行/下版本启动/介绍视频节奏 |
+| [发布检查清单.md](发布检查清单.md) | 改完/发版前逐项过 |
 | 5 | [存储后端与备份.md](存储后端与备份.md) | 换库/备份/恢复 |
 
 ## 当前有效文档
