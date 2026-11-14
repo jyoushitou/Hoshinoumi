@@ -1,4 +1,4 @@
-﻿# Hoshinoumi（REC） v21
+# Hoshinoumi（REC） v21
 
 > 后端 **v21** · 网关 **v21**（owner 鉴权 / JWT / 架构收口）
 > v19 与 v20.0–v20.4 已完成，当前在做 Docker 与网关验证。
@@ -57,7 +57,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 |---|---|
 | 不是通用客服/问答机器人 | 它没有“知识库问答”目标，回答首先服从人设和关系 |
 | 不是多租户 SaaS | 当前单主人 `__owner__`；多用户是 v23 计划 |
-| 不是公网即开即用 | 网关当前没有 JWT/限流/TLS；只适合本机/内网验证 |
+| 不是公网即开即用 | v21 网关有 JWT，但还没有 TLS/限流/审计；只适合本机/内网验证 |
 | 不是“装完就懂你” | 记忆需要聊出来；人设需要调；它不会读心 |
 | 不是无依赖一键包 | 读书要 Playwright/tesseract；语音要 edge-tts；模型要 API Key |
 | 不是角色扮演框架 | 它只服务一个角色卡体系；换人是换 `personas/`，不是做平台 |
@@ -143,7 +143,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 
 7. **可观测、可降级、可回滚**：模型失败有兜底；OCR/语音缺依赖降级；迁移默认 dry-run；备份/回滚有文档。
 
-8. **本地优先，公网最小暴露**：后端只监听本机；公网走独立网关；密钥不进 git；网关鉴权还没做，所以不吹“安全公网”。
+8. **本地优先，公网最小暴露**：后端只监听本机；公网走独立网关；密钥不进 git；v21 网关已有 owner/JWT，但 TLS/限流还没做，所以不吹“安全公网”。
 
 ### 一次典型的一天
 
@@ -617,28 +617,48 @@ python3 run.py
 
 ---
 
-## 网关（v20，可选）
+## 网关（v21，可选）
 
-v20 网关负责公网/多端入口，后端仍只监听 `127.0.0.1`。v20 还没有登录/JWT/限流，只适合本机或内网验证。
+网关负责 **API / 多端入口**，后端仍只监听 `127.0.0.1`。
+
+先看清两套入口是并行的：
+
+```text
+入口 A：QQ
+NapCat --WebSocket 3001--> Python bot 核心
+
+入口 B：API
+客户端/Web/IDE --HTTP+JWT--> gateway 27005 --HTTP 27004--> Python bot 核心
+```
+
+- NapCat 只负责 QQ，**不经过网关**
+- 网关只负责 API 客户端，**不代理 QQ**
+- 两条入口最后都进入同一个 bot 核心（记忆/状态/调度）
+
+v21 网关有 owner 登录/JWT/refresh，但还没有 TLS/限流/审计，只适合本机或内网验证。
 
 ```bash
 # 1. 配置后端地址 / 网关端口
 python3 scripts/configure.py
 
 # 2. 构建（开发机）
-python3 scripts/build_gateway.py --version 20.0.0
+.\scripts\package_gateway_docker.ps1 -Version 21.0.0
 # 或直接 Docker 构建
-docker build -f gateway/Dockerfile -t hoshinoumi-gateway:20.0.0 .
+docker build -f gateway/Dockerfile.offline -t hoshinoumi-gateway:21.0.0 .
 
 # 3. 导出到部署机
-# release/REC-v20.5.0-gateway-docker.tar.gz
-docker load -i REC-v20.5.0-gateway-docker.tar.gz
+# release/REC-v21.0.0-gateway-docker.tar.gz
+docker load -i REC-v21.0.0-gateway-docker.tar.gz
 
 # 4. 运行（必须 host 网络，后端只允许 127.0.0.1）
+# gateway.env 里写：NAO_GATEWAY_OWNER_SECRET=你的强密码
 docker run -d --name hoshinoumi-gateway \
   --network host \
+  --restart unless-stopped \
+  --env-file "$PWD/gateway.env" \
   -v "$PWD/config:/app/config:ro" \
-  hoshinoumi-gateway:20.0.0
+  -v "$PWD/logs-gateway:/logs" \
+  hoshinoumi-gateway:21.0.0
 
 # 5. 健康检查
 curl -s http://127.0.0.1:27005/healthz
@@ -1724,7 +1744,7 @@ unit 里要改 `User`、`WorkingDirectory`、`ExecStart`；默认路径是 `/hom
 
 ```bash
 docker load -i REC-v20.5.0-docker.tar.gz
-docker load -i REC-v20.5.0-gateway-docker.tar.gz
+docker load -i REC-v21.0.0-gateway-docker.tar.gz
 cp .env.example .env && vi .env
 docker compose -f docker-compose.release.yml up -d
 docker compose -f docker-compose.release.yml logs -f
@@ -1873,6 +1893,7 @@ python3 scripts/check_names.py        # 未定义名字
 所以有了 Hoshinoumi。算是给“故事结束之后”补的一间学生会室：让她继续上学、开会、喂猫、弹琴，也让她在 QQ、Web、桌面和手机那边，记得你随口说过的话。
 
 > 故事结束以后，她还在。
+
 
 
 
