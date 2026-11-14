@@ -62,6 +62,8 @@ def iter_files(include_deps=False):
         if parts and parts[0] in EXCLUDE_DIRS:
             dirs[:] = []
             continue
+        if not rel_base:
+            dirs[:] = [d for d in dirs if not d.startswith("tmp")]
         dirs[:] = [d for d in dirs if d not in EXCLUDE_DIRS]
 
         for name in files:
