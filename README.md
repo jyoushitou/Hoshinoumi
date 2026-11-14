@@ -1,4 +1,4 @@
-﻿# Hoshinoumi（REC） v21
+﻿# Hoshinoumi（REC） v22
 
 > 后端 **v21** · 网关 **v21**（owner 鉴权 / JWT / 架构收口）
 > v19 与 v20.0–v20.4 已完成，当前在做 Docker 与网关验证。
@@ -12,9 +12,9 @@
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-5C2D91)](#)
 [![NapCat](https://img.shields.io/badge/NapCat-QQ-12B7F5)](#)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
-![Backend](https://img.shields.io/badge/Backend-v21-yellow)
-![Gateway](https://img.shields.io/badge/Gateway-v21-blue)
-![Version](https://img.shields.io/badge/Version-v21-orange)
+![Backend](https://img.shields.io/badge/Backend-v22-yellow)
+![Gateway](https://img.shields.io/badge/Gateway-v22-blue)
+![Version](https://img.shields.io/badge/Version-v22-orange)
 ![Tests](https://img.shields.io/badge/Tests-993%20passing-brightgreen)
 
 > **Hoshinoumi（REC，记录）** · 友利奈绪 · 星之海学园学生会室
@@ -1895,6 +1895,7 @@ python3 scripts/check_names.py        # 未定义名字
 所以有了 Hoshinoumi。算是给“故事结束之后”补的一间学生会室：让她继续上学、开会、喂猫、弹琴，也让她在 QQ、Web、桌面和手机那边，记得你随口说过的话。
 
 > 故事结束以后，她还在。
+
 
 
 
