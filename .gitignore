@@ -35,3 +35,4 @@ data/nao.db-wal
 data/env_report.json
 data/nao.db
 docs/video/
+.tmp_deco/
