@@ -31,7 +31,9 @@ async def cmd_gw(ctx):
     except Exception:
         limited = clients = -1
 
-    lines = [f"🌐 网关观测｜近5分钟客户端 {clients}｜429 {limited}"]
+    lines = [f"🌐 网关观测｜近5分钟客户端 {clients}｜429 {limited}｜最近 {len(rows)} 条"]
+    if limited == 0 and clients == 0:
+        lines.append("（近5分钟无请求，以下为最近记录）")
     for r in reversed(rows):
         owner = r.get("owner") or "-"
         lines.append(

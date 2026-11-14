@@ -1,4 +1,4 @@
-﻿/// @file        router.cpp
+/// @file        router.cpp
 /// @brief       网关路由实现
 /// @author      jyoushitou
 /// @date        2026-11-13
@@ -470,9 +470,10 @@ namespace Gateway
         const std::string requestId = NextRequestId();
         const std::string body = url.body;
         const std::string ip = url.requestIP.empty() ? "0.0.0.0" : url.requestIP;
+        const std::string clientPath = url.target;
         const auto started = std::chrono::steady_clock::now();
         BackendClient backend = backend_;
-        std::thread([session, seq, backend, path, method, body, owner, requestId, ip, started]()
+        std::thread([session, seq, backend, path, method, body, owner, requestId, ip, started, clientPath]()
                     {
                         const auto result = backend.Request(method, path, body, owner);
                         boost::json::object out;
@@ -481,7 +482,7 @@ namespace Gateway
                         {
                             boost::json::object entry;
                             entry["owner"] = owner;
-                            entry["path"] = path;
+                            entry["path"] = clientPath;
                             entry["status"] = code;
                             entry["cost_ms"] = std::chrono::duration_cast<std::chrono::milliseconds>(
                                 std::chrono::steady_clock::now() - started).count();
