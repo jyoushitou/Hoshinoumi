@@ -1,4 +1,4 @@
-# 测试文件
+﻿# 测试文件
 __pycache__/
 
 .cph
@@ -34,3 +34,4 @@ data/nao.db-shm
 data/nao.db-wal
 data/env_report.json
 data/nao.db
+docs/video/
