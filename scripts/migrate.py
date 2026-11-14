@@ -60,25 +60,29 @@ def main():
             return _preview(c)
 
         from bot.infra import schema
-        from scripts import migrate_indexes, migrate_v18, migrate_v23, setup
+        from scripts import migrate_indexes, migrate_v18, migrate_v23, migrate_v24, setup
 
-        print("  [1/7] 建缺表")
+        print("  [1/8] 建缺表")
         made = schema.ensure_tables(c, log=lambda m: print("        " + m))
         print(f"        新建 {len(made)} 张")
 
-        print("  [2/7] 业务表 user_id / 索引 / 回填")
+        print("  [2/8] 业务表 user_id / 索引 / 回填")
         made_u = migrate_v23.apply(c)
         print(f"        新增 user_id 列 {len(made_u)} 张")
 
-        print("  [3/7] 账号底座（users/identities/roles）")
+        print("  [3/8] owner user_id → MASTER_QQ")
+        migrated = migrate_v24.apply(c)
+        print(f"        {migrated['old']} -> {migrated['new']}（{migrated['changed']} 行）")
+
+        print("  [4/8] 账号底座（users/identities/roles）")
         from bot.infra import repo_users
         repo_users.ensure_defaults(c)
         print("        owner / roles 已就绪")
 
-        print("  [4/7] 定时表补列 / 场景规则")
+        print("  [5/8] 定时表补列 / 场景规则")
         setup.ensure_cron_schema()
 
-        print("  [5/7] v18.17 events → memories")
+        print("  [6/8] v18.17 events → memories")
         rc = migrate_v18.upgrade(c)
         if rc:
             print("[X] 迁移中断，先别启动")
@@ -92,18 +96,18 @@ def main():
         except Exception as e:
             print(f"        events 视图清理跳过：{e}")
 
-        print("  [6/7] 索引")
+        print("  [7/8] 索引")
         try:
             migrate_indexes.apply(c)
         except Exception as e:
             print(f"  [!] 索引补齐失败（不影响启动，可跳过后重试）：{e}")
 
-        print("  [7/7] 内置场景")
+        print("  [8/8] 内置场景")
         setup.seed_scenes()
 
         from bot.infra import repo_meta
-        repo_meta.set_value("schema_version", "24")
-        print("        schema_version=24")
+        repo_meta.set_value("schema_version", "25")
+        print("        schema_version=25")
         print("\n[OK] 迁移完成，下一步：python3 checks/env_check.py")
         return 0
     finally:

@@ -5,6 +5,16 @@ OWNER_ID = "__owner__"
 SYSTEM_ID = "__system__"
 
 
+def owner_id():
+    """v23.5：owner user_id 直接是 MASTER_QQ；未配置时退回旧 __owner__。"""
+    try:
+        from ..config import MASTER_QQ
+        q = int(MASTER_QQ or 0)
+        return str(q) if q > 0 else OWNER_ID
+    except Exception:
+        return OWNER_ID
+
+
 class TenantError(ValueError):
     """缺少 user_id 或跨租户访问"""
 
@@ -17,20 +27,21 @@ def require(user_id):
 
 
 def owner():
-    return OWNER_ID
+    return owner_id()
 
 
 def is_owner(user_id):
-    return str(user_id or "") == OWNER_ID
+    uid = str(user_id or "")
+    return uid in (OWNER_ID, owner_id())
 
 
 def require_owner(user_id):
     uid = require(user_id)
-    if uid != OWNER_ID:
+    if not is_owner(uid):
         raise TenantError("需要 owner 权限")
     return uid
 
 
 def scoped(user_id):
     """把可能为空的旧调用规范成 owner；仅供旧代码迁移期使用。"""
-    return str(user_id).strip() if user_id and str(user_id).strip() else OWNER_ID
+    return str(user_id).strip() if user_id and str(user_id).strip() else owner_id()

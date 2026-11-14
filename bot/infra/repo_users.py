@@ -47,7 +47,9 @@ def _insert_ignore(c, sql, params):
 def ensure_defaults(cursor=None):
     """幂等：roles + owner 用户 + owner 的 QQ 身份"""
     from ..config import MASTER_QQ
+    from . import tenant
 
+    owner = tenant.owner_id()
     c, owned = _get_cursor(cursor)
     try:
         for name, (display, perms) in ROLES.items():
@@ -58,12 +60,12 @@ def ensure_defaults(cursor=None):
         _insert_ignore(
             c,
             "INSERT IGNORE INTO users(id, nickname, role, status) VALUES(%s,%s,%s,%s)",
-            (OWNER_ID, "owner", "owner", "active"))
+            (owner, "owner", "owner", "active"))
         if int(MASTER_QQ or 0) > 0:
             _insert_ignore(
                 c,
                 "INSERT IGNORE INTO identities(user_id, channel, external_id) VALUES(%s,%s,%s)",
-                (OWNER_ID, "qq", str(MASTER_QQ)))
+                (owner, "qq", str(MASTER_QQ)))
         c.connection.commit()
         return True
     except Exception as e:
