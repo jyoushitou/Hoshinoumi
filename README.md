@@ -291,8 +291,8 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | v37 | 电脑 Web：聊天 + 历史 + 功能面板 | 📋 已规划 | [v37.md](docs/versions/v37.md) |
 | v38 | 桌面端（一）Linux：Tauri + Web UI | 📋 已规划 | [v38.md](docs/versions/v38.md) |
 | v39 | 桌面端（二）Windows：Tauri + WebView2 | 📋 已规划 | [v39.md](docs/versions/v39.md) |
-| v40 | 手机 App（Flutter）+ 推送通知 | 📋 已规划 | [v40.md](docs/versions/v40.md) |
-| v41 | 手机 App 独立模式：后端不可达直连 DeepSeek，恢复立即同步 | 📋 已规划 | [v41.md](docs/versions/v41.md) |
+| v40 | 手机 App（Flutter）+ 推送通知 + 记账 | 📋 已规划 | [v40.md](docs/versions/v40.md) |
+| v41 | 手机 App 独立模式：离线对话/记账，恢复立即同步 | 📋 已规划 | [v41.md](docs/versions/v41.md) |
 | v42 | QQ 空间：发说说 + 只对熟人点赞/评论 | 📋 已规划 | [v42.md](docs/versions/v42.md) |
 | v43 | 运维（一）bash 只读 | 📋 已规划 | [v43.md](docs/versions/v43.md) |
 | v44 | 运维（二）agent | 📋 已规划 | [v44.md](docs/versions/v44.md) |
