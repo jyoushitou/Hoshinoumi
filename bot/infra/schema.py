@@ -27,6 +27,47 @@ CURRENT = {
             KEY idx_time (created_at)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """,
+    "users": """
+        CREATE TABLE IF NOT EXISTS users (
+            id VARCHAR(64) PRIMARY KEY,
+            nickname VARCHAR(64) NOT NULL DEFAULT '',
+            role VARCHAR(16) NOT NULL DEFAULT 'user',
+            status VARCHAR(16) NOT NULL DEFAULT 'active',
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            KEY idx_users_role (role),
+            KEY idx_users_status (status)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
+    "identities": """
+        CREATE TABLE IF NOT EXISTS identities (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            user_id VARCHAR(64) NOT NULL,
+            channel VARCHAR(16) NOT NULL,
+            external_id VARCHAR(128) NOT NULL,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY uk_identity (channel, external_id),
+            KEY idx_identity_user (user_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
+    "roles": """
+        CREATE TABLE IF NOT EXISTS roles (
+            name VARCHAR(16) PRIMARY KEY,
+            display_name VARCHAR(32) NOT NULL DEFAULT '',
+            permissions TEXT,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
+    "invites": """
+        CREATE TABLE IF NOT EXISTS invites (
+            code VARCHAR(64) PRIMARY KEY,
+            role VARCHAR(16) NOT NULL DEFAULT 'user',
+            created_by VARCHAR(64) NOT NULL DEFAULT '__owner__',
+            used_by VARCHAR(64) NULL,
+            expires_at DATETIME NULL,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            KEY idx_invite_used (used_by)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
     "gateway_log": """
         CREATE TABLE IF NOT EXISTS gateway_log (
             id BIGINT AUTO_INCREMENT PRIMARY KEY,

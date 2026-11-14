@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """统一迁移入口（推荐部署第一步）
 
     python3 scripts/migrate.py            # 预览：还缺什么/有多少旧数据
@@ -62,14 +62,19 @@ def main():
         from bot.infra import schema
         from scripts import migrate_indexes, migrate_v18, setup
 
-        print("  [1/5] 建缺表")
+        print("  [1/6] 建缺表")
         made = schema.ensure_tables(c, log=lambda m: print("        " + m))
         print(f"        新建 {len(made)} 张")
 
-        print("  [2/5] 定时表补列 / 场景规则")
+        print("  [2/6] 账号底座（users/identities/roles）")
+        from bot.infra import repo_users
+        repo_users.ensure_defaults(c)
+        print("        owner / roles 已就绪")
+
+        print("  [3/6] 定时表补列 / 场景规则")
         setup.ensure_cron_schema()
 
-        print("  [3/5] v18.17 events → memories")
+        print("  [4/6] v18.17 events → memories")
         rc = migrate_v18.upgrade(c)
         if rc:
             print("[X] 迁移中断，先别启动")
@@ -83,18 +88,18 @@ def main():
         except Exception as e:
             print(f"        events 视图清理跳过：{e}")
 
-        print("  [4/5] 索引")
+        print("  [5/6] 索引")
         try:
             migrate_indexes.apply(c)
         except Exception as e:
             print(f"  [!] 索引补齐失败（不影响启动，可跳过后重试）：{e}")
 
-        print("  [5/5] 内置场景")
+        print("  [6/6] 内置场景")
         setup.seed_scenes()
 
         from bot.infra import repo_meta
-        repo_meta.set_value("schema_version", "20")
-        print("        schema_version=20")
+        repo_meta.set_value("schema_version", "21")
+        print("        schema_version=21")
         print("\n[OK] 迁移完成，下一步：python3 checks/env_check.py")
         return 0
     finally:
@@ -106,3 +111,4 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
+
