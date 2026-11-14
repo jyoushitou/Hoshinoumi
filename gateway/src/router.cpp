@@ -515,9 +515,16 @@ namespace Gateway
                         {
                             out["ok"] = false;
                             out["error"] = result.error;
-                            status = (result.status >= 400 && result.status < 600)
-                                         ? static_cast<boost::beast::http::status>(result.status)
-                                         : boost::beast::http::status::bad_gateway;
+                            if (result.status == 0)
+                            {
+                                status = boost::beast::http::status::service_unavailable;
+                            }
+                            else
+                            {
+                                status = (result.status >= 400 && result.status < 600)
+                                             ? static_cast<boost::beast::http::status>(result.status)
+                                             : boost::beast::http::status::bad_gateway;
+                            }
                         }
                         audit(static_cast<int>(status));
                         session->httpAsyncReplay(seq, boost::json::serialize(out), status,
