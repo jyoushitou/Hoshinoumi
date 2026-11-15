@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package nao.v1;
+
+// v26 内部帧的 protobuf body。
+// 帧：8 字节头 + 4 字节长度 + 本消息。
+// payload 统一用 JsonPayload.json，便于现有业务层平滑迁移；
+// 后续可替换成结构化 ChatRequest/HistoryRequest。
+
+message JsonPayload {
+  string json = 1;
+}
+
+message InternalRequest {
+  string request_id = 1;
+  string method = 2;      // /internal/chat 等
+  string user_id = 3;
+  string role = 4;
+  bytes payload = 5;      // JsonPayload 序列化后的字节
+}
+
+message InternalResponse {
+  string request_id = 1;
+  int32 status = 2;
+  string error = 3;
+  bytes payload = 4;      // JsonPayload 序列化后的字节
+}
