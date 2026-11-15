@@ -193,13 +193,16 @@ def chapter_start_offset(name, chapter_no=1):
     return starts[idx]
 
 
-def read_chunk(name, offset=0, limit=CHUNK_CHARS):
+def read_chunk(name, offset=0, limit=None):
     """v24.8.4：按全书连续字符读，每次 1000 字，不再按章节切块。
 
     offset 是全书正文的全局字符位置；跨章节时直接拼下一章，
     返回起始章节/结束章节用于展示。
     """
     import bisect
+    if limit is None:
+        from ..core import appconfig
+        limit = appconfig.get("reading.chunk_chars")
     title, chapters = load_book(name)
     if not chapters:
         raise ValueError("没有可读章节")

@@ -6,7 +6,8 @@ import time as _time
 from collections import deque
 from datetime import datetime, timedelta
 
-from ..config import MAX_USER_ROUND, MAX_GLOBAL_KEY, CST
+from ..config import MAX_GLOBAL_KEY, CST
+from ..core import appconfig
 from ..log import log_api, log_err
 from .conn import get_cursor
 from .dedupe import dedupe_key
@@ -35,7 +36,7 @@ def load_user_memories_from_db():
     for r in c.fetchall():
         tid = r["target_id"]
         if tid not in pool:
-            pool[tid] = deque(maxlen=MAX_USER_ROUND)  # 每个用户最多保留MAX_USER_ROUND轮对话
+            pool[tid] = deque(maxlen=appconfig.get("memory.max_user_round"))
         pool[tid].append([r["user_msg"], r["bot_msg"]])
     return pool
 
@@ -45,7 +46,7 @@ def add_user_memory_to_db(tid, user_msg, bot_msg):
     c = get_cursor()
     c.execute("INSERT INTO user_memory(target_id,user_msg,bot_msg)VALUES(%s,%s,%s)", (tid, user_msg, bot_msg))
     # 删除超出MAX_USER_ROUND的旧记录
-    c.execute("DELETE FROM user_memory WHERE id NOT IN(SELECT id FROM(SELECT id FROM user_memory WHERE target_id=%s ORDER BY id DESC LIMIT %s)AS tmp)AND target_id=%s", (tid, MAX_USER_ROUND, tid))
+    c.execute("DELETE FROM user_memory WHERE id NOT IN(SELECT id FROM(SELECT id FROM user_memory WHERE target_id=%s ORDER BY id DESC LIMIT %s)AS tmp)AND target_id=%s", (tid, appconfig.get("memory.max_user_round"), tid))
     c.connection.commit()
 
 

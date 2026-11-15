@@ -40,7 +40,8 @@ STICKER_FACE_IDS = [14, 91, 99, 176, 179, 183, 196, 202, 211]  # QQ表情ID列�
 STICKER_ARCHIVE_DIR = "sticker_archive"  # 旧表情包存档目录
 MAX_USER_STICKERS = 30  # 每个用户最大收藏表情包数
 IMAGE_DIR = "images"  # 新图片存储目录
-MAX_USER_ROUND = int(_os.getenv("NAO_MAX_USER_ROUND", "50"))  # 每个用户最大对话记忆轮数
+from . import appconfig as _appconfig
+MAX_USER_ROUND = _appconfig.get("memory.max_user_round")  # 每个用户最大对话记忆轮数（运行时以 appconfig 为准）
 MAX_GLOBAL_KEY = 40  # 全局关键词最大数量
 
 DB_CONFIG = _settings.db_config()  # MySQL数据库配置（v16：从环境变量/配置文件读，代码里不存密码）

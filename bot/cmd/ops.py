@@ -107,8 +107,13 @@ async def cmd_config(ctx):
     from ..core import tunables
 
     args = ctx.args
+    from ..core import appconfig
     if not args:
-        lines = ["⚙️ 可调参数（改完立即生效，重启也记得）："]
+        lines = ["⚙️ 上下文配置（优先级 default<config<env<runtime）："]
+        for name, value, default, src, desc in appconfig.all_items():
+            lines.append(f"  {name} = {value}  (默认 {default}, {src}) —— {desc}")
+        lines.append("")
+        lines.append("⚙️ 可调参数（改完立即生效，重启也记得）：")
         for name, value, desc in tunables.all_items():
             lines.append(f"  {name} = {value}   —— {desc}")
         lines.append("用法：!config <参数> <值>")
@@ -117,5 +122,8 @@ async def cmd_config(ctx):
     if len(args) < 2:
         return "用法：!config <参数> <值>\n例如：!config image_prob 0.2"
 
-    ok, msg = tunables.set_value(args[0], args[1])
+    if args[0] in appconfig.SPEC:
+        ok, msg = appconfig.set_runtime(args[0], args[1])
+    else:
+        ok, msg = tunables.set_value(args[0], args[1])
     return ("✅ " if ok else "❌ ") + msg

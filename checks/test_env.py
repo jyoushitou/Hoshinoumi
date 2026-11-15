@@ -236,6 +236,9 @@ class TestEnvironment(unittest.TestCase):
         "NAO_MIN_REPLY_PROB",
         "NAO_SUMMARY_MAX_TOKENS",
         "NAO_MAX_USER_ROUND",
+        "NAO_DIGEST_ROUNDS",
+        "NAO_READ_CHUNK_CHARS",
+        "NAO_MEMORY_BUDGET",
     }
 
     @staticmethod

@@ -19,7 +19,7 @@ MAX_PER_SESSION = 3
 NIGHT_START, NIGHT_END = 1, 7        # 深夜不读
 SHARE_PROB = 0.20                    # 读完一章说一句的概率
 SUMMARY_MAX = 100
-SUMMARY_MAX_TOKENS = int(os.getenv("NAO_SUMMARY_MAX_TOKENS", "1024"))
+SUMMARY_MAX_TOKENS = 1024  # 兼容旧代码；运行时以 appconfig.summary.max_tokens 为准
 
 
 def _now(now=None):
@@ -448,6 +448,11 @@ def fallback_summary(text, limit=SUMMARY_MAX):
     return ("。".join(parts[:2]) + "。")[:limit]
 
 
+def _summary_tokens():
+    from ..core import appconfig
+    return appconfig.get("summary.max_tokens")
+
+
 async def summarize_chapter(text, limit=SUMMARY_MAX, call_model=None,
                            allow_text_fallback=True):
     """把一章正文压成一句话。
@@ -479,7 +484,7 @@ async def summarize_chapter(text, limit=SUMMARY_MAX, call_model=None,
         if not fn:
             continue
         try:
-            out = await fn(msgs, max_tokens=SUMMARY_MAX_TOKENS)
+            out = await fn(msgs, max_tokens=_summary_tokens())
             if isinstance(out, str) and type(out).__name__ == "Fallback":
                 out = ""
             cleaned = _clean_summary(out, limit)

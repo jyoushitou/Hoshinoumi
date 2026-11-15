@@ -15,7 +15,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 DIGEST_DIR = os.path.join(ROOT, "data", "digests")
 MAX_LINES = 20
 MAX_LINE_CHARS = 40
-ROUNDS_PER_DIGEST = 10  # 每攒够 10 轮溢出对话就浓缩一行
+ROUNDS_PER_DIGEST = 10  # 兼容旧代码；运行时以 appconfig.memory.digest_rounds 为准
 
 
 def _path(tid):
@@ -60,7 +60,7 @@ def append(tid, line):
 def compact_from_rounds(rounds):
     """没有 AI 也能用的兜底：把最近几轮压成关键词一行"""
     words = []
-    for u, b in rounds[-ROUNDS_PER_DIGEST:]:
+    for u, b in rounds[-_digest_rounds():]:
         for text in (u, b):
             for w in re.findall(r"[\u4e00-\u9fa5]{2,4}", text or ""):
                 if w not in words:
@@ -73,13 +73,13 @@ async def update(tid, rounds, summarize=None):
 
     summarize: 可选，异步函数 (文本) -> 一行摘要；没有就用兜底规则。
     """
-    if not rounds or len(rounds) < ROUNDS_PER_DIGEST:
+    if not rounds or len(rounds) < _digest_rounds():
         return False
 
     line = ""
     if summarize is not None:
         try:
-            convo = "\n".join(f"他：{u}\n她：{b}" for u, b in rounds[-ROUNDS_PER_DIGEST:])
+            convo = "\n".join(f"他：{u}\n她：{b}" for u, b in rounds[-_digest_rounds():])
             line = await summarize(convo)
         except Exception as e:
             log_api(f"[浓缩] AI 摘要失败，用兜底: {e}")
@@ -104,6 +104,11 @@ def describe(tid):
     text = load(tid)
     return text if text else ""
 
+def _digest_rounds():
+    from ..core import appconfig
+    return appconfig.get("memory.digest_rounds")
+
+
 async def maybe_condense(tid, summarize=None, rng=None):
     """超过 MAX_USER_ROUND 轮后，把溢出缓冲里的旧对话浓缩成一行（v14.1-D3）
 
@@ -112,11 +117,11 @@ async def maybe_condense(tid, summarize=None, rng=None):
     from ..core import state as cfg
 
     buf = cfg.digest_pending.get(str(tid)) or []
-    if len(buf) < ROUNDS_PER_DIGEST:
+    if len(buf) < _digest_rounds():
         return False
 
-    chunk = buf[:ROUNDS_PER_DIGEST]
-    del buf[:ROUNDS_PER_DIGEST]
+    chunk = buf[:_digest_rounds()]
+    del buf[:_digest_rounds()]
 
     ok = await update(tid, chunk, summarize)
     if ok:

@@ -22,7 +22,9 @@ async def cmd_reload(ctx):
     try:
         reload_api_keys()
         load_memories()
-        return "♻️ 已重新加载API密钥和记忆数据"
+        from ..core import appconfig
+        appconfig.reload()
+        return "♻️ 已重新加载API密钥、记忆与上下文配置"
     except Exception as e:
         return f"❌ 重载失败: {e}"
 

@@ -4,7 +4,7 @@
 import jieba  # 中文分词库
 from collections import deque  # 双端队列（用于对话记忆池）
 
-from ..config import MAX_USER_ROUND  # 每个用户最大对话轮数
+from ..core import appconfig
 from ..infra.repo_memory import load_user_memories_from_db, load_global_keywords_from_db, add_user_memory_to_db, add_global_keywords_to_db, load_events_from_db, add_event_to_db  # 数据库操作
 from ..log import log_system  # 日志
 from bot.core import state as cfg  # 全局运行时变量
@@ -38,8 +38,12 @@ def add_target_memory(tid, user_msg, bot_msg, img_keywords=None, refined_keyword
         log_system(f"记忆: 跳过兜底文案，不入库 (tid={tid})")
         return
     add_user_memory_to_db(tid, user_msg, bot_msg)  # 写入数据库
-    pool = cfg.user_memory_pool.setdefault(tid, deque(maxlen=MAX_USER_ROUND))
-    if len(pool) >= MAX_USER_ROUND:  # v14.1-D3：满了就把最旧一轮挪进待浓缩缓冲
+    limit = appconfig.get("memory.max_user_round")
+    pool = cfg.user_memory_pool.get(tid)
+    if pool is None or pool.maxlen != limit:
+        pool = deque(pool or [], maxlen=limit)
+        cfg.user_memory_pool[tid] = pool
+    if len(pool) >= limit:  # v14.1-D3：满了就把最旧一轮挪进待浓缩缓冲
         try:
             old = pool.popleft()
             buf = cfg.digest_pending.setdefault(tid, [])
@@ -78,7 +82,7 @@ def build_memory_context(tid, current_kws=None, query=None):
 
     rounds = []
     if tid in cfg.user_memory_pool:  # 该用户有记忆
-        for u, b in list(cfg.user_memory_pool[tid])[-MAX_USER_ROUND:]:  # v24.9.4：最多取 MAX_USER_ROUND 轮
+        for u, b in list(cfg.user_memory_pool[tid])[-appconfig.get("memory.max_user_round"):]:  # v25：最多取配置轮数
             rounds.append(f"用户:{u}\n奈绪:{b}")
     dia, _ = cap_lines(rounds, BUDGET["dialogue"]) if rounds else ("无", 0)
 
@@ -86,7 +90,7 @@ def build_memory_context(tid, current_kws=None, query=None):
     events_str = _recall_memories(tid, q)  # 双路召回
 
     kw = trim(kw, BUDGET["keywords"])
-    events_str = trim(events_str, BUDGET["memories"])
+    events_str = trim(events_str, appconfig.get("context.memory_budget"))
     return kw, dia, events_str  # 返回(全局关键词, 对话历史, 相关记忆)
 
 
