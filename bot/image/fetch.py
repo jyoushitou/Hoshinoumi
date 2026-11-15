@@ -20,6 +20,25 @@ async def _get(session, url, **kwargs):
                               timeout=30, name="image-get")  # v17.0.3：统一线程池
 
 
+def _image_urls(payload):
+    """v24.4：空结果 / dict / list / 缺字段统一防御，返回可下载 URL 列表。"""
+    if isinstance(payload, dict):
+        payload = [payload]
+    if not isinstance(payload, list):
+        return []
+    urls = []
+    for item in payload:
+        if isinstance(item, str):
+            u = item
+        elif isinstance(item, dict):
+            u = item.get("url") or item.get("img") or item.get("image")
+        else:
+            u = None
+        if isinstance(u, str) and u.strip():
+            urls.append(u.strip())
+    return urls
+
+
 async def _download(url):
     """同步下载丢进线程"""
     return await run_blocking(download_url, url, timeout=60, name="image-download")  # v17.0.3
@@ -34,8 +53,9 @@ async def fetch_and_save_acg_image():
                        timeout=10, verify=False, headers=DEFAULT_HEADERS)
         if r.status_code == 200:
             data = r.json()
-            if data.get("code") == 200 and data.get("data"):
-                img_url = data["data"].get("url") if isinstance(data["data"], dict) else None
+            if isinstance(data, dict) and data.get("code") == 200:
+                urls = _image_urls(data.get("data"))
+                img_url = urls[0] if urls else None
                 if img_url:
                     img_data = await _download(img_url)
                     if img_data:
@@ -57,13 +77,9 @@ async def search_alapi_and_save(keywords):
                        timeout=10, verify=False, headers=DEFAULT_HEADERS)
         if r.status_code == 200:
             data = r.json()
-            if data.get("data") and isinstance(data["data"], list) and data["data"]:
+            if isinstance(data, dict):
+                urls = _image_urls(data.get("data"))
                 # v8-FIX：坏源（403 防盗链）直接换下一张，不在同一张上重试
-                urls = []
-                for item in data["data"]:
-                    u = item if isinstance(item, str) else (item.get("url") or item.get("img"))
-                    if u:
-                        urls.append(u)
                 random.shuffle(urls)
                 for img_url in urls[:3]:
                     img_data = await _download(img_url)
