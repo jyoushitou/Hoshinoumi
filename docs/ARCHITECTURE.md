@@ -1,6 +1,6 @@
 # 架构图（v25.5.7）
 
-> 配套阅读：**[ARCH-REVIEW.md](ARCH-REVIEW.md)**（量化审查、问题与修复顺序）
+> 配套阅读：**[ARCH-REVIEW-v25.md](ARCH-REVIEW-v25.md)**（v25.5.7 复审）、**[ARCH-REVIEW.md](ARCH-REVIEW.md)**（v18.20 历史审查）
 >
 > **当前后端 v25.5.7，网关按 README 的 v24.8.1。** 已部署试运行。本图按 v23 多用户、v24 本地书、v25.5.7 代码更新；网关在 `gateway/`（C++），内部契约骨架在 `proto/nao/v1/`。
 > 开发计划见 [ROADMAP](ROADMAP.md) 与 [versions/](versions/)；图中 ⚠ 是已知架构债，不代表当前不能用。
@@ -314,7 +314,7 @@ v17.1 的三档队列仍然是底座；但**到点触发**已经从 `minute_tick
 
 ---
 
-## 5. 已知架构债（v18.20 审查；v25.5.7 未重新全量审计）
+## 5. 已知架构债（v25.5.7 复审；P0/P1 见 [ARCH-REVIEW-v25](ARCH-REVIEW-v25.md)）
 
 1. **`events` 兼容视图是过渡态**  
    写路径已切 `memories`，但 `repo_memory`、`store_v2`、`diary/store` 仍有 `FROM events` 读查询。
