@@ -122,6 +122,13 @@ async def handle_internal_auth_verify(request):
         return json_response({"ok": False, "error": "auth_failed", "message": str(e)}, 500)
 
 
+async def handle_internal_auth_owner(request):
+    """GET /internal/auth/owner：网关 owner secret 登录时取真实 owner user_id"""
+    from ..infra import tenant
+    return json_response({"ok": True, "data": {
+        "user_id": tenant.owner_id(), "role": "owner"}})
+
+
 async def handle_internal_auth_register(request):
     """POST /internal/auth/register：邀请码注册"""
     from ..infra import repo_users, tenant
@@ -299,6 +306,7 @@ async def start_api_server():
     app.router.add_post("/internal/chat", handle_internal_chat)
     app.router.add_post("/internal/audit", handle_internal_audit)
     app.router.add_post("/internal/auth/verify", handle_internal_auth_verify)
+    app.router.add_get("/internal/auth/owner", handle_internal_auth_owner)
     app.router.add_post("/internal/auth/register", handle_internal_auth_register)
     app.router.add_get("/internal/state", handle_internal_state)
     app.router.add_get("/internal/cron", handle_internal_cron)

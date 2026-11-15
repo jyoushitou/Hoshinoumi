@@ -460,17 +460,31 @@ namespace Gateway
 
         try
         {
+            std::string ownerSub = "__owner__";
+            try
+            {
+                const auto owner = backend_.Request("GET", "/internal/auth/owner", "", "");
+                if (owner.ok)
+                {
+                    const auto parsed = boost::json::parse(owner.body);
+                    ownerSub = std::string(
+                        parsed.as_object().at("data").as_object().at("user_id").as_string());
+                }
+            }
+            catch (const std::exception&)
+            {
+            }
             boost::json::object data;
-            data["access"] = auth_.IssueAccess("__owner__", "owner");
-            data["refresh"] = auth_.IssueRefresh("__owner__", "owner");
+            data["access"] = auth_.IssueAccess(ownerSub, "owner");
+            data["refresh"] = auth_.IssueRefresh(ownerSub, "owner");
             data["token_type"] = "Bearer";
             data["expires_in"] = auth_.AccessTtl();
-            data["user_id"] = "__owner__";
+            data["user_id"] = ownerSub;
             data["role"] = "owner";
             boost::json::object body;
             body["ok"] = true;
             body["data"] = data;
-            Audit("__owner__", url.target, 200, 0, ip, NextRequestId());
+            Audit(ownerSub, url.target, 200, 0, ip, NextRequestId());
             session->httpReplay(boost::json::serialize(body),
                                 boost::beast::http::status::ok,
                                 JsonHeaders(NextRequestId()));
