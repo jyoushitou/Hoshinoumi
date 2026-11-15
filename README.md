@@ -362,6 +362,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 > - 插件 DDL 不在 v28，统一到 v38 存储层。
 > - 插件 stop 跟随 worker，不跟随 ingress。
 > - `!plugin list` 不显示核心 native/fallback。
+> - `uninstall(ctx)` 只提供接口；核心不自动调用，插件数据由开发者自行清理。
 > **插件接口只给第三方做优化/性能扩展**：例如更快的模型 provider、外部向量检索、
 > 自定义通道；核心实现始终保留。核心功能只能在启动前通过 `config/features.json`
 > （或 `NAO_FEATURES`）关闭；没有对应开关的默认常开。插件管理器不能 disable/uninstall 核心功能。

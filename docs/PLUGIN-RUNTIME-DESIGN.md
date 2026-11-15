@@ -8,6 +8,7 @@
 插件与核心同进程，**视为可信代码**：
 
 - 插件代码经过主账号审核后安装。
+- 所有监听地址只允许 loopback `127.0.0.1`（`127.0.0.0` 是网络地址，不能作为监听地址）。
 - 不做 Python 沙箱；无法阻止插件直接 import 核心模块。
 - 所有正常能力必须通过 `PluginContext`；绕过 context 的调用属于违规代码，审核拒绝。
 - 插件包记录作者、hash、capability；安装时校验，不信任文件名。
@@ -280,7 +281,9 @@ manifest.auto_start = true
 - 插件 DDL/迁移在 **v38 存储层**，不在 v28。
 - v38 提供 MySQL/SQLite 方言、dry-run、事务、`plugin_schema_version`。
 - 插件表只允许 `plugin_<name>_` 前缀；核心表拒绝。
-- 卸载由插件开发者提供 `uninstall(ctx)` 清理自己的数据；核心不自动 drop 表。
+- `uninstall(ctx)` 只是提供给开发者的接口；**核心不自动调用**。
+- `!plugin uninstall` 只停止插件、移除插件文件和注册表记录，不 drop 表、不执行开发者清理逻辑。
+- 插件自己的数据/表由开发者自行维护删除。
 
 ## 10. `!plugin list`
 
