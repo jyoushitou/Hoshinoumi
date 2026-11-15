@@ -320,6 +320,7 @@ async def start_api_server():
         sock = worker.prepare_socket("api.sock")
         site = web.UnixSite(runner, sock)
         await site.start()
+        worker.chmod_socket(sock)
         log_system(f"API worker 已启动: unix:{sock}")
     else:
         site = web.TCPSite(runner, apicfg.API_HOST, apicfg.API_PORT, reuse_address=True, reuse_port=True)

@@ -42,7 +42,18 @@ def active_socket(name):
 def socket_path(name):
     d = Path(directory())
     d.mkdir(parents=True, exist_ok=True)
+    try:
+        os.chmod(d, 0o700)
+    except OSError:
+        pass
     return str(d / name)
+
+
+def chmod_socket(path):
+    try:
+        os.chmod(path, 0o600)
+    except OSError:
+        pass
 
 
 def prepare_socket(name):
@@ -60,5 +71,9 @@ def bind_unix(name, backlog=128):
     p = prepare_socket(name)
     s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     s.bind(p)
+    try:
+        os.chmod(p, 0o600)
+    except OSError:
+        pass
     s.listen(backlog)
     return p, s

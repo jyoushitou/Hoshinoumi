@@ -70,7 +70,7 @@ async def main_async(args):
     app.router.add_route("*", "/{tail:.*}", lambda r: _http_proxy(r))
     runner = web.AppRunner(app, handle_signals=False)
     await runner.setup()
-    site = web.TCPSite(runner, args.http_host, args.http_port, reuse_address=True, reuse_port=True)
+    site = web.TCPSite(runner, args.http_host, args.http_port)
     await site.start()
 
     ws = await websockets.serve(_ws_proxy, args.ws_host, args.ws_port,
@@ -125,10 +125,18 @@ def main():
     ap.add_argument("--http-host", default=os.getenv("NAO_API_HOST", "127.0.0.1"))
     ap.add_argument("--ws-host", default=os.getenv("NAO_LISTEN_HOST", "0.0.0.0"))
     ap.add_argument("--http-port", type=int, default=int(os.getenv("NAO_API_PORT", "27004")))
+    ap.add_argument("--allow-public", action="store_true",
+                    help="允许 HTTP 监听非 loopback（默认拒绝）")
     ap.add_argument("--ws-port", type=int, default=int(os.getenv("NAO_WS_PORT", "3001")))
     args = ap.parse_args()
     if args.host:
         args.http_host = args.ws_host = args.host
+    try:
+        is_loop = ip_address(args.http_host).is_loopback
+    except ValueError:
+        is_loop = args.http_host in ("localhost",)
+    if not is_loop and not args.allow_public:
+        raise SystemExit("HTTP 监听不是 loopback；如确需公网请显式加 --allow-public")
     asyncio.run(main_async(args))
 
 
