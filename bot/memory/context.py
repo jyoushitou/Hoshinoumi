@@ -78,7 +78,7 @@ def build_memory_context(tid, current_kws=None, query=None):
 
     rounds = []
     if tid in cfg.user_memory_pool:  # 该用户有记忆
-        for u, b in list(cfg.user_memory_pool[tid])[-30:]:  # v14.1：最多取 30 轮，按预算再砍
+        for u, b in list(cfg.user_memory_pool[tid])[-MAX_USER_ROUND:]:  # v24.9.4：最多取 MAX_USER_ROUND 轮
             rounds.append(f"用户:{u}\n奈绪:{b}")
     dia, _ = cap_lines(rounds, BUDGET["dialogue"]) if rounds else ("无", 0)
 

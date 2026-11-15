@@ -105,7 +105,7 @@ def describe(tid):
     return text if text else ""
 
 async def maybe_condense(tid, summarize=None, rng=None):
-    """超过 30 轮后，把溢出缓冲里的旧对话浓缩成一行（v14.1-D3）
+    """超过 MAX_USER_ROUND 轮后，把溢出缓冲里的旧对话浓缩成一行（v14.1-D3）
 
     返回这次是否写入了一行。
     """

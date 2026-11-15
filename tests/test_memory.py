@@ -259,7 +259,7 @@ class TestDigest(unittest.TestCase):
         self.assertEqual(self.D.describe("nobody"), "")
 
 class TestDigestOverflow(unittest.TestCase):
-    """v14.1-D3：超过 30 轮才浓缩"""
+    """v14.1-D3：超过 MAX_USER_ROUND 轮才浓缩"""
 
     def setUp(self):
         import os
@@ -285,7 +285,7 @@ class TestDigestOverflow(unittest.TestCase):
     def test_overflow_moves_oldest_to_buffer(self):
         from collections import deque
         import bot.memory.context as ctx
-        self.cfg.user_memory_pool["t1"] = deque([["u", "b"]] * 30, maxlen=30)
+        self.cfg.user_memory_pool["t1"] = deque([["u", "b"]] * 50, maxlen=50)
         orig_u, orig_e = ctx.add_user_memory_to_db, ctx.add_event_to_db
         orig_k = ctx.add_global_keywords_to_db
         ctx.add_user_memory_to_db = lambda *a, **k: None
@@ -297,12 +297,12 @@ class TestDigestOverflow(unittest.TestCase):
             ctx.add_user_memory_to_db, ctx.add_event_to_db = orig_u, orig_e
             ctx.add_global_keywords_to_db = orig_k
         self.assertEqual(len(self.cfg.digest_pending["t1"]), 1, "溢出的一轮要进缓冲")
-        self.assertEqual(len(self.cfg.user_memory_pool["t1"]), 30)
+        self.assertEqual(len(self.cfg.user_memory_pool["t1"]), 50)
 
     def test_no_buffer_before_30(self):
         from collections import deque
         import bot.memory.context as ctx
-        self.cfg.user_memory_pool["t2"] = deque([["u", "b"]] * 5, maxlen=30)
+        self.cfg.user_memory_pool["t2"] = deque([["u", "b"]] * 5, maxlen=50)
         orig_u, orig_e = ctx.add_user_memory_to_db, ctx.add_event_to_db
         orig_k = ctx.add_global_keywords_to_db
         ctx.add_user_memory_to_db = lambda *a, **k: None

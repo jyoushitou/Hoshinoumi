@@ -183,10 +183,10 @@ class TestBaselineMemoryAndCommands(unittest.TestCase):
     """基线：记忆轮数上限与命令可用性"""
 
     def test_memory_rounds(self):
-        """每个对象最多保留 30 轮对话"""
+        """每个对象最多保留 50 轮对话"""
         from bot.core.constants import MAX_USER_ROUND
 
-        self.assertEqual(MAX_USER_ROUND, 30)
+        self.assertEqual(MAX_USER_ROUND, 50)
 
     def test_memory_budget(self):
         """分层预算：profile 120 / dialogue 700 / memories 250 / keywords 120 / timeline 200"""
