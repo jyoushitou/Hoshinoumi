@@ -77,18 +77,45 @@ async def main_async(args):
                                 ping_interval=20, ping_timeout=60)
     print(f"[ingress] HTTP {args.http_host}:{args.http_port} WS {args.ws_host}:{args.ws_port} -> {args.worker_dir}")
     stop = asyncio.Event()
+    stopping = {"v": False}
     loop = asyncio.get_running_loop()
+
+    def _on_signal():
+        # 第一次请求优雅退出；第二次强制退出，避免被活跃 WS 卡死
+        if stopping["v"]:
+            os._exit(0)
+        stopping["v"] = True
+        stop.set()
+
     for sig in (signal.SIGINT, signal.SIGTERM):
         try:
-            loop.add_signal_handler(sig, stop.set)
-        except NotImplementedError:
+            loop.add_signal_handler(sig, _on_signal)
+        except (NotImplementedError, RuntimeError):
             pass
     try:
         await stop.wait()
     finally:
-        ws.close()
-        await ws.wait_closed()
-        await runner.cleanup()
+        async def _shutdown():
+            try:
+                ws.close(close_connections=True)
+            except TypeError:
+                ws.close()
+            except Exception:
+                pass
+            try:
+                await asyncio.wait_for(ws.wait_closed(), 3)
+            except Exception:
+                pass
+            try:
+                await asyncio.wait_for(runner.cleanup(), 3)
+            except Exception:
+                pass
+
+        try:
+            await asyncio.wait_for(_shutdown(), 8)
+        except Exception:
+            print("[ingress] 优雅退出超时，强制结束")
+            os._exit(0)
 
 
 def main():
