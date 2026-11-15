@@ -67,7 +67,7 @@ def stop(proc, timeout=20):
             pass
 
 
-async def deploy(base: Path, version: str, cmd, timeout=30.0):
+async def deploy(base: Path, version: str, cmd, timeout=30.0, drain_seconds=60.0):
     version_dir = base / "versions" / version
     version_dir.mkdir(parents=True, exist_ok=True)
     env = os.environ.copy()
@@ -95,6 +95,9 @@ async def deploy(base: Path, version: str, cmd, timeout=30.0):
     switch_current(base, version_dir)
     print(f"[supervisor] 已切到 {version}（{version_dir}）")
     if old_dir and old_dir.resolve() != version_dir.resolve():
+        if drain_seconds > 0:
+            print(f"[supervisor] 旧 worker 继续服务 {drain_seconds:.0f}s，保留在途 WS/HTTP")
+            await asyncio.sleep(drain_seconds)
         try:
             old_pid = int((old_dir / "worker.pid").read_text(encoding="utf-8").strip())
             os.kill(old_pid, signal.SIGTERM)
@@ -110,10 +113,11 @@ def main():
     ap.add_argument("--version", required=True)
     ap.add_argument("--worker-cmd", default=f"{sys.executable} run.py")
     ap.add_argument("--timeout", type=float, default=30)
+    ap.add_argument("--drain-seconds", type=float, default=60)
     args = ap.parse_args()
     base = Path(args.base)
     cmd = shlex.split(args.worker_cmd)
-    ok = asyncio.run(deploy(base, args.version, cmd, args.timeout))
+    ok = asyncio.run(deploy(base, args.version, cmd, args.timeout, args.drain_seconds))
     return 0 if ok else 1
 
 
