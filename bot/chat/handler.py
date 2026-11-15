@@ -37,13 +37,20 @@ from .cache import remember as remember_message  # v18.6：最近消息缓存
 
 # v18.6：后台消息任务集合（避免 create_task 被 GC）
 _bg_tasks = set()
+_bg_ws = {}  # task -> ws，断线只取消本连接的 tasks
 _online_tasks = set()
+_online_ws = {}
 
 
 
-async def _send_online_image(ws):
-    """v27.3.1：上线配图转后台，绝不再挡住 ws.recv()。"""
+async def _send_online_notice(ws):
+    """v27.4.1：上线通知文字+配图全部后台，绝不挡住 ws.recv()。"""
     try:
+        from .online import notice_text
+        mode = getattr(cfg, "startup_mode", "normal")
+        await send_short_reply(MASTER_QQ, notice_text(mode), ws, MASTER_QQ)
+        cfg.startup_mode = "normal"
+
         img_fp = await fetch_and_save_acg_image()
         if not img_fp:
             log_api("[上线] ACG图片获取失败")
@@ -56,9 +63,11 @@ async def _send_online_image(ws):
     except asyncio.CancelledError:
         pass
     except Exception as e:
-        log_err(f"[上线] ACG图片异常（已忽略）: {e}")
+        log_err(f"[上线] 通知/配图异常（已忽略）: {e}")
     finally:
-        _online_tasks.discard(asyncio.current_task())
+        _task = asyncio.current_task()
+        _online_tasks.discard(_task)
+        _online_ws.pop(_task, None)
 
 
 def _sender_name(d):
@@ -83,6 +92,7 @@ def _looks_like_command(d):
 
 def _bg_done(task):
     _bg_tasks.discard(task)
+    _bg_ws.pop(task, None)
     try:
         task.result()
     except asyncio.CancelledError:
@@ -97,6 +107,7 @@ def _dispatch_message(d, ws):
         return _handle_message(d, ws)
     task = asyncio.create_task(_handle_message(d, ws))
     _bg_tasks.add(task)
+    _bg_ws[task] = ws
     task.add_done_callback(_bg_done)
     return None
 
@@ -599,9 +610,14 @@ async def _handle_message_impl(d, ws):
 async def websocket_handle_qq(ws):
     """WebSocket消息处理主函数：接收→解析→处理→回复"""
     async with cfg.active_ws_lock:  # 加锁，确保只有一个WebSocket连接
-        if cfg.active_ws_qq and not getattr(cfg.active_ws_qq, "closed", False):  # 已有活跃连接
-            await ws.close()  # 关闭新连接
-            return  # 返回
+        old = cfg.active_ws_qq
+        if old is not None and old is not ws and not getattr(old, "closed", False):
+            # 新连接代表 NapCat 重连：关闭旧连接，接受新连接，避免旧对象“未 closed”把新连接挡住
+            try:
+                await asyncio.wait_for(old.close(), 3)
+            except Exception:
+                pass
+            log_system("QQ重连：替换旧 WebSocket")
         cfg.active_ws_qq = ws  # 设置当前活跃连接
     log_system("QQ上线")  # 日志记录上线
 
@@ -621,14 +637,10 @@ async def websocket_handle_qq(ws):
     if not claim_online_notice():
         log_system("QQ重连（60秒内已发过上线通知，跳过通知与配图）")
     else:
-        # 上线发文字 + ACG图片 检验连通性
-        from .online import notice_text
-        mode = getattr(cfg, "startup_mode", "normal")
-        await send_short_reply(MASTER_QQ, notice_text(mode), ws, MASTER_QQ)  # v25.7：区分首次/热更
-        cfg.startup_mode = "normal"
-
-        # v27.3.1：配图转后台，先进入 ws.recv()，避免图片接口慢导致 !ping/消息不响应
-        _online_tasks.add(asyncio.create_task(_send_online_image(ws)))
+        # v27.4.1：文字+配图全部后台，立即进入 ws.recv()
+        _t = asyncio.create_task(_send_online_notice(ws))
+        _online_tasks.add(_t)
+        _online_ws[_t] = ws
 
     try:
         while True:  # 消息接收循环
@@ -662,9 +674,11 @@ async def websocket_handle_qq(ws):
         log_err(f"QQ异常:{e}")  # 日志记录异常
     finally:  # 清理
         for _t in list(_bg_tasks):
-            _t.cancel()
+            if _bg_ws.get(_t) is ws:
+                _t.cancel()
         for _t in list(_online_tasks):
-            _t.cancel()
+            if _online_ws.get(_t) is ws:
+                _t.cancel()
         async with cfg.active_ws_lock:  # 加锁
             if cfg.active_ws_qq is ws:  # 当前连接就是本连接
                 cfg.active_ws_qq = None  # 清空活跃连接
