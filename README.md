@@ -1,4 +1,4 @@
-﻿# Hoshinoumi（REC） v24.8.5
+# Hoshinoumi（REC） v24.8.5
 
 > 后端 **v24.8.4** · 网关 **v24.8.1**（多用户 / 读书 / 本地书）
 > v24 试运行；v23 及以前已完成；v25（内部 TCP/protobuf）已规划。
@@ -548,7 +548,7 @@ NAO_VISION_MODEL=ep-xxxxxxxx
 | 功能开关（vision/voice/reading/ocr/backup…） | `config/features.json` |
 | 运行时概率/频率（`image_prob`、`voice_prob`…） | QQ 里 `!config` |
 | 密钥状态 / 重载 | `!apikeys` / `!reload` |
-| 环境是否检查过、哪些能力可用 | `data/env_report.json` + `!features` |
+| 环境是否检查过、哪些能力可用 | `data/env_report.json` |
 
 `config.local.json` 的视觉段：
 
@@ -564,6 +564,49 @@ NAO_VISION_MODEL=ep-xxxxxxxx
 ```
 
 `NAO_VISION_*` 环境变量优先；没有环境变量时才读这里的配置。
+
+### 功能被禁用时怎么排查
+
+功能开关在 `config/features.json`：
+
+```json
+{
+  "features": {
+    "reading": { "enabled": true },
+    "ocr": { "enabled": true },
+    "vision": { "enabled": true },
+    "voice": { "enabled": true },
+    "backup": { "enabled": true },
+    "proactive": { "enabled": true }
+  }
+}
+```
+
+常见提示与处理：
+
+| 提示 | 原因 | 处理 |
+|---|---|---|
+| `功能未启用：reading` | `features.reading.enabled = false` | 改 `true`，重跑 preflight，重启 |
+| `功能未启用：ocr` | OCR 被关 | 改 `true`；没装 tesseract 时只能浅层读 |
+| `功能未启用：vision` | 视觉被关 | 改 `true`；同时检查视觉密钥 |
+| `功能未启用：voice` | 语音被关 | 改 `true`；检查 edge-tts |
+| `环境监测报告已过期` | 配置/功能清单变了 | 重跑 `python3 scripts/preflight.py` |
+| `最近一次环境监测未通过` | 依赖/网络/密钥缺失 | 看 `data/env_report.json` 的失败项 |
+| 读书降级成“浅层在读” | 没装 Playwright/OCR | 装可选依赖，或接受降级 |
+
+功能被禁用时，回复统一带上帮助：
+
+```text
+该功能当前被禁用。
+启用：config/features.json -> features.<name>.enabled = true
+然后：python3 scripts/preflight.py && python3 run.py
+```
+
+注意：
+
+- `chat` 是 `required`，不要关闭
+- 改完功能清单必须重跑 preflight，否则启动会拒绝
+- 不要为了启用功能去删 `data/env_report.json`
 
 ### 可选依赖（读书功能要用）
 
@@ -1953,4 +1996,3 @@ python3 scripts/check_names.py        # 未定义名字
 所以有了 Hoshinoumi。算是给“故事结束之后”补的一间学生会室：让她继续上学、开会、喂猫、弹琴，也让她在 QQ、Web、桌面和手机那边，记得你随口说过的话。
 
 > 故事结束以后，她还在。
-
