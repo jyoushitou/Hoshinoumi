@@ -584,7 +584,10 @@ async def websocket_handle_qq(ws):
         log_system("QQ重连（60秒内已发过上线通知，跳过通知与配图）")
     else:
         # 上线发文字 + ACG图片 检验连通性
-        await send_short_reply(MASTER_QQ, "哼,上线了(叉腰)", ws, MASTER_QQ)  # 发送上线通知
+        from .online import notice_text
+        mode = getattr(cfg, "startup_mode", "normal")
+        await send_short_reply(MASTER_QQ, notice_text(mode), ws, MASTER_QQ)  # v25.7：区分首次/热更
+        cfg.startup_mode = "normal"
 
         img_fp = await fetch_and_save_acg_image()  # 获取ACG图片
         if img_fp:

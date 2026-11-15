@@ -14,6 +14,8 @@ active_ws_qq = None  # 当前活跃的QQ WebSocket连接
 active_ws_lock = asyncio.Lock()  # WebSocket连接锁（防止多连接冲突）
 send_lock = asyncio.Lock()  # 消息发送锁（防止WebSocket发送冲突）
 last_online_notice_ts = 0.0  # 上次发送「上线通知」的时间戳（v5-F5 防重发）
+startup_mode = "normal"  # v25.7：first / hot / normal
+startup_from_version = ""  # 上一个运行版本
 self_qq = 0  # 机器人自己的QQ号（从 OneBot 事件的 self_id 取，v6-E29 判断被@）
 
 # ===================== 群聊节奏（v6-E29） =====================

@@ -94,6 +94,15 @@ def bootstrap():
         init_clip_model()  # v25.5.5：只有显式开启才加载 CPU CLIP
     load_personality_supplement()  # 人设补充文本（远程 > 本地）
 
+    # v25.7：先判定 first/hot/normal，再刷新 bot_meta.version
+    try:
+        from ..core.startup import detect
+        cfg.startup_mode, cfg.startup_from_version, _cur = detect()
+        log_system(f"[启动] 模式={cfg.startup_mode} 版本={_cur} 上一版={cfg.startup_from_version or '无'}")
+    except Exception as e:
+        cfg.startup_mode = "normal"
+        log_err(f"[启动] 模式判定失败，按普通上线：{e}")
+
     # v19.0：启动不再改表；schema 只由 scripts/migrate.py --apply 负责。
     # 缺结构时让后续 SQL 直接报错，由环境监测提前拦住。
     _mark_start()    # v18.5：记录首次启动时间（!uptime 用，不受日志 TTL 影响）
