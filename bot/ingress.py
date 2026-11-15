@@ -185,7 +185,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--worker-dir", default=os.getenv("NAO_WORKER_SOCKET_DIR", "data/worker"))
     ap.add_argument("--protocol", choices=("http", "tcp"),
-                    default=os.getenv("NAO_INGRESS_PROTOCOL", "http"))
+                    default=os.getenv("NAO_INGRESS_PROTOCOL", "tcp"))
     ap.add_argument("--host", default="", help="兼容旧参数：同时设置 http/ws host")
     ap.add_argument("--http-host", default=os.getenv("NAO_API_HOST", "127.0.0.1"))
     ap.add_argument("--ws-host", default=os.getenv("NAO_LISTEN_HOST", "0.0.0.0"))

@@ -389,3 +389,7 @@ QQ !update 显示原因
 - 新旧 worker 共享数据库，但没有跨进程调度器 leader 锁；drain 窗口内定时任务可能重叠。
 - 依赖包是共享环境，升级 Python 包不属于 v25 热更范围。
 - 数据库 schema 变更必须停机。
+
+## v25+ 强制策略
+
+普通业务版本只切 worker；例外与验收见 [HOT-UPDATE-POLICY.md](HOT-UPDATE-POLICY.md)。
