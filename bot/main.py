@@ -25,7 +25,7 @@ async def main():
 
     # ===================== 内部 TCP（v26.2） =====================
     tcp_server = None
-    if os.getenv("NAO_INTERNAL_TCP") == "1":
+    if os.getenv("NAO_INTERNAL_TCP", "1") != "0":
         from .server.tcp_internal import start_tcp_server
         tcp_server = await start_tcp_server()
 

@@ -317,7 +317,7 @@ async def start_api_server():
     runner = web.AppRunner(app, handle_signals=False)
     await runner.setup()
     from ..core import worker
-    if os.getenv("NAO_INTERNAL_TCP") == "1":
+    if os.getenv("NAO_INTERNAL_TCP", "1") != "0":
         sock = worker.internal_api_socket()
         try:
             import os as _os
