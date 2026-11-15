@@ -1138,6 +1138,64 @@ sudo systemctl status hoshinoumi
 
 完整清单（依赖、systemd、验证、回滚）：[v19 开发记录](docs/versions/v19.md)；命名约定：[NAMING.md](docs/NAMING.md)。
 
+
+### v25 部署踩坑记录（2026-11-15）
+
+v25 不是 `start.py` 直接启动，而是：
+
+```text
+ingress 持有 3001/27004
+worker 只监听 Unix socket
+supervisor 启动/切换 worker
+```
+
+这次实际部署踩到的问题：
+
+| 现象 | 根因 | 处理 |
+|---|---|---|
+| worker 健康检查失败，`worker.log` 为空 | Python stdout 缓冲；且 supervisor 终端没 source `.env`，DB 密码为空 | `set -a; . ./.env; set +a`；worker 用 `python3 -u run.py` |
+| `config.local.json 读取失败：Extra data` | 文件缺最外层 `{` / `}`，`db.host` 还是 `"..."` | `python3 -m json.tool config.local.json`；重建合法 JSON |
+| `还没有有效的环境监测报告` | 代码/配置变更后报告过期 | `python3 checks/env_check.py` 重新生成 `data/env_report.json` |
+| 卡在 `加载 CLIP (CPU)...` | 旧 `bootstrap.py` 无条件 `init_clip_model()` | v25.5.5 起只有 `NAO_CLIP=1` 才加载 |
+| 27004 返回 502：`Cannot connect to unix socket data/workers/api.sock` | `current` 是相对软链，被解析成 `data/workers/data/workers/...` | v25.5.6 起写绝对路径；旧实例手动 `ln -sfn "$PWD/data/workers/versions/<版本>" data/workers/current` |
+| `/readyz` 返回 `{"ok":false,"backend":"starting"}` | 网关在后端起来前启动，探测没成功 | 后端 health 200 后 `docker restart hoshinoumi-gateway` |
+| `!version` 显示 `v24.9.4-14-g...` | `get_version()` 优先旧 git tag，不读静态 VERSION | v25.5.7 起静态 VERSION 优先；提交号单独显示 |
+| supervisor 提示 `--version` required | 命令里写了字面量 `...`，shell 把它当参数 | 逐行执行完整命令，不要输入省略号 |
+| `pkill: only one pattern can be provided` | 两行命令粘在一起 | `pkill -f 'run.py' 2>/dev/null` 单独一行 |
+
+#### 正确部署顺序
+
+```bash
+cd ~/Hoshinoumi
+
+# 1. 环境变量和依赖
+set -a
+. ./.env
+set +a
+python3 checks/env_check.py
+
+# 2. 版本目录（真正的新代码）
+python3 scripts/prepare_worker.py --version 25.5.7
+
+# 3. ingress（单独 screen/tmux，保持运行）
+python3 -m bot.ingress   --worker-dir data/workers   --http-host 127.0.0.1   --ws-host 0.0.0.0   --http-port 27004   --ws-port 3001
+
+# 4. worker（另一个终端）
+python3 scripts/nao_supervisor.py   --base data/workers   --version 25.5.7   --worker-cmd "python3 -u run.py"   --timeout 90   --drain-seconds 0
+
+# 5. 验收
+curl -s http://127.0.0.1:27004/api/health
+curl -s http://127.0.0.1:27005/readyz
+python3 scripts/nao_drill.py --base data/workers
+```
+
+#### 关键原则
+
+- **先 `env_check`，再 `prepare_worker`，再 ingress，再 worker。**
+- worker 必须从 `data/workers/versions/<version>/` 启动，不能直接在项目根目录用 `start.py`。
+- `200` 健康检查只看 `27004`；`!version` 走 QQ → ingress WS → worker。
+- 任何“需要迁移/必须重启”的版本都不走热更，按 v25 的 `update.json` 准入拒绝。
+
 ### 打包（四种形式）
 
 | 形式 | 命令 | 产物 |
