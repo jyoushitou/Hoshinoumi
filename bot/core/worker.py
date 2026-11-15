@@ -23,6 +23,22 @@ def set_directory(path):
     os.environ["NAO_WORKER_MODE"] = "1"
 
 
+def active_socket(name):
+    """当前蓝绿版本的 socket；没有 current 就退回基础目录。"""
+    base = Path(directory())
+    cur = base / "current"
+    try:
+        if cur.exists() or cur.is_symlink():
+            target = Path(os.readlink(cur)) if cur.is_symlink() else Path(cur.read_text().strip())
+            if not target.is_absolute():
+                target = base / target
+            if target.exists():
+                return str(target / name)
+    except OSError:
+        pass
+    return socket_path(name)
+
+
 def socket_path(name):
     d = Path(directory())
     d.mkdir(parents=True, exist_ok=True)
