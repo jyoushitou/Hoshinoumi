@@ -1,7 +1,9 @@
 ﻿# Hoshinoumi（REC） v24.8.4
 
-> 后端 **v21** · 网关 **v21**（owner 鉴权 / JWT / 架构收口）
-> v19 与 v20.0–v20.4 已完成，当前在做 Docker 与网关验证。
+> 后端 **v24.8.4** · 网关 **v24.8.1**（多用户 / 读书 / 本地书）
+> v24 试运行；v23 及以前已完成；v25（内部 TCP/protobuf）已规划。
+>
+> 状态规则：**下一个大版本进入试运行，则上一个大版本视为完成。**
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 ![C++17](https://img.shields.io/badge/C%2B%2B-17-00599C)
@@ -290,7 +292,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | v20 | 网关（一）核心：C++/CommonNet + REST↔后端 HTTP + Docker + 配置向导 | ✅ 已完成（v20.6） | [v20.md](docs/versions/v20.md) |
 | v21 | 网关（二）owner 鉴权：JWT/刷新/失败锁定 + 架构收口 | ✅ 已完成 | [v21.md](docs/versions/v21.md) |
 | v22 | 网关（三）安全：限流/审计/TLS/`!gw` | ✅ 已完成 | [v22.md](docs/versions/v22.md) |
-| v23 | 多用户 + 亲密度可骤降/负值/修复，归零降私聊回复：users/roles + user_id 隔离 | 🚧 v23.5.1 试运行 | [v23.md](docs/versions/v23.md) |
+| v23 | 多用户 + 亲密度可骤降/负值/修复，归零降私聊回复：users/roles + user_id 隔离 | ✅ 已完成（v23.5.1） | [v23.md](docs/versions/v23.md) |
 | v24 | 读书修复与增强：搜索/标题/进度、抓包分析、网络优先 + 本地书回退 | 🚧 v24.8.4 试运行 | [v24.md](docs/versions/v24.md) |
 | v25 | 内部通讯升级：外部 HTTP→网关；网关 8+4+body protobuf→后端 27004 | 📋 已规划 | [v25.md](docs/versions/v25.md) |
 | v26 | 插件接口实现（含 v26.0 代码审查与架构重构） | 📋 已规划 | [v26.md](docs/versions/v26.md) |
