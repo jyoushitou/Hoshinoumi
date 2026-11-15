@@ -206,6 +206,11 @@ class TestCommandRegistry(unittest.TestCase):
         self.assertTrue(handled)
         self.assertIn("未知命令", ws.texts()[0])
 
+    def test_fuzzy_command_corn(self):
+        handled, ws = self._run("! corn")
+        self.assertTrue(handled)
+        self.assertIn("你是不是想用 !cron", ws.texts()[0])
+
     def test_non_master_rejected(self):
         handled, ws = self._run("!help", uid="123456")
         self.assertTrue(handled)

@@ -78,8 +78,11 @@ def parse_time(text, now=None):
     if not text:
         return None
 
-    # 相对时间：N分钟后 / 半小时后
-    m = re.search(r"([0-9]+|[一二两三四五六七八九十]+|半)\s*分钟后", text)
+    # 相对时间：N分钟后 / N min / 半小时后 / 过30min
+    m = re.search(
+        r"(?:过\s*)?([0-9]+|[一二两三四五六七八九十]+|半)\s*"
+        r"(?:分钟|min(?:ute)?s?)\s*(?:后|以后)?",
+        text, re.I)
     if m:
         raw = m.group(1)
         mins = 30 if raw == "半" else _cn_int(raw)
@@ -87,7 +90,7 @@ def parse_time(text, now=None):
             return None
         at = now + timedelta(minutes=int(mins))
         return ("once", {"once_at": at.strftime("%Y-%m-%d %H:%M:%S")})
-    if "半小时后" in text:
+    if "半小时后" in text or "半小时以后" in text:
         at = now + timedelta(minutes=30)
         return ("once", {"once_at": at.strftime("%Y-%m-%d %H:%M:%S")})
 
@@ -154,7 +157,9 @@ def parse_content(text):
     s = re.sub(r"(明天|明早|明儿|今早|今晚|每天早上|每晚|每天|天天|周[一二三四五六日天]|星期[一二三四五六日天])", "", s)
     s = re.sub(r"[0-9]{1,2}\s*[:：]\s*[0-9]{2}", "", s)
     s = re.sub(r"([0-9]{1,2}|十[一二]?|[零一二两三四五六七八九])\s*点\s*(?:钟)?\s*(半|[0-9]{1,2}\s*分)?", "", s)
-    s = re.sub(r"([0-9]+|[一二两三四五六七八九十]+|半)\s*分钟后|半小时后", "", s)
+    s = re.sub(r"(?:过\s*)?([0-9]+|[一二两三四五六七八九十]+|半)\s*"
+               r"(?:分钟|min(?:ute)?s?)\s*(?:后|以后)?", "", s, flags=re.I)
+    s = re.sub(r"半小时(?:后|以后)", "", s)
     s = re.sub(r"[下这本]\s*(?=周|星期)", "", s)
     # 「把我叫起来」这类动作整段去掉，别留下「把起来」碎片
     s = re.sub(r"把(?:我)?(?:叫|喊|弄)?(?:起|醒)来", "", s)
@@ -359,3 +364,18 @@ def describe(data, task_id=None):
         when = f"{data.get('once_at', '')[:16]}"
     tail = f"（#{task_id}，不想要就说 !cron del {task_id}）" if task_id else ""
     return f"好，{when} 提醒你{data.get('content', '')}{tail}"
+
+
+def command_hint(data):
+    """把解析结果还原成标准命令草稿。"""
+    if not data or data.get("override_scene"):
+        return ""
+    content = str(data.get("content") or "").strip()
+    kind = data.get("schedule_type")
+    if kind == "daily":
+        return f"!cron add {data.get('at_time')} daily {content}"
+    if kind == "weekly":
+        days = str(data.get("weekdays") or "").replace(",", ",")
+        return f"!cron add {data.get('at_time')} {days} {content}"
+    once = str(data.get("once_at") or "")[:16]
+    return f"!cron once {once} {content}" if once else ""

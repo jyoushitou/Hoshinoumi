@@ -398,39 +398,54 @@ async def _read_after_request(uid, ws):
 
 
 async def _maybe_extract_timer(mt, text, uid, gid, ws, addressed):
-    """从对话提取定时任务（v21.9 从 _handle_message 抽出）"""
+    """从对话提取定时任务；返回 True 表示已处理，不再走模型回复。"""
     try:
         from ..schedule import extract as extract_mod
-        if extract_mod.should_extract(mt, text, uid, cfg.MASTER_QQ):
-            _tid, _data = extract_mod.create_from_text(text, uid)
-            if _data and (_tid or _data.get("override_scene")):
-                label = (f"#{_tid}" if _tid else
-                         f"当天微调 {_data.get('override_scene')}")
-                log_system(f"[定时] {label}：{_data.get('content')}")
-                from ..chat.send import send_short_reply
-                _confirm = extract_mod.describe(_data, _tid or 0)
-                _last = None
-                for _attempt in range(2):
-                    try:
-                        await send_short_reply(uid, _confirm, ws, uid, False, None)
-                        _last = None
-                        break
-                    except Exception as _e:
-                        _last = _e
-                        await asyncio.sleep(0.3)
-                if _last is not None:
-                    log_err(f"[定时] 确认回复两次都失败: {_last}")
-            elif (mt == "group" and addressed
-                  and str(uid) == str(cfg.MASTER_QQ)
-                  and extract_mod.is_timer_request(text)):
+
+        if not extract_mod.should_extract(mt, text, uid, cfg.MASTER_QQ):
+            if (mt == "group" and addressed
+                    and str(uid) == str(cfg.MASTER_QQ)
+                    and extract_mod.is_timer_request(text)):
                 log_system("[定时] 群聊里不建钩子，已明确拒绝")
                 try:
                     from ..chat.send import send_short_reply
                     await send_short_reply(gid, "群里不记闹钟，私聊我。", ws, gid, True, None)
                 except Exception as _e:
                     log_api(f"[定时] 群聊拒绝回复失败（忽略）: {_e}")
+                return True
+            return False
+
+        _tid, _data = extract_mod.create_from_text(text, uid)
+        if _data and (_tid or _data.get("override_scene")):
+            label = (f"#{_tid}" if _tid else
+                     f"当天微调 {_data.get('override_scene')}")
+            log_system(f"[定时] {label}：{_data.get('content')}")
+            from ..chat.send import send_short_reply
+            _confirm = extract_mod.describe(_data, _tid or 0)
+            _hint = extract_mod.command_hint(_data)
+            if _hint:
+                _confirm += f"\n标准命令：{_hint}"
+            try:
+                await send_short_reply(uid, _confirm, ws, uid, False, None)
+            except Exception as _e:
+                log_err(f"[定时] 确认回复失败: {_e}")
+            return True
+
+        if extract_mod.is_timer_request(text):
+            # 看起来是定时请求，但时间没解析出来：明确失败，禁止模型装懂
+            from ..chat.send import send_short_reply
+            msg = ("这个提醒我没建成：时间没解析出来。\n"
+                   "可以换成「30分钟后」「19:10」这种写法，"
+                   "或用 !cron once 2026-11-15 19:10 吃药。")
+            try:
+                await send_short_reply(uid, msg, ws, uid, False, None)
+            except Exception as _e:
+                log_err(f"[定时] 失败提示发送失败: {_e}")
+            return True
+        return False
     except Exception as _e:
         log_api(f"[定时] 提取失败（忽略）: {_e}")
+        return False
 
 
 async def _handle_message(d, ws):
@@ -539,7 +554,8 @@ async def _handle_message_impl(d, ws):
         log_api(f"[事实] 提取失败（忽略）: {_e}")
 
     # v17.7：从对话里提取定时任务（只私聊 + 只主人）
-    await _maybe_extract_timer(mt, text, uid, gid, ws, addressed)
+    if await _maybe_extract_timer(mt, text, uid, gid, ws, addressed):
+        return
 
     # 代码模式：每次收到消息更新最后活跃时间戳
     if cfg.CODE_MODE:

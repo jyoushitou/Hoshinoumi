@@ -70,7 +70,15 @@ async def handle_command(text, uid, ws, is_group, gid):
         if not ok and not reply:
             reply = "❌ 命令执行失败"
     else:
-        reply = f"❌ 未知命令: {cmd_name}\n输入 !help 查看可用命令"
+        import difflib
+        names = list(registry.COMMANDS.keys())
+        hit = difflib.get_close_matches(cmd_name, names, n=1, cutoff=0.55)
+        if hit:
+            reply = (f"❌ 未知命令: {cmd_name}\n"
+                     f"你是不是想用 !{hit[0]}？\n"
+                     f"输入 !help 查看完整用法")
+        else:
+            reply = f"❌ 未知命令: {cmd_name}\n输入 !help 查看可用命令"
 
     await _send_command_reply(reply, uid, ws, is_group, gid)
     return True
