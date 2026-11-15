@@ -137,7 +137,7 @@ async def _chunk_summary(info):
     """把这一块交给模型总结；不返回正文。"""
     try:
         from ..life import reading
-        text = await reading.summarize_chapter(info["chunk"][:3000])
+        text = await reading.summarize_chapter(info["chunk"][:3000], allow_text_fallback=False)
         return (text or "").strip()[:500] or "（这段摘要生成失败，进度已记录）"
     except Exception:
         return "（这段摘要生成失败，进度已记录）"

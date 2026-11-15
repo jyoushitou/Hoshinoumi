@@ -130,7 +130,8 @@ async def handle_local_read(ev):
         return {"ok": False, "reason": str(e)}
     summary = ""
     try:
-        summary = await reading.summarize_chapter(info["chunk"][:3000])
+        summary = await reading.summarize_chapter(
+            info["chunk"][:3000], allow_text_fallback=False)
     except Exception:
         pass
     book_queue.set_progress(tid, name, info["end_index"], info["total"],

@@ -115,7 +115,7 @@ class TestLocalBooks(unittest.TestCase):
         sent = []
         async def fake_send(*args, **kwargs):
             sent.append(args[1] if len(args) > 1 else "")
-        async def fake_sum(text):
+        async def fake_sum(text, **kwargs):
             return "测试摘要"
         S.send_short_reply = fake_send
         reading.summarize_chapter = fake_sum
@@ -150,6 +150,15 @@ class TestLocalBooks(unittest.TestCase):
         self.assertTrue(first["chunk"].startswith("<刀剑神域>"))
         self.assertIn("第一卷", first["chunk"])
         self.assertEqual(first["chapter"], "全文")
+
+    def test_summary_no_raw_text_fallback(self):
+        import asyncio
+        from bot.life import reading
+        async def empty(msgs, max_tokens=None):
+            return ""
+        out = asyncio.run(reading.summarize_chapter(
+            "<刀剑神域>正文", call_model=empty, allow_text_fallback=False))
+        self.assertEqual(out, "")
 
     def test_book_summary_memory(self):
         from bot.life import book_memory
