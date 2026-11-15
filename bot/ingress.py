@@ -70,12 +70,12 @@ async def main_async(args):
     app.router.add_route("*", "/{tail:.*}", lambda r: _http_proxy(r))
     runner = web.AppRunner(app, handle_signals=False)
     await runner.setup()
-    site = web.TCPSite(runner, args.host, args.http_port, reuse_address=True, reuse_port=True)
+    site = web.TCPSite(runner, args.http_host, args.http_port, reuse_address=True, reuse_port=True)
     await site.start()
 
-    ws = await websockets.serve(_ws_proxy, args.host, args.ws_port,
+    ws = await websockets.serve(_ws_proxy, args.ws_host, args.ws_port,
                                 ping_interval=20, ping_timeout=60)
-    print(f"[ingress] HTTP :{args.http_port} WS :{args.ws_port} -> {args.worker_dir}")
+    print(f"[ingress] HTTP {args.http_host}:{args.http_port} WS {args.ws_host}:{args.ws_port} -> {args.worker_dir}")
     stop = asyncio.Event()
     loop = asyncio.get_running_loop()
     for sig in (signal.SIGINT, signal.SIGTERM):
@@ -94,10 +94,14 @@ async def main_async(args):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--worker-dir", default=os.getenv("NAO_WORKER_SOCKET_DIR", "data/worker"))
-    ap.add_argument("--host", default=os.getenv("NAO_LISTEN_HOST", "0.0.0.0"))
+    ap.add_argument("--host", default="", help="兼容旧参数：同时设置 http/ws host")
+    ap.add_argument("--http-host", default=os.getenv("NAO_API_HOST", "127.0.0.1"))
+    ap.add_argument("--ws-host", default=os.getenv("NAO_LISTEN_HOST", "0.0.0.0"))
     ap.add_argument("--http-port", type=int, default=int(os.getenv("NAO_API_PORT", "27004")))
     ap.add_argument("--ws-port", type=int, default=int(os.getenv("NAO_WS_PORT", "3001")))
     args = ap.parse_args()
+    if args.host:
+        args.http_host = args.ws_host = args.host
     asyncio.run(main_async(args))
 
 
