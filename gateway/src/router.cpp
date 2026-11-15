@@ -26,7 +26,7 @@ namespace Gateway
             return {
                 {"Content-Type", "application/json; charset=utf-8"},
                 {"X-Request-Id", requestId},
-                {"X-Gateway", "hoshinoumi-gateway/24.8.1"},
+                {"X-Gateway", "hoshinoumi-gateway/26.4.0"},
             };
         }
     } // namespace
@@ -158,7 +158,7 @@ namespace Gateway
         boost::json::object body;
         body["ok"] = true;
         body["service"] = "hoshinoumi-gateway";
-        body["version"] = "24.8.1";
+        body["version"] = "26.4.0";
         session->httpReplay(boost::json::serialize(body),
                             boost::beast::http::status::ok,
                             JsonHeaders(NextRequestId()));
