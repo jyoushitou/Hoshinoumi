@@ -123,27 +123,79 @@ def parse_chapter_list(html):
     return chapters
 
 
+_TITLE_SUFFIX = re.compile(
+    r"\s*(?:[-_|—–].*)?(?:完整版在线免费阅读|在线免费阅读|全文免费阅读|全文阅读|"
+    r"番茄小说.*|最新章节.*|无弹窗.*)$")
+_OG_TITLE = re.compile(r'<meta[^>]+property=["\']og:title["\'][^>]+content=["\']([^"\']+)', re.I)
+_JSON_TITLE = re.compile(r'"(?:bookName|book_name|title)"\s*:\s*"([^"]{1,80})"')
+
+
+def clean_book_title(raw):
+    """去掉站点后缀；不把「番茄小说」「完整版」当书名。"""
+    text = strip_tags(raw or "").strip()
+    # 先按分隔符取前段，再按常见后缀截断（顺序覆盖「完整版_番茄小说」这类）
+    text = re.split(r"\s*[-_|—–]\s*", text)[0].strip()
+    for marker in ("完整版", "在线免费阅读", "全文免费阅读", "全文阅读",
+                   "最新章节", "无弹窗", "番茄小说"):
+        idx = text.find(marker)
+        if idx > 0:
+            text = text[:idx]
+    return text.strip(" -_|—–")[:40]
+
+
+def _title_candidates(html):
+    out = []
+    m = re.search(r"<h1[^>]*>(.*?)</h1>", html, re.S)
+    if m:
+        out.append(m.group(1))
+    m = re.search(r"<title[^>]*>(.*?)</title>", html, re.S)
+    if m:
+        out.append(m.group(1))
+    m = _OG_TITLE.search(html)
+    if m:
+        out.append(m.group(1))
+    for m in _JSON_TITLE.finditer(html):
+        out.append(m.group(1))
+    return out
+
+
 def parse_book(html):
-    """从书籍页解析书名/作者/简介/章节"""
+    """从书籍页解析书名/作者/简介/章节；解析不到书名就留空，不伪造。"""
     if not html:
         return None
     title = ""
-    m = re.search(r"<h1[^>]*>(.*?)</h1>", html, re.S)
-    if m:
-        title = strip_tags(m.group(1))[:40]
+    for raw in _title_candidates(html):
+        candidate = clean_book_title(raw)
+        if candidate and candidate not in ("番茄小说", "这本小说", "小说"):
+            title = candidate
+            break
+    plain = strip_tags(html)
     author = ""
-    m = re.search(r'作者[：:]\s*([^<\n]{1,20})', strip_tags(html))
+    m = re.search(r'作者[：:]\s*([^<\n]{1,20})', plain)
     if m:
         author = m.group(1).strip()
     intro = ""
-    m = re.search(r'作品简介\s*(.{0,300})', strip_tags(html), re.S)
+    m = re.search(r'作品简介\s*(.{0,300})', plain, re.S)
     if m:
         intro = m.group(1).strip()[:200]
+    status = ""
+    if re.search(r"(已完结|完结)", plain[:5000]):
+        status = "完结"
+    elif re.search(r"(连载中|连载)", plain[:5000]):
+        status = "连载中"
+    words = ""
+    m = re.search(r'(\d+(?:\.\d+)?)\s*万字', plain[:8000])
+    if m:
+        words = m.group(1) + " 万字"
+    chapters = parse_chapter_list(html)
     return {
         "title": title,
         "author": author,
         "intro": intro,
-        "chapters": parse_chapter_list(html),
+        "status": status,
+        "words": words,
+        "chapter_count": len(chapters),
+        "chapters": chapters,
     }
 
 

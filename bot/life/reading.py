@@ -338,9 +338,22 @@ async def follow(tid, url="", title="", fetch_book=None, search=None):
             except Exception as e:
                 log_api(f"[读书] 指定书取信息失败: {e}")
                 info = None
-        name = (info or {}).get("title") or title or "这本小说"
+        info = info or {}
+        name = info.get("title") or title
+        if not name:
+            # v24.2：解析失败保留 URL，不伪造书名
+            book = {"title": "", "url": url, "last_no": 0, "last_title": "",
+                    "intro": "", "status": "", "words": "", "chapter_count": 0}
+            books.append(book)
+            save(tid, data)
+            log_system(f"主人点名追书: 书名解析失败，保留 URL {url[:60]}")
+            return book, "链接我收下了，但页面没解析出书名（可能需要登录/风控/页面变化）；没有乱编书名。"
         book = {"title": name, "url": url, "last_no": 0, "last_title": "",
-                "intro": ((info or {}).get("intro") or "")[:200]}
+                "intro": (info.get("intro") or "")[:200],
+                "author": info.get("author") or "",
+                "status": info.get("status") or "",
+                "words": info.get("words") or "",
+                "chapter_count": int(info.get("chapter_count") or len(info.get("chapters") or []))}
         books.append(book)
         save(tid, data)
         log_system(f"主人点名追书: 《{name}》")
@@ -361,7 +374,7 @@ async def follow(tid, url="", title="", fetch_book=None, search=None):
                 found_title, found_url = hit
                 return await follow(tid, url=found_url, title=found_title,
                                     fetch_book=fetch_book, search=None)
-        return None, f"《{title}》——给我个链接吧，我找不到同名的那本"
+        return None, f"《{title}》番茄搜索没找到；发我链接，或把 TXT/EPUB 放进 data/books/。"
 
     return None, "没听出是哪本"
 

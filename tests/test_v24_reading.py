@@ -11,6 +11,44 @@ SAMPLE = '''
 '''
 
 
+class TestTitleV242(unittest.TestCase):
+    HTML_A = """<html><head><title>十日终焉完整版在线免费阅读_番茄小说官网</title></head>
+    <body><h1>十日终焉</h1><div>作者：杀虫队队员</div>
+    <div>作品简介 无限流</div><div>已完结 320.1 万字</div>
+    <a href="/reader/1">第1章 开端</a></body></html>"""
+
+    HTML_B = """<html><head><title>领主：我在苦痛世界，养成少女 - 番茄小说</title></head>
+    <body><h1>领主：我在苦痛世界，养成少女</h1></body></html>"""
+
+    def test_real_titles(self):
+        from bot.life import novel
+        a = novel.parse_book(self.HTML_A)
+        b = novel.parse_book(self.HTML_B)
+        self.assertEqual(a["title"], "十日终焉")
+        self.assertEqual(b["title"], "领主：我在苦痛世界，养成少女")
+        self.assertEqual(a["author"], "杀虫队队员")
+        self.assertEqual(a["status"], "完结")
+
+    def test_title_clean_suffix(self):
+        from bot.life.novel import clean_book_title
+        self.assertEqual(clean_book_title("十日终焉完整版在线免费阅读_番茄小说官网"), "十日终焉")
+
+    def test_no_fake_title(self):
+        import asyncio
+        from bot.life import reading
+        orig = reading.load
+        reading.load = lambda tid, user_id="__owner__": {"books": []}
+        try:
+            async def fetch(url):
+                return {"title": "", "chapters": []}
+            book, msg = asyncio.run(reading.follow("99", url="https://x/page/1", fetch_book=fetch))
+        finally:
+            reading.load = orig
+        self.assertIsNotNone(book)
+        self.assertEqual(book["title"], "")
+        self.assertIn("没有乱编书名", msg)
+
+
 class TestSearchV241(unittest.TestCase):
     def test_parse_ssr_and_json(self):
         from bot.life import novel
