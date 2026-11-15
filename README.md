@@ -294,7 +294,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | v22 | 网关（三）安全：限流/审计/TLS/`!gw` | ✅ 已完成 | [v22.md](docs/versions/v22.md) |
 | v23 | 多用户 + 亲密度可骤降/负值/修复，归零降私聊回复：users/roles + user_id 隔离 | ✅ 已完成（v23.5.1） | [v23.md](docs/versions/v23.md) |
 | v24 | 读书修复与增强：搜索/标题/进度、抓包分析、网络优先 + 本地书回退 | 🚧 v24.9.4 试运行 | [v24.md](docs/versions/v24.md) |
-| v25 | 热更新：配置/代码自动加载 + 上下文配置动态化 | 📋 已规划 | [v25.md](docs/versions/v25.md) |
+| v25 | 热更新：配置/代码自动加载，数据库/重启类更新强制拒绝 + 配置动态化 | 📋 已规划 | [v25.md](docs/versions/v25.md) |
 | v26 | 内部通讯升级：8+4+body TCP + protobuf（原 v25 顺延） | 📋 已规划 | [v26.md](docs/versions/v26.md) |
 | v27 | 插件接口实现（含 v27.0 代码审查与架构重构） | 📋 已规划 | [v27.md](docs/versions/v27.md) |
 | v28 | 模型层接口实现 | 📋 已规划 | [v28.md](docs/versions/v28.md) |
