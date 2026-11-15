@@ -145,14 +145,7 @@ def _mark(task_id, ok=True):
     from ..schedule import cron
 
     try:
-        task = cron.get(task_id)
-        # 一次性任务成功后直接删除；保留一条“已触发”的暂停任务只会让列表越来越脏
-        if ok and task and task.get("schedule_type") == "once":
-            cron.cancel(task_id)
-            if cron.remove(task_id, user_id=task.get("user_id") or "__owner__"):
-                log_system(f"[定时] 一次性任务已完成并删除 #{task_id}")
-                return
-            log_err(f"[定时] 一次性任务删除失败，改为停用 #{task_id}")
+        import pymysql
 
         c = None
         from ..infra.conn import get_cursor

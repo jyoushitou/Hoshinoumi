@@ -1,6 +1,6 @@
-# Hoshinoumi（REC） v26.7.5
+# Hoshinoumi（REC） v26.7.4
 
-> 后端 **v26.7.5** · 网关 **v26.4.0**（8+4+body TCP / protobuf / 模糊指令）
+> 后端 **v26.7.4** · 网关 **v26.4.0**（8+4+body TCP / protobuf / 模糊指令）
 > v25 已完成；v26 已完成。**v25 之后普通版本只切 worker，热更策略见 [HOT-UPDATE-POLICY.md](docs/HOT-UPDATE-POLICY.md)**；部署见 [DEPLOY-v26.md](docs/DEPLOY-v26.md)。
 >
 > 状态规则：**下一个大版本进入试运行，则上一个大版本视为完成。**
@@ -14,10 +14,10 @@
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-5C2D91)](#)
 [![NapCat](https://img.shields.io/badge/NapCat-QQ-12B7F5)](#)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
-![Backend](https://img.shields.io/badge/Backend-v26.7.5-yellow)
+![Backend](https://img.shields.io/badge/Backend-v26.7.4-yellow)
 ![Gateway](https://img.shields.io/badge/Gateway-v26.4.0-blue)
-![Version](https://img.shields.io/badge/Version-v26.7.5-orange)
-![Tests](https://img.shields.io/badge/Tests-1097%20passing-brightgreen)
+![Version](https://img.shields.io/badge/Version-v26.7.4-orange)
+![Tests](https://img.shields.io/badge/Tests-1095%20passing-brightgreen)
 
 > **Hoshinoumi（REC，记录）** · 友利奈绪 · 星之海学园学生会室
 >
@@ -295,7 +295,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | v23 | 多用户 + 亲密度可骤降/负值/修复，归零降私聊回复：users/roles + user_id 隔离 | ✅ 已完成（v23.5.1） | [v23.md](docs/versions/v23.md) |
 | v24 | 读书修复与增强：搜索/标题/进度、抓包分析、网络优先 + 本地书回退 | ✅ 已完成（v24.9.4） | [v24.md](docs/versions/v24.md) |
 | v25 | 热更新 + 配置动态化：配置/热加载/ingress/蓝绿/准入/清理/上线提示 | ✅ 已完成（v25.7.0） | [v25.md](docs/versions/v25.md) |
-| v26 | 内部通讯升级 + 模糊指令归一化：8+4+body TCP / protobuf / 标准命令 | ✅ 已完成（v26.7.5） | [v26.md](docs/versions/v26.md) |
+| v26 | 内部通讯升级 + 模糊指令归一化：8+4+body TCP / protobuf / 标准命令 | ✅ 已完成（v26.7.4） | [v26.md](docs/versions/v26.md) |
 | v27 | 插件注册表基础（含 v27.0 代码审查） | 📋 已规划 | [v27.md](docs/versions/v27.md) |
 | v28 | 插件运行时：审批 / 加载 / 错误 / DDL | 📋 已规划 | [v28.md](docs/versions/v28.md) |
 | v29 | 模型层契约 + native | 📋 已规划 | [v29.md](docs/versions/v29.md) |
