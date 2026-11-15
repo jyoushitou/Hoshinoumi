@@ -3,7 +3,7 @@
 # 适用网络无法访问 GitHub 的部署机/构建机。
 #
 #   docker build --build-arg BASE_IMAGE=docker.m.daocloud.io/library/ubuntu:24.04 \
-#     -f gateway/Dockerfile.offline -t hoshinoumi-gateway:20.0.0-offline .
+#     -f gateway/Dockerfile.offline -t hoshinoumi-gateway:26.4.0-offline .
 
 ARG BASE_IMAGE=ubuntu:24.04
 FROM ${BASE_IMAGE} AS build

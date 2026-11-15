@@ -1,6 +1,6 @@
 ﻿# Hoshinoumi（REC）gateway 镜像
 # 构建上下文是项目根目录：
-#   docker build -f gateway/Dockerfile -t hoshinoumi-gateway:20.0.0 .
+#   docker build -f gateway/Dockerfile -t hoshinoumi-gateway:26.4.0 .
 # 部署机只 docker load / docker run，不在部署机编译 C++。
 
 ARG BASE_IMAGE=ubuntu:24.04

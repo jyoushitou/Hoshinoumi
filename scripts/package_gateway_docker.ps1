@@ -1,10 +1,10 @@
 ﻿# 只打包 C++ 网关镜像（不含 Python bot）
 # 用法：
-#   .\scripts\package_gateway_docker.ps1 -Version 20.0.0 `
+#   .\scripts\package_gateway_docker.ps1 -Version 26.4.0 `
 #     -GatewayBase docker.m.daocloud.io/library/ubuntu:24.04
 
 param(
-    [string]$Version = "20.0.0",
+    [string]$Version = "26.4.0",
     [string]$GatewayBase = "ubuntu:24.04"
 )
 
