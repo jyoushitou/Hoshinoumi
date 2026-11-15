@@ -408,11 +408,19 @@ python3 scripts/run_tests.py --fast     # 只跑功能测试
 ## 架构
 
 ```
-run.py → app.bootstrap → app.loop
-                 │
-  接入(WS/HTTP/定时) → 调度器 → 业务/能力层 → 基础层 → MySQL/SQLite
-                 │
-            唯一出站口 egress.outbound → ws.send
+start.py / run.py
+  → app.runtime_checks（网络 / 人设）
+  → app.bootstrap（features / schema / 密钥 / life_bridge）
+  → app.loop（QQ WS 3001 + HTTP 27004 + 心跳 + 定时循环）
+        │
+        ├─ 接入：QQ / HTTP / 调度
+        ├─ 命令：cmd.registry + cmd/*
+        ├─ 业务/能力：chat / life / ai / memory / image / speech
+        ├─ 基础：core / infra / ports / events / egress
+        └─ 数据：MySQL / SQLite + data/books/ + backups/
+
+QQ → NapCat → bot:3001
+客户端 → gateway:27005（JWT / 限流 / 审计） → bot:27004
 ```
 
 完整分层图、消息生命周期、调度器模型、已知架构债：
@@ -626,7 +634,10 @@ sudo python3 -m playwright install-deps chromium
 
 ### 启动
 
-**一键启动（推荐）**
+> v25 生产部署不要用 `start.py`：它直接占 3001/27004，绕过热更新。
+> 生产走 [v25 生产部署](#v25-生产部署ingress--worker)。本节的 `start.py` 只用于本地单进程调试。
+
+**一键启动（本地调试）**
 
 ```bash
 python3 start.py
@@ -1106,95 +1117,185 @@ python3 scripts/build_all.py --version 19.5.7 --skip full,exe,docker
 
 **版本号必须三段式**（`v17.0.0`），两段会直接拒绝。
 
-### 服务器部署 / 从 v18.4 升级
+### v25 生产部署（ingress + worker）
 
-**先备份数据库**（迁移不可逆，回滚要靠它）：
-
-```bash
-cd ~/NapCat-Pyhon
-mysqldump -h 127.0.0.1 -u 用户 -p 库名 > ~/nao-before-v20.5.0.sql
-# 或 SQLite：sqlite3 data/nao.db ".backup '$HOME/nao-before-v20.5.0.db'"
-```
-
-取代码并迁移：
-
-```bash
-git fetch ./REC-v20.5.0-bundle.bundle main
-git reset --hard FETCH_HEAD
-
-python3 scripts/migrate.py --apply      # 建表 + 补列 + events→memories + 场景
-python3 checks/env_check.py             # 严格监测（FAIL 不启动）
-python3 run.py
-```
-
-systemd（新名字，旧 `nao-bot` unit 仍保留）：
-
-```bash
-sudo cp deploy/hoshinoumi.service /etc/systemd/system/hoshinoumi.service
-sudo systemctl daemon-reload
-sudo systemctl enable --now hoshinoumi
-sudo systemctl status hoshinoumi
-```
-
-完整清单（依赖、systemd、验证、回滚）：[v19 开发记录](docs/versions/v19.md)；命名约定：[NAMING.md](docs/NAMING.md)。
-
-
-### v25 部署踩坑记录（2026-11-15）
-
-v25 不是 `start.py` 直接启动，而是：
+v25 起生产环境是：
 
 ```text
-ingress 持有 3001/27004
+nao-ingress 持有 3001 / 27004
 worker 只监听 Unix socket
-supervisor 启动/切换 worker
+supervisor 启动、健康检查、蓝绿切换
 ```
 
-这次实际部署踩到的问题：
+不要用 `python3 start.py` 做生产启动。
 
-| 现象 | 根因 | 处理 |
-|---|---|---|
-| worker 健康检查失败，`worker.log` 为空 | Python stdout 缓冲；且 supervisor 终端没 source `.env`，DB 密码为空 | `set -a; . ./.env; set +a`；worker 用 `python3 -u run.py` |
-| `config.local.json 读取失败：Extra data` | 文件缺最外层 `{` / `}`，`db.host` 还是 `"..."` | `python3 -m json.tool config.local.json`；重建合法 JSON |
-| `还没有有效的环境监测报告` | 代码/配置变更后报告过期 | `python3 checks/env_check.py` 重新生成 `data/env_report.json` |
-| 卡在 `加载 CLIP (CPU)...` | 旧 `bootstrap.py` 无条件 `init_clip_model()` | v25.5.5 起只有 `NAO_CLIP=1` 才加载 |
-| 27004 返回 502：`Cannot connect to unix socket data/workers/api.sock` | `current` 是相对软链，被解析成 `data/workers/data/workers/...` | v25.5.6 起写绝对路径；旧实例手动 `ln -sfn "$PWD/data/workers/versions/<版本>" data/workers/current` |
-| `/readyz` 返回 `{"ok":false,"backend":"starting"}` | 网关在后端起来前启动，探测没成功 | 后端 health 200 后 `docker restart hoshinoumi-gateway` |
-| `!version` 显示 `v24.9.4-14-g...` | `get_version()` 优先旧 git tag，不读静态 VERSION | v25.5.7 起静态 VERSION 优先；提交号单独显示 |
-| supervisor 提示 `--version` required | 命令里写了字面量 `...`，shell 把它当参数 | 逐行执行完整命令，不要输入省略号 |
-| `pkill: only one pattern can be provided` | 两行命令粘在一起 | `pkill -f 'run.py' 2>/dev/null` 单独一行 |
-
-#### 正确部署顺序
+#### 1. 备份、取代码
 
 ```bash
 cd ~/Hoshinoumi
 
-# 1. 环境变量和依赖
+mysqldump --no-tablespaces --single-transaction \
+  --default-character-set=utf8mb4 \
+  -h 192.168.0.50 -u TomoriNaoBot -p TomoriNaoBotData \
+  > ~/nao-before-v25.sql
+```
+
+```bash
+git bundle verify Release/REC-v25.5.7.bundle
+git fetch Release/REC-v25.5.7.bundle main:refs/remotes/bundle/main
+git merge --ff-only refs/remotes/bundle/main
+```
+
+确认：
+
+```bash
+grep 'VERSION =' bot/core/version.py   # 25.5.7
+```
+
+schema 当前为 29；只有迁移脚本要求时才跑：
+
+```bash
+python3 scripts/migrate.py --apply
+```
+
+#### 2. 环境变量与环境报告
+
+```bash
+cd ~/Hoshinoumi
 set -a
 . ./.env
 set +a
+
 python3 checks/env_check.py
+```
 
-# 2. 版本目录（真正的新代码）
+必须生成 `data/env_report.json`。worker 启动会检查它，过期会拒绝启动。
+
+#### 3. 准备 worker 版本目录
+
+```bash
 python3 scripts/prepare_worker.py --version 25.5.7
+```
 
-# 3. ingress（单独 screen/tmux，保持运行）
-python3 -m bot.ingress   --worker-dir data/workers   --http-host 127.0.0.1   --ws-host 0.0.0.0   --http-port 27004   --ws-port 3001
+生成：
 
-# 4. worker（另一个终端）
-python3 scripts/nao_supervisor.py   --base data/workers   --version 25.5.7   --worker-cmd "python3 -u run.py"   --timeout 90   --drain-seconds 0
+```text
+data/workers/versions/25.5.7/
+```
 
-# 5. 验收
+`.env`、`config.local.json`、`data`、`personas` 会软链回项目根目录。
+
+#### 4. 启动 ingress
+
+单独 screen/tmux，保持运行：
+
+```bash
+screen -S ingress
+
+cd ~/Hoshinoumi
+set -a
+. ./.env
+set +a
+
+python3 -m bot.ingress \
+  --worker-dir data/workers \
+  --http-host 127.0.0.1 \
+  --ws-host 0.0.0.0 \
+  --http-port 27004 \
+  --ws-port 3001
+```
+
+看到：
+
+```text
+[ingress] HTTP 127.0.0.1:27004 WS 0.0.0.0:3001 -> data/workers
+```
+
+按 `Ctrl-A D` detach。
+
+#### 5. 启动 worker
+
+```bash
+cd ~/Hoshinoumi
+set -a
+. ./.env
+set +a
+
+python3 scripts/nao_supervisor.py \
+  --base data/workers \
+  --version 25.5.7 \
+  --worker-cmd "python3 -u run.py" \
+  --timeout 90 \
+  --drain-seconds 0
+```
+
+`-u` 必须加，否则 `worker.log` 可能因缓冲为空。supervisor 退出是正常的，worker 会留在后台。
+
+#### 6. 验收
+
+```bash
 curl -s http://127.0.0.1:27004/api/health
+curl -s http://127.0.0.1:27005/healthz
 curl -s http://127.0.0.1:27005/readyz
+
 python3 scripts/nao_drill.py --base data/workers
 ```
 
-#### 关键原则
+QQ 私聊：
 
-- **先 `env_check`，再 `prepare_worker`，再 ingress，再 worker。**
-- worker 必须从 `data/workers/versions/<version>/` 启动，不能直接在项目根目录用 `start.py`。
-- `200` 健康检查只看 `27004`；`!version` 走 QQ → ingress WS → worker。
-- 任何“需要迁移/必须重启”的版本都不走热更，按 v25 的 `update.json` 准入拒绝。
+```text
+!version
+!ping
+!config
+```
+
+`!version` 应为 `v25.5.7`。
+
+如果 `/readyz` 返回 `backend: starting`，而后端 health 已经 200：
+
+```bash
+docker restart hoshinoumi-gateway
+```
+
+#### 7. 以后热更新
+
+```bash
+cd ~/Hoshinoumi
+
+python3 scripts/prepare_worker.py --version 25.5.8
+
+python3 scripts/nao_supervisor.py \
+  --base data/workers \
+  --version 25.5.8 \
+  --worker-cmd "python3 -u run.py" \
+  --timeout 90
+```
+
+默认旧 worker 保留 60 秒 drain，再退出。需要迁移数据库或必须重启的版本会被 `update.json` 拒绝，不自动切。
+
+#### 8. 回滚
+
+```bash
+pkill -f 'bot.ingress'
+pkill -f 'run.py'
+
+cd ~/Hoshinoumi
+git log --oneline -5
+git reset --hard <旧提交>
+python3 start.py --no-gateway
+```
+
+数据库没有结构变更时不需要恢复备份；有迁移时恢复 `~/nao-before-v25.sql`。
+
+完整踩坑记录和配置校验见 [v25 部署踩坑记录](#v25-部署踩坑记录2026-11-15)。
+
+### 旧版单进程（仅本地调试）
+
+```bash
+python3 start.py --no-gateway
+```
+
+这种方式直接监听 3001/27004，不支持 ingress/蓝绿热更新，只适合本地调试或临时验证。
 
 ### 打包（四种形式）
 
@@ -1213,23 +1314,31 @@ Docker 镜像里自带 Chromium，抓小说可用。
 
 ```
 bot/
-├── core/       常量、运行时状态、锁、单实例、参数中心、统计
-├── infra/      数据库连接与仓储（记忆 / 画像 / 密钥 / 日志 / AI 原文）
-├── memory/     上下文、检索（BM25+RRF）、分层预算、时间线、浓缩
-├── ai/         人设、角色卡加载、提示词、模型调用、工具调用、回复解析、视觉
-├── chat/       入站解析、回复组装、发送、群聊节奏、通知事件、摩擦反馈
-├── cmd/        46 个命令（注册表 + 各分类实现）
+├── core/       常量、运行时状态、features、settings、tunables、时钟、单实例
+├── infra/      连接 / 仓储 / tenant 多用户隔离 / schema / 缓存 / 备份 / 日志
+├── ports/      模型、记忆、传输、服务、时钟端口
+├── memory/     上下文、检索（BM25+RRF）、分层预算、时间线
+├── ai/         人设、提示词、模型调用、工具调用、回复解析、视觉
+├── chat/       入站解析、回复组装、发送、群聊节奏、通知、摩擦反馈
+├── cmd/        命令注册表 + 分类实现（books / cron / memory / ops 等）
 ├── diary/      日记生成与存储
 ├── schedule/   定时任务、随机闲聊、空闲读书
+├── scheduler/  三档队列、dispatcher、policy、workers
+├── executors/  主动 / 空闲 / 读书等执行器
 ├── image/      图库：存图、打标、检索、在线图源
 ├── speech/     语音合成（TTS）与转写（ASR）
-├── life/       状态、生活事件、愿望、日程、关系、习惯、摩擦、读书、OCR
-├── server/     HTTP API
-└── app/        启动引导与主循环
+├── life/       状态 / 关系 / 日程 / 读书 / novel / local_books / book_queue / OCR
+├── server/     HTTP API（routes_chat / routes_meta / config）
+├── events/     事件注册表
+├── egress/     唯一出站口与合并
+└── app/        runtime_checks / bootstrap / life_bridge / loop
 
+gateway/       C++ 网关：auth / rate_limit / router / backend
 personas/       角色卡（不进代码，可直接改）
+proto/          内部契约骨架
 scripts/        迁移 / 自检 / 发布 / 打包 / 探测
 data/           运行时数据（tunables、digests、cookies、凭据）——不进版本库
+data/books/     本地 TXT/EPUB（用户自备，不进版本库）
 ```
 
 ---
