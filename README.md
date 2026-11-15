@@ -1374,9 +1374,11 @@ python3 start.py --no-gateway
 | 形式 | 命令 | 产物 |
 |---|---|---|
 | git bundle | `python3 scripts/release.py --apply` | `release/REC-vX.Y.Z-bundle.bundle` |
-| 源码 zip | `python3 scripts/package.py` | 含依赖清单 |
+| 源码 zip | `python3 scripts/package.py` | 仅 Python + Markdown，约 1 MB |
 | 可执行 | `python3 scripts/build_exe.py` | PyInstaller |
 | Docker | `python3 scripts/build_docker.py` | 镜像 |
+
+源码包默认不含 `gateway/`、`third_party/`、`docs/video/assets/`、图片、`personas/` 等运行素材；要旧的全量源码包加 `--full`。
 
 Docker 镜像里自带 Chromium，抓小说可用。
 
@@ -2251,4 +2253,5 @@ python3 scripts/check_names.py        # 未定义名字
 所以有了 Hoshinoumi。算是给“故事结束之后”补的一间学生会室：让她继续上学、开会、喂猫、弹琴，也让她在 QQ、Web、桌面和手机那边，记得你随口说过的话。
 
 > 故事结束以后，她还在。
+
 

@@ -128,6 +128,35 @@ def build_zip(zip_path, files, extra=None, sanitize=False):
     return count
 
 
+# ===================== v25.6.2：源码包只收 Python + Markdown =====================
+SRC_EXACT = {
+    "requirements.txt",
+    "config.example.json",
+    ".env.example",
+    "botsetting.yaml",
+}
+SRC_PY_ROOTS = ("bot", "scripts", "checks", "tests")
+
+
+def _src_allowed(rel):
+    rel = rel.replace("\\", "/")
+    name = rel.rsplit("/", 1)[-1]
+    if rel in ("run.py", "start.py") or rel in SRC_EXACT:
+        return True
+    if name.endswith(".py"):
+        return any(rel == root or rel.startswith(root + "/") for root in SRC_PY_ROOTS)
+    if rel == "README.md":
+        return True
+    if rel.startswith("docs/") and name.endswith(".md"):
+        return True
+    return False
+
+
+def src_files():
+    """只收 Python、Markdown 和最小配置示例；不含 C++/图片/运行数据。"""
+    return [rel for rel in iter_files() if _src_allowed(rel)]
+
+
 def find_site_packages():
     """找当前解释器的 site-packages（用于整包）"""
     for p in sys.path:
@@ -163,6 +192,8 @@ def main():
     ap.add_argument("--deps", action="store_true", help="同时打整包（含依赖）")
     ap.add_argument("--site-packages", action="store_true",
                     help="整包依赖从 site-packages 复制（默认用 vendor/ 目录）")
+    ap.add_argument("--full", action="store_true",
+                    help="源码包也带上 C++/图片/运行数据（旧行为）")
     ap.add_argument("--sanitize", action="store_true",
                     help="分发模式：把密码/QQ 等默认值替换成占位符")
     args = ap.parse_args()
@@ -173,8 +204,9 @@ def main():
     print("=" * 56)
 
     os.makedirs(DIST, exist_ok=True)
-    files = list(iter_files())
-    print(f"\n>> 源码包（{len(files)} 个文件）")
+    all_files = list(iter_files())
+    files = all_files if args.full else src_files()
+    print(f"\n>> 源码包（{len(files)} 个文件，仅 Python/Markdown）")
     src_zip = os.path.join(DIST, src_name(version))
     build_zip(src_zip, files, extra={
         "启动说明.txt": (
@@ -213,7 +245,7 @@ def main():
         n = len(os.listdir(vendor))
     print(f"   已收集 {n} 个依赖")
 
-    full_files = list(files)
+    full_files = list(all_files)
     for base, dirs, fnames in os.walk(staging):
         for name in fnames:
             rel = os.path.relpath(os.path.join(base, name), staging)
