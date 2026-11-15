@@ -1,6 +1,6 @@
 # v26 部署与热更新（8+4+body TCP / protobuf）
 
-> 后端：v26.7.1  
+> 后端：v26.7.2  
 > 网关：v26.4.0（`backend.protocol=tcp`）  
 > 数据库 schema：29，不需要迁移  
 > 对外端口：ingress `3001` WS + `27004` TCP；gateway `27005` HTTP
@@ -36,8 +36,8 @@ data/workers/versions/<version>
 ```bash
 cd ~/Hoshinoumi
 
-git bundle verify Release/REC-v26.7.1.bundle
-git fetch Release/REC-v26.7.1.bundle main:refs/remotes/bundle/main
+git bundle verify Release/REC-v26.7.2.bundle
+git fetch Release/REC-v26.7.2.bundle main:refs/remotes/bundle/main
 git merge --ff-only refs/remotes/bundle/main
 
 grep 'VERSION =' bot/core/version.py
@@ -258,7 +258,7 @@ QQ：
 应：
 
 ```text
-v26.7.1
+v26.7.2
 标准命令：!cron once ... 吃药
 你是不是想用 !cron？
 ```

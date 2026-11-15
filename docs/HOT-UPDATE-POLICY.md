@@ -83,7 +83,11 @@ v25 的 27004 是 HTTP，v26 是 8+4+body TCP。协议不兼容，所以第一�
 
 这不是“每次版本都重启整套设备”，只是协议切换的一次性 ingress 重启。
 
-## 6. 热更新流程
+## 6. 重启登记
+
+需要重启 ingress/gateway/整套服务的版本，必须补 [RESTART-LEDGER.md](RESTART-LEDGER.md)。
+
+## 7. 热更新流程
 
 ```bash
 python3 scripts/prepare_worker.py --version X.Y.Z
