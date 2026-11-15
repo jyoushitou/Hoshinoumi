@@ -261,7 +261,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 
 ## 开发计划
 
-**当前：v24.7 试运行（本地阅读队列 / 读书修复）**｜v24.8 待审核（立即读第 1 章 + 主动告知）｜下一站 v26 模型层接口。
+**当前：v24.8.4 试运行（本地书连续 1000 字 / 主动告知）**｜下一站 v25 内部 TCP/protobuf。
 
 > v22 试运行 1 天后，进入约 1 天的 v23 启动 + v22 介绍视频，再开始 v23 子版本开发。
 
@@ -655,6 +655,8 @@ NapCat --WebSocket 3001--> Python bot 核心
 
 入口 B：API
 客户端/Web/IDE --HTTP+JWT--> gateway 27005 --HTTP 27004--> Python bot 核心
+
+> v24 当前仍是 HTTP/JSON 内部链路；v25 会把网关→后端 27004 改成 8+4+body TCP + protobuf。
 ```
 
 - NapCat 只负责 QQ，**不经过网关**
@@ -837,6 +839,23 @@ python3 scripts/export_persona.py
 | `!diary raw <日期>` | 原始事件记录 |
 | `!todo` | 待办 |
 | `!task` | 定时任务 |
+
+### 本地阅读（仅主人 / 私聊）
+
+| 命令 | 说明 |
+|---|---|
+| `!books` | 列出 `data/books/` 的 TXT/EPUB |
+| `!book local <书名>` | 加入队首，立即读首个 1000 字，并主动私聊告知 |
+| `!book read <书名> [章节]` | 从指定章节开头读 1000 字 |
+| `!book next` | 从上次结束的下一个字继续读 1000 字 |
+| `!book queue` | 查看队列、已读字数、章节进度 |
+| `!book remove <书名>` | 移出队列 |
+| `!book progress` | 当前本地阅读进度 |
+
+- 全书连续字符流，每次 1000 字，可跨章节，不按章节重置。
+- 章节名只用于显示，不决定切块。
+- 只读本机 `data/books/`，不导入数据库、不上传。
+- 群聊不响应。
 
 ### 模式与运维
 
@@ -1488,7 +1507,7 @@ python3 checks/env_check.py --init-db   # 环境监测时自动建
 
 ---
 
-## 附录 B · 命令全表（39 个）
+## 附录 B · 命令全表（45 个）
 
 > 全部命令仅主人可用；群聊里需要 @ 或命令前缀。`!task` 只保留迁移提示。
 
@@ -1533,6 +1552,8 @@ python3 checks/env_check.py --init-db   # 环境监测时自动建
 | `!say` | `!say <内容>` | 以她的口吻回一句 |
 | `!sayg` | `!sayg <群号> <内容>` | 在指定群说话 |
 | `!task` | `!task` | 已移除；提示改用 `!cron` / `!hooks` |
+| `!books` | `!books` | 列出本地 TXT/EPUB |
+| `!book` | `!book local/read/next/queue/remove/progress` | 本地阅读队列与连续 1000 字 |
 
 ---
 
@@ -1641,6 +1662,7 @@ curl -s -H "Authorization: Bearer $TOKEN" http://127.0.0.1:27004/api/status
 | `habits` | 口癖计数 | `target_id`、`phrase`、`count` |
 | `diaries` | 日记 | `target_id`、`diary_date`、`content` |
 | `reading_progress` | 阅读进度/书架 | `target_id`、`book_url`、`title`、`last_no`、`last_chapter` |
+| `reading_queue` | 本地阅读队列 | `user_id`、`name`、`position`、`status`、`last_chapter`、`char_offset`、`total` |
 | `images` | 图库 | `md5_hash`、`file_path`、`tags` |
 | `acg_images` | 二次元图缓存 | `md5_hash`、`image_data`、`tags`、`source_url`、`use_count` |
 | `ai_raw_responses` | 原始模型返回/用量 | `model_name`、`raw_response_json`、`status`、`prompt_tokens`、`completion_tokens` |
