@@ -19,6 +19,8 @@ ROOT = Path(__file__).resolve().parent.parent
 
 
 def switch_current(base: Path, target: Path):
+    base = base.resolve()
+    target = target.resolve()
     base.mkdir(parents=True, exist_ok=True)
     tmp = base / "current.tmp"
     try:
@@ -79,8 +81,12 @@ async def deploy(base: Path, version: str, cmd, timeout=30.0, drain_seconds=60.0
     try:
         if current.is_symlink():
             old_dir = Path(os.readlink(current))
+            if not old_dir.is_absolute():
+                old_dir = base / old_dir
         elif current.exists():
             old_dir = Path(current.read_text(encoding="utf-8").strip())
+            if not old_dir.is_absolute():
+                old_dir = base / old_dir
     except OSError:
         old_dir = None
     log = open(version_dir / "worker.log", "ab")
