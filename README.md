@@ -1,4 +1,4 @@
-# Hoshinoumi（REC） v23.5.1
+# Hoshinoumi（REC） v24.6
 
 > 后端 **v21** · 网关 **v21**（owner 鉴权 / JWT / 架构收口）
 > v19 与 v20.0–v20.4 已完成，当前在做 Docker 与网关验证。
@@ -12,10 +12,10 @@
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-5C2D91)](#)
 [![NapCat](https://img.shields.io/badge/NapCat-QQ-12B7F5)](#)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
-![Backend](https://img.shields.io/badge/Backend-v23.5.1-yellow)
-![Gateway](https://img.shields.io/badge/Gateway-v23.5.1-blue)
-![Version](https://img.shields.io/badge/Version-v23.5.1-orange)
-![Tests](https://img.shields.io/badge/Tests-1018%20passing-brightgreen)
+![Backend](https://img.shields.io/badge/Backend-v24.6-yellow)
+![Gateway](https://img.shields.io/badge/Gateway-v24.6-blue)
+![Version](https://img.shields.io/badge/Version-v24.6-orange)
+![Tests](https://img.shields.io/badge/Tests-1034%20passing-brightgreen)
 
 > **Hoshinoumi（REC，记录）** · 友利奈绪 · 星之海学园学生会室
 >
@@ -291,7 +291,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | v21 | 网关（二）owner 鉴权：JWT/刷新/失败锁定 + 架构收口 | ✅ 已完成 | [v21.md](docs/versions/v21.md) |
 | v22 | 网关（三）安全：限流/审计/TLS/`!gw` | ✅ 已完成 | [v22.md](docs/versions/v22.md) |
 | v23 | 多用户 + 亲密度可骤降/负值/修复，归零降私聊回复：users/roles + user_id 隔离 | 🚧 v23.5.1 试运行 | [v23.md](docs/versions/v23.md) |
-| v24 | 读书修复与增强：搜索/标题/进度、抓包分析、网络优先 + 本地书回退 | 📋 已规划 | [v24.md](docs/versions/v24.md) |
+| v24 | 读书修复与增强：搜索/标题/进度、抓包分析、网络优先 + 本地书回退 | 🚧 v24.6 试运行 | [v24.md](docs/versions/v24.md) |
 | v25 | 插件接口实现（含 v25.0 代码审查与架构重构） | 📋 已规划 | [v25.md](docs/versions/v25.md) |
 | v26 | 模型层接口实现 | 📋 已规划 | [v26.md](docs/versions/v26.md) |
 | v27 | 记忆层接口实现 | 📋 已规划 | [v27.md](docs/versions/v27.md) |
@@ -791,7 +791,7 @@ python3 scripts/export_persona.py
 
 ---
 
-## 命令（39 个，仅主人可用）
+## 命令（45 个，仅主人可用）
 
 ### 基础
 
@@ -1093,7 +1093,7 @@ bot/
 ├── memory/     上下文、检索（BM25+RRF）、分层预算、时间线、浓缩
 ├── ai/         人设、角色卡加载、提示词、模型调用、工具调用、回复解析、视觉
 ├── chat/       入站解析、回复组装、发送、群聊节奏、通知事件、摩擦反馈
-├── cmd/        39 个命令（注册表 + 各分类实现）
+├── cmd/        45 个命令（注册表 + 各分类实现）
 ├── diary/      日记生成与存储
 ├── schedule/   定时任务、随机闲聊、空闲读书
 ├── image/      图库：存图、打标、检索、在线图源
@@ -1462,7 +1462,7 @@ python3 checks/env_check.py --init-db   # 环境监测时自动建
 | 阶段 | Docker 验证 + 网关验证，已部署试运行 |
 | 前序 | v19 与 v20.0–v20.4 已完成 |
 | 数据表 | 25 张表 + 1 个只读视图 `v_bot_meta` |
-| 命令 | 39 个注册命令（`!task` 仅提示迁移） |
+| 命令 | 45 个注册命令（`!task` 仅提示迁移） |
 | 测试 | 969 条：功能 932 + 环境/迁移 37 |
 | 账号 | 单主人 `__owner__`；多用户 v23 计划 |
 | 后端鉴权 | `/api/*` 除 health 外要 Bearer Token；`/internal/*` 免鉴权 |

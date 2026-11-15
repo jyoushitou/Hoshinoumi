@@ -46,7 +46,7 @@ class TestV1820(unittest.TestCase):
     def test_version_bumped(self):
         from bot.core import version
 
-        self.assertEqual(version.VERSION, "23.5.1")
+        self.assertEqual(version.VERSION, "24.6.0")
 
 
 if __name__ == "__main__":
