@@ -716,7 +716,7 @@ NapCat --WebSocket 3001--> Python bot 核心
 入口 B：API
 客户端/Web/IDE --HTTP+JWT--> gateway 27005 --HTTP 27004--> Python bot 核心
 
-> v24 当前仍是 HTTP/JSON 内部链路；v26 会把网关→后端 27004 改成 8+4+body TCP + protobuf。
+> v26 起网关→后端 27004 是 8+4+body TCP + protobuf；旧的 HTTP/JSON 只作 `protocol=http` 回滚。
 ```
 
 - NapCat 只负责 QQ，**不经过网关**
@@ -1998,7 +1998,9 @@ curl -s -H "Authorization: Bearer $TOKEN" http://127.0.0.1:27004/api/status
 |---|---|---|
 | `NAO_MASTER_QQ` | 空 | 主人 QQ |
 | `NAO_WS_PORT` | 3001 | NapCat 连入端口 |
-| `NAO_API_PORT` | 27004 | 后端 HTTP 端口 |
+| `NAO_API_PORT` | 27004 | 后端内部端口（v26 默认 TCP 帧；`NAO_INTERNAL_TCP=0` 回 HTTP） |
+| `NAO_INTERNAL_TCP` | `1` | 1=27004 TCP 帧 + HTTP Unix socket；0=旧 HTTP |
+| `NAO_WS_TOKEN` | 空（关闭） | WS 握手 token，NapCat URL 带 `?token=` |
 | `NAO_API_HOST` | 127.0.0.1 | 后端 HTTP 监听地址 |
 | `NAO_DB_BACKEND` | auto | auto / mysql / sqlite |
 | `NAO_DB_PATH` | data/nao.db | SQLite 文件 |
