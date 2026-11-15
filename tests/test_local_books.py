@@ -1,8 +1,24 @@
 # ===================== v24.6 本地 TXT/EPUB =====================
+import sys
 import tempfile
+import types
 import unittest
 import zipfile
 from pathlib import Path
+
+
+def _stub():
+    for name, attrs in (("jieba", {"lcut": lambda s: list(s)}), ("PIL", {"Image": None})):
+        try:
+            __import__(name)
+        except ImportError:
+            m = types.ModuleType(name)
+            for k, v in attrs.items():
+                setattr(m, k, v)
+            sys.modules[name] = m
+
+
+_stub()
 
 
 class TestLocalBooks(unittest.TestCase):
@@ -69,13 +85,21 @@ class TestLocalBooks(unittest.TestCase):
         BQ.enqueue = lambda uid, name, total=0: calls.setdefault("enqueue", name) or True
         BQ.get_item = lambda uid, name: {"name": name}
         BQ.set_progress = lambda uid, name, chapter, total=0: calls.setdefault("progress", chapter)
+        import bot.chat.send as S
+        orig_send = S.send_short_reply
+        sent = []
+        async def fake_send(*args, **kwargs):
+            sent.append(args[1] if len(args) > 1 else "")
+        S.send_short_reply = fake_send
         try:
             ctx = CommandContext(parts=["book", "local", "测试书"], uid="u1",
                                  ws=None, is_group=False, gid=0)
             out = asyncio.run(cmd_book(ctx))
         finally:
             BQ.enqueue, BQ.get_item, BQ.set_progress = orig
+            S.send_short_reply = orig_send
         self.assertIn("第1章 开始", out)
+        self.assertTrue(any("我开始读" in x for x in sent))
         self.assertIn("第 1 章已读", out)
         self.assertEqual(calls["progress"], 1)
 

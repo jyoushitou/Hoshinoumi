@@ -135,10 +135,18 @@ async def handle_local_read(ev):
     except Exception:
         pass
     book_queue.set_progress(tid, name, info["index"], info["total"])
+    done = info["index"] >= info["total"]
     log_system(f"[本地阅读] {name} {info['chapter']} "
                f"({info['index']}/{info['total']}) 摘要 {len(summary or '')} 字")
-    return {"ok": True, "chapter": info["chapter"], "summary": summary,
-            "done": info["index"] >= info["total"]}
+    if done:
+        try:
+            from ..chat.send import send_short_reply
+            await send_short_reply(
+                tid, f"我把《{info['title']}》读完了。共 {info['total']} 章。",
+                cfg.active_ws_qq, tid, False, None)
+        except Exception as e:
+            log_api(f"[本地阅读] 完成告知失败: {e}")
+    return {"ok": True, "chapter": info["chapter"], "summary": summary, "done": done}
 
 
 # ---------- tick 的自我重排 ----------

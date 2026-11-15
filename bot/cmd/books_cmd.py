@@ -60,8 +60,13 @@ async def cmd_book(ctx):
             return _decl(ctx) + f"加入失败：{e}"
         BQ.enqueue(ctx.uid, name, len(chapters))
         # v24.8.0：立即读第 1 章完成验证；之后空闲从第 2 章续读
-        first = _read(ctx, name, 1)
-        return (first + f"\n已加入队首：《{title}》，共 {len(chapters)} 章；"
+        info = LB.read_chapter(name, 1)
+        LB.set_progress(ctx.uid, name, info["index"])
+        if BQ.get_item(ctx.uid, name):
+            BQ.set_progress(ctx.uid, name, info["index"], info["total"])
+        # v24.8.1：单独主动发一条自然消息，不和命令回执混在一起
+        await _notify_start(ctx, title, info)
+        return (_render(info) + f"\n已加入队首：《{title}》，共 {len(chapters)} 章；"
                 "第 1 章已读，空闲续读。")
     if sub == "progress":
         p = LB.get_progress(ctx.uid)
@@ -89,6 +94,24 @@ async def cmd_book(ctx):
     return _read(ctx, name, chapter)
 
 
+async def _notify_start(ctx, title, info):
+    from ..chat.send import send_short_reply
+    text = (f"我开始读《{title}》了。\n"
+            f"第 1 章《{info['chapter']}》：\n"
+            f"{info['summary'][:180]}\n"
+            f"共 {info['total']} 章，读完我再告诉你。")
+    try:
+        await send_short_reply(ctx.uid, text, ctx.ws, ctx.uid, False, None)
+    except Exception:
+        pass
+
+
+def _render(info):
+    return (f"📖《{info['title']}》{info['chapter']}（{info['index']}/{info['total']}）\n"
+            f"摘要：{info['summary'][:300]}\n"
+            "（只读本机文件，不导入数据库，不上传。）")
+
+
 def _read(ctx, name, chapter):
     try:
         info = LB.read_chapter(name, chapter)
@@ -97,9 +120,4 @@ def _read(ctx, name, chapter):
     LB.set_progress(ctx.uid, name, info["index"])
     if BQ.get_item(ctx.uid, name):
         BQ.set_progress(ctx.uid, name, info["index"], info["total"])
-    return (
-        _decl(ctx)
-        + f"📖《{info['title']}》{info['chapter']}（{info['index']}/{info['total']}）\n"
-        + f"摘要：{info['summary'][:300]}\n"
-        + "（只读本机文件，不导入数据库，不上传。）"
-    )
+    return _decl(ctx) + _render(info)
