@@ -50,7 +50,7 @@ int main(int argc, char **argv)
 
         Utils::init();
         Utils::serviceID = RPCGateway;
-        Utils::Out::outMsg("Hoshinoumi（REC）网关 v23.5.0");
+        Utils::Out::outMsg("Hoshinoumi（REC）网关 v23.5.1");
         Utils::Out::outMsg("配置: " + cfg.Describe());
 
         boost::asio::io_context io;
@@ -103,6 +103,7 @@ int main(int argc, char **argv)
         return 1;
     }
 }
+
 
 
 

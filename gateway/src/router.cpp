@@ -26,7 +26,7 @@ namespace Gateway
             return {
                 {"Content-Type", "application/json; charset=utf-8"},
                 {"X-Request-Id", requestId},
-                {"X-Gateway", "hoshinoumi-gateway/23.5.0"},
+                {"X-Gateway", "hoshinoumi-gateway/23.5.1"},
             };
         }
     } // namespace
@@ -158,7 +158,7 @@ namespace Gateway
         boost::json::object body;
         body["ok"] = true;
         body["service"] = "hoshinoumi-gateway";
-        body["version"] = "23.5.0";
+        body["version"] = "23.5.1";
         session->httpReplay(boost::json::serialize(body),
                             boost::beast::http::status::ok,
                             JsonHeaders(NextRequestId()));
@@ -669,6 +669,7 @@ namespace Gateway
                             JsonHeaders(NextRequestId()));
     }
 } // namespace Gateway
+
 
 
 
