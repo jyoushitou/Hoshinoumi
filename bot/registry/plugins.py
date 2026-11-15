@@ -4,6 +4,9 @@
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
+from .errors import PluginConflictError
+from .manifest import PluginManifest
+
 
 @dataclass(frozen=True)
 class PluginRecord:
@@ -12,6 +15,7 @@ class PluginRecord:
     factory: Callable
     priority: int = 0
     metadata: dict = field(default_factory=dict)
+    manifest: object = None
 
 
 class PluginRegistry:
@@ -21,7 +25,7 @@ class PluginRegistry:
         self._by_name = {}
         self._by_cap = {}
 
-    def register(self, name, capabilities, factory, priority=0, metadata=None):
+    def register(self, name, capabilities, factory, priority=0, metadata=None, manifest=None):
         name = str(name or "").strip()
         if not name:
             raise ValueError("plugin name is required")
@@ -32,7 +36,38 @@ class PluginRegistry:
             raise ValueError(f"plugin {name} has no capabilities")
         if not callable(factory):
             raise TypeError(f"plugin {name} factory is not callable")
-        rec = PluginRecord(name, caps, factory, int(priority), dict(metadata or {}))
+        for cap in caps:
+            for old in self._by_cap.get(cap, ()):
+                if old.priority == int(priority):
+                    raise PluginConflictError(
+                        f"capability 冲突: {cap} 已被 {old.name} 以 priority={priority} 占用")
+        rec = PluginRecord(name, caps, factory, int(priority), dict(metadata or {}), manifest)
+        self._by_name[name] = rec
+        for cap in caps:
+            self._by_cap.setdefault(cap, []).append(rec)
+        return rec
+
+    def register_manifest(self, manifest: PluginManifest, factory):
+        """校验 manifest 后注册；核心 native 不走这里。"""
+        if not isinstance(manifest, PluginManifest):
+            raise TypeError("manifest 必须是 PluginManifest")
+        manifest.validate()
+        return self._insert_manifest(manifest, factory)
+
+    def _insert_manifest(self, manifest, factory):
+        name = str(manifest.name or "").strip()
+        if name in self._by_name:
+            raise PluginConflictError(f"plugin name duplicated: {name}")
+        if not callable(factory):
+            raise TypeError(f"plugin {name} factory is not callable")
+        caps = tuple(str(c) for c in manifest.capabilities)
+        for cap in caps:
+            for old in self._by_cap.get(cap, ()):
+                if old.priority == int(manifest.priority):
+                    raise PluginConflictError(
+                        f"capability 冲突: {cap} 已被 {old.name} 以 priority={manifest.priority} 占用")
+        rec = PluginRecord(name, caps, factory, int(manifest.priority),
+                           manifest.to_dict(), manifest)
         self._by_name[name] = rec
         for cap in caps:
             self._by_cap.setdefault(cap, []).append(rec)
