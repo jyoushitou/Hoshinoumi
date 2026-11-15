@@ -115,6 +115,16 @@ def _add_setup_columns(c):
     return changed
 
 
+def _add_queue_offset(c):
+    table = "reading_queue"
+    if not _table_exists(c, table):
+        return False
+    if "char_offset" in _columns(c, table):
+        return False
+    c.execute(f"ALTER TABLE {table} ADD COLUMN char_offset INT NOT NULL DEFAULT 0")
+    return True
+
+
 def apply(c):
     made = []
     for table, target_col in USER_TABLES:
@@ -135,5 +145,7 @@ def apply(c):
         made.append("users.password_prompted")
     if _add_setup_columns(c):
         made.append("users.setup_columns")
+    if _add_queue_offset(c):
+        made.append("reading_queue.char_offset")
     c.connection.commit()
     return made

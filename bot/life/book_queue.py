@@ -19,15 +19,16 @@ def enqueue(user_id, name, total=0):
     row = c.fetchone()
     if row:
         new_pos = int(row["position"] or 0) - 1
-        c.execute("UPDATE reading_queue SET position=%s,status='queued',total=%s "
+        c.execute("UPDATE reading_queue SET position=%s,status='queued',"
+                  "last_chapter=0,char_offset=0,total=%s "
                   "WHERE user_id=%s AND name=%s",
                   (new_pos, int(total or 0), uid, name))
     else:
         c.execute("SELECT MIN(position) AS p FROM reading_queue WHERE user_id=%s", (uid,))
         p = c.fetchone()
         pos = (int((p or {}).get("p") or 0) - 1)
-        c.execute("INSERT INTO reading_queue(user_id,name,position,status,total) "
-                  "VALUES(%s,%s,%s,'queued',%s)",
+        c.execute("INSERT INTO reading_queue(user_id,name,position,status,total,char_offset) "
+                  "VALUES(%s,%s,%s,'queued',%s,0)",
                   (uid, name, pos, int(total or 0)))
     c.connection.commit()
     return True
@@ -35,14 +36,14 @@ def enqueue(user_id, name, total=0):
 
 def list_queue(user_id=None):
     c = get_cursor()
-    c.execute("SELECT name,position,status,last_chapter,total FROM reading_queue "
+    c.execute("SELECT name,position,status,last_chapter,char_offset,total FROM reading_queue "
               "WHERE user_id=%s ORDER BY position", (_uid(user_id),))
     return list(c.fetchall() or [])
 
 
 def active(user_id=None):
     c = get_cursor()
-    c.execute("SELECT name,position,status,last_chapter,total FROM reading_queue "
+    c.execute("SELECT name,position,status,last_chapter,char_offset,total FROM reading_queue "
               "WHERE user_id=%s AND status IN ('queued','reading') "
               "ORDER BY position LIMIT 1", (_uid(user_id),))
     return c.fetchone()
@@ -50,7 +51,7 @@ def active(user_id=None):
 
 def get_item(user_id, name):
     c = get_cursor()
-    c.execute("SELECT name,position,status,last_chapter,total FROM reading_queue "
+    c.execute("SELECT name,position,status,last_chapter,char_offset,total FROM reading_queue "
               "WHERE user_id=%s AND name=%s", (_uid(user_id), str(name)))
     return c.fetchone()
 
@@ -70,16 +71,16 @@ def set_total(user_id, name, total):
     c.connection.commit()
 
 
-def set_progress(user_id, name, chapter, total=0, status="reading"):
+def set_progress(user_id, name, chapter, total=0, status="reading", offset=0):
     uid = _uid(user_id)
     total = int(total or 0)
     chapter = int(chapter or 0)
     if total and chapter >= total:
         status = "done"
     c = get_cursor()
-    c.execute("UPDATE reading_queue SET last_chapter=%s,total=%s,status=%s "
+    c.execute("UPDATE reading_queue SET last_chapter=%s,char_offset=%s,total=%s,status=%s "
               "WHERE user_id=%s AND name=%s",
-              (chapter, total, status, uid, str(name)))
+              (chapter, int(offset or 0), total, status, uid, str(name)))
     c.connection.commit()
 
 

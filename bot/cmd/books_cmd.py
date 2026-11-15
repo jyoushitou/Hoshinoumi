@@ -53,7 +53,8 @@ async def cmd_book(ctx):
         lines = [_decl(ctx) + "📚 本地阅读队列"]
         for r in rows:
             lines.append(f"  {r['status']}  {r['name']}  "
-                         f"{r['last_chapter']}/{r['total'] or '?'}")
+                         f"已读 {r.get('char_offset', 0)} 字 "
+                         f"（{r['last_chapter']}/{r['total'] or '?'} 章）")
         return "\n".join(lines)
     if sub == "remove":
         if len(args) < 2:
@@ -79,15 +80,17 @@ async def cmd_book(ctx):
         p = LB.get_progress(ctx.uid)
         if not p:
             return _decl(ctx) + "还没有本地阅读进度。"
-        return f"📖 当前：{p['name']} 第 {p['chapter']} 章"
+        q = BQ.get_item(ctx.uid, p["name"])
+        extra = f"，已读 {q.get('char_offset', 0)} 字" if q else ""
+        return f"📖 当前：{p['name']} 第 {p['chapter']} 章{extra}"
     if sub == "next":
+        q = BQ.active(ctx.uid)
+        if q:
+            return _read_chunk(ctx, q["name"], int(q.get("char_offset") or 0))
         p = LB.get_progress(ctx.uid)
         if not p:
-            q = BQ.active(ctx.uid)
-            if q:
-                return _read(ctx, q["name"], int(q["last_chapter"] or 0) + 1)
             return _decl(ctx) + "还没有进度，先 !book read <文件名> 或 !book local <书名>。"
-        return _read(ctx, p["name"], int(p["chapter"]) + 1)
+        return _read_chunk(ctx, p["name"], LB.chapter_start_offset(p["name"], int(p["chapter"]) + 1))
     if sub != "read" or len(args) < 2:
         return _decl(ctx) + "用法：!book read <文件名> [章节]"
     rest = args[1:]
@@ -98,7 +101,7 @@ async def cmd_book(ctx):
     name = " ".join(rest).strip()
     if not name:
         return _decl(ctx) + "请给我文件名。"
-    return _read(ctx, name, chapter)
+    return _read_chunk(ctx, name, LB.chapter_start_offset(name, chapter))
 
 
 async def _read_first_and_notify(ctx, name):
@@ -106,9 +109,11 @@ async def _read_first_and_notify(ctx, name):
     try:
         title, chapters = LB.load_book(name)
         BQ.set_total(ctx.uid, name, len(chapters))
-        info = LB.read_chapter(name, 1)
-        LB.set_progress(ctx.uid, name, info["index"])
-        BQ.set_progress(ctx.uid, name, info["index"], info["total"])
+        info = LB.read_chunk(name, 0)
+        LB.set_progress(ctx.uid, name, info["end_index"])
+        BQ.set_progress(ctx.uid, name, info["end_index"], info["total"],
+                        status=("done" if info["done"] else "reading"),
+                        offset=info["next_offset"])
         await _notify_start(ctx, title, info)
     except Exception as e:
         try:
@@ -117,7 +122,7 @@ async def _read_first_and_notify(ctx, name):
             pass
         try:
             from ..chat.send import send_short_reply
-            await send_short_reply(ctx.uid, f"《{name}》第 1 章读不了：{e}",
+            await send_short_reply(ctx.uid, f"《{name}》首个可识别章节读不了：{e}",
                                    ctx.ws, ctx.uid, False, None)
         except Exception:
             pass
@@ -126,27 +131,28 @@ async def _read_first_and_notify(ctx, name):
 async def _notify_start(ctx, title, info):
     from ..chat.send import send_short_reply
     text = (f"我开始读《{title}》了。\n"
-            f"《{info['chapter']}》：\n"
-            f"{info['summary'][:180]}\n"
-            f"共 {info['total']} 个可识别章节，读完我再告诉你。")
+            f"《{info['chapter']}》（第 {info['offset'] + 1} 字起）：\n"
+            f"{info['chunk'][:180]}\n"
+            f"共 {info['total']} 个可识别章节，每次读 1000 字，读完我再告诉你。")
     try:
         await send_short_reply(ctx.uid, text, ctx.ws, ctx.uid, False, None)
     except Exception:
         pass
 
 
-def _render(info):
-    return (f"📖《{info['title']}》{info['chapter']}（{info['index']}/{info['total']}）\n"
-            f"摘要：{info['summary'][:300]}\n"
-            "（只读本机文件，不导入数据库，不上传。）")
-
-
-def _read(ctx, name, chapter):
+def _read_chunk(ctx, name, offset=0):
     try:
-        info = LB.read_chapter(name, chapter)
+        info = LB.read_chunk(name, offset)
     except Exception as e:
         return _decl(ctx) + f"读不了：{e}\n只能读 data/books/ 内的 TXT/EPUB。"
-    LB.set_progress(ctx.uid, name, info["index"])
-    if BQ.get_item(ctx.uid, name):
-        BQ.set_progress(ctx.uid, name, info["index"], info["total"])
-    return _decl(ctx) + _render(info)
+    LB.set_progress(ctx.uid, name, info["end_index"])
+    q = BQ.get_item(ctx.uid, name)
+    if q:
+        BQ.set_progress(ctx.uid, name, info["end_index"], info["total"],
+                        status=("done" if info["done"] else "reading"),
+                        offset=info["next_offset"])
+    return (_decl(ctx)
+            + f"📖《{info['title']}》{info['chapter']}"
+            f"（第 {info['offset'] + 1} 字起，+{len(info['chunk'])} 字）\n"
+            + f"内容：{info['chunk'][:300]}\n"
+            + "（每次 1000 字，只读本机文件，不上传。）")

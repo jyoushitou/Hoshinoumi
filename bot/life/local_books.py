@@ -11,6 +11,7 @@ from xml.etree import ElementTree as ET
 ROOT = Path(__file__).resolve().parents[2]
 BOOK_DIR = ROOT / "data" / "books"
 MAX_CHAPTER_CHARS = 400
+CHUNK_CHARS = 1000
 _progress = {}   # user_id -> {"name": str, "chapter": int}
 _declared = set()
 _cache = {}      # path -> (mtime_ns, size, title, chapters)
@@ -167,6 +168,93 @@ def read_chapter(name, chapter_no=1):
         "total": len(chapters),
         "text": body,
         "summary": body[:MAX_CHAPTER_CHARS].strip(),
+    }
+
+
+def _chapter_layout(chapters):
+    starts = []
+    total = 0
+    for _heading, body in chapters:
+        starts.append(total)
+        total += len(body)
+    return starts, total
+
+
+def chapter_start_offset(name, chapter_no=1):
+    _title, chapters = load_book(name)
+    if not chapters:
+        return 0
+    idx = max(1, min(int(chapter_no), len(chapters))) - 1
+    starts, _total = _chapter_layout(chapters)
+    return starts[idx]
+
+
+def read_chunk(name, offset=0, limit=CHUNK_CHARS):
+    """v24.8.4：按全书连续字符读，每次 1000 字，不再按章节切块。
+
+    offset 是全书正文的全局字符位置；跨章节时直接拼下一章，
+    返回起始章节/结束章节用于展示。
+    """
+    import bisect
+    title, chapters = load_book(name)
+    if not chapters:
+        raise ValueError("没有可读章节")
+    starts, total = _chapter_layout(chapters)
+    offset = max(0, min(int(offset or 0), total))
+    if offset >= total:
+        return {
+            "title": title, "chapter": "", "chapter_index": len(chapters),
+            "end_chapter": "", "end_index": len(chapters),
+            "total": len(chapters), "total_chars": total, "offset": offset,
+            "chunk": "", "next_offset": total, "chars": 0, "done": True,
+        }
+    idx = max(0, bisect.bisect_right(starts, offset) - 1)
+    # 跳过空章节
+    while idx < len(chapters) and starts[idx] + len(chapters[idx][1]) <= offset:
+        idx += 1
+    if idx >= len(chapters):
+        idx = len(chapters) - 1
+    pos = offset - starts[idx]
+    parts = []
+    remain = max(100, int(limit))
+    cur = idx
+    end_idx = idx
+    while cur < len(chapters) and remain > 0:
+        body = chapters[cur][1]
+        if pos < len(body):
+            take = body[pos:pos + remain]
+            if take:
+                parts.append(take)
+                remain -= len(take)
+                end_idx = cur
+            pos += len(take)
+            if pos >= len(body):
+                cur += 1
+                pos = 0
+            else:
+                break
+        else:
+            cur += 1
+            pos = 0
+    chunk = "".join(parts)
+    next_offset = offset + len(chunk)
+    done = next_offset >= total
+    first = chapters[idx][0]
+    last = chapters[end_idx][0]
+    label = first if end_idx == idx else f"{first} → {last}"
+    return {
+        "title": title,
+        "chapter": label,
+        "chapter_index": idx + 1,
+        "end_chapter": last,
+        "end_index": end_idx + 1,
+        "total": len(chapters),
+        "total_chars": total,
+        "offset": offset,
+        "next_offset": next_offset,
+        "chunk": chunk,
+        "chars": len(chunk),
+        "done": done,
     }
 
 

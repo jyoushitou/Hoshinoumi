@@ -105,7 +105,8 @@ class TestLocalBooks(unittest.TestCase):
         orig = (BQ.set_total, BQ.set_progress, BQ.mark_error)
         calls = {}
         BQ.set_total = lambda uid, name, total: calls.setdefault("total", total)
-        BQ.set_progress = lambda uid, name, chapter, total=0: calls.setdefault("chapter", chapter)
+        BQ.set_progress = lambda uid, name, chapter, total=0, **kw: calls.update(
+            {"chapter": chapter, "offset": kw.get("offset")})
         BQ.mark_error = lambda uid, name: None
         import bot.chat.send as S
         orig_send = S.send_short_reply
@@ -120,8 +121,31 @@ class TestLocalBooks(unittest.TestCase):
         finally:
             BQ.set_total, BQ.set_progress, BQ.mark_error = orig
             S.send_short_reply = orig_send
-        self.assertEqual(calls["chapter"], 1)
+        self.assertEqual(calls["chapter"], 2)  # 第一章已读完，指向下一章
+        self.assertEqual(calls["offset"], 6)
         self.assertTrue(any("我开始读" in x for x in sent))
+
+    def test_read_chunk_1000_chars(self):
+        p = self.LB.BOOK_DIR / "长章.txt"
+        p.write_text("第1章 长章\n" + ("字" * 2500), encoding="utf-8")
+        first = self.LB.read_chunk("长章", 0)
+        self.assertEqual(len(first["chunk"]), 1000)
+        self.assertEqual(first["next_offset"], 1000)
+        second = self.LB.read_chunk("长章", first["next_offset"])
+        self.assertEqual(len(second["chunk"]), 1000)
+        third = self.LB.read_chunk("长章", second["next_offset"])
+        self.assertEqual(len(third["chunk"]), 500)
+        self.assertTrue(third["done"])
+
+    def test_chunk_crosses_chapter_boundary(self):
+        p = self.LB.BOOK_DIR / "跨界.txt"
+        p.write_text("第1章\n" + ("甲" * 500) + "\n第2章\n" + ("乙" * 1500), encoding="utf-8")
+        first = self.LB.read_chunk("跨界", 0)
+        self.assertEqual(len(first["chunk"]), 1000)
+        self.assertIn("甲", first["chunk"])
+        self.assertIn("乙", first["chunk"])
+        self.assertEqual(first["chapter_index"], 1)
+        self.assertEqual(first["end_index"], 2)
 
     def test_command_group_silent(self):
         from bot.cmd.books_cmd import cmd_book
@@ -134,5 +158,6 @@ class TestLocalBooks(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
 
 

@@ -123,21 +123,23 @@ async def handle_local_read(ev):
     item = book_queue.get_item(tid, name)
     if not item or item["status"] in ("done", "error"):
         return {"ok": False, "reason": "队列项不可读"}
-    chapter = int(item["last_chapter"] or 0) + 1
     try:
-        info = local_books.read_chapter(name, chapter)
+        info = local_books.read_chunk(name, int(item.get("char_offset") or 0))
     except Exception as e:
         log_api(f"[本地阅读] 读取失败 {name} 第 {chapter} 章: {e}")
         return {"ok": False, "reason": str(e)}
     summary = ""
     try:
-        summary = await reading.summarize_chapter(info["text"][:3000])
+        summary = await reading.summarize_chapter(info["chunk"][:3000])
     except Exception:
         pass
-    book_queue.set_progress(tid, name, info["index"], info["total"])
-    done = info["index"] >= info["total"]
+    book_queue.set_progress(tid, name, info["end_index"], info["total"],
+                            status=("done" if info["done"] else "reading"),
+                            offset=info["next_offset"])
+    done = info["done"]
     log_system(f"[本地阅读] {name} {info['chapter']} "
-               f"({info['index']}/{info['total']}) 摘要 {len(summary or '')} 字")
+               f"({info['index']}/{info['total']} +{info['offset']}字) "
+               f"摘要 {len(summary or '')} 字")
     if done:
         try:
             from ..chat.send import send_short_reply
