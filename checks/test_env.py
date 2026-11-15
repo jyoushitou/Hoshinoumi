@@ -243,6 +243,8 @@ class TestEnvironment(unittest.TestCase):
         "NAO_HOT_RELOAD_INTERVAL",
         "NAO_WORKER_MODE",
         "NAO_WORKER_SOCKET_DIR",
+        "NAO_WORKER_KEEP",
+        "NAO_WORKER_GC_INTERVAL",
     }
 
     @staticmethod
