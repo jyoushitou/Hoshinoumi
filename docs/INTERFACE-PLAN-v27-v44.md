@@ -1,28 +1,37 @@
-# v27–v35 接口层开发总纲
+# v27–v44 接口层开发总纲
 
 > 目标：**一个大版本只开放一层接口**。每层都同时具备：
 > 核心 native 实现、第三方插件实现、统一注册表、审批、错误记录、任务归属、热更新加载。
 
-## 1. 九个接口层
+## 1. 十八个接口版本
 
 | 版本 | 层 | 开放的能力 | 核心 native |
 |---|---|---|---|
-| v27 | 插件/注册表层 | PluginManifest / PluginRegistry / MasterRegistry | 无（只做契约和注册表） |
-| v28 | 模型层 | `model.<name>@1` | DeepSeek / 豆包 |
-| v29 | 记忆层 | `memory.store.<name>@1`、`memory.retriever.<name>@1` | SQLMemoryStore / BM25 |
-| v30 | 通道层 | `channel.<name>@1` | NapCat / QQ |
-| v31 | 工具层 | `tool.<name>@1` | 现有工具 |
-| v32 | 存储层 | `storage.backend.<name>@1`、`storage.repository.<name>@1` | MySQL / SQLite |
-| v33 | 调度层 | `scheduler.<name>@1`、`schedule.trigger.<name>@1` | asyncio 调度器 |
-| v34 | 出站层 | `transport.<name>@1` | WebSocket |
-| v35 | 默认链路 | `route.<layer>.<name>@1` | 核心 native 默认链路 |
+| v27 | 插件注册表基础 | PluginManifest / PluginRegistry / MasterRegistry | 无 |
+| v28 | 插件运行时 | 权限审批 / loader / errors / tasks / DDL | 无 |
+| v29 | 模型契约 + native | `model.<name>@1` | DeepSeek / 豆包 |
+| v30 | 模型插件接入 | `model.<name>@1` 第三方实现 | 同上 |
+| v31 | 记忆契约 + native | `memory.store.<name>@1` / `memory.retriever.<name>@1` | SQLMemoryStore / BM25 |
+| v32 | 记忆插件接入 | 第三方 store / retriever | 同上 |
+| v33 | 通道契约 + native | `channel.<name>@1` | NapCat / QQ |
+| v34 | 通道插件接入 | 第三方通道 | 同上 |
+| v35 | 工具契约 + native | `tool.<name>@1` | 现有工具 |
+| v36 | 工具插件接入 | 第三方工具 | 同上 |
+| v37 | 存储契约 + native | `storage.backend.<name>@1` / `storage.repository.<name>@1` | MySQL / SQLite |
+| v38 | 存储插件接入 | 第三方 backend / repository | 同上 |
+| v39 | 调度契约 + native | `scheduler.<name>@1` / `schedule.trigger.<name>@1` | asyncio |
+| v40 | 调度插件接入 | 第三方 scheduler / trigger | 同上 |
+| v41 | 出站契约 + native | `transport.<name>@1` | WebSocket |
+| v42 | 出站插件接入 | 第三方 transport | 同上 |
+| v43 | 默认链路契约 + native | `route.<layer>.<name>@1` | 核心默认链路 |
+| v44 | 默认链路插件接入 | 第三方 route candidate | 同上 |
 
 规则：
 
 - **核心 native 不实现 PluginManifest，不进入插件表。**
 - 插件实现某一层的 Protocol，通过 v27 的 PluginRegistry 注册。
 - 调用方 `registry.get(capability)` 返回 `None` 时，回落核心 native。
-- 每层的默认选择由 v35 RouteRegistry 统一定义；默认仍优先核心 native。
+- 每层的默认选择由 v43 RouteRegistry 统一定义（v44 接第三方候选）；默认仍优先核心 native。
 
 ## 2. 六个注册表
 

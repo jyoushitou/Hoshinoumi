@@ -128,44 +128,57 @@ v6：P1 会说话 → P2 说实话 → P2.5 长感官 → P3 有生活 → P4 �
 | **v24** | [versions/v24.md](versions/v24.md) | 读书修复 + 本地 TXT/EPUB + 摘要入长期记忆 | ✅ 已完成（v24.9.4） |
 | **v25** | [versions/v25.md](versions/v25.md) | 热更新 + 配置动态化（配置/热加载/ingress/蓝绿/准入/清理/上线提示） | ✅ 已完成（v25.7.0） |
 | **v26** | [versions/v26.md](versions/v26.md) | 内部通讯升级 + 模糊指令归一化 | ✅ 已完成（v26.7.4） |
-| **v27** | [versions/v27.md](versions/v27.md) | 插件/注册表层接口（含 v27.0 代码审查） | 规划中 |
-| **v28** | [versions/v28.md](versions/v28.md) | 模型层接口 | 规划中 |
-| **v29** | [versions/v29.md](versions/v29.md) | 记忆层接口 | 规划中 |
-| **v30** | [versions/v30.md](versions/v30.md) | 通道层接口 | 规划中 |
-| **v31** | [versions/v31.md](versions/v31.md) | 工具层接口 | 规划中 |
-| **v32** | [versions/v32.md](versions/v32.md) | 存储层接口 | 规划中 |
-| **v33** | [versions/v33.md](versions/v33.md) | 调度层接口 | 规划中 |
-| **v34** | [versions/v34.md](versions/v34.md) | 出站层接口 | 规划中 |
-| **v35** | [versions/v35.md](versions/v35.md) | 默认链路接口 | 规划中 |
-> v27–v35 每版只开放一层接口，统一约束见 [INTERFACE-PLAN-v27-v35.md](INTERFACE-PLAN-v27-v35.md)。
+| **v27** | [versions/v27.md](versions/v27.md) | 插件注册表基础（含 v27.0 代码审查） | 规划中 |
+| **v28** | [versions/v28.md](versions/v28.md) | 插件运行时：审批 / 加载 / 错误 / DDL | 规划中 |
+| **v29** | [versions/v29.md](versions/v29.md) | 模型层契约 + native | 规划中 |
+| **v30** | [versions/v30.md](versions/v30.md) | 模型层插件接入 | 规划中 |
+| **v31** | [versions/v31.md](versions/v31.md) | 记忆层契约 + native | 规划中 |
+| **v32** | [versions/v32.md](versions/v32.md) | 记忆层插件接入 | 规划中 |
+| **v33** | [versions/v33.md](versions/v33.md) | 通道层契约 + native | 规划中 |
+| **v34** | [versions/v34.md](versions/v34.md) | 通道层插件接入 | 规划中 |
+| **v35** | [versions/v35.md](versions/v35.md) | 工具层契约 + native | 规划中 |
+| **v36** | [versions/v36.md](versions/v36.md) | 工具层插件接入 | 规划中 |
+| **v37** | [versions/v37.md](versions/v37.md) | 存储层契约 + native | 规划中 |
+| **v38** | [versions/v38.md](versions/v38.md) | 存储层插件接入 | 规划中 |
+| **v39** | [versions/v39.md](versions/v39.md) | 调度层契约 + native | 规划中 |
+| **v40** | [versions/v40.md](versions/v40.md) | 调度层插件接入 | 规划中 |
+| **v41** | [versions/v41.md](versions/v41.md) | 出站层契约 + native | 规划中 |
+| **v42** | [versions/v42.md](versions/v42.md) | 出站层插件接入 | 规划中 |
+| **v43** | [versions/v43.md](versions/v43.md) | 默认链路契约 + native | 规划中 |
+| **v44** | [versions/v44.md](versions/v44.md) | 默认链路插件接入 | 规划中 |
 
-| **v36** | [versions/v36.md](versions/v36.md) | 多端推送（主动消息 fan-out） | 规划中 |
-| **v37** | [versions/v37.md](versions/v37.md) | 本机服务化 | 规划中 |
-| **v38** | [versions/v38.md](versions/v38.md) | DSH 插件 | 规划中 |
-| **v39** | [versions/v39.md](versions/v39.md) | Qoder / WorkBuddy 插件与安装器 | 规划中 |
-| **v40** | [versions/v40.md](versions/v40.md) | 命令收敛与专用前端通道 | 规划中 |
-| **v41** | [versions/v41.md](versions/v41.md) | 自有客户端（一）电脑 Web | 规划中 |
-| **v42** | [versions/v42.md](versions/v42.md) | 自有客户端（二）Linux 桌面 | 规划中 |
-| **v43** | [versions/v43.md](versions/v43.md) | 自有客户端（三）Windows 桌面 | 规划中 |
-| **v44** | [versions/v44.md](versions/v44.md) | 自有客户端（四）手机 App | 规划中 |
-| **v45** | [versions/v45.md](versions/v45.md) | 手机 App 独立模式 | 规划中 |
-| **v46** | [versions/v46.md](versions/v46.md) | QQ 空间 | 规划中 |
-| **v47** | [versions/v47.md](versions/v47.md) | 运维通道（一）bash 只读 | 规划中 |
-| **v48** | [versions/v48.md](versions/v48.md) | 运维通道（二）agent | 规划中 |
-| **v49** | [versions/v49.md](versions/v49.md) | 运维通道（三）有限写 | 规划中 |
-| **v50** | [versions/v50.md](versions/v50.md) | 运维通道（四）可写体系 | 规划中 |
-| **v51** | [versions/v51.md](versions/v51.md) | 视频（一）B 站 | 规划中 |
-| **v52** | [versions/v52.md](versions/v52.md) | 视频（二）抖音 | 规划中 |
-| **v53** | [versions/v53.md](versions/v53.md) | 微信接入（OpenClaw / 龙虾） | 规划中 |
-| **v54** | [versions/v54.md](versions/v54.md) | 语音通话 | 规划中 |
-| **v55** | [versions/v55.md](versions/v55.md) | 视频通话 | 规划中 |
-| **v56** | [versions/v56.md](versions/v56.md) | 微服务接入（自有 Web） | 规划中 |
-| **v57** | [versions/v57.md](versions/v57.md) | 常驻（后端）systemd 与看门狗 | 规划中 |
-| **v58** | [versions/v58.md](versions/v58.md) | 嵌入式前端（Linux 后端） | 规划中 |
+| **v45** | [versions/v45.md](versions/v45.md) | 多端推送（主动消息 fan-out） | 规划中 |
 
 
+| **v46** | [versions/v46.md](versions/v46.md) | 本机服务化 | 规划中 |
+| **v47** | [versions/v47.md](versions/v47.md) | DSH 插件 | 规划中 |
+| **v48** | [versions/v48.md](versions/v48.md) | Qoder / WorkBuddy 插件与安装器 | 规划中 |
+| **v49** | [versions/v49.md](versions/v49.md) | 命令收敛与专用前端通道 | 规划中 |
+| **v50** | [versions/v50.md](versions/v50.md) | 自有客户端（一）电脑 Web | 规划中 |
+| **v51** | [versions/v51.md](versions/v51.md) | 自有客户端（二）Linux 桌面 | 规划中 |
+| **v52** | [versions/v52.md](versions/v52.md) | 自有客户端（三）Windows 桌面 | 规划中 |
+| **v53** | [versions/v53.md](versions/v53.md) | 自有客户端（四）手机 App | 规划中 |
+| **v54** | [versions/v54.md](versions/v54.md) | 手机 App 独立模式 | 规划中 |
+| **v55** | [versions/v55.md](versions/v55.md) | QQ 空间 | 规划中 |
+| **v56** | [versions/v56.md](versions/v56.md) | 运维通道（一）bash 只读 | 规划中 |
+| **v57** | [versions/v57.md](versions/v57.md) | 运维通道（二）agent | 规划中 |
+| **v58** | [versions/v58.md](versions/v58.md) | 运维通道（三）有限写 | 规划中 |
+| **v59** | [versions/v59.md](versions/v59.md) | 运维通道（四）可写体系 | 规划中 |
+| **v60** | [versions/v60.md](versions/v60.md) | 视频（一）B 站 | 规划中 |
+| **v61** | [versions/v61.md](versions/v61.md) | 视频（二）抖音 | 规划中 |
+| **v62** | [versions/v62.md](versions/v62.md) | 微信接入（OpenClaw / 龙虾） | 规划中 |
+| **v63** | [versions/v63.md](versions/v63.md) | 语音通话 | 规划中 |
+| **v64** | [versions/v64.md](versions/v64.md) | 视频通话 | 规划中 |
+| **v65** | [versions/v65.md](versions/v65.md) | 微服务接入（自有 Web） | 规划中 |
+| **v66** | [versions/v66.md](versions/v66.md) | 常驻（后端）systemd 与看门狗 | 规划中 |
+| **v67** | [versions/v67.md](versions/v67.md) | 嵌入式前端（Linux 后端） | 规划中 |
 
-> 文档里所有 vXXX 功能都是核心功能；v24–v34 本身是核心代码里的接口定义，
+> v27–v44 每版只开放一层接口，统一约束见 [INTERFACE-PLAN-v27-v44.md](INTERFACE-PLAN-v27-v44.md)。
+
+
+
+
+> 文档里所有 vXXX 功能都是核心功能；v24–v44 本身是核心代码里的接口定义，
 > 不是插件，也不是功能实现。
 > 插件接口只给第三方做优化/性能扩展，后续版本不会用插件接口实现功能。
 > 核心功能只能在启动前通过 `config/features.json` / `NAO_FEATURES` 关闭。

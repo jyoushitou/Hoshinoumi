@@ -8,7 +8,7 @@
 > 4. 一个功能一个功能做，每做完一个停下来确认
 > 5. 新发现的 bug 记进**当前开发版本的**「遗留问题」，不往已发布版本塞
 > 6. 版本号**只增不减**；不插入重排已发布的版本。
->    例外：2026-11 多次插入（**v20 多用户**、**v25 热更新**、**v26 内部通讯**、**v27–v33 七层接口**、**v36 多端推送**、**v40 命令收敛**、**v58 嵌入式前端**）；
+>    例外：2026-11 多次插入（**v20 多用户**、**v25 热更新**、**v26 内部通讯**、**v27–v44 接口层**、**v45 多端推送**、**v49 命令收敛**、**v67 嵌入式前端**）；
 >    当前编号以本页表格为准，不再保留旧编号。
 
 
@@ -158,9 +158,9 @@
 | **v23.2.0** | **仓储强制过滤 + 双用户隔离 + 封禁/管理** | v23.1 | A 看不到 B 的任何数据 |
 | **v23.3.0** | **API 带 user_id** + 网关登录/JWT 角色升级 + 多端同步 + 收尾 | v23.2 | 契约测试；A/B 不串号 |
 
-## v24–v58 · 新版号总览
+## v24–v67 · 新版号总览
 
-> **2026-11 重排**：v24 读书修复 → **v25 热更新 + 配置动态化** → **v26 内部 TCP/protobuf** → v27 插件接口 → v28–v34 七层接口 → v35 默认链路 → v36 多端推送 → v37 本机服务化 → v38 DSH → v39 Qoder → **v40 命令收敛** → v41 Web → v42–v43 桌面 → v44–v45 手机 → v46 QQ 空间 → v47–v50 运维 → v51–v52 视频 → v53 微信 → v54–v55 语音/视频 → v56 微服务 → v57 systemd → v58 嵌入式。
+> **2026-11 重排**：v24 读书修复 → **v25 热更新 + 配置动态化** → **v26 内部 TCP/protobuf** → v27 注册表基础 → v28 插件运行时 → v29–v44 八层接口（每层契约 + 插件接入）→ v45 多端推送 → v46 本机服务化 → v47 DSH → v48 Qoder → **v49 命令收敛** → v50 Web → v51–v52 桌面 → v53–v54 手机 → v55 QQ 空间 → v56–v59 运维 → v60–v61 视频 → v62 微信 → v63–v64 语音/视频 → v65 微服务 → v66 systemd → v67 嵌入式。
 > 每个版本的次版本、依赖、验收，以对应 `docs/versions/vNN.md` 为准；本表只做总览，不再维护重复的次版本表。
 
 | 版本 | 主题 | 详情 |
@@ -168,46 +168,56 @@
 | v24 | 读书修复与增强（v24.6 已完成） | [v24.md](versions/v24.md) |
 | v25 | 热更新与配置动态化 | [v25.md](versions/v25.md) |
 | v26 | 内部通讯升级（8+4+body TCP + protobuf） | [v26.md](versions/v26.md) |
-| v27 | 插件/注册表层接口（含 v27.0 代码审查） | [v27.md](versions/v27.md) |
+| v27 | 插件注册表基础（含 v27.0 代码审查） | [v27.md](versions/v27.md) |
+| v28 | 插件运行时：审批 / 加载 / 错误 / DDL | [v28.md](versions/v28.md) |
+| v29 | 模型层契约 + native | [v29.md](versions/v29.md) |
+| v30 | 模型层插件接入 | [v30.md](versions/v30.md) |
+| v31 | 记忆层契约 + native | [v31.md](versions/v31.md) |
+| v32 | 记忆层插件接入 | [v32.md](versions/v32.md) |
+| v33 | 通道层契约 + native | [v33.md](versions/v33.md) |
+| v34 | 通道层插件接入 | [v34.md](versions/v34.md) |
+| v35 | 工具层契约 + native | [v35.md](versions/v35.md) |
+| v36 | 工具层插件接入 | [v36.md](versions/v36.md) |
+| v37 | 存储层契约 + native | [v37.md](versions/v37.md) |
+| v38 | 存储层插件接入 | [v38.md](versions/v38.md) |
+| v39 | 调度层契约 + native | [v39.md](versions/v39.md) |
+| v40 | 调度层插件接入 | [v40.md](versions/v40.md) |
+| v41 | 出站层契约 + native | [v41.md](versions/v41.md) |
+| v42 | 出站层插件接入 | [v42.md](versions/v42.md) |
+| v43 | 默认链路契约 + native | [v43.md](versions/v43.md) |
+| v44 | 默认链路插件接入 | [v44.md](versions/v44.md) |
+| v45 | 多端推送（主动消息 fan-out） | [v45.md](versions/v45.md) |
+| v46 | 本机服务化 | [v46.md](versions/v46.md) |
+| v47 | DSH 插件 | [v47.md](versions/v47.md) |
+| v48 | Qoder / WorkBuddy 插件与安装器 | [v48.md](versions/v48.md) |
+| v49 | 命令收敛与专用前端通道 | [v49.md](versions/v49.md) |
+| v50 | 自有客户端（一）电脑 Web | [v50.md](versions/v50.md) |
+| v51 | 自有客户端（二）Linux 桌面 | [v51.md](versions/v51.md) |
+| v52 | 自有客户端（三）Windows 桌面 | [v52.md](versions/v52.md) |
+| v53 | 自有客户端（四）手机 App | [v53.md](versions/v53.md) |
+| v54 | 手机 App 独立模式 | [v54.md](versions/v54.md) |
+| v55 | QQ 空间 | [v55.md](versions/v55.md) |
+| v56 | 运维通道（一）bash 只读 | [v56.md](versions/v56.md) |
+| v57 | 运维通道（二）agent | [v57.md](versions/v57.md) |
+| v58 | 运维通道（三）有限写 | [v58.md](versions/v58.md) |
+| v59 | 运维通道（四）可写体系 | [v59.md](versions/v59.md) |
+| v60 | 视频（一）B 站 | [v60.md](versions/v60.md) |
+| v61 | 视频（二）抖音 | [v61.md](versions/v61.md) |
+| v62 | 微信接入（OpenClaw / 龙虾） | [v62.md](versions/v62.md) |
+| v63 | 语音通话 | [v63.md](versions/v63.md) |
+| v64 | 视频通话 | [v64.md](versions/v64.md) |
+| v65 | 微服务接入（自有 Web） | [v65.md](versions/v65.md) |
+| v66 | 常驻（后端）systemd 与看门狗 | [v66.md](versions/v66.md) |
+| v67 | 嵌入式前端（Linux 后端） | [v67.md](versions/v67.md) |
 
-> v27–v35 每版只开放一层接口，统一约束见 [INTERFACE-PLAN-v27-v35.md](INTERFACE-PLAN-v27-v35.md)。
-| v28 | 模型层接口实现 | [v28.md](versions/v28.md) |
-| v29 | 记忆层接口实现 | [v29.md](versions/v29.md) |
-| v30 | 通道层接口实现 | [v30.md](versions/v30.md) |
-| v31 | 工具层接口实现 | [v31.md](versions/v31.md) |
-| v32 | 存储层接口实现 | [v32.md](versions/v32.md) |
-| v33 | 调度层接口实现 | [v33.md](versions/v33.md) |
-| v34 | 出站层接口实现 | [v34.md](versions/v34.md) |
-| v35 | 默认链路选择实现 | [v35.md](versions/v35.md) |
-| v36 | 多端推送（主动消息 fan-out） | [v36.md](versions/v36.md) |
-| v37 | 本机服务化 | [v37.md](versions/v37.md) |
-| v38 | DSH 插件 | [v38.md](versions/v38.md) |
-| v39 | Qoder / WorkBuddy 插件与安装器 | [v39.md](versions/v39.md) |
-| v40 | 命令收敛与专用前端通道 | [v40.md](versions/v40.md) |
-| v41 | 自有客户端（一）电脑 Web | [v41.md](versions/v41.md) |
-| v42 | 自有客户端（二）Linux 桌面 | [v42.md](versions/v42.md) |
-| v43 | 自有客户端（三）Windows 桌面 | [v43.md](versions/v43.md) |
-| v44 | 自有客户端（四）手机 App | [v44.md](versions/v44.md) |
-| v45 | 手机 App 独立模式 | [v45.md](versions/v45.md) |
-| v46 | QQ 空间 | [v46.md](versions/v46.md) |
-| v47 | 运维通道（一）bash 只读 | [v47.md](versions/v47.md) |
-| v48 | 运维通道（二）agent | [v48.md](versions/v48.md) |
-| v49 | 运维通道（三）有限写 | [v49.md](versions/v49.md) |
-| v50 | 运维通道（四）可写体系 | [v50.md](versions/v50.md) |
-| v51 | 视频（一）B 站 | [v51.md](versions/v51.md) |
-| v52 | 视频（二）抖音 | [v52.md](versions/v52.md) |
-| v53 | 微信接入（OpenClaw / 龙虾） | [v53.md](versions/v53.md) |
-| v54 | 语音通话 | [v54.md](versions/v54.md) |
-| v55 | 视频通话 | [v55.md](versions/v55.md) |
-| v56 | 微服务接入（自有 Web） | [v56.md](versions/v56.md) |
-| v57 | 常驻（后端）systemd 与看门狗 | [v57.md](versions/v57.md) |
-| v58 | 嵌入式前端（Linux 后端） | [v58.md](versions/v58.md) |
+> v27–v44 每版只开放一层接口，统一约束见 [INTERFACE-PLAN-v27-v44.md](INTERFACE-PLAN-v27-v44.md)。
+
 **关键边界**：
 
-- **v38 命令收敛**：QQ 只保留 `!help` / `!status` / `!ping` / `!stop`；`!db`、`!usage`、`!hooks`、`!cron`、`!plugins`、`!memory`、`!logs` 只返回“请到客户端查看”，详细配置走专属前端。
-- **v34 多端推送**：只做 Endpoint / DeliveryHub / 协议，用测试入口 + QQ 验收；真实客户端在 v39+ 接入。
-- **v35–v37**：本机服务化 → DSH → Qoder/WorkBuddy，插件只做入口，不把核心插件化。
-- **v39+**：Web / 桌面 / 手机 / 嵌入式都复用 v34 的 hub 和 v35 的本机服务，不重新写一套核心。
+- **v49 命令收敛**：QQ 只保留 `!help` / `!status` / `!ping` / `!stop`；`!db`、`!usage`、`!hooks`、`!cron`、`!plugins`、`!memory`、`!logs` 只返回“请到客户端查看”，详细配置走专属前端。
+- **v45 多端推送**：只做 Endpoint / DeliveryHub / 协议，用测试入口 + QQ 验收；真实客户端在 v50+ 接入。
+- **v46–v48**：本机服务化 → DSH → Qoder/WorkBuddy，插件只做入口，不把核心插件化。
+- **v50+**：Web / 桌面 / 手机 / 嵌入式都复用 v45 的 hub 和 v46 的本机服务，不重新写一套核心。
 
 ## 热修记录（不等大版本）
 
@@ -234,26 +244,26 @@ v20 网关核心 ──→ v21 网关鉴权 ──→ v22 网关安全 ──→
                                                        ▼
 v23 多用户
   ├─ v24 读书修复 / 增强（独立）
-  └─ v25 热更新 + 配置动态化 ──→ v26 内部 TCP/protobuf ──→ v27 插件接口
+  └─ v25 热更新 + 配置动态化 ──→ v26 内部 TCP/protobuf ──→ v27 注册表基础 ──→ v28 插件运行时
                                       │
                                       ▼
-v28 模型 ──→ v29 记忆 ──→ v30 通道 ──→ v31 工具 ──→ v32 存储 ──→ v33 调度 ──→ v34 出站
+v29/v30 模型 ──→ v31/v32 记忆 ──→ v33/v34 通道 ──→ v35/v36 工具 ──→ v37/v38 存储 ──→ v39/v40 调度 ──→ v41/v42 出站
                                       │
                                       ▼
-v35 默认链路 ──→ v36 多端推送 ──→ v37 本机服务化 ──→ v38 DSH ──→ v39 Qoder ──→ v40 命令收敛
+v43/v44 默认链路 ──→ v45 多端推送 ──→ v46 本机服务化 ──→ v47 DSH ──→ v48 Qoder ──→ v49 命令收敛
                                                                                     │
                                                                                     ▼
-v41 Web ──→ v42 Linux / v43 Windows / v44 手机 / v45 手机独立 / v58 嵌入式
-v18 ──→ v44 QQ 空间        v45–v48 运维（独立串行）
-v18 ──→ v49–v50 视频        v51 微信 / v52–v53 语音视频
-v22 + v35 ──→ v54 微服务接入 ──→ v55 systemd ──→ v56 嵌入式前端
+v50 Web ──→ v51 Linux / v52 Windows / v53 手机 / v54 手机独立 / v67 嵌入式
+v18 ──→ v53 QQ 空间        v54–v57 运维（独立串行）
+v18 ──→ v58–v59 视频        v60 微信 / v61–v62 语音视频
+v22 + v50 ──→ v65 微服务接入 ──→ v66 systemd ──→ v67 嵌入式前端
 ```
 
 - **v19 不依赖多用户**：先做架构、对话消息表、`!history`；v20–v22 先做网关，v23 再做账号隔离。
 - **v20 核心**只做代理；**v21** owner 鉴权；**v22** 限流/审计/TLS。
 - **v23 多用户**再加 `users`/`user_id` 隔离，并升级网关登录。
-- **v25–v40** 用 v23 的多用户 API、走 v22 网关；v25 是热更新/配置；v26 是内部 TCP/protobuf；v27 是插件接口；v28–v34 是接口底座；v35 是默认链路；v36 是主动消息扇出；v37 是本机服务；v38/v39 是 IDE 插件；v40 收 QQ 命令。v24 读书链路独立推进。
-- **v41–v58** 按域独立推进；Web/桌面/手机/嵌入式都复用 v34 的 hub 和 v35 的本机服务，跨域只共享 `memories` / `conversation_messages`。
+- **v25–v49** 用 v23 的多用户 API、走 v22 网关；v25 是热更新/配置；v26 是内部 TCP/protobuf；v27/v28 是插件注册表与运行时；v29–v42 是能力接口；v43/v44 是默认链路；v45 是主动消息扇出；v46 是本机服务；v47/v48 是 IDE 插件；v49 收 QQ 命令。v24 读书链路独立推进。
+- **v50–v67** 按域独立推进；Web/桌面/手机/嵌入式都复用 v45 的 hub 和 v46 的本机服务，跨域只共享 `memories` / `conversation_messages`。
 
 
 
