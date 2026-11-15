@@ -18,3 +18,8 @@ async def generate_text(messages, max_tokens=1500, target_id=None):
     if fn is None:
         raise RuntimeError("AI 文本生成端口未注册")
     return await fn(messages, max_tokens=max_tokens, target_id=target_id)
+
+
+def available():
+    """已注册的 AI 能力名（master registry 快照用）。"""
+    return sorted(k for k, v in _impl.items() if v is not None)
