@@ -243,20 +243,57 @@ async def fetch_rank(limit=20):
 # ===================== 按书名搜索（v16.0.4） =====================
 
 SEARCH_URL = "https://fanqienovel.com/search?q={}"
+_SEARCH_JSON_TITLE = re.compile(r'"(?:bookName|book_name|title)"\s*:\s*"([^"]{1,40})"')
+_SEARCH_JSON_ID = re.compile(r'"(?:bookId|book_id|id)"\s*:\s*"?([0-9]{6,})"?')
+
+
+def parse_search(html, limit=5):
+    """从搜索结果页提取 (书名, url)。
+
+    番茄搜索页可能是 SSR（/page/ 链接）或前端 JSON（bookName + bookId），
+    两种都收；不依赖网络快照。
+    """
+    if not html:
+        return []
+    items = list(parse_rank(html, limit=limit))
+    seen = {u for _t, u in items}
+    # JSON 兜底：bookName 与 bookId 通常在同一段，按出现顺序配对
+    names = _SEARCH_JSON_TITLE.findall(html)
+    ids = _SEARCH_JSON_ID.findall(html)
+    for name, bid in zip(names, ids):
+        name = strip_tags(name).strip()
+        if not name or len(name) > 40:
+            continue
+        url = f"https://fanqienovel.com/page/{bid}"
+        if url in seen:
+            continue
+        seen.add(url)
+        items.append((name, url))
+        if len(items) >= limit:
+            break
+    return items[:limit]
 
 
 async def search_book(title):
     """在番茄搜索一本书；返回 (书名, url) 或 None"""
     from urllib.parse import quote
-    if not (title or "").strip():
+    title = (title or "").strip()
+    if not title:
         return None
-    url = SEARCH_URL.format(quote(title.strip()))
-    html = await fetch_html(url)
-    if not html:
-        return None
-    items = parse_rank(html, limit=5)
-    if not items:
-        log_api(f"[小说] 搜索「{title}」无结果")
-        return None
-    log_api(f"[小说] 搜索「{title}」→ {items[0][0]}")
-    return items[0]
+    # v24.1：q 为主，query 兜底；两次都解析失败才返回 None
+    for key in ("q", "query"):
+        url = f"https://fanqienovel.com/search?{key}={quote(title)}"
+        html = await fetch_html(url)
+        if not html:
+            continue
+        items = parse_search(html, limit=5)
+        if items:
+            # 优先完全同名，其次第一个候选
+            for name, item_url in items:
+                if name.strip() == title:
+                    log_api(f"[小说] 搜索「{title}」→ {name}")
+                    return name, item_url
+            log_api(f"[小说] 搜索「{title}」候选 {len(items)} 个，取第一个")
+            return items[0]
+    log_api(f"[小说] 搜索「{title}」无结果（q/query 均未解析到候选）")
+    return None
