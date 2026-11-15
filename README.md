@@ -1259,21 +1259,84 @@ QQ 私聊：
 docker restart hoshinoumi-gateway
 ```
 
-#### 7. 以后热更新
+#### 7. 热更新（ingress 不重启）
+
+前置：ingress 正在运行，`current` 指向旧 worker。
+
+```text
+新代码 -> prepare_worker -> 新 worker -> 健康检查 -> 切 current -> 旧 worker drain 60s
+```
+
+具体命令：
 
 ```bash
 cd ~/Hoshinoumi
 
-python3 scripts/prepare_worker.py --version 25.5.8
+# 1. 取新代码（旧 worker 已在内存里，不受影响）
+git bundle verify Release/REC-v25.x.y.bundle
+git fetch Release/REC-v25.x.y.bundle main:refs/remotes/bundle/main
+git merge --ff-only refs/remotes/bundle/main
 
+# 2. 代码/配置变更后先刷新环境报告
+set -a
+. ./.env
+set +a
+python3 checks/env_check.py
+
+# 3. 准备新版本目录（必须是新版本号）
+python3 scripts/prepare_worker.py --version 25.x.y
+
+# 4. 启动新 worker 并切流；ingress 不动
 python3 scripts/nao_supervisor.py \
   --base data/workers \
-  --version 25.5.8 \
+  --version 25.x.y \
   --worker-cmd "python3 -u run.py" \
-  --timeout 90
+  --timeout 90 \
+  --drain-seconds 60
 ```
 
-默认旧 worker 保留 60 秒 drain，再退出。需要迁移数据库或必须重启的版本会被 `update.json` 拒绝，不自动切。
+验收：
+
+```bash
+curl -s http://127.0.0.1:27004/api/health
+readlink -f data/workers/current
+tail -n 100 data/workers/versions/25.x.y/worker.log
+```
+
+QQ：
+
+```text
+!version
+```
+
+应显示新版本。旧 worker 在 60 秒 drain 窗口内继续服务已有 WS/HTTP，窗口结束再退出。
+
+##### 不能热更的版本
+
+只要 `update.json` 声明任一项，就不能走热更：
+
+```json
+{
+  "version": "25.x.y",
+  "requires_restart": true,
+  "requires_schema": true,
+  "schema_version": 29
+}
+```
+
+```text
+requires_restart=true -> 必须停进程维护
+requires_schema=true  -> 必须停机迁移数据库
+schema_version 不符   -> 走维护窗口
+```
+
+自动准入检查：
+
+```bash
+python3 scripts/nao_update.py --latest --dry-run
+```
+
+拒绝时会保留 `current`，写 `data/update_status.json`，QQ 里用 `!update` 查看原因。不要为了“强行热更”去改 schema 或跳过准入。
 
 #### 8. 回滚
 
