@@ -1,4 +1,4 @@
-﻿# Hoshinoumi（REC） v23.5
+# Hoshinoumi（REC） v23.5
 
 > 后端 **v21** · 网关 **v21**（owner 鉴权 / JWT / 架构收口）
 > v19 与 v20.0–v20.4 已完成，当前在做 Docker 与网关验证。
@@ -290,7 +290,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | v21 | 网关（二）owner 鉴权：JWT/刷新/失败锁定 + 架构收口 | ✅ 已完成 | [v21.md](docs/versions/v21.md) |
 | v22 | 网关（三）安全：限流/审计/TLS/`!gw` | ✅ 已完成 | [v22.md](docs/versions/v22.md) |
 | v23 | 多用户 + 亲密度可骤降/负值/修复，归零降私聊回复：users/roles + user_id 隔离 | 🚧 v23.5 试运行 | [v23.md](docs/versions/v23.md) |
-| v24 | 插件接口实现 | 📋 已规划 | [v24.md](docs/versions/v24.md) |
+| v24 | 插件接口实现 + v24.4 书籍链路修复 | 📋 已规划 | [v24.md](docs/versions/v24.md) |
 | v25 | 模型层接口实现 | 📋 已规划 | [v25.md](docs/versions/v25.md) |
 | v26 | 记忆层接口实现 | 📋 已规划 | [v26.md](docs/versions/v26.md) |
 | v27 | 通道层接口实现 | 📋 已规划 | [v27.md](docs/versions/v27.md) |
@@ -1914,23 +1914,3 @@ python3 scripts/check_names.py        # 未定义名字
 所以有了 Hoshinoumi。算是给“故事结束之后”补的一间学生会室：让她继续上学、开会、喂猫、弹琴，也让她在 QQ、Web、桌面和手机那边，记得你随口说过的话。
 
 > 故事结束以后，她还在。
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
