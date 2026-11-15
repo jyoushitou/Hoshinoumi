@@ -9,6 +9,7 @@ class TestMigrateV23(unittest.TestCase):
     def setUp(self):
         from bot.infra import conn, schema
         self.tmp = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.tmp, ignore_errors=True)
         self.path = str(Path(self.tmp) / "m23.db")
         conn.configure(backend="sqlite", sqlite_path=self.path)
         self.c = conn.get_cursor()

@@ -619,10 +619,11 @@ class TestSingleInstance(unittest.TestCase):
         import os
         from bot.core import single_instance as si
         si.release()
-        try:
-            os.remove(self.path)
-        except OSError:
-            pass
+        for p in (self.path, self.path + ".pid"):
+            try:
+                os.remove(p)
+            except OSError:
+                pass
 
     def test_second_acquire_fails_then_release_works(self):
         from bot.core import single_instance as si

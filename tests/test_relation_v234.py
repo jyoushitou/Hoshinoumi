@@ -24,6 +24,7 @@ class TestRelationV234(unittest.TestCase):
         from bot.infra import conn, schema
         from scripts import migrate_v23
         self.tmp = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.tmp, ignore_errors=True)
         conn.configure(backend="sqlite", sqlite_path=str(Path(self.tmp) / "rel.db"))
         self.c = conn.get_cursor()
         schema.ensure_tables(self.c)

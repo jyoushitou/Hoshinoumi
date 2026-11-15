@@ -26,6 +26,7 @@ class TestQqContext(unittest.TestCase):
         from bot.infra import conn, schema, tenant
         self.tenant = tenant
         self.tmp = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.tmp, ignore_errors=True)
         conn.configure(backend="sqlite", sqlite_path=str(Path(self.tmp) / "qq.db"))
         self.c = conn.get_cursor()
         schema.ensure_tables(self.c)

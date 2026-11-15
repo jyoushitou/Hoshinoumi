@@ -25,6 +25,7 @@ class TestBookQueue(unittest.TestCase):
     def setUp(self):
         from bot.infra import conn, schema
         self.tmp = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.tmp, ignore_errors=True)
         conn.configure(backend="sqlite", sqlite_path=str(Path(self.tmp) / "q.db"))
         self.c = conn.get_cursor()
         schema.ensure_tables(self.c)

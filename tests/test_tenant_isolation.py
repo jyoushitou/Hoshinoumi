@@ -28,6 +28,7 @@ class TestTenantIsolation(unittest.TestCase):
         from bot.infra import conn, schema
         from scripts import migrate_v23
         self.tmp = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.tmp, ignore_errors=True)
         self.path = str(Path(self.tmp) / "tenant.db")
         conn.configure(backend="sqlite", sqlite_path=self.path)
         self.ua = "u_a_" + uuid.uuid4().hex[:8]
