@@ -241,6 +241,8 @@ class TestEnvironment(unittest.TestCase):
         "NAO_MEMORY_BUDGET",
         "NAO_HOT_RELOAD",
         "NAO_HOT_RELOAD_INTERVAL",
+        "NAO_WORKER_MODE",
+        "NAO_WORKER_SOCKET_DIR",
     }
 
     @staticmethod

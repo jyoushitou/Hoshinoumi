@@ -315,10 +315,16 @@ async def start_api_server():
 
     runner = web.AppRunner(app, handle_signals=False)
     await runner.setup()
-    site = web.TCPSite(runner, apicfg.API_HOST, apicfg.API_PORT, reuse_address=True, reuse_port=True)
-    await site.start()
-
-    log_system(f"API 服务器已启动: http://{apicfg.API_HOST}:{apicfg.API_PORT}")
+    from ..core import worker
+    if worker.enabled():
+        sock = worker.prepare_socket("api.sock")
+        site = web.UnixSite(runner, sock)
+        await site.start()
+        log_system(f"API worker 已启动: unix:{sock}")
+    else:
+        site = web.TCPSite(runner, apicfg.API_HOST, apicfg.API_PORT, reuse_address=True, reuse_port=True)
+        await site.start()
+        log_system(f"API 服务器已启动: http://{apicfg.API_HOST}:{apicfg.API_PORT}")
     log_system(f"API Token: {apicfg.API_TOKEN[:12]}...")
     log_system(f"最大并发: {apicfg.MAX_CONCURRENT_REQUESTS}")
 

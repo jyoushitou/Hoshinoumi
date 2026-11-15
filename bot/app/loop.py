@@ -12,6 +12,7 @@ from ..log import log_system, log_err
 from ..heartbeat import heartbeat_monitor
 from ..schedule import cycle_task_run
 from ..chat.handler import websocket_handle_qq
+from ..core import worker
 
 
 MAX_RESTARTS = 10          # 连续失败多少次就放弃
@@ -47,10 +48,19 @@ async def serve(api_runner):
         hb = asyncio.create_task(heartbeat_monitor("QQ", cfg.active_ws_qq))  # 启动心跳监控
         cyc = asyncio.create_task(cycle_task_run())  # 启动定时任务循环
         try:
-            async with websockets.serve(  # 启动 WebSocket 服务器
-                websocket_handle_qq, LISTEN_HOST, LISTEN_PORT_QQ,
-                ping_interval=20, ping_timeout=60,  # v8-FIX：容忍短暂卡顿，别一卡就断线
-            ):
+            if worker.enabled():
+                sock = worker.prepare_socket("qq.sock")
+                server = websockets.unix_serve(
+                    websocket_handle_qq, sock,
+                    ping_interval=20, ping_timeout=60,
+                )
+                log_system(f"QQ worker 已启动: unix:{sock}")
+            else:
+                server = websockets.serve(
+                    websocket_handle_qq, LISTEN_HOST, LISTEN_PORT_QQ,
+                    ping_interval=20, ping_timeout=60,
+                )
+            async with server:
                 failures = 0                       # 起来了就清零
                 await cfg.shutdown_event.wait()  # 保持运行，等待 !exit 命令触发退出
         except Exception as e:
