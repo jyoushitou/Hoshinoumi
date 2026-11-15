@@ -4,6 +4,7 @@
 
 import argparse
 import sys
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -17,7 +18,10 @@ def main():
     ap.add_argument("--base", default=str(ROOT / "data" / "workers"))
     ap.add_argument("--keep", type=int, default=2, help="保留 current + keep 个版本")
     ap.add_argument("--apply", action="store_true")
+    ap.add_argument("--delay", type=float, default=0, help="延迟多少秒后清理")
     args = ap.parse_args()
+    if args.delay and args.delay > 0:
+        time.sleep(args.delay)
     base = Path(args.base).resolve()
     out = select_removable(base, max(1, args.keep))
     if not out:

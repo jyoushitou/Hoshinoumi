@@ -321,12 +321,12 @@ SIGTERM 旧 worker
 
 会。每个版本目录是完整源码副本，约 6 MB。
 
-v25.6 起，ingress 自带清理：
+v25.6 起，supervisor 在切换时清理，1 小时后再清一次：
 
 ```text
 默认 NAO_WORKER_KEEP=2
 保留 current + 上一个旧版本
-每 60 秒检查一次
+切换时清理一次，1 小时后再清理一次，不循环扫描
 worker.pid 仍存活的目录不删
 ```
 
@@ -379,7 +379,7 @@ QQ !update 显示原因
 6. ingress 新请求/新 WS 走 25.6.0
 7. 旧 worker 保留 60 秒 drain
 8. SIGTERM 旧 worker
-9. ingress GC 保留 current + 1 个旧版本
+9. supervisor 切换时清理，1 小时后再清一次，保留 current + 1 个旧版本
 ```
 
 ## 12. 已知限制

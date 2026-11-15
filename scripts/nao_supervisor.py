@@ -16,6 +16,9 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
+
+from bot.core import worker_gc  # noqa: E402
 
 
 def switch_current(base: Path, target: Path):
@@ -90,7 +93,8 @@ def stop(proc, timeout=20):
             pass
 
 
-async def deploy(base: Path, version: str, cmd, timeout=30.0, drain_seconds=60.0):
+async def deploy(base: Path, version: str, cmd, timeout=30.0, drain_seconds=60.0,
+                 keep_versions=2, gc_delay=3600):
     version_dir = base / "versions" / version
     version_dir.mkdir(parents=True, exist_ok=True)
     env = os.environ.copy()
@@ -132,6 +136,13 @@ async def deploy(base: Path, version: str, cmd, timeout=30.0, drain_seconds=60.0
         return False
     switch_current(base, version_dir)
     print(f"[supervisor] 已切到 {version}（{version_dir}）")
+    # 切换时清一次；只保留 current + 上一个旧版本，正在运行的 worker 会被 pid 保护
+    try:
+        n = worker_gc.cleanup(base, keep_versions)
+        if n:
+            print(f"[supervisor] 切换清理 {n} 个旧版本")
+    except Exception as e:
+        print(f"[supervisor] 切换清理失败: {e}")
     if old_dir and old_dir.resolve() != version_dir.resolve():
         if drain_seconds > 0:
             print(f"[supervisor] 旧 worker 继续服务 {drain_seconds:.0f}s，保留在途 WS/HTTP")
@@ -142,6 +153,19 @@ async def deploy(base: Path, version: str, cmd, timeout=30.0, drain_seconds=60.0
             print(f"[supervisor] 旧 worker {old_pid} 收到 SIGTERM")
         except Exception as e:
             print(f"[supervisor] 旧 worker 停止失败: {e}")
+    # 切换完成 1 小时后再清一次；不再周期性扫描
+    if gc_delay and gc_delay > 0:
+        try:
+            subprocess.Popen(
+                [sys.executable, str(ROOT / "scripts" / "nao_gc.py"),
+                 "--base", str(base), "--keep", str(keep_versions),
+                 "--delay", str(gc_delay), "--apply"],
+                cwd=str(ROOT), start_new_session=True,
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            )
+            print(f"[supervisor] 已安排 {gc_delay:.0f}s 后清理旧版本")
+        except Exception as e:
+            print(f"[supervisor] 延迟清理安排失败: {e}")
     return True
 
 
@@ -152,10 +176,14 @@ def main():
     ap.add_argument("--worker-cmd", default=f"{sys.executable} -u run.py")
     ap.add_argument("--timeout", type=float, default=30)
     ap.add_argument("--drain-seconds", type=float, default=60)
+    ap.add_argument("--keep-versions", type=int,
+                    default=int(os.getenv("NAO_WORKER_KEEP", "2")))
+    ap.add_argument("--gc-delay", type=float, default=3600)
     args = ap.parse_args()
     base = Path(args.base)
     cmd = shlex.split(args.worker_cmd)
-    ok = asyncio.run(deploy(base, args.version, cmd, args.timeout, args.drain_seconds))
+    ok = asyncio.run(deploy(base, args.version, cmd, args.timeout, args.drain_seconds,
+                             args.keep_versions, args.gc_delay))
     return 0 if ok else 1
 
 
