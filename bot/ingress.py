@@ -9,11 +9,14 @@ import argparse
 import asyncio
 import os
 import signal
+from pathlib import Path
 
 import websockets
 
-from .core import worker
+from .core import worker, worker_gc
 
+WORKER_KEEP = int(os.getenv("NAO_WORKER_KEEP", "2"))
+GC_INTERVAL = float(os.getenv("NAO_WORKER_GC_INTERVAL", "60"))
 HOP = {"connection", "keep-alive", "proxy-authenticate", "proxy-authorization",
        "te", "trailers", "transfer-encoding", "upgrade", "host", "content-length"}
 
@@ -63,9 +66,22 @@ async def _ws_proxy(client):
             pass
 
 
+async def _gc_loop(base):
+    while True:
+        await asyncio.sleep(GC_INTERVAL)
+        try:
+            n = worker_gc.cleanup(base, WORKER_KEEP)
+            if n:
+                print(f"[ingress] 已清理 {n} 个旧 worker 版本，保留 current + {WORKER_KEEP - 1} 个")
+        except Exception as e:
+            print(f"[ingress] worker 版本清理失败: {e}")
+
+
 async def main_async(args):
     from aiohttp import web
     worker.set_directory(args.worker_dir)
+    base = Path(args.worker_dir).resolve()
+    gc_task = asyncio.create_task(_gc_loop(base))
     app = web.Application()
     app.router.add_route("*", "/{tail:.*}", lambda r: _http_proxy(r))
     runner = web.AppRunner(app, handle_signals=False)
@@ -86,6 +102,11 @@ async def main_async(args):
     try:
         await stop.wait()
     finally:
+        gc_task.cancel()
+        try:
+            await gc_task
+        except Exception:
+            pass
         ws.close()
         await ws.wait_closed()
         await runner.cleanup()

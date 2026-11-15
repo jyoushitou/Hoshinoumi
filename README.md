@@ -1,6 +1,6 @@
-# Hoshinoumi（REC） v25.5.8
+# Hoshinoumi（REC） v25.6.0
 
-> 后端 **v25.5.8** · 网关 **v24.8.1**（多用户 / 读书 / 本地书）
+> 后端 **v25.6.0** · 网关 **v24.8.1**（多用户 / 读书 / 本地书）
 > v25 试运行；v24 及以前已完成；v26（内部 TCP/protobuf）已规划。
 >
 > 状态规则：**下一个大版本进入试运行，则上一个大版本视为完成。**
@@ -14,9 +14,9 @@
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-5C2D91)](#)
 [![NapCat](https://img.shields.io/badge/NapCat-QQ-12B7F5)](#)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
-![Backend](https://img.shields.io/badge/Backend-v25.5.8-yellow)
+![Backend](https://img.shields.io/badge/Backend-v25.6.0-yellow)
 ![Gateway](https://img.shields.io/badge/Gateway-v24.8.1-blue)
-![Version](https://img.shields.io/badge/Version-v25.5.8-orange)
+![Version](https://img.shields.io/badge/Version-v25.6.0-orange)
 ![Tests](https://img.shields.io/badge/Tests-1041%20passing-brightgreen)
 
 > **Hoshinoumi（REC，记录）** · 友利奈绪 · 星之海学园学生会室
@@ -263,7 +263,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 
 ## 开发计划
 
-**当前：v25.5.8 试运行（启动失败诊断）**｜待真实 NapCat 演练。
+**当前：v25.6.0 试运行（启动失败诊断）**｜待真实 NapCat 演练。
 
 > v22 试运行 1 天后，进入约 1 天的 v23 启动 + v22 介绍视频，再开始 v23 子版本开发。
 
@@ -294,7 +294,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | v22 | 网关（三）安全：限流/审计/TLS/`!gw` | ✅ 已完成 | [v22.md](docs/versions/v22.md) |
 | v23 | 多用户 + 亲密度可骤降/负值/修复，归零降私聊回复：users/roles + user_id 隔离 | ✅ 已完成（v23.5.1） | [v23.md](docs/versions/v23.md) |
 | v24 | 读书修复与增强：搜索/标题/进度、抓包分析、网络优先 + 本地书回退 | ✅ 已完成（v24.9.4） | [v24.md](docs/versions/v24.md) |
-| v25 | 热更新 + 配置动态化：配置/热加载/ingress/蓝绿/准入/演练 | 🚧 v25.5.8 试运行 | [v25.md](docs/versions/v25.md) |
+| v25 | 热更新 + 配置动态化：配置/热加载/ingress/蓝绿/准入/演练 | 🚧 v25.6.0 试运行 | [v25.md](docs/versions/v25.md) |
 | v26 | 内部通讯升级：8+4+body TCP + protobuf（含 v26.0 架构复审修复） | 📋 已规划 | [v26.md](docs/versions/v26.md) |
 | v27 | 插件接口实现（含 v27.0 代码审查与架构重构） | 📋 已规划 | [v27.md](docs/versions/v27.md) |
 | v28 | 模型层接口实现 | 📋 已规划 | [v28.md](docs/versions/v28.md) |
@@ -1262,6 +1262,9 @@ docker restart hoshinoumi-gateway
 
 #### 7. 热更新（ingress 不重启）
 
+> 原理、进程/线程区别、Unix socket 与数据交换：
+> [v25 热更新原理与数据交换](docs/HOT-UPDATE.md)。
+
 前置：ingress 正在运行，`current` 指向旧 worker。
 
 ```text
@@ -1311,6 +1314,7 @@ QQ：
 ```
 
 应显示新版本。旧 worker 在 60 秒 drain 窗口内继续服务已有 WS/HTTP，窗口结束再退出。
+ingress 默认每 60 秒清理旧版本，只保留 current + 上一个旧版本；`NAO_WORKER_KEEP=2`，需要更多回滚点就调大。
 
 ##### 不能热更的版本
 
@@ -1353,7 +1357,9 @@ python3 start.py --no-gateway
 
 数据库没有结构变更时不需要恢复备份；有迁移时恢复 `~/nao-before-v25.sql`。
 
-完整踩坑记录和配置校验见 [v25 部署踩坑记录](#v25-部署踩坑记录2026-11-15)。
+完整原理与问答：[v25 热更新原理与数据交换](docs/HOT-UPDATE.md)。
+
+部署踩坑记录见 [v25 部署踩坑记录](#v25-部署踩坑记录2026-11-15)。
 
 ### 旧版单进程（仅本地调试）
 
@@ -1711,6 +1717,8 @@ python3 checks/env_check.py --init-db   # 环境监测时自动建
 | `NAO_HOT_RELOAD_INTERVAL` | `3` | 热加载扫描间隔（秒） |
 | `NAO_WORKER_MODE` | `0` | worker 只监听 Unix socket |
 | `NAO_WORKER_SOCKET_DIR` | `data/worker` | ingress/worker socket 目录 |
+| `NAO_WORKER_KEEP` | `2` | 保留 current + 1 个旧版本 |
+| `NAO_WORKER_GC_INTERVAL` | `60` | ingress 清理旧版本间隔（秒） |
 | `NAO_BOOK_URLS` | 内置三本 | 自定义书单：`名字&#124;url,名字&#124;url` |
 | `NAO_OCR_LANG` | `chi_sim` | tesseract 语言包 |
 | `NAO_NO_AUTOINSTALL` | 未设置 | 设 `1` 关闭启动时自动装包 |
@@ -2243,3 +2251,4 @@ python3 scripts/check_names.py        # 未定义名字
 所以有了 Hoshinoumi。算是给“故事结束之后”补的一间学生会室：让她继续上学、开会、喂猫、弹琴，也让她在 QQ、Web、桌面和手机那边，记得你随口说过的话。
 
 > 故事结束以后，她还在。
+
