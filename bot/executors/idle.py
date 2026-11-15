@@ -126,7 +126,7 @@ async def handle_local_read(ev):
     try:
         info = local_books.read_chunk(name, int(item.get("char_offset") or 0))
     except Exception as e:
-        log_api(f"[本地阅读] 读取失败 {name} 第 {chapter} 章: {e}")
+        log_api(f"[本地阅读] 读取失败 {name} offset={item.get('char_offset', 0)}: {e}")
         return {"ok": False, "reason": str(e)}
     summary = ""
     try:
@@ -138,7 +138,7 @@ async def handle_local_read(ev):
                             offset=info["next_offset"])
     done = info["done"]
     log_system(f"[本地阅读] {name} {info['chapter']} "
-               f"({info['index']}/{info['total']} +{info['offset']}字) "
+               f"({info['chapter_index']}/{info['total']} +{info['offset']}字) "
                f"摘要 {len(summary or '')} 字")
     if done:
         try:
