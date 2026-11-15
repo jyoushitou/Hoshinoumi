@@ -181,7 +181,7 @@ plugin: <capability>
 规则：
 
 - 安装目录固定为 `plugins/<layer>/<name>/`，不能由插件指定任意路径。
-- 不信任包名；以 manifest name + 包 hash 为准。
+- 包文件名不参与身份判断；插件身份 = manifest `name`，hash 只做完整性和同名覆盖判断。
 - 同名已安装：hash 相同视为重复安装；hash 不同拒绝覆盖，需先卸载。
 - `layer` 只能是 `models/channels/memory/tools/storage`。
 

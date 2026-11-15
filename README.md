@@ -354,7 +354,8 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 >
 
 > **插件运行时（v28）**：
-> - 安装按 manifest `name` + 包 hash，复制到 `plugins/<layer>/<name>/`，不信任包名。
+> - 安装按 manifest `name` 识别插件，包 hash 只做完整性和同名覆盖判断；复制到 `plugins/<layer>/<name>/`。
+> - 监听地址只允许 loopback `127.0.0.1`。
 > - 初始化顺序固定：command → events → life → ai → plugin。
 > - `@2` 能力在核心只有 `@1` 时直接拒绝加载，不降级。
 > - `plugin-lock.json` 记录 registry generation；worker 启动校验，不一致拒绝加载插件。
