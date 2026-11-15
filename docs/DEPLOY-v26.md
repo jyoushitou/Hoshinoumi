@@ -1,6 +1,6 @@
 # v26 部署与回滚（8+4+body TCP / protobuf）
 
-> 后端：v26.6.2  
+> 后端：v26.6.3  
 > 网关：v26.4.0（`backend.protocol=tcp`）  
 > 数据库 schema：29，不需要迁移  
 > 外部端口：gateway `27005` HTTP；backend `3001` NapCat WS + `27004` 内部 TCP
@@ -37,8 +37,8 @@ ss -lntp | grep -E ':27004|:3001|:27005'
 ```bash
 cd ~/Hoshinoumi
 
-git bundle verify Release/REC-v26.6.2.bundle
-git fetch Release/REC-v26.6.2.bundle main:refs/remotes/bundle/main
+git bundle verify Release/REC-v26.6.3.bundle
+git fetch Release/REC-v26.6.3.bundle main:refs/remotes/bundle/main
 git merge --ff-only refs/remotes/bundle/main
 
 grep 'VERSION =' bot/core/version.py
