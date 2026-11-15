@@ -33,27 +33,48 @@ def switch_current(base: Path, target: Path):
         (base / "current").write_text(str(target), encoding="utf-8")
 
 
-async def health(api_sock: str, timeout=1.0):
+async def health_detail(api_sock: str, timeout=1.0):
+    """返回 (ok, 原因)；诊断用。"""
     import aiohttp
 
     try:
         conn = aiohttp.UnixConnector(path=api_sock)
         async with aiohttp.ClientSession(connector=conn) as s:
             async with s.get("http://worker/api/health", timeout=timeout) as r:
-                return r.status == 200
-    except Exception:
-        return False
+                body = (await r.text())[:200]
+                if r.status == 200:
+                    return True, ""
+                return False, f"health HTTP {r.status}: {body}"
+    except Exception as e:
+        return False, f"{type(e).__name__}: {e}"
+
+
+async def health(api_sock: str, timeout=1.0):
+    ok, _why = await health_detail(api_sock, timeout)
+    return ok
 
 
 async def wait_health(api_sock, proc, timeout=30.0):
+    """返回 (ok, 原因)；进程退出/超时/非 200 都给出具体原因。"""
     deadline = time.monotonic() + timeout
+    last = ""
     while time.monotonic() < deadline:
         if proc.poll() is not None:
-            return False
-        if await health(api_sock):
-            return True
+            return False, f"worker 进程已退出，code={proc.returncode}"
+        ok, why = await health_detail(api_sock)
+        if ok:
+            return True, ""
+        last = why
         await asyncio.sleep(0.5)
-    return False
+    return False, f"{timeout:.0f}s 内 {api_sock} 未就绪；最后一次：{last or '无响应'}"
+
+
+def _tail(path: Path, n=20):
+    try:
+        lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+        return "\n".join(lines[-n:]) if lines else "(空)"
+    except Exception as e:
+        return f"(读取失败: {e})"
 
 
 def stop(proc, timeout=20):
@@ -93,10 +114,21 @@ async def deploy(base: Path, version: str, cmd, timeout=30.0, drain_seconds=60.0
     proc = subprocess.Popen(cmd, cwd=str(version_dir), env=env, start_new_session=True,
                             stdout=log, stderr=subprocess.STDOUT)
     (version_dir / "worker.pid").write_text(str(proc.pid), encoding="utf-8")
-    ok = await wait_health(str(version_dir / "api.sock"), proc, timeout)
+    api_sock = str(version_dir / "api.sock")
+    ok, reason = await wait_health(api_sock, proc, timeout)
     if not ok:
         stop(proc)
         print(f"[supervisor] {version} 健康检查失败，拒绝切流")
+        print(f"  socket: {api_sock}")
+        print(f"  原因: {reason}")
+        print("  worker.log 最后 20 行：")
+        print(_tail(version_dir / "worker.log", 20))
+        print("  处理：先看上面的报错；常见为未 source .env、环境报告过期、"
+              "依赖缺失、current/socket 权限。")
+        try:
+            log.close()
+        except Exception:
+            pass
         return False
     switch_current(base, version_dir)
     print(f"[supervisor] 已切到 {version}（{version_dir}）")
@@ -117,7 +149,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--base", default=str(ROOT / "data" / "workers"))
     ap.add_argument("--version", required=True)
-    ap.add_argument("--worker-cmd", default=f"{sys.executable} run.py")
+    ap.add_argument("--worker-cmd", default=f"{sys.executable} -u run.py")
     ap.add_argument("--timeout", type=float, default=30)
     ap.add_argument("--drain-seconds", type=float, default=60)
     args = ap.parse_args()
