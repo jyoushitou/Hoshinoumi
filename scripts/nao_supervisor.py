@@ -101,6 +101,7 @@ async def deploy(base: Path, version: str, cmd, timeout=30.0, drain_seconds=60.0
     env["NAO_WORKER_MODE"] = "1"
     env["NAO_WORKER_SOCKET_DIR"] = str(version_dir)
     env["NAO_WORKER_VERSION"] = version
+    env["NAO_INTERNAL_TCP"] = "1"
     old_dir = None
     current = base / "current"
     try:

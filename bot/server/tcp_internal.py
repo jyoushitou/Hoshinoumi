@@ -110,3 +110,21 @@ async def start_tcp_server(host=HOST, port=27004):
     server = await asyncio.start_server(handle_client, host, port, limit=frame.MAX_BODY + 64)
     log_system(f"[TCP] 内部帧服务已启动: {host}:{port}")
     return server
+
+
+async def start_unix_frame_server(path):
+    """worker 模式：只在 Unix socket 接帧，由 ingress 做 27004 L4 透传。"""
+    import os
+    try:
+        if os.path.exists(path):
+            os.unlink(path)
+    except OSError:
+        pass
+    server = await asyncio.start_unix_server(handle_client, path,
+                                             limit=frame.MAX_BODY + 64)
+    try:
+        os.chmod(path, 0o600)
+    except OSError:
+        pass
+    log_system(f"[TCP] 内部帧服务已启动: unix:{path}")
+    return server

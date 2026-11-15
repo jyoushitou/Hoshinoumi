@@ -26,8 +26,14 @@ async def main():
     # ===================== 内部 TCP（v26.2） =====================
     tcp_server = None
     if os.getenv("NAO_INTERNAL_TCP", "1") != "0":
-        from .server.tcp_internal import start_tcp_server
-        tcp_server = await start_tcp_server()
+        from .core import worker
+        if worker.enabled():
+            from .server.tcp_internal import start_unix_frame_server
+            tcp_server = await start_unix_frame_server(
+                worker.prepare_socket("internal.sock"))
+        else:
+            from .server.tcp_internal import start_tcp_server
+            tcp_server = await start_tcp_server()
 
     # ===================== 主循环 =====================
     watcher = asyncio.create_task(hot_reload.watch())  # v25.1
