@@ -53,8 +53,7 @@ async def cmd_book(ctx):
         lines = [_decl(ctx) + "📚 本地阅读队列"]
         for r in rows:
             lines.append(f"  {r['status']}  {r['name']}  "
-                         f"已读 {r.get('char_offset', 0)} 字 "
-                         f"（{r['last_chapter']}/{r['total'] or '?'} 章）")
+                         f"已读 {r.get('char_offset', 0)} 字（全书连续）")
         return "\n".join(lines)
     if sub == "remove":
         if len(args) < 2:
@@ -74,15 +73,16 @@ async def cmd_book(ctx):
         BQ.enqueue(ctx.uid, name, 0)
         _spawn(_read_first_and_notify(ctx, name))
         return _decl(ctx) + (f"已加入队首：《{name}》。\n"
-                              "正在解析首个可识别章节，摘要随后主动发你；"
-                              "空闲从下一个章节续读。")
+                              "正在解析全书首个 1000 字，摘要随后主动发你；"
+                              "空闲从下一段 1000 字续读。")
     if sub == "progress":
         p = LB.get_progress(ctx.uid)
         if not p:
             return _decl(ctx) + "还没有本地阅读进度。"
         q = BQ.get_item(ctx.uid, p["name"])
-        extra = f"，已读 {q.get('char_offset', 0)} 字" if q else ""
-        return f"📖 当前：{p['name']} 第 {p['chapter']} 章{extra}"
+        if q:
+            return f"📖 当前：{p['name']}，已读 {q.get('char_offset', 0)} 字"
+        return f"📖 当前：{p['name']}"
     if sub == "next":
         q = BQ.active(ctx.uid)
         if q:
@@ -90,22 +90,18 @@ async def cmd_book(ctx):
         p = LB.get_progress(ctx.uid)
         if not p:
             return _decl(ctx) + "还没有进度，先 !book read <文件名> 或 !book local <书名>。"
-        return _read_chunk(ctx, p["name"], LB.chapter_start_offset(p["name"], int(p["chapter"]) + 1))
+        return _read_chunk(ctx, p["name"], 0)
     if sub != "read" or len(args) < 2:
-        return _decl(ctx) + "用法：!book read <文件名> [章节]"
-    rest = args[1:]
-    chapter = 1
-    if rest and rest[-1].isdigit():
-        chapter = int(rest[-1])
-        rest = rest[:-1]
-    name = " ".join(rest).strip()
+        return _decl(ctx) + "用法：!book read <文件名>"
+    name = " ".join(args[1:]).strip()
     if not name:
         return _decl(ctx) + "请给我文件名。"
-    return _read_chunk(ctx, name, LB.chapter_start_offset(name, chapter))
+    # v24.8.6：从文件第一个字开始，不按章节定位
+    return _read_chunk(ctx, name, 0)
 
 
 async def _read_first_and_notify(ctx, name):
-    """后台解析并读第 1 章，避免 15s 命令超时。"""
+    """后台解析并读全书首个 1000 字，避免 15s 命令超时。"""
     try:
         title, chapters = LB.load_book(name)
         BQ.set_total(ctx.uid, name, len(chapters))
@@ -122,7 +118,7 @@ async def _read_first_and_notify(ctx, name):
             pass
         try:
             from ..chat.send import send_short_reply
-            await send_short_reply(ctx.uid, f"《{name}》首个可识别章节读不了：{e}",
+            await send_short_reply(ctx.uid, f"《{name}》首个 1000 字读不了：{e}",
                                    ctx.ws, ctx.uid, False, None)
         except Exception:
             pass
@@ -131,9 +127,9 @@ async def _read_first_and_notify(ctx, name):
 async def _notify_start(ctx, title, info):
     from ..chat.send import send_short_reply
     text = (f"我开始读《{title}》了。\n"
-            f"《{info['chapter']}》（第 {info['offset'] + 1} 字起）：\n"
+            f"第 {info['offset'] + 1} 字起：\n"
             f"{info['chunk'][:180]}\n"
-            f"共 {info['total']} 个可识别章节，每次读 1000 字，读完我再告诉你。")
+            f"全书连续读取，每次 1000 字，读完我再告诉你。")
     try:
         await send_short_reply(ctx.uid, text, ctx.ws, ctx.uid, False, None)
     except Exception:
@@ -152,7 +148,7 @@ def _read_chunk(ctx, name, offset=0):
                         status=("done" if info["done"] else "reading"),
                         offset=info["next_offset"])
     return (_decl(ctx)
-            + f"📖《{info['title']}》{info['chapter']}"
+            + f"📖《{info['title']}》"
             f"（第 {info['offset'] + 1} 字起，+{len(info['chunk'])} 字）\n"
             + f"内容：{info['chunk'][:300]}\n"
             + "（每次 1000 字，只读本机文件，不上传。）")

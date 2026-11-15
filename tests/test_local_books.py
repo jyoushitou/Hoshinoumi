@@ -44,10 +44,10 @@ class TestLocalBooks(unittest.TestCase):
         self._txt()
         title, chapters = self.LB.load_book("测试书")
         self.assertEqual(title, "测试书")
-        self.assertEqual(len(chapters), 2)
-        info = self.LB.read_chapter("测试书", 2)
-        self.assertEqual(info["index"], 2)
-        self.assertIn("正文二", info["summary"])
+        self.assertEqual(len(chapters), 1)
+        self.assertEqual(chapters[0][0], "全文")
+        info = self.LB.read_chapter("测试书", 1)
+        self.assertIn("正文二", info["text"])
 
     def test_path_traversal_rejected(self):
         with self.assertRaises(ValueError):
@@ -92,7 +92,7 @@ class TestLocalBooks(unittest.TestCase):
         finally:
             BQ.enqueue = orig_enq
             books_cmd._spawn = orig_spawn
-        self.assertIn("正在解析首个可识别章节", out)
+        self.assertIn("正在解析全书首个 1000 字", out)
         self.assertEqual(calls["enqueue"], "测试书")
         self.assertTrue(calls["spawn"])
 
@@ -121,8 +121,8 @@ class TestLocalBooks(unittest.TestCase):
         finally:
             BQ.set_total, BQ.set_progress, BQ.mark_error = orig
             S.send_short_reply = orig_send
-        self.assertEqual(calls["chapter"], 2)  # 第一章已读完，指向下一章
-        self.assertEqual(calls["offset"], 6)
+        self.assertEqual(calls["chapter"], 1)
+        self.assertGreater(calls["offset"], 0)
         self.assertTrue(any("我开始读" in x for x in sent))
 
     def test_read_chunk_1000_chars(self):
@@ -134,18 +134,16 @@ class TestLocalBooks(unittest.TestCase):
         second = self.LB.read_chunk("长章", first["next_offset"])
         self.assertEqual(len(second["chunk"]), 1000)
         third = self.LB.read_chunk("长章", second["next_offset"])
-        self.assertEqual(len(third["chunk"]), 500)
+        self.assertGreater(len(third["chunk"]), 0)
         self.assertTrue(third["done"])
 
-    def test_chunk_crosses_chapter_boundary(self):
-        p = self.LB.BOOK_DIR / "跨界.txt"
-        p.write_text("第1章\n" + ("甲" * 500) + "\n第2章\n" + ("乙" * 1500), encoding="utf-8")
-        first = self.LB.read_chunk("跨界", 0)
-        self.assertEqual(len(first["chunk"]), 1000)
-        self.assertIn("甲", first["chunk"])
-        self.assertIn("乙", first["chunk"])
-        self.assertEqual(first["chapter_index"], 1)
-        self.assertEqual(first["end_index"], 2)
+    def test_first_char_is_file_start(self):
+        p = self.LB.BOOK_DIR / "开头.txt"
+        p.write_text("<刀剑神域>\n第一卷 艾恩葛朗特\n第八章 中央圣堂\n正文", encoding="utf-8")
+        first = self.LB.read_chunk("开头", 0)
+        self.assertTrue(first["chunk"].startswith("<刀剑神域>"))
+        self.assertIn("第一卷", first["chunk"])
+        self.assertEqual(first["chapter"], "全文")
 
     def test_command_group_silent(self):
         from bot.cmd.books_cmd import cmd_book

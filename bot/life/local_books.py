@@ -134,6 +134,9 @@ def _epub_text(path):
                     txt = _SPACE.sub(" ", html.unescape(_TAG.sub(" ", raw)))
                     if len(txt) > 80:
                         chapters.append((f"第{len(chapters)+1}节", txt))
+        # v24.8.6：EPUB 按 spine 顺序拼成全文，不按节切块
+        if chapters:
+            return title, [("全文", "".join(body for _h, body in chapters))]
         return title, chapters
 
 
@@ -147,8 +150,9 @@ def load_book(name):
     if path.suffix.lower() == ".epub":
         title, chapters = _epub_text(path)
     else:
+        # v24.8.6：文件解码后的第一个字符就是正文第一个字
         text = _decode(path.read_bytes())
-        title, chapters = path.stem, _split_chapters(text)
+        title, chapters = path.stem, [("全文", text)]
     if len(_cache) >= _CACHE_MAX:
         _cache.pop(next(iter(_cache)))
     _cache[key] = (st.st_mtime_ns, st.st_size, title, chapters)
