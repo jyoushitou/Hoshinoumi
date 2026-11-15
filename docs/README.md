@@ -189,12 +189,6 @@ v6：P1 会说话 → P2 说实话 → P2.5 长感官 → P3 有生活 → P4 �
 > 架构审查见 **[ARCH-REVIEW.md](ARCH-REVIEW.md)**（分层/环/巨石函数，含修复顺序）。
 > 架构图见 **[ARCHITECTURE.md](ARCHITECTURE.md)**（分层/消息流/调度模型/架构债）。
 
+## 故障复盘
 
-
-
-
-
-
-
-
-
+- [2026-11-15 上线后失联](POSTMORTEM-2026-11-15-STARTUP-HANG.md)

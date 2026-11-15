@@ -375,6 +375,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 > v17.12 起语音带**情绪与声线**：语气随心情变，声线跟角色卡走。
 
 
+- **上线后失联复盘**：[POSTMORTEM-2026-11-15-STARTUP-HANG.md](docs/POSTMORTEM-2026-11-15-STARTUP-HANG.md)
 - **细到每个小版本**（`x.y.z` 级）的拆解与验收点：[ROADMAP.md](docs/ROADMAP.md)
 - **数据库设计**（一表一职责）：[DB-DESIGN.md](docs/DB-DESIGN.md)
 - **未排期需求**（A~E 组）：[V14-后续清单.md](docs/V14-后续清单.md)
