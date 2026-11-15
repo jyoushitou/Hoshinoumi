@@ -54,7 +54,12 @@ async def _ws_copy(src, dst):
 async def _ws_proxy(client):
     path = worker.active_socket("qq.sock")
     try:
-        async with websockets.unix_connect(path) as upstream:
+        q = ""
+        try:
+            q = client.request.path
+        except Exception:
+            pass
+        async with websockets.unix_connect(path, uri=f"ws://localhost{q}") as upstream:
             await asyncio.gather(_ws_copy(client, upstream), _ws_copy(upstream, client))
     except Exception:
         try:

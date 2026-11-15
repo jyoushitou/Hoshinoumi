@@ -11,6 +11,7 @@ class TestArchGate(unittest.TestCase):
         self.assertEqual(result["events_reads"], [])
         self.assertEqual(result["startup_ddl"], [])
         self.assertEqual(result["persistence_cycle"], [])
+        self.assertEqual(result["import_cycles"], [])
 
 
 if __name__ == "__main__":

@@ -63,6 +63,16 @@ class TestFrame(unittest.TestCase):
         self.assertEqual(t, frame.TYPE_REQUEST)
         self.assertEqual(body, b"hello")
 
+    def test_many_coalesced(self):
+        frames = b"".join(
+            frame.encode_frame(frame.TYPE_REQUEST, f"m{i}".encode())
+            for i in range(1000)
+        )
+        parsed, rest = frame.parse_frames(frames)
+        self.assertEqual(len(parsed), 1000)
+        self.assertEqual(rest, b"")
+        self.assertEqual(parsed[-1][2], b"m999")
+
     def test_too_large(self):
         with self.assertRaises(ValueError):
             frame.encode_frame(1, b"x" * (frame.MAX_BODY + 1))

@@ -12,12 +12,29 @@ from ..log import log_system, log_err
 from ..heartbeat import heartbeat_monitor
 from ..schedule import cycle_task_run
 from ..chat.handler import websocket_handle_qq
+from ..chat.ws_auth import token_ok
 from ..core import worker
 
 
 MAX_RESTARTS = 10          # 连续失败多少次就放弃
 BACKOFF_BASE = 5           # 首次等待 5 秒
 BACKOFF_MAX = 60           # 退避封顶 60 秒
+
+
+async def _ws_entry(ws):
+    """v26.0：可选 WS token；未配置时保持旧行为。"""
+    try:
+        path = ws.request.path
+    except Exception:
+        path = ""
+    if not token_ok(path):
+        log_err("[WS] 拒绝未授权连接（token 不匹配）")
+        try:
+            await ws.close(code=1008, reason="unauthorized")
+        except Exception:
+            pass
+        return
+    await websocket_handle_qq(ws)
 
 
 async def serve(api_runner):
@@ -51,13 +68,13 @@ async def serve(api_runner):
             if worker.enabled():
                 sock = worker.prepare_socket("qq.sock")
                 server = websockets.unix_serve(
-                    websocket_handle_qq, sock,
+                    _ws_entry, sock,
                     ping_interval=20, ping_timeout=60,
                 )
                 log_system(f"QQ worker 已启动: unix:{sock}")
             else:
                 server = websockets.serve(
-                    websocket_handle_qq, LISTEN_HOST, LISTEN_PORT_QQ,
+                    _ws_entry, LISTEN_HOST, LISTEN_PORT_QQ,
                     ping_interval=20, ping_timeout=60,
                 )
             async with server:
