@@ -59,8 +59,10 @@ async def cmd_book(ctx):
         except Exception as e:
             return _decl(ctx) + f"加入失败：{e}"
         BQ.enqueue(ctx.uid, name, len(chapters))
-        return _decl(ctx) + (f"已加入队首：《{title}》，共 {len(chapters)} 章。\n"
-                              "空闲时会从第 1 章开始读，读完自动出队。")
+        # v24.8.0：立即读第 1 章完成验证；之后空闲从第 2 章续读
+        first = _read(ctx, name, 1)
+        return (first + f"\n已加入队首：《{title}》，共 {len(chapters)} 章；"
+                "第 1 章已读，空闲续读。")
     if sub == "progress":
         p = LB.get_progress(ctx.uid)
         if not p:

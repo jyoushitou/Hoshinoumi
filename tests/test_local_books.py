@@ -58,6 +58,27 @@ class TestLocalBooks(unittest.TestCase):
         self.assertIn("本地阅读", a)
         self.assertEqual(b, "")
 
+    def test_local_command_reads_first_chapter(self):
+        import asyncio
+        from bot.cmd.books_cmd import cmd_book
+        from bot.cmd.registry import CommandContext
+        from bot.life import book_queue as BQ
+        self._txt()
+        orig = (BQ.enqueue, BQ.get_item, BQ.set_progress)
+        calls = {}
+        BQ.enqueue = lambda uid, name, total=0: calls.setdefault("enqueue", name) or True
+        BQ.get_item = lambda uid, name: {"name": name}
+        BQ.set_progress = lambda uid, name, chapter, total=0: calls.setdefault("progress", chapter)
+        try:
+            ctx = CommandContext(parts=["book", "local", "测试书"], uid="u1",
+                                 ws=None, is_group=False, gid=0)
+            out = asyncio.run(cmd_book(ctx))
+        finally:
+            BQ.enqueue, BQ.get_item, BQ.set_progress = orig
+        self.assertIn("第1章 开始", out)
+        self.assertIn("第 1 章已读", out)
+        self.assertEqual(calls["progress"], 1)
+
     def test_command_group_silent(self):
         from bot.cmd.books_cmd import cmd_book
         from bot.cmd.registry import CommandContext
