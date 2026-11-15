@@ -212,6 +212,21 @@ PURE = {
                        ON UPDATE CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """,
+    "reading_queue": """
+        CREATE TABLE IF NOT EXISTS reading_queue (
+            user_id VARCHAR(64) NOT NULL,
+            name VARCHAR(255) NOT NULL,
+            position INT NOT NULL DEFAULT 0,
+            status VARCHAR(16) NOT NULL DEFAULT 'queued',
+            last_chapter INT NOT NULL DEFAULT 0,
+            total INT NOT NULL DEFAULT 0,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                       ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (user_id, name),
+            KEY idx_rq_user_pos (user_id, position)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
     "relation_events": """
         CREATE TABLE IF NOT EXISTS relation_events (
             id BIGINT AUTO_INCREMENT PRIMARY KEY,

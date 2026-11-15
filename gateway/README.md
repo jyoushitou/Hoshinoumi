@@ -1,4 +1,4 @@
-# Hoshinoumi（REC）Gateway v24.6
+# Hoshinoumi（REC）Gateway v24.7
 
 基于用户自己的 **NetWorkCommunication / CommonNet**（Boost.Asio + Boost.Beast）实现的 C++ 网关。
 
@@ -7,7 +7,7 @@
 - 依赖：vcpkg overlay ports（`commonnet` + `utils`）
 - 部署：Docker 镜像，部署机不编译
 
-## 当前范围（v24.6，试运行）
+## 当前范围（v24.7，试运行）
 
 | 有 | 没有（后续） |
 |---|---|

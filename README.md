@@ -1,4 +1,4 @@
-# Hoshinoumi（REC） v24.6
+# Hoshinoumi（REC） v24.7
 
 > 后端 **v21** · 网关 **v21**（owner 鉴权 / JWT / 架构收口）
 > v19 与 v20.0–v20.4 已完成，当前在做 Docker 与网关验证。
@@ -12,10 +12,10 @@
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-5C2D91)](#)
 [![NapCat](https://img.shields.io/badge/NapCat-QQ-12B7F5)](#)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
-![Backend](https://img.shields.io/badge/Backend-v24.6-yellow)
-![Gateway](https://img.shields.io/badge/Gateway-v24.6-blue)
-![Version](https://img.shields.io/badge/Version-v24.6-orange)
-![Tests](https://img.shields.io/badge/Tests-1034%20passing-brightgreen)
+![Backend](https://img.shields.io/badge/Backend-v24.7-yellow)
+![Gateway](https://img.shields.io/badge/Gateway-v24.7-blue)
+![Version](https://img.shields.io/badge/Version-v24.7-orange)
+![Tests](https://img.shields.io/badge/Tests-1037%20passing-brightgreen)
 
 > **Hoshinoumi（REC，记录）** · 友利奈绪 · 星之海学园学生会室
 >
@@ -291,7 +291,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | v21 | 网关（二）owner 鉴权：JWT/刷新/失败锁定 + 架构收口 | ✅ 已完成 | [v21.md](docs/versions/v21.md) |
 | v22 | 网关（三）安全：限流/审计/TLS/`!gw` | ✅ 已完成 | [v22.md](docs/versions/v22.md) |
 | v23 | 多用户 + 亲密度可骤降/负值/修复，归零降私聊回复：users/roles + user_id 隔离 | 🚧 v23.5.1 试运行 | [v23.md](docs/versions/v23.md) |
-| v24 | 读书修复与增强：搜索/标题/进度、抓包分析、网络优先 + 本地书回退 | 🚧 v24.6 试运行 | [v24.md](docs/versions/v24.md) |
+| v24 | 读书修复与增强：搜索/标题/进度、抓包分析、网络优先 + 本地书回退 | 🚧 v24.7 试运行 | [v24.md](docs/versions/v24.md) |
 | v25 | 插件接口实现（含 v25.0 代码审查与架构重构） | 📋 已规划 | [v25.md](docs/versions/v25.md) |
 | v26 | 模型层接口实现 | 📋 已规划 | [v26.md](docs/versions/v26.md) |
 | v27 | 记忆层接口实现 | 📋 已规划 | [v27.md](docs/versions/v27.md) |

@@ -49,9 +49,21 @@ async def handle_idle_tick(ev):
         return {"ok": False, "reason": why}
 
     tid = _tid(ev)
+    sched = get_scheduler()
+
+    # v24.7：本地阅读队列优先；一次只读一章，读完自动出队
+    try:
+        from ..life import book_queue
+        local = book_queue.active(tid)
+    except Exception:
+        local = None
+    if local:
+        sched.submit("idle_local_read", f"local:{tid}:{local['name']}",
+                     args=(tid, local["name"]))
+        return {"ok": True, "reason": "投递本地阅读"}
+
     data = life_reading.load(tid)
     book = life_reading.current_book(data)
-    sched = get_scheduler()
 
     if not book:
         sched.submit("idle_pick_book", f"pick:{tid}", args=(tid,))
@@ -96,6 +108,37 @@ async def handle_read(ev):
     else:
         log_api(f"[空闲] 没读成：{out.get('reason')}")
     return out
+
+
+@register("idle_local_read", priority=Priority.IDLE, timeout=120, retries=1,
+          description="按队列读一章本地 TXT/EPUB")
+async def handle_local_read(ev):
+    from ..life import book_queue, local_books, reading
+
+    args = getattr(ev, "args", ()) or ()
+    tid = str(args[0]) if args else str(cfg.MASTER_QQ)
+    name = str(args[1]) if len(args) > 1 else ""
+    if not name:
+        return {"ok": False, "reason": "没有书名"}
+    item = book_queue.get_item(tid, name)
+    if not item or item["status"] in ("done", "error"):
+        return {"ok": False, "reason": "队列项不可读"}
+    chapter = int(item["last_chapter"] or 0) + 1
+    try:
+        info = local_books.read_chapter(name, chapter)
+    except Exception as e:
+        log_api(f"[本地阅读] 读取失败 {name} 第 {chapter} 章: {e}")
+        return {"ok": False, "reason": str(e)}
+    summary = ""
+    try:
+        summary = await reading.summarize_chapter(info["text"][:3000])
+    except Exception:
+        pass
+    book_queue.set_progress(tid, name, info["index"], info["total"])
+    log_system(f"[本地阅读] {name} {info['chapter']} "
+               f"({info['index']}/{info['total']}) 摘要 {len(summary or '')} 字")
+    return {"ok": True, "chapter": info["chapter"], "summary": summary,
+            "done": info["index"] >= info["total"]}
 
 
 # ---------- tick 的自我重排 ----------
