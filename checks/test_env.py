@@ -239,6 +239,8 @@ class TestEnvironment(unittest.TestCase):
         "NAO_DIGEST_ROUNDS",
         "NAO_READ_CHUNK_CHARS",
         "NAO_MEMORY_BUDGET",
+        "NAO_HOT_RELOAD",
+        "NAO_HOT_RELOAD_INTERVAL",
     }
 
     @staticmethod

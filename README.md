@@ -1,6 +1,6 @@
-# Hoshinoumi（REC） v25.0.0
+# Hoshinoumi（REC） v25.1.0
 
-> 后端 **v25.0.0** · 网关 **v24.8.1**（多用户 / 读书 / 本地书）
+> 后端 **v25.1.0** · 网关 **v24.8.1**（多用户 / 读书 / 本地书）
 > v25 试运行；v24 及以前已完成；v26（内部 TCP/protobuf）已规划。
 >
 > 状态规则：**下一个大版本进入试运行，则上一个大版本视为完成。**
@@ -14,9 +14,9 @@
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-5C2D91)](#)
 [![NapCat](https://img.shields.io/badge/NapCat-QQ-12B7F5)](#)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
-![Backend](https://img.shields.io/badge/Backend-v25.0.0-yellow)
+![Backend](https://img.shields.io/badge/Backend-v25.1.0-yellow)
 ![Gateway](https://img.shields.io/badge/Gateway-v24.8.1-blue)
-![Version](https://img.shields.io/badge/Version-v25.0.0-orange)
+![Version](https://img.shields.io/badge/Version-v25.1.0-orange)
 ![Tests](https://img.shields.io/badge/Tests-1041%20passing-brightgreen)
 
 > **Hoshinoumi（REC，记录）** · 友利奈绪 · 星之海学园学生会室
@@ -263,7 +263,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 
 ## 开发计划
 
-**当前：v25.0.0 试运行（配置中心）**｜下一步 v25.1 热加载。
+**当前：v25.1.0 试运行（配置/提示词热加载）**｜下一步 v25.2 ingress。
 
 > v22 试运行 1 天后，进入约 1 天的 v23 启动 + v22 介绍视频，再开始 v23 子版本开发。
 
@@ -294,7 +294,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | v22 | 网关（三）安全：限流/审计/TLS/`!gw` | ✅ 已完成 | [v22.md](docs/versions/v22.md) |
 | v23 | 多用户 + 亲密度可骤降/负值/修复，归零降私聊回复：users/roles + user_id 隔离 | ✅ 已完成（v23.5.1） | [v23.md](docs/versions/v23.md) |
 | v24 | 读书修复与增强：搜索/标题/进度、抓包分析、网络优先 + 本地书回退 | ✅ 已完成（v24.9.4） | [v24.md](docs/versions/v24.md) |
-| v25 | 热更新 + 配置动态化：v25.0 配置中心，后续热加载/蓝绿/自动更新 | 🚧 v25.0.0 试运行 | [v25.md](docs/versions/v25.md) |
+| v25 | 热更新 + 配置动态化：配置中心/热加载，后续蓝绿/自动更新 | 🚧 v25.1.0 试运行 | [v25.md](docs/versions/v25.md) |
 | v26 | 内部通讯升级：8+4+body TCP + protobuf（原 v25 顺延） | 📋 已规划 | [v26.md](docs/versions/v26.md) |
 | v27 | 插件接口实现（含 v27.0 代码审查与架构重构） | 📋 已规划 | [v27.md](docs/versions/v27.md) |
 | v28 | 模型层接口实现 | 📋 已规划 | [v28.md](docs/versions/v28.md) |
@@ -1472,6 +1472,8 @@ python3 checks/env_check.py --init-db   # 环境监测时自动建
 | `NAO_DIGEST_ROUNDS` | `10` | 每多少轮溢出对话写一条浓缩 |
 | `NAO_READ_CHUNK_CHARS` | `1000` | 本地阅读每次读取字数 |
 | `NAO_MEMORY_BUDGET` | `250` | 注入上下文的记忆预算字数 |
+| `NAO_HOT_RELOAD` | `1` | 配置/提示词热加载开关 |
+| `NAO_HOT_RELOAD_INTERVAL` | `3` | 热加载扫描间隔（秒） |
 | `NAO_BOOK_URLS` | 内置三本 | 自定义书单：`名字&#124;url,名字&#124;url` |
 | `NAO_OCR_LANG` | `chi_sim` | tesseract 语言包 |
 | `NAO_NO_AUTOINSTALL` | 未设置 | 设 `1` 关闭启动时自动装包 |
