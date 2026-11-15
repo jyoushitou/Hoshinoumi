@@ -23,19 +23,19 @@ def _headers(request):
 
 
 async def _http_proxy(request):
-    import aiohttp
+    from aiohttp import ClientSession, UnixConnector, web
     body = await request.read()
     url = f"http://worker{request.path_qs}"
     try:
-        connector = aiohttp.UnixConnector(path=worker.active_socket("api.sock"))
-        async with aiohttp.ClientSession(connector=connector) as session:
+        connector = UnixConnector(path=worker.active_socket("api.sock"))
+        async with ClientSession(connector=connector) as session:
             async with session.request(request.method, url, headers=_headers(request),
                                        data=body) as resp:
                 data = await resp.read()
                 headers = {k: v for k, v in resp.headers.items() if k.lower() not in HOP}
-                return aiohttp.web.Response(status=resp.status, headers=headers, body=data)
+                return web.Response(status=resp.status, headers=headers, body=data)
     except Exception as e:
-        return aiohttp.web.json_response({"ok": False, "error": f"worker unavailable: {e}"}, status=502)
+        return web.json_response({"ok": False, "error": f"worker unavailable: {e}"}, status=502)
 
 
 async def _ws_copy(src, dst):
@@ -64,13 +64,13 @@ async def _ws_proxy(client):
 
 
 async def main_async(args):
-    import aiohttp
+    from aiohttp import web
     worker.set_directory(args.worker_dir)
-    app = aiohttp.web.Application()
+    app = web.Application()
     app.router.add_route("*", "/{tail:.*}", lambda r: _http_proxy(r))
-    runner = aiohttp.web.AppRunner(app, handle_signals=False)
+    runner = web.AppRunner(app, handle_signals=False)
     await runner.setup()
-    site = aiohttp.web.TCPSite(runner, args.host, args.http_port, reuse_address=True, reuse_port=True)
+    site = web.TCPSite(runner, args.host, args.http_port, reuse_address=True, reuse_port=True)
     await site.start()
 
     ws = await websockets.serve(_ws_proxy, args.host, args.ws_port,

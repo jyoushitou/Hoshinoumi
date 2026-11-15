@@ -1,6 +1,6 @@
-# Hoshinoumi（REC） v25.5.0
+# Hoshinoumi（REC） v25.5.1
 
-> 后端 **v25.5.0** · 网关 **v24.8.1**（多用户 / 读书 / 本地书）
+> 后端 **v25.5.1** · 网关 **v24.8.1**（多用户 / 读书 / 本地书）
 > v25 试运行；v24 及以前已完成；v26（内部 TCP/protobuf）已规划。
 >
 > 状态规则：**下一个大版本进入试运行，则上一个大版本视为完成。**
@@ -14,9 +14,9 @@
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-5C2D91)](#)
 [![NapCat](https://img.shields.io/badge/NapCat-QQ-12B7F5)](#)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
-![Backend](https://img.shields.io/badge/Backend-v25.5.0-yellow)
+![Backend](https://img.shields.io/badge/Backend-v25.5.1-yellow)
 ![Gateway](https://img.shields.io/badge/Gateway-v24.8.1-blue)
-![Version](https://img.shields.io/badge/Version-v25.5.0-orange)
+![Version](https://img.shields.io/badge/Version-v25.5.1-orange)
 ![Tests](https://img.shields.io/badge/Tests-1041%20passing-brightgreen)
 
 > **Hoshinoumi（REC，记录）** · 友利奈绪 · 星之海学园学生会室
@@ -263,7 +263,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 
 ## 开发计划
 
-**当前：v25.5.0 试运行（热更新演练基线）**｜待 Linux 部署验证。
+**当前：v25.5.1 试运行（Docker Linux ingress/蓝绿验证通过）**｜待真实 NapCat 演练。
 
 > v22 试运行 1 天后，进入约 1 天的 v23 启动 + v22 介绍视频，再开始 v23 子版本开发。
 
@@ -294,7 +294,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | v22 | 网关（三）安全：限流/审计/TLS/`!gw` | ✅ 已完成 | [v22.md](docs/versions/v22.md) |
 | v23 | 多用户 + 亲密度可骤降/负值/修复，归零降私聊回复：users/roles + user_id 隔离 | ✅ 已完成（v23.5.1） | [v23.md](docs/versions/v23.md) |
 | v24 | 读书修复与增强：搜索/标题/进度、抓包分析、网络优先 + 本地书回退 | ✅ 已完成（v24.9.4） | [v24.md](docs/versions/v24.md) |
-| v25 | 热更新 + 配置动态化：配置/热加载/ingress/蓝绿/准入/演练 | 🚧 v25.5.0 试运行 | [v25.md](docs/versions/v25.md) |
+| v25 | 热更新 + 配置动态化：配置/热加载/ingress/蓝绿/准入/演练 | 🚧 v25.5.1 试运行 | [v25.md](docs/versions/v25.md) |
 | v26 | 内部通讯升级：8+4+body TCP + protobuf（原 v25 顺延） | 📋 已规划 | [v26.md](docs/versions/v26.md) |
 | v27 | 插件接口实现（含 v27.0 代码审查与架构重构） | 📋 已规划 | [v27.md](docs/versions/v27.md) |
 | v28 | 模型层接口实现 | 📋 已规划 | [v28.md](docs/versions/v28.md) |

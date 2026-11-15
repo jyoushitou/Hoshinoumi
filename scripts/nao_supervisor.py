@@ -83,7 +83,9 @@ async def deploy(base: Path, version: str, cmd, timeout=30.0):
             old_dir = Path(current.read_text(encoding="utf-8").strip())
     except OSError:
         old_dir = None
-    proc = subprocess.Popen(cmd, cwd=str(ROOT), env=env, start_new_session=True)
+    log = open(version_dir / "worker.log", "ab")
+    proc = subprocess.Popen(cmd, cwd=str(ROOT), env=env, start_new_session=True,
+                            stdout=log, stderr=subprocess.STDOUT)
     (version_dir / "worker.pid").write_text(str(proc.pid), encoding="utf-8")
     ok = await wait_health(str(version_dir / "api.sock"), proc, timeout)
     if not ok:
