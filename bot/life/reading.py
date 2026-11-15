@@ -421,8 +421,8 @@ async def pick_from_rank(tid, fetch_rank=None, fetch_book=None, rng=None, exclud
 # ===================== 章节摘要 =====================
 
 SUMMARY_PROMPT = (
-    "把下面这段小说章节压成一两句事实：发生了什么、谁做了什么。"
-    "不超过 80 字。不评价、不加引号、不写「本章」「主角」这种词，直接说人名和事。"
+    "阅读下面这段文字，用一两句话概括发生了什么、谁做了什么。"
+    "只输出事实摘要，不超过 80 字；不要解释、不要复述原文、不要加引号。"
 )
 SUMMARY_SOURCE_CHARS = 3000
 
@@ -447,30 +447,50 @@ def fallback_summary(text, limit=SUMMARY_MAX):
     return ("。".join(parts[:2]) + "。")[:limit]
 
 
-async def summarize_chapter(text, limit=SUMMARY_MAX, call_model=None):
-    """把一章正文压成一句话；模型失败就退回开头两句"""
+async def summarize_chapter(text, limit=SUMMARY_MAX, call_model=None,
+                           allow_text_fallback=True):
+    """把一章正文压成一句话。
+
+    allow_text_fallback=False：模型失败时返回空，绝不把正文开头当摘要。
+    本地书阅读用 False；网页追更保留旧兜底。
+    """
     if not text or not text.strip():
         return ""
     snippet = text.strip()[:SUMMARY_SOURCE_CHARS]
 
+    first = call_model
+    if first is None:
+        try:
+            from ..ai.models import call_deepseek as first
+        except Exception:
+            first = None
+
+    fallback_model = None
     if call_model is None:
         try:
-            from ..ai.models import call_deepseek as call_model
+            from ..ai.models import call_doubao as fallback_model
         except Exception:
-            call_model = None
+            fallback_model = None
 
-    if call_model:
+    msgs = [{"role": "system", "content": SUMMARY_PROMPT},
+            {"role": "user", "content": snippet}]
+    for name, fn in (("deepseek", first), ("doubao", fallback_model)):
+        if not fn:
+            continue
         try:
-            msgs = [{"role": "system", "content": SUMMARY_PROMPT},
-                    {"role": "user", "content": snippet}]
-            out = await call_model(msgs, max_tokens=120)
+            out = await fn(msgs, max_tokens=512)
+            if isinstance(out, str) and type(out).__name__ == "Fallback":
+                out = ""
             cleaned = _clean_summary(out, limit)
             if cleaned:
                 return cleaned
+            log_api(f"[读书] {name} 摘要为空")
         except Exception as e:
-            log_api(f"[读书] 摘要模型失败，用兜底: {e}")
+            log_api(f"[读书] {name} 摘要失败: {e}")
 
-    return fallback_summary(snippet, limit)
+    if allow_text_fallback:
+        return fallback_summary(snippet, limit)
+    return ""
 async def follow_request(tid, req, fetch_book=None, search=None):
     """处理「主人点名一本书」：立刻给回应，不等抓取
 
