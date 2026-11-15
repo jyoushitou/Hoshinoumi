@@ -26,7 +26,7 @@ namespace Gateway
         int backendTimeoutMs = 5000;
 
         /// @brief 内部协议：http / tcp（v26）
-        std::string backendProtocol = "http";
+        std::string backendProtocol = "tcp";
 
         /// @brief TCP 后端地址（只允许 loopback）
         std::string backendTcpHost = "127.0.0.1";

@@ -5,6 +5,7 @@
   },
   "backend": {
     "base": "http://127.0.0.1:27004",
+    "protocol": "tcp",
     "timeout_ms": 5000,
     "startup_wait": true,
     "startup_retry_interval_sec": 30,
