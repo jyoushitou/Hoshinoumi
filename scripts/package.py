@@ -27,10 +27,10 @@ from artifact_names import full as full_name, src as src_name  # noqa: E402
 EXCLUDE_DIRS = {
     ".git", ".venv", "venv", ".vendor", "vendor", ".tmp", ".tmp_deco", "dist", "data",
     "release", "logs", "build",
-    "__pycache__", ".pytest_cache", ".mypy_cache", ".idea", ".vscode",
+    "__pycache__", ".pytest_cache", ".mypy_cache", ".idea", ".vscode", "APK",
     ".playwright-browsers", "node_modules",
 }
-EXCLUDE_SUFFIX = (".pyc", ".pyo", ".bundle", ".log", ".pid", ".zip")
+EXCLUDE_SUFFIX = (".pyc", ".pyo", ".bundle", ".log", ".pid", ".zip", ".apk")
 EXCLUDE_FILES = {".DS_Store", "Thumbs.db", ".nao-ref-glyphs.json"}
 
 # 整包要带上的运行目录
