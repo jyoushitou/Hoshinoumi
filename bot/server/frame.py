@@ -29,7 +29,7 @@ def decode_header(raw):
         raise ValueError("bad magic")
     if version != VERSION:
         raise ValueError("bad version")
-    if length <= 0 or length > MAX_BODY:
+    if length > MAX_BODY:
         raise ValueError("bad length")
     return type_, flags, length
 

@@ -1,4 +1,5 @@
 import asyncio
+import os
 
 # ===================== 主程序入口 =====================
 # v5-R5：初始化在 app/bootstrap.py，主循环在 app/loop.py，这里只做装配
@@ -22,11 +23,23 @@ async def main():
         log_err(f"API 服务器启动失败: {e}")
         api_runner = None  # API 服务器启动失败不影响主流程
 
+    # ===================== 内部 TCP（v26.2） =====================
+    tcp_server = None
+    if os.getenv("NAO_INTERNAL_TCP") == "1":
+        from .server.tcp_internal import start_tcp_server
+        tcp_server = await start_tcp_server()
+
     # ===================== 主循环 =====================
     watcher = asyncio.create_task(hot_reload.watch())  # v25.1
     try:
         await serve(api_runner)
     finally:
+        if tcp_server:
+            tcp_server.close()
+            try:
+                await tcp_server.wait_closed()
+            except Exception:
+                pass
         watcher.cancel()
         try:
             await watcher

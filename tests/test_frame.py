@@ -41,7 +41,7 @@ class TestFrame(unittest.TestCase):
         with self.assertRaises(ValueError):
             frame.decode_header(bytes(raw[:12]))
         with self.assertRaises(ValueError):
-            frame.decode_header(frame.HEADER.pack(b"NAO1", 1, 1, 0, 0, 0))
+            frame.decode_header(frame.HEADER.pack(b"NAO1", 1, 1, 0, 0, frame.MAX_BODY + 1))
 
     def test_partial_and_coalesced(self):
         a = frame.encode_frame(frame.TYPE_REQUEST, b"a")
@@ -70,4 +70,5 @@ class TestFrame(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
 

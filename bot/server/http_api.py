@@ -4,6 +4,7 @@
 
 import asyncio
 import hmac
+import os
 
 from aiohttp import web
 
@@ -316,7 +317,19 @@ async def start_api_server():
     runner = web.AppRunner(app, handle_signals=False)
     await runner.setup()
     from ..core import worker
-    if worker.enabled():
+    if os.getenv("NAO_INTERNAL_TCP") == "1":
+        sock = worker.internal_api_socket()
+        try:
+            import os as _os
+            if _os.path.exists(sock):
+                _os.unlink(sock)
+        except OSError:
+            pass
+        site = web.UnixSite(runner, sock)
+        await site.start()
+        worker.chmod_socket(sock)
+        log_system(f"内部 API 已启动: unix:{sock}（27004 由 TCP 帧服务占用）")
+    elif worker.enabled():
         sock = worker.prepare_socket("api.sock")
         site = web.UnixSite(runner, sock)
         await site.start()

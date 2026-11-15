@@ -49,6 +49,16 @@ def socket_path(name):
     return str(d / name)
 
 
+def internal_api_socket():
+    d = Path(directory())
+    d.mkdir(parents=True, exist_ok=True)
+    try:
+        os.chmod(d, 0o700)
+    except OSError:
+        pass
+    return str(d / "internal-api.sock")
+
+
 def chmod_socket(path):
     try:
         os.chmod(path, 0o600)

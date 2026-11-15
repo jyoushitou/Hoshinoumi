@@ -1,6 +1,6 @@
-# Hoshinoumi（REC） v26.1.0
+# Hoshinoumi（REC） v26.2.0
 
-> 后端 **v26.1.0** · 网关 **v24.8.1**（多用户 / 读书 / 本地书）
+> 后端 **v26.2.0** · 网关 **v24.8.1**（多用户 / 读书 / 本地书）
 > v25 试运行；v24 及以前已完成；v26（内部 TCP/protobuf）已规划。
 >
 > 状态规则：**下一个大版本进入试运行，则上一个大版本视为完成。**
@@ -14,9 +14,9 @@
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-5C2D91)](#)
 [![NapCat](https://img.shields.io/badge/NapCat-QQ-12B7F5)](#)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
-![Backend](https://img.shields.io/badge/Backend-v26.1.0-yellow)
+![Backend](https://img.shields.io/badge/Backend-v26.2.0-yellow)
 ![Gateway](https://img.shields.io/badge/Gateway-v24.8.1-blue)
-![Version](https://img.shields.io/badge/Version-v26.1.0-orange)
+![Version](https://img.shields.io/badge/Version-v26.2.0-orange)
 ![Tests](https://img.shields.io/badge/Tests-1041%20passing-brightgreen)
 
 > **Hoshinoumi（REC，记录）** · 友利奈绪 · 星之海学园学生会室

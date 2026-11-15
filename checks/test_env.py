@@ -244,6 +244,7 @@ class TestEnvironment(unittest.TestCase):
         "NAO_WORKER_MODE",
         "NAO_WORKER_SOCKET_DIR",
         "NAO_WORKER_VERSION",
+        "NAO_INTERNAL_TCP",
         "NAO_WORKER_KEEP",
     }
 
