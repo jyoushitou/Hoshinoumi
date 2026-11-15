@@ -91,7 +91,7 @@ def bootstrap():
     init_sticker_archive()  # 表情包存档目录，迁移旧版 JSON 索引
     if os.getenv("NAO_CLIP") == "1":  # v8-CLIPCUT：默认不加载 CLIP，需要时显式开启
         tunables.load()  # v15：先加载可调参数
-    init_clip_model()
+        init_clip_model()  # v25.5.5：只有显式开启才加载 CPU CLIP
     load_personality_supplement()  # 人设补充文本（远程 > 本地）
 
     # v19.0：启动不再改表；schema 只由 scripts/migrate.py --apply 负责。
