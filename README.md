@@ -1,6 +1,6 @@
-# Hoshinoumi（REC） v25.3.0
+# Hoshinoumi（REC） v25.4.0
 
-> 后端 **v25.3.0** · 网关 **v24.8.1**（多用户 / 读书 / 本地书）
+> 后端 **v25.4.0** · 网关 **v24.8.1**（多用户 / 读书 / 本地书）
 > v25 试运行；v24 及以前已完成；v26（内部 TCP/protobuf）已规划。
 >
 > 状态规则：**下一个大版本进入试运行，则上一个大版本视为完成。**
@@ -14,9 +14,9 @@
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-5C2D91)](#)
 [![NapCat](https://img.shields.io/badge/NapCat-QQ-12B7F5)](#)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
-![Backend](https://img.shields.io/badge/Backend-v25.3.0-yellow)
+![Backend](https://img.shields.io/badge/Backend-v25.4.0-yellow)
 ![Gateway](https://img.shields.io/badge/Gateway-v24.8.1-blue)
-![Version](https://img.shields.io/badge/Version-v25.3.0-orange)
+![Version](https://img.shields.io/badge/Version-v25.4.0-orange)
 ![Tests](https://img.shields.io/badge/Tests-1041%20passing-brightgreen)
 
 > **Hoshinoumi（REC，记录）** · 友利奈绪 · 星之海学园学生会室
@@ -263,7 +263,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 
 ## 开发计划
 
-**当前：v25.3.0 试运行（蓝绿 worker）**｜下一步 v25.4 自动加载/拒绝。
+**当前：v25.4.0 试运行（自动加载准入/拒绝）**｜下一步 v25.5 演练。
 
 > v22 试运行 1 天后，进入约 1 天的 v23 启动 + v22 介绍视频，再开始 v23 子版本开发。
 
@@ -294,7 +294,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | v22 | 网关（三）安全：限流/审计/TLS/`!gw` | ✅ 已完成 | [v22.md](docs/versions/v22.md) |
 | v23 | 多用户 + 亲密度可骤降/负值/修复，归零降私聊回复：users/roles + user_id 隔离 | ✅ 已完成（v23.5.1） | [v23.md](docs/versions/v23.md) |
 | v24 | 读书修复与增强：搜索/标题/进度、抓包分析、网络优先 + 本地书回退 | ✅ 已完成（v24.9.4） | [v24.md](docs/versions/v24.md) |
-| v25 | 热更新 + 配置动态化：配置/热加载/ingress/蓝绿，后续自动更新 | 🚧 v25.3.0 试运行 | [v25.md](docs/versions/v25.md) |
+| v25 | 热更新 + 配置动态化：配置/热加载/ingress/蓝绿/自动准入 | 🚧 v25.4.0 试运行 | [v25.md](docs/versions/v25.md) |
 | v26 | 内部通讯升级：8+4+body TCP + protobuf（原 v25 顺延） | 📋 已规划 | [v26.md](docs/versions/v26.md) |
 | v27 | 插件接口实现（含 v27.0 代码审查与架构重构） | 📋 已规划 | [v27.md](docs/versions/v27.md) |
 | v28 | 模型层接口实现 | 📋 已规划 | [v28.md](docs/versions/v28.md) |
@@ -840,7 +840,7 @@ python3 scripts/export_persona.py
 
 ---
 
-## 命令（45 个，仅主人可用）
+## 命令（46 个，仅主人可用）
 
 ### 基础
 
@@ -1160,7 +1160,7 @@ bot/
 ├── memory/     上下文、检索（BM25+RRF）、分层预算、时间线、浓缩
 ├── ai/         人设、角色卡加载、提示词、模型调用、工具调用、回复解析、视觉
 ├── chat/       入站解析、回复组装、发送、群聊节奏、通知事件、摩擦反馈
-├── cmd/        45 个命令（注册表 + 各分类实现）
+├── cmd/        46 个命令（注册表 + 各分类实现）
 ├── diary/      日记生成与存储
 ├── schedule/   定时任务、随机闲聊、空闲读书
 ├── image/      图库：存图、打标、检索、在线图源
@@ -1538,7 +1538,7 @@ python3 checks/env_check.py --init-db   # 环境监测时自动建
 | 阶段 | Docker 验证 + 网关验证，已部署试运行 |
 | 前序 | v19 与 v20.0–v20.4 已完成 |
 | 数据表 | 25 张表 + 1 个只读视图 `v_bot_meta` |
-| 命令 | 45 个注册命令（`!task` 仅提示迁移） |
+| 命令 | 46 个注册命令（`!task` 仅提示迁移） |
 | 测试 | 969 条：功能 932 + 环境/迁移 37 |
 | 账号 | 单主人 `__owner__`；多用户 v23 计划 |
 | 后端鉴权 | `/api/*` 除 health 外要 Bearer Token；`/internal/*` 免鉴权 |
@@ -1563,7 +1563,7 @@ python3 checks/env_check.py --init-db   # 环境监测时自动建
 
 ---
 
-## 附录 B · 命令全表（45 个）
+## 附录 B · 命令全表（46 个）
 
 > 全部命令仅主人可用；群聊里需要 @ 或命令前缀。`!task` 只保留迁移提示。
 
@@ -1599,6 +1599,7 @@ python3 checks/env_check.py --init-db   # 环境监测时自动建
 | `!code` | `!code` / `!code off` | 代码模式开关（30 分钟无消息自动退） |
 | `!persona` | `!persona [名字]` | 查看/切换角色卡 |
 | `!config` | `!config` / `!config <参数> <值>` | 查看/修改运行时参数 |
+| `!update` | `!update` | 查看最近一次热更新/拒绝原因 |
 | `!set` | `!set <键> <值>` | 修改设置项 |
 | `!stats` | `!stats` | 今日回复/配图/语音/群接话率 |
 | `!db` | `!db` | 数据库统计 |

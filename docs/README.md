@@ -1,6 +1,6 @@
 # Hoshinoumi（REC）· 文档索引
 
-> **当前事实：后端 v25.3.0，网关 v24.8.1（蓝绿 worker）**（2026-11-15）
+> **当前事实：后端 v25.4.0，网关 v24.8.1（自动加载准入/拒绝）**（2026-11-15）
 > v23 试运行；v22 及以前已完成。
 >
 > 这里只放“现在有效”的文档；开发计划单独维护，历史文档明确标注。
@@ -126,7 +126,7 @@ v6：P1 会说话 → P2 说实话 → P2.5 长感官 → P3 有生活 → P4 �
 | **v22** | [versions/v22.md](versions/v22.md) | 网关（三）安全：限流/审计/TLS/`!gw` | 规划中 |
 | **v23** | [versions/v23.md](versions/v23.md) | 多用户 + 亲密度负值/修复，归零降私聊回复 | ✅ 已完成（v23.5.1） |
 | **v24** | [versions/v24.md](versions/v24.md) | 读书修复 + 本地 TXT/EPUB + 摘要入长期记忆 | ✅ 已完成（v24.9.4） |
-| **v25** | [versions/v25.md](versions/v25.md) | 热更新 + 配置动态化（配置/热加载/ingress/蓝绿） | 🚧 v25.3.0 试运行 |
+| **v25** | [versions/v25.md](versions/v25.md) | 热更新 + 配置动态化（配置/热加载/ingress/蓝绿/准入） | 🚧 v25.4.0 试运行 |
 | **v26** | [versions/v26.md](versions/v26.md) | 内部通讯升级（8+4+body TCP + protobuf） | 规划中 |
 | **v27** | [versions/v27.md](versions/v27.md) | 插件接口实现（含 v27.0 代码审查与重构） | 规划中 |
 | **v28** | [versions/v28.md](versions/v28.md) | 模型层接口实现 | 规划中 |

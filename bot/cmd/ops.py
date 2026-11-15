@@ -101,6 +101,22 @@ async def cmd_vision(ctx):
     return await self_test()
 
 
+@command("update")
+async def cmd_update(ctx):
+    """!update - 查看最近一次热更新/拒绝结果"""
+    import json
+    from pathlib import Path
+    p = Path(__file__).resolve().parents[2] / "data" / "update_status.json"
+    try:
+        data = json.loads(p.read_text(encoding="utf-8"))
+    except Exception:
+        return "还没有热更新记录。用 scripts/nao_update.py --latest 检查/更新。"
+    if data.get("allowed"):
+        return f"✅ 已允许热更新：{data.get('version')}（{data.get('reason')}）"
+    return (f"⛔ 拒绝热更新：{data.get('version')}\n"
+            f"原因：{data.get('reason')}\n"
+            "当前版本继续运行，未切换。请安排维护窗口后手动升级。")
+
 @command("config")
 async def cmd_config(ctx):
     """!config - 查看可调参数；!config <参数> <值> 修改"""
