@@ -29,7 +29,13 @@ def configure(mysql_config=None, backend=None, sqlite_path=None):
     _config["mysql"] = dict(mysql_config) if mysql_config else None
     _config["backend"] = backend
     _config["sqlite_path"] = sqlite_path
-    # 配置变了，旧连接作废
+    # 配置变了，旧连接作废；先 close，Windows 才会释放 sqlite 文件
+    try:
+        old = getattr(_local, "conn", None)
+        if old is not None:
+            old.close()
+    except Exception:
+        pass
     try:
         _local.__dict__.clear()
     except Exception:
