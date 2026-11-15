@@ -86,18 +86,18 @@ async def cmd_book(ctx):
     if sub == "next":
         q = BQ.active(ctx.uid)
         if q:
-            return _read_chunk(ctx, q["name"], int(q.get("char_offset") or 0))
+            return await _read_chunk(ctx, q["name"], int(q.get("char_offset") or 0))
         p = LB.get_progress(ctx.uid)
         if not p:
             return _decl(ctx) + "还没有进度，先 !book read <文件名> 或 !book local <书名>。"
-        return _read_chunk(ctx, p["name"], 0)
+        return await _read_chunk(ctx, p["name"], 0)
     if sub != "read" or len(args) < 2:
         return _decl(ctx) + "用法：!book read <文件名>"
     name = " ".join(args[1:]).strip()
     if not name:
         return _decl(ctx) + "请给我文件名。"
     # v24.8.6：从文件第一个字开始，不按章节定位
-    return _read_chunk(ctx, name, 0)
+    return await _read_chunk(ctx, name, 0)
 
 
 async def _read_first_and_notify(ctx, name):
@@ -110,7 +110,8 @@ async def _read_first_and_notify(ctx, name):
         BQ.set_progress(ctx.uid, name, info["end_index"], info["total"],
                         status=("done" if info["done"] else "reading"),
                         offset=info["next_offset"])
-        await _notify_start(ctx, title, info)
+        summary = await _chunk_summary(info)
+        await _notify_start(ctx, title, info, summary)
     except Exception as e:
         try:
             BQ.mark_error(ctx.uid, name)
@@ -124,11 +125,21 @@ async def _read_first_and_notify(ctx, name):
             pass
 
 
-async def _notify_start(ctx, title, info):
+async def _chunk_summary(info):
+    """把这一块交给模型总结；不返回正文。"""
+    try:
+        from ..life import reading
+        text = await reading.summarize_chapter(info["chunk"][:3000])
+        return (text or "").strip()[:500] or "（这段摘要生成失败，进度已记录）"
+    except Exception:
+        return "（这段摘要生成失败，进度已记录）"
+
+
+async def _notify_start(ctx, title, info, summary):
     from ..chat.send import send_short_reply
     text = (f"我开始读《{title}》了。\n"
-            f"第 {info['offset'] + 1} 字起：\n"
-            f"{info['chunk'][:180]}\n"
+            f"第 {info['offset'] + 1} 字到第 {info['offset'] + info['chars']} 字摘要：\n"
+            f"{summary}\n"
             f"全书连续读取，每次 1000 字，读完我再告诉你。")
     try:
         await send_short_reply(ctx.uid, text, ctx.ws, ctx.uid, False, None)
@@ -136,7 +147,7 @@ async def _notify_start(ctx, title, info):
         pass
 
 
-def _read_chunk(ctx, name, offset=0):
+async def _read_chunk(ctx, name, offset=0):
     try:
         info = LB.read_chunk(name, offset)
     except Exception as e:
@@ -147,8 +158,9 @@ def _read_chunk(ctx, name, offset=0):
         BQ.set_progress(ctx.uid, name, info["end_index"], info["total"],
                         status=("done" if info["done"] else "reading"),
                         offset=info["next_offset"])
+    summary = await _chunk_summary(info)
     return (_decl(ctx)
             + f"📖《{info['title']}》"
-            f"（第 {info['offset'] + 1} 字起，+{len(info['chunk'])} 字）\n"
-            + f"内容：{info['chunk'][:300]}\n"
+            f"（第 {info['offset'] + 1} 字到第 {info['offset'] + info['chars']} 字）\n"
+            + f"摘要：{summary}\n"
             + "（每次 1000 字，只读本机文件，不上传。）")

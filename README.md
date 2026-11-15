@@ -1,6 +1,6 @@
-# Hoshinoumi（REC） v24.8.6
+# Hoshinoumi（REC） v24.8.7
 
-> 后端 **v24.8.6** · 网关 **v24.8.1**（多用户 / 读书 / 本地书）
+> 后端 **v24.8.7** · 网关 **v24.8.1**（多用户 / 读书 / 本地书）
 > v24 试运行；v23 及以前已完成；v25（内部 TCP/protobuf）已规划。
 >
 > 状态规则：**下一个大版本进入试运行，则上一个大版本视为完成。**
@@ -14,9 +14,9 @@
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-5C2D91)](#)
 [![NapCat](https://img.shields.io/badge/NapCat-QQ-12B7F5)](#)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
-![Backend](https://img.shields.io/badge/Backend-v24.8.6-yellow)
+![Backend](https://img.shields.io/badge/Backend-v24.8.7-yellow)
 ![Gateway](https://img.shields.io/badge/Gateway-v24.8.1-blue)
-![Version](https://img.shields.io/badge/Version-v24.8.6-orange)
+![Version](https://img.shields.io/badge/Version-v24.8.7-orange)
 ![Tests](https://img.shields.io/badge/Tests-1041%20passing-brightgreen)
 
 > **Hoshinoumi（REC，记录）** · 友利奈绪 · 星之海学园学生会室
@@ -263,7 +263,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 
 ## 开发计划
 
-**当前：v24.8.6 试运行（本地书从文件第一个字连续读）**｜下一站 v25 内部 TCP/protobuf。
+**当前：v24.8.7 试运行（本地阅读只发摘要）**｜下一站 v25 内部 TCP/protobuf。
 
 > v22 试运行 1 天后，进入约 1 天的 v23 启动 + v22 介绍视频，再开始 v23 子版本开发。
 
@@ -293,7 +293,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | v21 | 网关（二）owner 鉴权：JWT/刷新/失败锁定 + 架构收口 | ✅ 已完成 | [v21.md](docs/versions/v21.md) |
 | v22 | 网关（三）安全：限流/审计/TLS/`!gw` | ✅ 已完成 | [v22.md](docs/versions/v22.md) |
 | v23 | 多用户 + 亲密度可骤降/负值/修复，归零降私聊回复：users/roles + user_id 隔离 | ✅ 已完成（v23.5.1） | [v23.md](docs/versions/v23.md) |
-| v24 | 读书修复与增强：搜索/标题/进度、抓包分析、网络优先 + 本地书回退 | 🚧 v24.8.6 试运行 | [v24.md](docs/versions/v24.md) |
+| v24 | 读书修复与增强：搜索/标题/进度、抓包分析、网络优先 + 本地书回退 | 🚧 v24.8.7 试运行 | [v24.md](docs/versions/v24.md) |
 | v25 | 内部通讯升级：外部 HTTP→网关；网关 8+4+body protobuf→后端 27004 | 📋 已规划 | [v25.md](docs/versions/v25.md) |
 | v26 | 插件接口实现（含 v26.0 代码审查与架构重构） | 📋 已规划 | [v26.md](docs/versions/v26.md) |
 | v27 | 模型层接口实现 | 📋 已规划 | [v27.md](docs/versions/v27.md) |
@@ -890,7 +890,7 @@ python3 scripts/export_persona.py
 | 命令 | 说明 |
 |---|---|
 | `!books` | 列出 `data/books/` 的 TXT/EPUB |
-| `!book local <书名>` | 加入队首，从文件第一个字读 1000 字，并主动私聊告知 |
+| `!book local <书名>` | 加入队首，从文件第一个字读 1000 字，AI 总结后主动私聊 |
 | `!book read <书名>` | 从文件第一个字开始读 1000 字 |
 | `!book next` | 从上次结束的下一个字继续读 1000 字 |
 | `!book queue` | 查看队列、已读字数、章节进度 |
@@ -900,6 +900,7 @@ python3 scripts/export_persona.py
 - 全书连续字符流，每次 1000 字，可跨章节，不按章节重置。
 - 不匹配“第…章”，文件第一个字就是正文第一个字。
 - 只读本机 `data/books/`，不导入数据库、不上传。
+- 只发摘要，不把正文贴到 QQ。
 - 群聊不响应。
 
 ### 模式与运维

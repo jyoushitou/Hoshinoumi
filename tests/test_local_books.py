@@ -109,11 +109,16 @@ class TestLocalBooks(unittest.TestCase):
             {"chapter": chapter, "offset": kw.get("offset")})
         BQ.mark_error = lambda uid, name: None
         import bot.chat.send as S
+        from bot.life import reading
         orig_send = S.send_short_reply
+        orig_sum = reading.summarize_chapter
         sent = []
         async def fake_send(*args, **kwargs):
             sent.append(args[1] if len(args) > 1 else "")
+        async def fake_sum(text):
+            return "测试摘要"
         S.send_short_reply = fake_send
+        reading.summarize_chapter = fake_sum
         try:
             ctx = CommandContext(parts=["book", "local", "测试书"], uid="u1",
                                  ws=None, is_group=False, gid=0)
@@ -121,6 +126,7 @@ class TestLocalBooks(unittest.TestCase):
         finally:
             BQ.set_total, BQ.set_progress, BQ.mark_error = orig
             S.send_short_reply = orig_send
+            reading.summarize_chapter = orig_sum
         self.assertEqual(calls["chapter"], 1)
         self.assertGreater(calls["offset"], 0)
         self.assertTrue(any("我开始读" in x for x in sent))
