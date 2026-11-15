@@ -127,7 +127,7 @@ v6：P1 会说话 → P2 说实话 → P2.5 长感官 → P3 有生活 → P4 �
 | **v23** | [versions/v23.md](versions/v23.md) | 多用户 + 亲密度负值/修复，归零降私聊回复 | ✅ 已完成（v23.5.1） |
 | **v24** | [versions/v24.md](versions/v24.md) | 读书修复 + 本地 TXT/EPUB + 摘要入长期记忆 | ✅ 已完成（v24.9.4） |
 | **v25** | [versions/v25.md](versions/v25.md) | 热更新 + 配置动态化（配置/热加载/ingress/蓝绿/准入/清理/上线提示） | ✅ 已完成（v25.7.0） |
-| **v26** | [versions/v26.md](versions/v26.md) | 内部通讯升级 + 模糊指令归一化 | 🚧 v26.6.0 试运行 |
+| **v26** | [versions/v26.md](versions/v26.md) | 内部通讯升级 + 模糊指令归一化 | ✅ 已完成（v26.6.0） |
 | **v27** | [versions/v27.md](versions/v27.md) | 插件接口实现（含 v27.0 代码审查与重构） | 规划中 |
 | **v28** | [versions/v28.md](versions/v28.md) | 模型层接口实现 | 规划中 |
 | **v29** | [versions/v29.md](versions/v29.md) | 记忆层接口实现 | 规划中 |
