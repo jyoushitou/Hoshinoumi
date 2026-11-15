@@ -1,94 +1,150 @@
-# 架构图（v20.5）
+# 架构图（v25.5.7）
 
 > 配套阅读：**[ARCH-REVIEW.md](ARCH-REVIEW.md)**（量化审查、问题与修复顺序）
 >
-> **当前后端 v20.5，网关 v20.5（Docker/网关验证）。** 已部署试运行。 本图以 v18.20 的分层为基线，v19 已加入 `conversation_messages`、
-> 迁移单一入口与语音分段；网关在 `gateway/`（C++，v20 核心），内部契约骨架在 `proto/nao/v1/`。
+> **当前后端 v25.5.7，网关按 README 的 v24.8.1。** 已部署试运行。本图按 v23 多用户、v24 本地书、v25.5.7 代码更新；网关在 `gateway/`（C++），内部契约骨架在 `proto/nao/v1/`。
 > 开发计划见 [ROADMAP](ROADMAP.md) 与 [versions/](versions/)；图中 ⚠ 是已知架构债，不代表当前不能用。
 
 ---
 
-## 1. 分层总览
+## 0. 生产拓扑（v25.5.7）
 
 ```
-                        ┌──────────────────────────────────┐
-     启动              │  run.py                          │
-                        │   ├→ 配置检查 / 依赖检查          │
-                        │   └→ bot.main                    │
-                        │        ├→ app.bootstrap           │  加载密钥/状态/人设
-                        │        │   ├→ _ensure_tables()    │  ⚠ 启动时改表
-                        │        │   └→ _ensure_cron_schema()│  ⚠ 启动时补列
-                        │        └→ app.loop.serve          │  常驻循环
-                        └──────────────┬───────────────────┘
+QQ 用户
+  │  WS 3001
+  ▼
+NapCat ───────────────┐
+                      │
+客户端/Web/IDE         │
+  │ HTTP+JWT 27005    │
+  ▼                   │
+gateway（C++）         │
+  │ HTTP 27004        │
+  ▼                   ▼
+┌──────────────────────────────────────┐
+│ nao-ingress（bot/ingress.py）          │
+│ 持有 3001 / 27004                      │
+│  qq.sock / api.sock → 当前 worker      │
+└──────────────────┬───────────────────┘
+                   │ Unix socket
+                   ▼
+┌──────────────────────────────────────┐
+│ worker（run.py，NAO_WORKER_MODE=1）    │
+│ 不监听 3001/27004，只接 Unix socket    │
+│ 同一套 app.bootstrap / app.loop        │
+└──────────────────▲───────────────────┘
+                   │ 启动 / 健康检查 / 切 current
+┌──────────────────┴───────────────────┐
+│ supervisor（scripts/nao_supervisor.py）│
+│ data/workers/versions/<version>        │
+│ current 指针蓝绿切换                    │
+└──────────────────────────────────────┘
+```
+
+- 生产：**ingress 持有公网/本机端口，worker 只走 Unix socket**。
+- 本地调试：`start.py` 仍是单进程，直接监听 3001 / 27004。
+- 蓝绿：新 worker 先起在版本目录，`/api/health` 通过后才原子切换 `current`；失败不切流。
+- gateway 只连 ingress 的 `27004`，不直连 worker。
+
+## 1. 分层总览（v25.5.7）
+
+> 以下分层是 ingress 后面的 **worker 进程内部**；本地单进程调试（`start.py`）也是同一套，只是直接监听 3001 / 27004。
+
+```
+                    ┌──────────────────────────────────────────┐
+run.py / start.py   │ 配置检查 / features / preflight / 依赖检查 │
+                    └──────────────────┬───────────────────────┘
                                        │
+                    ┌──────────────────▼───────────────────────┐
+                    │ app.bootstrap                            │
+                    │ schema_version 校验 / 密钥 / 人设 / 端口  │
+                    │ app.runtime_checks / app.life_bridge      │
+                    └──────────────────┬───────────────────────┘
+                                       │
+                    ┌──────────────────▼───────────────────────┐
+                    │ app.loop.serve                           │
+                    │ QQ WebSocket + HTTP API + 心跳 + 定时循环 │
+                    └──────────────────┬───────────────────────┘
         ┌──────────────────────────────┼──────────────────────────────┐
         │                              │                              │
 ┌───────▼────────┐          ┌──────────▼──────────┐        ┌──────────▼─────────┐
-│ 接入：QQ        │          │ 接入：HTTP API       │        │ 接入：调度          │
-│ chat.handler    │          │ server.http_api      │        │ scheduler           │
-│ chat.inbound    │          │ routes_chat/meta     │        │ executors/*         │
-│ chat.cache ⭐    │          └──────────┬──────────┘        │ schedule.items ⭐    │
-└───────┬────────┘                     │                   └──────────┬─────────┘
+│ QQ 入口         │          │ HTTP API             │        │ 调度 / 执行器        │
+│ chat.handler    │          │ server.http_api      │        │ scheduler.dispatcher│
+│ chat.inbound    │          │ routes_chat / meta   │        │ scheduler.queue     │
+│ chat.batcher    │          │ server.config/common │        │ scheduler.workers   │
+│ chat.cache      │          │                      │        │ executors / schedule│
+└───────┬────────┘          └──────────┬──────────┘        └──────────┬─────────┘
         │                              │                              │
-        │ 命令（同步）                  │ 状态/配置                     │ 到点事件
-        └──────────────┬───────────────┴──────────────┬───────────────┘
-                       │                              │
-              ┌────────▼─────────┐          ┌─────────▼──────────┐
-              │ 调度层            │          │ 命令层              │
-              │ 三档队列 / worker │          │ cmd/*（39 个命令）   │
-              │ 超时/重试/熔断     │          └─────────┬──────────┘
-              └────────┬──────────┘                    │
-                       │                               │
-        ┌──────────────┴───────────────┬───────────────┘
-        │                              │
-┌───────▼─────────┐          ┌─────────▼──────────┐
-│ 业务层           │          │ 能力层              │
-│ chat  (收发/分条) │          │ ai     (模型/解析)  │
-│ life  (生活/关系) │          │ memory (检索/预算)  │
-│ diary (日记)      │          │ image  (抓图/存档)  │
-│ schedule (定时)   │          │ speech (语音/转写)  │
-│ executors (执行器)│          │ life.recall ⭐       │
-└───────┬─────────┘          └─────────┬──────────┘
-        │                              │
-        └──────────────┬───────────────┘
-                       │
-        ┌──────────────▼───────────────────────────────┐
-        │ 基础层                                        │
-        │ core    状态 / 配置 / 锁 / 指标 / 版本 / 时钟   │
-        │ infra   conn / repo_* / schema / cache ⭐ /     │
-        │         backup ⭐ / blocking / log             │
-        │ ports   接口（ChatModel / Transport）           │
-        │ events  Event + 注册表                         │
-        │ egress  唯一出站口 + 合并                       │
-        └──────────────┬───────────────────────────────┘
-                       │
-              ┌────────▼─────────────────────────┐
-              │ MySQL（默认）/ SQLite（自动降级）  │
-              │ 25 张表 + v_bot_meta 只读视图       │
-              │ + data/ 文件 + backups/            │
-              └──────────────────────────────────┘
+        └───────────────┬──────────────┴──────────────┬───────────────┘
+                        │                             │
+              ┌─────────▼─────────┐         ┌─────────▼──────────┐
+              │ 命令层             │         │ 调度层               │
+              │ cmd.registry       │         │ 三档队列 / worker    │
+              │ cmd/*（books 等）  │         │ 超时 / 重试 / 熔断    │
+              └─────────┬─────────┘         └─────────┬────────────┘
+                        │                             │
+        ┌───────────────┴───────────────┬─────────────┘
+        │                               │
+┌───────▼─────────┐            ┌────────▼──────────┐
+│ 业务层           │            │ 能力层             │
+│ chat            │            │ ai                 │
+│ life            │            │ memory             │
+│  reading/novel  │            │ image              │
+│  local_books    │            │ speech             │
+│  book_queue     │            │                    │
+│ diary / schedule│            │                    │
+│ executors       │            │                    │
+└───────┬─────────┘            └────────┬──────────┘
+        └───────────────┬───────────────┘
+                        │
+        ┌───────────────▼───────────────────────────────┐
+        │ 基础层                                         │
+        │ core      state / settings / features /        │
+        │           tunables / clock / worker / version  │
+        │ infra     conn / repo_* / tenant / schema /    │
+        │           cache / backup / blocking / log      │
+        │ ports     models / memory / transport /        │
+        │           services / clock                     │
+        │ events    Event + 注册表                       │
+        │ egress    唯一出站口 + 合并                     │
+        └───────────────┬───────────────────────────────┘
+                        │
+        ┌───────────────▼───────────────────────────────┐
+        │ MySQL（默认）/ SQLite（自动降级）              │
+        │ data/books/ 本地书 + data/ + backups/          │
+        └───────────────────────────────────────────────┘
 ```
 
-⭐ = v18 新增或显著改动的部件：
-`chat.cache`（引用消息缓存）、`life.recall`（突然想起）、`infra.cache`（TTL）、
-`infra.backup`（自动备份）、`schedule.items`（日程/待办 `call_at` 钩子）。
+**规则**：箭头只允许向下；上层可依赖下层，下层不反向依赖上层。  
+**当前**：v23 多用户隔离（`infra/tenant.py` + `repo_tenant`）、v24 本地书（`life/local_books.py` + `cmd/books_cmd.py`）、v25.5.7 运行版本。  
+**架构环**：不再在文档里写死数量，以 `python3 scripts/arch_check.py` 的输出为准。
 
-**规则**：箭头只允许向下；上层可依赖下层，下层不反向依赖上层。
-当前：**包级 0 环**；模块级精确环 **5 个**（见 §5 与审查文档），比 v17.11 的 6 个少 1 个
-（`schedule.planner` 已在 v18.9 删除）。
-
----
-
-## 1.1 当前入口（v20.5）
+## 1.1 当前入口（v25.5.7）
 
 | 入口 | 代码 | 端口 | 说明 |
 |---|---|---|---|
-| QQ | `bot.chat.handler` | `3001` | bot 是 WebSocket 服务端，NapCat 连入 |
-| 本机 HTTP | `bot.server.http_api` | `27004` | `/api/*` 用 Bearer Token；`/api/health` 与 `/internal/*` 免鉴权 |
-| 网关 | `gateway/`（C++） | `27005` | `/api/*` → 本机 `27004`；v20.5，无 JWT/限流/TLS |
+| QQ | `bot.ingress` → `chat.handler` | `3001` | ingress 收 WS，转发 worker 的 `qq.sock` |
+| 本机 HTTP | `bot.ingress` → `server.http_api` | `27004` | ingress 收 HTTP，转发 worker 的 `api.sock` |
+| 网关 | `gateway/`（C++） | `27005` | JWT / 限流 / 审计 / 转发到 ingress `27004` |
+| worker | `run.py`（`NAO_WORKER_MODE=1`） | Unix socket | 不监听公网端口 |
+| supervisor | `scripts/nao_supervisor.py` | — | 启动 / 健康检查 / 蓝绿切 current |
 | 定时/主动 | `bot.scheduler` / `bot.executors` | — | `call_at` 钩子 + 三档队列 |
+| 本地书 | `bot.life.local_books` / `bot.cmd.books_cmd` | — | 只读 `data/books/`，不导入数据库 |
 
 > 网关不替代 NapCat：NapCat 仍是 QQ 通道；网关只服务自有客户端/公网 HTTP。
+
+## 1.2 网关与多入口
+
+```
+QQ 用户 ──> NapCat ──WS 3001──> nao-ingress ──qq.sock──> worker
+客户端/Web/IDE ──HTTP+JWT──> gateway 27005 ──HTTP 27004──> nao-ingress ──api.sock──> worker
+supervisor ──versions/current──> worker（蓝绿）
+```
+
+- gateway：`auth.cpp`（JWT）、`rate_limit.cpp`（令牌桶）、`router.cpp`（路由/审计）、`backend.cpp`（转发）。
+- 后端只监听本机 `27004`；gateway 是公网入口。
+- 两条入口并行，最后汇合到同一个核心；不是“NapCat → gateway → bot”的单链。
+- 多用户隔离在 v23 生效：`user_id` / `identity` / `target_id` 分离，repo 层强制过滤。
 
 ## 2. 一条消息的生命周期（v18.6 起异步派发）
 
@@ -258,7 +314,7 @@ v17.1 的三档队列仍然是底座；但**到点触发**已经从 `minute_tick
 
 ---
 
-## 5. 已知架构债（v18.20 审查，v20.5 仍未清完）
+## 5. 已知架构债（v18.20 审查；v25.5.7 未重新全量审计）
 
 1. **`events` 兼容视图是过渡态**  
    写路径已切 `memories`，但 `repo_memory`、`store_v2`、`diary/store` 仍有 `FROM events` 读查询。
@@ -349,5 +405,3 @@ python .tmp/arch_cycles2.py
 
 当前基线：154 个文件、13,859 有效行、885 个函数、24 个函数 >60 行、
 261 个函数无 docstring、模块级 5 环、包级 0 环。
-
-

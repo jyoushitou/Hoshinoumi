@@ -408,19 +408,21 @@ python3 scripts/run_tests.py --fast     # 只跑功能测试
 ## 架构
 
 ```
+本地单进程：
 start.py / run.py
-  → app.runtime_checks（网络 / 人设）
-  → app.bootstrap（features / schema / 密钥 / life_bridge）
-  → app.loop（QQ WS 3001 + HTTP 27004 + 心跳 + 定时循环）
-        │
-        ├─ 接入：QQ / HTTP / 调度
-        ├─ 命令：cmd.registry + cmd/*
-        ├─ 业务/能力：chat / life / ai / memory / image / speech
-        ├─ 基础：core / infra / ports / events / egress
-        └─ 数据：MySQL / SQLite + data/books/ + backups/
+  → app.runtime_checks → app.bootstrap → app.loop（3001 / 27004）
 
-QQ → NapCat → bot:3001
-客户端 → gateway:27005（JWT / 限流 / 审计） → bot:27004
+生产：
+NapCat ──WS 3001──> nao-ingress ──qq.sock──> worker
+客户端 ──HTTP+JWT 27005──> gateway ──27004──> nao-ingress ──api.sock──> worker
+supervisor ──versions/current──> worker（蓝绿切换）
+
+worker 内部：
+  → 接入 QQ / HTTP / 调度
+  → 命令 cmd.registry + cmd/*
+  → 业务/能力 chat / life / ai / memory / image / speech
+  → 基础 core / infra / ports / events / egress
+  → 数据 MySQL / SQLite + data/books/ + backups/
 ```
 
 完整分层图、消息生命周期、调度器模型、已知架构债：
@@ -1314,7 +1316,7 @@ Docker 镜像里自带 Chromium，抓小说可用。
 
 ```
 bot/
-├── core/       常量、运行时状态、features、settings、tunables、时钟、单实例
+├── core/       常量、运行时状态、features、settings、tunables、时钟、单实例、worker
 ├── infra/      连接 / 仓储 / tenant 多用户隔离 / schema / 缓存 / 备份 / 日志
 ├── ports/      模型、记忆、传输、服务、时钟端口
 ├── memory/     上下文、检索（BM25+RRF）、分层预算、时间线
@@ -1331,14 +1333,16 @@ bot/
 ├── server/     HTTP API（routes_chat / routes_meta / config）
 ├── events/     事件注册表
 ├── egress/     唯一出站口与合并
-└── app/        runtime_checks / bootstrap / life_bridge / loop
+├── app/        runtime_checks / bootstrap / life_bridge / loop
+└── ingress.py  生产入口：3001 / 27004 → Unix socket worker
 
 gateway/       C++ 网关：auth / rate_limit / router / backend
 personas/       角色卡（不进代码，可直接改）
 proto/          内部契约骨架
-scripts/        迁移 / 自检 / 发布 / 打包 / 探测
+scripts/        迁移 / 自检 / 发布 / 打包 / 探测 / nao_supervisor.py
 data/           运行时数据（tunables、digests、cookies、凭据）——不进版本库
 data/books/     本地 TXT/EPUB（用户自备，不进版本库）
+data/workers/   ingress/worker 的版本目录与 current 指针
 ```
 
 ---
@@ -2175,5 +2179,3 @@ python3 scripts/check_names.py        # 未定义名字
 所以有了 Hoshinoumi。算是给“故事结束之后”补的一间学生会室：让她继续上学、开会、喂猫、弹琴，也让她在 QQ、Web、桌面和手机那边，记得你随口说过的话。
 
 > 故事结束以后，她还在。
-
-
