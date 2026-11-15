@@ -111,6 +111,10 @@ namespace Gateway
             const auto& b = backend->as_object();
             cfg.backendBase = GetString(b, "base", cfg.backendBase);
             cfg.backendTimeoutMs = GetInt(b, "timeout_ms", cfg.backendTimeoutMs);
+            cfg.backendProtocol = GetString(b, "protocol", cfg.backendProtocol);
+            cfg.backendTcpHost = GetString(b, "tcp_host", cfg.backendTcpHost);
+            cfg.backendTcpPort = static_cast<unsigned short>(
+                GetInt(b, "tcp_port", cfg.backendTcpPort));
             cfg.startupWait = GetBool(b, "startup_wait", cfg.startupWait);
             cfg.startupRetryIntervalSec = GetInt(b, "startup_retry_interval_sec",
                                                 cfg.startupRetryIntervalSec);
@@ -143,6 +147,18 @@ namespace Gateway
         if (listenPort == 0)
         {
             throw std::runtime_error("listen.port 必须在 1..65535");
+        }
+        if (backendProtocol != "http" && backendProtocol != "tcp")
+        {
+            throw std::runtime_error("backend.protocol 只支持 http / tcp");
+        }
+        if (backendTcpHost != "127.0.0.1" && backendTcpHost != "localhost")
+        {
+            throw std::runtime_error("backend.tcp_host 只允许 127.0.0.1 / localhost");
+        }
+        if (backendTcpPort == 0)
+        {
+            throw std::runtime_error("backend.tcp_port 必须在 1..65535");
         }
         if (backendTimeoutMs <= 0)
         {
@@ -185,7 +201,8 @@ namespace Gateway
     std::string Config::Describe() const
     {
         return "listen=" + listenHost + ":" + std::to_string(listenPort) +
-               " backend=" + backendBase +
+               " backend=" + backendProtocol + "://" +
+               (backendProtocol == "tcp" ? backendTcpHost + ":" + std::to_string(backendTcpPort) : backendBase) +
                " timeout_ms=" + std::to_string(backendTimeoutMs) +
                " startup_wait=" + (startupWait ? "true" : "false") +
                " startup_interval=" + std::to_string(startupRetryIntervalSec) + "s" +

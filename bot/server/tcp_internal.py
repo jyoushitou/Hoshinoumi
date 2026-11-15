@@ -22,6 +22,12 @@ def _status_from_http(code):
 async def dispatch(req: P.InternalRequest):
     payload = P.decode_json_value(req.payload)
     method = (req.method or "").strip()
+    if "?" in method:
+        from urllib.parse import parse_qsl, urlsplit
+        _u = urlsplit(method)
+        method = _u.path
+        for k, v in parse_qsl(_u.query, keep_blank_values=True):
+            payload.setdefault(k, v)
     if method == "/internal/health":
         return P.InternalResponse(req.request_id, 200, "",
                                   P.encode_json_value({"ok": True, "status": "ok"}))

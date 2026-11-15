@@ -25,6 +25,15 @@ namespace Gateway
         /// @brief 调后端的超时（毫秒）
         int backendTimeoutMs = 5000;
 
+        /// @brief 内部协议：http / tcp（v26）
+        std::string backendProtocol = "http";
+
+        /// @brief TCP 后端地址（只允许 loopback）
+        std::string backendTcpHost = "127.0.0.1";
+
+        /// @brief TCP 后端端口
+        unsigned short backendTcpPort = 27004;
+
         /// @brief 启动时是否等待后端（默认开启）
         bool startupWait = true;
 
