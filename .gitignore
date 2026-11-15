@@ -42,3 +42,5 @@ docs/video/
 obs_hdr_dark_compare.png
 tmp*/
 *.db/
+
+APK/*.apk
