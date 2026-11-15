@@ -906,6 +906,7 @@ class TestVersionInfo(unittest.TestCase):
     def test_fallback_starts_with_v(self):
         ver = self.V.get_version(force=True)
         self.assertTrue(ver.startswith("v"), f"版本号应以 v 开头：{ver}")
+        self.assertEqual(ver, f"v{self.V.VERSION}", "静态 VERSION 不应被旧 git tag 覆盖")
 
     def test_describe_has_fields(self):
         text = self.V.describe()

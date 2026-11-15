@@ -14,7 +14,7 @@ import subprocess
 import sys
 import time
 
-VERSION = "25.5.6"         # 与 README / tag 对齐；发版时改这里
+VERSION = "25.5.7"         # 与 README / tag 对齐；发版时改这里
 _started_at = time.time()
 _cache = {}
 
@@ -40,13 +40,9 @@ def get_version(force=False):
     if env:
         ver = env if env.startswith("v") else f"v{env}"
     else:
-        described = _git("describe", "--tags", "--always")
-        if described.startswith("v"):
-            ver = described
-        elif described:
-            ver = f"v{VERSION}+{described}"     # 不在 tag 上：v17.0.0+3a1b2c
-        else:
-            ver = f"v{VERSION}"
+        # v25.5.7：静态 VERSION 优先；git describe 只用于提交号，
+        # 避免旧 tag 把 25.x 显示成 24.9.4-14-gxxxx。
+        ver = f"v{VERSION}"
 
     _cache["version"] = ver
     return ver
