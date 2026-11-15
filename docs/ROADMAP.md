@@ -167,7 +167,7 @@
 |---|---|---|
 | v24 | 读书修复与增强 | [v24.md](versions/v24.md) |
 | v25 | 插件接口实现（含 v25.0 代码审查与重构） | [v25.md](versions/v25.md) |
-| v26 | 模型层接口实现 | [v26.md](versions/v26.md) |
+| v26 | 内部通讯升级（含 v26.0 架构复审修复） | [v26.md](versions/v26.md) |
 | v27 | 记忆层接口实现 | [v27.md](versions/v27.md) |
 | v28 | 通道层接口实现 | [v28.md](versions/v28.md) |
 | v29 | 工具层接口实现 | [v29.md](versions/v29.md) |
