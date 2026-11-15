@@ -297,7 +297,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | v25 | 热更新 + 配置动态化：配置/热加载/ingress/蓝绿/准入/清理/上线提示 | ✅ 已完成（v25.7.0） | [v25.md](docs/versions/v25.md) |
 | v26 | 内部通讯升级 + 模糊指令归一化：8+4+body TCP / protobuf / 标准命令 | ✅ 已完成（v26.7.4） | [v26.md](docs/versions/v26.md) |
 | v27 | 插件注册表基础（含 v27.0 代码审查） | 📋 已规划 | [v27.md](docs/versions/v27.md) |
-| v28 | 插件运行时：审批 / 加载 / 错误 / DDL | 📋 已规划 | [v28.md](docs/versions/v28.md) |
+| v28 | 插件运行时：PluginContext / 审批 / 加载 / 错误 | 📋 已规划 | [v28.md](docs/versions/v28.md) |
 | v29 | 模型层契约 + native | 📋 已规划 | [v29.md](docs/versions/v29.md) |
 | v30 | 模型层插件接入 | 📋 已规划 | [v30.md](docs/versions/v30.md) |
 | v31 | 记忆层契约 + native | 📋 已规划 | [v31.md](docs/versions/v31.md) |
@@ -342,16 +342,26 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 >
 > **编号变更**：命令收敛移到 **v49**（v48 Qoder 之后、v50 Web 之前）；v45 多端推送 / v46 本机服务化 / v47 DSH / v48 Qoder。详见 [v49.md](docs/versions/v49.md)。
 >
-> **插件接口原则**：v27–v44 暴露的是各架构层的接口，不是把现有功能插件化。统一约束见 [INTERFACE-PLAN-v27-v44.md](docs/INTERFACE-PLAN-v27-v44.md)。
-> **接口层不实现任何功能**：v24–v44 只定义契约和注册表，不提供任何实现；真实 provider / channel / tool / storage 由核心或第三方开发者实现。欢迎按契约提交实现。
+> **插件接口原则**：v27–v44 暴露的是各架构层的接口，不是把现有功能插件化。统一约束见 [INTERFACE-PLAN-v27-v44.md](docs/INTERFACE-PLAN-v27-v44.md)，运行时契约见 [PLUGIN-RUNTIME-DESIGN.md](docs/PLUGIN-RUNTIME-DESIGN.md)。
+> **接口层不实现任何功能**：v27–v44 只定义契约和注册表，不提供任何实现；真实 provider / channel / tool / storage 由核心或第三方开发者实现。欢迎按契约提交实现。
 > DeepSeek/豆包、BM25、QQ/NapCat、现有工具/命令、MySQL/SQLite、asyncio 调度、
 > WebSocket 出站都保持核心 native；外部插件只能 extend / enhance / 显式 replace 路由，
 > 禁用/卸载/失败时回退核心。
 >
 > **核心范围**：文档里所有 **vXXX 功能都是核心功能**，包括 v23 之前的聊天、记忆、
-> 命令、定时、语音、视觉、读书、OCR、备份、主动消息，以及 v24–v44 的接口定义。
+> 命令、定时、语音、视觉、读书、OCR、备份、主动消息，以及 v27–v44 的接口定义。
 > v27–v44 本身不是插件，也不是功能实现；后续版本也不会用插件接口实现功能。
 >
+
+> **插件运行时（v28）**：
+> - 安装按 manifest `name` + 包 hash，复制到 `plugins/<layer>/<name>/`，不信任包名。
+> - 初始化顺序固定：command → events → life → ai → plugin。
+> - `@2` 能力在核心只有 `@1` 时直接拒绝加载，不降级。
+> - `plugin-lock.json` 记录 registry generation；worker 启动校验，不一致拒绝加载插件。
+> - 运行中 disable 立即 stop；下一次 worker 不再加载；自动停用不自动恢复。
+> - 插件 DDL 不在 v28，统一到 v38 存储层。
+> - 插件 stop 跟随 worker，不跟随 ingress。
+> - `!plugin list` 不显示核心 native/fallback。
 > **插件接口只给第三方做优化/性能扩展**：例如更快的模型 provider、外部向量检索、
 > 自定义通道；核心实现始终保留。核心功能只能在启动前通过 `config/features.json`
 > （或 `NAO_FEATURES`）关闭；没有对应开关的默认常开。插件管理器不能 disable/uninstall 核心功能。

@@ -129,7 +129,7 @@ v6：P1 会说话 → P2 说实话 → P2.5 长感官 → P3 有生活 → P4 �
 | **v25** | [versions/v25.md](versions/v25.md) | 热更新 + 配置动态化（配置/热加载/ingress/蓝绿/准入/清理/上线提示） | ✅ 已完成（v25.7.0） |
 | **v26** | [versions/v26.md](versions/v26.md) | 内部通讯升级 + 模糊指令归一化 | ✅ 已完成（v26.7.4） |
 | **v27** | [versions/v27.md](versions/v27.md) | 插件注册表基础（含 v27.0 代码审查） | 规划中 |
-| **v28** | [versions/v28.md](versions/v28.md) | 插件运行时：审批 / 加载 / 错误 / DDL | 规划中 |
+| **v28** | [versions/v28.md](versions/v28.md) | 插件运行时：PluginContext / 审批 / 加载 / 错误 | 规划中 |
 | **v29** | [versions/v29.md](versions/v29.md) | 模型层契约 + native | 规划中 |
 | **v30** | [versions/v30.md](versions/v30.md) | 模型层插件接入 | 规划中 |
 | **v31** | [versions/v31.md](versions/v31.md) | 记忆层契约 + native | 规划中 |
@@ -173,7 +173,7 @@ v6：P1 会说话 → P2 说实话 → P2.5 长感官 → P3 有生活 → P4 �
 | **v66** | [versions/v66.md](versions/v66.md) | 常驻（后端）systemd 与看门狗 | 规划中 |
 | **v67** | [versions/v67.md](versions/v67.md) | 嵌入式前端（Linux 后端） | 规划中 |
 
-> v27–v44 每版只开放一层接口，统一约束见 [INTERFACE-PLAN-v27-v44.md](INTERFACE-PLAN-v27-v44.md)。
+> v27–v44 每版只开放一层接口，统一约束见 [INTERFACE-PLAN-v27-v44.md](INTERFACE-PLAN-v27-v44.md)，运行时契约见 [PLUGIN-RUNTIME-DESIGN.md](PLUGIN-RUNTIME-DESIGN.md)。
 
 
 

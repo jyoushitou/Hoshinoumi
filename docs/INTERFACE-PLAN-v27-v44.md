@@ -8,7 +8,7 @@
 | 版本 | 层 | 开放的能力 | 核心 native |
 |---|---|---|---|
 | v27 | 插件注册表基础 | PluginManifest / PluginRegistry / MasterRegistry | 无 |
-| v28 | 插件运行时 | 权限审批 / loader / errors / tasks / DDL | 无 |
+| v28 | 插件运行时 | PluginContext / 审批 / loader / errors / tasks | 无 |
 | v29 | 模型契约 + native | `model.<name>@1` | DeepSeek / 豆包 |
 | v30 | 模型插件接入 | `model.<name>@1` 第三方实现 | 同上 |
 | v31 | 记忆契约 + native | `memory.store.<name>@1` / `memory.retriever.<name>@1` | SQLMemoryStore / BM25 |
@@ -18,7 +18,7 @@
 | v35 | 工具契约 + native | `tool.<name>@1` | 现有工具 |
 | v36 | 工具插件接入 | 第三方工具 | 同上 |
 | v37 | 存储契约 + native | `storage.backend.<name>@1` / `storage.repository.<name>@1` | MySQL / SQLite |
-| v38 | 存储插件接入 | 第三方 backend / repository | 同上 |
+| v38 | 存储插件接入 | 第三方 backend / repository + 插件 DDL/迁移 | 同上 |
 | v39 | 调度契约 + native | `scheduler.<name>@1` / `schedule.trigger.<name>@1` | asyncio |
 | v40 | 调度插件接入 | 第三方 scheduler / trigger | 同上 |
 | v41 | 出站契约 + native | `transport.<name>@1` | WebSocket |
@@ -27,6 +27,13 @@
 | v44 | 默认链路插件接入 | 第三方 route candidate | 同上 |
 
 规则：
+
+- 运行时契约见 [PLUGIN-RUNTIME-DESIGN.md](PLUGIN-RUNTIME-DESIGN.md)。
+- v28 不做插件 DDL；DDL/迁移统一在 v38 存储层。
+- 初始化顺序：command → events → life → ai → plugin（最后）。
+- `@2` 能力在核心只有 `@1` 时拒绝加载，不做降级。
+- 安装按 manifest name + 包 hash，复制到 `plugins/<layer>/<name>/`。
+- `!plugin list` 不显示核心 native/fallback。
 
 - **核心 native 不实现 PluginManifest，不进入插件表。**
 - 插件实现某一层的 Protocol，通过 v27 的 PluginRegistry 注册。
@@ -174,6 +181,13 @@ plugins/<layer>/<name>/migrations/001_init.sql
 ```
 
 规则：
+
+- 运行时契约见 [PLUGIN-RUNTIME-DESIGN.md](PLUGIN-RUNTIME-DESIGN.md)。
+- v28 不做插件 DDL；DDL/迁移统一在 v38 存储层。
+- 初始化顺序：command → events → life → ai → plugin（最后）。
+- `@2` 能力在核心只有 `@1` 时拒绝加载，不做降级。
+- 安装按 manifest name + 包 hash，复制到 `plugins/<layer>/<name>/`。
+- `!plugin list` 不显示核心 native/fallback。
 
 - MySQL + SQLite 两套方言。
 - 插件表前缀 `plugin_<name>_`。

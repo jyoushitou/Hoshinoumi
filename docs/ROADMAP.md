@@ -169,7 +169,7 @@
 | v25 | 热更新与配置动态化 | [v25.md](versions/v25.md) |
 | v26 | 内部通讯升级（8+4+body TCP + protobuf） | [v26.md](versions/v26.md) |
 | v27 | 插件注册表基础（含 v27.0 代码审查） | [v27.md](versions/v27.md) |
-| v28 | 插件运行时：审批 / 加载 / 错误 / DDL | [v28.md](versions/v28.md) |
+| v28 | 插件运行时：PluginContext / 审批 / 加载 / 错误 | [v28.md](versions/v28.md) |
 | v29 | 模型层契约 + native | [v29.md](versions/v29.md) |
 | v30 | 模型层插件接入 | [v30.md](versions/v30.md) |
 | v31 | 记忆层契约 + native | [v31.md](versions/v31.md) |
