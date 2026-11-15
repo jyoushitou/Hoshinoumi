@@ -1,4 +1,4 @@
-﻿# ===================== v24.6 本地 TXT/EPUB =====================
+# ===================== v24.6 本地 TXT/EPUB =====================
 import tempfile
 import unittest
 import zipfile
