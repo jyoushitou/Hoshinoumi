@@ -597,9 +597,18 @@ def dual_write(kind, tid, payload, user_id="__owner__"):
         cols = list(row)
         ph = ",".join(["%s"] * len(cols))
         updates = ",".join(f"{k}=VALUES({k})" for k in cols if k not in ("target_id", "user_id"))
-        sql = f"INSERT INTO {table}({','.join(cols)}) VALUES({ph})"
-        if updates:
-            sql += f" ON DUPLICATE KEY UPDATE {updates}"
+        backend = "mysql"
+        try:
+            from .conn import _resolve_backend
+            backend = _resolve_backend()
+        except Exception:
+            pass
+        if backend == "sqlite":
+            sql = f"INSERT OR REPLACE INTO {table}({','.join(cols)}) VALUES({ph})"
+        else:
+            sql = f"INSERT INTO {table}({','.join(cols)}) VALUES({ph})"
+            if updates:
+                sql += f" ON DUPLICATE KEY UPDATE {updates}"
         c = get_cursor()
         c.execute(sql, tuple(row[k] for k in cols))
         c.connection.commit()
