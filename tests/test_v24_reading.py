@@ -49,6 +49,47 @@ class TestTitleV242(unittest.TestCase):
         self.assertIn("没有乱编书名", msg)
 
 
+class TestProgressV243(unittest.TestCase):
+    def test_first_read_starts_chapter_one(self):
+        import asyncio
+        from bot.life import reading
+        data = {"books": [{"title": "A", "url": "u", "last_no": 0}],
+                "day": "", "chapters": 0}
+        orig_load, orig_save = reading.load, reading.save
+        reading.load = lambda tid, user_id="__owner__": data
+        reading.save = lambda tid, d, user_id="__owner__": True
+
+        async def fetch_book(url):
+            return {"title": "A", "chapters": [("第1章 开始", "c1"), ("第2章", "c2")]}
+
+        async def fetch_chapter(url):
+            return "正文" * 100
+
+        try:
+            out = asyncio.run(reading.read_once("1", fetch_book, fetch_chapter, force=True))
+        finally:
+            reading.load, reading.save = orig_load, orig_save
+        self.assertTrue(out["ok"], out)
+        self.assertEqual(out["chapter"], "第1章 开始")
+
+    def test_no_chapters_reason(self):
+        import asyncio
+        from bot.life import reading
+        data = {"books": [{"title": "A", "url": "u", "last_no": 0}], "day": "", "chapters": 0}
+        orig_load, orig_save = reading.load, reading.save
+        reading.load = lambda tid, user_id="__owner__": data
+        reading.save = lambda tid, d, user_id="__owner__": True
+
+        async def fetch_book(url):
+            return {"title": "A", "chapters": []}
+
+        try:
+            out = asyncio.run(reading.read_once("1", fetch_book, lambda u: None, force=True))
+        finally:
+            reading.load, reading.save = orig_load, orig_save
+        self.assertIn("目录为空", out["reason"])
+
+
 class TestSearchV241(unittest.TestCase):
     def test_parse_ssr_and_json(self):
         from bot.life import novel

@@ -252,12 +252,19 @@ async def read_once(tid, fetch_book=None, fetch_chapter=None, summarize=None,
     except Exception as e:
         log_api(f"[读书] 取目录失败: {e}")
         info = None
-    if not info or not info.get("chapters"):
-        return {"ok": False, "reason": "目录取不到"}
+    if not info:
+        return {"ok": False, "reason": "目录取不到（未登录/风控/解析失败）"}
+    if not info.get("chapters"):
+        return {"ok": False, "reason": "目录为空（未登录/风控/页面结构变化）"}
 
-    batch = next_chapters(info["chapters"], int(book.get("last_no", 0) or 0), 1)
+    last_no = int(book.get("last_no", 0) or 0)
+    batch = next_chapters(info["chapters"], last_no, 1)
+    if not batch and last_no <= 0:
+        # v24.3：首次追书/章节标题无编号时，从第一章开始，不把最新章节当基准
+        batch = [info["chapters"][0]]
+        log_api(f"[读书] 首次读取，回退第 1 章：{batch[0][0]}")
     if not batch:
-        return {"ok": False, "reason": "没有新章节"}
+        return {"ok": False, "reason": "没有新章节（已追到最新章）"}
 
     chapter_title, chapter_url = batch[0]
     try:
@@ -266,7 +273,7 @@ async def read_once(tid, fetch_book=None, fetch_chapter=None, summarize=None,
         log_api(f"[读书] 取正文失败: {e}")
         text = ""
     if not text:
-        return {"ok": False, "reason": "正文取不到"}
+        return {"ok": False, "reason": "正文取不到（登录/风控/解析失败）"}
 
     summary = ""
     if summarize:
