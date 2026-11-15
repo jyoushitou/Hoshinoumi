@@ -151,6 +151,22 @@ class TestLocalBooks(unittest.TestCase):
         self.assertIn("第一卷", first["chunk"])
         self.assertEqual(first["chapter"], "全文")
 
+    def test_book_summary_memory(self):
+        from bot.life import book_memory
+        orig = book_memory.add_event_to_db
+        calls = []
+        book_memory.add_event_to_db = lambda *a, **kw: calls.append((a, kw))
+        try:
+            info = {"offset": 1000, "chars": 1000}
+            book_memory.remember_chunk("u1", "u1", "书", info, "摘要")
+            book_memory.remember_finished("u1", "u1", "书", 12000)
+        finally:
+            book_memory.add_event_to_db = orig
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(calls[0][1]["kind"], "book")
+        self.assertIn("摘要", calls[0][0][1])
+        self.assertIn("读完", calls[1][0][1])
+
     def test_command_group_silent(self):
         from bot.cmd.books_cmd import cmd_book
         from bot.cmd.registry import CommandContext

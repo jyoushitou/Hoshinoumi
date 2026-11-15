@@ -113,7 +113,7 @@ async def handle_read(ev):
 @register("idle_local_read", priority=Priority.IDLE, timeout=120, retries=1,
           description="按队列读一章本地 TXT/EPUB")
 async def handle_local_read(ev):
-    from ..life import book_queue, local_books, reading
+    from ..life import book_memory, book_queue, local_books, reading
 
     args = getattr(ev, "args", ()) or ()
     tid = str(args[0]) if args else str(cfg.MASTER_QQ)
@@ -137,6 +137,13 @@ async def handle_local_read(ev):
                             status=("done" if info["done"] else "reading"),
                             offset=info["next_offset"])
     done = info["done"]
+    if summary and "摘要生成失败" not in summary:
+        try:
+            book_memory.remember_chunk(tid, tid, info["title"], info, summary)
+            if done:
+                book_memory.remember_finished(tid, tid, info["title"], info["total_chars"])
+        except Exception as e:
+            log_api(f"[本地阅读] 写入记忆失败: {e}")
     log_system(f"[本地阅读] {name} {info['chapter']} "
                f"({info['chapter_index']}/{info['total']} +{info['offset']}字) "
                f"摘要 {len(summary or '')} 字")

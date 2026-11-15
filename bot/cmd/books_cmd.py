@@ -1,6 +1,7 @@
 # ===================== 本地书命令（v24.6） =====================
 import asyncio
 
+from ..life import book_memory
 from ..life import book_queue as BQ
 from ..life import local_books as LB
 from .registry import command
@@ -111,6 +112,13 @@ async def _read_first_and_notify(ctx, name):
                         status=("done" if info["done"] else "reading"),
                         offset=info["next_offset"])
         summary = await _chunk_summary(info)
+        if "摘要生成失败" not in summary:
+            try:
+                book_memory.remember_chunk(ctx.uid, ctx.uid, title, info, summary)
+                if info["done"]:
+                    book_memory.remember_finished(ctx.uid, ctx.uid, title, info["total_chars"])
+            except Exception:
+                pass
         await _notify_start(ctx, title, info, summary)
     except Exception as e:
         try:
@@ -159,6 +167,13 @@ async def _read_chunk(ctx, name, offset=0):
                         status=("done" if info["done"] else "reading"),
                         offset=info["next_offset"])
     summary = await _chunk_summary(info)
+    if "摘要生成失败" not in summary:
+        try:
+            book_memory.remember_chunk(ctx.uid, ctx.uid, info["title"], info, summary)
+            if info["done"]:
+                book_memory.remember_finished(ctx.uid, ctx.uid, info["title"], info["total_chars"])
+        except Exception:
+            pass
     return (_decl(ctx)
             + f"📖《{info['title']}》"
             f"（第 {info['offset'] + 1} 字到第 {info['offset'] + info['chars']} 字）\n"

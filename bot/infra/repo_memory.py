@@ -13,10 +13,10 @@ from .dedupe import dedupe_key
 
 # v7-B15：去重窗口与按 kind 的保留上限
 DEDUPE_WINDOW_DAYS = 7
-KIND_LIMITS = {"life": 60, "event": 30, "promise": 30, "profile": 20, "photo": 40}
+KIND_LIMITS = {"life": 60, "event": 30, "promise": 30, "profile": 20, "photo": 40, "book": 500}
 KIND_LIMIT_DEFAULT = 20
 # 旧代码调 load_events_from_db 时默认只看这几类
-DEFAULT_KINDS = ("event", "life", "promise", "photo")
+DEFAULT_KINDS = ("event", "life", "promise", "photo", "book")
 
 
 # ===================== 对话记忆 =====================
@@ -503,7 +503,7 @@ def load_memories_for_search(tid, limit=300, user_id="__owner__"):
                created_at, last_seen
         FROM memories
         WHERE user_id=%s AND target_id IN (%s, %s)
-          AND kind IN ('event','life','promise','photo')
+          AND kind IN ('event','life','promise','photo','book')
         ORDER BY id DESC LIMIT %s
     """, (str(user_id), tid, STATE_TARGET, limit))
     return list(c.fetchall())
