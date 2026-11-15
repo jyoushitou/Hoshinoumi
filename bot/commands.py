@@ -1,4 +1,4 @@
-# ===================== 命令分发入口 =====================
+﻿# ===================== 命令分发入口 =====================
 # v5-R5：26 个命令已全部拆到 bot/cmd/*，本文件只负责鉴权与分发
 # 旧版 426 行的 if/elif 长链已删除
 
@@ -8,7 +8,7 @@ from .log import log_send
 from .send import send_private_msg, send_group_msg
 from .cmd import registry
 from .cmd import (basic, query, admin, media, memory_cmd, diary_cmd, ops,
-                   cron_cmd, history_cmd, gw_cmd)  # noqa: F401  导入即注册
+                   cron_cmd, history_cmd, gw_cmd, books_cmd)  # noqa: F401  导入即注册
 
 CMD_PREFIX = "!"  # 命令前缀
 
@@ -74,3 +74,4 @@ async def handle_command(text, uid, ws, is_group, gid):
 
     await _send_command_reply(reply, uid, ws, is_group, gid)
     return True
+
