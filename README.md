@@ -290,7 +290,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | v21 | 网关（二）owner 鉴权：JWT/刷新/失败锁定 + 架构收口 | ✅ 已完成 | [v21.md](docs/versions/v21.md) |
 | v22 | 网关（三）安全：限流/审计/TLS/`!gw` | ✅ 已完成 | [v22.md](docs/versions/v22.md) |
 | v23 | 多用户 + 亲密度可骤降/负值/修复，归零降私聊回复：users/roles + user_id 隔离 | 🚧 v23.5.1 试运行 | [v23.md](docs/versions/v23.md) |
-| v24 | 插件接口实现 + v24.4–v24.7 网页书籍链路修复 | 📋 已规划 | [v24.md](docs/versions/v24.md) |
+| v24 | 插件接口实现 + v24.4–v24.8 书籍链路与抓包分析 | 📋 已规划 | [v24.md](docs/versions/v24.md) |
 | v25 | 模型层接口实现 | 📋 已规划 | [v25.md](docs/versions/v25.md) |
 | v26 | 记忆层接口实现 | 📋 已规划 | [v26.md](docs/versions/v26.md) |
 | v27 | 通道层接口实现 | 📋 已规划 | [v27.md](docs/versions/v27.md) |
