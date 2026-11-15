@@ -13,6 +13,8 @@ BOOK_DIR = ROOT / "data" / "books"
 MAX_CHAPTER_CHARS = 400
 _progress = {}   # user_id -> {"name": str, "chapter": int}
 _declared = set()
+_cache = {}      # path -> (mtime_ns, size, title, chapters)
+_CACHE_MAX = 2
 
 DECLARATION = (
     "本地阅读仅提供 TXT/EPUB 解析工具；文件与来源由使用者提供。\n"
@@ -136,11 +138,20 @@ def _epub_text(path):
 
 def load_book(name):
     path = _safe_name(name)
+    st = path.stat()
+    key = str(path)
+    hit = _cache.get(key)
+    if hit and hit[0] == st.st_mtime_ns and hit[1] == st.st_size:
+        return hit[2], hit[3]
     if path.suffix.lower() == ".epub":
         title, chapters = _epub_text(path)
-        return title, chapters
-    text = _decode(path.read_bytes())
-    return path.stem, _split_chapters(text)
+    else:
+        text = _decode(path.read_bytes())
+        title, chapters = path.stem, _split_chapters(text)
+    if len(_cache) >= _CACHE_MAX:
+        _cache.pop(next(iter(_cache)))
+    _cache[key] = (st.st_mtime_ns, st.st_size, title, chapters)
+    return title, chapters
 
 
 def read_chapter(name, chapter_no=1):

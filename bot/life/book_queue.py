@@ -63,6 +63,13 @@ def remove(user_id, name):
     return c.rowcount > 0
 
 
+def set_total(user_id, name, total):
+    c = get_cursor()
+    c.execute("UPDATE reading_queue SET total=%s WHERE user_id=%s AND name=%s",
+              (int(total or 0), _uid(user_id), str(name)))
+    c.connection.commit()
+
+
 def set_progress(user_id, name, chapter, total=0, status="reading"):
     uid = _uid(user_id)
     total = int(total or 0)

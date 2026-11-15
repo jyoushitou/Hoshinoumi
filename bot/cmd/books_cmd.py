@@ -1,7 +1,18 @@
 # ===================== 本地书命令（v24.6） =====================
+import asyncio
+
 from ..life import book_queue as BQ
 from ..life import local_books as LB
 from .registry import command
+
+_bg_tasks = set()
+
+
+def _spawn(coro):
+    task = asyncio.create_task(coro)
+    _bg_tasks.add(task)
+    task.add_done_callback(_bg_tasks.discard)
+    return task
 
 
 def _decl(ctx):
@@ -55,19 +66,15 @@ async def cmd_book(ctx):
             return _decl(ctx) + "用法：!book local <书名>"
         name = " ".join(args[1:]).strip()
         try:
-            title, chapters = LB.load_book(name)
+            # 只做路径/后缀校验，不解析 14MB 全文，避免命令 15 秒超时
+            LB._safe_name(name)
         except Exception as e:
             return _decl(ctx) + f"加入失败：{e}"
-        BQ.enqueue(ctx.uid, name, len(chapters))
-        # v24.8.0：立即读第 1 章完成验证；之后空闲从第 2 章续读
-        info = LB.read_chapter(name, 1)
-        LB.set_progress(ctx.uid, name, info["index"])
-        if BQ.get_item(ctx.uid, name):
-            BQ.set_progress(ctx.uid, name, info["index"], info["total"])
-        # v24.8.1：单独主动发一条自然消息，不和命令回执混在一起
-        await _notify_start(ctx, title, info)
-        return (_render(info) + f"\n已加入队首：《{title}》，共 {len(chapters)} 章；"
-                "第 1 章已读，空闲续读。")
+        BQ.enqueue(ctx.uid, name, 0)
+        _spawn(_read_first_and_notify(ctx, name))
+        return _decl(ctx) + (f"已加入队首：《{name}》。\n"
+                              "正在解析首个可识别章节，摘要随后主动发你；"
+                              "空闲从下一个章节续读。")
     if sub == "progress":
         p = LB.get_progress(ctx.uid)
         if not p:
@@ -94,12 +101,34 @@ async def cmd_book(ctx):
     return _read(ctx, name, chapter)
 
 
+async def _read_first_and_notify(ctx, name):
+    """后台解析并读第 1 章，避免 15s 命令超时。"""
+    try:
+        title, chapters = LB.load_book(name)
+        BQ.set_total(ctx.uid, name, len(chapters))
+        info = LB.read_chapter(name, 1)
+        LB.set_progress(ctx.uid, name, info["index"])
+        BQ.set_progress(ctx.uid, name, info["index"], info["total"])
+        await _notify_start(ctx, title, info)
+    except Exception as e:
+        try:
+            BQ.mark_error(ctx.uid, name)
+        except Exception:
+            pass
+        try:
+            from ..chat.send import send_short_reply
+            await send_short_reply(ctx.uid, f"《{name}》第 1 章读不了：{e}",
+                                   ctx.ws, ctx.uid, False, None)
+        except Exception:
+            pass
+
+
 async def _notify_start(ctx, title, info):
     from ..chat.send import send_short_reply
     text = (f"我开始读《{title}》了。\n"
-            f"第 1 章《{info['chapter']}》：\n"
+            f"《{info['chapter']}》：\n"
             f"{info['summary'][:180]}\n"
-            f"共 {info['total']} 章，读完我再告诉你。")
+            f"共 {info['total']} 个可识别章节，读完我再告诉你。")
     try:
         await send_short_reply(ctx.uid, text, ctx.ws, ctx.uid, False, None)
     except Exception:
