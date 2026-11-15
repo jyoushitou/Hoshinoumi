@@ -21,6 +21,7 @@ STORE = os.path.join(ROOT, "data", "cookies.json")
 # 也认这几个位置（放错地方也能用）
 FALLBACKS = (
     os.path.join(ROOT, "data", "cookies.json"),
+    os.path.join(ROOT, "config", "fanqie_cookies.json"),
     os.path.join(ROOT, "cookies.json"),
     os.path.join(ROOT, "qidian.json"),
 )
@@ -69,12 +70,25 @@ def _normalize(items, default_domain=""):
         if not domain.startswith("."):
             # 让 cookie 对整个域生效
             domain = "." + domain.lstrip(".")
-        out.append({
+        item = {
             "name": name,
             "value": str(value),
             "domain": domain,
             "path": it.get("path") or "/",
-        })
+        }
+        # Cookie-Editor 的字段映射；不认识的字段不传，避免 Playwright 报错
+        if it.get("expirationDate") is not None:
+            try:
+                item["expires"] = float(it["expirationDate"])
+            except Exception:
+                pass
+        for k in ("httpOnly", "secure"):
+            if isinstance(it.get(k), bool):
+                item[k] = it[k]
+        same = str(it.get("sameSite") or "").lower()
+        if same in ("lax", "strict", "none"):
+            item["sameSite"] = same.capitalize()
+        out.append(item)
     return out
 
 
