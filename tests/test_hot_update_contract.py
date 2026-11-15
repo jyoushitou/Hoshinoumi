@@ -28,6 +28,11 @@ class TestHotUpdateContract(unittest.TestCase):
         self.assertIn('env["NAO_WORKER_VERSION"] = version', text)
         self.assertIn('env["NAO_INTERNAL_TCP"] = "1"', text)
 
+    def test_supervisor_uses_tcp_health(self):
+        text = (ROOT / "scripts/nao_supervisor.py").read_text(encoding="utf-8")
+        self.assertIn("tcp_health_detail", text)
+        self.assertIn('"internal.sock" if use_tcp', text)
+
     def test_ingress_resolves_current_per_connection(self):
         text = (ROOT / "bot/ingress.py").read_text(encoding="utf-8")
         self.assertIn('worker.active_socket("internal.sock")', text)

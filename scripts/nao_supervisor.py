@@ -36,6 +36,28 @@ def switch_current(base: Path, target: Path):
         (base / "current").write_text(str(target), encoding="utf-8")
 
 
+async def tcp_health_detail(sock: str, timeout=1.0):
+    """v26：worker 的 internal.sock 走 8+4+body 帧，不再有 api.sock。"""
+    from bot.server import frame, proto_wire as P
+
+    try:
+        async def _probe():
+            r, w = await asyncio.open_unix_connection(sock)
+            req = P.InternalRequest("health", "/internal/health", "__owner__", "owner",
+                                    P.encode_json_value({}))
+            await frame.write_frame(w, frame.TYPE_REQUEST, P.encode_request(req))
+            _t, _f, body = await frame.read_frame(r)
+            w.close()
+            return P.decode_response(body)
+
+        resp = await asyncio.wait_for(_probe(), timeout)
+        if resp.status == 200:
+            return True, ""
+        return False, f"health status {resp.status}: {resp.error}"
+    except Exception as e:
+        return False, f"{type(e).__name__}: {e}"
+
+
 async def health_detail(api_sock: str, timeout=1.0):
     """返回 (ok, 原因)；诊断用。"""
     import aiohttp
@@ -57,14 +79,14 @@ async def health(api_sock: str, timeout=1.0):
     return ok
 
 
-async def wait_health(api_sock, proc, timeout=30.0):
+async def wait_health(api_sock, proc, timeout=30.0, tcp=False):
     """返回 (ok, 原因)；进程退出/超时/非 200 都给出具体原因。"""
     deadline = time.monotonic() + timeout
     last = ""
     while time.monotonic() < deadline:
         if proc.poll() is not None:
             return False, f"worker 进程已退出，code={proc.returncode}"
-        ok, why = await health_detail(api_sock)
+        ok, why = await (tcp_health_detail(api_sock) if tcp else health_detail(api_sock))
         if ok:
             return True, ""
         last = why
@@ -119,8 +141,9 @@ async def deploy(base: Path, version: str, cmd, timeout=30.0, drain_seconds=60.0
     proc = subprocess.Popen(cmd, cwd=str(version_dir), env=env, start_new_session=True,
                             stdout=log, stderr=subprocess.STDOUT)
     (version_dir / "worker.pid").write_text(str(proc.pid), encoding="utf-8")
-    api_sock = str(version_dir / "api.sock")
-    ok, reason = await wait_health(api_sock, proc, timeout)
+    use_tcp = env.get("NAO_INTERNAL_TCP") == "1"
+    api_sock = str(version_dir / ("internal.sock" if use_tcp else "api.sock"))
+    ok, reason = await wait_health(api_sock, proc, timeout, tcp=use_tcp)
     if not ok:
         stop(proc)
         print(f"[supervisor] {version} 健康检查失败，拒绝切流")
