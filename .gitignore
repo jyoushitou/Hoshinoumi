@@ -1,4 +1,4 @@
-﻿# 测试文件
+# 测试文件
 __pycache__/
 
 .cph
@@ -25,6 +25,9 @@ qidian.json
 release/
 gateway/build/
 config/gateway.json
+config/fanqie_cookies.json
+config/fanqie_cookies*.json
+fanqie_cookies.json
 
 # v17.5：TXT 日志
 logs/
