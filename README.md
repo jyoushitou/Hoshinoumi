@@ -1,6 +1,6 @@
-# Hoshinoumi（REC） v24.9.2
+# Hoshinoumi（REC） v24.9.3
 
-> 后端 **v24.9.2** · 网关 **v24.8.1**（多用户 / 读书 / 本地书）
+> 后端 **v24.9.3** · 网关 **v24.8.1**（多用户 / 读书 / 本地书）
 > v24 试运行；v23 及以前已完成；v25（内部 TCP/protobuf）已规划。
 >
 > 状态规则：**下一个大版本进入试运行，则上一个大版本视为完成。**
@@ -14,9 +14,9 @@
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-5C2D91)](#)
 [![NapCat](https://img.shields.io/badge/NapCat-QQ-12B7F5)](#)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
-![Backend](https://img.shields.io/badge/Backend-v24.9.2-yellow)
+![Backend](https://img.shields.io/badge/Backend-v24.9.3-yellow)
 ![Gateway](https://img.shields.io/badge/Gateway-v24.8.1-blue)
-![Version](https://img.shields.io/badge/Version-v24.9.2-orange)
+![Version](https://img.shields.io/badge/Version-v24.9.3-orange)
 ![Tests](https://img.shields.io/badge/Tests-1041%20passing-brightgreen)
 
 > **Hoshinoumi（REC，记录）** · 友利奈绪 · 星之海学园学生会室
@@ -263,7 +263,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 
 ## 开发计划
 
-**当前：v24.9.2 试运行（摘要 token/提示词修复）**｜下一站 v25 内部 TCP/protobuf。
+**当前：v24.9.3 试运行（摘要 token 1024）**｜下一站 v25 内部 TCP/protobuf。
 
 > v22 试运行 1 天后，进入约 1 天的 v23 启动 + v22 介绍视频，再开始 v23 子版本开发。
 
@@ -293,7 +293,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | v21 | 网关（二）owner 鉴权：JWT/刷新/失败锁定 + 架构收口 | ✅ 已完成 | [v21.md](docs/versions/v21.md) |
 | v22 | 网关（三）安全：限流/审计/TLS/`!gw` | ✅ 已完成 | [v22.md](docs/versions/v22.md) |
 | v23 | 多用户 + 亲密度可骤降/负值/修复，归零降私聊回复：users/roles + user_id 隔离 | ✅ 已完成（v23.5.1） | [v23.md](docs/versions/v23.md) |
-| v24 | 读书修复与增强：搜索/标题/进度、抓包分析、网络优先 + 本地书回退 | 🚧 v24.9.2 试运行 | [v24.md](docs/versions/v24.md) |
+| v24 | 读书修复与增强：搜索/标题/进度、抓包分析、网络优先 + 本地书回退 | 🚧 v24.9.3 试运行 | [v24.md](docs/versions/v24.md) |
 | v25 | 内部通讯升级：外部 HTTP→网关；网关 8+4+body protobuf→后端 27004 | 📋 已规划 | [v25.md](docs/versions/v25.md) |
 | v26 | 插件接口实现（含 v26.0 代码审查与架构重构） | 📋 已规划 | [v26.md](docs/versions/v26.md) |
 | v27 | 模型层接口实现 | 📋 已规划 | [v27.md](docs/versions/v27.md) |
@@ -1466,6 +1466,7 @@ python3 checks/env_check.py --init-db   # 环境监测时自动建
 | `NAO_CITY` | 空 | 城市名，设了才查天气 |
 | `NAO_READ_IDLE_HOURS` | `2` | 多久没说话才去读书 |
 | `NAO_READ_DAILY_CHAPTERS` | `20` | 每天最多读几章 |
+| `NAO_SUMMARY_MAX_TOKENS` | `1024` | 读书摘要最大输出 token |
 | `NAO_BOOK_URLS` | 内置三本 | 自定义书单：`名字&#124;url,名字&#124;url` |
 | `NAO_OCR_LANG` | `chi_sim` | tesseract 语言包 |
 | `NAO_NO_AUTOINSTALL` | 未设置 | 设 `1` 关闭启动时自动装包 |
@@ -1997,3 +1998,4 @@ python3 scripts/check_names.py        # 未定义名字
 所以有了 Hoshinoumi。算是给“故事结束之后”补的一间学生会室：让她继续上学、开会、喂猫、弹琴，也让她在 QQ、Web、桌面和手机那边，记得你随口说过的话。
 
 > 故事结束以后，她还在。
+

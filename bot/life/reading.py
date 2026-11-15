@@ -19,6 +19,7 @@ MAX_PER_SESSION = 3
 NIGHT_START, NIGHT_END = 1, 7        # 深夜不读
 SHARE_PROB = 0.20                    # 读完一章说一句的概率
 SUMMARY_MAX = 100
+SUMMARY_MAX_TOKENS = int(os.getenv("NAO_SUMMARY_MAX_TOKENS", "1024"))
 
 
 def _now(now=None):
@@ -478,7 +479,7 @@ async def summarize_chapter(text, limit=SUMMARY_MAX, call_model=None,
         if not fn:
             continue
         try:
-            out = await fn(msgs, max_tokens=512)
+            out = await fn(msgs, max_tokens=SUMMARY_MAX_TOKENS)
             if isinstance(out, str) and type(out).__name__ == "Fallback":
                 out = ""
             cleaned = _clean_summary(out, limit)

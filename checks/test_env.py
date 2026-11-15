@@ -234,6 +234,7 @@ class TestEnvironment(unittest.TestCase):
         "NAO_LOG_KEEP_DAYS",
         "NAO_LOG_DIR",
         "NAO_MIN_REPLY_PROB",
+        "NAO_SUMMARY_MAX_TOKENS",
     }
 
     @staticmethod
