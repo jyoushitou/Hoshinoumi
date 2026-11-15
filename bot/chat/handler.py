@@ -37,6 +37,28 @@ from .cache import remember as remember_message  # v18.6：最近消息缓存
 
 # v18.6：后台消息任务集合（避免 create_task 被 GC）
 _bg_tasks = set()
+_online_tasks = set()
+
+
+
+async def _send_online_image(ws):
+    """v27.3.1：上线配图转后台，绝不再挡住 ws.recv()。"""
+    try:
+        img_fp = await fetch_and_save_acg_image()
+        if not img_fp:
+            log_api("[上线] ACG图片获取失败")
+            return
+        log_api(f"[上线] ACG图片: {img_fp}")
+        img_msg = make_image_msg(img_fp)
+        if img_msg and not getattr(ws, "closed", False):
+            await send_private_msg(MASTER_QQ, img_msg, ws)
+            log_system("上线ACG图片已发送")
+    except asyncio.CancelledError:
+        pass
+    except Exception as e:
+        log_err(f"[上线] ACG图片异常（已忽略）: {e}")
+    finally:
+        _online_tasks.discard(asyncio.current_task())
 
 
 def _sender_name(d):
@@ -605,15 +627,8 @@ async def websocket_handle_qq(ws):
         await send_short_reply(MASTER_QQ, notice_text(mode), ws, MASTER_QQ)  # v25.7：区分首次/热更
         cfg.startup_mode = "normal"
 
-        img_fp = await fetch_and_save_acg_image()  # 获取ACG图片
-        if img_fp:
-            log_api(f"[上线] ACG图片: {img_fp}")  # 日志记录
-            img_msg = make_image_msg(img_fp)  # 构建图片消息（内部已解析路径）
-            if img_msg and not getattr(ws, "closed", False):  # 图片有效且连接未关闭
-                await send_private_msg(MASTER_QQ, img_msg, ws)  # 发送图片给主人
-                log_system("上线ACG图片已发送")  # 日志记录
-        else:
-            log_api("[上线] ACG图片获取失败")  # 日志记录
+        # v27.3.1：配图转后台，先进入 ws.recv()，避免图片接口慢导致 !ping/消息不响应
+        _online_tasks.add(asyncio.create_task(_send_online_image(ws)))
 
     try:
         while True:  # 消息接收循环
@@ -647,6 +662,8 @@ async def websocket_handle_qq(ws):
         log_err(f"QQ异常:{e}")  # 日志记录异常
     finally:  # 清理
         for _t in list(_bg_tasks):
+            _t.cancel()
+        for _t in list(_online_tasks):
             _t.cancel()
         async with cfg.active_ws_lock:  # 加锁
             if cfg.active_ws_qq is ws:  # 当前连接就是本连接

@@ -128,7 +128,7 @@ v6：P1 会说话 → P2 说实话 → P2.5 长感官 → P3 有生活 → P4 �
 | **v24** | [versions/v24.md](versions/v24.md) | 读书修复 + 本地 TXT/EPUB + 摘要入长期记忆 | ✅ 已完成（v24.9.4） |
 | **v25** | [versions/v25.md](versions/v25.md) | 热更新 + 配置动态化（配置/热加载/ingress/蓝绿/准入/清理/上线提示） | ✅ 已完成（v25.7.0） |
 | **v26** | [versions/v26.md](versions/v26.md) | 内部通讯升级 + 模糊指令归一化 | ✅ 已完成（v26.7.4） |
-| **v27** | [versions/v27.md](versions/v27.md) | 插件注册表基础：Manifest/Registry/快照 | ✅ 已完成（v27.3.0） |
+| **v27** | [versions/v27.md](versions/v27.md) | 插件注册表基础：Manifest/Registry/快照 | ✅ 已完成（v27.3.1） |
 | **v28** | [versions/v28.md](versions/v28.md) | 插件运行时 + 自然语言提醒交互回归 | 规划中 |
 | **v29** | [versions/v29.md](versions/v29.md) | 模型层契约 + native | 规划中 |
 | **v30** | [versions/v30.md](versions/v30.md) | 模型层插件接入 | 规划中 |
