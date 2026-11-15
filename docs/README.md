@@ -128,15 +128,17 @@ v6：P1 会说话 → P2 说实话 → P2.5 长感官 → P3 有生活 → P4 �
 | **v24** | [versions/v24.md](versions/v24.md) | 读书修复 + 本地 TXT/EPUB + 摘要入长期记忆 | ✅ 已完成（v24.9.4） |
 | **v25** | [versions/v25.md](versions/v25.md) | 热更新 + 配置动态化（配置/热加载/ingress/蓝绿/准入/清理/上线提示） | ✅ 已完成（v25.7.0） |
 | **v26** | [versions/v26.md](versions/v26.md) | 内部通讯升级 + 模糊指令归一化 | ✅ 已完成（v26.7.4） |
-| **v27** | [versions/v27.md](versions/v27.md) | 插件接口实现（含 v27.0 代码审查与重构） | 规划中 |
-| **v28** | [versions/v28.md](versions/v28.md) | 模型层接口实现 | 规划中 |
-| **v29** | [versions/v29.md](versions/v29.md) | 记忆层接口实现 | 规划中 |
-| **v30** | [versions/v30.md](versions/v30.md) | 通道层接口实现 | 规划中 |
-| **v31** | [versions/v31.md](versions/v31.md) | 工具层接口实现 | 规划中 |
-| **v32** | [versions/v32.md](versions/v32.md) | 存储层接口实现 | 规划中 |
-| **v33** | [versions/v33.md](versions/v33.md) | 调度层接口实现 | 规划中 |
-| **v34** | [versions/v34.md](versions/v34.md) | 出站层接口实现 | 规划中 |
-| **v35** | [versions/v35.md](versions/v35.md) | 默认链路选择实现 | 规划中 |
+| **v27** | [versions/v27.md](versions/v27.md) | 插件/注册表层接口（含 v27.0 代码审查） | 规划中 |
+| **v28** | [versions/v28.md](versions/v28.md) | 模型层接口 | 规划中 |
+| **v29** | [versions/v29.md](versions/v29.md) | 记忆层接口 | 规划中 |
+| **v30** | [versions/v30.md](versions/v30.md) | 通道层接口 | 规划中 |
+| **v31** | [versions/v31.md](versions/v31.md) | 工具层接口 | 规划中 |
+| **v32** | [versions/v32.md](versions/v32.md) | 存储层接口 | 规划中 |
+| **v33** | [versions/v33.md](versions/v33.md) | 调度层接口 | 规划中 |
+| **v34** | [versions/v34.md](versions/v34.md) | 出站层接口 | 规划中 |
+| **v35** | [versions/v35.md](versions/v35.md) | 默认链路接口 | 规划中 |
+> v27–v35 每版只开放一层接口，统一约束见 [INTERFACE-PLAN-v27-v35.md](INTERFACE-PLAN-v27-v35.md)。
+
 | **v36** | [versions/v36.md](versions/v36.md) | 多端推送（主动消息 fan-out） | 规划中 |
 | **v37** | [versions/v37.md](versions/v37.md) | 本机服务化 | 规划中 |
 | **v38** | [versions/v38.md](versions/v38.md) | DSH 插件 | 规划中 |

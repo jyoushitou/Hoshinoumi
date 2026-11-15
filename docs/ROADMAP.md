@@ -168,7 +168,9 @@
 | v24 | 读书修复与增强（v24.6 已完成） | [v24.md](versions/v24.md) |
 | v25 | 热更新与配置动态化 | [v25.md](versions/v25.md) |
 | v26 | 内部通讯升级（8+4+body TCP + protobuf） | [v26.md](versions/v26.md) |
-| v27 | 插件接口实现（含 v27.0 代码审查与重构） | [v27.md](versions/v27.md) |
+| v27 | 插件/注册表层接口（含 v27.0 代码审查） | [v27.md](versions/v27.md) |
+
+> v27–v35 每版只开放一层接口，统一约束见 [INTERFACE-PLAN-v27-v35.md](INTERFACE-PLAN-v27-v35.md)。
 | v28 | 模型层接口实现 | [v28.md](versions/v28.md) |
 | v29 | 记忆层接口实现 | [v29.md](versions/v29.md) |
 | v30 | 通道层接口实现 | [v30.md](versions/v30.md) |

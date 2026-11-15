@@ -296,15 +296,15 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | v24 | 读书修复与增强：搜索/标题/进度、抓包分析、网络优先 + 本地书回退 | ✅ 已完成（v24.9.4） | [v24.md](docs/versions/v24.md) |
 | v25 | 热更新 + 配置动态化：配置/热加载/ingress/蓝绿/准入/清理/上线提示 | ✅ 已完成（v25.7.0） | [v25.md](docs/versions/v25.md) |
 | v26 | 内部通讯升级 + 模糊指令归一化：8+4+body TCP / protobuf / 标准命令 | ✅ 已完成（v26.7.4） | [v26.md](docs/versions/v26.md) |
-| v27 | 插件接口实现（含 v27.0 代码审查与架构重构） | 📋 已规划 | [v27.md](docs/versions/v27.md) |
-| v28 | 模型层接口实现 | 📋 已规划 | [v28.md](docs/versions/v28.md) |
-| v29 | 记忆层接口实现 | 📋 已规划 | [v29.md](docs/versions/v29.md) |
-| v30 | 通道层接口实现 | 📋 已规划 | [v30.md](docs/versions/v30.md) |
-| v31 | 工具层接口实现 | 📋 已规划 | [v31.md](docs/versions/v31.md) |
-| v32 | 存储层接口实现 | 📋 已规划 | [v32.md](docs/versions/v32.md) |
-| v33 | 调度层接口实现 | 📋 已规划 | [v33.md](docs/versions/v33.md) |
-| v34 | 出站层接口实现 | 📋 已规划 | [v34.md](docs/versions/v34.md) |
-| v35 | 默认链路选择实现 | 📋 已规划 | [v35.md](docs/versions/v35.md) |
+| v27 | 插件/注册表层接口（含 v27.0 代码审查） | 📋 已规划 | [v27.md](docs/versions/v27.md) |
+| v28 | 模型层接口 | 📋 已规划 | [v28.md](docs/versions/v28.md) |
+| v29 | 记忆层接口 | 📋 已规划 | [v29.md](docs/versions/v29.md) |
+| v30 | 通道层接口 | 📋 已规划 | [v30.md](docs/versions/v30.md) |
+| v31 | 工具层接口 | 📋 已规划 | [v31.md](docs/versions/v31.md) |
+| v32 | 存储层接口 | 📋 已规划 | [v32.md](docs/versions/v32.md) |
+| v33 | 调度层接口 | 📋 已规划 | [v33.md](docs/versions/v33.md) |
+| v34 | 出站层接口 | 📋 已规划 | [v34.md](docs/versions/v34.md) |
+| v35 | 默认链路接口 | 📋 已规划 | [v35.md](docs/versions/v35.md) |
 | v36 | 多端推送：主动消息扇出到所有接入口 | 📋 已规划 | [v36.md](docs/versions/v36.md) |
 | v37 | 本机服务化：常驻 / 自启 / 健康检查 | 📋 已规划 | [v37.md](docs/versions/v37.md) |
 | v38 | DSH 插件：本机工具注册与调用 | 📋 已规划 | [v38.md](docs/versions/v38.md) |
@@ -333,7 +333,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 >
 > **编号变更**：命令收敛移到 **v40**（v39 Qoder 之后、v41 Web 之前）；v36 多端推送 / v37 本机服务化 / v38 DSH / v39 Qoder。详见 [v40.md](docs/versions/v40.md)。
 >
-> **插件接口原则**：v27–v35 暴露的是各架构层的接口，不是把现有功能插件化。
+> **插件接口原则**：v27–v35 暴露的是各架构层的接口，不是把现有功能插件化。统一约束见 [INTERFACE-PLAN-v27-v35.md](docs/INTERFACE-PLAN-v27-v35.md)。
 > **接口层不实现任何功能**：v24–v35 只定义契约和注册表，不提供任何实现；真实 provider / channel / tool / storage 由核心或第三方开发者实现。欢迎按契约提交实现。
 > DeepSeek/豆包、BM25、QQ/NapCat、现有工具/命令、MySQL/SQLite、asyncio 调度、
 > WebSocket 出站都保持核心 native；外部插件只能 extend / enhance / 显式 replace 路由，
