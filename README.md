@@ -2000,6 +2000,7 @@ curl -s -H "Authorization: Bearer $TOKEN" http://127.0.0.1:27004/api/status
 | `NAO_WS_PORT` | 3001 | NapCat 连入端口 |
 | `NAO_API_PORT` | 27004 | 后端内部端口（v26 默认 TCP 帧；`NAO_INTERNAL_TCP=0` 回 HTTP） |
 | `NAO_INTERNAL_TCP` | `1` | 1=27004 TCP 帧 + HTTP Unix socket；0=旧 HTTP |
+| `NAO_INGRESS_PROTOCOL` | `http` | v26 生产设 `tcp`：27004 做帧 L4 透传 |
 | `NAO_WS_TOKEN` | 空（关闭） | WS 握手 token，NapCat URL 带 `?token=` |
 | `NAO_API_HOST` | 127.0.0.1 | 后端 HTTP 监听地址 |
 | `NAO_DB_BACKEND` | auto | auto / mysql / sqlite |
