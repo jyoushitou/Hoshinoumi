@@ -1,6 +1,6 @@
 # v26 部署与回滚（8+4+body TCP / protobuf）
 
-> 后端：v26.6.0  
+> 后端：v26.6.2  
 > 网关：v26.4.0（`backend.protocol=tcp`）  
 > 数据库 schema：29，不需要迁移  
 > 外部端口：gateway `27005` HTTP；backend `3001` NapCat WS + `27004` 内部 TCP
@@ -37,12 +37,12 @@ ss -lntp | grep -E ':27004|:3001|:27005'
 ```bash
 cd ~/Hoshinoumi
 
-git bundle verify Release/REC-v26.6.0.bundle
-git fetch Release/REC-v26.6.0.bundle main:refs/remotes/bundle/main
+git bundle verify Release/REC-v26.6.2.bundle
+git fetch Release/REC-v26.6.2.bundle main:refs/remotes/bundle/main
 git merge --ff-only refs/remotes/bundle/main
 
 grep 'VERSION =' bot/core/version.py
-# 26.6.0
+# 26.6.2
 ```
 
 环境：
@@ -155,6 +155,7 @@ v26 的 protobuf/TCP 不向后兼容；回滚必须同时回滚网关和后端�
 
 ## 8. 已知限制
 
-- v26.0 的 WS token / `/internal` 独立 secret / import 环检测尚未全部实现；当前靠 loopback 边界。
+- v26.0 的 WS token 已实现（可选 `NAO_WS_TOKEN`）；`/internal` 独立 secret 仍未做，靠 loopback 边界。
 - 27004 TCP 目前一请求一连接，未做连接池；后续可加。
+- WS token 开启后 NapCat URL 要带 `?token=...`；不配置则保持旧行为。
 - v26 直连 3001/27004 后，v25 的蓝绿热更新不再适用；热更新方案需要 v27 再设计。
