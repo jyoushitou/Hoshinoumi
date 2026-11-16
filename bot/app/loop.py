@@ -62,7 +62,7 @@ async def serve(api_runner):
             log_system("已安全退出")
             return
 
-        hb = asyncio.create_task(heartbeat_monitor("QQ", cfg.active_ws_qq))  # 启动心跳监控
+        hb = asyncio.create_task(heartbeat_monitor("QQ", lambda: cfg.active_ws_qq))  # v27.6：lambda 读取最新连接
         cyc = asyncio.create_task(cycle_task_run())  # 启动定时任务循环
         try:
             if worker.enabled():
