@@ -197,6 +197,7 @@ CURRENT = {
             requires_core VARCHAR(64) NOT NULL DEFAULT '',
             capabilities TEXT,
             entrypoint VARCHAR(255) NOT NULL DEFAULT '',
+            path VARCHAR(255) NOT NULL DEFAULT '',
             package_hash VARCHAR(128) NOT NULL DEFAULT '',
             auto_start TINYINT NOT NULL DEFAULT 0,
             enabled TINYINT NOT NULL DEFAULT 0,

@@ -15,6 +15,14 @@ def apply(c):
     from bot.infra import schema, repo_meta
 
     made = schema.ensure_tables(c, names=list(PLUGIN_TABLES))
+    # v28.4：旧 v28.2 表补 path 列（幂等）
+    try:
+        c.execute("ALTER TABLE plugin_registry ADD COLUMN path VARCHAR(255) NOT NULL DEFAULT ''")
+    except Exception:
+        try:
+            c.connection.rollback()
+        except Exception:
+            pass
     try:
         c.execute(
             "INSERT INTO plugin_registry_generation(id, generation) VALUES(1, 0)")
