@@ -193,3 +193,7 @@ v6：P1 会说话 → P2 说实话 → P2.5 长感官 → P3 有生活 → P4 �
 ## 故障复盘
 
 - [2026-11-15 上线后失联](POSTMORTEM-2026-11-15-STARTUP-HANG.md)
+
+## 宣传片
+
+- [v23–v30 宣传片 HTML](video/demo-v23-v30.html) · [分镜与 Q&A](video/v23-v30-outline.md)
