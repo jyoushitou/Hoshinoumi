@@ -28,6 +28,14 @@ class ModelRouter:
         rec = self.registry.get(cap)
         if rec is None:
             return self.native(name)
+        # v30.2：注册表里仍有对象，但 DB 已停用 → 不调用，回落 native
+        if self.store is not None:
+            try:
+                db_rec = self.store.get(rec.name)
+                if db_rec is not None and not db_rec.enabled:
+                    return self.native(name)
+            except Exception:
+                pass
         if rec.name in self._cache:
             return self._cache[rec.name]
         try:
