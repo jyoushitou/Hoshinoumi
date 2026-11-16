@@ -102,6 +102,32 @@ def _tail(path: Path, n=20):
         return f"(读取失败: {e})"
 
 
+def _alive(pid):
+    try:
+        os.kill(int(pid), 0)
+        return True
+    except Exception:
+        return False
+
+
+def stop_pid(pid, grace=10.0):
+    """先 SIGTERM；宽限期后还在就 SIGKILL，保证旧连接断开。"""
+    try:
+        os.kill(int(pid), signal.SIGTERM)
+    except Exception:
+        return False
+    deadline = time.monotonic() + grace
+    while time.monotonic() < deadline:
+        if not _alive(pid):
+            return True
+        time.sleep(0.2)
+    try:
+        os.kill(int(pid), signal.SIGKILL)
+        return True
+    except Exception:
+        return False
+
+
 def stop(proc, timeout=20):
     if proc.poll() is not None:
         return
@@ -181,8 +207,8 @@ async def deploy(base: Path, version: str, cmd, timeout=30.0, drain_seconds=60.0
             await asyncio.sleep(drain_seconds)
         try:
             old_pid = int((old_dir / "worker.pid").read_text(encoding="utf-8").strip())
-            os.kill(old_pid, signal.SIGTERM)
-            print(f"[supervisor] 旧 worker {old_pid} 收到 SIGTERM")
+            stop_pid(old_pid, grace=10.0)
+            print(f"[supervisor] 旧 worker {old_pid} 已停止（SIGTERM，超时 SIGKILL）")
         except Exception as e:
             print(f"[supervisor] 旧 worker 停止失败: {e}")
     # 切换完成 1 小时后再清一次；不再周期性扫描
