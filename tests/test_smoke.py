@@ -371,9 +371,11 @@ class TestOnlineNotice(unittest.TestCase):
 
     def setUp(self):
         cfg.last_online_notice_ts = 0.0
+        cfg.online_notice_sent = False
 
     def tearDown(self):
         cfg.last_online_notice_ts = 0.0
+        cfg.online_notice_sent = False
 
     def test_first_call_claims(self):
         from bot.chat.handler import claim_online_notice
@@ -384,11 +386,11 @@ class TestOnlineNotice(unittest.TestCase):
         self.assertTrue(claim_online_notice())
         self.assertFalse(claim_online_notice())
 
-    def test_after_cooldown_allowed(self):
+    def test_after_reconnect_still_blocked(self):
         from bot.chat.handler import claim_online_notice
         self.assertTrue(claim_online_notice())
-        cfg.last_online_notice_ts -= 61  # 模拟 61 秒前
-        self.assertTrue(claim_online_notice())
+        cfg.last_online_notice_ts -= 3600  # 模拟一小时后重连
+        self.assertFalse(claim_online_notice())
 
 class TestOutbox(unittest.TestCase):
     """F6：断线期间的消息入队，重连后补发"""

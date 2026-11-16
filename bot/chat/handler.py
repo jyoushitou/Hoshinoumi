@@ -197,8 +197,7 @@ def note_group_reply(gid):
     cfg.group_msg_window.setdefault(gid, deque(maxlen=30)).append(now)
     cfg.group_streak[gid] = cfg.group_streak.get(gid, 0) + 1  # 连着说了几句
 
-# v5-F5：上线通知的冷却时间（秒）——重连太频繁时不重复打扰
-ONLINE_NOTICE_COOLDOWN = 60
+# v27.7：上线通知每进程一次；不再按 60 秒冷却，避免心跳重连又弹一次
 
 
 # ===================== 分享欲（v12-A18） =====================
@@ -239,11 +238,11 @@ async def maybe_share_something(tid, ws):
     return True
 
 def claim_online_notice():
-    """决定这次连接要不要发上线通知（60 秒内只发一次）"""
-    now = _time.time()
-    if now - cfg.last_online_notice_ts < ONLINE_NOTICE_COOLDOWN:
+    """决定这次连接要不要发上线通知（每个 worker 进程只发一次）。"""
+    if getattr(cfg, "online_notice_sent", False):
         return False
-    cfg.last_online_notice_ts = now
+    cfg.online_notice_sent = True
+    cfg.last_online_notice_ts = _time.time()
     return True
 
 
