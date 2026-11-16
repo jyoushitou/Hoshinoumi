@@ -12,7 +12,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 SKIP = {".git", ".venv", ".tmp", "release", "data", "logs", "__pycache__",
         ".pytest_cache", "APK", "ingress_test", "node_modules"}
-SHARE = (".env", "config.local.json", "gateway.env", "data", "personas")
+SHARE = (".env", "config.local.json", "gateway.env", "data", "logs", "personas")
 
 
 def copy_tree(src: Path, dst: Path):
@@ -39,6 +39,7 @@ def main():
     src = Path(args.source).resolve()
     dst = Path(args.base) / "versions" / args.version
     print(f"[prepare] {src} -> {dst}")
+    (ROOT / "logs").mkdir(exist_ok=True)
     copy_tree(src, dst)
     for name in SHARE:
         s = ROOT / name
