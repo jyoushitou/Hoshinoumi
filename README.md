@@ -225,15 +225,24 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 
 ## 技术栈
 
-| 部分 | 技术 |
+| 部分 | 技术 / 当前实现 |
 |---|---|
-| **Python 后端** | Python 3.10+、asyncio、websockets（NapCat 通道）、aiohttp（HTTP API）、PyMySQL / SQLite、requests、Pillow、jieba、edge-tts、Playwright、tesseract |
-| **C++ 网关（v20）** | C++17、Boost.Asio / Boost.Beast、CommonNet（NetWorkCommunication / Utils）、CMake 3.20+、vcpkg overlay ports |
-| **存储** | MySQL 8（默认）/ SQLite（自动回退） |
-| **部署** | Docker / docker compose、systemd、Windows / Linux |
+| **Python 后端** | Python 3.10+（服务器实测 3.12）、asyncio、websockets、aiohttp、protobuf（内部帧）、PyMySQL / SQLite、requests、Pillow、jieba、edge-tts；Playwright / tesseract 按需 |
+| **稳定入口** | `bot/ingress.py`：NapCat WS **3001**、gateway TCP **27004**（8+4+body 帧）；worker 只连 Unix socket |
+| **C++ 网关（v26.4）** | C++17、Boost.Asio / Boost.Beast、CommonNet（NetWorkCommunication / Utils）、CMake 3.20+、vcpkg overlay ports；对客户端提供 HTTP/JWT **27005** |
+| **热更新** | `supervisor` + `data/workers/versions/<version>` + `current` 蓝绿切换；`prepare_worker` 复制代码、共享 `data`、`logs`、`personas`；旧 worker drain 后退出 |
+| **插件接口** | v27.9 已完成 Manifest / PluginRegistry / MasterRegistry；v28 运行时规划中。核心 native 仍默认，不把现有功能插件化 |
+| **存储** | MySQL 8（默认，schema 29）/ SQLite（自动回退）；当前用连接池，v28 计划统一到 `infra/pool` |
+| **部署** | gateway 用 Docker / docker compose；ingress / worker 用 systemd 或 screen；Linux 生产、Windows 开发 |
 | **外部服务** | NapCat（QQ 协议）、DeepSeek（主对话）、豆包 / 火山方舟（视觉）、ALAPI（搜图） |
+| **测试** | 10000 条：功能 9963 + 环境/迁移 37；含注册表、Manifest、semver/capability 边界矩阵 |
 
-> 网关是独立的 C++ 进程：`gateway/`；Python 后端是 `bot/`。两者只通过本机 HTTP 对接，后端不监听公网。
+> 当前拓扑不是“网关直接 HTTP 打后端”：
+>
+> - `NapCat → ingress 3001 → worker qq.sock`
+> - `gateway 27005 → TCP 27004 帧 → ingress L4 → worker internal.sock`
+>
+> worker 不监听 3001/27004；ingress 的 3001 对外，必须靠防火墙限制来源。
 
 ## 特性一览
 
@@ -254,16 +263,16 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | 定时更准 | 规则化起床/睡觉/晚餐；`今天 7:40 叫我` 只改当天；准点提醒预生成 |
 | 会回忆 | 重记忆会自己冒出来（每天最多一次，心情差时不提旧伤口） |
 | 能备份 | 每月 1 号 04:30 自动备份，保留 6 份；`!backup` 看清单/立即备份 |
-| C++ 网关 | 用户自己的 CommonNet（Boost.Asio/Beast）；后端只监听本机，Docker 交付 |
+| C++ 网关 | 用户自己的 CommonNet（Boost.Asio/Beast）；客户端 27005 → TCP 27004 帧 → ingress；worker 只走 Unix socket |
 | 查版本 | `!version` 看版本号、提交、运行时长 |
 
-**969 条测试**（功能 932 + 环境/迁移 37），静态检查零未定义名字。
+**10000 条测试**（功能 9963 + 环境/迁移 37），静态检查零未定义名字。
 
 ---
 
 ## 开发计划
 
-**当前：v25.6.0 试运行（启动失败诊断）**｜待真实 NapCat 演练。
+**当前：v27.9.0 已完成（插件注册表基础 + 10000 测试）**｜待真实 NapCat 全量演练。
 
 > v22 试运行 1 天后，进入约 1 天的 v23 启动 + v22 介绍视频，再开始 v23 子版本开发。
 
@@ -390,8 +399,8 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 ```
 项目根/
 ├── bot/            机器人代码（分层包）
-├── gateway/        C++ 网关（v20，CommonNet + Docker）
-├── tests/           功能测试（分模块 + 冒烟，932 条）
+├── gateway/        C++ 网关（v26.4，CommonNet + Docker）
+├── tests/           功能测试（分模块 + 冒烟，9963 条）
 ├── checks/          前置环境监测 + 迁移检查（37 条，与 bot 同级）
 ├── scripts/         迁移 / 打包 / 发布 / 自检脚本
 ├── docs/            版本计划、架构图、数据库设计、发布清单
@@ -1099,7 +1108,7 @@ AI 摘要（≤100 字）→ 记进度
 ### 测试
 
 ```bash
-python3 scripts/run_tests.py             # 969 条（tests 932 + checks 37）
+python3 scripts/run_tests.py             # 10000 条（tests 9963 + checks 37）
 python3 scripts/check_names.py            # 静态检查：未定义名字 / 先用后赋值
 ```
 
@@ -1796,17 +1805,17 @@ python3 checks/env_check.py --init-db   # 环境监测时自动建
 
 第三方组件遵循其各自许可证；本项目不包含《Charlotte》的官方素材。
 
-## 附录 A · 当前状态与 v20.5 验证清单
+## 附录 A · 当前状态（v27.9）
 
 | 项 | 当前事实 |
 |---|---|
-| 后端 | v20.5，`bot/`，Python 3.10+ |
-| 网关 | v20.5，`gateway/`，C++17 + Boost.Asio/Beast |
-| 阶段 | Docker 验证 + 网关验证，已部署试运行 |
+| 后端 | v27.9.0，`bot/`，Python 3.10+ |
+| 网关 | v26.4.0，`gateway/`，C++17 + Boost.Asio/Beast |
+| 阶段 | v27.9.0 已打包，待部署验收 |
 | 前序 | v19 与 v20.0–v20.4 已完成 |
-| 数据表 | 25 张表 + 1 个只读视图 `v_bot_meta` |
+| 数据表 | schema 29；插件表 v28 计划 |
 | 命令 | 46 个注册命令（`!task` 仅提示迁移） |
-| 测试 | 969 条：功能 932 + 环境/迁移 37 |
+| 测试 | 10000 条：功能 9963 + 环境/迁移 37 |
 | 账号 | 单主人 `__owner__`；多用户 v23 计划 |
 | 后端鉴权 | `/api/*` 除 health 外要 Bearer Token；`/internal/*` 免鉴权 |
 | 网关鉴权 | 无 JWT / 无按用户限流 / 无 TLS（v21/v22） |
