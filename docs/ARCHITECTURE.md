@@ -1,13 +1,16 @@
-# 架构图（v26.7.5 / v27–v44 接口规划）
+# 架构图（v27.9.0 / v27–v44 接口规划）
 
-> 当前后端 v26.7.5；网关 v26.4.0。  
-> 已部署架构：ingress 持有 3001/27004，worker 只走 Unix socket，蓝绿热更新。  
-> v27–v44 是接口规划，不是已实现插件；核心 native 仍照常工作。  
+> 当前后端 v27.9.0；网关 v26.4.0。
+>
+> 已部署架构：ingress 持有 3001/27004，worker 只走 Unix socket，蓝绿热更新。
+>
+> v27 已完成注册表/Manifest 基础；v28 运行时及其余层是规划，核心 native 仍照常工作。
+>
 > 配套：v27–v44 总纲见 [INTERFACE-PLAN-v27-v44.md](INTERFACE-PLAN-v27-v44.md)。
 
 ---
 
-## 0. 生产拓扑（v26.7.5）
+## 0. 生产拓扑（v27.9.0）
 
 ```text
 QQ 用户
@@ -74,7 +77,7 @@ worker → server/tcp_internal.py → 内部 HTTP Unix → 业务
 5. 能力层      ai、memory、image、speech
 6. 基础设施    infra（conn/pool/repo/log/cache/blocking）、egress
 7. 存储/外部   MySQL / SQLite / 文件 / 网络
-8. 插件层      v27–v44 接口（纵向切面，未实现）
+8. 插件层      v27 注册表已完成；v28 运行时规划中
 ```
 
 核心 native 不进入插件表；插件通过 v27/v28 的注册表、权限、加载器、任务池接入。
