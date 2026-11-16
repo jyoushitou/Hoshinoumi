@@ -133,7 +133,7 @@ v6：P1 会说话 → P2 说实话 → P2.5 长感官 → P3 有生活 → P4 �
 | **v29** | [versions/v29.md](versions/v29.md) | 模型层契约 + native + 环境门禁 + 阅读静默 | ✅ 已完成（v29.4.2） |
 | **v30** | [versions/v30.md](versions/v30.md) | 模型层插件接入 | ✅ 已完成（v30.2.0） |
 | **v31** | [versions/v31.md](versions/v31.md) | 记忆层契约 + native + 动态帮助 | ✅ 已完成（v31.3.0） |
-| **v32** | [versions/v32.md](versions/v32.md) | 记忆层插件接入 + 钩子批量修改 | 规划中 |
+| **v32** | [versions/v32.md](versions/v32.md) | 记忆层插件接入 + 钩子批量修改 + 多行命令 | 规划中 |
 | **v33** | [versions/v33.md](versions/v33.md) | 通道层契约 + native | 规划中 |
 | **v34** | [versions/v34.md](versions/v34.md) | 通道层插件接入 | 规划中 |
 | **v35** | [versions/v35.md](versions/v35.md) | 工具层契约 + native | 规划中 |
