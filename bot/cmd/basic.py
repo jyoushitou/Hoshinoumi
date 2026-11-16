@@ -14,8 +14,9 @@ from .formatters import (
 
 @command("help")
 async def cmd_help(ctx):
-    """!help - 显示帮助"""
-    return build_cmd_help()
+    """!help [命令|all] - 显示动态帮助"""
+    arg = ctx.args[0] if ctx.args else None
+    return build_cmd_help(arg)
 
 
 @command("status")

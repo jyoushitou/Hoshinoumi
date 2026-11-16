@@ -14,53 +14,70 @@ from ..schedule import is_workday_today, CHINESE_CALENDAR_OK  # 工作日判断
 from ..memory import extract_keywords  # 关键词提取
 
 
-def build_cmd_help():
-    """构建帮助文本：列出所有可用命令及说明"""
-    return (
-        "📋 可用命令（私聊发送，仅主人有效）：\n"
-        "!help          - 显示本帮助\n"
-        "!status        - 查看运行状态概览\n"
-        "!status all    - 查看所有详细参数\n"
-        "!task          - 查看定时任务列表与下次触发时间\n"
-        "!memory        - 查看对话记忆统计\n"
-        "!memory <uid>  - 查看指定对象的记忆详情\n"
-        "!sticker       - 查看表情包存档统计\n"
-        "!clip          - 查看CLIP状态\n"
-        "!keywords      - 查看全局关键词\n"
-        "!apikeys       - 查看API密钥状态（隐藏完整值）\n"
-        "!reload        - 重新加载API密钥和记忆\n"
-        "!set <键> <值>  - 修改配置（仅支持部分参数）\n"
-        "                支持: master_qq, heartbeat\n"
-        "!say <内容>     - 让奈绪主动说一句话\n"
-        "!sayg <群号> <内容> - 让奈绪在指定群说话\n"
-        "!img <关键词>   - 手动搜图并发送\n"
-        "!acg           - 获取一张ACG二次元图\n"
-        "!profile [uid] - 查看对象画像；!profile set <uid> <字段> <值> 写入\n"
-        "!todo [文字]   - 查看日程；!todo 周五下午三点 面试 添加\n"
-        "!voice <文本>  - 合成一条语音（需要 edge-tts）\n"
-        "!memorybook    - 记忆本：认识多久、关系、口头禅\n"
-        "!growth        - 成长轨迹：认识天数、关系进度、一起经历过多少事\n"
-        "!persona [名字] - 查看/切换角色卡（personas/ 下的目录）\n"
-        "!stats         - 今日统计：回复/配图/语音/群聊接话率\n"
-        "!config [k] [v]- 查看/修改运行时参数\n"
-        "!version       - 当前版本、提交、运行时长\n"
-        "!cron          - 定时消息（add/once/every/del/on/off）\n"
-        "!event <uid>   - 查看指定对象的事件记忆\n"
-        "!clear <uid>   - 清除指定对象的对话记忆\n"
-        "!log <行数>     - 查看最近日志（默认20行）\n"
-        "!db            - 查看数据库连接状态\n"
-        "!usage         - 查看最近10次token用量和使用模型\n"
-        "!uptime        - 查看机器人运行时长\n"
-        "!meta          - 查看机器人元数据（首次启动/版本/运行时长视图）\n"
-        "!ping          - 测试机器人是否在线\n"
-        "!code          - 开启代码模式（知识正确性优先于人设，30分钟无消息自动退出）\n"
-        "!code off      - 手动退出代码模式\n"
-        "!diary          - 查看今天的日记（AI生成）\n"
-        "!diary <日期>   - 查看指定日期日记，如 !diary 2026-07-15\n"
-        "!diary list [天数] - 最近几天日记概览（默认7天）\n"
-        "!diary raw <日期>  - 查看指定日期的原始事件记录\n"
-        "!exit / !quit    - 安全退出程序（停止所有服务）\n"
-        )
+_HELP_GROUPS = {
+    "基础": {"help", "ping", "status", "version", "uptime", "meta", "stats",
+             "usage", "log", "db", "exit", "quit", "code", "reload", "set"},
+    "记忆": {"memory", "memorybook", "event", "keywords", "clear",
+             "relation", "growth", "profile"},
+    "媒体": {"img", "voice", "vision", "sticker", "acg", "clip", "say", "sayg"},
+    "日常": {"diary", "todo", "cron", "hooks", "task", "backup", "config"},
+    "阅读": {"book", "books"},
+    "配置": {"persona", "apikeys", "update", "adduser", "gw", "history"},
+    "插件": {"plugin"},
+}
+
+
+def _cmd_group(name):
+    for group, names in _HELP_GROUPS.items():
+        if name in names:
+            return group
+    return "其他"
+
+
+def _cmd_desc(cmd):
+    text = (getattr(cmd, "help_text", "") or "").strip()
+    if text:
+        return text
+    doc = (getattr(cmd.handler, "__doc__", "") or "").strip()
+    return doc.splitlines()[0].strip() if doc else ""
+
+
+def build_cmd_help(section=None):
+    """v31.3：从注册表动态生成帮助，不再维护静态命令列表。"""
+    from . import registry
+
+    section = str(section or "").strip().lower().lstrip("!")
+    commands = sorted(registry.COMMANDS.values(), key=lambda c: c.name)
+    if section and section not in ("all", "全部"):
+        cmd = registry.COMMANDS.get(section)
+        if cmd is None:
+            return f"❌ 没有这个命令：{section}\n先发 !help 看列表。"
+        desc = _cmd_desc(cmd)
+        return (f"📋 !{cmd.name}\n{desc}\n"
+                f"分类：{_cmd_group(cmd.name)}\n"
+                "只给主人使用；群聊需要 @ 或命令前缀。")
+
+    groups = {}
+    for cmd in commands:
+        groups.setdefault(_cmd_group(cmd.name), []).append(cmd)
+    total = len(commands)
+    lines = [f"📋 可用命令（{total} 个，私聊发送，仅主人有效）："]
+    if section in ("all", "全部"):
+        for group, cmds in groups.items():
+            lines.append(f"\n【{group}】")
+            for cmd in cmds:
+                desc = _cmd_desc(cmd)
+                lines.append(f"!{cmd.name}" + (f" - {desc}" if desc else ""))
+        return "\n".join(lines)
+
+    for group in ("基础", "记忆", "媒体", "日常", "阅读", "配置", "插件", "其他"):
+        cmds = groups.get(group)
+        if not cmds:
+            continue
+        lines.append(f"\n【{group}】")
+        lines.append("  " + "  ".join(f"!{c.name}" for c in cmds))
+    lines.append("\n!help <命令> 看单个说明；!help all 看完整列表。")
+    return "\n".join(lines)
 
 
 def format_status_detailed():
