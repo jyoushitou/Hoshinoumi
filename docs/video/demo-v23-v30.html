@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hoshinoumi v23–v30 · 从一本书到一套接口</title>
+<style>
+  :root{
+    --bg:#060a12; --panel:#0d1627; --text:#edf4ff; --muted:#8fa3bf;
+    --pink:#f472b6; --blue:#60a5fa; --cyan:#22d3ee; --green:#4ade80;
+    --line:#26344e; --sans:"Microsoft YaHei","PingFang SC","Noto Sans SC",sans-serif;
+    --mono:"Cascadia Code","Consolas",monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--sans)}
+  #stage{position:fixed;inset:0;overflow:hidden;background:
+    radial-gradient(900px 650px at 76% 18%,rgba(37,99,235,.12),transparent 65%),
+    radial-gradient(700px 520px at 15% 82%,rgba(219,39,119,.10),transparent 68%),#060a12}
+  #stage::after{content:"";position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(105deg,rgba(255,255,255,.035),transparent 28%,transparent 72%,rgba(255,255,255,.025));
+    animation:breath 5s ease-in-out infinite}
+  @keyframes breath{0%,100%{opacity:.45}50%{opacity:1}}
+  .scene{position:absolute;inset:0;padding:5.2vh 5.2vw;display:flex;flex-direction:column;justify-content:center;
+    background:radial-gradient(1100px 700px at 70% 20%,#16233d,#070b14 72%);animation:sceneIn .45s ease both}
+  .scene.light{background:radial-gradient(900px 600px at 86% 10%,#fce7f3 0,transparent 58%),
+    radial-gradient(1100px 700px at 15% 20%,#dbeafe,#f8fbff 72%);color:#0b2545}
+  @keyframes sceneIn{from{opacity:0;transform:scale(1.008)}to{opacity:1;transform:none}}
+  .kicker{font-size:.72vw;letter-spacing:.22em;color:var(--pink);font-weight:800}
+  .light .kicker{color:#1d4ed8}
+  h1{font-size:5vw;line-height:1.18;margin:1.6vh 0 0;letter-spacing:.01em}
+  h1 em{font-style:normal;color:var(--pink)}
+  .light h1 em{color:#db2777}
+  .lead{font-size:1.03vw;line-height:1.9;color:var(--muted);margin:2.2vh 0 0;max-width:62vw}
+  .light .lead{color:#5b7391}
+  .chips{display:flex;gap:.7vw;flex-wrap:wrap;margin-top:2.8vh}
+  .chip{border:1px solid #2b3a55;background:#0d1729;color:#cbd8ea;border-radius:99px;padding:.65vh 1vw;font-size:.76vw}
+  .light .chip{border-color:#93c5fd;background:#fff;color:#1e3a5f}
+  .anim{opacity:0;animation:rise .62s cubic-bezier(.2,.8,.25,1) both;animation-delay:var(--d,0s)}
+  @keyframes rise{from{opacity:0;transform:translateY(1.5vh)}to{opacity:1;transform:none}}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1vw;margin-top:4vh}
+  .grid.two{grid-template-columns:repeat(2,1fr)}
+  .grid.three{grid-template-columns:repeat(3,1fr)}
+  .card{background:linear-gradient(180deg,#141f34,#0d1627);border:1px solid #2a3a55;border-radius:.9vw;padding:1.7vh 1.15vw;min-height:14vh}
+  .light .card{background:#fff;border-color:#c7d9f1;box-shadow:0 10px 28px rgba(30,64,120,.08)}
+  .card .v{font-family:var(--mono);font-size:1.7vw;font-weight:800;color:var(--pink)}
+  .card .t{font-size:1.05vw;font-weight:800;margin-top:.7vh}
+  .card .d{font-size:.7vw;line-height:1.6;color:var(--muted);margin-top:.8vh}
+  .light .card .d{color:#5b7391}
+  .card.blue .v{color:var(--blue)} .card.cyan .v{color:var(--cyan)} .card.green .v{color:var(--green)}
+  .timeline{display:grid;grid-template-columns:repeat(8,1fr);gap:.55vw;margin-top:4vh}
+  .tl{border-top:2px solid #2a3a55;padding-top:1.5vh;min-height:12vh}
+  .tl.hot{border-top-color:var(--pink)}
+  .tl .v{font-family:var(--mono);font-size:1.35vw;font-weight:800;color:#cbd8ea}
+  .tl.hot .v{color:var(--pink)}
+  .tl .n{font-size:.72vw;color:var(--muted);line-height:1.5;margin-top:.6vh}
+  .quote{border-left:3px solid var(--pink);padding:1.5vh 0 1.5vh 1.2vw;margin-top:3.4vh;font-size:1.25vw;line-height:1.7;color:#dce8f8}
+  .light .quote{color:#1e3a5f;border-left-color:#db2777}
+  .note{border:1px solid #26344e;background:#0d1729;border-radius:.8vw;padding:1.2vh 1.1vw;margin-top:2.4vh;font-size:.82vw;line-height:1.7;color:#b9cbe3}
+  .light .note{border-color:#c7d9f1;background:#eff6ff;color:#31506f}
+  .code{font-family:var(--mono);font-size:.78vw;color:#93c5fd;background:#0a1220;border:1px solid #22314a;border-radius:.55vw;padding:.9vh .9vw;margin-top:1.8vh;line-height:1.75}
+  .light .code{background:#fff;border-color:#c7d9f1;color:#1d4ed8}
+  .stageTag{position:absolute;top:3vh;right:5vw;font-family:var(--mono);font-size:.62vw;color:#64748b;letter-spacing:.1em}
+  .chapter{position:absolute;top:3vh;left:5.2vw;font-size:.72vw;color:#cbd8ea;letter-spacing:.08em}
+  .chapter span{color:#64748b}
+  .progress{position:absolute;left:0;right:0;bottom:0;height:3px;background:#0b1322;z-index:20}
+  .progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--pink),var(--cyan));transition:width .25s linear}
+  .subtitle{position:absolute;left:5.2vw;right:5.2vw;bottom:4.2vh;font-size:.86vw;line-height:1.7;color:#a9bdd6;z-index:10}
+  .light .subtitle{color:#5b7391}
+  .qaTag{display:inline-block;font-family:var(--mono);font-size:.7vw;letter-spacing:.18em;color:var(--cyan);border:1px solid rgba(34,211,238,.45);border-radius:99px;padding:.45vh .9vw;background:rgba(34,211,238,.07)}
+  .question{font-size:3.15vw;line-height:1.28;margin:2vh 0 0;max-width:80vw}
+  .answer{display:grid;grid-template-columns:1fr 1fr;gap:1.2vw;margin-top:3.4vh}
+  .answer .card{min-height:19vh}
+  .answer .card .t{font-size:1.2vw}
+  .answer .card .d{font-size:.82vw;line-height:1.75}
+  .verdict{margin-top:2.6vh;border:1px solid rgba(244,114,182,.55);background:rgba(244,114,182,.07);border-radius:.8vw;padding:1.2vh 1.2vw;font-size:.92vw;line-height:1.65;color:#f6d8ea}
+  .light .verdict{background:#fdf2f8;border-color:#f9a8d4;color:#831843}
+  .endTitle{font-size:4.2vw;line-height:1.2;margin:0}
+  .endTitle em{font-style:normal;color:var(--pink)}
+  .meta{display:flex;gap:2vw;margin-top:3.2vh;font-family:var(--mono);font-size:.8vw;color:#7b90ad;flex-wrap:wrap}
+  .meta b{color:#cbd8ea;font-weight:700}
+  .hint{position:absolute;right:5.2vw;bottom:4.2vh;font-size:.62vw;color:#52637a;z-index:12}
+  .pauseBadge{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-family:var(--mono);font-size:1vw;
+    color:#cbd8ea;border:1px solid #2a3a55;background:#0d1729;padding:1vh 1.4vw;border-radius:99px;display:none;z-index:30}
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<div class="chapter" id="chapter"></div>
+<div class="stageTag">HOSHINOUMI / REC · v23–v30</div>
+<div class="subtitle" id="subtitle"></div>
+<div class="hint">空格暂停 · ←/→ 切场</div>
+<div class="pauseBadge" id="pauseBadge">PAUSED</div>
+<div class="progress"><i id="bar"></i></div>
+<script>
+const $ = s => document.querySelector(s);
+const stage = $("#stage");
+const params = new URLSearchParams(location.search);
+const startScene = params.get("scene");
+let index = 0, timer = null, startedAt = 0, elapsed = 0, paused = false;
+
+const scenes = [
+  {
+    id:"title", duration:6500, chapter:"00 · 开场",
+    sub:"v23–v30：把“能聊”推进到“可扩展”。",
+    html:`<div class="scene"><div class="kicker anim" style="--d:0s">HOSHINOUMI / REC · v23 → v30</div>
+      <h1 class="anim" style="--d:.12s">从一本书，<br>到一套<em>接口。</em></h1>
+      <p class="lead anim" style="--d:.3s">v23 多用户底座，v24 读书链路，v25 热更新，v26 内部 TCP，<br>
+      v27 注册表，v28 插件运行时，v29 模型契约，v30 模型插件接入。</p>
+      <div class="chips anim" style="--d:.5s">
+        <span class="chip">8 个大版本</span><span class="chip">10045 条测试</span>
+        <span class="chip">worker 热更</span><span class="chip">native 不插件化</span>
+      </div></div>`
+  },
+  {
+    id:"overview", duration:12000, chapter:"01 · 路线",
+    sub:"八个版本，三个关键词：隔离、稳定、可扩展。",
+    html:`<div class="scene light"><div class="kicker anim" style="--d:0s">01 · 版本路线</div>
+      <h1 class="anim" style="--d:.1s;font-size:3.6vw">v23 → v30，<em>每一步都在补底座</em></h1>
+      <div class="timeline">
+        <div class="tl hot anim" style="--d:.2s"><div class="v">v23</div><div class="n">账号与隔离</div></div>
+        <div class="tl hot anim" style="--d:.3s"><div class="v">v24</div><div class="n">读书链路</div></div>
+        <div class="tl hot anim" style="--d:.4s"><div class="v">v25</div><div class="n">热更新</div></div>
+        <div class="tl hot anim" style="--d:.5s"><div class="v">v26</div><div class="n">内部 TCP</div></div>
+        <div class="tl anim" style="--d:.6s"><div class="v">v27</div><div class="n">插件注册表</div></div>
+        <div class="tl anim" style="--d:.7s"><div class="v">v28</div><div class="n">插件运行时</div></div>
+        <div class="tl anim" style="--d:.8s"><div class="v">v29</div><div class="n">模型契约</div></div>
+        <div class="tl anim" style="--d:.9s"><div class="v">v30</div><div class="n">模型插件</div></div>
+      </div>
+      <div class="quote anim" style="--d:1.05s">核心 native 始终保留；插件只做扩展，不替换默认。</div>
+      <div class="note anim" style="--d:1.2s">v27–v44 是接口层；v45 学习规划；v46 多端推送。编号以 docs/ROADMAP.md 为准。</div>
+    </div>`
+  },
+  {
+    id:"v23", duration:14000, chapter:"02 · v23",
+    sub:"先解决“谁在说话”，再谈多用户。",
+    html:`<div class="scene"><div class="kicker anim" style="--d:0s">02 · v23 · 账号底座</div>
+      <h1 class="anim" style="--d:.1s">不是多开 QQ，<br><em>是数据隔离。</em></h1>
+      <div class="grid three" style="margin-top:3.8vh">
+        <div class="card anim" style="--d:.25s"><div class="v">users</div><div class="t">账号</div><div class="d">主人 / 普通用户 / 角色。</div></div>
+        <div class="card blue anim" style="--d:.4s"><div class="v">identities</div><div class="t">渠道身份</div><div class="d">同一个用户可绑定 QQ、Web 等多个入口。</div></div>
+        <div class="card cyan anim" style="--d:.55s"><div class="v">user_id</div><div class="t">全表隔离</div><div class="d">记忆、关系、日记、对话都按用户过滤。</div></div>
+      </div>
+      <div class="note anim" style="--d:.75s">v23 的边界：先做账号、身份、角色和隔离；不是多租户 SaaS，也没有完整审计/限流。</div>
+      <div class="quote anim" style="--d:.95s">A 看不到 B 的任何记忆，这才叫多用户。</div>
+    </div>`
+  },
+  {
+    id:"v24", duration:12000, chapter:"03 · v24",
+    sub:"读书不是“抓一章”，而是全书连续进度。",
+    html:`<div class="scene light"><div class="kicker anim" style="--d:0s">03 · v24 · 读书链路</div>
+      <h1 class="anim" style="--d:.1s">从书名，<br>到<em>第 N 个字。</em></h1>
+      <div class="grid three" style="margin-top:3.8vh">
+        <div class="card anim" style="--d:.25s"><div class="v">TXT / EPUB</div><div class="t">本地优先</div><div class="d">文件由使用者提供，不上传正文。</div></div>
+        <div class="card blue anim" style="--d:.4s"><div class="v">1000 字</div><div class="t">连续分块</div><div class="d">跨章节按全书 offset 推进，不按章节重置。</div></div>
+        <div class="card cyan anim" style="--d:.55s"><div class="v">reading_queue</div><div class="t">队列与进度</div><div class="d">排队、续读、完成后才出队。</div></div>
+      </div>
+      <div class="note anim" style="--d:.75s">v28.9 又修了“首段 1000 字被误标 done”的问题：章节数不等于总进度。</div>
+      <div class="quote anim" style="--d:.95s">判断读完的依据是字符偏移，不是“章节索引 == 章节数”。</div>
+    </div>`
+  },
+  {
+    id:"v25", duration:14000, chapter:"04 · v25",
+    sub:"版本切换不是重启整个入口，而是切 worker。",
+    html:`<div class="scene"><div class="kicker anim" style="--d:0s">04 · v25 · 热更新</div>
+      <h1 class="anim" style="--d:.1s">入口不动，<br><em>换的是 worker。</em></h1>
+      <div class="grid two" style="margin-top:3.8vh">
+        <div class="card anim" style="--d:.25s"><div class="v">3001 / 27004</div><div class="t">ingress 持有公网入口</div><div class="d">NapCat 和 gateway 只认 ingress；worker 只走 Unix socket。</div></div>
+        <div class="card blue anim" style="--d:.4s"><div class="v">current</div><div class="t">蓝绿指针</div><div class="d">新 worker 健康检查通过，才切 current；旧 worker drain 后退出。</div></div>
+      </div>
+      <div class="code anim" style="--d:.6s">prepare_worker → new worker → health → current → drain old</div>
+      <div class="note anim" style="--d:.8s">v29.3 起，prepare / supervisor 前必须有新鲜且版本匹配的 env_report；没有环境检测不允许进蓝绿。</div>
+      <div class="quote anim" style="--d:1s">热更是流程，不是把进程 kill 了再启动。</div>
+    </div>`
+  },
+  {
+    id:"v26", duration:14000, chapter:"05 · v26",
+    sub:"QQ 和 API 两条入口，最后汇到同一个 worker。",
+    html:`<div class="scene light"><div class="kicker anim" style="--d:0s">05 · v26 · 内部通讯</div>
+      <h1 class="anim" style="--d:.1s">两条入口，<br><em>一套帧。</em></h1>
+      <div class="grid three" style="margin-top:3.8vh">
+        <div class="card anim" style="--d:.25s"><div class="v">3001</div><div class="t">NapCat WS</div><div class="d">QQ 消息从 ingress 进来，转 worker qq.sock。</div></div>
+        <div class="card blue anim" style="--d:.4s"><div class="v">27004</div><div class="t">8+4+body TCP</div><div class="d">gateway 的帧，L4 透传到 worker internal.sock。</div></div>
+        <div class="card cyan anim" style="--d:.55s"><div class="v">protobuf</div><div class="t">内部协议</div><div class="d">不再用 HTTP JSON 混在内部入口。</div></div>
+      </div>
+      <div class="note anim" style="--d:.75s">27005 是 gateway 对客户端的 HTTP/JWT；27004 不是 HTTP，worker 也不监听 3001/27004。</div>
+      <div class="quote anim" style="--d:.95s">入口、协议、worker 三者分开，才谈得上稳定升级。</div>
+    </div>`
+  },
+  {
+    id:"v27", duration:14000, chapter:"06 · v27",
+    sub:"先有契约和注册表，再谈加载和权限。",
+    html:`<div class="scene"><div class="kicker anim" style="--d:0s">06 · v27 · 插件注册表</div>
+      <h1 class="anim" style="--d:.1s">不是插件市场，<br><em>是契约底座。</em></h1>
+      <div class="grid three" style="margin-top:3.8vh">
+        <div class="card anim" style="--d:.25s"><div class="v">PluginManifest</div><div class="t">名字 / 作者 / 层 / 版本</div><div class="d">capability 使用 model.x@1 这种格式；核心只支持 @1。</div></div>
+        <div class="card blue anim" style="--d:.4s"><div class="v">PluginRegistry</div><div class="t">内存注册</div><div class="d">同名、同能力同优先级冲突直接拒绝。</div></div>
+        <div class="card cyan anim" style="--d:.55s"><div class="v">MasterRegistry</div><div class="t">5 个注册表</div><div class="d">command → events → life → ai → plugin，最后插件表。</div></div>
+      </div>
+      <div class="note anim" style="--d:.75s">核心 native 不实现 PluginManifest，不进入插件表；v27 只做契约，不做 loader。</div>
+      <div class="quote anim" style="--d:.95s">先定义“能注册什么”，再决定“怎么加载、怎么拒绝”。</div>
+    </div>`
+  },
+  {
+    id:"v28", duration:18000, chapter:"07 · v28",
+    sub:"插件运行时：安装、审批、权限、停用、stop。",
+    html:`<div class="scene light"><div class="kicker anim" style="--d:0s">07 · v28 · 插件运行时</div>
+      <h1 class="anim" style="--d:.1s">插件不是<em>“能 import”</em><br>就算接入了。</h1>
+      <div class="grid two" style="margin-top:3.4vh">
+        <div class="card anim" style="--d:.25s"><div class="v">install</div><div class="t">目录 + manifest + hash</div><div class="d">复制到 plugins/&lt;layer&gt;/&lt;name&gt;/；同名同 hash 幂等，不同 hash 拒绝。</div></div>
+        <div class="card blue anim" style="--d:.4s"><div class="v">approve</div><div class="t">pending 才启用</div><div class="d">!plugin install 先 pending；approve 后才加载。</div></div>
+        <div class="card cyan anim" style="--d:.55s"><div class="v">permissions</div><div class="t">0 / 1 / 2</div><div class="d">db 表级、file 路径级、network host 级；越权直接拒绝。</div></div>
+        <div class="card green anim" style="--d:.7s"><div class="v">stop</div><div class="t">跟随 worker</div><div class="d">cancel 任务 → stop(5s) → unregister；不是跟着 ingress。</div></div>
+      </div>
+      <div class="note anim" style="--d:.9s">插件 DDL 不在 v28；按计划下沉到 v38 存储层。v28 只记录 schema_version。</div>
+      <div class="quote anim" style="--d:1.05s">权限默认是“问”，不是“给”；停用不自动恢复。</div>
+    </div>`
+  },
+  {
+    id:"v29", duration:18000, chapter:"08 · v29",
+    sub:"模型层契约、native adapter、环境门禁、静默阅读。",
+    html:`<div class="scene"><div class="kicker anim" style="--d:0s">08 · v29 · 模型契约</div>
+      <h1 class="anim" style="--d:.1s">模型可以换，<br><em>调用方式不能乱。</em></h1>
+      <div class="grid three" style="margin-top:3.4vh">
+        <div class="card anim" style="--d:.25s"><div class="v">ModelProvider</div><div class="t">统一契约</div><div class="d">name / capabilities / complete；DeepSeek、豆包都实现。</div></div>
+        <div class="card blue anim" style="--d:.4s"><div class="v">native</div><div class="t">不插件化</div><div class="d">DeepSeekProvider、DoubaoProvider 仍是核心 native。</div></div>
+        <div class="card cyan anim" style="--d:.55s"><div class="v">env gate</div><div class="t">蓝绿前强制检测</div><div class="d">报告版本 / 配置 hash / 时效不匹配，拒绝 prepare 和切流。</div></div>
+      </div>
+      <div class="note anim" style="--d:.75s">v29.4：自动阅读只在后端入库，不再主动发摘要；只有 !book next / !book read 才回复。</div>
+      <div class="quote anim" style="--d:.95s">读到的内容属于记忆，不属于聊天噪音。</div>
+    </div>`
+  },
+  {
+    id:"v30", duration:16000, chapter:"09 · v30",
+    sub:"第三方模型 provider 的接入点，不改变默认链路。",
+    html:`<div class="scene light"><div class="kicker anim" style="--d:0s">09 · v30 · 模型插件</div>
+      <h1 class="anim" style="--d:.1s">先能接入，<br><em>再谈路由。</em></h1>
+      <div class="grid two" style="margin-top:3.4vh">
+        <div class="card anim" style="--d:.25s"><div class="v">ModelRouter</div><div class="t">model.&lt;name&gt;@1</div><div class="d">从 PluginRegistry 取第三方 provider；取不到就回落 native。</div></div>
+        <div class="card blue anim" style="--d:.4s"><div class="v">fallback</div><div class="t">异常 / 无权限 / 停用</div><div class="d">写 plugin_errors，清缓存，回落 DeepSeek / 豆包。</div></div>
+      </div>
+      <div class="code anim" style="--d:.6s">plugin.call 权限 → 插件 provider → 失败 → native</div>
+      <div class="note anim" style="--d:.8s">v30 只做接入点；现有聊天主链路仍走 native。默认路由在 v43。</div>
+      <div class="quote anim" style="--d:1s">插件是候选，不是默认；核心永远有退路。</div>
+    </div>`
+  },
+  {
+    id:"qa-intro", duration:6500, chapter:"10 · 部署 Q&A",
+    sub:"下面不是产品 FAQ，是这次部署真实踩过的坑。",
+    html:`<div class="scene"><div class="qaTag anim" style="--d:0s">DEPLOY Q&amp;A</div>
+      <h1 class="anim" style="--d:.15s;font-size:4.2vw">部署问题环节</h1>
+      <p class="lead anim" style="--d:.35s">prepare、schema、current、旧 worker、阅读摘要。<br>六个真实问题，直接给结论。</p>
+      <div class="note anim" style="--d:.55s">这一节按实际排障顺序讲；不是“功能介绍”。</div>
+    </div>`
+  },
+  {
+    id:"qa1", duration:9000, chapter:"Q1 · prepare",
+    sub:"No module named 'bot'，plugin-lock 被跳过。",
+    html:`<div class="scene light"><div class="qaTag anim" style="--d:0s">Q1 / PREPARE</div>
+      <h2 class="question anim" style="--d:.15s">prepare_worker 报 <em>No module named 'bot'</em>？</h2>
+      <div class="answer">
+        <div class="card anim" style="--d:.35s"><div class="t">现象</div><div class="d">plugin-lock 跳过；版本目录能生成，但没有插件快照。</div></div>
+        <div class="card blue anim" style="--d:.5s"><div class="t">原因</div><div class="d">脚本从 scripts/ 启动，sys.path[0] 是 scripts，不是项目根。</div></div>
+      </div>
+      <div class="verdict anim" style="--d:.7s">v28.8.2 修复：启动时把项目根插入 sys.path；再跑 prepare，应看到“plugin-lock.json 已写入”。</div>
+    </div>`
+  },
+  {
+    id:"qa2", duration:9000, chapter:"Q2 · schema",
+    sub:"plugin_* 表 0 张，不代表迁移失败。",
+    html:`<div class="scene"><div class="qaTag anim" style="--d:0s">Q2 / SCHEMA</div>
+      <h2 class="question anim" style="--d:.15s">迁移显示 <em>plugin_* 表 0 张</em>，是失败了吗？</h2>
+      <div class="answer">
+        <div class="card anim" style="--d:.35s"><div class="t">不是</div><div class="d">[1/8] 建缺表时已经把 plugin_* 建好了；[8/8] 再检查自然是 0 张。</div></div>
+        <div class="card blue anim" style="--d:.5s"><div class="t">怎么确认</div><div class="d">查 schema_version=30，并确认 6 张 plugin_* 表存在。</div></div>
+      </div>
+      <div class="verdict anim" style="--d:.7s">关键看 [OK] 迁移完成 + schema_version=30，不是看“新建几张”。</div>
+    </div>`
+  },
+  {
+    id:"qa3", duration:9500, chapter:"Q3 · env gate",
+    sub:"v29.3 起，没有新鲜 env_report 不允许进蓝绿。",
+    html:`<div class="scene light"><div class="qaTag anim" style="--d:0s">Q3 / ENV GATE</div>
+      <h2 class="question anim" style="--d:.15s">prepare 被拒绝：<em>env_report 没有 version</em>？</h2>
+      <div class="answer">
+        <div class="card anim" style="--d:.35s"><div class="t">规则</div><div class="d">v29.3 要求报告有 version、未过期、config hash 匹配。</div></div>
+        <div class="card blue anim" style="--d:.5s"><div class="t">修复</div><div class="d">v29.4.1 让 preflight 写入 version；更新后重跑 checks/env_check.py。</div></div>
+      </div>
+      <div class="verdict anim" style="--d:.72s">报告版本必须等于当前代码版本；旧报告不能绕过，必须重跑。</div>
+    </div>`
+  },
+  {
+    id:"qa4", duration:10000, chapter:"Q4 · current",
+    sub:"current 已切 29.4.1，但 !version 还是 28.9.1。",
+    html:`<div class="scene"><div class="qaTag anim" style="--d:0s">Q4 / OLD WORKER</div>
+      <h2 class="question anim" style="--d:.15s"><em>current 已切</em>，为什么还是旧版本在回？</h2>
+      <div class="answer">
+        <div class="card anim" style="--d:.35s"><div class="t">现象</div><div class="d">supervisor 说切到 29.4.1；QQ 的 !version 仍回 28.9.1。</div></div>
+        <div class="card blue anim" style="--d:.5s"><div class="t">原因</div><div class="d">NapCat 的现有 WS 还钉在旧 worker；旧进程收到 SIGTERM 但没退。</div></div>
+      </div>
+      <div class="verdict anim" style="--d:.72s">v29.4.2：SIGTERM 等 10 秒，仍存活就 SIGKILL；旧连接断开后 NapCat 才会重连 current。</div>
+    </div>`
+  },
+  {
+    id:"qa5", duration:9500, chapter:"Q5 · deleted cwd",
+    sub:"/proc/PID/cwd 是 (deleted)，internal.sock 消失。",
+    html:`<div class="scene light"><div class="qaTag anim" style="--d:0s">Q5 / VERSION DIR</div>
+      <h2 class="question anim" style="--d:.15s">worker 还活着，<em>版本目录却被删了？</em></h2>
+      <div class="answer">
+        <div class="card anim" style="--d:.35s"><div class="t">原因</div><div class="d">worker 运行时又 prepare 同一个版本；旧逻辑先 rmtree。</div></div>
+        <div class="card blue anim" style="--d:.5s"><div class="t">后果</div><div class="d">cwd 变成 (deleted)，internal.sock / worker.log 一起消失。</div></div>
+      </div>
+      <div class="verdict anim" style="--d:.72s">v28.9.1 起 prepare 检测 worker.pid 活进程，直接拒绝覆盖；重刷请用新版本号。</div>
+    </div>`
+  },
+  {
+    id:"qa6", duration:9000, chapter:"Q6 · reading",
+    sub:"自动阅读还在发摘要，不是 v29.4 没生效，而是旧 worker 还在服务。",
+    html:`<div class="scene"><div class="qaTag anim" style="--d:0s">Q6 / READING</div>
+      <h2 class="question anim" style="--d:.15s">更新后<em>自动阅读还在发摘要</em>？</h2>
+      <div class="answer">
+        <div class="card anim" style="--d:.35s"><div class="t">先查版本</div><div class="d">!version 如果还是 28.9.1，说明旧 WS/旧 worker 还在。</div></div>
+        <div class="card blue anim" style="--d:.5s"><div class="t">v29.4 规则</div><div class="d">自动阅读只入库；只有 !book next / !book read 才发摘要。</div></div>
+      </div>
+      <div class="verdict anim" style="--d:.72s">先断开旧连接/杀旧 worker，让 NapCat 重连当前 worker，再验证 !version。</div>
+    </div>`
+  },
+  {
+    id:"end", duration:10000, chapter:"11 · 结尾",
+    sub:"v30.2.0 · 10045 条测试 · 非官方同人项目。",
+    html:`<div class="scene light"><div class="kicker anim" style="--d:0s">HOSHINOUMI / REC</div>
+      <h1 class="endTitle anim" style="--d:.15s">v23–v30，<br><em>底座已经铺好。</em></h1>
+      <p class="lead anim" style="--d:.35s">从账号隔离到模型插件，核心 native 始终保留。<br>
+      下一段：v31 记忆层契约，继续一层一层往上接。</p>
+      <div class="meta anim" style="--d:.55s"><span><b>v30.2.0</b></span><span><b>10045</b> tests</span><span><b>v45</b> 学习规划</span><span>MIT · 非官方二创</span></div>
+      <div class="note anim" style="--d:.75s">代码版本不等于线上版本；部署以 current worker 和 env_report 为准。</div>
+    </div>`
+  }
+];
+
+function htmlFor(s){ return s.html; }
+
+function show(i){
+  index = (i + scenes.length) % scenes.length;
+  const s = scenes[index];
+  stage.innerHTML = htmlFor(s);
+  $("#chapter").innerHTML = s.chapter + " <span>" + fmt(scenes.slice(0,index).reduce((a,x)=>a+x.duration,0)) + "</span>";
+  $("#subtitle").textContent = s.sub || "";
+  startedAt = performance.now(); elapsed = 0;
+  $("#bar").style.width = "0%";
+  clearTimeout(timer);
+  if (!paused) timer = setTimeout(next, s.duration);
+}
+function next(){ show(index+1); }
+function fmt(ms){ const s=Math.floor(ms/1000); return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0"); }
+function tick(){
+  if (!paused) elapsed = performance.now()-startedAt;
+  const t = scenes[index] ? Math.min(1, elapsed/scenes[index].duration) : 0;
+  $("#bar").style.width = (t*100).toFixed(2)+"%";
+  requestAnimationFrame(tick);
+}
+function togglePause(){
+  paused = !paused;
+  $("#pauseBadge").style.display = paused ? "block" : "none";
+  if (paused) clearTimeout(timer);
+  else { startedAt = performance.now()-elapsed; timer = setTimeout(next, scenes[index].duration-elapsed); }
+}
+document.addEventListener("keydown", e => {
+  if (e.code === "Space"){ e.preventDefault(); togglePause(); }
+  if (e.key === "ArrowRight"){ show(index+1); }
+  if (e.key === "ArrowLeft"){ show(index-1); }
+});
+const startIdx = startScene ? scenes.findIndex(s=>s.id===startScene) : 0;
+show(startIdx >= 0 ? startIdx : 0);
+tick();
+</script>
+</body>
+</html>
