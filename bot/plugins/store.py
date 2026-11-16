@@ -143,7 +143,79 @@ class PluginStore:
                 pass
         return self.generation()
 
-    def record_error(self, name, error_type, message, traceback=""):
+    def add_approval(self, name, action="install", requested_by="__owner__"):
+        c = self._cursor()
+        try:
+            c.execute(
+                "INSERT INTO plugin_approvals(plugin_name,action,status,requested_by) "
+                "VALUES(%s,%s,'pending',%s)", (str(name), str(action), str(requested_by)))
+            c.connection.commit()
+            return getattr(c, "lastrowid", None)
+        finally:
+            try:
+                c.close()
+            except Exception:
+                pass
+
+    def pending_approvals(self):
+        c = self._cursor()
+        try:
+            c.execute("SELECT id,plugin_name,action,status,created_at "
+                      "FROM plugin_approvals WHERE status='pending' ORDER BY id")
+            return c.fetchall() or []
+        finally:
+            try:
+                c.close()
+            except Exception:
+                pass
+
+    def decide(self, approval_id, status, decided_by="__owner__"):
+        if status not in ("approved", "rejected"):
+            raise ValueError("status 必须是 approved/rejected")
+        c = self._cursor()
+        try:
+            c.execute(
+                "UPDATE plugin_approvals SET status=%s, decided_by=%s, "
+                "decided_at=CURRENT_TIMESTAMP WHERE id=%s",
+                (status, str(decided_by), int(approval_id)))
+            c.connection.commit()
+            return getattr(c, "rowcount", 0) > 0
+        finally:
+            try:
+                c.close()
+            except Exception:
+                pass
+
+    def set_auto_start(self, name, enabled):
+        c = self._cursor()
+        try:
+            c.execute("UPDATE plugin_registry SET auto_start=%s WHERE name=%s",
+                      (int(bool(enabled)), str(name)))
+            c.connection.commit()
+        finally:
+            try:
+                c.close()
+            except Exception:
+                pass
+
+    def errors(self, name=None, limit=50):
+        c = self._cursor()
+        try:
+            if name:
+                c.execute("SELECT plugin_name,error_type,message,created_at "
+                          "FROM plugin_errors WHERE plugin_name=%s ORDER BY id DESC LIMIT %s",
+                          (str(name), int(limit)))
+            else:
+                c.execute("SELECT plugin_name,error_type,message,created_at "
+                          "FROM plugin_errors ORDER BY id DESC LIMIT %s", (int(limit),))
+            return c.fetchall() or []
+        finally:
+            try:
+                c.close()
+            except Exception:
+                pass
+
+    def record_error(self, name, error_type, message, traceback="", fail_limit=5):
         c = self._cursor()
         try:
             c.execute(
@@ -157,3 +229,13 @@ class PluginStore:
                 c.close()
             except Exception:
                 pass
+        # 连续失败达到阈值自动停用；不自动恢复
+        try:
+            n = len(self.errors(name, limit=int(fail_limit)))
+            if n >= int(fail_limit):
+                self.set_enabled(name, False)
+        except Exception:
+            pass
+
+    def auto_start_names(self):
+        return [p.name for p in self.list(enabled_only=True) if p.auto_start]
