@@ -362,8 +362,8 @@ def describe(data, task_id=None):
         when = f"每周{days} {data.get('at_time')}"
     else:
         when = f"{data.get('once_at', '')[:16]}"
-    tail = f"（#{task_id}，不想要就说 !cron del {task_id}）" if task_id else ""
-    return f"好，{when} 提醒你{data.get('content', '')}{tail}"
+    # v28.7：用户可见回复不贴 task_id / 删除命令；id 只进日志
+    return f"好，{when} 提醒你{data.get('content', '')}"
 
 
 def command_hint(data):

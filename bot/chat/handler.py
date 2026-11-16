@@ -454,9 +454,6 @@ async def _maybe_extract_timer(mt, text, uid, gid, ws, addressed):
             log_system(f"[定时] {label}：{_data.get('content')}")
             from ..chat.send import send_short_reply
             _confirm = extract_mod.describe(_data, _tid or 0)
-            _hint = extract_mod.command_hint(_data)
-            if _hint:
-                _confirm += f"\n标准命令：{_hint}"
             try:
                 await send_short_reply(uid, _confirm, ws, uid, False, None)
             except Exception as _e:
@@ -466,9 +463,7 @@ async def _maybe_extract_timer(mt, text, uid, gid, ws, addressed):
         if extract_mod.is_timer_request(text):
             # 看起来是定时请求，但时间没解析出来：明确失败，禁止模型装懂
             from ..chat.send import send_short_reply
-            msg = ("这个提醒我没建成：时间没解析出来。\n"
-                   "可以换成「30分钟后」「19:10」这种写法，"
-                   "或用 !cron once 2026-11-15 19:10 吃药。")
+            msg = "嗯……我没听清具体时间。你是想让我几点提醒你？"
             try:
                 await send_short_reply(uid, msg, ws, uid, False, None)
             except Exception as _e:

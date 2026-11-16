@@ -204,12 +204,12 @@ class TestCommandRegistry(unittest.TestCase):
     def test_unknown_command(self):
         handled, ws = self._run("!nope")
         self.assertTrue(handled)
-        self.assertIn("未知命令", ws.texts()[0])
+        self.assertIn("没看懂", ws.texts()[0])
 
     def test_fuzzy_command_corn(self):
         handled, ws = self._run("! corn")
         self.assertTrue(handled)
-        self.assertIn("你是不是想用 !cron", ws.texts()[0])
+        self.assertNotIn("你是不是想用 !cron", ws.texts()[0])
 
     def test_non_master_rejected(self):
         handled, ws = self._run("!help", uid="123456")

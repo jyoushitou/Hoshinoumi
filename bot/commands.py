@@ -4,7 +4,7 @@
 
 from bot.core import state as cfg
 from .config import MASTER_QQ
-from .log import log_send
+from .log import log_send, log_api
 from .send import send_private_msg, send_group_msg
 from .cmd import registry
 from .cmd import (basic, query, admin, media, memory_cmd, diary_cmd, ops,
@@ -70,15 +70,9 @@ async def handle_command(text, uid, ws, is_group, gid):
         if not ok and not reply:
             reply = "❌ 命令执行失败"
     else:
-        import difflib
-        names = list(registry.COMMANDS.keys())
-        hit = difflib.get_close_matches(cmd_name, names, n=1, cutoff=0.55)
-        if hit:
-            reply = (f"❌ 未知命令: {cmd_name}\n"
-                     f"你是不是想用 !{hit[0]}？\n"
-                     f"输入 !help 查看完整用法")
-        else:
-            reply = f"❌ 未知命令: {cmd_name}\n输入 !help 查看可用命令"
+        # v28.7：错命令只进日志，不向用户提示命令建议
+        log_api(f"[命令] 未知命令: {cmd_name!r} uid={uid} group={is_group} gid={gid}")
+        reply = "奈绪歪头：这条我没看懂。"
 
     await _send_command_reply(reply, uid, ws, is_group, gid)
     return True

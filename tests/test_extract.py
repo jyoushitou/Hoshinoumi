@@ -135,7 +135,7 @@ class TestExtract(unittest.TestCase):
         text = self.E.describe(d, 7)
         self.assertIn("每天 23:00", text)
         self.assertIn("睡觉", text)
-        self.assertIn("!cron del 7", text, "要告诉她怎么撤")
+        self.assertNotIn("!cron del", text, "v28.7 不再贴删除命令")
 
     def test_describe_weekly(self):
         d = self.E.extract("周五提醒我交报告", self.now)
