@@ -186,7 +186,7 @@
 | v42 | 出站层插件接入 | [v42.md](versions/v42.md) |
 | v43 | 默认链路契约 + native | [v43.md](versions/v43.md) |
 | v44 | 默认链路插件接入 | [v44.md](versions/v44.md) |
-| v45 | 学习规划（单表 study_plans） | [v45.md](versions/v45.md) |
+| v45 | 学习规划（单表 study_plans，7 个日列） | [v45.md](versions/v45.md) |
 | v46 | 多端推送（主动消息 fan-out） | [v46.md](versions/v46.md) |
 | v47 | 本机服务化 | [v47.md](versions/v47.md) |
 | v48 | DSH 插件 | [v48.md](versions/v48.md) |

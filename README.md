@@ -324,7 +324,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | v42 | 出站层插件接入 | 📋 已规划 | [v42.md](docs/versions/v42.md) |
 | v43 | 默认链路契约 + native | 📋 已规划 | [v43.md](docs/versions/v43.md) |
 | v44 | 默认链路插件接入 | 📋 已规划 | [v44.md](docs/versions/v44.md) |
-| v45 | 学习规划：单表 study_plans + 周计划/执行/顺延 | 📋 已规划 | [v45.md](docs/versions/v45.md) |
+| v45 | 学习规划：单表 study_plans（7 个日列）+ 周计划/顺延 | 📋 已规划 | [v45.md](docs/versions/v45.md) |
 | v46 | 多端推送：主动消息扇出到所有接入口 | 📋 已规划 | [v46.md](docs/versions/v46.md) |
 | v47 | 本机服务化：常驻 / 自启 / 健康检查 | 📋 已规划 | [v47.md](docs/versions/v47.md) |
 | v48 | DSH 插件：本机工具注册与调用 | 📋 已规划 | [v48.md](docs/versions/v48.md) |
