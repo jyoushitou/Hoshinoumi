@@ -146,7 +146,7 @@ v6：P1 会说话 → P2 说实话 → P2.5 长感官 → P3 有生活 → P4 �
 | **v42** | [versions/v42.md](versions/v42.md) | 出站层插件接入 | 规划中 |
 | **v43** | [versions/v43.md](versions/v43.md) | 默认链路契约 + native | 规划中 |
 | **v44** | [versions/v44.md](versions/v44.md) | 默认链路插件接入 | 规划中 |
-| **v45** | [versions/v45.md](versions/v45.md) | 学习规划 / 计划表 | 规划中 |
+| **v45** | [versions/v45.md](versions/v45.md) | 学习规划（单表 study_plans） | 规划中 |
 
 | **v46** | [versions/v46.md](versions/v46.md) | 多端推送（主动消息 fan-out） | 规划中 |
 
