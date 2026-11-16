@@ -394,10 +394,11 @@ def _feature_report(data):
     return out
 
 
-def _build_report(data, skip_vision=False):
+def _build_report(data, skip_vision=False, version=""):
     failed = [r for r in results if r[0] == FAIL]
     return {
         "schema_version": 1,
+        "version": version,
         "checked_at": datetime.now(timezone.utc).isoformat(),
         "config_hash": None,  # main 填
         "ok": not failed,
@@ -480,7 +481,7 @@ def main():
 
     failed = [r for r in results if r[0] == FAIL]
     if not args.no_report:
-        report = _build_report(feature_data, args.skip_vision)
+        report = _build_report(feature_data, args.skip_vision, _ver)
         report["config_hash"] = features.config_hash(feature_data)
         try:
             path = features.write_report(feature_data, report)
