@@ -38,14 +38,15 @@ async def handle_cron_prepare(ev):
         return {"ok": False, "reason": "任务不可用"}
 
     content = (task.get("content") or "").strip()
+    suffix = (task.get("suffix") or "").strip()
     try:
         if content.startswith("scene:"):
             from .schedule import generate_scene_reply
-            rep = await generate_scene_reply(content.split(":", 1)[1].strip())
+            rep = await generate_scene_reply(content.split(":", 1)[1].strip(), suffix)
         else:
             from ..ai.client import get_character_reply
             rep = await get_character_reply(
-                _PROMPT.format(content=content),
+                _PROMPT.format(content=_with_suffix(task, content)),
                 str(task.get("target_id") or cfg.MASTER_QQ))
     except Exception as e:
         log_err(f"[定时] 预生成失败({task_id}): {e}")
@@ -59,6 +60,13 @@ async def handle_cron_prepare(ev):
 
 # content 前面加这句，让她以「提醒/告知」的语气说，而不是自言自语
 _PROMPT = "（现在是你要主动提醒他的时间。要提醒的事：{content}。用一句话说出来，别解释为什么）"
+
+
+def _with_suffix(task, content):
+    suffix = (task.get("suffix") or "").strip()
+    if suffix and not content.startswith("scene:"):
+        return content + "，" + suffix
+    return content
 
 
 @register("cron_task", priority=Priority.EVENT, timeout=90, retries=1,
@@ -102,7 +110,7 @@ async def handle_cron_task(ev):
 
             class _Ev:
                 kind = "schedule_scene"
-                args = (scene,)
+                args = (scene, (task.get("suffix") or "").strip())
 
             out = await handle_schedule_scene(_Ev(), prepared=prepared)
             _mark(task_id, ok=bool(out.get("ok")))
@@ -122,7 +130,7 @@ async def handle_cron_task(ev):
         rep = prepared
         if not rep:
             from ..ai.client import get_character_reply
-            rep = await get_character_reply(_PROMPT.format(content=content), target)
+            rep = await get_character_reply(_PROMPT.format(content=_with_suffix(task, content)), target)
         if not rep:
             log_err(f"[定时] 任务 {task_id} 生成空回复")
             _mark(task_id, ok=False)

@@ -35,7 +35,7 @@ def _now():
 # ===================== 表操作 =====================
 
 _COLS = ("id, user_id, target_id, schedule_type, at_time, weekdays, once_at, "
-         "interval_min, content, source, enabled, jitter_min, last_fire, next_ts, "
+         "interval_min, content, suffix, source, enabled, jitter_min, last_fire, next_ts, "
          "rule, timing")
 
 
@@ -99,6 +99,48 @@ def add(target_id, schedule_type, content, at_time=None, weekdays=None,
     except Exception as e:
         log_err(f"[定时] 新增失败: {e}")
         return None
+
+
+def set_suffix(task_id, suffix, user_id="__owner__"):
+    """v32.3：给一条钩子追加补充话术；空串清除。"""
+    from ..infra.conn import get_cursor
+    suffix = (suffix or "").strip()[:200] or None
+    c = get_cursor()
+    try:
+        c.execute("UPDATE cron_tasks SET suffix=%s WHERE id=%s AND user_id=%s",
+                  (suffix, int(task_id), str(user_id)))
+        c.connection.commit()
+        try:
+            from ..infra import cache
+            cache.invalidate("cron:list")
+        except Exception:
+            pass
+        return True
+    except Exception as e:
+        log_err(f"[定时] 写 suffix 失败: {e}")
+        return False
+
+
+def append_suffix(keyword, text, user_id="__owner__"):
+    """按场景/内容关键词批量追加 suffix；返回 [(id,label), ...]。"""
+    keyword = (keyword or "").strip()
+    text = (text or "").strip()[:200]
+    if not keyword or not text:
+        return []
+    # 口语别名：吃饭 → 晚餐/外卖/午饭
+    aliases = {
+        "吃饭": ("吃饭", "晚餐", "晚饭", "外卖", "午餐", "午饭"),
+        "睡觉": ("睡觉", "睡了", "晚安"),
+    }.get(keyword, (keyword,))
+    hits = []
+    for t in list_tasks(enabled_only=True, user_id=user_id):
+        label = _scene_of(t) or (t.get("content") or "")
+        hay = label + " " + (t.get("content") or "")
+        if any(a in hay for a in aliases):
+            hits.append((int(t["id"]), label))
+    for tid, _label in hits:
+        set_suffix(tid, text, user_id=user_id)
+    return hits
 
 
 def remove(task_id, user_id="__owner__"):

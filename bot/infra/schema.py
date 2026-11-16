@@ -439,6 +439,7 @@ PURE = {
             once_at DATETIME NULL,                    -- 一次性
             interval_min INT NULL,                    -- 间隔分钟
             content VARCHAR(500) NOT NULL,            -- 要说什么/做什么
+            suffix VARCHAR(200) NULL,                 -- v32.3：额外补充话术
             source ENUM('chat','command') NOT NULL DEFAULT 'command',
             enabled TINYINT(1) NOT NULL DEFAULT 1,
             jitter_min TINYINT NOT NULL DEFAULT 10,   -- ±分钟

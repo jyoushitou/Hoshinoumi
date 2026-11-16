@@ -434,6 +434,19 @@ async def _maybe_extract_timer(mt, text, uid, gid, ws, addressed):
     try:
         from ..schedule import extract as extract_mod
 
+        # v32.3：先识别“提醒我X的时候，让我Y” → 改现有钩子，不新建
+        pair = extract_mod.parse_hook_modify(text)
+        if pair and mt == "private" and str(uid) == str(cfg.MASTER_QQ):
+            keyword, suffix = pair
+            from ..schedule import cron
+            hits = cron.append_suffix(keyword, suffix)
+            label = "、".join(f"#{i}" for i, _ in hits) if hits else "没有匹配"
+            msg = (f"好，给 {label} 加上「{suffix}」。" if hits
+                   else f"没找到「{keyword}」相关的提醒；要先建一条吗？")
+            from ..chat.send import send_short_reply
+            await send_short_reply(uid, msg, ws, uid, False, None)
+            return True
+
         if not extract_mod.should_extract(mt, text, uid, cfg.MASTER_QQ):
             if (mt == "group" and addressed
                     and str(uid) == str(cfg.MASTER_QQ)

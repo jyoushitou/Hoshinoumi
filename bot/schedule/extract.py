@@ -215,6 +215,21 @@ def is_timer_request(text, now=None):
     return parse_time(text, now) is not None
 
 
+def parse_hook_modify(text):
+    """v32.3：识别“提醒我吃饭的时候，让我少吃点” → (关键词, 补充话术)。"""
+    t = (text or "").strip()
+    if "提醒我" not in t or "的时候" not in t:
+        return None
+    m = re.search(r"提醒我(.{1,24}?)的时候[，,：:]?\s*(?:让我|叫我|说|提醒我)?\s*(.{1,60})", t)
+    if not m:
+        return None
+    keyword = m.group(1).strip("，,。 ")
+    suffix = m.group(2).strip("。！! ")
+    if not keyword or not suffix:
+        return None
+    return keyword, suffix[:200]
+
+
 def should_extract(message_type, text, uid=None, master=None, addressed=False):
     """哪些消息值得尝试提取
 

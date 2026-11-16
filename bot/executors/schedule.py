@@ -81,14 +81,16 @@ def scene_config(name):
     return SCENES.get(name, {"prompts": DEFAULT_PROMPTS})
 
 
-async def generate_scene_reply(scene):
-    """只生成不发送（v18.7 预生成用）"""
+async def generate_scene_reply(scene, suffix=""):
+    """只生成不发送（v18.7 预生成用）；v32.3 支持补充话术。"""
     import random
 
     from ..ai.client import get_character_reply
 
     conf = scene_config(scene)
     prompt = random.choice(conf["prompts"])
+    if (suffix or "").strip():
+        prompt += f"；另外要说：{suffix.strip()}"
     log_api(f"[定时] 生成场景：{scene}")
     return await get_character_reply(prompt, str(cfg.MASTER_QQ))
 
@@ -101,12 +103,13 @@ async def handle_schedule_scene(ev, prepared=None):
 
     args = getattr(ev, "args", ()) or ()
     scene = args[0] if args else ""
+    suffix = str(args[1]) if len(args) > 1 else ""
     conf = scene_config(scene)
 
     log_api(f"[定时] 执行场景：{scene}")
 
     try:
-        rep = prepared or await generate_scene_reply(scene)
+        rep = prepared or await generate_scene_reply(scene, suffix)
     except Exception as e:
         log_err(f"[定时] {scene} 生成失败: {e}")
         return {"ok": False, "reason": "生成失败"}

@@ -23,6 +23,8 @@ HELP = """⏰ 定时消息
 !cron every 分钟 内容           每隔几分钟
 !cron del <id>                  删除
 !cron on|off <id>               启用/停用
+!cron append <关键词> <补充>     批量给匹配钩子加补充话术
+!cron suffix <id> <补充|clear>   单条设置/清除补充话术
 !cron reload                    立即重建全部钩子"""
 
 
@@ -55,8 +57,10 @@ def _fmt_task(t):
             tail += "｜今天跳过" if ov.get("skip") else f"｜今天微调 {ov.get('at_time')}"
     except Exception:
         pass
+    suf = (t.get("suffix") or "").strip()
+    note = f"｜+{suf}" if suf else ""
     return (f"{flag} #{t['id']} {when} · {t.get('content', '')[:30]}"
-            f"（{src}｜{tail}）")
+            f"（{src}｜{tail}{note}）")
 
 
 @command("hooks")
@@ -136,6 +140,26 @@ async def cmd_cron(ctx):
             ok = cron.remove(tid)
             cron.cancel(tid)
             return f"🗑️ 已删除 #{tid}" if ok else f"❌ 删除失败 #{tid}"
+
+        if sub == "append":
+            if len(parts) < 3:
+                return "用法：!cron append <关键词> <补充话术>"
+            keyword, text = parts[1], " ".join(parts[2:])
+            hits = cron.append_suffix(keyword, text)
+            if not hits:
+                return f"没找到包含「{keyword}」的提醒。"
+            ids = "、".join(f"#{i}" for i, _ in hits)
+            return f"✅ 已给 {ids} 加上「{text.strip()}」"
+
+        if sub == "suffix":
+            if len(parts) < 3:
+                return "用法：!cron suffix <id> <补充话术|clear>"
+            tid = int(parts[1])
+            text = " ".join(parts[2:])
+            if text.lower() == "clear":
+                text = ""
+            ok = cron.set_suffix(tid, text, user_id=uid)
+            return (f"✅ #{tid} 补充话术已更新" if ok else f"❌ 更新失败 #{tid}")
 
         if sub in ("on", "off"):
             tid = int(parts[1])
