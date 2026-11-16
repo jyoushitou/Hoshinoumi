@@ -311,7 +311,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | v29 | 模型层契约 + native + 环境门禁；v29.4 阅读静默待做 | 🚧 v31.3.0 / v29.4 计划 | [v29.md](docs/versions/v29.md) |
 | v30 | 模型层插件接入 | ✅ 已完成（v31.3.0） | [v30.md](docs/versions/v30.md) |
 | v31 | 记忆层契约 + native；v31.3 帮助升级待做 | 🚧 v31.3.0 / v31.3 计划 | [v31.md](docs/versions/v31.md) |
-| v32 | 记忆层插件接入 | 📋 已规划 | [v32.md](docs/versions/v32.md) |
+| v32 | 记忆层插件接入 + 钩子批量修改 | 📋 已规划 | [v32.md](docs/versions/v32.md) |
 | v33 | 通道层契约 + native | 📋 已规划 | [v33.md](docs/versions/v33.md) |
 | v34 | 通道层插件接入 | 📋 已规划 | [v34.md](docs/versions/v34.md) |
 | v35 | 工具层契约 + native | 📋 已规划 | [v35.md](docs/versions/v35.md) |
