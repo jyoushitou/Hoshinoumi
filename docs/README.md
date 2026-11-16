@@ -146,32 +146,33 @@ v6：P1 会说话 → P2 说实话 → P2.5 长感官 → P3 有生活 → P4 �
 | **v42** | [versions/v42.md](versions/v42.md) | 出站层插件接入 | 规划中 |
 | **v43** | [versions/v43.md](versions/v43.md) | 默认链路契约 + native | 规划中 |
 | **v44** | [versions/v44.md](versions/v44.md) | 默认链路插件接入 | 规划中 |
+| **v45** | [versions/v45.md](versions/v45.md) | 学习规划 / 计划表 | 规划中 |
 
-| **v45** | [versions/v45.md](versions/v45.md) | 多端推送（主动消息 fan-out） | 规划中 |
+| **v46** | [versions/v46.md](versions/v46.md) | 多端推送（主动消息 fan-out） | 规划中 |
 
 
-| **v46** | [versions/v46.md](versions/v46.md) | 本机服务化 | 规划中 |
-| **v47** | [versions/v47.md](versions/v47.md) | DSH 插件 | 规划中 |
-| **v48** | [versions/v48.md](versions/v48.md) | Qoder / WorkBuddy 插件与安装器 | 规划中 |
-| **v49** | [versions/v49.md](versions/v49.md) | 命令收敛与专用前端通道 | 规划中 |
-| **v50** | [versions/v50.md](versions/v50.md) | 自有客户端（一）电脑 Web | 规划中 |
-| **v51** | [versions/v51.md](versions/v51.md) | 自有客户端（二）Linux 桌面 | 规划中 |
-| **v52** | [versions/v52.md](versions/v52.md) | 自有客户端（三）Windows 桌面 | 规划中 |
-| **v53** | [versions/v53.md](versions/v53.md) | 自有客户端（四）手机 App | 规划中 |
-| **v54** | [versions/v54.md](versions/v54.md) | 手机 App 独立模式 | 规划中 |
-| **v55** | [versions/v55.md](versions/v55.md) | QQ 空间 | 规划中 |
-| **v56** | [versions/v56.md](versions/v56.md) | 运维通道（一）bash 只读 | 规划中 |
-| **v57** | [versions/v57.md](versions/v57.md) | 运维通道（二）agent | 规划中 |
-| **v58** | [versions/v58.md](versions/v58.md) | 运维通道（三）有限写 | 规划中 |
-| **v59** | [versions/v59.md](versions/v59.md) | 运维通道（四）可写体系 | 规划中 |
-| **v60** | [versions/v60.md](versions/v60.md) | 视频（一）B 站 | 规划中 |
-| **v61** | [versions/v61.md](versions/v61.md) | 视频（二）抖音 | 规划中 |
-| **v62** | [versions/v62.md](versions/v62.md) | 微信接入（OpenClaw / 龙虾） | 规划中 |
-| **v63** | [versions/v63.md](versions/v63.md) | 语音通话 | 规划中 |
-| **v64** | [versions/v64.md](versions/v64.md) | 视频通话 | 规划中 |
-| **v65** | [versions/v65.md](versions/v65.md) | 微服务接入（自有 Web） | 规划中 |
-| **v66** | [versions/v66.md](versions/v66.md) | 常驻（后端）systemd 与看门狗 | 规划中 |
-| **v67** | [versions/v67.md](versions/v67.md) | 嵌入式前端（Linux 后端） | 规划中 |
+| **v47** | [versions/v47.md](versions/v47.md) | 本机服务化 | 规划中 |
+| **v48** | [versions/v48.md](versions/v48.md) | DSH 插件 | 规划中 |
+| **v49** | [versions/v49.md](versions/v49.md) | Qoder / WorkBuddy 插件与安装器 | 规划中 |
+| **v50** | [versions/v50.md](versions/v50.md) | 命令收敛与专用前端通道 | 规划中 |
+| **v51** | [versions/v51.md](versions/v51.md) | 自有客户端（一）电脑 Web | 规划中 |
+| **v52** | [versions/v52.md](versions/v52.md) | 自有客户端（二）Linux 桌面 | 规划中 |
+| **v53** | [versions/v53.md](versions/v53.md) | 自有客户端（三）Windows 桌面 | 规划中 |
+| **v54** | [versions/v54.md](versions/v54.md) | 自有客户端（四）手机 App | 规划中 |
+| **v55** | [versions/v55.md](versions/v55.md) | 手机 App 独立模式 | 规划中 |
+| **v56** | [versions/v56.md](versions/v56.md) | QQ 空间 | 规划中 |
+| **v57** | [versions/v57.md](versions/v57.md) | 运维通道（一）bash 只读 | 规划中 |
+| **v58** | [versions/v58.md](versions/v58.md) | 运维通道（二）agent | 规划中 |
+| **v59** | [versions/v59.md](versions/v59.md) | 运维通道（三）有限写 | 规划中 |
+| **v60** | [versions/v60.md](versions/v60.md) | 运维通道（四）可写体系 | 规划中 |
+| **v61** | [versions/v61.md](versions/v61.md) | 视频（一）B 站 | 规划中 |
+| **v62** | [versions/v62.md](versions/v62.md) | 视频（二）抖音 | 规划中 |
+| **v63** | [versions/v63.md](versions/v63.md) | 微信接入（OpenClaw / 龙虾） | 规划中 |
+| **v64** | [versions/v64.md](versions/v64.md) | 语音通话 | 规划中 |
+| **v65** | [versions/v65.md](versions/v65.md) | 视频通话 | 规划中 |
+| **v66** | [versions/v66.md](versions/v66.md) | 微服务接入（自有 Web） | 规划中 |
+| **v67** | [versions/v67.md](versions/v67.md) | 常驻（后端）systemd 与看门狗 | 规划中 |
+| **v68** | [versions/v68.md](versions/v68.md) | 嵌入式前端（Linux 后端） | 规划中 |
 
 > v27–v44 每版只开放一层接口，统一约束见 [INTERFACE-PLAN-v27-v44.md](INTERFACE-PLAN-v27-v44.md)，运行时契约见 [PLUGIN-RUNTIME-DESIGN.md](PLUGIN-RUNTIME-DESIGN.md)。
 

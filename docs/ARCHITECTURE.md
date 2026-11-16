@@ -263,4 +263,4 @@ v41/42 出站              v43/44 默认链路
 - `infra/conn` 线程本地连接与 `infra/pool` 并存，v28 统一。
 - 约 164 处 `except Exception: pass`，插件链路不得静默。
 - 旧兼容层：`bot/api.py`、`api_server.py`、`handler.py`、`config.py`；`bot/db.py` 已无引用可删。
-- v45–v67 后期计划只做过编号顺延，语义仍需逐版复审。
+- v46–v68 后期计划只做过编号顺延，语义仍需逐版复审。

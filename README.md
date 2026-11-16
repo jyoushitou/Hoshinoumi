@@ -85,7 +85,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | 想要商业客服 / 知识库问答机器人的人 | 它优先服从人设和关系，不是客服 |
 | 需要多租户 SaaS、高并发、合规审计的团队 | 多用户是 v23 计划；当前没有完整鉴权/限流 |
 | 不能接受 QQ 平台风控 / 角色 IP 二创风险的人 | 这是自托管二创项目，不是官方产品 |
-| 期待开箱即用的语音通话 / 手机 App / 桌面端的人 | 这些在 v50+ 计划里，当前还没做 |
+| 期待开箱即用的语音通话 / 手机 App / 桌面端的人 | 这些在 v51+ 计划里，当前还没做 |
 | 不愿意维护数据库、备份、升级的人 | 长期记忆和角色状态都在数据库里 |
 | 要求“零 bug、零配置、零运维”的人 | 项目还在快速迭代，边界和文档会变 |
 
@@ -105,10 +105,11 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | v21–v27 | 已完成网关/读书/热更新/TCP 帧/插件注册表；多用户隔离仍未完成 |
 | v24 | 想修好读书链路的人：搜索、链接标题、进度、本地书回退 |
 | v27–v44 | 第三方开发者：写模型 provider、检索器、通道、工具、存储、调度、传输适配器 |
-| v45 | 需要多端主动消息的人：QQ、Web、桌面、手机、嵌入式屏 |
-| v47–v48 | 用 DSH / Qoder / WorkBuddy 的开发者：希望 IDE 里也能调用同一个“她” |
-| v49 | 觉得 QQ 命令刷屏的人：只留短命令，详细配置走专属前端 |
-| v50–v67 | 想要 Web / Linux 桌面 / Windows 桌面 / 手机 App / 嵌入式屏的人 |
+| v45 | 想把每周学习计划交给机器人提醒/顺延的人 |
+| v46 | 需要多端主动消息的人：QQ、Web、桌面、手机、嵌入式屏 |
+| v48–v49 | 用 DSH / Qoder / WorkBuddy 的开发者：希望 IDE 里也能调用同一个“她” |
+| v50 | 觉得 QQ 命令刷屏的人：只留短命令，详细配置走专属前端 |
+| v51–v68 | 想要 Web / Linux 桌面 / Windows 桌面 / 手机 App / 嵌入式屏的人 |
 | 长期 | 写作辅助、跑团/角色扮演、个人知识陪伴、AI 角色研究、小社区自托管 |
 
 仍然不适合的方向：
@@ -323,33 +324,34 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | v42 | 出站层插件接入 | 📋 已规划 | [v42.md](docs/versions/v42.md) |
 | v43 | 默认链路契约 + native | 📋 已规划 | [v43.md](docs/versions/v43.md) |
 | v44 | 默认链路插件接入 | 📋 已规划 | [v44.md](docs/versions/v44.md) |
-| v45 | 多端推送：主动消息扇出到所有接入口 | 📋 已规划 | [v45.md](docs/versions/v45.md) |
-| v46 | 本机服务化：常驻 / 自启 / 健康检查 | 📋 已规划 | [v46.md](docs/versions/v46.md) |
-| v47 | DSH 插件：本机工具注册与调用 | 📋 已规划 | [v47.md](docs/versions/v47.md) |
-| v48 | Qoder / WorkBuddy 插件与安装器 | 📋 已规划 | [v48.md](docs/versions/v48.md) |
-| v49 | 命令收敛：QQ 只保留短命令，详细配置走专属前端 | 📋 已规划 | [v49.md](docs/versions/v49.md) |
-| v50 | 电脑 Web：聊天 + 历史 + 功能面板 | 📋 已规划 | [v50.md](docs/versions/v50.md) |
-| v51 | 桌面端（一）Linux：Tauri + Web UI | 📋 已规划 | [v51.md](docs/versions/v51.md) |
-| v52 | 桌面端（二）Windows：Tauri + WebView2 | 📋 已规划 | [v52.md](docs/versions/v52.md) |
-| v53 | 手机 App（Flutter）+ 推送通知 + 记账 | 📋 已规划 | [v53.md](docs/versions/v53.md) |
-| v54 | 手机 App 独立模式：离线对话/记账，恢复立即同步 | 📋 已规划 | [v54.md](docs/versions/v54.md) |
-| v55 | QQ 空间：发说说 + 只对熟人点赞/评论 | 📋 已规划 | [v55.md](docs/versions/v55.md) |
-| v56 | 运维（一）bash 只读 | 📋 已规划 | [v56.md](docs/versions/v56.md) |
-| v57 | 运维（二）agent | 📋 已规划 | [v57.md](docs/versions/v57.md) |
-| v58 | 运维（三）有限写 | 📋 已规划 | [v58.md](docs/versions/v58.md) |
-| v59 | 运维（四）可写体系 | 📋 已规划 | [v59.md](docs/versions/v59.md) |
-| v60 | 视频（一）B 站 | 📋 已规划 | [v60.md](docs/versions/v60.md) |
-| v61 | 视频（二）抖音 | 📋 已规划 | [v61.md](docs/versions/v61.md) |
-| v62 | 微信接入（OpenClaw） | 📋 已规划 | [v62.md](docs/versions/v62.md) |
-| v63 | 语音通话 | 📋 已规划 | [v63.md](docs/versions/v63.md) |
-| v64 | 视频通话 | 📋 已规划 | [v64.md](docs/versions/v64.md) |
-| v65 | 微服务接入：融进自有 Web，探网关 5 次 + 池复用 | 📋 已规划 | [v65.md](docs/versions/v65.md) |
-| v66 | 常驻（后端）systemd / 看门狗 | 📋 已规划 | [v66.md](docs/versions/v66.md) |
-| v67 | 嵌入式前端（Linux 后端）：树莓派/平板显示对话 | 📋 已规划 | [v67.md](docs/versions/v67.md) |
+| v45 | 学习规划 / 计划表：周计划、执行、顺延 | 📋 已规划 | [v45.md](docs/versions/v45.md) |
+| v46 | 多端推送：主动消息扇出到所有接入口 | 📋 已规划 | [v46.md](docs/versions/v46.md) |
+| v47 | 本机服务化：常驻 / 自启 / 健康检查 | 📋 已规划 | [v47.md](docs/versions/v47.md) |
+| v48 | DSH 插件：本机工具注册与调用 | 📋 已规划 | [v48.md](docs/versions/v48.md) |
+| v49 | Qoder / WorkBuddy 插件与安装器 | 📋 已规划 | [v49.md](docs/versions/v49.md) |
+| v50 | 命令收敛：QQ 只保留短命令，详细配置走专属前端 | 📋 已规划 | [v50.md](docs/versions/v50.md) |
+| v51 | 电脑 Web：聊天 + 历史 + 功能面板 | 📋 已规划 | [v51.md](docs/versions/v51.md) |
+| v52 | 桌面端（一）Linux：Tauri + Web UI | 📋 已规划 | [v52.md](docs/versions/v52.md) |
+| v53 | 桌面端（二）Windows：Tauri + WebView2 | 📋 已规划 | [v53.md](docs/versions/v53.md) |
+| v54 | 手机 App（Flutter）+ 推送通知 + 记账 | 📋 已规划 | [v54.md](docs/versions/v54.md) |
+| v55 | 手机 App 独立模式：离线对话/记账，恢复立即同步 | 📋 已规划 | [v55.md](docs/versions/v55.md) |
+| v56 | QQ 空间：发说说 + 只对熟人点赞/评论 | 📋 已规划 | [v56.md](docs/versions/v56.md) |
+| v57 | 运维（一）bash 只读 | 📋 已规划 | [v57.md](docs/versions/v57.md) |
+| v58 | 运维（二）agent | 📋 已规划 | [v58.md](docs/versions/v58.md) |
+| v59 | 运维（三）有限写 | 📋 已规划 | [v59.md](docs/versions/v59.md) |
+| v60 | 运维（四）可写体系 | 📋 已规划 | [v60.md](docs/versions/v60.md) |
+| v61 | 视频（一）B 站 | 📋 已规划 | [v61.md](docs/versions/v61.md) |
+| v62 | 视频（二）抖音 | 📋 已规划 | [v62.md](docs/versions/v62.md) |
+| v63 | 微信接入（OpenClaw） | 📋 已规划 | [v63.md](docs/versions/v63.md) |
+| v64 | 语音通话 | 📋 已规划 | [v64.md](docs/versions/v64.md) |
+| v65 | 视频通话 | 📋 已规划 | [v65.md](docs/versions/v65.md) |
+| v66 | 微服务接入：融进自有 Web，探网关 5 次 + 池复用 | 📋 已规划 | [v66.md](docs/versions/v66.md) |
+| v67 | 常驻（后端）systemd / 看门狗 | 📋 已规划 | [v67.md](docs/versions/v67.md) |
+| v68 | 嵌入式前端（Linux 后端）：树莓派/平板显示对话 | 📋 已规划 | [v68.md](docs/versions/v68.md) |
 
 > **版本拆分**：v24 = 读书修复与增强；v25 = 热更新 + 配置动态化；v26 = 内部 TCP/protobuf；v27 = 插件注册表基础；v28 = 插件运行时；原 v26 及以后整体顺延为 **v27+**。
 >
-> **编号变更**：命令收敛移到 **v49**（v48 Qoder 之后、v50 Web 之前）；v45 多端推送 / v46 本机服务化 / v47 DSH / v48 Qoder。详见 [v49.md](docs/versions/v49.md)。
+> **编号变更**：命令收敛移到 **v50**（v49 Qoder 之后、v51 Web 之前）；v46 多端推送 / v47 本机服务化 / v48 DSH / v49 Qoder。详见 [v50.md](docs/versions/v50.md)。
 >
 > **插件接口原则**：v27–v44 暴露的是各架构层的接口，不是把现有功能插件化。统一约束见 [INTERFACE-PLAN-v27-v44.md](docs/INTERFACE-PLAN-v27-v44.md)，运行时契约见 [PLUGIN-RUNTIME-DESIGN.md](docs/PLUGIN-RUNTIME-DESIGN.md)。
 > **接口层不实现任何功能**：v27–v44 只定义契约和注册表，不提供任何实现；真实 provider / channel / tool / storage 由核心或第三方开发者实现。欢迎按契约提交实现。
@@ -1716,7 +1718,7 @@ python3 checks/env_check.py --init-db   # 环境监测时自动建
 |---|---|
 | **番茄正文有 OCR 错字** | 约 5%（`神谨`→`神龛`），对摘要够用，逐字引用不可靠 |
 | **起点抓不了** | 章节页对机房 IP + 未登录双重限制，已放弃 |
-| **抖音未实现** | 规划在 v57，且只做看和转发，发评论不可行 |
+| **抖音未实现** | 规划在 v58，且只做看和转发，发评论不可行 |
 | 群聊记忆按群号 | 同一个人在私聊和群里是两份记忆 |
 | 语义检索靠关键词 | 无外网装不了 embedding，BM25 + 关键词双路 |
 | 视觉/ASR 依赖外部接口 | 失败静默降级，不影响聊天 |
@@ -1756,10 +1758,10 @@ python3 checks/env_check.py --init-db   # 环境监测时自动建
 | 文档 | 内容 |
 |---|---|
 | [`docs/README.md`](docs/README.md) | 文档总索引（版本 → 条目 → 状态） |
-| [`docs/ROADMAP.md`](docs/ROADMAP.md) | 发布路线图：v17~v63 每个小版本的拆解与验收点 |
+| [`docs/ROADMAP.md`](docs/ROADMAP.md) | 发布路线图：v17~v64 每个小版本的拆解与验收点 |
 | [`docs/DB-DESIGN.md`](docs/DB-DESIGN.md) | 数据库设计（一表一职责） |
 | [`docs/发布检查清单.md`](docs/发布检查清单.md) | 5 组检查项 + 环境变量表 + 发布流程 |
-| [`docs/versions/`](docs/versions/) | 各版本设计文档（v6 ~ v63） |
+| [`docs/versions/`](docs/versions/) | 各版本设计文档（v6 ~ v64） |
 | [`docs/V14-后续清单.md`](docs/V14-后续清单.md) | 未排期需求（A~E 组） |
 | [`docs/V6-功能.md`](docs/V6-功能.md) | v6 时代的功能总表（74 项，封版） |
 | [`docs/RELEASE-NOTES.md`](docs/RELEASE-NOTES.md) | 最近一次发布说明 |
