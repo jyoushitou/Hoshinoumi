@@ -58,6 +58,25 @@ def main():
                 shutil.copytree(s, d)
             else:
                 shutil.copy2(s, d)
+    # v28.4：把启用插件快照和 registry generation 写进版本目录
+    try:
+        from bot.core import settings
+        from bot.infra import conn
+        from bot.plugins.store import PluginStore
+        from bot.plugins.lock import write_lock
+
+        backend = settings.storage_backend()
+        conn.configure(
+            mysql_config=settings.db_config() if backend == "mysql" else None,
+            backend=backend,
+            sqlite_path=settings.sqlite_path() if backend == "sqlite" else None,
+        )
+        store = PluginStore()
+        write_lock(dst, store.generation(), store.list(enabled_only=True))
+        print("[prepare] plugin-lock.json 已写入")
+    except Exception as e:
+        print(f"[prepare] plugin-lock 跳过：{e}")
+
     # 版本文件必须存在
     ver = dst / "bot" / "core" / "version.py"
     if not ver.exists():

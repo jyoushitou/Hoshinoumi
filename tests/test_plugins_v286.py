@@ -77,6 +77,17 @@ class TestPluginStop(unittest.TestCase):
             self.assertTrue(getattr(ctx, "stopped", False))
         asyncio.run(run())
 
+    def test_lock_generation_mismatch_skips_load(self):
+        from bot.plugins.lock import write_lock
+        from bot.plugins.runtime import PluginRuntime
+        from bot.registry import PluginRegistry
+        from unittest import mock
+
+        write_lock(self.tmp, self.store.generation() + 1, [])
+        with mock.patch("bot.plugins.runtime.Path.cwd", return_value=Path(self.tmp)):
+            rt = PluginRuntime(registry=PluginRegistry(), store=self.store)
+            self.assertEqual(rt.load_enabled(), 0)
+
 
 if __name__ == "__main__":
     unittest.main()

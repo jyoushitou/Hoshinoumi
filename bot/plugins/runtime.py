@@ -2,10 +2,12 @@
 # stop 跟随 worker：SIGTERM / drain / disable 都走这里。
 
 import asyncio
+from pathlib import Path
 
 from ..log import log_api, log_err, log_system
 from ..registry import PluginRegistry
 from .loader import load_plugin
+from .lock import read_lock, verify_generation
 from .store import PluginStore
 
 _runtime = None
@@ -19,8 +21,20 @@ class PluginRuntime:
 
     def load_enabled(self):
         """启动时加载 enabled + auto_start 的插件；失败只记录，不拖垮 worker。"""
+        lock = read_lock(Path.cwd())
+        if lock is not None:
+            gen = self.store.generation()
+            if not verify_generation(lock, gen):
+                log_err(f"[插件] plugin-lock generation 不匹配："
+                        f"lock={lock.get('registry_generation')} db={gen}，拒绝加载")
+                return 0
+            allowed = {str(x.get("name")) for x in (lock.get("plugins") or [])}
+        else:
+            allowed = None
         n = 0
         for rec in self.store.list(enabled_only=True):
+            if allowed is not None and rec.name not in allowed:
+                continue
             if not rec.auto_start:
                 continue
             try:
