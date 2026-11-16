@@ -1,12 +1,12 @@
-# 架构图（v28.0.0 / v27–v44 接口规划）
+# 架构图（v32.4.0 / v27–v37 接口规划）
 
-> 当前后端 v28.0.0；网关 v26.4.0。
+> 当前后端 v32.4.0；网关 v26.4.0；schema 31。
 >
 > 已部署架构：ingress 持有 3001/27004，worker 只走 Unix socket，蓝绿热更新。
 >
-> v27 已完成注册表/Manifest 基础；v28 插件运行时是当前计划，核心 native 仍照常工作。
+> v27/v28 插件注册表/运行时、v29–v32 模型/记忆层已完成；v33 起为规划。
 >
-> 配套：v27–v44 总纲见 [INTERFACE-PLAN-v27-v44.md](INTERFACE-PLAN-v27-v44.md)。
+> 配套：v27–v37 总纲见 [INTERFACE-PLAN-v27-v37.md](INTERFACE-PLAN-v27-v37.md)。
 
 ---
 
@@ -245,22 +245,22 @@ registry            插件安装/启用/审批/错误状态
 
 插件启用状态在注册表，不在 `features.json`。
 
-## 6. v27–v44 接口映射
+## 6. v27–v37 接口映射
 
 ```text
 v27 插件注册表基础       v28 插件运行时
 v29/30 模型              v31/32 记忆
-v33/34 通道              v35/36 工具
-v37/38 存储              v39/40 调度
-v41/42 出站              v43/44 默认链路
+v33 接口层收口（通道/工具/存储/调度/出站/默认链路）
+v34 学习规划              v35 多端与客户端
+v36 生态接入              v37 运维与嵌入式
 ```
 
-每层两版：契约 + native；插件接入。核心 native 不实现 PluginManifest，不进入插件表。
+v33 一次收口六层接口；核心 native 不实现 PluginManifest，不进入插件表。
 
 ## 7. 当前架构债
 
 - `bot/ports` 实际只有 2 个模块引用，v29 起逐层补。
-- `infra/conn` 线程本地连接与 `infra/pool` 并存，v28 统一。
+- `infra/conn` 与 `infra/pool` 并存，v28.1 已支持 repo pool，后续继续收口。
 - 约 164 处 `except Exception: pass`，插件链路不得静默。
 - 旧兼容层：`bot/api.py`、`api_server.py`、`handler.py`、`config.py`；`bot/db.py` 已无引用可删。
-- v46–v68 后期计划只做过编号顺延，语义仍需逐版复审。
+- v33–v37 是合并后的规划，落地前仍需逐版复审。

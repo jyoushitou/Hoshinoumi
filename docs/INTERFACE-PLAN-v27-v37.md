@@ -1,35 +1,28 @@
-# v27–v44 接口层开发总纲
+# v27–v37 接口层开发总纲
 
-> 目标：**一个大版本只开放一层接口**。每层都同时具备：
+> 目标：已发布的 v27–v32 不动；v33 一次收口六层接口，v34–v37 按阶段推进。每层都同时具备：
 > 核心 native 实现、第三方插件实现、统一注册表、审批、错误记录、任务归属、热更新加载。
 
-## 1. 十八个接口版本
+## 1. 已发布层与规划收口
 
 | 版本 | 层 | 开放的能力 | 核心 native |
 |---|---|---|---|
 | v27 | 插件注册表基础 | PluginManifest / PluginRegistry / MasterRegistry | 无 |
 | v28 | 插件运行时 | PluginContext / 审批 / loader / errors / tasks | 无 |
 | v29 | 模型契约 + native | `model.<name>@1` | DeepSeek / 豆包 |
-| v30 | 模型插件接入 | `model.<name>@1` 第三方实现 | 同上 |
+| v30 | 模型插件接入 | 第三方 model provider | 同上 |
 | v31 | 记忆契约 + native | `memory.store.<name>@1` / `memory.retriever.<name>@1` | SQLMemoryStore / BM25 |
 | v32 | 记忆插件接入 | 第三方 store / retriever | 同上 |
-| v33 | 通道契约 + native | `channel.<name>@1` | NapCat / QQ |
-| v34 | 通道插件接入 | 第三方通道 | 同上 |
-| v35 | 工具契约 + native | `tool.<name>@1` | 现有工具 |
-| v36 | 工具插件接入 | 第三方工具 | 同上 |
-| v37 | 存储契约 + native | `storage.backend.<name>@1` / `storage.repository.<name>@1` | MySQL / SQLite |
-| v38 | 存储插件接入 | 第三方 backend / repository + 插件 DDL/迁移 | 同上 |
-| v39 | 调度契约 + native | `scheduler.<name>@1` / `schedule.trigger.<name>@1` | asyncio |
-| v40 | 调度插件接入 | 第三方 scheduler / trigger | 同上 |
-| v41 | 出站契约 + native | `transport.<name>@1` | WebSocket |
-| v42 | 出站插件接入 | 第三方 transport | 同上 |
-| v43 | 默认链路契约 + native | `route.<layer>.<name>@1` | 核心默认链路 |
-| v44 | 默认链路插件接入 | 第三方 route candidate | 同上 |
+| **v33** | **接口层收口** | 通道/工具/存储/调度/出站/默认链路六层契约 + native + 插件 | NapCat / 现有工具 / MySQL/SQLite / asyncio / WebSocket / 核心路由 |
+| **v34** | 学习规划 | 周计划表 | 单表 `study_plans` |
+| **v35** | 多端与客户端 | 推送/本机服务/IDE/命令收敛/Web/桌面/手机 | 本机服务 + DeliveryHub |
+| **v36** | 生态接入 | QQ空间/运维/视频/微信/通话/微服务 | 各平台适配 |
+| **v37** | 运维与嵌入式 | systemd 常驻 + 嵌入式前端 | systemd + 前端 |
 
 规则：
 
 - 运行时契约见 [PLUGIN-RUNTIME-DESIGN.md](PLUGIN-RUNTIME-DESIGN.md)。
-- v28 不做插件 DDL；DDL/迁移统一在 v38 存储层。
+- 插件 DDL/迁移统一在 v33 的存储子层。
 - 初始化顺序：command → events → life → ai → plugin（最后）。
 - `@2` 能力在核心只有 `@1` 时拒绝加载，不做降级。
 - 安装按 manifest name + 包 hash，复制到 `plugins/<layer>/<name>/`。
@@ -38,7 +31,7 @@
 - **核心 native 不实现 PluginManifest，不进入插件表。**
 - 插件实现某一层的 Protocol，通过 v27 的 PluginRegistry 注册。
 - 调用方 `registry.get(capability)` 返回 `None` 时，回落核心 native。
-- 每层的默认选择由 v43 RouteRegistry 统一定义（v44 接第三方候选）；默认仍优先核心 native。
+- 每层的默认选择由 v33 默认链路子层统一定义；默认仍优先核心 native。
 
 ## 2. 六个注册表
 
@@ -183,7 +176,7 @@ plugins/<layer>/<name>/migrations/001_init.sql
 规则：
 
 - 运行时契约见 [PLUGIN-RUNTIME-DESIGN.md](PLUGIN-RUNTIME-DESIGN.md)。
-- v28 不做插件 DDL；DDL/迁移统一在 v38 存储层。
+- 插件 DDL/迁移统一在 v33 的存储子层。
 - 初始化顺序：command → events → life → ai → plugin（最后）。
 - `@2` 能力在核心只有 `@1` 时拒绝加载，不做降级。
 - 安装按 manifest name + 包 hash，复制到 `plugins/<layer>/<name>/`。

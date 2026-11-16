@@ -85,7 +85,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | 想要商业客服 / 知识库问答机器人的人 | 它优先服从人设和关系，不是客服 |
 | 需要多租户 SaaS、高并发、合规审计的团队 | 多用户是 v23 计划；当前没有完整鉴权/限流 |
 | 不能接受 QQ 平台风控 / 角色 IP 二创风险的人 | 这是自托管二创项目，不是官方产品 |
-| 期待开箱即用的语音通话 / 手机 App / 桌面端的人 | 这些在 v51+ 计划里，当前还没做 |
+| 期待开箱即用的语音通话 / 手机 App / 桌面端的人 | 这些在 v35.4+ 计划里，当前还没做 |
 | 不愿意维护数据库、备份、升级的人 | 长期记忆和角色状态都在数据库里 |
 | 要求“零 bug、零配置、零运维”的人 | 项目还在快速迭代，边界和文档会变 |
 
@@ -104,12 +104,11 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 |---|---|
 | v21–v27 | 已完成网关/读书/热更新/TCP 帧/插件注册表；多用户隔离仍未完成 |
 | v24 | 想修好读书链路的人：搜索、链接标题、进度、本地书回退 |
-| v27–v44 | 第三方开发者：写模型 provider、检索器、通道、工具、存储、调度、传输适配器 |
-| v45 | 想把每周学习计划交给机器人提醒/顺延的人 |
-| v46 | 需要多端主动消息的人：QQ、Web、桌面、手机、嵌入式屏 |
-| v48–v49 | 用 DSH / Qoder / WorkBuddy 的开发者：希望 IDE 里也能调用同一个“她” |
-| v50 | 觉得 QQ 命令刷屏的人：只留短命令，详细配置走专属前端 |
-| v51–v68 | 想要 Web / Linux 桌面 / Windows 桌面 / 手机 App / 嵌入式屏的人 |
+| v27–v37 | 第三方开发者：写模型 provider、检索器、通道、工具、存储、调度、传输适配器 |
+| v34 | 想把每周学习计划交给机器人提醒/顺延的人 |
+| v35 | 需要多端主动消息 / Web / 桌面 / 手机 / IDE 的人 |
+| v35.3 | 觉得 QQ 命令刷屏的人：只留短命令，详细配置走专属前端 |
+| v36–v37 | 想要生态接入 / 运维 / 嵌入式屏的人 |
 | 长期 | 写作辅助、跑团/角色扮演、个人知识陪伴、AI 角色研究、小社区自托管 |
 
 仍然不适合的方向：
@@ -236,7 +235,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | **存储** | MySQL 8（默认，schema 31）/ SQLite（自动回退）；已统一到 `infra/pool`（v28.1） |
 | **部署** | gateway 用 Docker / docker compose；ingress / worker 用 systemd 或 screen；Linux 生产、Windows 开发 |
 | **外部服务** | NapCat（QQ 协议）、DeepSeek（主对话）、豆包 / 火山方舟（视觉）、ALAPI（搜图） |
-| **测试** | 10071 条：功能 10019 + 环境/迁移 37 |
+| **测试** | 10071 条：功能 10034 + 环境/迁移 37 |
 
 > 当前拓扑不是“网关直接 HTTP 打后端”：
 >
@@ -267,7 +266,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | C++ 网关 | 用户自己的 CommonNet（Boost.Asio/Beast）；客户端 27005 → TCP 27004 帧 → ingress；worker 只走 Unix socket |
 | 查版本 | `!version` 看版本号、提交、运行时长 |
 
-**10071 条测试**（功能 10019 + 环境/迁移 37），静态检查零未定义名字。
+**10071 条测试**（功能 10034 + 环境/迁移 37），静态检查零未定义名字。
 
 ---
 
@@ -310,58 +309,27 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | v28 | DB pool + 插件运行时 + 交互回归 + cron 对账 + 阅读进度修复 | ✅ 已完成（v28.9.1） | [v28.md](docs/versions/v28.md) |
 | v29 | 模型层契约 + native + 环境门禁 + 阅读静默 | ✅ 已完成（v29.4.2） | [v29.md](docs/versions/v29.md) |
 | v30 | 模型层插件接入 | ✅ 已完成（v30.2.0） | [v30.md](docs/versions/v30.md) |
-| v31 | 记忆层契约 + native + 动态帮助 | ✅ 已完成（v32.4.0） | [v31.md](docs/versions/v31.md) |
+| v31 | 记忆层契约 + native + 动态帮助 | ✅ 已完成（v31.3.0） | [v31.md](docs/versions/v31.md) |
 | v32 | 记忆层插件接入 + 钩子批量修改 + 多行命令 | ✅ 已完成（v32.4.0） | [v32.md](docs/versions/v32.md) |
-| v33 | 通道层契约 + native | 📋 已规划 | [v33.md](docs/versions/v33.md) |
-| v34 | 通道层插件接入 | 📋 已规划 | [v34.md](docs/versions/v34.md) |
-| v35 | 工具层契约 + native | 📋 已规划 | [v35.md](docs/versions/v35.md) |
-| v36 | 工具层插件接入 | 📋 已规划 | [v36.md](docs/versions/v36.md) |
-| v37 | 存储层契约 + native | 📋 已规划 | [v37.md](docs/versions/v37.md) |
-| v38 | 存储层插件接入 | 📋 已规划 | [v38.md](docs/versions/v38.md) |
-| v39 | 调度层契约 + native | 📋 已规划 | [v39.md](docs/versions/v39.md) |
-| v40 | 调度层插件接入 | 📋 已规划 | [v40.md](docs/versions/v40.md) |
-| v41 | 出站层契约 + native | 📋 已规划 | [v41.md](docs/versions/v41.md) |
-| v42 | 出站层插件接入 | 📋 已规划 | [v42.md](docs/versions/v42.md) |
-| v43 | 默认链路契约 + native | 📋 已规划 | [v43.md](docs/versions/v43.md) |
-| v44 | 默认链路插件接入 | 📋 已规划 | [v44.md](docs/versions/v44.md) |
-| v45 | 学习规划：7 日列单表，节数可变 | 📋 已规划 | [v45.md](docs/versions/v45.md) |
-| v46 | 多端推送：主动消息扇出到所有接入口 | 📋 已规划 | [v46.md](docs/versions/v46.md) |
-| v47 | 本机服务化：常驻 / 自启 / 健康检查 | 📋 已规划 | [v47.md](docs/versions/v47.md) |
-| v48 | DSH 插件：本机工具注册与调用 | 📋 已规划 | [v48.md](docs/versions/v48.md) |
-| v49 | Qoder / WorkBuddy 插件与安装器 | 📋 已规划 | [v49.md](docs/versions/v49.md) |
-| v50 | 命令收敛：QQ 只保留短命令，详细配置走专属前端 | 📋 已规划 | [v50.md](docs/versions/v50.md) |
-| v51 | 电脑 Web：聊天 + 历史 + 功能面板 | 📋 已规划 | [v51.md](docs/versions/v51.md) |
-| v52 | 桌面端（一）Linux：Tauri + Web UI | 📋 已规划 | [v52.md](docs/versions/v52.md) |
-| v53 | 桌面端（二）Windows：Tauri + WebView2 | 📋 已规划 | [v53.md](docs/versions/v53.md) |
-| v54 | 手机 App（Flutter）+ 推送通知 + 记账 | 📋 已规划 | [v54.md](docs/versions/v54.md) |
-| v55 | 手机 App 独立模式：离线对话/记账，恢复立即同步 | 📋 已规划 | [v55.md](docs/versions/v55.md) |
-| v56 | QQ 空间：发说说 + 只对熟人点赞/评论 | 📋 已规划 | [v56.md](docs/versions/v56.md) |
-| v57 | 运维（一）bash 只读 | 📋 已规划 | [v57.md](docs/versions/v57.md) |
-| v58 | 运维（二）agent | 📋 已规划 | [v58.md](docs/versions/v58.md) |
-| v59 | 运维（三）有限写 | 📋 已规划 | [v59.md](docs/versions/v59.md) |
-| v60 | 运维（四）可写体系 | 📋 已规划 | [v60.md](docs/versions/v60.md) |
-| v61 | 视频（一）B 站 | 📋 已规划 | [v61.md](docs/versions/v61.md) |
-| v62 | 视频（二）抖音 | 📋 已规划 | [v62.md](docs/versions/v62.md) |
-| v63 | 微信接入（OpenClaw） | 📋 已规划 | [v63.md](docs/versions/v63.md) |
-| v64 | 语音通话 | 📋 已规划 | [v64.md](docs/versions/v64.md) |
-| v65 | 视频通话 | 📋 已规划 | [v65.md](docs/versions/v65.md) |
-| v66 | 微服务接入：融进自有 Web，探网关 5 次 + 池复用 | 📋 已规划 | [v66.md](docs/versions/v66.md) |
-| v67 | 常驻（后端）systemd / 看门狗 | 📋 已规划 | [v67.md](docs/versions/v67.md) |
-| v68 | 嵌入式前端（Linux 后端）：树莓派/平板显示对话 | 📋 已规划 | [v68.md](docs/versions/v68.md) |
+| v33 | 接口层收口：通道/工具/存储/调度/出站/默认链路 | 📋 已规划 | [v33.md](docs/versions/v33.md) |
+| v34 | 学习规划：7 日列单表，节数可变 | 📋 已规划 | [v34.md](docs/versions/v34.md) |
+| v35 | 多端与客户端：推送/本机服务/IDE/命令收敛/Web/桌面/手机 | 📋 已规划 | [v35.md](docs/versions/v35.md) |
+| v36 | 生态接入：QQ空间/运维/视频/微信/通话/微服务 | 📋 已规划 | [v36.md](docs/versions/v36.md) |
+| v37 | 运维与嵌入式：systemd 常驻 + 嵌入式前端 | 📋 已规划 | [v37.md](docs/versions/v37.md) |
 
 > **版本拆分**：v24 = 读书修复与增强；v25 = 热更新 + 配置动态化；v26 = 内部 TCP/protobuf；v27 = 插件注册表基础；v28 = 插件运行时；原 v26 及以后整体顺延为 **v27+**。
 >
-> **编号变更**：命令收敛移到 **v50**（v49 Qoder 之后、v51 Web 之前）；v46 多端推送 / v47 本机服务化 / v48 DSH / v49 Qoder。详见 [v50.md](docs/versions/v50.md)。
+> **规划合并**：已发布的 v27–v32 不动；v33+ 规划合并为 v33 接口层收口、v34 学习规划、v35 多端与客户端、v36 生态接入、v37 运维与嵌入式。
 >
-> **插件接口原则**：v27–v44 暴露的是各架构层的接口，不是把现有功能插件化。统一约束见 [INTERFACE-PLAN-v27-v44.md](docs/INTERFACE-PLAN-v27-v44.md)，运行时契约见 [PLUGIN-RUNTIME-DESIGN.md](docs/PLUGIN-RUNTIME-DESIGN.md)。
-> **接口层不实现任何功能**：v27–v44 只定义契约和注册表，不提供任何实现；真实 provider / channel / tool / storage 由核心或第三方开发者实现。欢迎按契约提交实现。
+> **插件接口原则**：v27–v37 暴露的是各架构层的接口，不是把现有功能插件化。统一约束见 [INTERFACE-PLAN-v27-v37.md](docs/INTERFACE-PLAN-v27-v37.md)，运行时契约见 [PLUGIN-RUNTIME-DESIGN.md](docs/PLUGIN-RUNTIME-DESIGN.md)。
+> **接口层不实现任何功能**：v27–v37 只定义契约和注册表，不提供任何实现；真实 provider / channel / tool / storage 由核心或第三方开发者实现。欢迎按契约提交实现。
 > DeepSeek/豆包、BM25、QQ/NapCat、现有工具/命令、MySQL/SQLite、asyncio 调度、
 > WebSocket 出站都保持核心 native；外部插件只能 extend / enhance / 显式 replace 路由，
 > 禁用/卸载/失败时回退核心。
 >
 > **核心范围**：文档里所有 **vXXX 功能都是核心功能**，包括 v23 之前的聊天、记忆、
-> 命令、定时、语音、视觉、读书、OCR、备份、主动消息，以及 v27–v44 的接口定义。
-> v27–v44 本身不是插件，也不是功能实现；后续版本也不会用插件接口实现功能。
+> 命令、定时、语音、视觉、读书、OCR、备份、主动消息，以及 v27–v37 的接口定义。
+> v27–v37 本身不是插件，也不是功能实现；后续版本也不会用插件接口实现功能。
 >
 
 > **插件运行时（v28）**：
@@ -1102,7 +1070,7 @@ AI 摘要（≤100 字）→ 记进度
 ### 测试
 
 ```bash
-python3 scripts/run_tests.py             # 10071 条（tests 10019 + checks 37）
+python3 scripts/run_tests.py             # 10071 条（tests 10034 + checks 37）
 python3 scripts/check_names.py            # 静态检查：未定义名字 / 先用后赋值
 ```
 
@@ -1718,7 +1686,7 @@ python3 checks/env_check.py --init-db   # 环境监测时自动建
 |---|---|
 | **番茄正文有 OCR 错字** | 约 5%（`神谨`→`神龛`），对摘要够用，逐字引用不可靠 |
 | **起点抓不了** | 章节页对机房 IP + 未登录双重限制，已放弃 |
-| **抖音未实现** | 规划在 v58，且只做看和转发，发评论不可行 |
+| **抖音未实现** | 规划在 v36.5，且只做看和转发，发评论不可行 |
 | 群聊记忆按群号 | 同一个人在私聊和群里是两份记忆 |
 | 语义检索靠关键词 | 无外网装不了 embedding，BM25 + 关键词双路 |
 | 视觉/ASR 依赖外部接口 | 失败静默降级，不影响聊天 |
@@ -1758,10 +1726,10 @@ python3 checks/env_check.py --init-db   # 环境监测时自动建
 | 文档 | 内容 |
 |---|---|
 | [`docs/README.md`](docs/README.md) | 文档总索引（版本 → 条目 → 状态） |
-| [`docs/ROADMAP.md`](docs/ROADMAP.md) | 发布路线图：v17~v64 每个小版本的拆解与验收点 |
+| [`docs/ROADMAP.md`](docs/ROADMAP.md) | 发布路线图：v17~v37 每个小版本的拆解与验收点 |
 | [`docs/DB-DESIGN.md`](docs/DB-DESIGN.md) | 数据库设计（一表一职责） |
 | [`docs/发布检查清单.md`](docs/发布检查清单.md) | 5 组检查项 + 环境变量表 + 发布流程 |
-| [`docs/versions/`](docs/versions/) | 各版本设计文档（v6 ~ v64） |
+| [`docs/versions/`](docs/versions/) | 各版本设计文档（v6 ~ v37） |
 | [`docs/V14-后续清单.md`](docs/V14-后续清单.md) | 未排期需求（A~E 组） |
 | [`docs/V6-功能.md`](docs/V6-功能.md) | v6 时代的功能总表（74 项，封版） |
 | [`docs/RELEASE-NOTES.md`](docs/RELEASE-NOTES.md) | 最近一次发布说明 |
@@ -1810,7 +1778,7 @@ python3 checks/env_check.py --init-db   # 环境监测时自动建
 | 前序 | v19–v30 已完成；v31 当前 |
 | 数据表 | schema 31；6 张 plugin_* 表 |
 | 命令 | 47 个注册命令（`!task` 仅提示迁移） |
-| 测试 | 10071 条：功能 10019 + 环境/迁移 37 |
+| 测试 | 10071 条：功能 10034 + 环境/迁移 37 |
 | 账号 | 单主人 `__owner__`；多用户 v23 计划 |
 | 后端鉴权 | `/api/*` 除 health 外要 Bearer Token；`/internal/*` 免鉴权 |
 | 网关鉴权 | 有 owner 登录/JWT；无按用户限流、无 TLS |
