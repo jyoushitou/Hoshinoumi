@@ -130,7 +130,7 @@ v6：P1 会说话 → P2 说实话 → P2.5 长感官 → P3 有生活 → P4 �
 | **v26** | [versions/v26.md](versions/v26.md) | 内部通讯升级 + 模糊指令归一化 | ✅ 已完成（v26.7.4） |
 | **v27** | [versions/v27.md](versions/v27.md) | 插件注册表基础：Manifest/Registry/快照 | ✅ 已完成（v27.8.0） |
 | **v28** | [versions/v28.md](versions/v28.md) | DB pool + schema30 + 插件运行时 + 交互回归 + cron 对账 | 🚧 v28.6 开发中 |
-| **v29** | [versions/v29.md](versions/v29.md) | 模型层契约 + native + 蓝绿环境门禁 | ✅ 已完成（v29.3.0） |
+| **v29** | [versions/v29.md](versions/v29.md) | 模型层契约 + native + 环境门禁；v29.4 阅读静默待做 | 🚧 v29.3.0 / v29.4 计划 |
 | **v30** | [versions/v30.md](versions/v30.md) | 模型层插件接入 | 规划中 |
 | **v31** | [versions/v31.md](versions/v31.md) | 记忆层契约 + native | 规划中 |
 | **v32** | [versions/v32.md](versions/v32.md) | 记忆层插件接入 | 规划中 |
