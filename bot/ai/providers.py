@@ -24,3 +24,24 @@ class DeepSeekProvider:
 
 
 assert isinstance(DeepSeekProvider(), ModelProvider)
+
+
+class DoubaoProvider:
+    name = "doubao"
+
+    def capabilities(self):
+        return {"text"}
+
+    async def complete(self, req: ModelRequest):
+        text = await call_doubao(
+            req.messages,
+            max_tokens=req.max_tokens,
+            target_id=req.target_id or None,
+        )
+        if not text:
+            return None
+        return ModelReply(text=str(text), model=self.name,
+                          fallback=isinstance(text, Fallback))
+
+
+assert isinstance(DoubaoProvider(), ModelProvider)
