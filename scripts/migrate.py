@@ -60,7 +60,7 @@ def main():
             return _preview(c)
 
         from bot.infra import schema
-        from scripts import migrate_indexes, migrate_v18, migrate_v23, migrate_v24, setup
+        from scripts import migrate_indexes, migrate_v18, migrate_v23, migrate_v24, migrate_v28, setup
 
         print("  [1/8] 建缺表")
         made = schema.ensure_tables(c, log=lambda m: print("        " + m))
@@ -102,12 +102,14 @@ def main():
         except Exception as e:
             print(f"  [!] 索引补齐失败（不影响启动，可跳过后重试）：{e}")
 
-        print("  [8/8] 内置场景")
+        print("  [8/8] 内置场景 + 插件表")
         setup.seed_scenes()
+        made_plugin = migrate_v28.apply(c)
+        print(f"        plugin_* 表 {len(made_plugin)} 张")
 
         from bot.infra import repo_meta
-        repo_meta.set_value("schema_version", "29")
-        print("        schema_version=29")
+        repo_meta.set_value("schema_version", "30", cursor=c)
+        print("        schema_version=30")
         print("\n[OK] 迁移完成，下一步：python3 checks/env_check.py")
         return 0
     finally:

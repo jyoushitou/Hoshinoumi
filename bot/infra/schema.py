@@ -185,6 +185,81 @@ CURRENT = {
             KEY idx_user_time (user_id, created_at)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """,
+    # ---------- v28：插件运行时核心表 ----------
+    "plugin_registry": """
+        CREATE TABLE IF NOT EXISTS plugin_registry (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(128) NOT NULL,
+            author VARCHAR(128) NOT NULL DEFAULT '',
+            layer VARCHAR(16) NOT NULL,
+            version VARCHAR(32) NOT NULL,
+            api_version INT NOT NULL DEFAULT 1,
+            requires_core VARCHAR(64) NOT NULL DEFAULT '',
+            capabilities TEXT,
+            entrypoint VARCHAR(255) NOT NULL DEFAULT '',
+            package_hash VARCHAR(128) NOT NULL DEFAULT '',
+            auto_start TINYINT NOT NULL DEFAULT 0,
+            enabled TINYINT NOT NULL DEFAULT 0,
+            installed_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                       ON UPDATE CURRENT_TIMESTAMP,
+            UNIQUE KEY uk_plugin_name (name)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
+    "plugin_approvals": """
+        CREATE TABLE IF NOT EXISTS plugin_approvals (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            plugin_name VARCHAR(128) NOT NULL,
+            action VARCHAR(32) NOT NULL,
+            status VARCHAR(16) NOT NULL DEFAULT 'pending',
+            requested_by VARCHAR(64) NOT NULL DEFAULT '__owner__',
+            decided_by VARCHAR(64) NULL,
+            detail TEXT,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            decided_at DATETIME NULL,
+            KEY idx_plugin_approval (plugin_name, status)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
+    "plugin_permissions": """
+        CREATE TABLE IF NOT EXISTS plugin_permissions (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            plugin_name VARCHAR(128) NOT NULL,
+            permission VARCHAR(64) NOT NULL,
+            scope VARCHAR(255) NOT NULL DEFAULT '',
+            level TINYINT NOT NULL DEFAULT 1,
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                       ON UPDATE CURRENT_TIMESTAMP,
+            UNIQUE KEY uk_plugin_perm (plugin_name, permission, scope)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
+    "plugin_errors": """
+        CREATE TABLE IF NOT EXISTS plugin_errors (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            plugin_name VARCHAR(128) NOT NULL,
+            error_type VARCHAR(64) NOT NULL DEFAULT '',
+            message TEXT,
+            traceback TEXT,
+            resolved TINYINT NOT NULL DEFAULT 0,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            KEY idx_plugin_err (plugin_name, created_at)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
+    "plugin_schema_version": """
+        CREATE TABLE IF NOT EXISTS plugin_schema_version (
+            plugin_name VARCHAR(128) PRIMARY KEY,
+            version VARCHAR(32) NOT NULL DEFAULT '',
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                       ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
+    "plugin_registry_generation": """
+        CREATE TABLE IF NOT EXISTS plugin_registry_generation (
+            id TINYINT PRIMARY KEY,
+            generation BIGINT NOT NULL DEFAULT 0,
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                       ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
 }
 
 # ---------- 新表（docs/DB-DESIGN.md 的纯表，v17.5 逐步切过去） ----------
