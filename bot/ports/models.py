@@ -27,6 +27,30 @@ class ChatReply:
     raw: Optional[dict] = None
 
 
+@dataclass
+class ModelRequest(ChatRequest):
+    """v29：模型层契约请求。"""
+
+
+@dataclass
+class ModelReply(ChatReply):
+    """v29：模型层契约回复。"""
+    fallback: bool = False
+
+
+@runtime_checkable
+class ModelProvider(Protocol):
+    """v29：第三方/原生模型 provider 的公共契约。"""
+    name: str
+
+    def capabilities(self) -> set:
+        """返回能力名，例如 {'text'} / {'text','vision'}。"""
+        ...
+
+    async def complete(self, req: ModelRequest) -> Optional[ModelReply]:
+        ...
+
+
 @runtime_checkable
 class ChatModel(Protocol):
     """模型端口：DeepSeek / 豆包 / 未来的任何模型都实现它"""
