@@ -8,7 +8,8 @@ from .errors import CapabilityUnsupportedError, ManifestError
 _NAME_RE = re.compile(r"^[a-z][a-z0-9_.-]{2,63}$")
 _CAP_RE = re.compile(r"^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+@([1-9][0-9]*)$")
 _SEMVER_RE = re.compile(r"^(\d+)\.(\d+)\.(\d+)(?:\.(\d+))?$")
-_LAYERS = {"models", "channels", "memory", "tools", "storage"}
+_LAYERS = {"models", "channels", "memory", "tools", "storage",
+           "scheduler", "outbound", "routes"}
 _SUPPORTED_API = {1}
 _SUPPORTED_CAP = {1}
 
