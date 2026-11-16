@@ -9,11 +9,33 @@ from .server import start_api_server
 from .app.bootstrap import bootstrap
 from .app.loop import serve
 from .core import hot_reload
+from .core import state as cfg
+from .plugins.runtime import get_runtime
 
 
 async def main():
     """启动机器人：初始化 → 起 API 服务器 → 常驻服务循环"""
     bootstrap()
+
+    # v28.6：加载 enabled + auto_start 插件；失败不拖垮 worker
+    plugin_runtime = get_runtime()
+    try:
+        n = plugin_runtime.load_enabled()
+        if n:
+            log_system(f"[插件] 启动加载 {n} 个")
+    except Exception as e:
+        log_err(f"[插件] 启动加载失败：{e}")
+
+    # v28.6：SIGTERM/SIGINT 走安全退出，触发 plugin.stop
+    try:
+        loop = asyncio.get_running_loop()
+        for _sig in ("SIGTERM", "SIGINT"):
+            import signal
+            if hasattr(signal, _sig):
+                loop.add_signal_handler(getattr(signal, _sig),
+                                        lambda: cfg.shutdown_event.set())
+    except Exception:
+        pass
 
     # ===================== 启动 API 服务器 =====================
     try:
@@ -40,6 +62,10 @@ async def main():
     try:
         await serve(api_runner)
     finally:
+        try:
+            await plugin_runtime.stop_all(timeout=5.0)
+        except Exception as e:
+            log_err(f"[插件] 停止失败：{e}")
         if tcp_server:
             tcp_server.close()
             try:

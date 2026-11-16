@@ -69,6 +69,9 @@ async def cmd_plugin(ctx):
             if len(args) < 2:
                 return f"用法：!plugin {sub} <name>"
             store.set_enabled(args[1], sub == "enable")
+            if sub == "disable":
+                from ..plugins.runtime import get_runtime
+                await get_runtime().stop_one(args[1], timeout=5.0)
             return f"{args[1]} 已{'启用' if sub == 'enable' else '停用'}"
 
         if sub == "permission":

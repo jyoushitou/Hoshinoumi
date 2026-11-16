@@ -99,7 +99,12 @@ def load_plugin(name, registry, store=None, plugins_dir=None):
         spec.loader.exec_module(mod)
         factory = getattr(mod, factory_name)
         ctx = make_context(manifest, registry=registry)
-        obj = factory(ctx)
+        registry.register_manifest(manifest, factory)
+        try:
+            obj = factory(ctx)
+        except Exception:
+            registry.unregister(manifest.name)
+            raise
         return ctx, obj
     except Exception as e:
         store.record_error(name, type(e).__name__, str(e))

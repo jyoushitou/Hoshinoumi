@@ -99,6 +99,17 @@ class PluginRegistry:
             for r in self.list()
         ]
 
+    def unregister(self, name):
+        rec = self._by_name.pop(str(name or ""), None)
+        if rec is None:
+            return False
+        for cap in rec.capabilities:
+            rows = self._by_cap.get(cap, [])
+            self._by_cap[cap] = [r for r in rows if r.name != rec.name]
+            if not self._by_cap[cap]:
+                self._by_cap.pop(cap, None)
+        return True
+
     def clear(self):
         """测试用。"""
         self._by_name.clear()
