@@ -166,7 +166,7 @@ class TestCommandRegistry(unittest.TestCase):
         "acg", "apikeys", "clear", "clip", "code", "db", "diary", "event",
         "exit", "help", "img", "keywords", "log", "memory", "plugin", "ping", "quit",
         "reload", "say", "sayg", "set", "status", "sticker", "task",
-        "uptime", "usage", "profile", "todo", "voice", "vision", "memorybook", "growth", "persona", "stats", "config", "version", "cron", "hooks", "backup", "meta", "history", "gw", "relation", "adduser", "books", "book", "update",
+        "uptime", "usage", "profile", "todo", "voice", "vision", "memorybook", "growth", "persona", "stats", "config", "version", "cron", "hooks", "backup", "meta", "history", "gw", "relation", "adduser", "books", "book", "update", "route",
     }
 
     def setUp(self):
