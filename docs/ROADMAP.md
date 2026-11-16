@@ -179,7 +179,7 @@
 | v34 | 学习规划（v34.1） | [v34.md](versions/v34.md) |
 | v35 | 多端与客户端（v35.1–v35.7） | [v35.md](versions/v35.md) |
 | v36 | 生态接入：微博/贴吧/知乎/视频 + 随机内容消费 | [v36.md](versions/v36.md) |
-| v37 | 运维与嵌入式（v37.1–v37.2） | [v37.md](versions/v37.md) |
+| v37 | 运维与嵌入式（v37.1–v37.2）+ 统计/遗留 bug 收尾（v37.3） | [v37.md](versions/v37.md) |
 
 > v33 一次收口六层接口，统一约束见 [INTERFACE-PLAN-v27-v37.md](INTERFACE-PLAN-v27-v37.md)。
 

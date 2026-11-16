@@ -138,7 +138,7 @@ v6：P1 会说话 → P2 说实话 → P2.5 长感官 → P3 有生活 → P4 �
 | **v34** | [versions/v34.md](versions/v34.md) | 学习规划（v34.1） | 规划中 |
 | **v35** | [versions/v35.md](versions/v35.md) | 多端与客户端（v35.1–v35.7） | 规划中 |
 | **v36** | [versions/v36.md](versions/v36.md) | 生态接入（v36.1–v36.10） | 规划中 |
-| **v37** | [versions/v37.md](versions/v37.md) | 运维与嵌入式（v37.1–v37.2） | 规划中 |
+| **v37** | [versions/v37.md](versions/v37.md) | 运维与嵌入式（v37.1–v37.2）+ 统计/遗留 bug 收尾（v37.3） | 规划中 |
 
 
 
