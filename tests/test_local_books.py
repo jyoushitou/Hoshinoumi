@@ -129,7 +129,7 @@ class TestLocalBooks(unittest.TestCase):
             reading.summarize_chapter = orig_sum
         self.assertEqual(calls["chapter"], 1)
         self.assertGreater(calls["offset"], 0)
-        self.assertTrue(any("我开始读" in x for x in sent))
+        self.assertEqual(sent, [], "v29.4 自动首读不应发聊天")
 
     def test_read_chunk_1000_chars(self):
         p = self.LB.BOOK_DIR / "长章.txt"

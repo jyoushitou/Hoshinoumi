@@ -152,16 +152,7 @@ async def handle_local_read(ev):
     log_system(f"[本地阅读] {name} {info['chapter']} "
                f"({info['chapter_index']}/{info['total']} +{info['offset']}字) "
                f"摘要 {len(summary or '')} 字")
-    try:
-        from ..chat.send import send_short_reply
-        text = (f"读了《{info['title']}》"
-                f"第 {info['offset'] + 1} 字到第 {info['offset'] + info['chars']} 字：\n"
-                f"{(summary or '（这段摘要生成失败）')[:400]}")
-        if done:
-            text += "\n这本读完了。"
-        await send_short_reply(tid, text, cfg.active_ws_qq, tid, False, None)
-    except Exception as e:
-        log_api(f"[本地阅读] 摘要告知失败: {e}")
+    # v29.4：自动阅读只入库/记日志，不主动发聊天
     return {"ok": True, "chapter": info["chapter"], "summary": summary, "done": done}
 
 

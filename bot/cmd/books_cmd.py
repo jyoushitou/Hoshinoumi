@@ -74,7 +74,7 @@ async def cmd_book(ctx):
         BQ.enqueue(ctx.uid, name, 0)
         _spawn(_read_first_and_notify(ctx, name))
         return _decl(ctx) + (f"已加入队首：《{name}》。\n"
-                              "正在解析全书首个 1000 字，摘要随后主动发你；"
+                              "正在解析全书首个 1000 字；摘要只入库，不主动发。"
                               "空闲从下一段 1000 字续读。")
     if sub == "progress":
         p = LB.get_progress(ctx.uid)
@@ -123,16 +123,15 @@ async def _read_first_and_notify(ctx, name):
                     book_memory.remember_finished(ctx.uid, ctx.uid, title, info["total_chars"])
             except Exception:
                 pass
-        await _notify_start(ctx, title, info, summary)
+        # v29.4：自动首读只入库，不主动发摘要/错误；手动 !book next 才回
     except Exception as e:
         try:
             BQ.mark_error(ctx.uid, name)
         except Exception:
             pass
         try:
-            from ..chat.send import send_short_reply
-            await send_short_reply(ctx.uid, f"《{name}》首个 1000 字读不了：{e}",
-                                   ctx.ws, ctx.uid, False, None)
+            from ..log import log_err
+            log_err(f"[本地阅读] 首段读取失败 {name}: {e}")
         except Exception:
             pass
 
@@ -145,18 +144,6 @@ async def _chunk_summary(info):
         return (text or "").strip()[:500] or "（这段摘要生成失败，进度已记录）"
     except Exception:
         return "（这段摘要生成失败，进度已记录）"
-
-
-async def _notify_start(ctx, title, info, summary):
-    from ..chat.send import send_short_reply
-    text = (f"我开始读《{title}》了。\n"
-            f"第 {info['offset'] + 1} 字到第 {info['offset'] + info['chars']} 字摘要：\n"
-            f"{summary}\n"
-            f"全书连续读取，每次 1000 字，读完我再告诉你。")
-    try:
-        await send_short_reply(ctx.uid, text, ctx.ws, ctx.uid, False, None)
-    except Exception:
-        pass
 
 
 async def _read_chunk(ctx, name, offset=0):
