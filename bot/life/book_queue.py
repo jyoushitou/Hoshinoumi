@@ -35,18 +35,40 @@ def enqueue(user_id, name, total=0):
 
 
 def list_queue(user_id=None):
+    uid = _uid(user_id)
     c = get_cursor()
     c.execute("SELECT name,position,status,last_chapter,char_offset,total FROM reading_queue "
-              "WHERE user_id=%s ORDER BY position", (_uid(user_id),))
+              "WHERE user_id=%s ORDER BY position", (uid,))
+    rows = list(c.fetchall() or [])
+    # v28.9：修复旧版本把首段 1000 字误标 done 的行
+    for row in rows:
+        if row.get("status") == "done":
+            repair_done(uid, row.get("name"))
+    c.execute("SELECT name,position,status,last_chapter,char_offset,total FROM reading_queue "
+              "WHERE user_id=%s ORDER BY position", (uid,))
     return list(c.fetchall() or [])
 
 
 def active(user_id=None):
+    uid = _uid(user_id)
     c = get_cursor()
-    c.execute("SELECT name,position,status,last_chapter,char_offset,total FROM reading_queue "
-              "WHERE user_id=%s AND status IN ('queued','reading') "
-              "ORDER BY position LIMIT 1", (_uid(user_id),))
-    return c.fetchone()
+    sql = ("SELECT name,position,status,last_chapter,char_offset,total FROM reading_queue "
+           "WHERE user_id=%s AND status IN ('queued','reading') "
+           "ORDER BY position LIMIT 1")
+    c.execute(sql, (uid,))
+    row = c.fetchone()
+    if row:
+        return row
+    # v28.9：旧版本把首段误标 done 后，active() 看不到它；
+    # 空闲 tick 会误以为没有本地队列。先修复再重查。
+    c.execute("SELECT name FROM reading_queue WHERE user_id=%s AND status='done'", (uid,))
+    names = [r["name"] for r in (c.fetchall() or [])]
+    for name in names:
+        repair_done(uid, name)
+    if names:
+        c.execute(sql, (uid,))
+        return c.fetchone()
+    return None
 
 
 def get_item(user_id, name):
@@ -71,17 +93,39 @@ def set_total(user_id, name, total):
     c.connection.commit()
 
 
-def set_progress(user_id, name, chapter, total=0, status="reading", offset=0):
+def set_progress(user_id, name, chapter, total=0, status=None, offset=0):
     uid = _uid(user_id)
     total = int(total or 0)
     chapter = int(chapter or 0)
-    if total and chapter >= total:
-        status = "done"
+    # v28.9：显式 status 由 read_chunk 的 done 决定，绝不再用章节数强制 done。
+    # 旧调用（不传 status）保留 chapter>=total 的行为。
+    if status is None:
+        status = "done" if (total and chapter >= total) else "reading"
     c = get_cursor()
     c.execute("UPDATE reading_queue SET last_chapter=%s,char_offset=%s,total=%s,status=%s "
               "WHERE user_id=%s AND name=%s",
               (chapter, int(offset or 0), total, status, uid, str(name)))
     c.connection.commit()
+
+
+def repair_done(user_id, name):
+    """把“done 但实际没读完”的历史行改回 reading；真正读完的保持 done。"""
+    item = get_item(user_id, name)
+    if not item or item.get("status") != "done":
+        return False
+    try:
+        from .local_books import load_book, _chapter_layout
+        _title, chapters = load_book(item["name"])
+        _starts, total_chars = _chapter_layout(chapters)
+    except Exception:
+        return False
+    if int(item.get("char_offset") or 0) < int(total_chars or 0):
+        c = get_cursor()
+        c.execute("UPDATE reading_queue SET status='reading' "
+                  "WHERE user_id=%s AND name=%s", (_uid(user_id), item["name"]))
+        c.connection.commit()
+        return True
+    return False
 
 
 def mark_error(user_id, name):

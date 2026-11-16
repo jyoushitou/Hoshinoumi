@@ -121,6 +121,10 @@ async def handle_local_read(ev):
     if not name:
         return {"ok": False, "reason": "没有书名"}
     item = book_queue.get_item(tid, name)
+    if item and item.get("status") == "done":
+        # v28.9：旧版本可能把首段误标 done；先按文件实际长度修复
+        book_queue.repair_done(tid, name)
+        item = book_queue.get_item(tid, name)
     if not item or item["status"] in ("done", "error"):
         return {"ok": False, "reason": "队列项不可读"}
     try:

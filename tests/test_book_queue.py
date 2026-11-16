@@ -51,6 +51,46 @@ class TestBookQueue(unittest.TestCase):
         self.assertIsNone(self.Q.active("u1"))
         self.assertEqual(len(self.Q.list_queue("u1")), 2)
 
+    def test_explicit_reading_not_forced_done(self):
+        self.Q.enqueue("u1", "A", 1)
+        self.Q.set_progress("u1", "A", 1, 1, status="reading", offset=1000)
+        row = self.Q.get_item("u1", "A")
+        self.assertEqual(row["status"], "reading")
+        self.assertEqual(row["char_offset"], 1000)
+
+    def test_second_chunk_advances_to_2000(self):
+        """第一次1000 + 第二次1000 = char_offset 2000，不能回到0重读。"""
+        from unittest import mock
+        self.Q.enqueue("u1", "A", 1)
+        self.Q.set_progress("u1", "A", 1, 1, status="reading", offset=1000)
+        self.assertEqual(self.Q.active("u1")["char_offset"], 1000)
+        self.Q.set_progress("u1", "A", 1, 1, status="reading", offset=2000)
+        row = self.Q.get_item("u1", "A")
+        self.assertEqual(row["char_offset"], 2000)
+        self.assertEqual(row["status"], "reading")
+
+    def test_repair_done_uses_real_total_chars(self):
+        from unittest import mock
+        self.Q.enqueue("u1", "A", 1)
+        self.Q.set_progress("u1", "A", 1, 1, offset=1000)
+        self.assertEqual(self.Q.get_item("u1", "A")["status"], "done")
+        with mock.patch("bot.life.local_books.load_book",
+                        return_value=("A", [("全文", "x" * 2000)])):
+            self.assertTrue(self.Q.repair_done("u1", "A"))
+        row = self.Q.get_item("u1", "A")
+        self.assertEqual(row["status"], "reading")
+
+    def test_active_repairs_stale_done(self):
+        from unittest import mock
+        self.Q.enqueue("u1", "A", 1)
+        self.Q.set_progress("u1", "A", 1, 1, offset=1000)
+        with mock.patch("bot.life.local_books.load_book",
+                        return_value=("A", [("全文", "x" * 2000)])):
+            row = self.Q.active("u1")
+        self.assertEqual(row["name"], "A")
+        self.assertEqual(row["status"], "reading")
+        self.assertEqual(row["char_offset"], 1000)
+
     def test_user_isolated(self):
         self.Q.enqueue("u1", "A", 1)
         self.Q.enqueue("u2", "B", 1)

@@ -91,6 +91,10 @@ async def cmd_book(ctx):
         p = LB.get_progress(ctx.uid)
         if not p:
             return _decl(ctx) + "还没有进度，先 !book read <文件名> 或 !book local <书名>。"
+        BQ.repair_done(ctx.uid, p["name"])
+        q = BQ.active(ctx.uid)
+        if q and q["name"] == p["name"]:
+            return await _read_chunk(ctx, q["name"], int(q.get("char_offset") or 0))
         return await _read_chunk(ctx, p["name"], 0)
     if sub != "read" or len(args) < 2:
         return _decl(ctx) + "用法：!book read <文件名>"
