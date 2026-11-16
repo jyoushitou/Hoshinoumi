@@ -3,6 +3,7 @@
 
 from ..ports.models import ModelProvider, ModelRequest
 from ..registry import PluginRegistry
+from ..plugins.permissions import PermissionDenied, PermissionRequired
 from .providers import DeepSeekProvider, DoubaoProvider
 
 NATIVE = {
@@ -12,9 +13,10 @@ NATIVE = {
 
 
 class ModelRouter:
-    def __init__(self, registry=None, plugin_factory=None):
+    def __init__(self, registry=None, plugin_factory=None, store=None):
         self.registry = registry or PluginRegistry()
         self._plugin_factory = plugin_factory
+        self.store = store
         self._cache = {}
 
     def native(self, name):
@@ -34,8 +36,13 @@ class ModelRouter:
             else:
                 from ..plugins.context import make_context
                 ctx = make_context(rec.manifest, registry=self.registry)
+                # v30.1：插件模型必须先获得 plugin.call 权限（默认 1=审批）
+                ctx.permissions.require("plugin.call", cap)
                 obj = rec.factory(ctx)
-        except Exception:
+        except (PermissionDenied, PermissionRequired):
+            return None
+        except Exception as e:
+            self._record_error(rec.name, e)
             return None
         if obj is not None:
             self._cache[rec.name] = obj
@@ -48,13 +55,25 @@ class ModelRouter:
                 reply = await p.complete(req)
                 if reply is not None:
                     return reply
-            except Exception:
+            except Exception as e:
+                rec = self.registry.get(f"model.{name}@1")
+                if rec is not None:
+                    self._record_error(rec.name, e)
+                    self._cache.pop(rec.name, None)
                 reply = None
         if fallback:
             native = self.native(name)
             if native is not None:
                 return await native.complete(req)
         return None
+
+    def _record_error(self, name, exc):
+        if self.store is None:
+            return
+        try:
+            self.store.record_error(name, type(exc).__name__, str(exc))
+        except Exception:
+            pass
 
     def invalidate(self, name=None):
         if name is None:
