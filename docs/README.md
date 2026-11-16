@@ -134,11 +134,11 @@ v6：P1 会说话 → P2 说实话 → P2.5 长感官 → P3 有生活 → P4 �
 | **v30** | [versions/v30.md](versions/v30.md) | 模型层插件接入 | ✅ 已完成（v30.2.0） |
 | **v31** | [versions/v31.md](versions/v31.md) | 记忆层契约 + native + 动态帮助 | ✅ 已完成（v31.3.0） |
 | **v32** | [versions/v32.md](versions/v32.md) | 记忆层插件接入 + 钩子批量修改 + 多行命令 | ✅ 已完成（v32.4.0） |
-| **v33** | [versions/v33.md](versions/v33.md) | 接口层收口：通道/工具/存储/调度/出站/默认链路 | 规划中 |
-| **v34** | [versions/v34.md](versions/v34.md) | 学习规划 | 规划中 |
-| **v35** | [versions/v35.md](versions/v35.md) | 多端与客户端 | 规划中 |
-| **v36** | [versions/v36.md](versions/v36.md) | 生态接入：微博/贴吧/知乎 + 随机内容消费 | 规划中 |
-| **v37** | [versions/v37.md](versions/v37.md) | 运维与嵌入式 | 规划中 |
+| **v33** | [versions/v33.md](versions/v33.md) | 接口层收口（v33.33–v33.44） | 规划中 |
+| **v34** | [versions/v34.md](versions/v34.md) | 学习规划（v34.45） | 规划中 |
+| **v35** | [versions/v35.md](versions/v35.md) | 多端与客户端（v35.46–v35.55） | 规划中 |
+| **v36** | [versions/v36.md](versions/v36.md) | 生态接入（v36.56–v36.70） | 规划中 |
+| **v37** | [versions/v37.md](versions/v37.md) | 运维与嵌入式（v37.67–v37.68） | 规划中 |
 
 
 
