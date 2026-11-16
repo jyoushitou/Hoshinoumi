@@ -73,6 +73,14 @@ def main():
         print(f"[prepare] 拒绝：{dst} 仍有运行中的 worker PID {pid}")
         print("[prepare] 先停 worker，或使用新的版本号；绝不能删除运行中的版本目录")
         return 1
+    # v29.3：新版本进入蓝绿前必须有新鲜环境报告
+    try:
+        from scripts.env_gate import require_env_check
+        require_env_check()
+    except Exception as e:
+        print(f"[prepare] 拒绝：环境检测门禁未通过：{e}")
+        print("[prepare] 先运行：python3 checks/env_check.py")
+        return 1
     (ROOT / "logs").mkdir(exist_ok=True)
     copy_tree(src, dst)
     for name in SHARE:

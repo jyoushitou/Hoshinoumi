@@ -117,6 +117,14 @@ def stop(proc, timeout=20):
 
 async def deploy(base: Path, version: str, cmd, timeout=30.0, drain_seconds=60.0,
                  keep_versions=2, gc_delay=3600):
+    # v29.3：切流前再次校验环境报告，防止 prepare 后配置被改
+    try:
+        from scripts.env_gate import require_env_check
+        require_env_check()
+    except Exception as e:
+        print(f"[supervisor] 拒绝切流：环境检测门禁未通过：{e}")
+        print("[supervisor] 先运行：python3 checks/env_check.py")
+        return False
     version_dir = base / "versions" / version
     version_dir.mkdir(parents=True, exist_ok=True)
     env = os.environ.copy()
