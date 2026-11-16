@@ -1,6 +1,6 @@
 # Hoshinoumi（REC）· 文档索引
 
-> **当前事实：后端 v33.1.2.1，网关 v26.4.0，schema 31，测试 13078 条**（2026-11-16）
+> **当前事实：后端 v33.2.1.1，网关 v26.4.0，schema 31，测试 13082 条**（2026-11-16）
 > v27–v32 已完成；v33+ 规划已按阶段合并为 v33–v37。
 >
 > 这里只放“现在有效”的文档；开发计划单独维护，历史文档明确标注。
@@ -22,7 +22,7 @@
 
 | 文档 | 内容 | 维护状态 |
 |---|---|---|
-| [../README.md](../README.md) | 总览、快速开始、命令、配置、限制 | ✅ 现行（v33.1.2.1） |
+| [../README.md](../README.md) | 总览、快速开始、命令、配置、限制 | ✅ 现行（v33.2.1.1） |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | 分层图、消息生命周期、调度/出站 | ✅ 现行（以实际代码为准） |
 | [DB-DESIGN.md](DB-DESIGN.md) | 数据库设计与表职责 | ✅ 现行（DDL 以 `bot/infra/schema.py` 为准） |
 | [存储后端与备份.md](存储后端与备份.md) | MySQL/SQLite 备份、恢复、换后端 | ✅ 现行 |
@@ -133,8 +133,8 @@ v6：P1 会说话 → P2 说实话 → P2.5 长感官 → P3 有生活 → P4 �
 | **v29** | [versions/v29.md](versions/v29.md) | 模型层契约 + native + 环境门禁 + 阅读静默 | ✅ 已完成（v29.4.2） |
 | **v30** | [versions/v30.md](versions/v30.md) | 模型层插件接入 | ✅ 已完成（v30.2.0） |
 | **v31** | [versions/v31.md](versions/v31.md) | 记忆层契约 + native + 动态帮助 | ✅ 已完成（v31.3.0） |
-| **v32** | [versions/v32.md](versions/v32.md) | 记忆层插件接入 + 钩子批量修改 + 多行命令 | ✅ 已完成（v33.1.2.1） |
-| **v33** | [versions/v33.md](versions/v33.md) | 接口层收口（v33.1–v33.7） | 🚧 v33.1.2.1 开发中 |
+| **v32** | [versions/v32.md](versions/v32.md) | 记忆层插件接入 + 钩子批量修改 + 多行命令 | ✅ 已完成（v33.2.1.1） |
+| **v33** | [versions/v33.md](versions/v33.md) | 接口层收口（v33.1–v33.7） | 🚧 v33.2.1.1 开发中 |
 | **v34** | [versions/v34.md](versions/v34.md) | 学习规划（v34.1–v34.2） | 规划中 |
 | **v35** | [versions/v35.md](versions/v35.md) | 多端与客户端（v35.1–v35.8） | 规划中 |
 | **v36** | [versions/v36.md](versions/v36.md) | 生态接入（v36.1–v36.11） | 规划中 |
