@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hoshinoumi v27–v33 · 从注册表到六层接口</title>
+<title>Hoshinoumi v27–v33 · 从注册表到六层接口 + FUTURE v34–v37</title>
 <style>
   :root{
     --bg:#060a12; --panel:#0d1627; --text:#edf4ff; --muted:#8fa3bf;
@@ -27,25 +27,26 @@
   @keyframes sceneIn{from{opacity:0;transform:scale(1.008)}to{opacity:1;transform:none}}
   .kicker{font-size:.72vw;letter-spacing:.22em;color:var(--pink);font-weight:800}
   .light .kicker{color:#1d4ed8}
+  .scene.light{background:radial-gradient(1100px 700px at 70% 20%,#16233d,#070b14 72%);color:var(--text)}
   h1{font-size:5vw;line-height:1.18;margin:1.6vh 0 0;letter-spacing:.01em}
   h1 em{font-style:normal;color:var(--pink)}
   .light h1 em{color:#db2777}
   .lead{font-size:1.03vw;line-height:1.9;color:var(--muted);margin:2.2vh 0 0;max-width:62vw}
-  .light .lead{color:#5b7391}
+  .light .lead{color:var(--muted)}
   .chips{display:flex;gap:.7vw;flex-wrap:wrap;margin-top:2.8vh}
   .chip{border:1px solid #2b3a55;background:#0d1729;color:#cbd8ea;border-radius:99px;padding:.65vh 1vw;font-size:.76vw}
-  .light .chip{border-color:#93c5fd;background:#fff;color:#1e3a5f}
+  .light .chip{border-color:#2b3a55;background:#0d1729;color:#cbd8ea}
   .anim{opacity:0;animation:rise .62s cubic-bezier(.2,.8,.25,1) both;animation-delay:var(--d,0s)}
   @keyframes rise{from{opacity:0;transform:translateY(1.5vh)}to{opacity:1;transform:none}}
   .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1vw;margin-top:4vh}
   .grid.two{grid-template-columns:repeat(2,1fr)}
   .grid.three{grid-template-columns:repeat(3,1fr)}
   .card{background:linear-gradient(180deg,#141f34,#0d1627);border:1px solid #2a3a55;border-radius:.9vw;padding:1.7vh 1.15vw;min-height:14vh}
-  .light .card{background:#fff;border-color:#c7d9f1;box-shadow:0 10px 28px rgba(30,64,120,.08)}
+  .light .card{background:linear-gradient(180deg,#141f34,#0d1627);border-color:#2a3a55;box-shadow:none}
   .card .v{font-family:var(--mono);font-size:1.7vw;font-weight:800;color:var(--pink)}
   .card .t{font-size:1.05vw;font-weight:800;margin-top:.7vh}
   .card .d{font-size:.7vw;line-height:1.6;color:var(--muted);margin-top:.8vh}
-  .light .card .d{color:#5b7391}
+  .light .card .d{color:var(--muted)}
   .card.blue .v{color:var(--blue)} .card.cyan .v{color:var(--cyan)} .card.green .v{color:var(--green)}
   .timeline{display:grid;grid-template-columns:repeat(8,1fr);gap:.55vw;margin-top:4vh}
   .tl{border-top:2px solid #2a3a55;padding-top:1.5vh;min-height:12vh}
@@ -54,11 +55,11 @@
   .tl.hot .v{color:var(--pink)}
   .tl .n{font-size:.72vw;color:var(--muted);line-height:1.5;margin-top:.6vh}
   .quote{border-left:3px solid var(--pink);padding:1.5vh 0 1.5vh 1.2vw;margin-top:3.4vh;font-size:1.25vw;line-height:1.7;color:#dce8f8}
-  .light .quote{color:#1e3a5f;border-left-color:#db2777}
+  .light .quote{color:#dce8f8;border-left-color:var(--pink)}
   .note{border:1px solid #26344e;background:#0d1729;border-radius:.8vw;padding:1.2vh 1.1vw;margin-top:2.4vh;font-size:.82vw;line-height:1.7;color:#b9cbe3}
-  .light .note{border-color:#c7d9f1;background:#eff6ff;color:#31506f}
+  .light .note{border-color:#2a3a55;background:#0d1729;color:#b9cbe3}
   .code{font-family:var(--mono);font-size:.78vw;color:#93c5fd;background:#0a1220;border:1px solid #22314a;border-radius:.55vw;padding:.9vh .9vw;margin-top:1.8vh;line-height:1.75}
-  .light .code{background:#fff;border-color:#c7d9f1;color:#1d4ed8}
+  .light .code{background:#0a1220;border-color:#22314a;color:#93c5fd}
   .stageTag{position:absolute;top:3vh;right:5vw;font-family:var(--mono);font-size:.62vw;color:#64748b;letter-spacing:.1em}
   .chapter{position:absolute;top:3vh;left:5.2vw;font-size:.72vw;color:#cbd8ea;letter-spacing:.08em}
   .chapter span{color:#64748b}
@@ -73,11 +74,18 @@
   .answer .card .t{font-size:1.2vw}
   .answer .card .d{font-size:.82vw;line-height:1.75}
   .verdict{margin-top:2.6vh;border:1px solid rgba(244,114,182,.55);background:rgba(244,114,182,.07);border-radius:.8vw;padding:1.2vh 1.2vw;font-size:.92vw;line-height:1.65;color:#f6d8ea}
-  .light .verdict{background:#fdf2f8;border-color:#f9a8d4;color:#831843}
+  .light .verdict{background:rgba(244,114,182,.07);border-color:rgba(244,114,182,.55);color:#f6d8ea}
   .endTitle{font-size:4.2vw;line-height:1.2;margin:0}
   .endTitle em{font-style:normal;color:var(--pink)}
   .meta{display:flex;gap:2vw;margin-top:3.2vh;font-family:var(--mono);font-size:.8vw;color:#7b90ad;flex-wrap:wrap}
   .meta b{color:#cbd8ea;font-weight:700}
+  .roadmap{display:grid;grid-template-columns:repeat(4,1fr);gap:.9vw;margin-top:2.6vh}
+  .roadmap .card{min-height:13vh}
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:1.4vw;margin-top:2.8vh}
+  .bigNum{font-family:var(--mono);font-size:3.4vw;font-weight:800;color:var(--pink);line-height:1}
+  .futureTag{display:inline-block;font-family:var(--mono);font-size:.62vw;letter-spacing:.16em;color:#fbbf24;border:1px solid rgba(251,191,36,.45);border-radius:99px;padding:.35vh .75vw;margin-left:.6vw;vertical-align:middle}
+  .mini{font-size:.66vw;line-height:1.6;color:#8fa3bf;margin-top:.6vh}
+  .rule{height:1px;background:linear-gradient(90deg,var(--pink),transparent);margin:2.2vh 0 1.2vh}
   .hint{position:absolute;right:5.2vw;bottom:4.2vh;font-size:.62vw;color:#52637a;z-index:12}
   .pauseBadge{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-family:var(--mono);font-size:1vw;
     color:#cbd8ea;border:1px solid #2a3a55;background:#0d1729;padding:1vh 1.4vw;border-radius:99px;display:none;z-index:30}
@@ -86,7 +94,7 @@
 <body>
 <div id="stage"></div>
 <div class="chapter" id="chapter"></div>
-<div class="stageTag">HOSHINOUMI / REC · v27–v33 + FUTURE</div>
+<div class="stageTag">HOSHINOUMI / REC · v27–v33 · FUTURE v34–v37</div>
 <div class="subtitle" id="subtitle"></div>
 <div class="hint">空格暂停 · ←/→ 切场</div>
 <div class="pauseBadge" id="pauseBadge">PAUSED</div>
@@ -100,211 +108,291 @@ let index = 0, timer = null, startedAt = 0, elapsed = 0, paused = false;
 
 const scenes = [
   {
-    id:"title", duration:6500, chapter:"00 · 开场",
-    sub:"v27–v33：插件从注册表走到六层接口；v34–v37 是下一步。",
+    id:"title", duration:8000, chapter:"00 · 开场",
+    sub:"v27–v33 已完成；v34–v37 是未来规划。",
     html:`<div class="scene"><div class="kicker anim" style="--d:0s">HOSHINOUMI / REC · v27 → v33</div>
-      <h1 class="anim" style="--d:.12s">从注册表，<br>到一套<em>接口层。</em></h1>
-      <p class="lead anim" style="--d:.3s">v27 注册表，v28 运行时，v29/v30 模型，v31/v32 记忆，v33 收口六层。<br>
-      后面还有 v34 学习规划、v35 多端、v36 生态、v37 运维与嵌入式。</p>
+      <h1 class="anim" style="--d:.12s">从注册表，<br>到一套<em>可替换的底座。</em></h1>
+      <p class="lead anim" style="--d:.3s">v27 契约，v28 运行时，v29/v30 模型，v31/v32 记忆，v33 六层收口。<br>
+      v34–v37 把学习、多端、生态和运维接上来。</p>
       <div class="chips anim" style="--d:.5s">
         <span class="chip">v33.7.1.1</span><span class="chip">13105 条测试</span>
         <span class="chip">六层接口</span><span class="chip">native 仍是默认</span>
-      </div></div>`
+      </div>
+      <div class="foot anim" style="--d:.7s">深色 REC 控制台主题 · 全片无水印外部素材</div></div>`
   },
   {
-    id:"overview", duration:13000, chapter:"01 · 路线",
-    sub:"v27–v33 是接口层；v34–v37 才是功能生态和运维。",
-    html:`<div class="scene light"><div class="kicker anim" style="--d:0s">01 · 当前路线</div>
-      <h1 class="anim" style="--d:.1s;font-size:3.4vw">七个版本，<em>把扩展点铺完</em></h1>
-      <div class="grid" style="margin-top:3.4vh">
+    id:"roadmap", duration:15000, chapter:"01 · 路线",
+    sub:"七个已完成版本；四个未来版本。",
+    html:`<div class="scene"><div class="kicker anim" style="--d:0s">01 · 路线图</div>
+      <h1 class="anim" style="--d:.1s;font-size:3.4vw">先接口，<em>再生活。</em></h1>
+      <div class="roadmap">
         <div class="card anim" style="--d:.2s"><div class="v">v27</div><div class="t">注册表</div><div class="d">Manifest / Registry</div></div>
-        <div class="card blue anim" style="--d:.3s"><div class="v">v28</div><div class="t">运行时</div><div class="d">权限 / 审批 / stop</div></div>
+        <div class="card blue anim" style="--d:.3s"><div class="v">v28</div><div class="t">运行时</div><div class="d">审批 / 权限 / stop</div></div>
         <div class="card cyan anim" style="--d:.4s"><div class="v">v29</div><div class="t">模型契约</div><div class="d">Provider / native</div></div>
         <div class="card green anim" style="--d:.5s"><div class="v">v30</div><div class="t">模型插件</div><div class="d">Router / fallback</div></div>
         <div class="card anim" style="--d:.6s"><div class="v">v31</div><div class="t">记忆 native</div><div class="d">Store / Retriever</div></div>
         <div class="card blue anim" style="--d:.7s"><div class="v">v32</div><div class="t">记忆插件</div><div class="d">Router / suffix</div></div>
         <div class="card cyan anim" style="--d:.8s"><div class="v">v33</div><div class="t">六层收口</div><div class="d">Channel → Route</div></div>
-        <div class="card green anim" style="--d:.9s"><div class="v">34–37</div><div class="t">未来</div><div class="d">规划 / 多端 / 生态 / 运维</div></div>
+        <div class="card green anim" style="--d:.9s"><div class="v">v34–v37</div><div class="t">FUTURE</div><div class="d">规划 / 多端 / 生态 / 运维</div></div>
       </div>
-      <div class="note anim" style="--d:1.05s">核心 native 始终保留；插件是候选，不是默认。默认路由在 v33 的 RouteRegistry。</div>
+      <div class="quote anim" style="--d:1.05s">v27–v33 不换核心；v34–v37 才是把能力接到更多入口。</div>
     </div>`
   },
   {
-    id:"v27", duration:12000, chapter:"02 · v27",
-    sub:"先有契约和注册表，再谈加载。",
-    html:`<div class="scene"><div class="kicker anim" style="--d:0s">02 · v27 · 注册表基础</div>
-      <h1 class="anim" style="--d:.1s">插件不是<em>“能 import”</em><br>就算接入。</h1>
-      <div class="grid three" style="margin-top:3.8vh">
-        <div class="card anim" style="--d:.25s"><div class="v">Manifest</div><div class="t">名字 / 作者 / 层 / 版本</div><div class="d">capability 使用 model.x@1；核心只支持 @1。</div></div>
-        <div class="card blue anim" style="--d:.4s"><div class="v">Registry</div><div class="t">内存注册</div><div class="d">同名、同能力同优先级冲突直接拒绝。</div></div>
-        <div class="card cyan anim" style="--d:.55s"><div class="v">Master</div><div class="t">5 个注册表</div><div class="d">command → events → life → ai → plugin。</div></div>
+    id:"v27a", duration:14000, chapter:"02 · v27",
+    sub:"Manifest 先定义“什么能注册”。",
+    html:`<div class="scene"><div class="kicker anim" style="--d:0s">02 · v27 · Manifest</div>
+      <h1 class="anim" style="--d:.1s">先写清楚，<br><em>你是谁。</em></h1>
+      <div class="grid three" style="margin-top:3vh">
+        <div class="card anim" style="--d:.25s"><div class="v">identity</div><div class="t">name / author / layer</div><div class="d">插件身份是 manifest.name；包名不参与判断。</div></div>
+        <div class="card blue anim" style="--d:.4s"><div class="v">contract</div><div class="t">version / api_version</div><div class="d">requires_core 只支持 &gt;=x.y.z；核心 API 只支持 @1。</div></div>
+        <div class="card cyan anim" style="--d:.55s"><div class="v">capability</div><div class="t">model.x@1</div><div class="d">@2 但核心只有 @1：直接拒绝，不降级。</div></div>
       </div>
-      <div class="quote anim" style="--d:.8s">核心 native 不实现 PluginManifest，不进入插件表。</div>
+      <div class="note anim" style="--d:.75s">核心 native 不实现 PluginManifest，不进入插件表。</div>
     </div>`
   },
   {
-    id:"v28", duration:15000, chapter:"03 · v28",
-    sub:"安装、审批、权限、错误、stop，一套运行时。",
-    html:`<div class="scene light"><div class="kicker anim" style="--d:0s">03 · v28 · 插件运行时</div>
-      <h1 class="anim" style="--d:.1s">插件运行时，<br><em>不是 loader 一件事。</em></h1>
-      <div class="grid two" style="margin-top:3.4vh">
-        <div class="card anim" style="--d:.25s"><div class="v">install</div><div class="t">目录 + manifest + hash</div><div class="d">plugins/&lt;layer&gt;/&lt;name&gt;/；同 hash 幂等，不同 hash 拒绝。</div></div>
-        <div class="card blue anim" style="--d:.4s"><div class="v">approve</div><div class="t">pending → enabled</div><div class="d">!plugin install 先待审；批准后才加载。</div></div>
-        <div class="card cyan anim" style="--d:.55s"><div class="v">permissions</div><div class="t">0 / 1 / 2</div><div class="d">db 表级、file 路径级、network host 级。</div></div>
-        <div class="card green anim" style="--d:.7s"><div class="v">stop</div><div class="t">跟随 worker</div><div class="d">cancel 任务 → stop(5s) → unregister。</div></div>
+    id:"v27b", duration:13000, chapter:"02 · v27",
+    sub:"五个注册表，最后才是插件表。",
+    html:`<div class="scene"><div class="kicker anim" style="--d:0s">02 · v27 · MasterRegistry</div>
+      <h1 class="anim" style="--d:.1s">注册表，<br><em>也有顺序。</em></h1>
+      <div class="timeline" style="margin-top:3.6vh">
+        <div class="tl hot anim" style="--d:.2s"><div class="v">01</div><div class="n">command</div></div>
+        <div class="tl hot anim" style="--d:.3s"><div class="v">02</div><div class="n">events</div></div>
+        <div class="tl hot anim" style="--d:.4s"><div class="v">03</div><div class="n">life</div></div>
+        <div class="tl hot anim" style="--d:.5s"><div class="v">04</div><div class="n">ai</div></div>
+        <div class="tl anim" style="--d:.6s"><div class="v">05</div><div class="n">plugin</div></div>
       </div>
-      <div class="note anim" style="--d:.9s">权限默认是“问”，不是“给”；自动停用不自动恢复。</div>
+      <div class="quote anim" style="--d:.85s">插件最后初始化；它看到的是已经稳定的前四个快照。</div>
+      <div class="note anim" style="--d:1s">同名、同 capability 同 priority 冲突拒绝；不同 priority 允许候选。</div>
     </div>`
   },
   {
-    id:"v29", duration:14000, chapter:"04 · v29",
-    sub:"模型契约、native adapter、环境门禁、静默阅读。",
-    html:`<div class="scene"><div class="kicker anim" style="--d:0s">04 · v29 · 模型层</div>
+    id:"v28a", duration:15000, chapter:"03 · v28",
+    sub:"安装不是 import；先目录、hash、pending。",
+    html:`<div class="scene"><div class="kicker anim" style="--d:0s">03 · v28 · 安装</div>
+      <h1 class="anim" style="--d:.1s">先放进目录，<br><em>再谈启用。</em></h1>
+      <div class="grid three" style="margin-top:3vh">
+        <div class="card anim" style="--d:.25s"><div class="v">install</div><div class="t">plugins/&lt;layer&gt;/&lt;name&gt;/</div><div class="d">只接受目录包；manifest 校验后才复制。</div></div>
+        <div class="card blue anim" style="--d:.4s"><div class="v">hash</div><div class="t">完整性 / 覆盖判断</div><div class="d">同 name 同 hash 幂等；不同 hash 拒绝覆盖。</div></div>
+        <div class="card cyan anim" style="--d:.55s"><div class="v">pending</div><div class="t">默认不启用</div><div class="d">!plugin approve 后才进入 enabled。</div></div>
+      </div>
+      <div class="code anim" style="--d:.75s">!plugin install &lt;dir&gt; → pending → !plugin approve &lt;id&gt;</div>
+    </div>`
+  },
+  {
+    id:"v28b", duration:16000, chapter:"03 · v28",
+    sub:"权限三档、自动停用、stop 跟随 worker。",
+    html:`<div class="scene"><div class="kicker anim" style="--d:0s">03 · v28 · 运行时</div>
+      <h1 class="anim" style="--d:.1s">权限，<br><em>不是装饰。</em></h1>
+      <div class="grid two" style="margin-top:2.8vh">
+        <div class="card anim" style="--d:.25s"><div class="v">0 / 1 / 2</div><div class="t">拒绝 / 审批 / 允许</div><div class="d">默认 1；db 表级、file 路径级、network host 级。</div></div>
+        <div class="card blue anim" style="--d:.4s"><div class="v">errors</div><div class="t">连续失败自动停用</div><div class="d">写 plugin_errors；停用不自动恢复；可 auto_start 启动。</div></div>
+      </div>
+      <div class="code anim" style="--d:.6s">worker stop → cancel tasks → plugin.stop(5s) → unregister</div>
+      <div class="note anim" style="--d:.8s">stop 跟随 worker，不跟随 ingress；运行中 disable 立即 stop，下一次 worker 不再加载。</div>
+    </div>`
+  },
+  {
+    id:"v29a", duration:16000, chapter:"04 · v29",
+    sub:"ModelRequest / ModelReply / ModelProvider。",
+    html:`<div class="scene"><div class="kicker anim" style="--d:0s">04 · v29 · 模型契约</div>
       <h1 class="anim" style="--d:.1s">模型可以换，<br><em>调用方式不能乱。</em></h1>
-      <div class="grid three" style="margin-top:3.8vh">
-        <div class="card anim" style="--d:.25s"><div class="v">ModelProvider</div><div class="t">统一契约</div><div class="d">name / capabilities / complete。</div></div>
-        <div class="card blue anim" style="--d:.4s"><div class="v">native</div><div class="t">DeepSeek / 豆包</div><div class="d">核心 native；不注册为插件。</div></div>
-        <div class="card cyan anim" style="--d:.55s"><div class="v">env gate</div><div class="t">蓝绿前强制检测</div><div class="d">报告版本/配置/时效不符，拒绝切流。</div></div>
+      <div class="grid three" style="margin-top:3vh">
+        <div class="card anim" style="--d:.25s"><div class="v">Request</div><div class="t">messages / max_tokens</div><div class="d">target_id 归属、temperature、images 预留。</div></div>
+        <div class="card blue anim" style="--d:.4s"><div class="v">Reply</div><div class="t">text / model / tokens</div><div class="d">fallback 标记兜底；业务只依赖接口。</div></div>
+        <div class="card cyan anim" style="--d:.55s"><div class="v">Provider</div><div class="t">capabilities / complete</div><div class="d">DeepSeek / 豆包 native 实现，不进插件表。</div></div>
       </div>
-      <div class="quote anim" style="--d:.8s">自动阅读只入库；只有 !book next / !book read 才回摘要。</div>
+      <div class="quote anim" style="--d:.78s">DeepSeek 与豆包仍是核心 native；插件只是候选。</div>
     </div>`
   },
   {
-    id:"v30", duration:12000, chapter:"05 · v30",
-    sub:"第三方模型 provider 的接入点。",
-    html:`<div class="scene light"><div class="kicker anim" style="--d:0s">05 · v30 · 模型插件</div>
-      <h1 class="anim" style="--d:.1s">先能接入，<br><em>再谈默认路由。</em></h1>
-      <div class="grid two" style="margin-top:3.4vh">
-        <div class="card anim" style="--d:.25s"><div class="v">ModelRouter</div><div class="t">model.&lt;name&gt;@1</div><div class="d">从 PluginRegistry 取第三方 provider。</div></div>
-        <div class="card blue anim" style="--d:.4s"><div class="v">fallback</div><div class="t">异常 / 无权限 / 停用</div><div class="d">写 plugin_errors，清缓存，回落 native。</div></div>
+    id:"v29b", duration:16000, chapter:"04 · v29",
+    sub:"环境门禁 + 阅读静默：两个容易忽略的边界。",
+    html:`<div class="scene"><div class="kicker anim" style="--d:0s">04 · v29 · 边界</div>
+      <h1 class="anim" style="--d:.1s">蓝绿之前，<br><em>先过环境。</em></h1>
+      <div class="grid two" style="margin-top:2.8vh">
+        <div class="card anim" style="--d:.25s"><div class="v">env gate</div><div class="t">env_report 必须新鲜</div><div class="d">version / config_hash / checked_at 不匹配，prepare 和 supervisor 都拒绝。</div></div>
+        <div class="card blue anim" style="--d:.4s"><div class="v">reading</div><div class="t">自动流程静默</div><div class="d">idle / 首读只入库；!book next / !book read 才回摘要。</div></div>
       </div>
-      <div class="code anim" style="--d:.6s">plugin.call → 插件 provider → 失败 → native</div>
-      <div class="note anim" style="--d:.8s">v30 只做接入点；默认链路在 v33 的 RouteRegistry。</div>
+      <div class="note anim" style="--d:.62s">失败时 current 不动，旧 worker 继续服务；这是门禁，不是重启。</div>
+      <div class="quote anim" style="--d:.8s">读到的内容属于记忆，不属于聊天噪音。</div>
     </div>`
   },
   {
-    id:"v31", duration:14000, chapter:"06 · v31",
-    sub:"记忆层契约：Store / Retriever，BM25 仍是 native。",
-    html:`<div class="scene"><div class="kicker anim" style="--d:0s">06 · v31 · 记忆 native</div>
-      <h1 class="anim" style="--d:.1s">记忆不是<em>一个函数</em><br>是 store + retriever。</h1>
-      <div class="grid three" style="margin-top:3.8vh">
-        <div class="card anim" style="--d:.25s"><div class="v">MemoryStore</div><div class="t">add / delete / recent</div><div class="d">SQLMemoryStore 包装现有 repo_memory。</div></div>
-        <div class="card blue anim" style="--d:.4s"><div class="v">Retriever</div><div class="t">search(query, top_k)</div><div class="d">BM25Retriever 包装现有召回与 RRF。</div></div>
-        <div class="card cyan anim" style="--d:.55s"><div class="v">!help</div><div class="t">动态命令帮助</div><div class="d">按分类、单命令详情；不再维护静态列表。</div></div>
+    id:"v30", duration:14000, chapter:"05 · v30",
+    sub:"model.<name>@1 的接入点，失败/停用回落 native。",
+    html:`<div class="scene"><div class="kicker anim" style="--d:0s">05 · v30 · 模型插件</div>
+      <h1 class="anim" style="--d:.1s">先能接入，<br><em>再谈默认。</em></h1>
+      <div class="grid two" style="margin-top:2.8vh">
+        <div class="card anim" style="--d:.25s"><div class="v">ModelRouter</div><div class="t">capability 查找</div><div class="d">registry.get(model.x@1)；没有就 native。</div></div>
+        <div class="card blue anim" style="--d:.4s"><div class="v">fallback</div><div class="t">异常 / 无权限 / 停用</div><div class="d">plugin_errors + 缓存失效 + 回退 DeepSeek/豆包。</div></div>
       </div>
-      <div class="quote anim" style="--d:.8s">所有接口强制 user_id，禁止跨用户。</div>
+      <div class="note anim" style="--d:.62s">v30 只做接入点；默认链路在 v33 RouteRegistry。</div>
+      <div class="quote anim" style="--d:.8s">插件可以失败；核心永远有退路。</div>
     </div>`
   },
   {
-    id:"v32", duration:14000, chapter:"07 · v32",
-    sub:"记忆插件 + 钩子批量修改 + 多行命令。",
-    html:`<div class="scene light"><div class="kicker anim" style="--d:0s">07 · v32 · 记忆插件</div>
+    id:"v31a", duration:15000, chapter:"06 · v31",
+    sub:"MemoryStore / Retriever；BM25 仍是 native。",
+    html:`<div class="scene"><div class="kicker anim" style="--d:0s">06 · v31 · 记忆契约</div>
+      <h1 class="anim" style="--d:.1s">记忆不是<em>一个函数。</em></h1>
+      <div class="grid two" style="margin-top:2.8vh">
+        <div class="card anim" style="--d:.25s"><div class="v">MemoryStore</div><div class="t">add / delete / recent</div><div class="d">SQLMemoryStore 包现有 repo_memory；删除强制 id + user_id。</div></div>
+        <div class="card blue anim" style="--d:.4s"><div class="v">Retriever</div><div class="t">search(query, top_k)</div><div class="d">BM25 + 关键词双路 RRF；结果带 score。</div></div>
+      </div>
+      <div class="quote anim" style="--d:.62s">所有记忆接口强制 user_id；A 不能删 B 的记忆。</div>
+      <div class="note anim" style="--d:.8s">第三方记忆实现 v32 接入；native 仍是默认。</div>
+    </div>`
+  },
+  {
+    id:"v31b", duration:13000, chapter:"06 · v31",
+    sub:"帮助不再手写：从注册表动态生成。",
+    html:`<div class="scene"><div class="kicker anim" style="--d:0s">06 · v31 · 帮助</div>
+      <h1 class="anim" style="--d:.1s">命令变了，<br><em>帮助自己变。</em></h1>
+      <div class="grid three" style="margin-top:3vh">
+        <div class="card anim" style="--d:.25s"><div class="v">!help</div><div class="t">按分类</div><div class="d">读取 registry.COMMANDS，不再维护静态列表。</div></div>
+        <div class="card blue anim" style="--d:.4s"><div class="v">!help all</div><div class="t">完整列表</div><div class="d">新增命令自动出现。</div></div>
+        <div class="card cyan anim" style="--d:.55s"><div class="v">!help cmd</div><div class="t">单命令详情</div><div class="d">help_text 优先，回退 docstring。</div></div>
+      </div>
+      <div class="note anim" style="--d:.75s">API /api/help 复用同一个函数；帮助不会再落后于命令表。</div>
+    </div>`
+  },
+  {
+    id:"v32a", duration:14000, chapter:"07 · v32",
+    sub:"MemoryRouter：插件失败回落 SQL/BM25。",
+    html:`<div class="scene"><div class="kicker anim" style="--d:0s">07 · v32 · 记忆插件</div>
       <h1 class="anim" style="--d:.1s">插件可以换记忆，<br><em>但不能越权。</em></h1>
-      <div class="grid two" style="margin-top:3.2vh">
-        <div class="card anim" style="--d:.25s"><div class="v">MemoryRouter</div><div class="t">store / retriever</div><div class="d">插件失败/停用/无权限 → 回落 SQL/BM25。</div></div>
-        <div class="card blue anim" style="--d:.4s"><div class="v">cron suffix</div><div class="t">批量追加话术</div><div class="d">“吃饭少吃点”改现有钩子，不新建重复提醒。</div></div>
-        <div class="card cyan anim" style="--d:.55s"><div class="v">多行命令</div><div class="t">逐条执行</div><div class="d">首行 ! 才拆分；每行单独回复；上限 10 条。</div></div>
-        <div class="card green anim" style="--d:.7s"><div class="v">schema 31</div><div class="t">suffix 列</div><div class="d">迁移幂等；旧库可升级。</div></div>
+      <div class="grid two" style="margin-top:2.8vh">
+        <div class="card anim" style="--d:.25s"><div class="v">route</div><div class="t">store / retriever</div><div class="d">memory.store.x@1 / memory.retriever.x@1。</div></div>
+        <div class="card blue anim" style="--d:.4s"><div class="v">fallback</div><div class="t">权限 / 异常 / 停用</div><div class="d">plugin.call 默认审批；失败写错误并回 native。</div></div>
       </div>
-      <div class="note anim" style="--d:.9s">v32 的边界：插件是候选；native 仍是默认。</div>
+      <div class="code anim" style="--d:.6s">add / delete / recent / search → plugin or SQL/BM25</div>
+      <div class="note anim" style="--d:.8s">停用 DB enabled=false 时不调用插件。</div>
     </div>`
   },
   {
-    id:"v33", duration:20000, chapter:"08 · v33",
-    sub:"一次收口六层：通道、工具、存储、调度、出站、默认链路。",
-    html:`<div class="scene"><div class="kicker anim" style="--d:0s">08 · v33 · 接口层收口</div>
-      <h1 class="anim" style="--d:.1s">六层接口，<br><em>一次收口。</em></h1>
+    id:"v32b", duration:15000, chapter:"07 · v32",
+    sub:"钩子批量后缀 + 多行命令。",
+    html:`<div class="scene"><div class="kicker anim" style="--d:0s">07 · v32 · 交互</div>
+      <h1 class="anim" style="--d:.1s">改钩子，<br><em>不新建重复提醒。</em></h1>
       <div class="grid three" style="margin-top:2.8vh">
-        <div class="card anim" style="--d:.2s"><div class="v">Channel</div><div class="t">QQ / NapCat native</div><div class="d">插件通道失败回落 native。</div></div>
-        <div class="card blue anim" style="--d:.3s"><div class="v">Tool</div><div class="t">现有工具 native</div><div class="d">越权/超时拒绝。</div></div>
-        <div class="card cyan anim" style="--d:.4s"><div class="v">Storage</div><div class="t">MySQL / SQLite native</div><div class="d">插件 DDL 只建 plugin_&lt;name&gt;_*。</div></div>
-        <div class="card green anim" style="--d:.5s"><div class="v">Scheduler</div><div class="t">asyncio native</div><div class="d">插件失败回落 native。</div></div>
-        <div class="card anim" style="--d:.6s"><div class="v">Transport</div><div class="t">WebSocket native</div><div class="d">业务不直接 ws.send。</div></div>
-        <div class="card blue anim" style="--d:.7s"><div class="v">Route</div><div class="t">默认选 native</div><div class="d">!route 解释为什么走 native。</div></div>
+        <div class="card anim" style="--d:.25s"><div class="v">suffix</div><div class="t">schema 31</div><div class="d">“吃饭少吃点”批量追加到点外卖/晚餐/午饭。</div></div>
+        <div class="card blue anim" style="--d:.4s"><div class="v">!cron append</div><div class="t">批量补充话术</div><div class="d">不改变原时间、不新建重复提醒。</div></div>
+        <div class="card cyan anim" style="--d:.55s"><div class="v">多行命令</div><div class="t">逐条执行</div><div class="d">首行 ! 才拆；每行单独回复；上限 10。</div></div>
       </div>
-      <div class="note anim" style="--d:.9s">v33.7.1.1：六层契约、native、插件接入全部完成；13105 条测试，0 失败。</div>
-      <div class="quote anim" style="--d:1.05s">插件是候选；默认路由、失败回退、停用回滚都在核心。</div>
+      <div class="quote anim" style="--d:.78s">一条命令失败，不影响后面的行。</div>
     </div>`
   },
   {
-    id:"boundary", duration:10000, chapter:"09 · 边界",
-    sub:"v27–v33 是接口层，不是把现有功能插件化。",
-    html:`<div class="scene light"><div class="kicker anim" style="--d:0s">09 · 边界</div>
+    id:"v33a", duration:13000, chapter:"08 · v33",
+    sub:"一次收口六层：Channel / Tool / Storage / Scheduler / Transport / Route。",
+    html:`<div class="scene"><div class="kicker anim" style="--d:0s">08 · v33 · 六层接口</div>
+      <h1 class="anim" style="--d:.1s">六层接口，<br><em>一次收口。</em></h1>
+      <div class="grid three" style="margin-top:2.6vh">
+        <div class="card anim" style="--d:.2s"><div class="v">Channel</div><div class="t">QQ / NapCat</div><div class="d">消息进出，不碰记忆。</div></div>
+        <div class="card blue anim" style="--d:.3s"><div class="v">Tool</div><div class="t">搜索 / 图片 / 语音</div><div class="d">注册后模型才看得到。</div></div>
+        <div class="card cyan anim" style="--d:.4s"><div class="v">Storage</div><div class="t">MySQL / SQLite</div><div class="d">Repository 只依赖接口。</div></div>
+        <div class="card green anim" style="--d:.5s"><div class="v">Scheduler</div><div class="t">asyncio</div><div class="d">定时 / 主动 / 重试。</div></div>
+        <div class="card anim" style="--d:.6s"><div class="v">Transport</div><div class="t">WebSocket</div><div class="d">唯一出站口。</div></div>
+        <div class="card blue anim" style="--d:.7s"><div class="v">Route</div><div class="t">默认链路</div><div class="d">native 优先，插件候选。</div></div>
+      </div>
+      <div class="note anim" style="--d:.9s">六层都是“契约 + native + 插件接入 + 失败回落”；核心 native 不实现 manifest。</div>
+    </div>`
+  },
+  {
+    id:"v33b", duration:18000, chapter:"08 · v33",
+    sub:"每层都有 native 默认、插件候选、失败回落。",
+    html:`<div class="scene"><div class="kicker anim" style="--d:0s">08 · v33 · 规则</div>
+      <h1 class="anim" style="--d:.1s">默认 native，<br><em>插件候选。</em></h1>
+      <div class="split">
+        <div class="card anim" style="--d:.25s"><div class="t">Channel / Tool</div><div class="d">QQ、搜索、图片、语音保持 native；插件通道失败回落，越权/超时拒绝。</div><div class="mini">验证：QQ 行为不变；工具失败可查。</div></div>
+        <div class="card blue anim" style="--d:.4s"><div class="t">Storage / Scheduler</div><div class="d">MySQL/SQLite、asyncio 保持 native；插件 DDL 只建 plugin_&lt;name&gt;_*。</div><div class="mini">验证：现有读写/定时不变。</div></div>
+        <div class="card cyan anim" style="--d:.55s"><div class="t">Transport / Route</div><div class="d">WebSocket 唯一出站；!route 只读解释为什么走 native。</div><div class="mini">验证：业务不直接 ws.send；路由可解释。</div></div>
+        <div class="card green anim" style="--d:.7s"><div class="t">收口统计</div><div class="d">v33.7.1.1：六层完成；13105 条测试，0 失败；P0/P1 清零。</div><div class="mini">测试全绿，但已知限制仍要写文档。</div></div>
+      </div>
+    </div>`
+  },
+  {
+    id:"boundary", duration:11000, chapter:"09 · 边界",
+    sub:"接口层不是插件化；同进程插件不是沙箱。",
+    html:`<div class="scene"><div class="kicker anim" style="--d:0s">09 · 边界</div>
       <h1 class="anim" style="--d:.1s">接口层，<br><em>不换核心。</em></h1>
-      <div class="grid two" style="margin-top:3.2vh">
-        <div class="card anim" style="--d:.25s"><div class="t">核心 native</div><div class="d">DeepSeek、豆包、BM25、NapCat、MySQL/SQLite、asyncio 调度、WebSocket 都保留。</div></div>
+      <div class="grid two" style="margin-top:2.8vh">
+        <div class="card anim" style="--d:.25s"><div class="t">核心 native</div><div class="d">DeepSeek、豆包、BM25、NapCat、MySQL/SQLite、asyncio、WebSocket 都保留。</div></div>
         <div class="card blue anim" style="--d:.4s"><div class="t">插件</div><div class="d">只能 extend / enhance / 显式 replace 路由；失败、无权限、停用都回落 native。</div></div>
       </div>
-      <div class="verdict anim" style="--d:.62s">同进程插件不是沙箱；权限能挡正常调用，挡不住恶意代码，安装审核仍是边界。</div>
+      <div class="verdict anim" style="--d:.62s">权限能挡正常调用，挡不住恶意代码；安装审核仍是边界。</div>
     </div>`
   },
   {
-    id:"future34", duration:14000, chapter:"10 · FUTURE v34",
-    sub:"学习规划：7 天 × 可变节数，一张 study_plans 表。",
-    html:`<div class="scene"><div class="qaTag anim" style="--d:0s">FUTURE · v34</div>
-      <h1 class="anim" style="--d:.15s">一张表，<br><em>一周计划。</em></h1>
-      <div class="grid two" style="margin-top:3.2vh">
-        <div class="card anim" style="--d:.35s"><div class="v">7 列</div><div class="t">周一到周日</div><div class="d">一天一个 JSON 数组；每天节数可以不同。</div></div>
-        <div class="card blue anim" style="--d:.5s"><div class="v">study_plans</div><div class="t">单表</div><div class="d">不拆 items/events；不占 cron_tasks。</div></div>
+    id:"future34", duration:18000, chapter:"10 · FUTURE v34",
+    sub:"学习规划：一张 study_plans 表，7 个日列，节数可变。",
+    html:`<div class="scene"><div class="qaTag anim" style="--d:0s">FUTURE · v34 · 学习规划</div>
+      <h1 class="anim" style="--d:.15s">一周一张表，<br><em>每天节数可变。</em></h1>
+      <div class="grid two" style="margin-top:2.8vh">
+        <div class="card anim" style="--d:.3s"><div class="v">7 列</div><div class="t">monday → sunday</div><div class="d">每列一个 JSON 数组；0..N 节，不要求连续。</div></div>
+        <div class="card blue anim" style="--d:.45s"><div class="v">study_plans</div><div class="t">一周一行</div><div class="d">不拆 items/events；不占 cron_tasks。</div></div>
       </div>
-      <div class="code anim" style="--d:.7s">!plan today / week / import / done / skip / move</div>
-      <div class="note anim" style="--d:.9s">v34 是计划：周计划、执行、顺延；不是教务课程表。</div>
+      <div class="code anim" style="--d:.65s">!plan today / week / import / done / skip / move</div>
+      <div class="note anim" style="--d:.85s">自动提醒不刷屏；只有命令才回详情。v34 是规划，不是已实现。</div>
     </div>`
   },
   {
-    id:"future35", duration:16000, chapter:"11 · FUTURE v35",
+    id:"future35", duration:20000, chapter:"11 · FUTURE v35",
     sub:"多端与客户端：推送、本机服务、IDE、命令收敛、Web/桌面/手机。",
-    html:`<div class="scene light"><div class="qaTag anim" style="--d:0s">FUTURE · v35</div>
+    html:`<div class="scene"><div class="qaTag anim" style="--d:0s">FUTURE · v35 · 多端</div>
       <h1 class="anim" style="--d:.15s">一套后端，<br><em>多个入口。</em></h1>
-      <div class="grid three" style="margin-top:3vh">
-        <div class="card anim" style="--d:.3s"><div class="v">v35.1</div><div class="t">多端推送</div><div class="d">Endpoint / DeliveryHub / 协议。</div></div>
-        <div class="card blue anim" style="--d:.4s"><div class="v">v35.2</div><div class="t">本机服务</div><div class="d">常驻、自启、健康检查。</div></div>
-        <div class="card cyan anim" style="--d:.5s"><div class="v">v35.3</div><div class="t">DSH / Qoder</div><div class="d">IDE 调用本机工具。</div></div>
-        <div class="card green anim" style="--d:.6s"><div class="v">v35.4</div><div class="t">命令收敛</div><div class="d">QQ 只留短命令；详细配置走前端。</div></div>
-        <div class="card anim" style="--d:.7s"><div class="v">v35.5–7</div><div class="t">Web / 桌面 / 手机</div><div class="d">复用 hub 和本机服务。</div></div>
-        <div class="card blue anim" style="--d:.8s"><div class="v">v35.8</div><div class="t">收尾</div><div class="d">回归、统计、遗留 bug。</div></div>
+      <div class="grid three" style="margin-top:2.6vh">
+        <div class="card anim" style="--d:.25s"><div class="v">v35.1</div><div class="t">多端推送</div><div class="d">Endpoint / DeliveryHub / 协议；QQ + 测试入口验收。</div></div>
+        <div class="card blue anim" style="--d:.35s"><div class="v">v35.2</div><div class="t">本机服务</div><div class="d">常驻、自启、健康检查；掉线可拉起。</div></div>
+        <div class="card cyan anim" style="--d:.45s"><div class="v">v35.3</div><div class="t">DSH / Qoder</div><div class="d">IDE 调用本机工具，不把核心插件化。</div></div>
+        <div class="card green anim" style="--d:.55s"><div class="v">v35.4</div><div class="t">命令收敛</div><div class="d">QQ 只留短命令；详细配置走前端。</div></div>
+        <div class="card anim" style="--d:.65s"><div class="v">v35.5–7</div><div class="t">Web / 桌面 / 手机</div><div class="d">复用 hub + 本机服务；手机支持离线独立模式。</div></div>
+        <div class="card blue anim" style="--d:.75s"><div class="v">v35.8</div><div class="t">收尾</div><div class="d">统计、回归、遗留 bug；只修不加。</div></div>
       </div>
-      <div class="note anim" style="--d:1s">这些是规划；真实客户端还没做。</div>
+      <div class="note anim" style="--d:.95s">这些都还是计划；真实客户端在 v35 开发后才可用。</div>
     </div>`
   },
   {
-    id:"future36", duration:16000, chapter:"12 · FUTURE v36",
+    id:"future36", duration:20000, chapter:"12 · FUTURE v36",
     sub:"生态接入：QQ空间、运维、B站/抖音、微信、通话、微服务、内容流。",
-    html:`<div class="scene"><div class="qaTag anim" style="--d:0s">FUTURE · v36</div>
+    html:`<div class="scene"><div class="qaTag anim" style="--d:0s">FUTURE · v36 · 生态</div>
       <h1 class="anim" style="--d:.15s">从聊天，<br><em>走向内容与运维。</em></h1>
-      <div class="grid three" style="margin-top:3vh">
-        <div class="card anim" style="--d:.3s"><div class="v">v36.1</div><div class="t">QQ 空间</div><div class="d">发说说；只对熟人点赞/评论。</div></div>
-        <div class="card blue anim" style="--d:.4s"><div class="v">v36.2</div><div class="t">运维</div><div class="d">bash 只读 → agent → 有限写 → 可写体系。</div></div>
-        <div class="card cyan anim" style="--d:.5s"><div class="v">v36.3–4</div><div class="t">B站 / 抖音</div><div class="d">搜索、解析、摘要；只读。</div></div>
-        <div class="card green anim" style="--d:.6s"><div class="v">v36.5–7</div><div class="t">微信 / 语音 / 视频</div><div class="d">接入与通话；失败降级。</div></div>
-        <div class="card anim" style="--d:.7s"><div class="v">v36.8</div><div class="t">微服务</div><div class="d">接自有 Web；探网关 5 次 + 池复用。</div></div>
-        <div class="card blue anim" style="--d:.8s"><div class="v">v36.9–10</div><div class="t">内容流</div><div class="d">微博/贴吧/知乎 + 随机消费；自动流程只入库。</div></div>
+      <div class="grid three" style="margin-top:2.4vh">
+        <div class="card anim" style="--d:.25s"><div class="v">v36.1</div><div class="t">QQ 空间</div><div class="d">发说说；只对熟人点赞/评论。</div></div>
+        <div class="card blue anim" style="--d:.35s"><div class="v">v36.2</div><div class="t">运维</div><div class="d">bash 只读 → agent → 有限写 → 可写体系；写要审批+回滚。</div></div>
+        <div class="card cyan anim" style="--d:.45s"><div class="v">v36.3–4</div><div class="t">B站 / 抖音</div><div class="d">搜索、解析、摘要；公开视频只读。</div></div>
+        <div class="card green anim" style="--d:.55s"><div class="v">v36.5–7</div><div class="t">微信 / 语音 / 视频</div><div class="d">OpenClaw 接入与通话；失败降级。</div></div>
+        <div class="card anim" style="--d:.65s"><div class="v">v36.8</div><div class="t">微服务</div><div class="d">接自有 Web；探网关 5 次 + 池复用。</div></div>
+        <div class="card blue anim" style="--d:.75s"><div class="v">v36.9–10</div><div class="t">内容流</div><div class="d">微博/贴吧/知乎 + 随机消费；自动流程只入库。</div></div>
       </div>
-      <div class="note anim" style="--d:1s">每个生态独立开关，默认关闭；写操作必须审批。</div>
+      <div class="note anim" style="--d:.95s">每个生态独立开关，默认关闭；不把平台密钥写进日志。</div>
     </div>`
   },
   {
-    id:"future37", duration:14000, chapter:"13 · FUTURE v37",
+    id:"future37", duration:18000, chapter:"13 · FUTURE v37",
     sub:"运维与嵌入式：systemd、树莓派/平板、断网恢复、统计收尾。",
-    html:`<div class="scene light"><div class="qaTag anim" style="--d:0s">FUTURE · v37</div>
+    html:`<div class="scene"><div class="qaTag anim" style="--d:0s">FUTURE · v37 · 运维</div>
       <h1 class="anim" style="--d:.15s">最后，<br><em>让她一直在。</em></h1>
-      <div class="grid three" style="margin-top:3vh">
-        <div class="card anim" style="--d:.3s"><div class="v">v37.1</div><div class="t">systemd</div><div class="d">常驻 + 看门狗 + 自启；崩溃 30s 内拉起。</div></div>
-        <div class="card blue anim" style="--d:.4s"><div class="v">v37.2</div><div class="t">嵌入式</div><div class="d">树莓派/平板常亮显示对话。</div></div>
-        <div class="card cyan anim" style="--d:.5s"><div class="v">v37.2.2</div><div class="t">恢复</div><div class="d">断网/重启不丢当前会话。</div></div>
+      <div class="grid three" style="margin-top:2.6vh">
+        <div class="card anim" style="--d:.25s"><div class="v">v37.1</div><div class="t">systemd</div><div class="d">常驻 + 看门狗 + 自启；崩溃 30s 内拉起。</div></div>
+        <div class="card blue anim" style="--d:.4s"><div class="v">v37.2</div><div class="t">嵌入式</div><div class="d">树莓派/平板常亮显示对话；只是前端。</div></div>
+        <div class="card cyan anim" style="--d:.55s"><div class="v">v37.2.2</div><div class="t">恢复</div><div class="d">断网/重启不丢当前会话。</div></div>
       </div>
-      <div class="note anim" style="--d:.7s">v37.3：统计 + 修遗留 bug；只修 bug，不加功能。</div>
+      <div class="note anim" style="--d:.75s">v37.3：统计 + 修遗留 bug；修不完写“已知限制”。</div>
+      <div class="quote anim" style="--d:.9s">嵌入式复用 v35 的 hub/本机服务，不重写核心。</div>
     </div>`
   },
   {
-    id:"end", duration:9000, chapter:"14 · 结尾",
+    id:"end", duration:10000, chapter:"14 · 结尾",
     sub:"v33.7.1.1 已完成；v34–v37 是规划。",
     html:`<div class="scene"><div class="kicker anim" style="--d:0s">HOSHINOUMI / REC</div>
       <h1 class="endTitle anim" style="--d:.15s">接口已经铺完，<br><em>接下来是生活。</em></h1>
       <p class="lead anim" style="--d:.35s">v33 六层接口收口；v34 学习规划；v35 多端；v36 生态；v37 运维与嵌入式。<br>
       核心 native 仍是默认；插件只是候选。</p>
       <div class="meta anim" style="--d:.55s"><span><b>v33.7.1.1</b></span><span><b>13105</b> tests</span><span><b>v34–v37</b> planned</span><span>MIT · 非官方二创</span></div>
-      <div class="note anim" style="--d:.75s">未来功能以对应 docs/versions/vNN.md 为准；视频不把计划说成已实现。</div>
+      <div class="note anim" style="--d:.75s">未来功能以 docs/versions/vNN.md 为准；视频不把计划说成已实现。</div>
     </div>`
   }
 ];
