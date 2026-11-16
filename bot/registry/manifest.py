@@ -7,17 +7,18 @@ from .errors import CapabilityUnsupportedError, ManifestError
 
 _NAME_RE = re.compile(r"^[a-z][a-z0-9_.-]{2,63}$")
 _CAP_RE = re.compile(r"^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+@([1-9][0-9]*)$")
-_SEMVER_RE = re.compile(r"^(\d+)\.(\d+)\.(\d+)$")
+_SEMVER_RE = re.compile(r"^(\d+)\.(\d+)\.(\d+)(?:\.(\d+))?$")
 _LAYERS = {"models", "channels", "memory", "tools", "storage"}
 _SUPPORTED_API = {1}
 _SUPPORTED_CAP = {1}
 
 
 def parse_semver(text):
+    """支持三段（旧版）和四段（v33+）版本号。"""
     m = _SEMVER_RE.match(str(text or "").strip().lstrip("v"))
     if not m:
-        raise ManifestError(f"非法版本号: {text!r}，需要 x.y.z")
-    return tuple(int(x) for x in m.groups())
+        raise ManifestError(f"非法版本号: {text!r}，需要 x.y.z 或 x.y.z.w")
+    return tuple(int(x) for x in m.groups() if x is not None)
 
 
 def parse_capability(cap):

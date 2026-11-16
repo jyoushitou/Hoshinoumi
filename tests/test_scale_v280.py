@@ -27,9 +27,14 @@ def _semver_valid_cases():
     for major in range(10):
         for minor in range(10):
             for patch in range(30):
-                text = f"{major}.{minor}.{patch}"
-                want = (major, minor, patch)
-                yield lambda t=text, w=want: (
+                text3 = f"{major}.{minor}.{patch}"
+                want3 = (major, minor, patch)
+                yield lambda t=text3, w=want3: (
+                    parse_semver(t) == w or (_ for _ in ()).throw(
+                        AssertionError(f"{t} != {w}")))
+                text4 = f"{major}.{minor}.{patch}.1"
+                want4 = (major, minor, patch, 1)
+                yield lambda t=text4, w=want4: (
                     parse_semver(t) == w or (_ for _ in ()).throw(
                         AssertionError(f"{t} != {w}")))
 
@@ -38,7 +43,7 @@ def _semver_valid_cases():
 def _semver_invalid_cases():
     values = []
     values += [f"{i}.2" for i in range(1000)]
-    values += [f"{i}.2.3.4" for i in range(1000)]
+    values += [f"{i}.2.3.4.5" for i in range(1000)]
     values += [f"x{i}.2.3" for i in range(500)]
     values += [f"1.{i}.x" for i in range(500)]
     for text in values:
