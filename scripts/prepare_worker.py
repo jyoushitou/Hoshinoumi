@@ -10,6 +10,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
 SKIP = {".git", ".venv", ".tmp", "release", "data", "logs", "__pycache__",
         ".pytest_cache", "APK", "ingress_test", "node_modules"}
 SHARE = (".env", "config.local.json", "gateway.env", "data", "logs", "personas")

@@ -48,3 +48,5 @@ data/books/*
 !data/books/README.md
 
 *.out
+
+data/workers
