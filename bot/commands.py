@@ -38,8 +38,29 @@ async def _send_command_reply(reply, uid, ws, is_group, gid):
     log_send(f"[命令回复] {reply[:50]}...")
 
 
-async def handle_command(text, uid, ws, is_group, gid):
-    """处理对话命令，返回True表示已处理（不再走AI回复）"""
+def split_commands(text):
+    """v32.4：按行拆命令；非 ! 行作为上一条的续行。"""
+    lines = (text or "").splitlines()
+    if not lines:
+        return []
+    first = lines[0].lstrip()
+    if first[:1] not in ("!", "！"):
+        return [text]
+    commands, cur = [], []
+    for line in lines:
+        s = line.lstrip()
+        if s[:1] in ("!", "！"):
+            if cur:
+                commands.append("\n".join(cur))
+            cur = [line]
+        elif cur:
+            cur.append(line)
+    if cur:
+        commands.append("\n".join(cur))
+    return commands
+
+
+async def _handle_single_command(text, uid, ws, is_group, gid):
     text = normalize_command(text)
     if not text.startswith(CMD_PREFIX):
         return False
@@ -63,17 +84,32 @@ async def handle_command(text, uid, ws, is_group, gid):
         ctx = registry.CommandContext(
             parts=parts, uid=str(uid), ws=ws, is_group=is_group, gid=gid
         )
-        # v17.2 U4：命令走专用通道（不进调度器队列，带超时与耗时统计）
         from .cmd.channel import get_channel
         ok, reply = await get_channel().run(
             cmd_name, lambda: registry.run(cmd_name, ctx))
         if not ok and not reply:
             reply = "❌ 命令执行失败"
     else:
-        # v28.7：错命令只进日志，不向用户提示命令建议
         log_api(f"[命令] 未知命令: {cmd_name!r} uid={uid} group={is_group} gid={gid}")
         reply = "奈绪歪头：这条我没看懂。"
 
     await _send_command_reply(reply, uid, ws, is_group, gid)
     return True
 
+
+async def handle_command(text, uid, ws, is_group, gid):
+    """处理对话命令；v32.4 支持一消息多条命令，逐条执行分别回复。"""
+    text = normalize_command(text)
+    if not text.startswith(CMD_PREFIX):
+        return False
+    commands = split_commands(text)
+    if len(commands) > 1:
+        for one in commands[:10]:
+            await _handle_single_command(one, uid, ws, is_group, gid)
+        if len(commands) > 10:
+            await _send_command_reply(
+                f"一次最多执行 10 条命令，已执行前 10 条（共 {len(commands)} 条）。",
+                uid, ws, is_group, gid)
+        return True
+    return await _handle_single_command(commands[0] if commands else text,
+                                        uid, ws, is_group, gid)
