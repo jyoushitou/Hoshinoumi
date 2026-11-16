@@ -14,6 +14,7 @@
 #   - 借了必还（try/finally 或 with）
 #   - 不在长操作（调模型）期间持有连接
 
+import contextvars
 import os
 import queue
 import threading
@@ -26,12 +27,13 @@ DEFAULT_ACQUIRE_TIMEOUT = float(os.getenv("NAO_DB_POOL_TIMEOUT", "5.0"))
 
 
 def _default_connect():
-    """真实连接（测试里会被替换）"""
-    import pymysql
+    """真实连接（测试里会被替换）；MySQL/SQLite 由 infra.conn 统一创建。"""
+    from .conn import create_connection
 
-    from ..config import DB_CONFIG
+    return create_connection()
 
-    return pymysql.connect(**DB_CONFIG, cursorclass=pymysql.cursors.DictCursor)
+
+_active_cursor = contextvars.ContextVar("nao_pooled_cursor", default=None)
 
 
 class ConnPool:
@@ -103,7 +105,10 @@ class ConnPool:
         try:
             if not getattr(conn, "open", True):
                 return False
-            conn.ping(reconnect=False)
+            if hasattr(conn, "ping"):
+                conn.ping(reconnect=False)
+            else:
+                conn.execute("SELECT 1")
             return True
         except Exception:
             return False
@@ -140,12 +145,19 @@ _pool_lock = threading.Lock()
 
 
 def get_pool():
-    """全局连接池（懒加载）"""
+    """全局连接池（懒加载）；SQLite 用单连接避免写锁互抢。"""
     global _pool
     if _pool is None:
         with _pool_lock:
             if _pool is None:
-                _pool = ConnPool()
+                size = None
+                try:
+                    from .conn import _resolve_backend
+                    if _resolve_backend() == "sqlite":
+                        size = 1
+                except Exception:
+                    pass
+                _pool = ConnPool(size=size)
     return _pool
 
 
@@ -155,21 +167,76 @@ def set_pool(pool):
     _pool = pool
 
 
+def reset_pool():
+    """配置切换（尤其测试临时 SQLite）后丢弃旧池。"""
+    global _pool
+    old = _pool
+    _pool = None
+    if old is not None:
+        try:
+            old.close_all()
+        except Exception:
+            pass
+
+
 class pooled_cursor:
-    """with pooled_cursor() as c: ... 自动借还"""
+    """with pooled_cursor() as c: 自动借还。
+
+    同一上下文里嵌套调用复用同一个 cursor/事务；repo 里的 get_cursor()
+    在池会话中会返回这个 cursor，退出时统一 commit/rollback + release。
+    """
+
+    def __init__(self):
+        self._token = None
+        self._nested = False
 
     def __enter__(self):
+        existing = _active_cursor.get()
+        if existing is not None:
+            self._nested = True
+            self.cursor = existing
+            return existing
         self.conn = get_pool().acquire()
-        self.cursor = self.conn.cursor()
+        try:
+            from .conn import _resolve_backend, _SQLiteCursor
+            raw = self.conn.cursor()
+            if _resolve_backend() == "sqlite":
+                self.cursor = _SQLiteCursor(raw, self.conn)
+            else:
+                self.cursor = raw
+        except Exception:
+            get_pool().release(self.conn)
+            raise
+        self._token = _active_cursor.set(self.cursor)
         return self.cursor
 
     def __exit__(self, exc_type, exc, tb):
+        if self._nested:
+            return False
         try:
-            self.cursor.close()
-        except Exception:
-            pass
-        get_pool().release(self.conn)
+            if exc_type is None:
+                try:
+                    self.conn.commit()
+                except Exception:
+                    pass
+            else:
+                try:
+                    self.conn.rollback()
+                except Exception:
+                    pass
+        finally:
+            try:
+                self.cursor.close()
+            except Exception:
+                pass
+            _active_cursor.reset(self._token)
+            get_pool().release(self.conn)
         return False
+
+
+def active_cursor():
+    """当前池会话的 cursor；没有就返回 None。"""
+    return _active_cursor.get()
 
 
 def conn_stats():

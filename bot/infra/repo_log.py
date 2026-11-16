@@ -16,3 +16,7 @@ def write_log_to_db(level, msg):
         c.connection.commit()
     except:
         pass  # 日志写入失败不影响主流程
+
+# v28.1：repo 函数进入统一池会话
+from .repo_pool import install_module as _install_repo_pool
+_install_repo_pool(globals())

@@ -622,5 +622,6 @@ def dual_write(kind, tid, payload, user_id="__owner__"):
             log_api(f"[双写] 失败累计 {_dual_fail} 次；最近：{kind} → {table}：{e}")
         return False
 
-
-
+# v28.1：repo 函数进入统一池会话
+from .repo_pool import install_module as _install_repo_pool
+_install_repo_pool(globals())

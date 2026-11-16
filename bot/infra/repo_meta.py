@@ -239,3 +239,7 @@ def describe(cursor=None):
         if owned:
             _close(c)
     return "\n".join(lines)
+
+# v28.1：repo 函数进入统一池会话
+from .repo_pool import install_module as _install_repo_pool
+_install_repo_pool(globals())

@@ -44,6 +44,11 @@ def _configure_db():
             sqlite_path=settings.sqlite_path() if backend == "sqlite" else None,
         )
         log_system(f"[存储] 已注入配置：{backend}")
+        try:
+            from ..infra.repo_pool import enable as _enable_repo_pool
+            _enable_repo_pool()  # v28.1：启动后才启用 repo 池会话，测试默认关闭
+        except Exception:
+            pass
         return backend
     except Exception as e:
         log_err(f"[存储] 注入配置失败，用默认：{e}")

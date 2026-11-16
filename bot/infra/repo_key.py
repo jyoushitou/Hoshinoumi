@@ -63,3 +63,7 @@ def save_api_key(name, value, cursor=None):
                 c.close()
             except Exception:
                 pass
+
+# v28.1：repo 函数进入统一池会话
+from .repo_pool import install_module as _install_repo_pool
+_install_repo_pool(globals())

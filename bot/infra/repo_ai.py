@@ -60,3 +60,7 @@ def get_recent_usage(limit=10):
     except Exception as e:
         log_err(f"查询token用量失败: {e}")
         return []
+
+# v28.1：repo 函数进入统一池会话
+from .repo_pool import install_module as _install_repo_pool
+_install_repo_pool(globals())

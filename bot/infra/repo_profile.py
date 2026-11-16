@@ -71,3 +71,7 @@ def format_profile(tid):
     for k, v in p.items():
         lines.append(f"  {k}：{v}")
     return "\n".join(lines)
+
+# v28.1：repo 函数进入统一池会话
+from .repo_pool import install_module as _install_repo_pool
+_install_repo_pool(globals())

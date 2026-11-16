@@ -40,6 +40,11 @@ def configure(mysql_config=None, backend=None, sqlite_path=None):
         _local.__dict__.clear()
     except Exception:
         pass
+    try:
+        from .pool import reset_pool
+        reset_pool()
+    except Exception:
+        pass
     return _config
 
 
@@ -123,6 +128,16 @@ def _connect_sqlite():
     return conn
 
 
+def create_connection():
+    """创建一条后端连接；供线程本地兼容路径和 infra.pool 共用。"""
+    if _resolve_backend() == "sqlite":
+        return _connect_sqlite()
+    import pymysql
+
+    return pymysql.connect(
+        **_resolve_mysql(), cursorclass=pymysql.cursors.DictCursor)
+
+
 def get_db():
     """获取当前线程的数据库连接（懒加载）"""
     if not hasattr(_local, "conn") or _local.conn is None:
@@ -135,18 +150,23 @@ def get_db():
                       + ("（文件数据库）" if backend == "sqlite" else ""))
             except Exception:
                 pass
-        if backend == "sqlite":
-            _local.conn = _connect_sqlite()
-        else:
-            import pymysql
-
-            _local.conn = pymysql.connect(
-                **_resolve_mysql(), cursorclass=pymysql.cursors.DictCursor)
+        _local.conn = create_connection()
     return _local.conn
 
 
 def get_cursor():
-    """获取数据库游标（两种后端统一接口）"""
+    """获取数据库游标（两种后端统一接口）。
+
+    v28.1：repo 进入 infra.pool 的池会话后，这里返回同一个池游标；
+    其他旧调用仍走线程本地连接，保证兼容。
+    """
+    try:
+        from .pool import active_cursor
+        pooled = active_cursor()
+        if pooled is not None:
+            return pooled
+    except Exception:
+        pass
     conn = get_db()
     if _resolve_backend() == "sqlite":
         return _SQLiteCursor(conn.cursor(), conn)

@@ -42,3 +42,7 @@ def diary_get(target_id, date_str, user_id):
     uid = tenant.require(user_id)
     from ..diary import store
     return store.get_diary_from_db(target_id, date_str, user_id=uid)
+
+# v28.1：repo 函数进入统一池会话
+from .repo_pool import install_module as _install_repo_pool
+_install_repo_pool(globals())

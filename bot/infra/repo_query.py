@@ -129,3 +129,7 @@ def describe(cursor=None):
                    "global_keywords", "ai_raw_responses"), cursor)
     first = first_log(cursor)
     return {"counts": data, "first": first}
+
+# v28.1：repo 函数进入统一池会话
+from .repo_pool import install_module as _install_repo_pool
+_install_repo_pool(globals())

@@ -380,3 +380,7 @@ def verify_login(user_id, password, setup_code=None):
     if not verify_password(password, row.get("password_hash")):
         return None, "invalid_credentials"
     return row, None
+
+# v28.1：repo 函数进入统一池会话
+from .repo_pool import install_module as _install_repo_pool
+_install_repo_pool(globals())

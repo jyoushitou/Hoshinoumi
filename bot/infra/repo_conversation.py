@@ -112,3 +112,7 @@ def cleanup(days=RETENTION_DAYS, max_per_thread=MAX_PER_THREAD, cursor=None):
             pass
         log.warning("conversation cleanup failed: %s", e)
     return deleted
+
+# v28.1：repo 函数进入统一池会话
+from .repo_pool import install_module as _install_repo_pool
+_install_repo_pool(globals())
