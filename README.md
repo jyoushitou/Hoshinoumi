@@ -310,7 +310,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | v28 | DB pool + 插件运行时 + 交互回归 + cron 对账 + 阅读进度修复 | ✅ 已完成（v31.2.0） | [v28.md](docs/versions/v28.md) |
 | v29 | 模型层契约 + native + 环境门禁；v29.4 阅读静默待做 | 🚧 v31.2.0 / v29.4 计划 | [v29.md](docs/versions/v29.md) |
 | v30 | 模型层插件接入 | ✅ 已完成（v31.2.0） | [v30.md](docs/versions/v30.md) |
-| v31 | 记忆层契约 + native | ✅ 已完成（v31.2.0） | [v31.md](docs/versions/v31.md) |
+| v31 | 记忆层契约 + native；v31.3 帮助升级待做 | 🚧 v31.2.0 / v31.3 计划 | [v31.md](docs/versions/v31.md) |
 | v32 | 记忆层插件接入 | 📋 已规划 | [v32.md](docs/versions/v32.md) |
 | v33 | 通道层契约 + native | 📋 已规划 | [v33.md](docs/versions/v33.md) |
 | v34 | 通道层插件接入 | 📋 已规划 | [v34.md](docs/versions/v34.md) |

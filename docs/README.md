@@ -132,7 +132,7 @@ v6：P1 会说话 → P2 说实话 → P2.5 长感官 → P3 有生活 → P4 �
 | **v28** | [versions/v28.md](versions/v28.md) | DB pool + schema30 + 插件运行时 + 交互回归 + cron 对账 | 🚧 v28.6 开发中 |
 | **v29** | [versions/v29.md](versions/v29.md) | 模型层契约 + native + 环境门禁；v29.4 阅读静默待做 | 🚧 v31.2.0 / v29.4 计划 |
 | **v30** | [versions/v30.md](versions/v30.md) | 模型层插件接入 | ✅ 已完成（v31.2.0） |
-| **v31** | [versions/v31.md](versions/v31.md) | 记忆层契约 + native | ✅ 已完成（v31.2.0） |
+| **v31** | [versions/v31.md](versions/v31.md) | 记忆层契约 + native；v31.3 帮助升级待做 | 🚧 v31.2.0 / v31.3 计划 |
 | **v32** | [versions/v32.md](versions/v32.md) | 记忆层插件接入 | 规划中 |
 | **v33** | [versions/v33.md](versions/v33.md) | 通道层契约 + native | 规划中 |
 | **v34** | [versions/v34.md](versions/v34.md) | 通道层插件接入 | 规划中 |
