@@ -137,7 +137,7 @@ v6：P1 会说话 → P2 说实话 → P2.5 长感官 → P3 有生活 → P4 �
 | **v33** | [versions/v33.md](versions/v33.md) | 接口层收口：通道/工具/存储/调度/出站/默认链路 | 规划中 |
 | **v34** | [versions/v34.md](versions/v34.md) | 学习规划 | 规划中 |
 | **v35** | [versions/v35.md](versions/v35.md) | 多端与客户端 | 规划中 |
-| **v36** | [versions/v36.md](versions/v36.md) | 生态接入 | 规划中 |
+| **v36** | [versions/v36.md](versions/v36.md) | 生态接入：微博/贴吧/知乎 + 随机内容消费 | 规划中 |
 | **v37** | [versions/v37.md](versions/v37.md) | 运维与嵌入式 | 规划中 |
 
 

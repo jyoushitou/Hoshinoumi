@@ -177,7 +177,7 @@
 | v33 | 接口层收口（六层契约 + native + 插件） | [v33.md](versions/v33.md) |
 | v34 | 学习规划（7 日列单表） | [v34.md](versions/v34.md) |
 | v35 | 多端与客户端 | [v35.md](versions/v35.md) |
-| v36 | 生态接入 | [v36.md](versions/v36.md) |
+| v36 | 生态接入：微博/贴吧/知乎/视频 + 随机内容消费 | [v36.md](versions/v36.md) |
 | v37 | 运维与嵌入式 | [v37.md](versions/v37.md) |
 
 > v33 一次收口六层接口，统一约束见 [INTERFACE-PLAN-v27-v37.md](INTERFACE-PLAN-v27-v37.md)。
