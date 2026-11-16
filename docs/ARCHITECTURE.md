@@ -1,10 +1,10 @@
-# 架构图（v27.9.0 / v27–v44 接口规划）
+# 架构图（v28.0.0 / v27–v44 接口规划）
 
-> 当前后端 v27.9.0；网关 v26.4.0。
+> 当前后端 v28.0.0；网关 v26.4.0。
 >
 > 已部署架构：ingress 持有 3001/27004，worker 只走 Unix socket，蓝绿热更新。
 >
-> v27 已完成注册表/Manifest 基础；v28 运行时及其余层是规划，核心 native 仍照常工作。
+> v27 已完成注册表/Manifest 基础；v28 插件运行时是当前计划，核心 native 仍照常工作。
 >
 > 配套：v27–v44 总纲见 [INTERFACE-PLAN-v27-v44.md](INTERFACE-PLAN-v27-v44.md)。
 
@@ -111,6 +111,103 @@ NapCat WS 3001
 → 业务 handler
 → 帧回传 gateway
 ```
+
+
+## 3.1 数据流（v28 计划）
+
+### 数据面
+
+```text
+QQ:
+NapCat WS 3001
+  → ingress 3001
+  → worker qq.sock
+  → chat.handler / chat.inbound
+  → 业务层（ai / memory / life / schedule）
+  → egress
+  → ingress
+  → NapCat
+
+网关 API:
+客户端 HTTP 27005
+  → gateway JWT / 限流 / 审计
+  → 8+4+body TCP 帧 27004
+  → ingress TCP L4
+  → worker internal.sock
+  → server.tcp_internal.dispatch
+  → 内部 HTTP Unix
+  → 业务 handler
+  → frame 回传 gateway
+```
+
+规则：
+
+- 外部只看到 `3001` / `27005` / `27004`（本机）。
+- ingress 只做连接和 L4 转发，不解析业务。
+- worker 不绑定 3001/27004。
+- 27004 是帧协议，不再是 HTTP。
+- 核心 native 不经过插件表；插件只通过注册表/运行时接入。
+
+### 控制面
+
+```text
+supervisor
+  ├─ data/workers/current
+  ├─ /api/health（Unix socket）
+  ├─ 切换时清理 + 1h 后清理
+  └─ worker.pid / worker.log
+
+update
+  ├─ update.json 准入
+  ├─ schema / requires_restart 检查
+  └─ 拒绝需迁移/重启版本
+
+registry（v27+）
+  ├─ command / events / life / ai / plugin
+  ├─ MasterRegistry 静态登记
+  └─ v28 增加安装/审批/权限/错误/任务
+```
+
+### 状态归属
+
+| 数据 | 位置 | 生命周期 |
+|---|---|---|
+| NapCat / HTTP 连接 | ingress | 连接关闭即结束 |
+| worker 内存、缓存、任务 | worker 进程 | 进程退出即结束 |
+| 用户、记忆、对话、日程、阅读进度 | MySQL | 持久 |
+| 本地书、日志、worker 版本目录 | `data/` | 文件生命周期 |
+| 当前版本指针 | `data/workers/current` | 切换时更新 |
+| 插件安装/审批/权限/错误 | `plugin_*`（v28 schema 30） | 持久 |
+| 插件代码 | 版本目录快照 | 跟随 worker |
+
+### 插件数据流（v28）
+
+```text
+启动:
+  MasterRegistry 初始化
+  → 读取插件注册表/审批状态
+  → manifest-first loader
+  → PluginContext 创建
+  → 权限检查
+  → register
+  → auto_start（若启用）
+
+运行:
+  核心调用点
+  → capability 路由
+  → 核心 native 或插件 adapter
+  → 权限/scope 校验
+  → TaskManager 归属任务
+  → 错误记录/降级
+
+停止:
+  worker drain / SIGTERM
+  → TaskManager.cancel(plugin:...)
+  → plugin.stop(ctx)
+  → registry.unregister
+```
+
+插件状态不放在 `features.json`；核心 native 不实现 `PluginManifest`。v28 只做运行时，插件 DDL 统一在 v38。
 
 ## 4. 热更新与插件生命周期
 
