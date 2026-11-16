@@ -47,3 +47,4 @@ APK/*.apk
 data/books/*
 !data/books/README.md
 
+*.out

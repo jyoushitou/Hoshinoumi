@@ -453,8 +453,14 @@ def _make_handle(task, loop, scheduler):
     nxt = compute_next(task)
 
     if nxt is None:
-        log_api(f"[定时] 任务 {task_id} 没有下一次（一次性且已过期）")
-        set_enabled(task_id, False)
+        if task.get("schedule_type") == "once":
+            # v28.8：过期的一次性任务不补发、不留在列表；直接删除
+            log_api(f"[定时] 过期一次性任务已删除 #{task_id} "
+                    f"{task.get('once_at')} {task.get('content')}")
+            remove(task_id, user_id=task.get("user_id") or "__owner__")
+        else:
+            log_api(f"[定时] 任务 {task_id} 没有下一次，停用")
+            set_enabled(task_id, False)
         return None
 
     set_next(task_id, nxt)
@@ -552,13 +558,40 @@ def cancel_all():
         cancel(tid)
 
 
+def _duplicate_groups(tasks):
+    """v28.8：同 user/target/type/时间/内容 的启用任务只告警，不自动删。"""
+    groups = {}
+    for t in tasks:
+        if not int(t.get("enabled") or 0):
+            continue
+        key = (str(t.get("user_id") or ""), str(t.get("target_id") or ""),
+               str(t.get("schedule_type") or ""), str(t.get("at_time") or ""),
+               str(t.get("weekdays") or ""), str(t.get("once_at") or ""),
+               str(t.get("content") or ""))
+        groups.setdefault(key, []).append(t)
+    return [rows for rows in groups.values() if len(rows) > 1]
+
+
 def schedule_all(tasks=None, loop=None, scheduler=None):
     """全量重建（启动 / 04:00 对账用）"""
     tasks = tasks if tasks is not None else list_tasks(enabled_only=True)
+    try:
+        for rows in _duplicate_groups(tasks):
+            ids = [int(x.get("id")) for x in rows]
+            log_api(f"[定时] 重复任务 {ids} 内容相同，保留 #{min(ids)}，"
+                    f"建议 !cron del {ids[-1]}")
+    except Exception:
+        pass
     cancel_all()
     n = 0
     for t in tasks:
         try:
+            if (t.get("schedule_type") == "once"
+                    and compute_next(t, now=_now()) is None):
+                log_api(f"[定时] 过期一次性任务已删除 #{t.get('id')} "
+                        f"{t.get('once_at')} {t.get('content')}")
+                remove(int(t["id"]), user_id=t.get("user_id") or "__owner__")
+                continue
             if schedule_one(t, loop, scheduler):
                 n += 1
         except Exception as e:
