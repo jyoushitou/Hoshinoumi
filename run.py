@@ -253,12 +253,14 @@ async def check_diary():
        追溯最近有事件记录的日期（最多7天），逐天生成日记并写入 diaries 表
     3. 生成后打印验证日志，确认日记功能正常
     """
+    # v27.5：这些必须在 try 之前导入；否则 bot.db 缺失时 except 里的 log_system 未定义
+    from bot.infra.conn import get_cursor
+    from bot.config import MASTER_QQ
+    from bot.log import log_system
+
     try:
         # 延迟导入，避免循环依赖
-        from bot.db import get_cursor
-        from bot.config import MASTER_QQ
         from bot.diary import generate_missing_7day_diaries
-        from bot.log import log_system
 
         tid = str(MASTER_QQ)
 
