@@ -16,6 +16,34 @@ SKIP = {".git", ".venv", ".tmp", "release", "data", "logs", "__pycache__",
 SHARE = (".env", "config.local.json", "gateway.env", "data", "logs", "personas")
 
 
+def _pid_alive(pid):
+    """跨平台探活；Windows 不能用 os.kill(pid, 0)（可能直接结束进程）。"""
+    if os.name == "nt":
+        try:
+            import ctypes
+            h = ctypes.windll.kernel32.OpenProcess(0x1000, False, int(pid))
+            if not h:
+                return False
+            ctypes.windll.kernel32.CloseHandle(h)
+            return True
+        except Exception:
+            return False
+    try:
+        os.kill(int(pid), 0)
+        return True
+    except Exception:
+        return False
+
+
+def live_pid(version_dir):
+    """返回正在使用该版本目录的 worker PID；没有就返回 None。"""
+    try:
+        pid = int((Path(version_dir) / "worker.pid").read_text(encoding="utf-8").strip())
+        return pid if _pid_alive(pid) else None
+    except Exception:
+        return None
+
+
 def copy_tree(src: Path, dst: Path):
     if dst.exists():
         shutil.rmtree(dst)
@@ -38,8 +66,13 @@ def main():
     ap.add_argument("--base", default=str(ROOT / "data" / "workers"))
     args = ap.parse_args()
     src = Path(args.source).resolve()
-    dst = Path(args.base) / "versions" / args.version
+    dst = (Path(args.base) / "versions" / args.version).resolve()
     print(f"[prepare] {src} -> {dst}")
+    pid = live_pid(dst)
+    if pid is not None:
+        print(f"[prepare] 拒绝：{dst} 仍有运行中的 worker PID {pid}")
+        print("[prepare] 先停 worker，或使用新的版本号；绝不能删除运行中的版本目录")
+        return 1
     (ROOT / "logs").mkdir(exist_ok=True)
     copy_tree(src, dst)
     for name in SHARE:

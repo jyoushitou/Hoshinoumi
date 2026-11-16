@@ -204,7 +204,7 @@ def main():
                     default=int(os.getenv("NAO_WORKER_KEEP", "2")))
     ap.add_argument("--gc-delay", type=float, default=3600)
     args = ap.parse_args()
-    base = Path(args.base)
+    base = Path(args.base).resolve()
     cmd = shlex.split(args.worker_cmd)
     ok = asyncio.run(deploy(base, args.version, cmd, args.timeout, args.drain_seconds,
                              args.keep_versions, args.gc_delay))
