@@ -307,7 +307,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | v26 | 内部通讯升级 + 模糊指令归一化：8+4+body TCP / protobuf / 标准命令 | ✅ 已完成（v26.7.4） | [v26.md](docs/versions/v26.md) |
 | v27 | 插件注册表基础：Manifest/Registry/快照 | ✅ 已完成（v27.8.0） | [v27.md](docs/versions/v27.md) |
 | v28 | DB pool + 插件运行时 + 交互回归 + cron 对账 + 阅读进度修复 | ✅ 已完成（v28.9.1） | [v28.md](docs/versions/v28.md) |
-| v29 | 模型层契约 + native | 📋 已规划 | [v29.md](docs/versions/v29.md) |
+| v29 | 模型层契约 + native + 蓝绿环境门禁 | 📋 已规划 | [v29.md](docs/versions/v29.md) |
 | v30 | 模型层插件接入 | 📋 已规划 | [v30.md](docs/versions/v30.md) |
 | v31 | 记忆层契约 + native | 📋 已规划 | [v31.md](docs/versions/v31.md) |
 | v32 | 记忆层插件接入 | 📋 已规划 | [v32.md](docs/versions/v32.md) |
