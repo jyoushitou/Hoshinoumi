@@ -233,10 +233,10 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | **C++ 网关（v26.4）** | C++17、Boost.Asio / Boost.Beast、CommonNet（NetWorkCommunication / Utils）、CMake 3.20+、vcpkg overlay ports；对客户端提供 HTTP/JWT **27005** |
 | **热更新** | `supervisor` + `data/workers/versions/<version>` + `current` 蓝绿切换；`prepare_worker` 复制代码、共享 `data`、`logs`、`personas`；旧 worker drain 后退出 |
 | **插件接口** | v27.8 已完成 Manifest / PluginRegistry / MasterRegistry；v28.3+ 做运行时。核心 native 仍默认，不把现有功能插件化 |
-| **存储** | MySQL 8（默认，schema 30）/ SQLite（自动回退）；当前用连接池，v28 计划统一到 `infra/pool` |
+| **存储** | MySQL 8（默认，schema 30）/ SQLite（自动回退）；已统一到 `infra/pool`（v28.1） |
 | **部署** | gateway 用 Docker / docker compose；ingress / worker 用 systemd 或 screen；Linux 生产、Windows 开发 |
 | **外部服务** | NapCat（QQ 协议）、DeepSeek（主对话）、豆包 / 火山方舟（视觉）、ALAPI（搜图） |
-| **测试** | 10056 条：功能 9987 + 环境/迁移 37；含 DB pool 回归 |
+| **测试** | 10056 条：功能 10019 + 环境/迁移 37 |
 
 > 当前拓扑不是“网关直接 HTTP 打后端”：
 >
@@ -267,13 +267,13 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | C++ 网关 | 用户自己的 CommonNet（Boost.Asio/Beast）；客户端 27005 → TCP 27004 帧 → ingress；worker 只走 Unix socket |
 | 查版本 | `!version` 看版本号、提交、运行时长 |
 
-**10056 条测试**（功能 9987 + 环境/迁移 37），静态检查零未定义名字。
+**10056 条测试**（功能 10019 + 环境/迁移 37），静态检查零未定义名字。
 
 ---
 
 ## 开发计划
 
-**当前：v31.3.0 已完成（插件运行时 + 阅读进度修复 + 10024 测试）**｜待真实 NapCat 全量演练。
+**当前：v31.3.0 已完成（记忆层 native + 动态帮助 + 10056 测试）**｜待真实 NapCat 全量演练。
 
 > v22 试运行 1 天后，进入约 1 天的 v23 启动 + v22 介绍视频，再开始 v23 子版本开发。
 
@@ -307,10 +307,10 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | v25 | 热更新 + 配置动态化：配置/热加载/ingress/蓝绿/准入/清理/上线提示 | ✅ 已完成（v25.7.0） | [v25.md](docs/versions/v25.md) |
 | v26 | 内部通讯升级 + 模糊指令归一化：8+4+body TCP / protobuf / 标准命令 | ✅ 已完成（v26.7.4） | [v26.md](docs/versions/v26.md) |
 | v27 | 插件注册表基础：Manifest/Registry/快照 | ✅ 已完成（v27.8.0） | [v27.md](docs/versions/v27.md) |
-| v28 | DB pool + 插件运行时 + 交互回归 + cron 对账 + 阅读进度修复 | ✅ 已完成（v31.3.0） | [v28.md](docs/versions/v28.md) |
-| v29 | 模型层契约 + native + 环境门禁；v29.4 阅读静默待做 | 🚧 v31.3.0 / v29.4 计划 | [v29.md](docs/versions/v29.md) |
-| v30 | 模型层插件接入 | ✅ 已完成（v31.3.0） | [v30.md](docs/versions/v30.md) |
-| v31 | 记忆层契约 + native；v31.3 帮助升级待做 | 🚧 v31.3.0 / v31.3 计划 | [v31.md](docs/versions/v31.md) |
+| v28 | DB pool + 插件运行时 + 交互回归 + cron 对账 + 阅读进度修复 | ✅ 已完成（v28.9.1） | [v28.md](docs/versions/v28.md) |
+| v29 | 模型层契约 + native + 环境门禁 + 阅读静默 | ✅ 已完成（v29.4.2） | [v29.md](docs/versions/v29.md) |
+| v30 | 模型层插件接入 | ✅ 已完成（v30.2.0） | [v30.md](docs/versions/v30.md) |
+| v31 | 记忆层契约 + native + 动态帮助 | ✅ 已完成（v31.3.0） | [v31.md](docs/versions/v31.md) |
 | v32 | 记忆层插件接入 + 钩子批量修改 | 📋 已规划 | [v32.md](docs/versions/v32.md) |
 | v33 | 通道层契约 + native | 📋 已规划 | [v33.md](docs/versions/v33.md) |
 | v34 | 通道层插件接入 | 📋 已规划 | [v34.md](docs/versions/v34.md) |
@@ -670,8 +670,8 @@ sudo python3 -m playwright install-deps chromium
 
 ### 启动
 
-> v27 生产部署不要用 `start.py`：它直接占 3001/27004，绕过热更新。
-> 生产走 [v27 生产部署](#v27-生产部署ingress--worker)。本节的 `start.py` 只用于本地单进程兼容调试。
+> v31 生产部署不要用 `start.py`：它直接占 3001/27004，绕过热更新。
+> 生产走 [v31 生产部署](#v31-生产部署ingress--worker)。本节的 `start.py` 只用于本地单进程兼容调试。
 
 **本地调试（单进程）**
 
@@ -1102,7 +1102,7 @@ AI 摘要（≤100 字）→ 记进度
 ### 测试
 
 ```bash
-python3 scripts/run_tests.py             # 10014 条（tests 9963 + checks 37）
+python3 scripts/run_tests.py             # 10056 条（tests 10019 + checks 37）
 python3 scripts/check_names.py            # 静态检查：未定义名字 / 先用后赋值
 ```
 
@@ -1145,7 +1145,7 @@ python3 scripts/build_all.py --version 19.5.7 --skip full,exe,docker
 
 **版本号必须三段式**（`v17.0.0`），两段会直接拒绝。
 
-### v27 生产部署（ingress + worker）
+### v31 生产部署（ingress + worker）
 
 v25 起生产环境使用同一套入口，v31.3.0 继续：
 
@@ -1202,7 +1202,7 @@ python3 checks/env_check.py
 #### 3. 准备 worker 版本目录
 
 ```bash
-python3 scripts/prepare_worker.py --version 28.0.0
+python3 scripts/prepare_worker.py --version 31.3.0
 ```
 
 生成：
@@ -1314,12 +1314,12 @@ set +a
 python3 checks/env_check.py
 
 # 3. 准备新版本目录（必须是新版本号）
-python3 scripts/prepare_worker.py --version 27.x.y
+python3 scripts/prepare_worker.py --version 31.x.y
 
 # 4. 启动新 worker 并切流；ingress 不动
 python3 scripts/nao_supervisor.py \
   --base data/workers \
-  --version 27.x.y \
+  --version 31.x.y \
   --worker-cmd "python3 -u run.py" \
   --timeout 90 \
   --drain-seconds 60
@@ -1807,10 +1807,10 @@ python3 checks/env_check.py --init-db   # 环境监测时自动建
 | 后端 | v31.3.0，`bot/`，Python 3.10+ |
 | 网关 | v26.4.0，`gateway/`，C++17 + Boost.Asio/Beast |
 | 阶段 | v31.3.0 已打包，待部署验收 |
-| 前序 | v19–v26 已完成；v27 注册表已完成 |
-| 数据表 | schema 30；插件表 v28 计划 |
+| 前序 | v19–v30 已完成；v31 当前 |
+| 数据表 | schema 30；6 张 plugin_* 表 |
 | 命令 | 47 个注册命令（`!task` 仅提示迁移） |
-| 测试 | 10014 条：功能 9963 + 环境/迁移 37 |
+| 测试 | 10056 条：功能 10019 + 环境/迁移 37 |
 | 账号 | 单主人 `__owner__`；多用户 v23 计划 |
 | 后端鉴权 | `/api/*` 除 health 外要 Bearer Token；`/internal/*` 免鉴权 |
 | 网关鉴权 | 有 owner 登录/JWT；无按用户限流、无 TLS |
@@ -1973,7 +1973,7 @@ curl -s -H "Authorization: Bearer $TOKEN" http://127.0.0.1:27004/api/status
 
 ---
 
-## 附录 D · 数据库字典（32 表，schema 30）
+## 附录 D · 数据库字典（38 表，schema 30）
 
 | 表 | 职责 | 关键列 |
 |---|---|---|
