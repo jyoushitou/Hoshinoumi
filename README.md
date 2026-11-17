@@ -340,7 +340,7 @@ v34.1.0.0   次版本
 | v32 | 记忆层插件接入 + 钩子批量修改 + 多行命令 | ✅ 已完成（v32.4.0） | [v32.md](docs/versions/v32.md) |
 | v33 | 接口层收口（v33.1–v33.7）：通道/工具/存储/调度/出站/默认链路 | ✅ 已完成（v34.3.0.0） | [v33.md](docs/versions/v33.md) |
 | v34 | 学习规划（手动 JSON）+ 主账号情境感知（v34.0–v34.3） | 📋 已规划 | [v34.md](docs/versions/v34.md) |
-| v35 | 多端与客户端（v35.0–v35.10：Vue 套壳 + Qt + Android + 小米 Rust） | 📋 已规划 | [v35.md](docs/versions/v35.md) |
+| v35 | 多端与客户端（v35.0–v35.10：Vue 套壳 + Qt + Android + 澎湃OS4 Rust） | 📋 已规划 | [v35.md](docs/versions/v35.md) |
 | v36 | 插件增强（v36.0–v36.6）：后端+前端插件接口 | 📋 已规划 | [v36.md](docs/versions/v36.md) |
 | v37 | 情感增强（v37.0–v37.5）：20维关系/可扩展标签/人设卡 v2 客户端编写（默认开启） | 📋 已规划 | [v37.md](docs/versions/v37.md) |
 | v38 | 生态接入（v38.0–v38.10）：微博/贴吧/知乎/视频 + 随机内容 | 📋 已规划 | [v38.md](docs/versions/v38.md) |
