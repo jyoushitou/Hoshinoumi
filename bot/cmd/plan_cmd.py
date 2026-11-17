@@ -27,6 +27,20 @@ async def cmd_plan(ctx):
         c = sp.set_status(uid, week, day, no, "done" if sub == "done" else "skipped")
         return "✅ 已更新" if c else "❌ 没找到这条任务"
 
+    if sub == "import":
+        if len(parts) < 2:
+            return "用法：!plan import <json>"
+        try:
+            sp.import_text(uid, " ".join(parts[1:]))
+            return "✅ 已导入本周计划"
+        except Exception as e:
+            return f"❌ 导入失败：{e}"
+
+    if sub == "export":
+        import datetime
+        week = sp.monday_of(datetime.date.today()).isoformat()
+        return sp.export_text(uid, week)
+
     if sub in ("stats", "统计"):
         import datetime
         week = sp.monday_of(datetime.date.today()).isoformat()
