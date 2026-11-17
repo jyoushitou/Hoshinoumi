@@ -17,6 +17,16 @@ async def cmd_plan(ctx):
         plan = sp.load_week(uid, week)
         day = sp.DAYS[datetime.date.today().weekday()]
         return sp.format_day(plan, day)
+    if sub in ("done", "skip"):
+        if len(parts) < 3:
+            return "用法：!plan done|skip <day> <no>"
+        import datetime
+        day = parts[1].lower()
+        no = int(parts[2])
+        week = sp.monday_of(datetime.date.today()).isoformat()
+        c = sp.set_status(uid, week, day, no, "done" if sub == "done" else "skipped")
+        return "✅ 已更新" if c else "❌ 没找到这条任务"
+
     if sub in ("week", "list", ""):
         import datetime
         week = sp.monday_of(datetime.date.today()).isoformat()

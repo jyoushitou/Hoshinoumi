@@ -167,3 +167,13 @@ def format_week(plan):
             mark = {"done": "✅", "skipped": "⏭️", "moved": "↪️"}.get(c.get("status"), "·")
             lines.append(f"  {mark} {c.get('time') or '--:--'} {c.get('subject','')} {c.get('task','')}".rstrip())
     return "\n".join(lines)
+
+
+def set_status(user_id, week_start, day, no, status):
+    plan = load_week(user_id, week_start)
+    for c in plan.get(day, []):
+        if int(c.get("no", 0)) == int(no):
+            c["status"] = status
+            save_week(user_id, plan)
+            return c
+    return None
