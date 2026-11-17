@@ -6,7 +6,7 @@
 <title>Hoshinoumi v27–v34 · 从注册表到六层接口，再到她的计划</title>
 <style>
   :root{
-    --bg:#060a12; --panel:#0d1627; --text:#edf4ff; --muted:#8fa3bf;
+    --bg:#f4f9ff; --panel:#ffffff; --text:#10233f; --muted:#5d7797;
     --pink:#f472b6; --blue:#60a5fa; --cyan:#22d3ee; --green:#4ade80;
     --line:#26344e; --sans:"Microsoft YaHei","PingFang SC","Noto Sans SC",sans-serif;
     --mono:"Cascadia Code","Consolas",monospace;
@@ -89,6 +89,57 @@
   .hint{position:absolute;right:5.2vw;bottom:4.2vh;font-size:.62vw;color:#52637a;z-index:12}
   .pauseBadge{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-family:var(--mono);font-size:1vw;
     color:#cbd8ea;border:1px solid #2a3a55;background:#0d1729;padding:1vh 1.4vw;border-radius:99px;display:none;z-index:30}
+  /* ===== v27–v34 浅蓝 + 粉 + 白主题 ===== */
+  html,body{background:#eef6ff;color:#10233f}
+  #stage{background:
+    radial-gradient(900px 650px at 78% 12%,rgba(191,219,254,.85),transparent 62%),
+    radial-gradient(760px 560px at 12% 88%,rgba(251,207,232,.72),transparent 66%),
+    linear-gradient(135deg,#f8fbff,#eaf4ff 52%,#fff7fb)}
+  #stage::after{background:
+    radial-gradient(700px 460px at 82% 18%,rgba(96,165,250,.10),transparent 68%),
+    radial-gradient(560px 420px at 12% 82%,rgba(244,114,182,.09),transparent 70%)}
+  .scene,.scene.light{background:
+    radial-gradient(900px 600px at 82% 12%,rgba(219,234,254,.85),transparent 58%),
+    radial-gradient(760px 560px at 12% 88%,rgba(252,231,243,.8),transparent 64%),
+    linear-gradient(135deg,#fbfdff,#edf6ff 58%,#fff8fc);color:#10233f}
+  .kicker,.light .kicker{color:#1d4ed8}
+  h1,.light h1{color:#0b2545}
+  h1 em,.light h1 em{color:#db2777}
+  .lead,.light .lead{color:#476583}
+  .chip,.light .chip{border-color:#b9d3ee;background:#ffffff;color:#23476d;box-shadow:0 4px 14px rgba(37,99,235,.06)}
+  .card,.light .card{background:linear-gradient(180deg,#ffffff,#f5faff);border-color:#cfe1f4;box-shadow:0 12px 30px rgba(37,99,235,.08)}
+  .card .t{color:#10233f}
+  .card .d,.light .card .d{color:#5d7797}
+  .card .v{color:#db2777}
+  .card.blue .v{color:#2563eb}
+  .card.cyan .v{color:#0891b2}
+  .card.green .v{color:#15803d}
+  .timeline .tl{border-top-color:#c7dcf2}
+  .tl .v{color:#23476d}
+  .tl.hot{border-top-color:#ec4899}
+  .tl.hot .v{color:#db2777}
+  .tl .n{color:#5d7797}
+  .quote,.light .quote{color:#23476d;border-left-color:#ec4899}
+  .note,.light .note{background:#f0f7ff;border-color:#c7ddf4;color:#345575}
+  .code,.light .code{background:#ffffff;border-color:#c7ddf4;color:#1d4ed8}
+  .chapter{color:#345575}
+  .chapter span{color:#7b93ad}
+  .stageTag{color:#7b93ad}
+  .subtitle,.light .subtitle{color:#476583}
+  .progress{background:#dbeafe}
+  .progress i{background:linear-gradient(90deg,#ec4899,#60a5fa)}
+  .qaTag{color:#1d4ed8;border-color:rgba(37,99,235,.35);background:rgba(219,234,254,.7)}
+  .question{color:#0b2545}
+  .question em{color:#db2777}
+  .verdict,.light .verdict{background:#fff0f7;border-color:#f9a8d4;color:#831843}
+  .meta,.light .meta{color:#5d7797}
+  .meta b,.light .meta b{color:#1e3a5f}
+  .futureTag{color:#b45309;border-color:rgba(180,83,9,.35);background:#fffbeb}
+  .mini,.light .mini{color:#5d7797}
+  .hint{color:#7b93ad}
+  .pauseBadge{color:#23476d;border-color:#c7ddf4;background:#ffffff}
+  .endTitle{color:#0b2545}
+  .endTitle em{color:#db2777}
 </style>
 </head>
 <body>
@@ -329,7 +380,7 @@ const scenes = [
   {
     id:"v34a", duration:18000, chapter:"10 · v34",
     sub:"学习规划：一张 study_plans 表，7 个日列，节数可变。",
-    html:`<div class="scene"><div class="kicker anim" style="--d:0s">10 · v34 · 学习规划 <span class="futureTag" style="color:#4ade80;border-color:rgba(74,222,128,.5)">DONE</span></div>
+    html:`<div class="scene"><div class="kicker anim" style="--d:0s">10 · v34 · 学习规划 <span class="futureTag" style="color:#15803d;border-color:rgba(21,128,61,.45)">DONE</span></div>
       <h1 class="anim" style="--d:.15s">一周一张表，<br><em>每天节数可变。</em></h1>
       <div class="grid two" style="margin-top:2.8vh">
         <div class="card anim" style="--d:.3s"><div class="v">7 列</div><div class="t">monday → sunday</div><div class="d">每列 JSON 数组；0..N 节；no 只是当天顺序。</div></div>
@@ -342,7 +393,7 @@ const scenes = [
   {
     id:"v34b", duration:18000, chapter:"10 · v34",
     sub:"主账号情境：她知道你现在在 coding、开会还是离开。",
-    html:`<div class="scene"><div class="kicker anim" style="--d:0s">10 · v34 · 情境感知 <span class="futureTag" style="color:#4ade80;border-color:rgba(74,222,128,.5)">DONE</span></div>
+    html:`<div class="scene"><div class="kicker anim" style="--d:0s">10 · v34 · 情境感知 <span class="futureTag" style="color:#15803d;border-color:rgba(21,128,61,.45)">DONE</span></div>
       <h1 class="anim" style="--d:.15s">不只是计划，<br><em>还有“你现在在做什么”。</em></h1>
       <div class="grid three" style="margin-top:2.6vh">
         <div class="card anim" style="--d:.25s"><div class="v">reporter</div><div class="t">30s 前台应用/空闲</div><div class="d">Windows/Linux；映射粗类；默认不传窗口标题。</div></div>
