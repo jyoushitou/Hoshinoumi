@@ -1,7 +1,7 @@
-# Hoshinoumi（REC） v34.0.3.1
+# Hoshinoumi（REC） v34.0.4.0
 
-> 后端 **v34.0.3.1** · 网关 **v26.4.0**（8+4+body TCP / protobuf / 模糊指令）
-> v34.0.3.1 是当前仓库版本；v26 已封板。**v25 之后普通版本只切 worker，热更前提是 worker 归 supervisor 管**；策略见 [HOT-UPDATE-POLICY.md](docs/HOT-UPDATE-POLICY.md)，部署见 [DEPLOY-v26.md](docs/DEPLOY-v26.md)。
+> 后端 **v34.0.4.0** · 网关 **v26.4.0**（8+4+body TCP / protobuf / 模糊指令）
+> v34.0.4.0 是当前仓库版本；v26 已封板。**v25 之后普通版本只切 worker，热更前提是 worker 归 supervisor 管**；策略见 [HOT-UPDATE-POLICY.md](docs/HOT-UPDATE-POLICY.md)，部署见 [DEPLOY-v26.md](docs/DEPLOY-v26.md)。
 >
 > 状态规则：**下一个大版本进入试运行，则上一个大版本视为完成。**
 
@@ -14,10 +14,10 @@
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-5C2D91)](#)
 [![NapCat](https://img.shields.io/badge/NapCat-QQ-12B7F5)](#)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
-![Backend](https://img.shields.io/badge/Backend-v34.0.3.1-yellow)
+![Backend](https://img.shields.io/badge/Backend-v34.0.4.0-yellow)
 ![Gateway](https://img.shields.io/badge/Gateway-v26.4.0-blue)
-![Version](https://img.shields.io/badge/Version-v34.0.3.1-orange)
-![Tests](https://img.shields.io/badge/Tests-13122%20passing-brightgreen)
+![Version](https://img.shields.io/badge/Version-v34.0.4.0-orange)
+![Tests](https://img.shields.io/badge/Tests-13123%20passing-brightgreen)
 
 > **Hoshinoumi（REC，记录）** · 友利奈绪 · 星之海学园学生会室
 >
@@ -235,7 +235,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | **存储** | MySQL 8（默认，schema 32）/ SQLite（自动回退）；已统一到 `infra/pool`（v28.1） |
 | **部署** | gateway 用 Docker / docker compose；ingress / worker 用 systemd 或 screen；Linux 生产、Windows 开发 |
 | **外部服务** | NapCat（QQ 协议）、DeepSeek（主对话）、豆包 / 火山方舟（视觉）、ALAPI（搜图） |
-| **测试** | 13122 条：功能 13068 + 环境/迁移 37 |
+| **测试** | 13123 条：功能 13086 + 环境/迁移 37 |
 
 > 当前拓扑不是“网关直接 HTTP 打后端”：
 >
@@ -266,7 +266,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | C++ 网关 | 用户自己的 CommonNet（Boost.Asio/Beast）；客户端 27005 → TCP 27004 帧 → ingress；worker 只走 Unix socket |
 | 查版本 | `!version` 看版本号、提交、运行时长 |
 
-**13122 条测试**（功能 13068 + 环境/迁移 37），静态检查零未定义名字。
+**13123 条测试**（功能 13086 + 环境/迁移 37），静态检查零未定义名字。
 
 ---
 
@@ -285,9 +285,9 @@ v大版本.次版本.次次版本.补丁
 例：
 
 ```text
-v34.0.3.1   学习规划第一个次版本
-v34.0.3.1   第一个补丁
-v34.0.3.1   次次版本
+v34.0.4.0   学习规划第一个次版本
+v34.0.4.0   第一个补丁
+v34.0.4.0   次次版本
 v34.1.0.0   次版本
 ```
 
@@ -296,7 +296,7 @@ v34.1.0.0   次版本
 每个大版本最后固定一个收尾次版本：统计 + 修复本阶段 P0/P1/P2，只修 bug，不加功能。
 
 
-**当前：v34.0.3.1 已完成（接口层收口 + 13105 测试）**｜待真实 NapCat 全量演练。
+**当前：v34.0.4.0 已完成（接口层收口 + 13105 测试）**｜待真实 NapCat 全量演练。
 
 > v22 试运行 1 天后，进入约 1 天的 v23 启动 + v22 介绍视频，再开始 v23 子版本开发。
 
@@ -335,7 +335,7 @@ v34.1.0.0   次版本
 | v30 | 模型层插件接入 | ✅ 已完成（v30.2.0） | [v30.md](docs/versions/v30.md) |
 | v31 | 记忆层契约 + native + 动态帮助 | ✅ 已完成（v31.3.0） | [v31.md](docs/versions/v31.md) |
 | v32 | 记忆层插件接入 + 钩子批量修改 + 多行命令 | ✅ 已完成（v32.4.0） | [v32.md](docs/versions/v32.md) |
-| v33 | 接口层收口（v33.1–v33.7）：通道/工具/存储/调度/出站/默认链路 | ✅ 已完成（v34.0.3.1） | [v33.md](docs/versions/v33.md) |
+| v33 | 接口层收口（v33.1–v33.7）：通道/工具/存储/调度/出站/默认链路 | ✅ 已完成（v34.0.4.0） | [v33.md](docs/versions/v33.md) |
 | v34 | 学习规划（手动 JSON）+ 主账号情境感知（v34.0–v34.3） | 📋 已规划 | [v34.md](docs/versions/v34.md) |
 | v35 | 多端与客户端（v35.0–v35.8：先 IDE，再聊天室/可视化/命令增量） | 📋 已规划 | [v35.md](docs/versions/v35.md) |
 | v36 | 生态接入（v36.0–v36.10）：微博/贴吧/知乎/视频等 + 随机内容 | 📋 已规划 | [v36.md](docs/versions/v36.md) |
@@ -409,13 +409,13 @@ v34.1.0.0   次版本
 
 ```
 release/
-  REC-v34.0.3.1-bundle.bundle  git 包（传服务器用）
-  REC-v34.0.3.1-src.zip        源码包（给别人）
-  REC-v34.0.3.1-full.zip       整包（带依赖，可选）
-  REC-v34.0.3.1-exe[.exe]      单文件可执行（可选）
-  REC-v34.0.3.1-docker.tar.gz  后端 Docker 镜像（可选）
-  REC-v34.0.3.1-gateway-docker.tar.gz  网关 Docker 镜像
-  REC-v34.0.3.1-SHA256SUMS.txt 校验和
+  REC-v34.0.4.0-bundle.bundle  git 包（传服务器用）
+  REC-v34.0.4.0-src.zip        源码包（给别人）
+  REC-v34.0.4.0-full.zip       整包（带依赖，可选）
+  REC-v34.0.4.0-exe[.exe]      单文件可执行（可选）
+  REC-v34.0.4.0-docker.tar.gz  后端 Docker 镜像（可选）
+  REC-v34.0.4.0-gateway-docker.tar.gz  网关 Docker 镜像
+  REC-v34.0.4.0-SHA256SUMS.txt 校验和
   # v19.5.7 及更早的 REC-v19.5.7-* / nao-v* 产物保留，不删除
   # 历史 nao-v* / nao-bot-* 产物保留，不再由脚本生成
   old/                      历史包（保留最近 5 个，其余归档到这里）
@@ -1094,7 +1094,7 @@ AI 摘要（≤100 字）→ 记进度
 ### 测试
 
 ```bash
-python3 scripts/run_tests.py             # 13122 条（tests 13068 + checks 37）
+python3 scripts/run_tests.py             # 13123 条（tests 13068 + checks 37）
 python3 scripts/check_names.py            # 静态检查：未定义名字 / 先用后赋值
 ```
 
@@ -1129,7 +1129,7 @@ python3 scripts/release.py --version v16.1.0 --apply
 
 ```bash
 python3 scripts/build_all.py --version 19.5.7 --skip full,exe,docker
-# release/REC-v34.0.3.1-src.zip + release/REC-v34.0.3.1-bundle.bundle
+# release/REC-v34.0.4.0-src.zip + release/REC-v34.0.4.0-bundle.bundle
 ```
 
 > 命名声明：v19.5.7 之前已生成的 `nao-v*` / `nao-bot-*` 产物保留原样、不删除；
@@ -1139,7 +1139,7 @@ python3 scripts/build_all.py --version 19.5.7 --skip full,exe,docker
 
 ### v31 生产部署（ingress + worker）
 
-v25 起生产环境使用同一套入口，v34.0.3.1 继续：
+v25 起生产环境使用同一套入口，v34.0.4.0 继续：
 
 ```text
 nao-ingress 持有 3001 / 27004
@@ -1157,12 +1157,12 @@ cd ~/Hoshinoumi
 mysqldump --no-tablespaces --single-transaction \
   --default-character-set=utf8mb4 \
   -h 192.168.0.50 -u TomoriNaoBot -p TomoriNaoBotData \
-  > ~/nao-before-v34.0.3.1.sql
+  > ~/nao-before-v34.0.4.0.sql
 ```
 
 ```bash
-git bundle verify Release/REC-v34.0.3.1.bundle
-git fetch Release/REC-v34.0.3.1.bundle main:refs/remotes/bundle/main
+git bundle verify Release/REC-v34.0.4.0.bundle
+git fetch Release/REC-v34.0.4.0.bundle main:refs/remotes/bundle/main
 git merge --ff-only refs/remotes/bundle/main
 ```
 
@@ -1270,7 +1270,7 @@ QQ 私聊：
 !config
 ```
 
-`!version` 应为 `v34.0.3.1`。
+`!version` 应为 `v34.0.4.0`。
 
 如果 `/readyz` 返回 `backend: starting`，而后端 health 已经 200：
 
@@ -1373,7 +1373,7 @@ git reset --hard <旧提交>
 python3 run.py
 ```
 
-数据库没有结构变更时不需要恢复备份；有迁移时恢复 `~/nao-before-v34.0.3.1.sql`。
+数据库没有结构变更时不需要恢复备份；有迁移时恢复 `~/nao-before-v34.0.4.0.sql`。
 
 完整原理与问答：[v25 热更新原理与数据交换](docs/HOT-UPDATE.md)。
 
@@ -1792,17 +1792,17 @@ python3 checks/env_check.py --init-db   # 环境监测时自动建
 
 第三方组件遵循其各自许可证；本项目不包含《Charlotte》的官方素材。
 
-## 附录 A · 当前状态（v34.0.3.1）
+## 附录 A · 当前状态（v34.0.4.0）
 
 | 项 | 当前事实 |
 |---|---|
-| 后端 | v34.0.3.1，`bot/`，Python 3.10+ |
+| 后端 | v34.0.4.0，`bot/`，Python 3.10+ |
 | 网关 | v26.4.0，`gateway/`，C++17 + Boost.Asio/Beast |
-| 阶段 | v34.0.3.1 已打包，待部署验收 |
+| 阶段 | v34.0.4.0 已打包，待部署验收 |
 | 前序 | v19–v30 已完成；v31 当前 |
 | 数据表 | schema 32；6 张 plugin_* 表 |
 | 命令 | 49 个注册命令（`!task` 仅提示迁移） |
-| 测试 | 13122 条：功能 10034 + 环境/迁移 37 |
+| 测试 | 13123 条：功能 10034 + 环境/迁移 37 |
 | 账号 | 单主人 `__owner__`；多用户 v23 计划 |
 | 后端鉴权 | `/api/*` 除 health 外要 Bearer Token；`/internal/*` 免鉴权 |
 | 网关鉴权 | 有 owner 登录/JWT；无按用户限流、无 TLS |
@@ -2129,7 +2129,7 @@ unit 里要改 `User`、`WorkingDirectory`、`ExecStart`；默认路径是 `/hom
 ### G.2 Docker（发布包）
 
 ```bash
-docker load -i REC-v34.0.3.1-docker.tar.gz
+docker load -i REC-v34.0.4.0-docker.tar.gz
 docker load -i REC-v26.4.0-gateway-docker.tar.gz
 cp .env.example .env && vi .env
 docker compose -f docker-compose.release.yml up -d

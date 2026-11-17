@@ -27,6 +27,11 @@ async def cmd_plan(ctx):
         c = sp.set_status(uid, week, day, no, "done" if sub == "done" else "skipped")
         return "✅ 已更新" if c else "❌ 没找到这条任务"
 
+    if sub in ("stats", "统计"):
+        import datetime
+        week = sp.monday_of(datetime.date.today()).isoformat()
+        return sp.format_stats(uid, week)
+
     if sub == "move":
         if len(parts) < 4:
             return "用法：!plan move <day> <no> <to_day> [to_no]"

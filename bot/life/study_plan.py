@@ -229,3 +229,26 @@ def mark_notified(user_id, week, day, no, when=None):
             save_week(user_id, plan)
             return True
     return False
+
+
+def week_stats(user_id, week_start):
+    p = load_week(user_id, week_start)
+    counts = {"total": 0, "done": 0, "skipped": 0, "moved": 0, "todo": 0}
+    minutes = 0
+    for day in DAYS:
+        for c in p.get(day, []):
+            counts["total"] += 1
+            st = c.get("status") or "todo"
+            counts[st if st in counts else "todo"] += 1
+            minutes += int(c.get("actual_min") or 0)
+    counts["completion"] = round(counts["done"] / counts["total"] * 100, 1) if counts["total"] else 0.0
+    counts["actual_min"] = minutes
+    return counts
+
+
+def format_stats(user_id, week_start):
+    s = week_stats(user_id, week_start)
+    return (f"📊 本周计划：{s['done']}/{s['total']} 完成"
+            f"（{s['completion']}%）\n"
+            f"跳过 {s['skipped']}｜顺延 {s['moved']}｜待做 {s['todo']}\n"
+            f"实际 {s['actual_min']} 分钟")
