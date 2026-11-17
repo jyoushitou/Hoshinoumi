@@ -196,3 +196,36 @@ def move_item(user_id, week_start, day, no, to_day, to_no=None):
     plan.setdefault(to_day, []).append(src)
     save_week(user_id, plan)
     return src
+
+
+def due_items(user_id, now=None):
+    from datetime import datetime
+    now = now or datetime.now()
+    week = monday_of(now.date()).isoformat()
+    day = DAYS[now.weekday()]
+    plan = load_week(user_id, week)
+    out = []
+    for c in plan.get(day, []):
+        if c.get("status") != "todo" or c.get("notified_at"):
+            continue
+        t = c.get("time") or ""
+        if not t:
+            continue
+        try:
+            hh, mm = map(int, t.split(":"))
+        except Exception:
+            continue
+        if (hh, mm) <= (now.hour, now.minute):
+            out.append(c)
+    return week, day, out
+
+
+def mark_notified(user_id, week, day, no, when=None):
+    from datetime import datetime
+    plan = load_week(user_id, week)
+    for c in plan.get(day, []):
+        if int(c.get("no", 0)) == int(no):
+            c["notified_at"] = (when or datetime.now()).isoformat(timespec="seconds")
+            save_week(user_id, plan)
+            return True
+    return False

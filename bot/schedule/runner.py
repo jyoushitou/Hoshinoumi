@@ -80,6 +80,8 @@ async def cycle_task_run():
         _sched.start()
         idle_exec.schedule_tick()
         proactive_exec.schedule_tick()
+        from ..executors import plan as plan_exec
+        plan_exec.schedule_tick()
         try:  # v18.7：日程/待办也走秒级钩子
             from . import items as item_hooks
             n = item_hooks.schedule_all()
