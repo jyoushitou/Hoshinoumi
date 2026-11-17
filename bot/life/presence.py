@@ -13,9 +13,13 @@ def normalize(activity):
 
 
 def set_presence(user_id, activity, detail="", idle_min=0, source="reporter"):
+    import os
     from ..infra.conn import get_cursor
     a = normalize(activity)
     detail = (detail or "")[:200]
+    # 默认不保存窗口标题；仅手动或显式开启 raw_title
+    if source != "manual" and os.getenv("NAO_PRESENCE_RAW_TITLE") != "1":
+        detail = ""
     c = get_cursor()
     try:
         c.execute("UPDATE owner_presence SET activity=%s, detail=%s, idle_min=%s, "
