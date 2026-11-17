@@ -140,3 +140,30 @@ def import_text(user_id, text):
 
 def export_text(user_id, week_start):
     return json.dumps(load_week(user_id, week_start), ensure_ascii=False, indent=2)
+
+
+def format_day(plan, day, limit=20):
+    rows = plan.get(day) or []
+    if not rows:
+        return "今天没有安排。"
+    lines = [f"📅 {day}："]
+    for c in rows[:limit]:
+        mark = {"done": "✅", "skipped": "⏭️", "moved": "↪️"}.get(c.get("status"), "·")
+        t = c.get("time") or "--:--"
+        lines.append(f"  {mark} {t} {c.get('subject','')} {c.get('task','')}".rstrip())
+    return "\n".join(lines)
+
+
+def format_week(plan):
+    start = plan.get("week_start", "")
+    lines = [f"📋 学习计划 {start}"]
+    for day in DAYS:
+        rows = plan.get(day) or []
+        if not rows:
+            continue
+        lines.append("")
+        lines.append(day)
+        for c in rows:
+            mark = {"done": "✅", "skipped": "⏭️", "moved": "↪️"}.get(c.get("status"), "·")
+            lines.append(f"  {mark} {c.get('time') or '--:--'} {c.get('subject','')} {c.get('task','')}".rstrip())
+    return "\n".join(lines)
