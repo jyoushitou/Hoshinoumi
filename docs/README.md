@@ -141,7 +141,7 @@ v6：P1 会说话 → P2 说实话 → P2.5 长感官 → P3 有生活 → P4 �
 | **v37** | [versions/v37.md](versions/v37.md) | 情感增强：20维/60标签/人设卡 v2 客户端编写（v37.0–v37.5） | 规划中 |
 | **v38** | [versions/v38.md](versions/v38.md) | 生态接入（v38.0–v38.10） | 规划中 |
 | **v39** | [versions/v39.md](versions/v39.md) | 运维：systemd/看门狗 | 规划中 |
-| **v40** | [versions/v40.md](versions/v40.md) | 虚拟游乐场（Unity 2D，生活空间/交互/虚拟设备/货币） | 规划中 |
+| **v40** | [versions/v40.md](versions/v40.md) | 虚拟游乐场（Unity 2D，模拟世界/生活/设备/货币） | 规划中 |
 
 
 
