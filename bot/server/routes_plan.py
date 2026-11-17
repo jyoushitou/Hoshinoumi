@@ -2,7 +2,7 @@
 # GET /api/plan、POST /api/plan、POST /api/plan/import、GET /api/plan/export
 
 from ..life import study_plan
-from ..core import tenant
+from ..infra import tenant
 from .common import json_response
 
 
