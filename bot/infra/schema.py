@@ -454,6 +454,36 @@ PURE = {
             KEY idx_target (target_id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """,
+    "study_plans": """
+        CREATE TABLE IF NOT EXISTS study_plans (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            user_id VARCHAR(64) NOT NULL DEFAULT '__owner__',
+            week_start DATE NOT NULL,
+            title VARCHAR(128) NOT NULL DEFAULT '',
+            monday TEXT NULL,
+            tuesday TEXT NULL,
+            wednesday TEXT NULL,
+            thursday TEXT NULL,
+            friday TEXT NULL,
+            saturday TEXT NULL,
+            sunday TEXT NULL,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                       ON UPDATE CURRENT_TIMESTAMP,
+            UNIQUE KEY uk_study_week (user_id, week_start)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
+    "owner_presence": """
+        CREATE TABLE IF NOT EXISTS owner_presence (
+            user_id VARCHAR(64) PRIMARY KEY,
+            activity VARCHAR(32) NOT NULL DEFAULT 'unknown',
+            detail VARCHAR(200) NOT NULL DEFAULT '',
+            idle_min INT NOT NULL DEFAULT 0,
+            source VARCHAR(32) NOT NULL DEFAULT 'manual',
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                       ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
     "cron_overrides": """
         CREATE TABLE IF NOT EXISTS cron_overrides (
             id BIGINT AUTO_INCREMENT PRIMARY KEY,
