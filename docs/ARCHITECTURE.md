@@ -6,7 +6,7 @@
 >
 > v27/v28 插件注册表/运行时、v29–v32 模型/记忆层已完成；v33 起为规划。
 >
-> 配套：v27–v37 总纲见 [INTERFACE-PLAN-v27-v37.md](INTERFACE-PLAN-v27-v37.md)。
+> 配套：v27–v37 总纲见 [INTERFACE-PLAN-v27-v36.md](INTERFACE-PLAN-v27-v36.md)。
 
 ---
 

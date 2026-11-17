@@ -1,7 +1,7 @@
 # Hoshinoumi（REC）· 文档索引
 
 > **当前事实：后端 v34.3.0.0，网关 v26.4.0，schema 32，测试 13134 条**（2026-11-16）
-> v27–v33 已完成；v34–v38 规划中。
+> v27–v33 已完成；v34–v39 规划中。
 >
 > 这里只放“现在有效”的文档；开发计划单独维护，历史文档明确标注。
 > 如果文档与代码冲突，以代码和测试为准，并回来改文档。
@@ -138,18 +138,19 @@ v6：P1 会说话 → P2 说实话 → P2.5 长感官 → P3 有生活 → P4 �
 | **v34** | [versions/v34.md](versions/v34.md) | 学习规划（手动 JSON）+ 主账号情境感知（v34.0–v34.3） | 规划中 |
 | **v35** | [versions/v35.md](versions/v35.md) | 多端与客户端（v35.0–v35.8：先 IDE，再聊天室/可视化/命令增量） | 规划中 |
 | **v36** | [versions/v36.md](versions/v36.md) | 插件增强：后端+前端插件接口（v36.0–v36.6） | 规划中 |
-| **v37** | [versions/v37.md](versions/v37.md) | 生态接入（v37.0–v37.10） | 规划中 |
-| **v38** | [versions/v38.md](versions/v38.md) | 运维与嵌入式（v38.0–v38.2） | 规划中 |
+| **v37** | [versions/v37.md](versions/v37.md) | 情感增强（v37.0–v37.5） | 规划中 |
+| **v38** | [versions/v38.md](versions/v38.md) | 生态接入（v38.0–v38.10） | 规划中 |
+| **v39** | [versions/v39.md](versions/v39.md) | 运维与嵌入式（v39.0–v39.2） | 规划中 |
 
 
 
 
-> v33 一次收口六层接口，统一约束见 [INTERFACE-PLAN-v27-v37.md](INTERFACE-PLAN-v27-v37.md)，运行时契约见 [PLUGIN-RUNTIME-DESIGN.md](PLUGIN-RUNTIME-DESIGN.md)。
+> v33 一次收口六层接口，统一约束见 [INTERFACE-PLAN-v27-v36.md](INTERFACE-PLAN-v27-v36.md)，运行时契约见 [PLUGIN-RUNTIME-DESIGN.md](PLUGIN-RUNTIME-DESIGN.md)。
 
 
 
 
-> 文档里所有 vXXX 功能都是核心功能；v24–v37 本身是核心代码里的接口定义，
+> 文档里所有 vXXX 功能都是核心功能；v24–v39 本身是核心代码里的接口/功能定义，
 > 不是插件，也不是功能实现。
 > 插件接口只给第三方做优化/性能扩展，后续版本不会用插件接口实现功能。
 > 核心功能只能在启动前通过 `config/features.json` / `NAO_FEATURES` 关闭。
