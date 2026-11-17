@@ -32,5 +32,11 @@ class TestDueV3430(unittest.TestCase):
         sp.mark_notified("u",w,d,1)
         self.assertEqual(sp.due_items("u",datetime(2026,11,16,9,2))[2],[])
 
+    def test_mark_idempotent(self):
+        w,d,_=sp.due_items("u",datetime(2026,11,16,9,1))
+        self.assertTrue(sp.mark_notified("u",w,d,1))
+        self.assertTrue(sp.mark_notified("u",w,d,1))
+        self.assertEqual(sp.due_items("u",datetime(2026,11,16,9,5))[2],[])
+
 
 if __name__=="__main__": unittest.main()
