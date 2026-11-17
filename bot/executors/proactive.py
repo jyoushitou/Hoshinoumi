@@ -33,6 +33,12 @@ def _tid(ev):
 @register("proactive_tick", priority=Priority.EVENT, timeout=30,
           description="每 30 分钟决定要不要主动找他")
 async def handle_proactive_tick(ev):
+    try:
+        from ..life import presence
+        if not presence.proactive_allowed(str(cfg.MASTER_QQ)):
+            return {"ok": True, "skipped": "presence"}
+    except Exception:
+        pass
     """只判断：该不该主动；该就投递 proactive_say"""
     from ..scheduler.dispatcher import get_scheduler
 

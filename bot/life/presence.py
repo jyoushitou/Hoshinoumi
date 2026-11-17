@@ -82,3 +82,10 @@ def inject(events, user_id):
     if not line:
         return events
     return line + ("\n" + events if events and events != "无" else "")
+
+
+def proactive_allowed(user_id):
+    """会议/离开静默；写代码降低打扰；其余允许。"""
+    p = get_presence(user_id)
+    a = (p or {}).get("activity", "unknown")
+    return a not in ("meeting", "away")
