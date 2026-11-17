@@ -177,3 +177,22 @@ def set_status(user_id, week_start, day, no, status):
             save_week(user_id, plan)
             return c
     return None
+
+
+def move_item(user_id, week_start, day, no, to_day, to_no=None):
+    plan = load_week(user_id, week_start)
+    src = None
+    for c in plan.get(day, []):
+        if int(c.get("no", 0)) == int(no):
+            src = c
+            break
+    if src is None:
+        return None
+    plan[day] = [c for c in plan[day] if int(c.get("no", 0)) != int(no)]
+    nums = [int(c.get("no", 0)) for c in plan.get(to_day, [])]
+    src["no"] = int(to_no) if to_no else (max(nums) + 1 if nums else 1)
+    src["status"] = "moved" if src.get("status") == "todo" else src.get("status")
+    src["note"] = (src.get("note") or "") + f" moved from {day}"
+    plan.setdefault(to_day, []).append(src)
+    save_week(user_id, plan)
+    return src
