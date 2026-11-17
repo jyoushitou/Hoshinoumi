@@ -171,5 +171,6 @@ v6：P1 会说话 → P2 说实话 → P2.5 长感官 → P3 有生活 → P4 �
 
 ## 宣传片
 
-- [v27–v33 宣传片 HTML（约 5:12）](video/demo-v27-v33.html) · [分镜/旁白](video/v27-v33-outline.md)
+- [v27–v34 宣传片 HTML（约 6:17）](video/demo-v27-v34.html) · [分镜/旁白](video/v27-v34-outline.md)
+- [v27–v33 旧宣传片](video/demo-v27-v33.html) · [分镜](video/v27-v33-outline.md)
 - [v23–v30 旧宣传片](video/demo-v23-v30.html) · [分镜](video/v23-v30-outline.md)

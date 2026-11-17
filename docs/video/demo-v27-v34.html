@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hoshinoumi v27–v34 · 从注册表到六层接口，再到她的计划</title>
+<style>
+  :root{
+    --bg:#060a12; --panel:#0d1627; --text:#edf4ff; --muted:#8fa3bf;
+    --pink:#f472b6; --blue:#60a5fa; --cyan:#22d3ee; --green:#4ade80;
+    --line:#26344e; --sans:"Microsoft YaHei","PingFang SC","Noto Sans SC",sans-serif;
+    --mono:"Cascadia Code","Consolas",monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--sans)}
+  #stage{position:fixed;inset:0;overflow:hidden;background:
+    radial-gradient(900px 650px at 76% 18%,rgba(37,99,235,.12),transparent 65%),
+    radial-gradient(700px 520px at 15% 82%,rgba(219,39,119,.10),transparent 68%),#060a12}
+  #stage::after{content:"";position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(105deg,rgba(255,255,255,.035),transparent 28%,transparent 72%,rgba(255,255,255,.025));
+    animation:breath 5s ease-in-out infinite}
+  @keyframes breath{0%,100%{opacity:.45}50%{opacity:1}}
+  .scene{position:absolute;inset:0;padding:5.2vh 5.2vw;display:flex;flex-direction:column;justify-content:center;
+    background:radial-gradient(1100px 700px at 70% 20%,#16233d,#070b14 72%);animation:sceneIn .45s ease both}
+  .scene.light{background:radial-gradient(900px 600px at 86% 10%,#fce7f3 0,transparent 58%),
+    radial-gradient(1100px 700px at 15% 20%,#dbeafe,#f8fbff 72%);color:#0b2545}
+  @keyframes sceneIn{from{opacity:0;transform:scale(1.008)}to{opacity:1;transform:none}}
+  .kicker{font-size:.72vw;letter-spacing:.22em;color:var(--pink);font-weight:800}
+  .light .kicker{color:#1d4ed8}
+  .scene.light{background:radial-gradient(1100px 700px at 70% 20%,#16233d,#070b14 72%);color:var(--text)}
+  h1{font-size:5vw;line-height:1.18;margin:1.6vh 0 0;letter-spacing:.01em}
+  h1 em{font-style:normal;color:var(--pink)}
+  .light h1 em{color:#db2777}
+  .lead{font-size:1.03vw;line-height:1.9;color:var(--muted);margin:2.2vh 0 0;max-width:62vw}
+  .light .lead{color:var(--muted)}
+  .chips{display:flex;gap:.7vw;flex-wrap:wrap;margin-top:2.8vh}
+  .chip{border:1px solid #2b3a55;background:#0d1729;color:#cbd8ea;border-radius:99px;padding:.65vh 1vw;font-size:.76vw}
+  .light .chip{border-color:#2b3a55;background:#0d1729;color:#cbd8ea}
+  .anim{opacity:0;animation:rise .62s cubic-bezier(.2,.8,.25,1) both;animation-delay:var(--d,0s)}
+  @keyframes rise{from{opacity:0;transform:translateY(1.5vh)}to{opacity:1;transform:none}}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1vw;margin-top:4vh}
+  .grid.two{grid-template-columns:repeat(2,1fr)}
+  .grid.three{grid-template-columns:repeat(3,1fr)}
+  .card{background:linear-gradient(180deg,#141f34,#0d1627);border:1px solid #2a3a55;border-radius:.9vw;padding:1.7vh 1.15vw;min-height:14vh}
+  .light .card{background:linear-gradient(180deg,#141f34,#0d1627);border-color:#2a3a55;box-shadow:none}
+  .card .v{font-family:var(--mono);font-size:1.7vw;font-weight:800;color:var(--pink)}
+  .card .t{font-size:1.05vw;font-weight:800;margin-top:.7vh}
+  .card .d{font-size:.7vw;line-height:1.6;color:var(--muted);margin-top:.8vh}
+  .light .card .d{color:var(--muted)}
+  .card.blue .v{color:var(--blue)} .card.cyan .v{color:var(--cyan)} .card.green .v{color:var(--green)}
+  .timeline{display:grid;grid-template-columns:repeat(8,1fr);gap:.55vw;margin-top:4vh}
+  .tl{border-top:2px solid #2a3a55;padding-top:1.5vh;min-height:12vh}
+  .tl.hot{border-top-color:var(--pink)}
+  .tl .v{font-family:var(--mono);font-size:1.35vw;font-weight:800;color:#cbd8ea}
+  .tl.hot .v{color:var(--pink)}
+  .tl .n{font-size:.72vw;color:var(--muted);line-height:1.5;margin-top:.6vh}
+  .quote{border-left:3px solid var(--pink);padding:1.5vh 0 1.5vh 1.2vw;margin-top:3.4vh;font-size:1.25vw;line-height:1.7;color:#dce8f8}
+  .light .quote{color:#dce8f8;border-left-color:var(--pink)}
+  .note{border:1px solid #26344e;background:#0d1729;border-radius:.8vw;padding:1.2vh 1.1vw;margin-top:2.4vh;font-size:.82vw;line-height:1.7;color:#b9cbe3}
+  .light .note{border-color:#2a3a55;background:#0d1729;color:#b9cbe3}
+  .code{font-family:var(--mono);font-size:.78vw;color:#93c5fd;background:#0a1220;border:1px solid #22314a;border-radius:.55vw;padding:.9vh .9vw;margin-top:1.8vh;line-height:1.75}
+  .light .code{background:#0a1220;border-color:#22314a;color:#93c5fd}
+  .stageTag{position:absolute;top:3vh;right:5vw;font-family:var(--mono);font-size:.62vw;color:#64748b;letter-spacing:.1em}
+  .chapter{position:absolute;top:3vh;left:5.2vw;font-size:.72vw;color:#cbd8ea;letter-spacing:.08em}
+  .chapter span{color:#64748b}
+  .progress{position:absolute;left:0;right:0;bottom:0;height:3px;background:#0b1322;z-index:20}
+  .progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--pink),var(--cyan));transition:width .25s linear}
+  .subtitle{position:absolute;left:5.2vw;right:5.2vw;bottom:4.2vh;font-size:.86vw;line-height:1.7;color:#a9bdd6;z-index:10}
+  .light .subtitle{color:#5b7391}
+  .qaTag{display:inline-block;font-family:var(--mono);font-size:.7vw;letter-spacing:.18em;color:var(--cyan);border:1px solid rgba(34,211,238,.45);border-radius:99px;padding:.45vh .9vw;background:rgba(34,211,238,.07)}
+  .question{font-size:3.15vw;line-height:1.28;margin:2vh 0 0;max-width:80vw}
+  .answer{display:grid;grid-template-columns:1fr 1fr;gap:1.2vw;margin-top:3.4vh}
+  .answer .card{min-height:19vh}
+  .answer .card .t{font-size:1.2vw}
+  .answer .card .d{font-size:.82vw;line-height:1.75}
+  .verdict{margin-top:2.6vh;border:1px solid rgba(244,114,182,.55);background:rgba(244,114,182,.07);border-radius:.8vw;padding:1.2vh 1.2vw;font-size:.92vw;line-height:1.65;color:#f6d8ea}
+  .light .verdict{background:rgba(244,114,182,.07);border-color:rgba(244,114,182,.55);color:#f6d8ea}
+  .endTitle{font-size:4.2vw;line-height:1.2;margin:0}
+  .endTitle em{font-style:normal;color:var(--pink)}
+  .meta{display:flex;gap:2vw;margin-top:3.2vh;font-family:var(--mono);font-size:.8vw;color:#7b90ad;flex-wrap:wrap}
+  .meta b{color:#cbd8ea;font-weight:700}
+  .roadmap{display:grid;grid-template-columns:repeat(4,1fr);gap:.9vw;margin-top:2.6vh}
+  .roadmap .card{min-height:13vh}
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:1.4vw;margin-top:2.8vh}
+  .bigNum{font-family:var(--mono);font-size:3.4vw;font-weight:800;color:var(--pink);line-height:1}
+  .futureTag{display:inline-block;font-family:var(--mono);font-size:.62vw;letter-spacing:.16em;color:#fbbf24;border:1px solid rgba(251,191,36,.45);border-radius:99px;padding:.35vh .75vw;margin-left:.6vw;vertical-align:middle}
+  .mini{font-size:.66vw;line-height:1.6;color:#8fa3bf;margin-top:.6vh}
+  .rule{height:1px;background:linear-gradient(90deg,var(--pink),transparent);margin:2.2vh 0 1.2vh}
+  .hint{position:absolute;right:5.2vw;bottom:4.2vh;font-size:.62vw;color:#52637a;z-index:12}
+  .pauseBadge{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-family:var(--mono);font-size:1vw;
+    color:#cbd8ea;border:1px solid #2a3a55;background:#0d1729;padding:1vh 1.4vw;border-radius:99px;display:none;z-index:30}
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<div class="chapter" id="chapter"></div>
+<div class="stageTag">HOSHINOUMI / REC · v27–v34 · FUTURE v35–v39</div>
+<div class="subtitle" id="subtitle"></div>
+<div class="hint">空格暂停 · ←/→ 切场</div>
+<div class="pauseBadge" id="pauseBadge">PAUSED</div>
+<div class="progress"><i id="bar"></i></div>
+<script>
+const $ = s => document.querySelector(s);
+const stage = $("#stage");
+const params = new URLSearchParams(location.search);
+const startScene = params.get("scene");
+let index = 0, timer = null, startedAt = 0, elapsed = 0, paused = false;
+
+const scenes = [
+  {
+    id:"title", duration:8000, chapter:"00 · 开场",
+    sub:"v27–v34 已完成；v35–v39 是未来规划。",
+    html:`<div class="scene"><div class="kicker anim" style="--d:0s">HOSHINOUMI / REC · v27 → v34</div>
+      <h1 class="anim" style="--d:.12s">从注册表，<br>到六层接口，<br><em>再到她的计划。</em></h1>
+      <p class="lead anim" style="--d:.3s">v27 契约，v28 运行时，v29/v30 模型，v31/v32 记忆，v33 六层收口，<br>
+      v34 学习规划与主账号情境。</p>
+      <div class="chips anim" style="--d:.5s">
+        <span class="chip">v34.3.0.0</span><span class="chip">13134 条测试</span>
+        <span class="chip">六层接口</span><span class="chip">native 仍是默认</span>
+      </div>
+      <div class="foot anim" style="--d:.7s">深色 REC 控制台主题 · 全片无水印外部素材</div></div>`
+  },
+  {
+    id:"roadmap", duration:16000, chapter:"01 · 路线",
+    sub:"八个已完成版本；五个未来版本。",
+    html:`<div class="scene"><div class="kicker anim" style="--d:0s">01 · 路线图</div>
+      <h1 class="anim" style="--d:.1s;font-size:3.2vw">八个底座，<em>五个未来。</em></h1>
+      <div class="grid three" style="margin-top:2.4vh">
+        <div class="card anim" style="--d:.2s"><div class="v">v27</div><div class="t">注册表</div><div class="d">Manifest / Registry</div></div>
+        <div class="card blue anim" style="--d:.3s"><div class="v">v28</div><div class="t">运行时</div><div class="d">审批 / 权限 / stop</div></div>
+        <div class="card cyan anim" style="--d:.4s"><div class="v">v29</div><div class="t">模型契约</div><div class="d">Provider / native</div></div>
+        <div class="card green anim" style="--d:.5s"><div class="v">v30</div><div class="t">模型插件</div><div class="d">Router / fallback</div></div>
+        <div class="card anim" style="--d:.6s"><div class="v">v31</div><div class="t">记忆 native</div><div class="d">Store / Retriever</div></div>
+        <div class="card blue anim" style="--d:.7s"><div class="v">v32</div><div class="t">记忆插件</div><div class="d">Router / suffix</div></div>
+        <div class="card cyan anim" style="--d:.8s"><div class="v">v33</div><div class="t">六层收口</div><div class="d">Channel → Route</div></div>
+        <div class="card green anim" style="--d:.9s"><div class="v">v34</div><div class="t">学习规划</div><div class="d">计划表 + 情境感知</div></div>
+        <div class="card anim" style="--d:1s"><div class="v">v35–v39</div><div class="t">FUTURE</div><div class="d">多端 / 插件 / 情感 / 生态 / 运维</div></div>
+      </div>
+      <div class="quote anim" style="--d:1.1s">v27–v33 铺接口；v34 开始用接口做生活；v35–v39 把入口、生态和运维接上。</div>
+    </div>`
+  },
+  {
+    id:"v27a", duration:14000, chapter:"02 · v27",
+    sub:"Manifest 先定义“什么能注册”。",
+    html:`<div class="scene"><div class="kicker anim" style="--d:0s">02 · v27 · Manifest</div>
+      <h1 class="anim" style="--d:.1s">先写清楚，<br><em>你是谁。</em></h1>
+      <div class="grid three" style="margin-top:3vh">
+        <div class="card anim" style="--d:.25s"><div class="v">identity</div><div class="t">name / author / layer</div><div class="d">插件身份是 manifest.name；包名不参与判断。</div></div>
+        <div class="card blue anim" style="--d:.4s"><div class="v">contract</div><div class="t">version / api_version</div><div class="d">requires_core 只支持 &gt;=x.y.z；核心 API 只支持 @1。</div></div>
+        <div class="card cyan anim" style="--d:.55s"><div class="v">capability</div><div class="t">model.x@1</div><div class="d">@2 但核心只有 @1：直接拒绝，不降级。</div></div>
+      </div>
+      <div class="note anim" style="--d:.75s">核心 native 不实现 PluginManifest，不进入插件表。</div>
+    </div>`
+  },
+  {
+    id:"v27b", duration:13000, chapter:"02 · v27",
+    sub:"五个注册表，最后才是插件表。",
+    html:`<div class="scene"><div class="kicker anim" style="--d:0s">02 · v27 · MasterRegistry</div>
+      <h1 class="anim" style="--d:.1s">注册表，<br><em>也有顺序。</em></h1>
+      <div class="timeline" style="margin-top:3.6vh">
+        <div class="tl hot anim" style="--d:.2s"><div class="v">01</div><div class="n">command</div></div>
+        <div class="tl hot anim" style="--d:.3s"><div class="v">02</div><div class="n">events</div></div>
+        <div class="tl hot anim" style="--d:.4s"><div class="v">03</div><div class="n">life</div></div>
+        <div class="tl hot anim" style="--d:.5s"><div class="v">04</div><div class="n">ai</div></div>
+        <div class="tl anim" style="--d:.6s"><div class="v">05</div><div class="n">plugin</div></div>
+      </div>
+      <div class="quote anim" style="--d:.85s">插件最后初始化；它看到的是已经稳定的前四个快照。</div>
+      <div class="note anim" style="--d:1s">同名、同 capability 同 priority 冲突拒绝；不同 priority 允许候选。</div>
+    </div>`
+  },
+  {
+    id:"v28a", duration:15000, chapter:"03 · v28",
+    sub:"安装不是 import；先目录、hash、pending。",
+    html:`<div class="scene"><div class="kicker anim" style="--d:0s">03 · v28 · 安装</div>
+      <h1 class="anim" style="--d:.1s">先放进目录，<br><em>再谈启用。</em></h1>
+      <div class="grid three" style="margin-top:3vh">
+        <div class="card anim" style="--d:.25s"><div class="v">install</div><div class="t">plugins/&lt;layer&gt;/&lt;name&gt;/</div><div class="d">只接受目录包；manifest 校验后才复制。</div></div>
+        <div class="card blue anim" style="--d:.4s"><div class="v">hash</div><div class="t">完整性 / 覆盖判断</div><div class="d">同 name 同 hash 幂等；不同 hash 拒绝覆盖。</div></div>
+        <div class="card cyan anim" style="--d:.55s"><div class="v">pending</div><div class="t">默认不启用</div><div class="d">!plugin approve 后才进入 enabled。</div></div>
+      </div>
+      <div class="code anim" style="--d:.75s">!plugin install &lt;dir&gt; → pending → !plugin approve &lt;id&gt;</div>
+    </div>`
+  },
+  {
+    id:"v28b", duration:16000, chapter:"03 · v28",
+    sub:"权限三档、自动停用、stop 跟随 worker。",
+    html:`<div class="scene"><div class="kicker anim" style="--d:0s">03 · v28 · 运行时</div>
+      <h1 class="anim" style="--d:.1s">权限，<br><em>不是装饰。</em></h1>
+      <div class="grid two" style="margin-top:2.8vh">
+        <div class="card anim" style="--d:.25s"><div class="v">0 / 1 / 2</div><div class="t">拒绝 / 审批 / 允许</div><div class="d">默认 1；db 表级、file 路径级、network host 级。</div></div>
+        <div class="card blue anim" style="--d:.4s"><div class="v">errors</div><div class="t">连续失败自动停用</div><div class="d">写 plugin_errors；停用不自动恢复；可 auto_start 启动。</div></div>
+      </div>
+      <div class="code anim" style="--d:.6s">worker stop → cancel tasks → plugin.stop(5s) → unregister</div>
+      <div class="note anim" style="--d:.8s">stop 跟随 worker，不跟随 ingress；运行中 disable 立即 stop，下一次 worker 不再加载。</div>
+    </div>`
+  },
+  {
+    id:"v29a", duration:16000, chapter:"04 · v29",
+    sub:"ModelRequest / ModelReply / ModelProvider。",
+    html:`<div class="scene"><div class="kicker anim" style="--d:0s">04 · v29 · 模型契约</div>
+      <h1 class="anim" style="--d:.1s">模型可以换，<br><em>调用方式不能乱。</em></h1>
+      <div class="grid three" style="margin-top:3vh">
+        <div class="card anim" style="--d:.25s"><div class="v">Request</div><div class="t">messages / max_tokens</div><div class="d">target_id 归属、temperature、images 预留。</div></div>
+        <div class="card blue anim" style="--d:.4s"><div class="v">Reply</div><div class="t">text / model / tokens</div><div class="d">fallback 标记兜底；业务只依赖接口。</div></div>
+        <div class="card cyan anim" style="--d:.55s"><div class="v">Provider</div><div class="t">capabilities / complete</div><div class="d">DeepSeek / 豆包 native 实现，不进插件表。</div></div>
+      </div>
+      <div class="quote anim" style="--d:.78s">DeepSeek 与豆包仍是核心 native；插件只是候选。</div>
+    </div>`
+  },
+  {
+    id:"v29b", duration:16000, chapter:"04 · v29",
+    sub:"环境门禁 + 阅读静默：两个容易忽略的边界。",
+    html:`<div class="scene"><div class="kicker anim" style="--d:0s">04 · v29 · 边界</div>
+      <h1 class="anim" style="--d:.1s">蓝绿之前，<br><em>先过环境。</em></h1>
+      <div class="grid two" style="margin-top:2.8vh">
+        <div class="card anim" style="--d:.25s"><div class="v">env gate</div><div class="t">env_report 必须新鲜</div><div class="d">version / config_hash / checked_at 不匹配，prepare 和 supervisor 都拒绝。</div></div>
+        <div class="card blue anim" style="--d:.4s"><div class="v">reading</div><div class="t">自动流程静默</div><div class="d">idle / 首读只入库；!book next / !book read 才回摘要。</div></div>
+      </div>
+      <div class="note anim" style="--d:.62s">失败时 current 不动，旧 worker 继续服务；这是门禁，不是重启。</div>
+      <div class="quote anim" style="--d:.8s">读到的内容属于记忆，不属于聊天噪音。</div>
+    </div>`
+  },
+  {
+    id:"v30", duration:14000, chapter:"05 · v30",
+    sub:"model.<name>@1 的接入点，失败/停用回落 native。",
+    html:`<div class="scene"><div class="kicker anim" style="--d:0s">05 · v30 · 模型插件</div>
+      <h1 class="anim" style="--d:.1s">先能接入，<br><em>再谈默认。</em></h1>
+      <div class="grid two" style="margin-top:2.8vh">
+        <div class="card anim" style="--d:.25s"><div class="v">ModelRouter</div><div class="t">capability 查找</div><div class="d">registry.get(model.x@1)；没有就 native。</div></div>
+        <div class="card blue anim" style="--d:.4s"><div class="v">fallback</div><div class="t">异常 / 无权限 / 停用</div><div class="d">plugin_errors + 缓存失效 + 回退 DeepSeek/豆包。</div></div>
+      </div>
+      <div class="note anim" style="--d:.62s">v30 只做接入点；默认链路在 v33 RouteRegistry。</div>
+      <div class="quote anim" style="--d:.8s">插件可以失败；核心永远有退路。</div>
+    </div>`
+  },
+  {
+    id:"v31a", duration:15000, chapter:"06 · v31",
+    sub:"MemoryStore / Retriever；BM25 仍是 native。",
+    html:`<div class="scene"><div class="kicker anim" style="--d:0s">06 · v31 · 记忆契约</div>
+      <h1 class="anim" style="--d:.1s">记忆不是<em>一个函数。</em></h1>
+      <div class="grid two" style="margin-top:2.8vh">
+        <div class="card anim" style="--d:.25s"><div class="v">MemoryStore</div><div class="t">add / delete / recent</div><div class="d">SQLMemoryStore 包现有 repo_memory；删除强制 id + user_id。</div></div>
+        <div class="card blue anim" style="--d:.4s"><div class="v">Retriever</div><div class="t">search(query, top_k)</div><div class="d">BM25 + 关键词双路 RRF；结果带 score。</div></div>
+      </div>
+      <div class="quote anim" style="--d:.62s">所有记忆接口强制 user_id；A 不能删 B 的记忆。</div>
+      <div class="note anim" style="--d:.8s">第三方记忆实现 v32 接入；native 仍是默认。</div>
+    </div>`
+  },
+  {
+    id:"v31b", duration:13000, chapter:"06 · v31",
+    sub:"帮助不再手写：从注册表动态生成。",
+    html:`<div class="scene"><div class="kicker anim" style="--d:0s">06 · v31 · 帮助</div>
+      <h1 class="anim" style="--d:.1s">命令变了，<br><em>帮助自己变。</em></h1>
+      <div class="grid three" style="margin-top:3vh">
+        <div class="card anim" style="--d:.25s"><div class="v">!help</div><div class="t">按分类</div><div class="d">读取 registry.COMMANDS，不再维护静态列表。</div></div>
+        <div class="card blue anim" style="--d:.4s"><div class="v">!help all</div><div class="t">完整列表</div><div class="d">新增命令自动出现。</div></div>
+        <div class="card cyan anim" style="--d:.55s"><div class="v">!help cmd</div><div class="t">单命令详情</div><div class="d">help_text 优先，回退 docstring。</div></div>
+      </div>
+      <div class="note anim" style="--d:.75s">API /api/help 复用同一个函数；帮助不会再落后于命令表。</div>
+    </div>`
+  },
+  {
+    id:"v32a", duration:14000, chapter:"07 · v32",
+    sub:"MemoryRouter：插件失败回落 SQL/BM25。",
+    html:`<div class="scene"><div class="kicker anim" style="--d:0s">07 · v32 · 记忆插件</div>
+      <h1 class="anim" style="--d:.1s">插件可以换记忆，<br><em>但不能越权。</em></h1>
+      <div class="grid two" style="margin-top:2.8vh">
+        <div class="card anim" style="--d:.25s"><div class="v">route</div><div class="t">store / retriever</div><div class="d">memory.store.x@1 / memory.retriever.x@1。</div></div>
+        <div class="card blue anim" style="--d:.4s"><div class="v">fallback</div><div class="t">权限 / 异常 / 停用</div><div class="d">plugin.call 默认审批；失败写错误并回 native。</div></div>
+      </div>
+      <div class="code anim" style="--d:.6s">add / delete / recent / search → plugin or SQL/BM25</div>
+      <div class="note anim" style="--d:.8s">停用 DB enabled=false 时不调用插件。</div>
+    </div>`
+  },
+  {
+    id:"v32b", duration:15000, chapter:"07 · v32",
+    sub:"钩子批量后缀 + 多行命令。",
+    html:`<div class="scene"><div class="kicker anim" style="--d:0s">07 · v32 · 交互</div>
+      <h1 class="anim" style="--d:.1s">改钩子，<br><em>不新建重复提醒。</em></h1>
+      <div class="grid three" style="margin-top:2.8vh">
+        <div class="card anim" style="--d:.25s"><div class="v">suffix</div><div class="t">schema 31</div><div class="d">“吃饭少吃点”批量追加到点外卖/晚餐/午饭。</div></div>
+        <div class="card blue anim" style="--d:.4s"><div class="v">!cron append</div><div class="t">批量补充话术</div><div class="d">不改变原时间、不新建重复提醒。</div></div>
+        <div class="card cyan anim" style="--d:.55s"><div class="v">多行命令</div><div class="t">逐条执行</div><div class="d">首行 ! 才拆；每行单独回复；上限 10。</div></div>
+      </div>
+      <div class="quote anim" style="--d:.78s">一条命令失败，不影响后面的行。</div>
+    </div>`
+  },
+  {
+    id:"v33a", duration:13000, chapter:"08 · v33",
+    sub:"一次收口六层：Channel / Tool / Storage / Scheduler / Transport / Route。",
+    html:`<div class="scene"><div class="kicker anim" style="--d:0s">08 · v33 · 六层接口</div>
+      <h1 class="anim" style="--d:.1s">六层接口，<br><em>一次收口。</em></h1>
+      <div class="grid three" style="margin-top:2.6vh">
+        <div class="card anim" style="--d:.2s"><div class="v">Channel</div><div class="t">QQ / NapCat</div><div class="d">消息进出，不碰记忆。</div></div>
+        <div class="card blue anim" style="--d:.3s"><div class="v">Tool</div><div class="t">搜索 / 图片 / 语音</div><div class="d">注册后模型才看得到。</div></div>
+        <div class="card cyan anim" style="--d:.4s"><div class="v">Storage</div><div class="t">MySQL / SQLite</div><div class="d">Repository 只依赖接口。</div></div>
+        <div class="card green anim" style="--d:.5s"><div class="v">Scheduler</div><div class="t">asyncio</div><div class="d">定时 / 主动 / 重试。</div></div>
+        <div class="card anim" style="--d:.6s"><div class="v">Transport</div><div class="t">WebSocket</div><div class="d">唯一出站口。</div></div>
+        <div class="card blue anim" style="--d:.7s"><div class="v">Route</div><div class="t">默认链路</div><div class="d">native 优先，插件候选。</div></div>
+      </div>
+      <div class="note anim" style="--d:.9s">六层都是“契约 + native + 插件接入 + 失败回落”；核心 native 不实现 manifest。</div>
+    </div>`
+  },
+  {
+    id:"v33b", duration:18000, chapter:"08 · v33",
+    sub:"每层都有 native 默认、插件候选、失败回落。",
+    html:`<div class="scene"><div class="kicker anim" style="--d:0s">08 · v33 · 规则</div>
+      <h1 class="anim" style="--d:.1s">默认 native，<br><em>插件候选。</em></h1>
+      <div class="split">
+        <div class="card anim" style="--d:.25s"><div class="t">Channel / Tool</div><div class="d">QQ、搜索、图片、语音保持 native；插件通道失败回落，越权/超时拒绝。</div><div class="mini">验证：QQ 行为不变；工具失败可查。</div></div>
+        <div class="card blue anim" style="--d:.4s"><div class="t">Storage / Scheduler</div><div class="d">MySQL/SQLite、asyncio 保持 native；插件 DDL 只建 plugin_&lt;name&gt;_*。</div><div class="mini">验证：现有读写/定时不变。</div></div>
+        <div class="card cyan anim" style="--d:.55s"><div class="t">Transport / Route</div><div class="d">WebSocket 唯一出站；!route 只读解释为什么走 native。</div><div class="mini">验证：业务不直接 ws.send；路由可解释。</div></div>
+        <div class="card green anim" style="--d:.7s"><div class="t">收口统计</div><div class="d">v33.7.1.1：六层完成；13105 条测试，0 失败；P0/P1 清零。</div><div class="mini">测试全绿，但已知限制仍要写文档。</div></div>
+      </div>
+    </div>`
+  },
+  {
+    id:"boundary", duration:11000, chapter:"09 · 边界",
+    sub:"接口层不是插件化；同进程插件不是沙箱。",
+    html:`<div class="scene"><div class="kicker anim" style="--d:0s">09 · 边界</div>
+      <h1 class="anim" style="--d:.1s">接口层，<br><em>不换核心。</em></h1>
+      <div class="grid two" style="margin-top:2.8vh">
+        <div class="card anim" style="--d:.25s"><div class="t">核心 native</div><div class="d">DeepSeek、豆包、BM25、NapCat、MySQL/SQLite、asyncio、WebSocket 都保留。</div></div>
+        <div class="card blue anim" style="--d:.4s"><div class="t">插件</div><div class="d">只能 extend / enhance / 显式 replace 路由；失败、无权限、停用都回落 native。</div></div>
+      </div>
+      <div class="verdict anim" style="--d:.62s">权限能挡正常调用，挡不住恶意代码；安装审核仍是边界。</div>
+    </div>`
+  },
+  {
+    id:"v34a", duration:18000, chapter:"10 · v34",
+    sub:"学习规划：一张 study_plans 表，7 个日列，节数可变。",
+    html:`<div class="scene"><div class="kicker anim" style="--d:0s">10 · v34 · 学习规划 <span class="futureTag" style="color:#4ade80;border-color:rgba(74,222,128,.5)">DONE</span></div>
+      <h1 class="anim" style="--d:.15s">一周一张表，<br><em>每天节数可变。</em></h1>
+      <div class="grid two" style="margin-top:2.8vh">
+        <div class="card anim" style="--d:.3s"><div class="v">7 列</div><div class="t">monday → sunday</div><div class="d">每列 JSON 数组；0..N 节；no 只是当天顺序。</div></div>
+        <div class="card blue anim" style="--d:.45s"><div class="v">study_plans</div><div class="t">一周一行</div><div class="d">不拆 items/events；不占 cron_tasks；schema 32。</div></div>
+      </div>
+      <div class="code anim" style="--d:.65s">!plan today / week / import / done / skip / move / stats</div>
+      <div class="note anim" style="--d:.85s">到点只提醒一次；notified_at 去重；自动流程不刷屏，命令才回详情。</div>
+    </div>`
+  },
+  {
+    id:"v34b", duration:18000, chapter:"10 · v34",
+    sub:"主账号情境：她知道你现在在 coding、开会还是离开。",
+    html:`<div class="scene"><div class="kicker anim" style="--d:0s">10 · v34 · 情境感知 <span class="futureTag" style="color:#4ade80;border-color:rgba(74,222,128,.5)">DONE</span></div>
+      <h1 class="anim" style="--d:.15s">不只是计划，<br><em>还有“你现在在做什么”。</em></h1>
+      <div class="grid three" style="margin-top:2.6vh">
+        <div class="card anim" style="--d:.25s"><div class="v">reporter</div><div class="t">30s 前台应用/空闲</div><div class="d">Windows/Linux；映射粗类；默认不传窗口标题。</div></div>
+        <div class="card blue anim" style="--d:.4s"><div class="v">owner_presence</div><div class="t">粗粒度情境</div><div class="d">coding / meeting / video / gaming / reading / eating / away。</div></div>
+        <div class="card cyan anim" style="--d:.55s"><div class="v">TTL 5m</div><div class="t">过期不注入</div><div class="d">meeting/away 时主动消息静默；unknown 不猜。</div></div>
+      </div>
+      <div class="code anim" style="--d:.75s">!doing coding / !presence / !doing clear</div>
+      <div class="note anim" style="--d:.95s">隐私边界：只存粗类；raw_title 要显式开关；不截屏、不按键记录。</div>
+    </div>`
+  },
+  {
+    id:"future35", duration:22000, chapter:"11 · FUTURE v35",
+    sub:"多端与客户端：先 IDE，再聊天室，再 Web/桌面/手机。",
+    html:`<div class="scene"><div class="qaTag anim" style="--d:0s">FUTURE · v35 · 多端</div>
+      <h1 class="anim" style="--d:.15s">一套后端，<br><em>多个入口。</em></h1>
+      <div class="grid three" style="margin-top:2.4vh">
+        <div class="card anim" style="--d:.25s"><div class="v">v35.0</div><div class="t">推送底座</div><div class="d">Endpoint / DeliveryHub / 重试 / ack；schema 33。</div></div>
+        <div class="card blue anim" style="--d:.35s"><div class="v">v35.1–2</div><div class="t">本机服务 + IDE</div><div class="d">Unix socket / 127.0.0.1；DSH/Qoder 只读工具优先。</div></div>
+        <div class="card cyan anim" style="--d:.45s"><div class="v">v35.3</div><div class="t">Web 基础</div><div class="d">登录/会话/历史/文本图片/SSE 实时/断线重连。</div></div>
+        <div class="card green anim" style="--d:.55s"><div class="v">v35.4</div><div class="t">命令收敛</div><div class="d">QQ 只留短命令；详细配置走前端。</div></div>
+        <div class="card anim" style="--d:.65s"><div class="v">v35.5–7</div><div class="t">四端</div><div class="d">Web 全量可视化、桌面托盘/通知、手机推送/离线/记账。</div></div>
+        <div class="card blue anim" style="--d:.75s"><div class="v">v35.8</div><div class="t">收尾</div><div class="d">统计、回归、遗留 bug；只修不加。</div></div>
+      </div>
+      <div class="note anim" style="--d:.95s">顺序固定：本机服务 → IDE → 四端聊天室 → Web 全量 → 平台增量。</div>
+    </div>`
+  },
+  {
+    id:"future36", duration:22000, chapter:"12 · FUTURE v36",
+    sub:"插件增强：从替换 adapter，到修改完整功能。",
+    html:`<div class="scene"><div class="qaTag anim" style="--d:0s">FUTURE · v36 · 插件 API v2</div>
+      <h1 class="anim" style="--d:.15s">插件可以改行为，<br><em>不能拿走控制权。</em></h1>
+      <div class="grid three" style="margin-top:2.4vh">
+        <div class="card anim" style="--d:.25s"><div class="v">hooks</div><div class="t">聊天前后 / prompt</div><div class="d">before_reply、prompt.build、after_reply；native 默认。</div></div>
+        <div class="card blue anim" style="--d:.35s"><div class="v">extend</div><div class="t">命令 / 事件 / 定时</div><div class="d">register_command、on(event)、register_job。</div></div>
+        <div class="card cyan anim" style="--d:.45s"><div class="v">relation</div><div class="t">关系/标签策略</div><div class="d">relation.adjust / tags；可扩展正负标签。</div></div>
+        <div class="card green anim" style="--d:.55s"><div class="v">persona</div><div class="t">人设卡 v2</div><div class="d">按关系阶段/维度调语气、称呼、边界。</div></div>
+        <div class="card anim" style="--d:.65s"><div class="v">ui</div><div class="t">panel / slot</div><div class="d">前端插件接口；SDK + 示例。</div></div>
+        <div class="card blue anim" style="--d:.75s"><div class="v">safety</div><div class="t">审计 / 配额 / 回滚</div><div class="d">失败/超时/停用回落 native；不改核心表结构。</div></div>
+      </div>
+      <div class="note anim" style="--d:.95s">旧 v1 插件仍可加载；不允许任意 shell、绕过权限直连库。</div>
+    </div>`
+  },
+  {
+    id:"future37", duration:22000, chapter:"13 · FUTURE v37",
+    sub:"情感增强：20 维关系 + 60 标签 + 人设卡 v2，默认开启。",
+    html:`<div class="scene"><div class="qaTag anim" style="--d:0s">FUTURE · v37 · 情感增强</div>
+      <h1 class="anim" style="--d:.15s">亲近，<br><em>不再是一个数字。</em></h1>
+      <div class="grid three" style="margin-top:2.4vh">
+        <div class="card anim" style="--d:.25s"><div class="v">20 维</div><div class="t">9 核心 + 11 修饰</div><div class="d">亲近/信任/尊重/吸引/安全感/张力/理解/支持/双向投入。</div></div>
+        <div class="card blue anim" style="--d:.35s"><div class="v">60 标签</div><div class="t">长期 trait + 短期 state</div><div class="d">正向 40 / 负向 20；可叠加，不是单选分支。</div></div>
+        <div class="card cyan anim" style="--d:.45s"><div class="v">阶段</div><div class="t">陌生 → 认识 → 熟 → 亲近</div><div class="d">亲近后可同时挂多个标签；负向独立叠加。</div></div>
+        <div class="card green anim" style="--d:.55s"><div class="v">标签库</div><div class="t">知己 / 挚友 / 搭档</div><div class="d">还有欢喜冤家、灵魂共鸣、家人等；插件可扩展。</div></div>
+        <div class="card anim" style="--d:.65s"><div class="v">人设卡 v2</div><div class="t">按阶段切换</div><div class="d">语气、称呼、边界随关系和维度变化。</div></div>
+        <div class="card blue anim" style="--d:.75s"><div class="v">开关</div><div class="t">emotion_enhanced</div><div class="d">默认开启；legacy 单值手动关闭。</div></div>
+      </div>
+      <div class="note anim" style="--d:.95s">不引入“依赖度”这类不健康指标；关系不是一条长梯子。</div>
+    </div>`
+  },
+  {
+    id:"future38", duration:20000, chapter:"14 · FUTURE v38",
+    sub:"生态接入：QQ空间、运维、视频、微信、通话、微服务、内容流。",
+    html:`<div class="scene"><div class="qaTag anim" style="--d:0s">FUTURE · v38 · 生态</div>
+      <h1 class="anim" style="--d:.15s">从聊天，<br><em>走向内容与运维。</em></h1>
+      <div class="grid three" style="margin-top:2.4vh">
+        <div class="card anim" style="--d:.25s"><div class="v">v38.0</div><div class="t">QQ 空间</div><div class="d">发说说；只对熟人点赞/评论；限频+审计。</div></div>
+        <div class="card blue anim" style="--d:.35s"><div class="v">v38.1</div><div class="t">运维</div><div class="d">bash 只读 → agent → 有限写 → 可写体系；写要审批+回滚。</div></div>
+        <div class="card cyan anim" style="--d:.45s"><div class="v">v38.2–3</div><div class="t">B站 / 抖音</div><div class="d">公开内容搜索、解析、摘要；不登录、不伪造。</div></div>
+        <div class="card green anim" style="--d:.55s"><div class="v">v38.4–6</div><div class="t">微信 / 语音 / 视频</div><div class="d">OpenClaw 接入与通话；失败降级。</div></div>
+        <div class="card anim" style="--d:.65s"><div class="v">v38.7</div><div class="t">微服务</div><div class="d">接自有 Web；探网关 5 次 + 池复用。</div></div>
+        <div class="card blue anim" style="--d:.75s"><div class="v">v38.8–9</div><div class="t">内容流</div><div class="d">微博/贴吧/知乎 + 随机消费；复用读书 offset；自动只入库。</div></div>
+      </div>
+      <div class="note anim" style="--d:.95s">每个生态独立开关，默认关闭；不发帖/评论/点赞（QQ空间熟人授权除外）。</div>
+    </div>`
+  },
+  {
+    id:"future39", duration:18000, chapter:"15 · FUTURE v39",
+    sub:"运维与嵌入式：systemd、树莓派/平板、断网恢复、统计收尾。",
+    html:`<div class="scene"><div class="qaTag anim" style="--d:0s">FUTURE · v39 · 运维</div>
+      <h1 class="anim" style="--d:.15s">最后，<br><em>让她一直在。</em></h1>
+      <div class="grid three" style="margin-top:2.6vh">
+        <div class="card anim" style="--d:.25s"><div class="v">v39.0</div><div class="t">systemd</div><div class="d">ingress + worker + watchdog.timer；崩溃 30s 拉起。</div></div>
+        <div class="card blue anim" style="--d:.4s"><div class="v">v39.1</div><div class="t">嵌入式</div><div class="d">树莓派/平板 + Chromium kiosk；触摸/软键盘。</div></div>
+        <div class="card cyan anim" style="--d:.55s"><div class="v">v39.1.2</div><div class="t">恢复</div><div class="d">断网显示最后缓存 + 重连中，不白屏。</div></div>
+      </div>
+      <div class="note anim" style="--d:.75s">unit 只启动 supervisor/ingress，不直接抢 worker；看门狗连续 3 次失败才重启。</div>
+      <div class="quote anim" style="--d:.9s">嵌入式只是前端，复用 v35 的 hub/本机服务，不重写核心。</div>
+    </div>`
+  },
+  {
+    id:"end", duration:10000, chapter:"16 · 结尾",
+    sub:"v34.3.0.0 已完成；v35–v39 是规划。",
+    html:`<div class="scene"><div class="kicker anim" style="--d:0s">HOSHINOUMI / REC</div>
+      <h1 class="endTitle anim" style="--d:.15s">接口已经铺完，<br><em>计划也开始了。</em></h1>
+      <p class="lead anim" style="--d:.35s">v34 学习规划 + 主账号情境已完成；v35 多端、v36 插件增强、v37 情感增强、v38 生态、v39 运维。<br>
+      核心 native 仍是默认；插件只是候选。</p>
+      <div class="meta anim" style="--d:.55s"><span><b>v34.3.0.0</b></span><span><b>13134</b> tests</span><span><b>v35–v39</b> planned</span><span>MIT · 非官方二创</span></div>
+      <div class="note anim" style="--d:.75s">未来功能以 docs/versions/vNN.md 为准；视频不把计划说成已实现。</div>
+    </div>`
+  }
+];
+
+function htmlFor(s){ return s.html; }
+
+function show(i){
+  index = (i + scenes.length) % scenes.length;
+  const s = scenes[index];
+  stage.innerHTML = htmlFor(s);
+  $("#chapter").innerHTML = s.chapter + " <span>" + fmt(scenes.slice(0,index).reduce((a,x)=>a+x.duration,0)) + "</span>";
+  $("#subtitle").textContent = s.sub || "";
+  startedAt = performance.now(); elapsed = 0;
+  $("#bar").style.width = "0%";
+  clearTimeout(timer);
+  if (!paused) timer = setTimeout(next, s.duration);
+}
+function next(){ show(index+1); }
+function fmt(ms){ const s=Math.floor(ms/1000); return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0"); }
+function tick(){
+  if (!paused) elapsed = performance.now()-startedAt;
+  const t = scenes[index] ? Math.min(1, elapsed/scenes[index].duration) : 0;
+  $("#bar").style.width = (t*100).toFixed(2)+"%";
+  requestAnimationFrame(tick);
+}
+function togglePause(){
+  paused = !paused;
+  $("#pauseBadge").style.display = paused ? "block" : "none";
+  if (paused) clearTimeout(timer);
+  else { startedAt = performance.now()-elapsed; timer = setTimeout(next, scenes[index].duration-elapsed); }
+}
+document.addEventListener("keydown", e => {
+  if (e.code === "Space"){ e.preventDefault(); togglePause(); }
+  if (e.key === "ArrowRight"){ show(index+1); }
+  if (e.key === "ArrowLeft"){ show(index-1); }
+});
+const startIdx = startScene ? scenes.findIndex(s=>s.id===startScene) : 0;
+show(startIdx >= 0 ? startIdx : 0);
+tick();
+</script>
+</body>
+</html>
