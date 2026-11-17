@@ -85,3 +85,58 @@ def dumps(data):
 
 def loads(text):
     return validate_plan(json.loads(text))
+
+
+def _row_to_plan(row):
+    data = {"week_start": str(row["week_start"])[:10], "title": row.get("title") or ""}
+    for day in DAYS:
+        raw = row.get(day)
+        try:
+            data[day] = json.loads(raw) if raw else []
+        except Exception:
+            data[day] = []
+    return validate_plan(data)
+
+
+def load_week(user_id, week_start):
+    from ..infra.conn import get_cursor
+    week = monday_of(week_start).isoformat()
+    c = get_cursor()
+    try:
+        c.execute("SELECT * FROM study_plans WHERE user_id=%s AND week_start=%s",
+                  (str(user_id), week))
+        row = c.fetchone()
+        return _row_to_plan(row) if row else empty_week(week)
+    finally:
+        try: c.close()
+        except Exception: pass
+
+
+def save_week(user_id, data):
+    plan = validate_plan(data)
+    from ..infra.conn import get_cursor
+    c = get_cursor()
+    vals = [json.dumps(plan[d], ensure_ascii=False) for d in DAYS]
+    try:
+        c.execute("UPDATE study_plans SET title=%s, monday=%s, tuesday=%s, "
+                  "wednesday=%s, thursday=%s, friday=%s, saturday=%s, sunday=%s "
+                  "WHERE user_id=%s AND week_start=%s",
+                  [plan.get("title", "")] + vals + [str(user_id), plan["week_start"]])
+        if not getattr(c, "rowcount", 0):
+            c.execute("INSERT INTO study_plans(user_id, week_start, title, monday, tuesday, "
+                      "wednesday, thursday, friday, saturday, sunday) "
+                      "VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+                      [str(user_id), plan["week_start"], plan.get("title", "")] + vals)
+        c.connection.commit()
+        return plan
+    finally:
+        try: c.close()
+        except Exception: pass
+
+
+def import_text(user_id, text):
+    return save_week(user_id, json.loads(text))
+
+
+def export_text(user_id, week_start):
+    return json.dumps(load_week(user_id, week_start), ensure_ascii=False, indent=2)
