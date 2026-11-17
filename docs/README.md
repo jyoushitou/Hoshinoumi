@@ -137,7 +137,7 @@ v6：P1 会说话 → P2 说实话 → P2.5 长感官 → P3 有生活 → P4 �
 | **v33** | [versions/v33.md](versions/v33.md) | 接口层收口（v33.1–v33.7） | 🚧 v34.3.0.0 开发中 |
 | **v34** | [versions/v34.md](versions/v34.md) | 学习规划（手动 JSON）+ 主账号情境感知（v34.0–v34.3） | 规划中 |
 | **v35** | [versions/v35.md](versions/v35.md) | 多端与客户端（v35.0–v35.8：先 IDE，再聊天室/可视化/命令增量） | 规划中 |
-| **v36** | [versions/v36.md](versions/v36.md) | 插件增强（v36.0–v36.6） | 规划中 |
+| **v36** | [versions/v36.md](versions/v36.md) | 插件增强：后端+前端插件接口（v36.0–v36.6） | 规划中 |
 | **v37** | [versions/v37.md](versions/v37.md) | 生态接入（v37.0–v37.10） | 规划中 |
 | **v38** | [versions/v38.md](versions/v38.md) | 运维与嵌入式（v38.0–v38.2） | 规划中 |
 
