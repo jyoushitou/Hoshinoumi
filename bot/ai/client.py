@@ -293,6 +293,13 @@ async def get_character_reply(txt, tid, current_kws=None,
             events = (_fb + "\n" + events) if events else _fb
     except Exception as _e:
         log_api(f"[事实] 注入失败（忽略）：{_e}")  # 上下文（关键词、对话历史、检索到的记忆）
+
+    # v34.2.1：主账号当前情境（开会/写代码/离开）
+    try:
+        from ..life import presence as _presence
+        events = _presence.inject(events, tid)
+    except Exception as _e:
+        log_api(f"[情境] 注入失败（忽略）：{_e}")
     log_api(f"[get_character_reply] 记忆: kw_len={len(kw)}, dia_len={len(dia)}, events={events[:40]}")  # 日志记录上下文信息
     cur_kw_str = "、".join(current_kws) if current_kws else "无"  # 当前话题关键词（顿号分隔）
     tone_line = await _build_tone_line(tid)

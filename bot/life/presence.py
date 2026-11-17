@@ -75,3 +75,10 @@ def prompt_block(user_id):
     label = names.get(p["activity"], p["activity"])
     idle = p.get("idle_min") or 0
     return f"当前情境：主人在{label}" + (f"，已空闲 {idle} 分钟" if idle else "")
+
+
+def inject(events, user_id):
+    line = prompt_block(user_id)
+    if not line:
+        return events
+    return line + ("\n" + events if events and events != "无" else "")
