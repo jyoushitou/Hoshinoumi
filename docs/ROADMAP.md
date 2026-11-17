@@ -176,7 +176,7 @@
 | v31 | 记忆层契约 + native | [v31.md](versions/v31.md) |
 | v32 | 记忆层插件接入 | [v32.md](versions/v32.md) |
 | v33 | 接口层收口（v33.1–v33.7） | [v33.md](versions/v33.md) |
-| v34 | 学习规划（v34.0–v34.1） | [v34.md](versions/v34.md) |
+| v34 | 学习规划 + 主账号情境感知（v34.0–v34.3） | [v34.md](versions/v34.md) |
 | v35 | 多端与客户端（v35.0–v35.7） | [v35.md](versions/v35.md) |
 | v36 | 生态接入：微博/贴吧/知乎/视频 + 随机内容消费 | [v36.md](versions/v36.md) |
 | v37 | 运维与嵌入式（v37.0–v37.2，含统计/遗留 bug 收尾） | [v37.md](versions/v37.md) |
