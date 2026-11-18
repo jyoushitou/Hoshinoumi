@@ -10,6 +10,7 @@ DSH 会话标题栏 “nao” 入口
 首次打开检查网关，无配置弹配置框
 网关 / token / target_id 保存到 ~/.dsh/hoshinoumi.json
 聊天 POST /api/hoshinoumi/chat → 后端 /api/chat
+历史 GET /api/hoshinoumi/history → 后端 /internal/history
 命令 POST /api/hoshinoumi/command → 后端 /api/command
 ```
 
@@ -21,7 +22,7 @@ Web profile：
 dsh plugin --profile web add link:D:\Desktop\Desktop\develop\NapCat+Pyhon\integrations\dsh-plugin
 ```
 
-桌面版通过 DSH 插件管理安装本地目录（本机已安装到 desktop/web 两个 profile）。
+桌面版通过 DSH 插件管理安装本地目录（本机已安装到 desktop/web 两个 profile，版本 35.2.4）。
 
 ## 使用
 
@@ -36,6 +37,7 @@ dsh plugin --profile web add link:D:\Desktop\Desktop\develop\NapCat+Pyhon\integr
 ```text
 GET  /healthz
 GET  /readyz
+GET  /internal/history?target_id=...&limit=...
 POST /api/chat       {message,target_id}
 POST /api/command    {command,args}
 ```

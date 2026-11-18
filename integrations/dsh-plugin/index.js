@@ -81,7 +81,7 @@ async function gatewayFetch(cfg, path, init = {}) {
 
 async function handleApi(req, res, path) {
   if (path === '/api/hoshinoumi/health' && req.method === 'GET') {
-    return sendJson(res, 200, { ok: true, version: '35.2.3.0', config: CONFIG_FILE })
+    return sendJson(res, 200, { ok: true, version: '35.2.4.0', config: CONFIG_FILE })
   }
 
   if (path === '/api/hoshinoumi/ui' && req.method === 'GET') {
@@ -116,6 +116,16 @@ async function handleApi(req, res, path) {
       health: health.data,
       ready: ready?.data ?? null,
     })
+  }
+
+  if (path === '/api/hoshinoumi/history' && req.method === 'GET') {
+    const url = new URL(req.url || '/', 'http://127.0.0.1')
+    const cfg = readConfig()
+    if (!cfg.gateway) throw new Error('gateway is not configured')
+    const target = url.searchParams.get('target_id') || cfg.target_id || 'owner'
+    const limit = Math.max(1, Math.min(Number(url.searchParams.get('limit') || 30), 100))
+    const out = await gatewayFetch(cfg, `/internal/history?target_id=${encodeURIComponent(target)}&limit=${limit}`, { method: 'GET' })
+    return sendJson(res, out.status, out.data)
   }
 
   if (path === '/api/hoshinoumi/chat' && req.method === 'POST') {

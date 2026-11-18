@@ -350,7 +350,18 @@ async function saveGateway(){
  st.className='mstatus';st.textContent='正在保存…';
  try{const r=await fetch('/api/hoshinoumi/config',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({gateway:url,token:document.getElementById('tokenInput').value,target_id:document.getElementById('targetInput').value})});const j=await r.json();if(!r.ok)throw new Error(j.message||('HTTP '+r.status));localStorage.setItem('hoshinoumi_target',document.getElementById('targetInput').value||'owner');st.className='mstatus ok';st.textContent='已保存，正在进入…';setTimeout(()=>{closeSetup();toast('后端已配置 · '+url);},450);}catch(e){st.className='mstatus err';st.textContent='保存失败：'+e.message;}
 }
-async function loadBackendConfig(){try{const r=await fetch('/api/hoshinoumi/config');const j=await r.json();if(j.target_id)localStorage.setItem('hoshinoumi_target',j.target_id);if(!j.configured)setTimeout(()=>openSetup(),500);}catch{setTimeout(()=>openSetup(),500);}}
+async function loadHistory(){
+ try{
+  const target=localStorage.getItem('hoshinoumi_target')||'';
+  const r=await fetch('/api/hoshinoumi/history?limit=30'+(target?'&target_id='+encodeURIComponent(target):''));
+  if(!r.ok)return;const j=await r.json();const rows=Array.isArray(j.data)?j.data:[];
+  if(!rows.length)return;
+  const chat=document.getElementById('chat');
+  chat.innerHTML='<div class="banner show">● 已从本机后端加载历史 · '+rows.length+' 条</div><div class="load show"><span>↑ 更早的消息</span></div>';
+  rows.forEach(x=>appendMsg({who:x.role==='user'?'me':'bot',text:String(x.content||''),meta:String(x.created_at||'').slice(11,16)||''}));
+ }catch{}
+}
+async function loadBackendConfig(){try{const r=await fetch('/api/hoshinoumi/config');const j=await r.json();if(j.target_id)localStorage.setItem('hoshinoumi_target',j.target_id);if(!j.configured)setTimeout(()=>openSetup(),500);else setTimeout(loadHistory,900);}catch{setTimeout(()=>openSetup(),500);}}
 function checkSetup(force){if(force||!localStorage.getItem(GW_KEY))setTimeout(()=>openSetup(),500);}
 
 clock();setInterval(clock,30000);replay();
