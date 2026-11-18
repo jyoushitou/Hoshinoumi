@@ -81,7 +81,7 @@ async function gatewayFetch(cfg, path, init = {}) {
 
 async function handleApi(req, res, path) {
   if (path === '/api/hoshinoumi/health' && req.method === 'GET') {
-    return sendJson(res, 200, { ok: true, version: '35.2.2.0', config: CONFIG_FILE })
+    return sendJson(res, 200, { ok: true, version: '35.2.3.0', config: CONFIG_FILE })
   }
 
   if (path === '/api/hoshinoumi/ui' && req.method === 'GET') {
@@ -104,7 +104,7 @@ async function handleApi(req, res, path) {
 
   if (path === '/api/hoshinoumi/test' && req.method === 'POST') {
     const body = await readBody(req)
-    const cfg = { ...readConfig(), ...(body.gateway ? { gateway: String(body.gateway).trim().replace(/\/+$/, '') } : {}) }
+    const cfg = { ...readConfig(), ...(body.gateway ? { gateway: String(body.gateway).trim().replace(/\/+$/, '') } : {}), ...(typeof body.token === 'string' ? { token: body.token.trim() } : {}) }
     if (!cfg.gateway) throw new Error('请先填写网关地址')
     const started = Date.now()
     const health = await gatewayFetch(cfg, '/healthz', { method: 'GET' })

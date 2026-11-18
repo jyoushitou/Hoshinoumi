@@ -342,7 +342,7 @@ async function testGateway(){
  const url=document.getElementById('gwInput').value.trim();const st=document.getElementById('setupStatus');
  if(!/^https?:\/\//.test(url)){st.className='mstatus err';st.textContent='地址需要以 http:// 或 https:// 开头';return;}
  st.className='mstatus';st.textContent='正在连接 '+url+' …';
- try{const r=await fetch('/api/hoshinoumi/test',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({gateway:url})});const j=await r.json();if(!r.ok||!j.ok)throw new Error(j.message||('HTTP '+r.status));st.className='mstatus ok';st.textContent='连接成功 · '+(j.latency_ms||0)+'ms · schema '+(j.ready?.schema??'33');}catch(e){st.className='mstatus err';st.textContent='连接失败：'+e.message;}
+ try{const r=await fetch('/api/hoshinoumi/test',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({gateway:url,token:document.getElementById('tokenInput').value,target_id:document.getElementById('targetInput').value})});const j=await r.json();if(!r.ok||!j.ok)throw new Error(j.message||('HTTP '+r.status));st.className='mstatus ok';st.textContent='连接成功 · '+(j.latency_ms||0)+'ms · schema '+(j.ready?.schema??'33');}catch(e){st.className='mstatus err';st.textContent='连接失败：'+e.message;}
 }
 async function saveGateway(){
  const url=document.getElementById('gwInput').value.trim();const st=document.getElementById('setupStatus');
