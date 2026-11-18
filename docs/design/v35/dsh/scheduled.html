@@ -1,0 +1,110 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>DSH 插件页面</title><style>
+*{box-sizing:border-box}html,body{margin:0;width:1440px;height:900px;overflow:hidden;background:#e9e9e5;color:#20211f;font-family:"Microsoft YaHei","Noto Sans SC",sans-serif}
+.win{position:absolute;left:40px;top:22px;width:1360px;height:850px;background:#fbfbf9;border:1px solid #d9d9d4;border-radius:14px;overflow:hidden;box-shadow:0 22px 60px rgba(30,30,25,.13)}
+.top{height:44px;background:#f3f3f0;border-bottom:1px solid #e4e4df;display:flex;align-items:center;gap:12px;padding:0 16px;font-size:11px;color:#686963}
+.mac{display:flex;gap:6px}.mac i{width:10px;height:10px;border-radius:50%;background:#ff605c}.mac i:nth-child(2){background:#ffbd44}.mac i:nth-child(3){background:#00ca4e}
+.crumb{color:#8a8a82}.right{margin-left:auto;display:flex;gap:14px;color:#8a8a82}
+.body{display:flex;height:806px}
+.side{width:292px;background:#f6f6f3;border-right:1px solid #e4e4df;padding:16px 12px;display:flex;flex-direction:column}
+.logo{display:flex;align-items:center;gap:8px;padding:0 6px 16px;font-size:16px;font-weight:800;color:#242522;letter-spacing:-.02em}
+.logo b{background:#1f2020;color:#fff;border-radius:4px;padding:2px 6px;font-size:10px;letter-spacing:.05em}
+.new{height:38px;border:1px solid #d9d9d4;background:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;gap:7px;font-size:12px;color:#3f403c;margin-bottom:10px}
+.nav{font-size:12px;color:#41423d}.nav div{padding:8px 9px;border-radius:8px;display:flex;gap:8px;align-items:center}.nav div.on{background:#e9e9e4}
+.subnav{margin:2px 0 2px 22px;border-left:1px solid #deded8;padding-left:8px}
+.subnav div{font-size:11px;color:#66675f;padding:7px 8px;border-radius:7px;display:flex;gap:7px;align-items:center}
+.subnav div.on{background:#e8edf8;color:#3457d5;font-weight:600}
+.sec{font-size:10px;letter-spacing:.1em;color:#9a9a91;padding:16px 9px 6px;display:flex;align-items:center;gap:6px}
+.ws{display:flex;align-items:center;gap:7px;font-size:12px;color:#33342f;padding:6px 9px}.ws i{width:13px;height:10px;border:1.5px solid #8a8a82;border-radius:2px;display:inline-block}
+.sess{font-size:11px;color:#5e5f58;padding:8px 10px;border-radius:8px;display:flex;gap:6px;line-height:1.4}.sess span{color:#a0a096;margin-left:auto;font-size:10px;white-space:nowrap}
+.side .foot{margin-top:auto;padding:10px 6px 0;border-top:1px solid #e4e4df;display:flex;align-items:center;gap:8px;font-size:10px;color:#8f9087}
+.mini-ava{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#9db7ff,#c7a6ff);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px}
+.main{flex:1;display:flex;flex-direction:column;background:#fdfdfb;min-width:0}
+.mhead{height:54px;border-bottom:1px solid #ecece7;display:flex;align-items:center;gap:10px;padding:0 24px}
+.mtitle{font-size:14px;font-weight:700}.mode{font-size:10px;color:#7d7e75;background:#f2f2ed;border:1px solid #e4e4df;border-radius:6px;padding:4px 7px}
+.mright{margin-left:auto;display:flex;gap:8px;color:#8c8d84;font-size:14px}
+.page{padding:22px 30px;overflow:hidden}
+.crumb2{font-size:10px;color:#8a8b82;margin-bottom:6px}.h1{font-size:22px;font-weight:750;letter-spacing:-.01em;display:flex;align-items:center;gap:9px}
+.ok{font-size:10px;color:#23845c;background:#e8f5ed;border:1px solid #d5ecdd;border-radius:20px;padding:4px 8px;font-weight:400}
+.desc{font-size:11px;color:#77786f;margin-top:5px}
+.tabs{display:flex;gap:18px;border-bottom:1px solid #ecece7;margin-top:16px;font-size:11px;color:#7e7f76}.tab{padding:9px 0;border-bottom:2px solid transparent}.tab.on{color:#3457d5;border-bottom-color:#3457d5}
+.grid{display:grid;grid-template-columns:1.35fr 1fr;gap:14px;margin-top:16px}
+.card{border:1px solid #e5e5df;background:#fff;border-radius:12px;padding:14px}
+.card h3{margin:0 0 9px;font-size:12px;font-weight:700;color:#2c2d28}.card p{margin:0;font-size:10px;color:#85867c;line-height:1.7}
+.kv{display:flex;font-size:11px;color:#5c5d55;padding:7px 0;border-bottom:1px solid #f0f0eb}.kv:last-child{border-bottom:0}.kv .r{margin-left:auto;color:#8a8b82}
+.tool{display:flex;align-items:center;gap:9px;border:1px solid #ecece7;border-radius:9px;padding:10px;margin-bottom:7px}
+.tool .ic{width:27px;height:27px;border-radius:7px;background:#eef1fb;color:#3457d5;display:flex;align-items:center;justify-content:center;font-size:11px}
+.tool .n{font-size:11px;font-weight:600;color:#33342f}.tool .d{font-size:9px;color:#8a8b82;margin-top:2px}
+.pill{font-size:9px;border-radius:20px;padding:2px 6px;background:#e8f5ed;color:#23845c}.pill.off{background:#f1f1ec;color:#9a9a91;margin-left:auto}
+.switch{width:30px;height:17px;border-radius:20px;background:#d9d9d3;margin-left:auto;position:relative}.switch.on{background:#3457d5}.switch i{position:absolute;top:3px;left:3px;width:11px;height:11px;border-radius:50%;background:#fff}.switch.on i{left:16px}
+.field{height:32px;border:1px solid #e1e1db;background:#fbfbf9;border-radius:7px;padding:0 9px;display:flex;align-items:center;font-size:10px;color:#7d7e75;margin-top:8px}
+.run{margin-top:8px;height:31px;border-radius:7px;background:#3457d5;color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700}
+.result{border:1px solid #e5e5df;background:#f7f7f3;border-radius:8px;padding:9px;margin-top:9px;font-size:10px;color:#686960;line-height:1.7}.result b{color:#3457d5}
+.perm{font-size:10px;color:#6c6d64;line-height:1.8}.perm code{background:#f2f2ed;border:1px solid #e5e5df;border-radius:3px;padding:1px 4px;font-size:9px}
+.pet{position:absolute;left:52px;bottom:8px;width:150px;text-align:center;filter:drop-shadow(0 10px 18px rgba(30,30,25,.25));z-index:5}
+.pet .head{width:92px;height:92px;margin:0 auto;border-radius:46% 46% 44% 44%;background:linear-gradient(160deg,#9db7ff,#c7a6ff);position:relative;border:3px solid #fff}
+.pet .hair{position:absolute;left:-9px;top:-8px;width:110px;height:56px;border-radius:50% 50% 30% 30%;background:#4f65d9;opacity:.9}
+.pet .eye{position:absolute;top:43px;width:9px;height:13px;border-radius:50%;background:#2f3b68;z-index:2}.pet .eye.l{left:26px}.pet .eye.r{right:26px}
+.pet .mouth{position:absolute;left:42px;top:61px;width:9px;height:4px;border-bottom:2px solid #8a4e6b;border-radius:0 0 8px 8px;z-index:2}
+.pet .bubble{display:inline-block;margin-top:4px;padding:6px 10px;border-radius:11px;background:#fff;border:1px solid #e4e4df;font-size:10px;color:#4f5049}
+
+.cmdsearch{height:34px;border:1px solid #e1e1da;background:#fff;border-radius:8px;display:flex;align-items:center;gap:7px;padding:0 10px;font-size:10px;color:#9a9b91;margin-top:12px}
+.cats{display:flex;gap:5px;margin:10px 0 12px;flex-wrap:wrap}
+.cat{font-size:9px;color:#74756c;border:1px solid #e4e4dd;background:#fff;border-radius:20px;padding:4px 9px}.cat.on{background:#e8edf8;border-color:#d6e1fb;color:#3457d5;font-weight:600}
+.cmdwrap{display:grid;grid-template-columns:1fr 360px;gap:13px}
+.cmdgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+.cmd{font-size:9px;color:#4d4e46;border:1px solid #ecece6;background:#fbfbf8;border-radius:6px;padding:5px 7px;display:flex;align-items:center;gap:4px;line-height:1.2}
+.cmd b{font-weight:600;color:#30312b}.cmd .risk{margin-left:auto;font-size:7px;color:#9a9b91}.cmd .risk.high{color:#c25b5b}.cmd.on{border-color:#c9d7f7;background:#eef3ff}.cmd.on b{color:#3457d5}
+.dsel{font-size:18px;font-weight:700;color:#2f302a;margin:2px 0 2px}.ddesc{font-size:10px;color:#7b7c72;line-height:1.6}.dkv{display:flex;gap:7px;font-size:10px;color:#66675e;padding:6px 0;border-bottom:1px solid #f0f0eb}.dkv .r{margin-left:auto;color:#8a8b82}
+.danger{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}.danger span{font-size:8px;color:#a54a4a;background:#fbf0f0;border:1px solid #f0dada;border-radius:5px;padding:3px 6px}
+
+.cmdsearch{height:32px;border:1px solid #e1e1da;background:#fff;border-radius:8px;display:flex;align-items:center;gap:7px;padding:0 10px;font-size:10px;color:#9a9b91;margin-top:9px}
+.cmdwrap{display:grid;grid-template-columns:1fr 348px;gap:11px}
+.groups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.group{border:1px solid #e5e5de;background:#fff;border-radius:9px;padding:7px 8px 7px;min-height:0}
+.group h3{margin:0 0 6px;font-size:12px;font-weight:700;color:#2f302a;display:flex;align-items:center}.group h3 span{margin-left:auto;color:#9a9b91;font-size:8px;font-weight:400}
+.chips{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px}
+.chip{font-size:10px;color:#55564e;border:1px solid #efefe9;background:#fbfbf8;border-radius:4px;padding:4px 5px;display:flex;align-items:center;gap:2px;line-height:1.15;white-space:nowrap;overflow:hidden}
+.chip b{font-weight:500;color:#3b3c35;overflow:hidden;text-overflow:ellipsis}.chip .risk{margin-left:auto;font-size:7px;color:#c25b5b}
+.chip.on{border-color:#c9d7f7;background:#eef3ff}.chip.on b{color:#3457d5}
+
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:11px 0}
+.stat{border:1px solid #e5e5de;background:#fff;border-radius:8px;padding:9px 11px}
+.stat .n{font-size:17px;font-weight:750;color:#2f302a}.stat .l{font-size:8px;color:#8a8b82;margin-top:3px}
+.twocol{display:grid;grid-template-columns:1.35fr 1fr;gap:10px}
+.job{display:flex;align-items:center;gap:9px;border:1px solid #efefe9;border-radius:8px;padding:8px 9px;margin-bottom:5px}
+.job .ic{width:24px;height:24px;border-radius:6px;background:#eef1fb;color:#3457d5;display:flex;align-items:center;justify-content:center;font-size:10px;flex:none}
+.job .nm{font-size:10px;font-weight:600;color:#33342e}.job .cr{font-size:8px;color:#8a8b82;margin-top:2px}
+.job .next{margin-left:auto;text-align:right;font-size:8px;color:#8a8b82}.job .next b{display:block;color:#3457d5;font-size:9px;font-weight:600}
+.st{font-size:7px;border-radius:20px;padding:2px 5px;background:#e8f5ed;color:#247d58;margin-left:6px}.st.pause{background:#f1f1ec;color:#9a9b91}
+.sw2{width:27px;height:15px;border-radius:20px;background:#d9d9d2;position:relative;flex:none}.sw2.on{background:#3457d5}.sw2 i{position:absolute;top:2px;left:2px;width:11px;height:11px;border-radius:50%;background:#fff}.sw2.on i{left:14px}
+.filters{display:flex;gap:5px;margin:10px 0}.filter{font-size:8px;border:1px solid #e4e4dd;background:#fff;border-radius:20px;padding:3px 8px;color:#7b7c72}.filter.on{background:#e8edf8;border-color:#d6e1fb;color:#3457d5}
+.logrow{display:flex;gap:8px;align-items:center;border-bottom:1px solid #f0f0eb;padding:7px 2px;font-size:9px;color:#5d5e56}
+.logrow:last-child{border-bottom:0}.logrow .tm{color:#9a9b91;width:54px}.logrow .nm{font-weight:600;color:#3b3c35}.logrow .du{margin-left:auto;color:#9a9b91}.logrow .ok{color:#247d58}.logrow .err{color:#c25b5b}
+.bars{display:flex;align-items:flex-end;gap:4px;height:44px;margin-top:7px}.bars i{flex:1;background:#dfe8fb;border-radius:2px 2px 0 0}.bars i.h{background:#9db4ee}
+</style></head><body><div class="win">
+<div class="top"><div class="mac"><i></i><i></i><i></i></div><span class="crumb">应用 / 自动化任务 / 定时任务</span><span class="right">◐　⌕　☰</span></div>
+<div class="body">
+<div class="side">
+ <div class="logo">deepseek <b>HARNESS</b></div>
+ <div class="new">＋ 新会话</div>
+ <div class="nav"><div>◇ 插件</div><div class="on">◷ 自动化任务</div><div class="subnav"><div>命令</div><div class="on">◷ 定时任务</div><div>▤ 运行日志</div></div><div>▦ 更多</div></div>
+ <div class="sec">工作区</div><div class="ws"><i></i> nao</div><div class="ws"><i></i> NapCat+Python</div>
+ <div class="sess on">和 nao 的对话 <span>刚刚</span></div><div class="sess">昨天 · 存钱与旅行目标 <span>昨天</span></div><div class="sess">前天 · 工作上的事 <span>2天</span></div><div class="sess" style="color:#9a9a91">更早的 46 个会话 <span>›</span></div>
+ <div class="sec">GateWay</div><div class="sess">编写后端冒烟测试脚本 (2) <span>9小时</span></div><div class="sess">编写后端冒烟测试脚本 (1) <span>22小时</span></div><div class="sess">测试脚本 <span>7天</span></div>
+ <div class="foot"><div class="mini-ava">奈</div><div>友利奈绪<br><span style="color:#a7a79e">v35.2.1</span></div><div style="margin-left:auto">↧ 新版本</div></div>
+</div>
+
+<div class="main"><div class="mhead"><div class="mtitle">定时任务</div><div class="mode">自动化任务 / 定时任务</div><div class="mright">◌　⋯　◫</div></div>
+<div class="page"><div class="crumb2">自动化任务 / 定时任务</div><div class="h1">定时任务 <span class="ok">● 3 个启用 / 5 个任务</span></div><div class="desc">本机调度 · 下次执行 08:00 · 时区 Asia/Shanghai</div>
+<div class="stats"><div class="stat"><div class="n">5</div><div class="l">全部任务</div></div><div class="stat"><div class="n">3</div><div class="l">启用中</div></div><div class="stat"><div class="n">08:00</div><div class="l">下次执行</div></div><div class="stat"><div class="n">98.4%</div><div class="l">近 7 天成功率</div></div></div>
+<div class="twocol"><div class="card"><h3>任务列表</h3>
+<div class="job"><div class="ic">☀</div><div><div class="nm">每日早报</div><div class="cr">每天 08:00 · 推送</div></div><div class="next"><b>明天 08:00</b>昨日成功</div><div class="sw2 on"><i></i></div></div>
+<div class="job"><div class="ic">✎</div><div><div class="nm">日记提醒</div><div class="cr">每天 22:30 · 私聊</div></div><div class="next"><b>今天 22:30</b>从未失败</div><div class="sw2 on"><i></i></div></div>
+<div class="job"><div class="ic">♥</div><div><div class="nm">健康检查</div><div class="cr">每小时 / 本机 · 静默</div></div><div class="next"><b>22:00</b>今日 22 次</div><div class="sw2 on"><i></i></div></div>
+<div class="job" style="opacity:.65"><div class="ic" style="background:#f1f1ec;color:#9a9b91">▤</div><div><div class="nm">每周备份</div><div class="cr">周一 09:00 · 已暂停</div></div><div class="next">暂停中</div><div class="sw2"><i></i></div></div>
+<div class="job" style="opacity:.65"><div class="ic" style="background:#f1f1ec;color:#9a9b91">◷</div><div><div class="nm">月度对账</div><div class="cr">每月 1 日 10:00 · 已暂停</div></div><div class="next">暂停中</div><div class="sw2"><i></i></div></div>
+</div>
+<div class="card"><h3>任务详情</h3><div class="dsel">每日早报</div><div class="ddesc">每天 08:00 汇总昨日消息、财务、天气和待办，推送到主人私聊。</div><div class="dkv">类型<span class="r">cron</span></div><div class="dkv">调度<span class="r">0 8 * * *</span></div><div class="dkv">上次<span class="r">今天 08:00 · 成功</span></div><div class="dkv">下次<span class="r">明天 08:00</span></div><div class="dkv">超时<span class="r">30s · 不重试</span></div><div class="run">立即运行</div><div class="result"><b>08:00</b> 已发送 · 312ms<br>今日摘要 · 3 条待办 · 余额正常</div></div></div></div></div></div>
+ </div>
+</div>
+</div></body></html>
