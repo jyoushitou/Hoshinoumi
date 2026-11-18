@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DSH · nao 演示</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#e8e8e3;color:#23241f;font-family:"Microsoft YaHei","Noto Sans SC",sans-serif;overflow:hidden}
+button,input{font:inherit}
+.app{position:absolute;inset:22px;background:#fbfbf8;border:1px solid #d8d8d2;border-radius:14px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 25px 70px rgba(30,30,25,.16);animation:appIn .7s cubic-bezier(.2,.7,.2,1) both}
+@keyframes appIn{from{opacity:0;transform:translateY(10px) scale(.995)}to{opacity:1;transform:none}}
+.top{height:42px;flex:none;background:#f2f2ee;border-bottom:1px solid #e3e3dd;display:flex;align-items:center;gap:11px;padding:0 14px;font-size:11px;color:#77786f}
+.mac{display:flex;gap:6px}.mac i{width:10px;height:10px;border-radius:50%;background:#ff605c}.mac i:nth-child(2){background:#ffbd44}.mac i:nth-child(3){background:#00ca4e}
+.top .right{margin-left:auto;display:flex;gap:16px;align-items:center}
+.replay{border:1px solid #deded7;background:#fff;border-radius:7px;padding:5px 9px;color:#5f6058;cursor:pointer;transition:.2s}
+.replay:hover{background:#f0f0eb;transform:translateY(-1px)}
+.body{flex:1;display:flex;min-height:0}
+.side{width:288px;flex:none;background:#f5f5f1;border-right:1px solid #e3e3dd;padding:14px 11px;display:flex;flex-direction:column;overflow:hidden}
+.logo{display:flex;align-items:center;gap:8px;padding:0 6px 14px;font-size:16px;font-weight:800;letter-spacing:-.03em}
+.logo b{background:#1e1f1c;color:#fff;border-radius:4px;padding:2px 6px;font-size:9px;letter-spacing:.06em}
+.new{height:36px;border:1px solid #dadad3;background:#fff;border-radius:9px;display:flex;align-items:center;justify-content:center;gap:7px;font-size:12px;color:#44453f;cursor:pointer;transition:.2s}
+.new:hover{border-color:#bcbdb4;background:#fafaf7}
+.nav{font-size:12px;color:#4a4b44;margin-top:7px}.nav .item{padding:8px 9px;border-radius:8px;display:flex;align-items:center;gap:8px;cursor:pointer;transition:.2s}
+.nav .item:hover{background:#ebebe5}.nav .item.on{background:#e9e9e3;color:#22231f;font-weight:600}
+.sub{margin:2px 0 2px 22px;border-left:1px solid #deded7;padding-left:7px;font-size:11px;color:#71726a}
+.sub div{padding:6px 8px;border-radius:6px;cursor:pointer;transition:.2s}.sub div:hover{background:#ebebe5}.sub div.on{background:#e8edf9;color:#3457d5;font-weight:600}
+.sec{font-size:9px;letter-spacing:.12em;color:#9b9c92;padding:14px 8px 5px}
+.ws{display:flex;align-items:center;gap:7px;padding:7px 9px;border-radius:7px;font-size:12px;color:#3e3f39;cursor:pointer;transition:.2s}
+.ws:hover{background:#ebebe5}.ws.on{background:#e8edf9;color:#3457d5;font-weight:600}
+.ws i{width:13px;height:10px;border:1.5px solid currentColor;border-radius:2px;display:inline-block;opacity:.65}
+.sess{padding:7px 9px;border-radius:7px;font-size:11px;color:#63645c;display:flex;gap:6px;line-height:1.35;cursor:pointer;transition:.2s}
+.sess:hover{background:#ebebe5}.sess.on{background:#e9e9e3;color:#272822}.sess span{margin-left:auto;color:#a3a49a;font-size:9px;white-space:nowrap}
+.side .foot{margin-top:auto;border-top:1px solid #e3e3dd;padding:9px 5px 0;display:flex;align-items:center;gap:8px;font-size:10px;color:#8a8b81}
+.ava{width:31px;height:31px;border-radius:50%;background:linear-gradient(135deg,#8fb0ff,#c29cff);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;flex:none}
+.main{flex:1;display:flex;flex-direction:column;min-width:0;background:#fdfdfa}
+.mhead{height:52px;flex:none;border-bottom:1px solid #ecece6;display:flex;align-items:center;gap:9px;padding:0 22px}
+.mtitle{font-size:14px;font-weight:750}.mode{font-size:9px;color:#77786f;background:#f2f2ed;border:1px solid #e4e4de;border-radius:6px;padding:4px 7px}
+.mright{margin-left:auto;display:flex;gap:13px;color:#92938a;font-size:13px;align-items:center}
+.dot{width:7px;height:7px;border-radius:50%;background:#2fa56b;box-shadow:0 0 0 3px #e7f4ec;animation:pulse 2s infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 6px rgba(47,165,107,.08)}}
+.tabs{height:37px;flex:none;border-bottom:1px solid #ecece6;display:flex;gap:16px;padding:0 22px;font-size:11px;color:#7d7e74}
+.tab{display:flex;align-items:center;border-bottom:2px solid transparent;cursor:pointer;transition:.2s}.tab:hover{color:#33342e}.tab.on{color:#3457d5;border-bottom-color:#3457d5}
+.page{flex:1;min-height:0;display:none;flex-direction:column}.page.on{display:flex;animation:pageIn .35s ease both}
+@keyframes pageIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.chat{flex:1;min-height:0;overflow:hidden;padding:16px 48px 0;max-width:1040px;width:100%;margin:0 auto}
+.banner{display:flex;align-items:center;gap:7px;font-size:10px;color:#247d58;background:#edf7f1;border:1px solid #d9ecdf;border-radius:8px;padding:7px 10px;opacity:0;transform:translateY(-4px);transition:.4s}
+.banner.show{opacity:1;transform:none}
+.bar{height:2px;background:#dcefe2;border-radius:2px;margin-top:6px;overflow:hidden}.bar i{display:block;width:0;height:100%;background:#54b37d;transition:width 1.5s ease}
+.load{text-align:center;margin:8px 0 10px}.load span{display:inline-block;font-size:9px;color:#3457d5;background:#eef3ff;border:1px solid #dce6fb;border-radius:20px;padding:5px 10px;opacity:0;transform:translateY(3px);transition:.3s}
+.load.show span{opacity:1;transform:none}
+.day{font-size:9px;color:#a0a096;text-align:center;margin:10px 0 8px}
+.msg{display:flex;gap:8px;max-width:78%;margin:0 0 11px;opacity:0;transform:translateY(9px)}
+.msg.show{animation:msgIn .45s cubic-bezier(.2,.7,.2,1) both}
+@keyframes msgIn{to{opacity:1;transform:none}}
+.msg.me{margin-left:auto;flex-direction:row-reverse}
+.msg .ava{width:27px;height:27px;font-size:10px}
+.msg .b{background:#f3f3ee;border:1px solid #e7e7e0;border-radius:4px 13px 13px 13px;padding:9px 12px;font-size:12px;line-height:1.7;color:#46473f}
+.msg.me .b{background:#e9efff;border-color:#d9e3ff;color:#33415c;border-radius:13px 4px 13px 13px}
+.meta{font-size:9px;color:#a1a298;margin-top:4px}.msg.me .meta{text-align:right}
+.typing{display:none;align-items:center;gap:8px;margin:2px 0 10px;color:#92938a;font-size:10px}.typing.show{display:flex;animation:msgIn .3s both}
+.typing .b{display:flex;gap:3px;background:#f3f3ee;border:1px solid #e7e7e0;border-radius:12px;padding:9px 11px}
+.typing i{width:4px;height:4px;border-radius:50%;background:#a8a99f;animation:blink 1.1s infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes blink{0%,70%,100%{opacity:.25;transform:translateY(0)}35%{opacity:1;transform:translateY(-2px)}}
+.composer{flex:none;width:calc(100% - 60px);max-width:980px;margin:0 auto 14px;border:1px solid #deded8;background:#fff;border-radius:13px;padding:11px 13px;box-shadow:0 3px 14px rgba(30,30,25,.04);transition:.2s}
+.composer:focus-within{border-color:#b9c8ef;box-shadow:0 4px 20px rgba(52,87,213,.08)}
+.composer input{width:100%;border:0;outline:0;background:transparent;font-size:12px;color:#36372f;padding:2px 0 9px}
+.composer input::placeholder{color:#a0a197}
+.cbot{display:flex;align-items:center;gap:8px;font-size:9px;color:#8b8c82}
+.plus{width:23px;height:23px;border:1px solid #deded8;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#77786f}
+.perm{border:1px solid #e2e2dc;border-radius:5px;padding:4px 6px}.model{margin-left:auto;color:#5e5f57;max-width:230px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.send{width:28px;height:28px;border:0;border-radius:50%;background:#3d5cf5;color:#fff;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center}
+.send:hover{transform:scale(1.06);background:#2f4ee6}
+.statusline{height:22px;flex:none;border-top:1px solid #ecece6;display:flex;align-items:center;justify-content:center;gap:14px;font-size:8px;color:#9a9b91;background:#fbfbf8}
+.cmdpage{padding:20px 30px;overflow:hidden}
+.crumb{font-size:9px;color:#8b8c82;margin-bottom:5px}
+.ch1{font-size:21px;font-weight:750;display:flex;gap:8px;align-items:center}
+.ok{font-size:9px;font-weight:400;color:#247d58;background:#e8f5ed;border:1px solid #d5ecdd;border-radius:20px;padding:3px 7px}
+.cdesc{font-size:10px;color:#7b7c72;margin-top:4px}
+.ctabs{display:flex;gap:16px;border-bottom:1px solid #ecece6;margin-top:13px;font-size:10px;color:#7e7f75}
+.ctab{padding:8px 0;border-bottom:2px solid transparent;cursor:pointer;transition:.2s}.ctab.on{color:#3457d5;border-bottom-color:#3457d5}
+.cgrid{display:grid;grid-template-columns:1.35fr 1fr;gap:12px;margin-top:13px}
+.card{border:1px solid #e5e5de;background:#fff;border-radius:11px;padding:12px}
+.card h3{margin:0 0 8px;font-size:11px;font-weight:700;color:#2f302a}
+.tool{display:flex;align-items:center;gap:8px;border:1px solid #ecece6;border-radius:8px;padding:9px;margin-bottom:6px;transition:.2s;animation:msgIn .4s both}
+.tool:hover{border-color:#cbd6ef;background:#fbfcff;transform:translateX(2px)}
+.tic{width:24px;height:24px;border-radius:6px;background:#eef1fb;color:#3457d5;display:flex;align-items:center;justify-content:center;font-size:10px}
+.tn{font-size:10px;font-weight:600}.td{font-size:8px;color:#8b8c82;margin-top:2px}
+.pill{font-size:8px;border-radius:20px;padding:2px 6px;background:#e8f5ed;color:#247d58;white-space:nowrap}.pill.off{background:#f1f1ec;color:#9a9b91}
+.sw{width:27px;height:15px;border-radius:20px;background:#d9d9d2;margin-left:auto;position:relative}.sw.on{background:#3457d5}.sw i{position:absolute;top:2px;left:2px;width:11px;height:11px;border-radius:50%;background:#fff}.sw.on i{left:14px}
+.field{height:30px;border:1px solid #e1e1da;background:#fbfbf8;border-radius:6px;padding:0 8px;display:flex;align-items:center;font-size:9px;color:#7b7c72;margin-top:6px}
+.run{height:29px;border:0;border-radius:6px;background:#3457d5;color:#fff;font-size:9px;font-weight:700;margin-top:7px;width:100%;cursor:pointer;transition:.2s}.run:hover{background:#2949c8}
+.result{border:1px solid #e5e5de;background:#f7f7f2;border-radius:7px;padding:8px;margin-top:7px;font-size:9px;color:#65665d;line-height:1.7}
+.result b{color:#3457d5}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+.cmdsearch{height:31px;border:1px solid #e1e1da;background:#fff;border-radius:7px;display:flex;align-items:center;gap:7px;padding:0 9px;font-size:9px;color:#9a9b91;margin-top:8px}
+.cmdsearch input{border:0;outline:0;flex:1;background:transparent;font-size:9px;color:#4d4e46}
+.cmdwrap{display:grid;grid-template-columns:1fr 330px;gap:10px;margin-top:10px}
+.groups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.group{border:1px solid #e5e5de;background:#fff;border-radius:8px;padding:7px;min-height:0}
+.group h3{margin:0 0 5px;font-size:11px;font-weight:700;color:#2f302a;display:flex}.group h3 span{margin-left:auto;color:#9a9b91;font-size:7px;font-weight:400}
+.chips{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px}
+.chip{font-size:9px;color:#55564e;border:1px solid #efefe9;background:#fbfbf8;border-radius:4px;padding:3px;display:flex;gap:2px;line-height:1.1;white-space:nowrap;overflow:hidden;cursor:pointer;transition:.15s}
+.chip:hover{background:#f2f5fb;border-color:#d6e0f5}.chip b{font-weight:500;overflow:hidden;text-overflow:ellipsis}.chip.on{border-color:#c9d7f7;background:#eef3ff}.chip.on b{color:#3457d5}
+.chip .risk{margin-left:auto;font-size:7px;color:#c25b5b}
+.dsel{font-size:16px;font-weight:700;margin:2px 0}.ddesc{font-size:9px;color:#7b7c72;line-height:1.6}
+.dkv{display:flex;font-size:9px;color:#66675e;padding:5px 0;border-bottom:1px solid #f0f0eb}.dkv .r{margin-left:auto;color:#8a8b82}
+.danger{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}.danger span{font-size:7px;color:#a54a4a;background:#fbf0f0;border:1px solid #f0dada;border-radius:4px;padding:2px 5px}
+
+.ovpage{padding:20px 28px;overflow:auto}.ogrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:12px}
+.ocard{border:1px solid #e5e5de;background:#fff;border-radius:10px;padding:11px;cursor:pointer;transition:.2s;animation:msgIn .35s both}
+.ocard:hover{border-color:#c9d7f7;background:#fbfcff;transform:translateY(-2px);box-shadow:0 6px 16px rgba(52,87,213,.06)}
+.ocard .oi{width:28px;height:28px;border-radius:8px;background:#eef1fb;color:#3457d5;display:flex;align-items:center;justify-content:center;font-size:12px;margin-bottom:8px}
+.ocard .on{font-size:11px;font-weight:650;color:#30312b}.ocard .od{font-size:8px;color:#8a8b82;line-height:1.5;margin-top:3px}
+.ocard .om{font-size:8px;color:#9a9b91;margin-top:7px}.ocard .om b{color:#3457d5}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:10px 0}.stat{border:1px solid #e5e5de;background:#fff;border-radius:8px;padding:9px 11px}.stat .n{font-size:17px;font-weight:750;color:#2f302a}.stat .l{font-size:8px;color:#8a8b82;margin-top:3px}
+.mgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.mcard{border:1px solid #e5e5de;background:#fff;border-radius:9px;padding:11px}.mcard h3{margin:0 0 7px;font-size:10px;color:#2f302a}.mline{display:flex;gap:7px;font-size:9px;color:#66675e;padding:5px 0;border-bottom:1px solid #f0f0eb}.mline:last-child{border:0}.mline .r{margin-left:auto;color:#8a8b82}
+.job{display:flex;align-items:center;gap:8px;border:1px solid #efefe9;border-radius:8px;padding:8px;margin-bottom:5px}.job .ic{width:23px;height:23px;border-radius:6px;background:#eef1fb;color:#3457d5;display:flex;align-items:center;justify-content:center;font-size:10px}.job .nm{font-size:9px;font-weight:600}.job .cr{font-size:7px;color:#8a8b82;margin-top:2px}.job .next{margin-left:auto;text-align:right;font-size:7px;color:#3457d5}.stx{font-size:7px;color:#247d58;background:#e8f5ed;border-radius:20px;padding:2px 5px}.stx.off{color:#9a9b91;background:#f1f1ec}
+.filters{display:flex;gap:5px;margin:9px 0}.filter{font-size:8px;border:1px solid #e4e4dd;background:#fff;border-radius:20px;padding:3px 8px;color:#7b7c72}.filter.on{background:#e8edf8;border-color:#d6e1fb;color:#3457d5}
+.logrow{display:flex;gap:7px;border-bottom:1px solid #f0f0eb;padding:6px 1px;font-size:8px;color:#5d5e56}.logrow .tm{color:#9a9b91;width:48px}.logrow .nm{font-weight:600}.logrow .du{margin-left:auto;color:#9a9b91}.logrow .ok{color:#247d58}.logrow .err{color:#c25b5b}
+
+.modal{position:fixed;inset:0;background:rgba(24,24,20,.32);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:50}
+.modal.show{display:flex;animation:fadeIn .2s both}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modalcard{width:430px;background:#fdfdfa;border:1px solid #deded7;border-radius:14px;box-shadow:0 30px 80px rgba(20,20,16,.25);padding:22px;animation:cardIn .35s cubic-bezier(.2,.7,.2,1) both}
+@keyframes cardIn{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+.modalcard h2{margin:0;font-size:18px;letter-spacing:-.02em;display:flex;align-items:center;gap:8px}
+.modalcard .sub{font-size:10px;color:#7b7c72;line-height:1.7;margin:6px 0 15px}
+.mlabel{font-size:9px;color:#8a8b82;margin:10px 0 4px}
+.minput{height:34px;border:1px solid #e1e1da;background:#fff;border-radius:7px;display:flex;align-items:center;padding:0 10px}
+.minput input{border:0;outline:0;background:transparent;width:100%;font-size:11px;color:#3d3e38}
+.mrow{display:flex;gap:7px;margin-top:14px}
+.mbtn{flex:1;height:32px;border:1px solid #deded7;background:#fff;border-radius:7px;font-size:10px;color:#5f6058;cursor:pointer;transition:.2s}
+.mbtn:hover{background:#f4f4ef}.mbtn.primary{background:#3457d5;border-color:#3457d5;color:#fff;font-weight:700}.mbtn.primary:hover{background:#2949c8}
+.mstatus{font-size:9px;color:#8a8b82;margin-top:9px;min-height:14px}.mstatus.ok{color:#247d58}.mstatus.err{color:#c25b5b}
+.mskip{text-align:center;font-size:9px;color:#9a9b91;margin-top:9px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+ <div class="top"><div class="mac"><i></i><i></i><i></i></div><span id="breadcrumb">应用 / 工作区 / nao</span><div class="right"><span id="clock">21:04</span><span onclick="openSetup()" title="后端设置" style="cursor:pointer">⚙</span><button class="replay" onclick="replay()">↻ 重播</button><span>◐</span><span>⌕</span><span>☰</span></div></div>
+ <div class="body">
+  <aside class="side">
+   <div class="logo">deepseek <b>HARNESS</b></div>
+   <div class="new" onclick="showNew()">＋ 新会话</div>
+   <div class="nav">
+    <div class="item" onclick="showModule('plugins')">◇ 插件</div>
+    <div class="item" id="navAuto" onclick="toggleAuto()">◷ 自动化任务</div>
+    <div class="sub" id="autoSub"><div onclick="showCmd('tools')">命令</div><div onclick="showScheduled()">◷ 定时任务</div><div onclick="showLogs()">▤ 运行日志</div></div>
+    <div class="item" onclick="showOverview()">▦ 全部功能</div>
+   </div>
+   <div class="sec">工作区</div>
+   <div class="ws on" id="wsNao" onclick="showChat()"><i></i> nao</div>
+   <div class="ws" onclick="showOverview()"><i></i> nao 功能</div>
+   <div class="ws" onclick="toast('NapCat+Python（演示）')"><i></i> NapCat+Python</div>
+   <div class="sess on">和 nao 的对话 <span>刚刚</span></div>
+   <div class="sess">昨天 · 存钱与旅行目标 <span>昨天</span></div>
+   <div class="sess">前天 · 工作上的事 <span>2天</span></div>
+   <div class="sess" style="color:#a1a298">更早的 46 个会话 <span>›</span></div>
+   <div class="sec">GateWay</div>
+   <div class="sess">编写后端冒烟测试脚本 (2) <span>9小时</span></div>
+   <div class="sess">编写后端冒烟测试脚本 (1) <span>22小时</span></div>
+   <div class="foot"><div class="ava">奈</div><div>友利奈绪<br><span style="color:#a7a89e">v35.2.1</span></div><div style="margin-left:auto">↧ 新版本</div></div>
+  </aside>
+  <main class="main">
+   <div class="mhead"><div class="mtitle" id="htitle">nao</div><div class="mode" id="hmode">◈ 工作区 · 本机后端</div><div class="mright"><span class="dot"></span><span id="hstatus">已连接</span><span>⟳</span><span>⋯</span></div></div>
+   <div class="tabs" id="tabs"><div class="tab on" onclick="toast('对话')">对话</div><div class="tab" onclick="toast('轨迹（演示）')">轨迹</div><div class="tab" onclick="toast('更多')">⋯</div></div>
+   <div class="page on" id="pageChat">
+    <div class="chat" id="chat">
+     <div class="banner" id="banner">● 已自动加载历史对话 · 1,284 条 · 最后一条 21:03<div class="bar"><i id="barfill"></i></div></div>
+     <div class="load" id="load"><span>↑ 加载更早的 20 条</span></div>
+     <div class="day" id="day1">昨天 21:01</div>
+    </div>
+    <div class="composer"><input id="input" placeholder="发消息或创建任务，/ 调用指令，@ 文件或对话" onkeydown="if(event.key==='Enter')sendMsg()"><div class="cbot"><div class="plus">＋</div><div class="perm">⌘ 完全权限 ⌄</div><div class="model">nao ⌄</div><button class="send" onclick="sendMsg()">↑</button></div></div>
+    <div class="statusline"><span>⌁ 本机后端 · 127.0.0.1:27004</span><span>▤ 历史 1,284 条 · 自动同步</span><span>◔ 57%</span></div>
+   </div>
+   <div class="page" id="pageCmd">
+    <div class="cmdpage"><div class="crumb">自动化任务 / 命令</div><div class="ch1">命令 <span class="ok">● 已连接本机服务</span></div><div class="cdesc">全量 51 个命令 · 按功能分组 · manifest v35.2.1 · 127.0.0.1:27004 · 42ms</div>
+     <div class="cmdsearch">⌕ <input id="cmdSearch" placeholder="搜索命令 / 参数" oninput="renderCmdGroups()"><span id="cmdCount">全部 51 个 · 9 个分类</span></div>
+     <div class="cmdwrap"><div class="groups" id="cmdGroups"></div>
+      <div class="card" id="cmdDetail"><h3>命令详情</h3><div class="dsel" id="dsel">!status</div><div class="ddesc" id="ddesc">查看运行状态、配置、API、记忆、定时和连接信息。</div>
+       <div class="dkv">权限<span class="r" id="dperm">owner</span></div><div class="dkv">风险<span class="r" id="drisk">低</span></div><div class="dkv">来源<span class="r">core / cmd.registry</span></div>
+       <div style="font-size:8px;color:#8a8b82;margin-top:7px">参数（可选）</div><div class="field" id="darg">all</div><button class="run" onclick="runCmd()">执行命令</button><div class="result" id="cmdResult"><b>!status</b> · 200 OK · 12ms<br>运行中 · 51 个命令 · DB 42ms<br>本机服务已连接 · schema 33</div>
+       <div style="font-size:8px;color:#8a8b82;margin-top:7px">危险命令</div><div class="danger"><span>!clear</span><span>!backup</span><span>!exit</span><span>!set</span><span>!config</span></div>
+      </div></div>
+    </div>
+   </div>
+   <div class="page" id="pageScheduled"><div class="ovpage"><div class="crumb">自动化任务 / 定时任务</div><div class="ch1">定时任务 <span class="ok">● 3 个启用 / 5 个任务</span></div><div class="cdesc">本机调度 · 下次执行 08:00 · 时区 Asia/Shanghai</div>
+    <div class="stats"><div class="stat"><div class="n">5</div><div class="l">全部任务</div></div><div class="stat"><div class="n">3</div><div class="l">启用中</div></div><div class="stat"><div class="n">08:00</div><div class="l">下次执行</div></div><div class="stat"><div class="n">98.4%</div><div class="l">近 7 天成功率</div></div></div>
+    <div class="mgrid"><div class="mcard"><h3>任务列表</h3><div class="job"><div class="ic">☀</div><div><div class="nm">每日早报</div><div class="cr">每天 08:00 · 推送</div></div><div class="next">明天 08:00</div><span class="stx">启用</span></div><div class="job"><div class="ic">✎</div><div><div class="nm">日记提醒</div><div class="cr">每天 22:30 · 私聊</div></div><div class="next">今天 22:30</div><span class="stx">启用</span></div><div class="job"><div class="ic">♥</div><div><div class="nm">健康检查</div><div class="cr">每小时 / 本机</div></div><div class="next">22:00</div><span class="stx">启用</span></div><div class="job"><div class="ic">▤</div><div><div class="nm">每周备份</div><div class="cr">周一 09:00</div></div><div class="next">暂停中</div><span class="stx off">暂停</span></div></div>
+    <div class="mcard"><h3>任务详情</h3><div class="dsel">每日早报</div><div class="ddesc">每天 08:00 汇总昨日消息、财务、天气和待办，推送到主人私聊。</div><div class="dkv">调度<span class="r">0 8 * * *</span></div><div class="dkv">上次<span class="r">今天 08:00 · 成功</span></div><div class="dkv">下次<span class="r">明天 08:00</span></div><div class="run">立即运行</div><div class="result"><b>08:00</b> 已发送 · 312ms<br>今日摘要 · 3 条待办 · 余额正常</div></div>
+    <div class="mcard"><h3>最近运行</h3><div class="mline">08:00 每日早报<span class="r">成功 · 312ms</span></div><div class="mline">22:30 日记提醒<span class="r">昨天 · 成功</span></div><div class="mline">每小时 健康检查<span class="r">22 次 · 成功</span></div></div>
+    <div class="mcard"><h3>新建</h3><div class="mline">cron 表达式<span class="r">0 8 * * *</span></div><div class="mline">动作<span class="r">发送早报</span></div><div class="mline">失败策略<span class="r">通知 owner</span></div><button class="run" onclick="toast('已保存定时任务')">保存任务</button></div></div>
+   </div></div>
+   <div class="page" id="pageLogs"><div class="ovpage"><div class="crumb">自动化任务 / 运行日志</div><div class="ch1">运行日志 <span class="ok">● 最近 24 小时</span></div><div class="cdesc">定时任务与命令执行记录 · 仅元数据 · 保留 7 天</div>
+    <div class="stats"><div class="stat"><div class="n">24</div><div class="l">今日运行</div></div><div class="stat"><div class="n">23</div><div class="l">成功</div></div><div class="stat"><div class="n">1</div><div class="l">失败</div></div><div class="stat"><div class="n">184ms</div><div class="l">平均耗时</div></div></div>
+    <div class="filters"><div class="filter on">全部 24</div><div class="filter">成功 23</div><div class="filter">失败 1</div><div class="filter">定时任务</div><div class="filter">命令</div></div>
+    <div class="mgrid"><div class="mcard"><h3>日志</h3><div class="logrow"><span class="tm">21:04:12</span><span class="nm">!status</span><span class="ok">200</span><span class="du">12ms</span></div><div class="logrow"><span class="tm">20:51:33</span><span class="nm">search_images</span><span class="ok">200</span><span class="du">84ms</span></div><div class="logrow"><span class="tm">20:32:07</span><span class="nm">recall</span><span class="ok">200</span><span class="du">12ms</span></div><div class="logrow"><span class="tm">19:20:09</span><span class="nm">search_images</span><span class="err">500</span><span class="du">1200ms</span></div><div class="logrow"><span class="tm">18:00:00</span><span class="nm">每日早报</span><span class="ok">200</span><span class="du">312ms</span></div></div>
+    <div class="mcard"><h3>详情</h3><div class="dsel">search_images</div><div class="dkv">状态<span class="r" style="color:#c25b5b">500 失败</span></div><div class="dkv">耗时<span class="r">1200ms</span></div><div class="dkv">来源<span class="r">DSH · 命令</span></div><div class="result"><b>错误</b><br>图库服务超时 · upstream timeout<br>未重试，避免阻塞 DSH。</div></div></div></div>
+   </div>
+   <div class="page" id="pageOverview"><div class="ovpage"><div class="crumb">工作区 / nao / 全部功能</div><div class="ch1">全部功能 <span class="ok">● 10 个模块</span></div><div class="cdesc">DSH 插件不是只有命令页；聊天、记忆、财务、信息、人设、设置、插件、自动化都在这里。</div>
+    <div class="ogrid">
+     <div class="ocard" onclick="showChat()"><div class="oi">◌</div><div class="on">聊天</div><div class="od">和 nao 对话，自动加载历史。</div><div class="om"><b>1,284</b> 条历史</div></div>
+     <div class="ocard" onclick="showModule('memory')"><div class="oi">◈</div><div class="on">记忆</div><div class="od">记忆本、画像、关系、事件。</div><div class="om"><b>1,284</b> 条记忆</div></div>
+     <div class="ocard" onclick="showModule('savings')"><div class="oi">¥</div><div class="on">存钱</div><div class="od">总余额、分账户、目标、流水。</div><div class="om"><b>¥3,300</b> 本月结余</div></div>
+     <div class="ocard" onclick="showModule('info')"><div class="oi">▤</div><div class="on">信息</div><div class="od">运行状态、日志、计划、阅读。</div><div class="om"><b>42</b> 张表</div></div>
+     <div class="ocard" onclick="showModule('persona')"><div class="oi">奈</div><div class="on">人设</div><div class="od">角色卡、预览、激活、导入。</div><div class="om"><b>3</b> 个人设</div></div>
+     <div class="ocard" onclick="showModule('settings')"><div class="oi">⚙</div><div class="on">设置</div><div class="od">后端地址、连接测试、页面可见性。</div><div class="om"><b>已连接</b></div></div>
+     <div class="ocard" onclick="showModule('plugins')"><div class="oi">◇</div><div class="on">插件</div><div class="od">安装、审批、权限、错误。</div><div class="om"><b>2</b> 个已装</div></div>
+     <div class="ocard" onclick="showCmd('tools')"><div class="oi">⌘</div><div class="on">命令</div><div class="od">全量 51 个命令，按功能分组。</div><div class="om"><b>51</b> 个命令</div></div>
+     <div class="ocard" onclick="showScheduled()"><div class="oi">◷</div><div class="on">定时任务</div><div class="od">早报、日记提醒、健康检查。</div><div class="om"><b>3</b> 个启用</div></div>
+     <div class="ocard" onclick="showLogs()"><div class="oi">▥</div><div class="on">运行日志</div><div class="od">命令与任务执行记录。</div><div class="om"><b>24</b> 今日运行</div></div>
+    </div></div></div>
+   <div class="page" id="pageModule"><div class="ovpage" id="moduleBody"></div></div>
+   </div>
+  </main>
+ </div>
+</div>
+<div class="modal" id="setupModal">
+ <div class="modalcard"><h2>连接 Hoshinoumi</h2><div class="sub">第一次打开 DSH 插件，需要先配置后端网关地址。聊天和记忆都会发到这台服务器。</div>
+  <div class="mlabel">网关地址</div><div class="minput"><input id="gwInput" placeholder="http://127.0.0.1:27004"></div>
+  <div class="mlabel">访问 token（可选）</div><div class="minput"><input id="tokenInput" type="password" placeholder="Bearer token"></div>
+  <div class="mlabel">主人 target_id（QQ）</div><div class="minput"><input id="targetInput" placeholder="owner"></div>
+  <div class="mstatus" id="setupStatus"></div>
+  <div class="mrow"><button class="mbtn" onclick="testGateway()">测试连接</button><button class="mbtn primary" onclick="saveGateway()">保存并连接</button></div>
+  <div class="mskip" onclick="closeSetup()">稍后配置</div>
+ </div></div>
+<div id="toast" style="position:fixed;left:50%;bottom:24px;transform:translate(-50%,12px);background:#22231f;color:#fff;font-size:11px;padding:8px 13px;border-radius:8px;opacity:0;pointer-events:none;transition:.25s;z-index:20"></div>
+<script>
+const history = [
+ {who:'bot', text:'你回来啦。今天外面有点冷，先喝点热的吧。', meta:'20:58 · 已读'},
+ {who:'me', text:'刚到家，方案终于过了。', meta:'21:00 · 已读'},
+ {who:'bot', text:'那很好啊。要不要记进“今天值得高兴的事”？', meta:'21:01 · 记忆已更新'},
+ {who:'bot', text:'本月结余 ¥3,300，旅行目标 60% 了。', meta:'21:03 · 仅主人私聊'}
+];
+let timers=[];
+function clearTimers(){timers.forEach(clearTimeout);timers=[]}
+function appendMsg(m){
+ const chat=document.getElementById('chat');
+ const el=document.createElement('div');el.className='msg '+(m.who==='me'?'me':'');
+ el.innerHTML='<div class="ava">'+(m.who==='me'?'你':'奈')+'</div><div><div class="b">'+m.text+'</div><div class="meta">'+m.meta+'</div></div>';
+ chat.appendChild(el);requestAnimationFrame(()=>el.classList.add('show'));
+}
+function typing(on){
+ let el=document.getElementById('typing');
+ if(!el){el=document.createElement('div');el.id='typing';el.className='typing';el.innerHTML='<div class="ava">奈</div><div class="b"><i></i><i></i><i></i></div><span>正在输入…</span>';document.getElementById('chat').appendChild(el)}
+ el.classList.toggle('show',on);
+}
+
+const COMMANDS=[
+ ["help","基础","L","列出命令"],["ping","基础","L","在线测试"],["status","基础","L","运行状态"],["version","基础","L","版本信息"],["uptime","基础","L","运行时长"],["meta","基础","L","元数据"],["usage","基础","L","Token 用量"],["log","基础","L","最近日志"],["db","基础","L","数据库统计"],["stats","基础","L","今日统计"],["history","基础","L","最近对话"],["reload","基础","H","重载密钥/记忆"],["set","基础","H","修改设置"],["exit","基础","H","安全退出"],["quit","基础","H","安全退出"],
+ ["memory","记忆","L","检索记忆"],["memorybook","记忆","L","记忆本"],["event","记忆","L","事件"],["keywords","记忆","L","关键词"],["clear","记忆","H","清空记忆"],["profile","记忆","L","画像"],["growth","记忆","L","成长轨迹"],["relation","记忆","L","关系"],
+ ["img","媒体","L","搜图"],["acg","媒体","L","二次元图"],["sticker","媒体","L","表情包"],["clip","媒体","L","CLIP 状态"],["voice","媒体","L","语音"],["vision","媒体","L","识图"],["say","媒体","H","主动说"],["sayg","媒体","H","群说"],
+ ["diary","日常","L","日记"],["todo","日常","L","待办"],["cron","日常","L","定时任务"],["hooks","日常","L","钩子"],["backup","日常","H","备份"],["update","日常","L","更新"],["task","日常","L","迁移提示"],
+ ["books","阅读","L","书架"],["book","阅读","L","阅读进度"],["plan","计划","L","学习计划"],["plugin","插件","H","插件管理"],["adduser","账号","H","预建账号"],["persona","账号","L","人设"],["doing","多端","L","当前活动"],["presence","多端","L","情境"],["route","多端","L","路由"],["gw","多端","H","网关"],["config","多端","H","配置"],["code","多端","H","代码模式"],["apikeys","多端","H","密钥"]
+];
+const CATS=["基础","记忆","媒体","日常","阅读","计划","插件","账号","多端"];
+let selectedCmd="status";
+function renderCmdGroups(){
+ const q=(document.getElementById('cmdSearch').value||'').trim().toLowerCase();
+ const list=COMMANDS.filter(x=>!q||x[0].includes(q)||x[3].includes(q));
+ document.getElementById('cmdCount').textContent=q?('匹配 '+list.length+' 个'):'全部 51 个 · 9 个分类';
+ document.getElementById('cmdGroups').innerHTML=CATS.map(cat=>{const arr=list.filter(x=>x[1]===cat);if(!arr.length)return'';
+  return '<div class="group"><h3>'+cat+' <span>'+arr.length+'</span></h3><div class="chips">'+arr.map(x=>'<div class="chip'+(x[0]===selectedCmd?' on':'')+'" onclick="selectCmd(\''+x[0]+'\')"><b>!'+x[0]+'</b><span class="risk">'+(x[2]==='H'?'owner':'')+'</span></div>').join('')+'</div></div>';
+ }).join('');
+}
+function selectCmd(name){
+ selectedCmd=name;const c=COMMANDS.find(x=>x[0]===name);if(!c)return;
+ document.getElementById('dsel').textContent='!'+c[0];
+ document.getElementById('ddesc').textContent=c[3]+'。';
+ document.getElementById('dperm').textContent=c[2]==='H'?'owner':'可用';
+ document.getElementById('drisk').textContent=c[2]==='H'?'高':'低';
+ document.getElementById('darg').textContent=c[0]==='status'?'all':'';
+ document.getElementById('cmdResult').innerHTML='<b>!'+c[0]+'</b> · 就绪 · 点击执行';
+ renderCmdGroups();
+}
+async function runCmd(){
+ const r=document.getElementById('cmdResult');r.style.opacity=.3;r.innerHTML='<b>!'+selectedCmd+'</b> · 执行中…';
+ try{
+  const out=await fetch('/api/hoshinoumi/command',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({command:selectedCmd,args:[]})});
+  const j=await out.json();r.style.opacity=1;
+  if(!out.ok)throw new Error(j.message||j.error||('HTTP '+out.status));
+  r.innerHTML='<b>!'+selectedCmd+'</b> · 200 OK<br>'+String(j.result??j.message??'（空结果）').replace(/\n/g,'<br>');
+ }catch(e){r.style.opacity=1;r.innerHTML='<b>!'+selectedCmd+'</b> · 失败<br>'+e.message;}
+}
+
+function replay(){
+ clearTimers();document.getElementById('chat').innerHTML='<div class="banner" id="banner">● 已自动加载历史对话 · 1,284 条 · 最后一条 21:03<div class="bar"><i id="barfill"></i></div></div><div class="load" id="load"><span>↑ 加载更早的 20 条</span></div><div class="day" id="day1">昨天 21:01</div>';
+ document.getElementById('input').value='';showChat();
+ timers.push(setTimeout(()=>{document.getElementById('banner').classList.add('show');document.getElementById('barfill').style.width='100%'},250));
+ timers.push(setTimeout(()=>document.getElementById('load').classList.add('show'),650));
+ history.forEach((m,i)=>timers.push(setTimeout(()=>appendMsg(m),900+i*520)));
+ timers.push(setTimeout(()=>typing(true),3100));
+ timers.push(setTimeout(()=>{typing(false);appendMsg({who:'me',text:'早。今天有什么安排？',meta:'09:12 · 已读'});},3700));
+ timers.push(setTimeout(()=>typing(true),4100));
+ timers.push(setTimeout(()=>{typing(false);appendMsg({who:'bot',text:'上午看书，下午把房间收拾一下。你忙你的，我在。',meta:'09:13 · 情境已同步'});},4700));
+}
+async function sendMsg(){
+ const inp=document.getElementById('input');const text=inp.value.trim();if(!text)return;
+ appendMsg({who:'me',text,meta:'现在 · 已发送本机后端'});inp.value='';typing(true);
+ try{
+  const target=localStorage.getItem('hoshinoumi_target')||'';
+  const r=await fetch('/api/hoshinoumi/chat',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({message:text,target_id:target})});
+  const j=await r.json();if(!r.ok)throw new Error(j.message||j.error||('HTTP '+r.status));
+  typing(false);appendMsg({who:'bot',text:j.reply||'（空回复）',meta:'现在 · 本机后端'});
+ }catch(e){typing(false);appendMsg({who:'bot',text:'本机后端连接失败：'+e.message,meta:'现在 · 错误'});}
+}
+function reply(text){
+ if(text.includes('存钱')||text.includes('余额'))return '本月结余 ¥3,300，存钱目标 60%。';
+ if(text.includes('书'))return '我在看《十日终焉》，窗边光线刚好。';
+ if(text.includes('命令')||text.includes('工具'))return '命令在左侧“自动化任务”下面，我已经连上本机服务。';
+ return '嗯，我在听。你继续说。';
+}
+function hideAll(){document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));document.getElementById('tabs').style.display='none';}
+function setHead(title,mode,status){document.getElementById('htitle').textContent=title;document.getElementById('hmode').textContent=mode;document.getElementById('hstatus').textContent=status;}
+function showChat(){hideAll();document.getElementById('app').classList.remove('cmd-mode');document.getElementById('breadcrumb').textContent='应用 / 工作区 / nao';document.getElementById('pageChat').classList.add('on');setHead('nao','◈ 工作区 · 私聊','已连接');document.getElementById('tabs').style.display='flex';}
+function showNew(){hideAll();document.getElementById('breadcrumb').textContent='应用 / 工作区 / nao / 新会话';document.getElementById('pageModule').classList.add('on');document.getElementById('moduleBody').innerHTML='<div class="crumb">工作区 / nao / 新会话</div><div class="ch1">新会话</div><div class="cdesc">和 nao 开始新对话，历史不会丢。</div><div class="mgrid" style="margin-top:12px"><div class="mcard"><h3>你可以这样开始</h3><div class="mline">“今天有点累”<span class="r">情绪</span></div><div class="mline">“午饭 35”<span class="r">记账</span></div><div class="mline">“这周有什么安排”<span class="r">日程</span></div></div><div class="mcard"><h3>上下文</h3><div class="mline">人设<span class="r">友利奈绪</span></div><div class="mline">记忆<span class="r">1,284 条</span></div><div class="mline">后端<span class="r">已连接</span></div></div></div>';setHead('新会话','◈ 工作区 · 私聊','已连接');}
+function showCmd(tab){hideAll();document.getElementById('breadcrumb').textContent='应用 / 自动化任务 / 命令';document.getElementById('pageCmd').classList.add('on');setHead('命令','自动化任务 / Hoshinoumi','只读');renderCmdGroups();}
+function showScheduled(){hideAll();document.getElementById('breadcrumb').textContent='应用 / 自动化任务 / 定时任务';document.getElementById('pageScheduled').classList.add('on');setHead('定时任务','自动化任务 / 定时任务','3 个启用');}
+function showLogs(){hideAll();document.getElementById('breadcrumb').textContent='应用 / 自动化任务 / 运行日志';document.getElementById('pageLogs').classList.add('on');setHead('运行日志','自动化任务 / 运行日志','24h');}
+function showOverview(){hideAll();document.getElementById('breadcrumb').textContent='应用 / 工作区 / nao / 全部功能';document.getElementById('pageOverview').classList.add('on');setHead('全部功能','工作区 / nao','10 个模块');}
+const MODULES={
+ memory:{t:'记忆',d:'记忆本、画像、关系、事件和关键词。',stats:[['1,284','记忆'],['328','事件'],['12','关系'],['46','关键词']],cards:[['用户画像',['偏好 · 晚上聊天','称呼 · 你','边界 · 财务仅私聊']],['关系',['奈绪 · 恋人','信任 86','最近互动 · 今天']],['记忆本',['昨天方案通过','旅行目标 60%','担心过不了']],['关键词',['旅行','方案','猫','读书']]]},
+ savings:{t:'存钱',d:'总余额、分账户、目标和最近流水。',stats:[['¥3,300','本月结余'],['¥18,420','总余额'],['60%','旅行目标'],['¥420','今日支出']],cards:[['账户',['银行卡 · ¥12,000','支付宝 · ¥3,420','微信 · ¥1,800','现金 · ¥1,200']],['目标',['旅行基金 · 60%','应急金 · 80%']],['最近流水',['午饭 -35','工资 +8,000','书 -58']],['对账',['上次 · 昨天','差额 · 0']]]},
+ info:{t:'信息',d:'运行状态、数据库、日志、计划与阅读。',stats:[['v35.2.1','版本'],['33','schema'],['42','表'],['51','命令']],cards:[['运行',['本机服务 · 已连接','DB 42ms','API 余额 ¥126.40']],['日志',['最近 24h · 24 条','失败 · 1']],['学习计划',['当前 · 读书','进度 · 60%']],['阅读',['《十日终焉》· 62%','本周 3h']]]},
+ persona:{t:'人设',d:'角色卡、预览、激活和导入导出。',stats:[['3','人设'],['友利奈绪','当前'],['1,284','共享记忆'],['轻量','语气']],cards:[['友利奈绪',['激活 · 是','语气 · 轻量','记忆 · 共享']],['备用人设',['测试人格 · 未激活']],['预览',['“你回来啦。”','“先喝点热的吧。”']],['导入',['JSON / YAML','仅 owner']]]},
+ settings:{t:'设置',d:'后端地址、连接测试、页面可见性、动画。',stats:[['已连接','后端'],['42ms','延迟'],['开','动画'],['6','主页面']],cards:[['后端',['127.0.0.1:27004','Bearer · 只读','测试 · 通过']],['页面可见性',['主页面 · 6','子页面 · 8','导航球 · 关']],['动画',['消息 · 开','页面 · 开','减少动态 · 跟随系统']],['数据',['日志 · 7 天','财务 · 仅主人']]]},
+ plugins:{t:'插件',d:'DSH 插件的安装、审批、权限和错误。',stats:[['2','已安装'],['1','待审批'],['0','错误'],['read','权限']],cards:[['Hoshinoumi',['v35.2.1','已启用','read-only']],['Search Images',['已启用','只读']],['待审批',['memory-write','需要 owner']],['权限',['recall · 允许','remember · 拒绝']]]}
+};
+function showModule(key){const m=MODULES[key];if(!m)return;hideAll();document.getElementById('breadcrumb').textContent='应用 / 工作区 / nao / '+m.t;document.getElementById('pageModule').classList.add('on');document.getElementById('moduleBody').innerHTML='<div class="crumb">工作区 / nao / '+m.t+'</div><div class="ch1">'+m.t+' <span class="ok">● 已同步</span></div><div class="cdesc">'+m.d+'</div><div class="stats">'+m.stats.map(x=>'<div class="stat"><div class="n">'+x[0]+'</div><div class="l">'+x[1]+'</div></div>').join('')+'</div><div class="mgrid">'+m.cards.map(c=>'<div class="mcard"><h3>'+c[0]+'</h3>'+c[1].map(x=>'<div class="mline">'+x+'<span class="r">›</span></div>').join('')+'</div>').join('')+'</div>';setHead(m.t,'工作区 / nao','已同步');}
+function toggleAuto(){document.getElementById('autoSub').style.display=document.getElementById('autoSub').style.display==='none'?'block':'none';}
+function cmdTab(el){document.querySelectorAll('.ctab').forEach(x=>x.classList.remove('on'));el.classList.add('on');}
+function runTool(){const r=document.getElementById('cmdResult');r.style.opacity=.25;setTimeout(()=>{r.style.opacity=1;r.innerHTML='<b>recall</b> · 200 OK · 12ms<br>找到 1 条：<br>· 昨天方案通过，很高兴'},650);}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.opacity=1;t.style.transform='translate(-50%,0)';clearTimeout(t._h);t._h=setTimeout(()=>{t.style.opacity=0;t.style.transform='translate(-50%,12px)'},1600);}
+function clock(){const d=new Date();document.getElementById('clock').textContent=d.toTimeString().slice(0,5)}
+
+function openSetup(){const m=document.getElementById('setupModal');document.getElementById('setupStatus').textContent='';fetch('/api/hoshinoumi/config').then(r=>r.json()).then(c=>{document.getElementById('gwInput').value=c.gateway||'http://127.0.0.1:27004';document.getElementById('targetInput').value=c.target_id||'owner';}).catch(()=>{});m.classList.add('show');}
+function closeSetup(){document.getElementById('setupModal').classList.remove('show');}
+async function testGateway(){
+ const url=document.getElementById('gwInput').value.trim();const st=document.getElementById('setupStatus');
+ if(!/^https?:\/\//.test(url)){st.className='mstatus err';st.textContent='地址需要以 http:// 或 https:// 开头';return;}
+ st.className='mstatus';st.textContent='正在连接 '+url+' …';
+ try{const r=await fetch('/api/hoshinoumi/test',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({gateway:url})});const j=await r.json();if(!r.ok||!j.ok)throw new Error(j.message||('HTTP '+r.status));st.className='mstatus ok';st.textContent='连接成功 · '+(j.latency_ms||0)+'ms · schema '+(j.ready?.schema??'33');}catch(e){st.className='mstatus err';st.textContent='连接失败：'+e.message;}
+}
+async function saveGateway(){
+ const url=document.getElementById('gwInput').value.trim();const st=document.getElementById('setupStatus');
+ if(!/^https?:\/\//.test(url)){st.className='mstatus err';st.textContent='地址需要以 http:// 或 https:// 开头';return;}
+ st.className='mstatus';st.textContent='正在保存…';
+ try{const r=await fetch('/api/hoshinoumi/config',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({gateway:url,token:document.getElementById('tokenInput').value,target_id:document.getElementById('targetInput').value})});const j=await r.json();if(!r.ok)throw new Error(j.message||('HTTP '+r.status));localStorage.setItem('hoshinoumi_target',document.getElementById('targetInput').value||'owner');st.className='mstatus ok';st.textContent='已保存，正在进入…';setTimeout(()=>{closeSetup();toast('后端已配置 · '+url);},450);}catch(e){st.className='mstatus err';st.textContent='保存失败：'+e.message;}
+}
+async function loadBackendConfig(){try{const r=await fetch('/api/hoshinoumi/config');const j=await r.json();if(j.target_id)localStorage.setItem('hoshinoumi_target',j.target_id);if(!j.configured)setTimeout(()=>openSetup(),500);}catch{setTimeout(()=>openSetup(),500);}}
+function checkSetup(force){if(force||!localStorage.getItem(GW_KEY))setTimeout(()=>openSetup(),500);}
+
+clock();setInterval(clock,30000);replay();
+loadBackendConfig();
+const h=location.hash.slice(1);
+if(h==='cmd')setTimeout(()=>showCmd('tools'),400);
+if(h==='overview')setTimeout(()=>showOverview(),400);
+if(h==='scheduled')setTimeout(()=>showScheduled(),400);
+if(h==='logs')setTimeout(()=>showLogs(),400);
+if(h==='memory')setTimeout(()=>showModule('memory'),400);
+if(h==='savings')setTimeout(()=>showModule('savings'),400);
+if(h==='persona')setTimeout(()=>showModule('persona'),400);
+if(h==='settings')setTimeout(()=>showModule('settings'),400);
+if(h==='plugins')setTimeout(()=>showModule('plugins'),400);
+if(h==='setup')setTimeout(()=>{showOverview();openSetup();},400);
+</script>
+</body>
+</html>
