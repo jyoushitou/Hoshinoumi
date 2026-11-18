@@ -57,5 +57,9 @@ def format_api_token_info():
         f"    POST /api/command  - 执行命令"
         f"    GET  /api/tools     - DSH 只读工具清单"
         f"    POST /api/tools/<name>/call - 调用只读工具"
+        f"    GET  /api/endpoints - 客户端 endpoint 列表"
+        f"    POST /api/endpoints - 注册 endpoint"
+        f"    GET  /api/endpoints/<id>/messages - 拉取多端消息"
+        f"    POST /api/endpoints/<id>/ack - 确认消息"
     )
 

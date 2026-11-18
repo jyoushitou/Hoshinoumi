@@ -70,7 +70,7 @@ class FakeRequest:
 
 
 class FakeCursor:
-    def __init__(self, schema="32"):
+    def __init__(self, schema="33"):
         self.schema = schema
         self.last = ""
 
@@ -95,16 +95,16 @@ class TestLocalServiceHealth(unittest.TestCase):
         self.assertEqual(body["status"], "ok")
         self.assertEqual(body["service"], "local")
 
-    def test_readyz_ok_schema_32(self):
+    def test_readyz_ok_schema_33(self):
         import bot.infra.conn as conn
         old = conn.get_cursor
-        conn.get_cursor = lambda: FakeCursor("32")
+        conn.get_cursor = lambda: FakeCursor("33")
         try:
             resp = asyncio.run(routes_meta.handle_readyz(FakeRequest()))
             body = _body(resp)
             self.assertEqual(resp.status, 200)
             self.assertEqual(body["status"], "ready")
-            self.assertEqual(body["checks"]["schema"], "32")
+            self.assertEqual(body["checks"]["schema"], "33")
         finally:
             conn.get_cursor = old
 

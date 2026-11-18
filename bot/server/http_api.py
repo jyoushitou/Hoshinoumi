@@ -19,6 +19,13 @@ from .routes_chat import handle_chat, handle_command
 from .routes_plan import handle_get as handle_plan_get, handle_put as handle_plan_put, handle_import as handle_plan_import, handle_export as handle_plan_export
 from .routes_presence import handle_get as handle_presence_get, handle_post as handle_presence_post, handle_delete as handle_presence_delete
 from .routes_tools import handle_list as handle_tools_list, handle_call as handle_tool_call
+from .routes_endpoints import (
+    handle_list as handle_endpoints_list,
+    handle_register as handle_endpoint_register,
+    handle_disable as handle_endpoint_disable,
+    handle_messages as handle_endpoint_messages,
+    handle_ack as handle_endpoint_ack,
+)
 
 
 async def handle_internal_history(request):
@@ -276,6 +283,10 @@ async def auth_middleware(request, handler):
     """Bearer Token 鉴权；/healthz、/readyz、/api/health、/internal/* 免鉴权（只监听本机）"""
     if request.path in ("/api/health", "/healthz", "/readyz") or request.path.startswith("/internal/"):
         return await handler(request)
+    # endpoint 用自己的 token 拉消息/ack；注册/列表/停用仍走 owner Bearer
+    if request.path.startswith("/api/endpoints/") and (
+            request.path.endswith("/messages") or request.path.endswith("/ack")):
+        return await handler(request)
 
     auth_header = request.headers.get("Authorization", "")
     if not auth_header.startswith("Bearer "):
@@ -308,6 +319,11 @@ async def start_api_server():
     app.router.add_get("/api/token", handle_get_token)
     app.router.add_post("/api/chat", handle_chat)
     app.router.add_post("/api/command", handle_command)
+    app.router.add_get("/api/endpoints", handle_endpoints_list)
+    app.router.add_post("/api/endpoints", handle_endpoint_register)
+    app.router.add_delete("/api/endpoints/{id}", handle_endpoint_disable)
+    app.router.add_get("/api/endpoints/{id}/messages", handle_endpoint_messages)
+    app.router.add_post("/api/endpoints/{id}/ack", handle_endpoint_ack)
     app.router.add_get("/api/tools", handle_tools_list)
     app.router.add_post("/api/tools/{name}/call", handle_tool_call)
     app.router.add_get("/api/plan", handle_plan_get)

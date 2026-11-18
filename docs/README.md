@@ -1,6 +1,6 @@
 # Hoshinoumi（REC）· 文档索引
 
-> **当前事实：后端 v35.2.0.0，网关 v26.4.0，schema 32，测试 13145 条**（2026-11-18）
+> **当前事实：后端 v35.2.1.0，网关 v26.4.0，schema 33，测试 13150 条**（2026-11-18）
 > v27–v34 已完成；v35.1/v35.2 已实现；v36–v40 规划中。
 >
 > 这里只放“现在有效”的文档；开发计划单独维护，历史文档明确标注。
@@ -22,7 +22,7 @@
 
 | 文档 | 内容 | 维护状态 |
 |---|---|---|
-| [../README.md](../README.md) | 总览、快速开始、命令、配置、限制 | ✅ 现行（v35.2.0.0） |
+| [../README.md](../README.md) | 总览、快速开始、命令、配置、限制 | ✅ 现行（v35.2.1.0） |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | 分层图、消息生命周期、调度/出站 | ✅ 现行（以实际代码为准） |
 | [DB-DESIGN.md](DB-DESIGN.md) | 数据库设计与表职责 | ✅ 现行（DDL 以 `bot/infra/schema.py` 为准） |
 | [存储后端与备份.md](存储后端与备份.md) | MySQL/SQLite 备份、恢复、换后端 | ✅ 现行 |
@@ -30,7 +30,7 @@
 | [NAMING.md](NAMING.md) | 项目命名、缩写、兼容边界 | ✅ 现行 |
 | [RELEASE-NOTES.md](RELEASE-NOTES.md) | 发布记录（只追加，旧记录保留） | 🕘 历史 |
 | [gateway/README.md](../gateway/README.md) | C++ 网关构建/配置/Docker | ✅ 现行 |
-| [../integrations/dsh/README.md](../integrations/dsh/README.md) | DSH 只读工具桥 / manifest | ✅ 现行（v35.2.0.0） |
+| [../integrations/dsh/README.md](../integrations/dsh/README.md) | DSH 只读工具桥 / manifest | ✅ 现行（v35.2.1.0） |
 
 ## 开发计划（单独维护）
 
@@ -137,7 +137,7 @@ v6：P1 会说话 → P2 说实话 → P2.5 长感官 → P3 有生活 → P4 �
 | **v32** | [versions/v32.md](versions/v32.md) | 记忆层插件接入 + 钩子批量修改 + 多行命令 | ✅ 已完成（v32.4.0） |
 | **v33** | [versions/v33.md](versions/v33.md) | 接口层收口（v33.1–v33.7） | ✅ 已完成（v34.3.0.0） |
 | **v34** | [versions/v34.md](versions/v34.md) | 学习规划 + 主账号情境感知（v34.0–v34.3） | ✅ 已完成（v34.3.0.0） |
-| **v35** | [versions/v35.md](versions/v35.md) | 多端与客户端；已实现 v35.1.0.0 本机健康检查、v35.2.0.0 DSH 只读工具桥 | 🚧 v35.2.0.0 |
+| **v35** | [versions/v35.md](versions/v35.md) | 多端与客户端；已实现 v35.1.0.0 本机健康检查、v35.2.1.0 DSH 只读工具桥 | 🚧 v35.2.1.0 |
 | **v36** | [versions/v36.md](versions/v36.md) | 插件增强：后端+前端插件接口（v36.0–v36.6） | 规划中 |
 | **v37** | [versions/v37.md](versions/v37.md) | 情感增强：20维/60标签/人设卡 v2 客户端编写（v37.0–v37.5） | 规划中 |
 | **v38** | [versions/v38.md](versions/v38.md) | 生态接入（v38.0–v38.10） | 规划中 |

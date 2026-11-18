@@ -1,12 +1,12 @@
-# 数据库设计（当前 v35.2.0.0）
+# 数据库设计（当前 v35.2.1.0）
 
-> **当前事实**：schema **32**，`bot/infra/schema.py` 定义 **40 张表 + 1 个只读视图 `v_bot_meta`**。
+> **当前事实**：schema **33**，`bot/infra/schema.py` 定义 **42 张表 + 1 个只读视图 `v_bot_meta`**。
 > 完整 DDL 以 [`bot/infra/schema.py`](../bot/infra/schema.py) 为准；本文保留设计理由与字段规范。
 >
 > 当前表：
 >
 > `acg_images` / `ai_logs` / `ai_raw_responses` / `api_keys` / `bot_meta` / `bot_states` /
-> `conversation_messages` / `cron_overrides` / `cron_tasks` / `diaries` / `digests` /
+> `conversation_messages` / `cron_overrides` / `cron_tasks` / `client_endpoints` / `delivery_outbox` / `diaries` / `digests` /
 > `facts` / `friction_states` / `gateway_log` / `global_keywords` / `habits` / `identities` /
 > `images` / `invites` / `keywords` / `logs` / `memories` / `ops_audit` / `owner_presence` /
 > `plugin_approvals` / `plugin_errors` / `plugin_permissions` / `plugin_registry` /

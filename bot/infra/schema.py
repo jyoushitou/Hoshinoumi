@@ -498,6 +498,39 @@ PURE = {
             UNIQUE (target_id, scene, day)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """,
+
+    "client_endpoints": """
+        CREATE TABLE IF NOT EXISTS client_endpoints (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            user_id VARCHAR(64) NOT NULL DEFAULT '__owner__',
+            name VARCHAR(64) NOT NULL,
+            kind VARCHAR(32) NOT NULL DEFAULT 'client',
+            token_hash VARCHAR(128) NOT NULL,
+            enabled TINYINT(1) NOT NULL DEFAULT 1,
+            last_seen DATETIME NULL,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY uk_endpoint_name (user_id, name),
+            KEY idx_endpoint_user (user_id, enabled)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
+    "delivery_outbox": """
+        CREATE TABLE IF NOT EXISTS delivery_outbox (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            user_id VARCHAR(64) NOT NULL DEFAULT '__owner__',
+            endpoint_id BIGINT NOT NULL,
+            message_id VARCHAR(64) NOT NULL,
+            target_id VARCHAR(64) NOT NULL DEFAULT '',
+            channel VARCHAR(32) NOT NULL DEFAULT 'private',
+            payload_json TEXT NOT NULL,
+            status VARCHAR(16) NOT NULL DEFAULT 'pending',
+            attempts INT NOT NULL DEFAULT 0,
+            next_retry DATETIME NULL,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            delivered_at DATETIME NULL,
+            UNIQUE KEY uk_outbox_endpoint_msg (endpoint_id, message_id),
+            KEY idx_outbox_pending (endpoint_id, status, id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
     "bot_meta": """
         CREATE TABLE IF NOT EXISTS bot_meta (
             k VARCHAR(64) PRIMARY KEY,

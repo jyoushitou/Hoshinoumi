@@ -60,7 +60,7 @@ def main():
             return _preview(c)
 
         from bot.infra import schema
-        from scripts import migrate_indexes, migrate_v18, migrate_v23, migrate_v24, migrate_v28, migrate_v31, migrate_v32, setup
+        from scripts import migrate_indexes, migrate_v18, migrate_v23, migrate_v24, migrate_v28, migrate_v31, migrate_v32, migrate_v33, setup
 
         print("  [1/8] 建缺表")
         made = schema.ensure_tables(c, log=lambda m: print("        " + m))
@@ -108,10 +108,11 @@ def main():
         print(f"        plugin_* 表 {len(made_plugin)} 张")
         migrate_v31.apply(c)
         migrate_v32.apply(c)
+        migrate_v33.apply(c)
 
         from bot.infra import repo_meta
-        repo_meta.set_value("schema_version", "32", cursor=c)
-        print("        schema_version=32")
+        repo_meta.set_value("schema_version", "33", cursor=c)
+        print("        schema_version=33")
         print("\n[OK] 迁移完成，下一步：python3 checks/env_check.py")
         return 0
     finally:

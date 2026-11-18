@@ -304,6 +304,12 @@ async def send_short_reply(tid, text, ws, uid, is_group=False, kws=None):
                     thread_id=f"qq:{'group' if is_group else 'private'}:{tid}",
                     message_id=_mid,
                 )
+                if not is_group:
+                    try:
+                        from ..delivery.hub import fanout_text
+                        fanout_text(uid, tid, _txt, "private", _mid)
+                    except Exception as _he:
+                        log_api(f"[DeliveryHub] 扇出失败（忽略）: {_he}")
             except Exception as _e:
                 log_api(f"[对话] 出站写入失败（忽略）: {_e}")
         await asyncio.sleep(bubble_delay())  # 每条间隔随机 1.5~3 秒，像真人打字

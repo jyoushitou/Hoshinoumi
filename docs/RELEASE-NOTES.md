@@ -1,8 +1,16 @@
 # 发布记录
 
-> 当前后端 **v35.2.0.0**；下面保留 v20.5 / v18.20.0 的发布原文作为历史。
+> 当前后端 **v35.2.1.0**；下面保留 v20.5 / v18.20.0 的发布原文作为历史。
 
-## v35.2.0.0（当前）
+## v35.2.1.0（当前）
+
+- Endpoint 注册表 + DeliveryHub
+- schema 33：`client_endpoints` / `delivery_outbox`
+- 注册/停用 endpoint；token 只存 hash
+- 按 endpoint 幂等扇出；客户端拉取/ack
+- 测试 13150 条
+
+## v35.2.0.0
 
 - 新增 DSH 只读工具桥：`GET /api/tools`、`POST /api/tools/<name>/call`
 - 只开放 `recall` / `search_images`；写工具 403

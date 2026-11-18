@@ -190,7 +190,7 @@ async def handle_readyz(request):
         row = c.fetchone()
         schema = str(row["v"]) if row else ""
         checks["schema"] = schema or "missing"
-        if schema != "32":
+        if schema != "33":
             ready = False
     except Exception:
         checks["db"] = "error"

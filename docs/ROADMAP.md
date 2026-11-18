@@ -177,7 +177,7 @@
 | v32 | 记忆层插件接入 | [v32.md](versions/v32.md) |
 | v33 | 接口层收口（v33.1–v33.7） | [v33.md](versions/v33.md) |
 | v34 | 学习规划 + 主账号情境感知（已完成 v34.3.0.0） | [v34.md](versions/v34.md) |
-| v35 | 多端与客户端（进行中：v35.1/v35.2 已实现，后续 v35.2.1+ 规划） | [v35.md](versions/v35.md) |
+| v35 | 多端与客户端（进行中：v35.1/v35.2/v35.2.1 已实现，后续 v35.2.2+ 规划） | [v35.md](versions/v35.md) |
 | v36 | 插件增强：后端 + 前端插件接口 | [v36.md](versions/v36.md) |
 | v37 | 情感增强：20维关系 + 可扩展标签 + 人设卡 v2 客户端编写（默认开启） | [v37.md](versions/v37.md) |
 | v38 | 生态接入：微博/贴吧/知乎/视频 + 随机内容消费 | [v38.md](versions/v38.md) |
@@ -192,7 +192,8 @@
 - **v35.0 多端推送**：Endpoint / DeliveryHub / 协议（未实现）。
 - **v35.1 本机服务**：`/healthz` `/readyz` 已实现。
 - **v35.2 DSH**：只读工具桥 `api/tools` 已实现。
-- **v35.2.1+**：Qoder/WorkBuddy、VS Code、Web/Qt/Android/EMUI/CLI，按次次版本推进。
+- **v35.2.1**：Endpoint 注册表 + DeliveryHub + schema 33 已实现。
+- **v35.2.2+**：Qoder/WorkBuddy、VS Code、Web/Qt/Android/EMUI/CLI，按次次版本推进。
 
 ## 热修记录（不等大版本）
 

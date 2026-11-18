@@ -1,11 +1,11 @@
-# ===================== v34.0.0.0 study_plans schema 32 =====================
+# ===================== v34.0.0.0 study_plans schema 33 =====================
 import shutil
 import tempfile
 import unittest
 from pathlib import Path
 
 from bot.infra import conn, schema
-from scripts import migrate_v32
+from scripts import migrate_v32, migrate_v33
 
 
 class TestStudySchemaV3400(unittest.TestCase):
@@ -21,11 +21,12 @@ class TestStudySchemaV3400(unittest.TestCase):
 
     def test_tables_and_version(self):
         migrate_v32.apply(self.c)
+        migrate_v33.apply(self.c)
         for t in ("study_plans","owner_presence"):
             self.c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=%s",(t,))
             self.assertTrue(self.c.fetchone())
         self.c.execute("SELECT v FROM bot_meta WHERE k='schema_version'")
-        self.assertEqual(self.c.fetchone()["v"],"32")
+        self.assertEqual(self.c.fetchone()["v"],"33")
 
     def test_unique_week(self):
         migrate_v32.apply(self.c)
