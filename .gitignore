@@ -50,3 +50,9 @@ data/books/*
 *.out
 
 data/workers
+
+deploy\install-frpc-service.sh
+deploy/install-frpc-service.sh
+deploy/远程恢复frpc-完整流程.md
+deploy/家里开机应急卡.png
+deploy/家里开机应急卡.pdf
