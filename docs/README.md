@@ -140,7 +140,7 @@ v6：P1 会说话 → P2 说实话 → P2.5 长感官 → P3 有生活 → P4 �
 | **v36** | [versions/v36.md](versions/v36.md) | 插件增强：后端+前端插件接口（v36.0–v36.6） | 规划中 |
 | **v37** | [versions/v37.md](versions/v37.md) | 情感增强：20维/60标签/人设卡 v2 客户端编写（v37.0–v37.5） | 规划中 |
 | **v38** | [versions/v38.md](versions/v38.md) | 生态接入（v38.0–v38.10） | 规划中 |
-| **v39** | [versions/v39.md](versions/v39.md) | 虚拟游乐场（Unity 2D） | 规划中 |
+| **v39** | [versions/v39.md](versions/v39.md) | 虚拟游乐场（Unity 2D，内嵌所有GUI客户端） | 规划中 |
 | **v40** | [versions/v40.md](versions/v40.md) | 运维与嵌入式（合并） | 规划中 |
 
 

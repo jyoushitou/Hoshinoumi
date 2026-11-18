@@ -1,6 +1,6 @@
-# Hoshinoumi（REC） v34.3.0.0
+# Hoshinoumi（REC） v35.1.0.0
 
-> 后端 **v34.3.0.0** · 网关 **v26.4.0**（8+4+body TCP / protobuf / 模糊指令）
+> 后端 **v35.1.0.0** · 网关 **v26.4.0**（8+4+body TCP / protobuf / 模糊指令）
 > v34.3.0.0 是当前仓库版本；v26 已封板。**v25 之后普通版本只切 worker，热更前提是 worker 归 supervisor 管**；策略见 [HOT-UPDATE-POLICY.md](docs/HOT-UPDATE-POLICY.md)，部署见 [DEPLOY-v26.md](docs/DEPLOY-v26.md)。
 >
 > 状态规则：**下一个大版本进入试运行，则上一个大版本视为完成。**
@@ -346,7 +346,7 @@ v34.1.0.0   次版本
 | v36 | 插件增强（v36.0–v36.6）：后端+前端插件接口 | 📋 已规划 | [v36.md](docs/versions/v36.md) |
 | v37 | 情感增强（v37.0–v37.5）：20维关系/可扩展标签/人设卡 v2 客户端编写（默认开启） | 📋 已规划 | [v37.md](docs/versions/v37.md) |
 | v38 | 生态接入（v38.0–v38.10）：微博/贴吧/知乎/视频 + 随机内容 | 📋 已规划 | [v38.md](docs/versions/v38.md) |
-| v39 | 虚拟游乐场（Unity 2D，生活空间/交互/独立货币） | 📋 已规划 | [v39.md](docs/versions/v39.md) |
+| v39 | 虚拟游乐场（Unity 2D，内嵌所有GUI客户端） | 📋 已规划 | [v39.md](docs/versions/v39.md) |
 | v40 | 运维与嵌入式（合并原 v39/v41） | 📋 已规划 | [v40.md](docs/versions/v40.md) |
 
 
