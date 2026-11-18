@@ -1,0 +1,53 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
+<link rel="stylesheet" href="common.css"><title>命令</title></head>
+<body><div class="app">
+<aside class="rail">
+  <div class="logo">奈</div>
+  <div class="ico ">◉</div>
+  <div class="ico on">⌘</div>
+  <div class="ico ">¥</div>
+  <div class="ico ">≡</div>
+  <div class="ico ">◇</div>
+  <div class="ico ">◎</div>
+  <div style="margin-top:auto" class="ico">⚙</div>
+</aside>
+<aside class="side">
+  <div class="side-h"><div class="brand">HOSHINOMI</div><div style="font-size:11px;color:#6f7a8f">v35.2.1</div></div>
+  <div class="search">⌕ 搜索会话 / 命令 / 页面</div>
+  <div class="chat-item on"><div class="avatar">奈</div><div style="min-width:0"><div class="nm">友利奈绪</div><div class="last">今天也一起加油吧</div></div><div class="tm">21:04</div></div>
+  <div class="chat-item"><div class="avatar" style="background:linear-gradient(135deg,#8ad7e8,#7f9cff)">星</div><div style="min-width:0"><div class="nm">星之海 · 群</div><div class="last">[图片] 晚上的房间</div></div><div class="tm">20:41</div></div>
+  <div class="chat-item"><div class="avatar" style="background:linear-gradient(135deg,#f4c77a,#f29b8a)">存</div><div style="min-width:0"><div class="nm">存钱 / 流水</div><div class="last">本月已存 ¥1,500</div></div><div class="tm">19:22</div></div>
+  <div class="chat-item"><div class="avatar" style="background:linear-gradient(135deg,#9be0b0,#8ad7e8)">命</div><div style="min-width:0"><div class="nm">命令中心</div><div class="last">钩子 / 状态 / API 余额</div></div><div class="tm">18:50</div></div>
+  <div style="margin:auto 16px 16px;padding:12px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.02)">
+    <div style="font-size:10px;color:var(--muted);margin-bottom:6px">后端连接</div>
+    <div style="font-size:11px;color:var(--green)">● 本机服务 · 已连接</div>
+    <div style="font-size:10px;color:#5f6a7e;margin-top:5px">127.0.0.1:27004 · 42ms</div>
+  </div>
+</aside>
+<main class="main"><div class="top"><div><div class="title">命令中心</div><div class="sub">钩子 · 状态 · 日志 · API 余额</div></div><div class="status"><i class="dot"></i> 实时更新</div><div class="actions"><div class="btn pri">⌘ 命令面板</div></div></div>
+<div style="padding:24px 28px;overflow:hidden">
+<div class="tabs"><div class="tab on">总览</div><div class="tab">钩子/定时</div><div class="tab">状态/日志</div><div class="tab">API 余额</div><div class="tab">路由</div></div>
+<div class="grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px">
+  <div class="card"><div class="tagline">钩子 / 定时</div><div class="kpi" style="margin:7px 0 2px">8</div><p>今日待触发 3 · 已执行 5</p><div style="margin-top:10px"><span class="badge green">正常</span> <span class="badge">下次 21:30</span></div></div>
+  <div class="card"><div class="tagline">状态 / 日志</div><div class="kpi" style="margin:7px 0 2px">OK</div><p>DB 42ms · SSE 在线 · 0 错误</p><div style="margin-top:10px"><span class="badge green">健康</span> <span class="badge">最近 20 条</span></div></div>
+  <div class="card"><div class="tagline">API 余额</div><div class="kpi" style="margin:7px 0 2px">¥ 126.40</div><p>DeepSeek · 火山方舟未配置</p><div style="margin-top:10px"><span class="badge pink">低额提醒 50</span></div></div>
+</div>
+<div class="grid" style="grid-template-columns:1.4fr 1fr">
+<div class="card"><h3>命令面板</h3><p style="margin-bottom:12px">输入 / 选择，结果直接回显</p>
+<div class="search" style="margin:0 0 10px">⌘ 输入命令，例如 status / plan / saving</div>
+<div class="row"><span class="badge">日常</span> !status <span class="r">运行状态</span></div>
+<div class="row"><span class="badge">钩子</span> !hooks <span class="r">定时/主动/空闲</span></div>
+<div class="row"><span class="badge">存钱</span> !saving <span class="r">本月流水</span></div>
+<div class="row"><span class="badge">API</span> !balance <span class="r">剩余金额</span></div>
+</div>
+<div class="card"><h3>最近执行</h3>
+<div class="row">!status <span class="r">21:03 · 12ms</span></div>
+<div class="row">!balance <span class="r">20:40 · 84ms</span></div>
+<div class="row">!hooks <span class="r">19:58 · 9ms</span></div>
+<div class="row">!plan today <span class="r">19:20 · 15ms</span></div>
+<div style="margin-top:12px;font-size:10px;color:var(--muted)">危险命令需二次确认：clear / backup / exit</div>
+</div></div></div></main>
+<aside class="context"><div class="sec-title">当前连接</div><div class="card"><h3>本机服务</h3><p>127.0.0.1:27004<br>Unix socket · 42ms</p><div style="margin-top:10px"><span class="badge green">在线</span></div></div>
+<div class="sec-title">提醒</div><div class="card"><h3>API 低额</h3><p>DeepSeek 余额低于 ¥50 时仅提醒主人私聊。</p></div>
+<div class="sec-title">快捷</div><div class="quick"><div><b>日志</b>最近 20 条</div><div><b>DB</b>42 张表</div></div></aside>
+</div><div class="design-tag">DESIGN DRAFT · v35</div></body></html>

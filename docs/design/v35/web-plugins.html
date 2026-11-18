@@ -1,0 +1,28 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
+<link rel="stylesheet" href="common.css"><title>插件</title></head>
+<body><div class="app">
+<aside class="rail"><div class="logo">奈</div><div class="ico ">◉</div><div class="ico ">⌘</div><div class="ico ">¥</div><div class="ico ">≡</div><div class="ico on">◇</div><div class="ico ">◎</div><div style="margin-top:auto" class="ico">⚙</div></aside>
+<aside class="side"><div class="side-h"><div class="brand">HOSHINOMI</div><div style="font-size:11px;color:#6f7a8f">v35.2.1</div></div><div class="search">⌕ 搜索会话 / 命令 / 页面</div>
+<div class="chat-item"><div class="avatar">奈</div><div style="min-width:0"><div class="nm">友利奈绪</div><div class="last">今天也一起加油吧</div></div><div class="tm">21:04</div></div>
+<div class="chat-item"><div class="avatar" style="background:linear-gradient(135deg,#8ad7e8,#7f9cff)">星</div><div style="min-width:0"><div class="nm">星之海 · 群</div><div class="last">[图片] 晚上的房间</div></div><div class="tm">20:41</div></div>
+<div class="chat-item"><div class="avatar" style="background:linear-gradient(135deg,#f4c77a,#f29b8a)">存</div><div style="min-width:0"><div class="nm">存钱 / 流水</div><div class="last">本月已存 ¥1,500</div></div><div class="tm">19:22</div></div>
+<div style="margin:auto 16px 16px;padding:12px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.02)"><div style="font-size:10px;color:var(--muted);margin-bottom:6px">后端连接</div><div style="font-size:11px;color:var(--green)">● 本机服务 · 已连接</div><div style="font-size:10px;color:#5f6a7e;margin-top:5px">127.0.0.1:27004 · 42ms</div></div></aside>
+<main class="main"><div class="top"><div><div class="title">插件</div><div class="sub">安装 · 审批 · 权限 · 错误</div></div><div class="actions"><div class="btn">＋ 安装插件</div><div class="btn pri">审批 1</div></div></div>
+<div style="padding:24px 28px;overflow:hidden">
+<div class="tabs"><div class="tab on">已安装 6</div><div class="tab">待审批 1</div><div class="tab">权限</div><div class="tab">错误</div></div>
+<div class="grid" style="grid-template-columns:1.4fr 1fr">
+<div class="card"><h3>已安装</h3>
+<div class="row"><span class="badge green">启用</span> 天气 · weather <span class="r">读天气</span><div class="switch on"><i></i></div></div>
+<div class="row"><span class="badge green">启用</span> 读书摘要 · reader <span class="r">读写书架</span><div class="switch on"><i></i></div></div>
+<div class="row"><span class="badge">停用</span> 音乐 · music <span class="r">播放/搜索</span><div class="switch"><i></i></div></div>
+<div class="row"><span class="badge pink">待审批</span> 记账助手 · ledger <span class="r">读写财务</span><div class="btn">审批</div></div>
+<div class="row"><span class="badge green">启用</span> 面板 · dashboard <span class="r">前端 slot</span><div class="switch on"><i></i></div></div>
+</div>
+<div class="card"><h3>权限</h3><p style="margin-bottom:10px">插件默认只读；写操作逐项审批。</p>
+<div class="row">network <span class="r">2 个插件</span></div><div class="row">filesystem <span class="r">1 个</span></div><div class="row">db:plugin_* <span class="r">1 个</span></div><div class="row">finance <span class="r">需 owner</span></div>
+<div style="margin-top:12px"><span class="badge pink">写操作必须审计</span></div></div>
+</div>
+<div class="card" style="margin-top:14px"><h3>错误</h3><div class="row">music：播放失败 <span class="r">20:12</span></div><div class="row">weather：超时 <span class="r">18:03</span></div></div>
+</div></main><aside class="context"><div class="sec-title">插件运行时</div><div class="card"><h3>6 个已安装</h3><p>启用 5 · 停用 1 · 错误 2</p><div style="margin-top:10px"><span class="badge green">核心未受影响</span></div></div>
+<div class="sec-title">约束</div><div class="card"><h3>失败隔离</h3><p>插件异常不拖垮聊天；停用后回 core。</p></div>
+<div class="sec-title">清单</div><div class="card"><h3>manifest v2</h3><p>权限 / 前端 slot / 版本校验。</p></div></aside></div><div class="design-tag">DESIGN DRAFT · v35</div></body></html>

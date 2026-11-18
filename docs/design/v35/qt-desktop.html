@@ -1,0 +1,51 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
+<link rel="stylesheet" href="common.css"><title>Qt 桌面</title>
+<style>
+body{width:1440px;height:900px;background:
+ radial-gradient(900px 600px at 70% 10%,rgba(242,167,187,.12),transparent 60%),
+ radial-gradient(700px 500px at 15% 90%,rgba(138,215,232,.10),transparent 60%),#0a0d13}
+.qtbg{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:40px 40px}
+.qtwin{display:flex;flex-direction:column}
+.qtbar{height:40px;flex:none}
+.qtcontent{flex:1;display:flex;min-height:0}
+.qtside{width:238px;border-right:1px solid var(--line);background:rgba(16,20,29,.8);padding:12px}
+.qtchat{flex:1;display:flex;flex-direction:column;min-width:0;background:rgba(13,16,23,.55)}
+.qtright{width:254px;border-left:1px solid var(--line);background:rgba(16,20,29,.65);padding:16px}
+.qtinput{margin:0 18px 16px;border:1px solid var(--line);background:var(--panel);border-radius:14px;padding:10px}
+.qticons{display:flex;gap:10px;color:#6f7a8e;font-size:12px;padding-bottom:7px}
+.qtsend{margin-left:auto;background:var(--pink);color:#2a1720;border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700}
+.qtmsgs{padding:18px 22px;display:flex;flex-direction:column;gap:12px;flex:1;overflow:hidden}
+.qtmsgs .bubble{font-size:12px}
+.pet{right:38px;bottom:38px}
+.mini{position:absolute;right:38px;bottom:250px;width:180px;border:1px solid var(--line);background:rgba(21,26,36,.95);border-radius:14px;padding:10px;box-shadow:0 18px 40px rgba(0,0,0,.4)}
+.mini .h{font-size:10px;color:var(--muted);display:flex;justify-content:space-between}
+.mini .m{font-size:10px;color:var(--text);margin-top:7px;line-height:1.5}
+</style></head><body><div class="qtbg"></div>
+<div class="qtwin">
+ <div class="qtbar"><i class="win-dot"></i><i class="win-dot y"></i><i class="win-dot g"></i><span style="margin-left:12px">Hoshinoumi · Qt 6</span><span style="margin-left:auto;color:#5f6a7e">v35.2.1 · 本机服务 · 42ms</span></div>
+ <div class="qtcontent">
+  <div class="qtside"><div class="search" style="margin:2px 0 10px">⌕ 搜索</div>
+   <div class="chat-item on"><div class="avatar" style="width:32px;height:32px">奈</div><div><div class="nm">友利奈绪</div><div class="last">今天也一起加油吧</div></div></div>
+   <div class="chat-item"><div class="avatar" style="width:32px;height:32px;background:linear-gradient(135deg,#8ad7e8,#7f9cff)">星</div><div><div class="nm">星之海 · 群</div><div class="last">[图片] 晚上的房间</div></div></div>
+   <div class="chat-item"><div class="avatar" style="width:32px;height:32px;background:linear-gradient(135deg,#f4c77a,#f29b8a)">存</div><div><div class="nm">存钱 / 流水</div><div class="last">本月已存 ¥1,500</div></div></div>
+   <div style="margin-top:18px;font-size:10px;color:#5f6a7e">快捷页面</div>
+   <div class="row" style="padding:9px 0">⌘ 命令中心 <span class="r">›</span></div><div class="row" style="padding:9px 0">≡ 信息 <span class="r">›</span></div><div class="row" style="padding:9px 0">◇ 插件 <span class="r">›</span></div><div class="row" style="padding:9px 0">◎ 人设/设置 <span class="r">›</span></div>
+  </div>
+  <div class="qtchat"><div class="top" style="height:58px"><div><div class="title" style="font-size:15px">友利奈绪</div><div class="sub">在线 · 已读同步</div></div><div class="status"><i class="dot"></i> 在线</div><div class="actions"><div class="btn">⌕</div><div class="btn">⋯</div></div></div>
+   <div class="qtmsgs"><div class="day">今天 20:58</div>
+    <div class="msg"><div class="avatar" style="width:30px;height:30px">奈</div><div><div class="bubble">你回来啦。今天外面有点冷，先喝点热的吧。</div><div class="meta">20:58 · 已读</div></div></div>
+    <div class="msg me"><div><div class="bubble">刚到家，方案终于过了。</div><div class="meta">21:00 · <span class="read">已读</span></div></div><div class="avatar" style="width:30px;height:30px;background:linear-gradient(135deg,#8ad7e8,#7f9cff)">你</div></div>
+    <div class="msg"><div class="avatar" style="width:30px;height:30px">奈</div><div><div class="bubble">那很好啊。要不要记进“今天值得高兴的事”？</div><div class="meta">21:01 · 记忆已更新</div></div></div>
+   </div>
+   <div class="qtinput"><div class="qticons">＋　▧ 图片　◌ 语音　◇ 表情<div class="qtsend">发送</div></div><div style="height:30px;color:#687388;font-size:12px;display:flex;align-items:center">和奈绪说点什么……</div></div>
+  </div>
+  <div class="qtright"><div class="pcard" style="padding:12px"><div class="big" style="width:52px;height:52px;font-size:19px">奈</div><div class="name" style="font-size:13px">友利奈绪</div><div class="tag">亲近 · 知己 · 搭档</div>
+   <div class="bars"><div class="bar-row"><div class="lb"><span>信任</span><span>0.82</span></div><div class="bar"><i style="width:82%"></i></div></div><div class="bar-row"><div class="lb"><span>理解</span><span>0.76</span></div><div class="bar"><i style="width:76%"></i></div></div></div></div>
+   <div class="sec-title">桌宠</div><div class="card" style="padding:10px"><div style="font-size:11px">● 已开启 · 置顶</div><p style="margin-top:5px">待机/走路/睡觉/说话</p></div>
+   <div class="sec-title">快捷</div><div class="quick"><div><b>存钱</b>流水</div><div><b>命令</b>钩子/API</div><div><b>设置</b>后端/导航</div><div><b>隐藏</b>托盘</div></div>
+  </div>
+ </div>
+</div>
+<div class="mini"><div class="h"><span>快捷回复</span><span>— ×</span></div><div class="m">“好呀，等你回来。”</div><div class="m" style="color:#5f6a7e">Enter 发送 · Esc 关闭</div></div>
+<div class="pet"><div class="head"><i class="eye l"></i><i class="eye r"></i><i class="mouth"></i></div><div class="body"></div><div class="bubble">你回来啦。</div></div>
+</body></html>
