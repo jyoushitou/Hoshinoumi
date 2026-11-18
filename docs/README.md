@@ -140,8 +140,8 @@ v6：P1 会说话 → P2 说实话 → P2.5 长感官 → P3 有生活 → P4 �
 | **v36** | [versions/v36.md](versions/v36.md) | 插件增强：后端+前端插件接口（v36.0–v36.6） | 规划中 |
 | **v37** | [versions/v37.md](versions/v37.md) | 情感增强：20维/60标签/人设卡 v2 客户端编写（v37.0–v37.5） | 规划中 |
 | **v38** | [versions/v38.md](versions/v38.md) | 生态接入（v38.0–v38.10） | 规划中 |
-| **v39** | [versions/v39.md](versions/v39.md) | 运维：systemd/看门狗 | 规划中 |
-| **v40** | [versions/v40.md](versions/v40.md) | 虚拟游乐场（v40信息页改为游乐，Unity 2D + world-service） | 规划中 |
+| **v39** | [versions/v39.md](versions/v39.md) | 虚拟游乐场（Unity 2D） | 规划中 |
+| **v40** | [versions/v40.md](versions/v40.md) | 运维与嵌入式（合并） | 规划中 |
 
 
 
@@ -151,7 +151,7 @@ v6：P1 会说话 → P2 说实话 → P2.5 长感官 → P3 有生活 → P4 �
 
 
 
-> 文档里所有 vXXX 功能都是核心功能；v24–v41 本身是核心代码里的接口/功能定义，
+> 文档里所有 vXXX 功能都是核心功能；v24–v40 本身是核心代码里的接口/功能定义，
 > 不是插件，也不是功能实现。
 > 插件接口只给第三方做优化/性能扩展，后续版本不会用插件接口实现功能。
 > 核心功能只能在启动前通过 `config/features.json` / `NAO_FEATURES` 关闭。
