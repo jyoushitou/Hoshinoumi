@@ -1,7 +1,7 @@
 # Hoshinoumi（REC） v35.1.0.0
 
 > 后端 **v35.1.0.0** · 网关 **v26.4.0**（8+4+body TCP / protobuf / 模糊指令）
-> v34.3.0.0 是当前仓库版本；v26 已封板。**v25 之后普通版本只切 worker，热更前提是 worker 归 supervisor 管**；策略见 [HOT-UPDATE-POLICY.md](docs/HOT-UPDATE-POLICY.md)，部署见 [DEPLOY-v26.md](docs/DEPLOY-v26.md)。
+> v35.1.0.0 是当前仓库版本；v26 已封板。**v25 之后普通版本只切 worker，热更前提是 worker 归 supervisor 管**；策略见 [HOT-UPDATE-POLICY.md](docs/HOT-UPDATE-POLICY.md)，部署见 [DEPLOY-v26.md](docs/DEPLOY-v26.md)。
 >
 > 状态规则：**下一个大版本进入试运行，则上一个大版本视为完成。**
 
@@ -14,10 +14,10 @@
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-5C2D91)](#)
 [![NapCat](https://img.shields.io/badge/NapCat-QQ-12B7F5)](#)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
-![Backend](https://img.shields.io/badge/Backend-v34.3.0.0-yellow)
+![Backend](https://img.shields.io/badge/Backend-v35.1.0.0-yellow)
 ![Gateway](https://img.shields.io/badge/Gateway-v26.4.0-blue)
-![Version](https://img.shields.io/badge/Version-v34.3.0.0-orange)
-![Tests](https://img.shields.io/badge/Tests-13134%20passing-brightgreen)
+![Version](https://img.shields.io/badge/Version-v35.1.0.0-orange)
+![Tests](https://img.shields.io/badge/Tests-13139%20passing-brightgreen)
 
 > **Hoshinoumi（REC，记录）** · 友利奈绪 · 星之海学园学生会室
 >
@@ -239,7 +239,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | **存储** | MySQL 8（默认，schema 32）/ SQLite（自动回退）；已统一到 `infra/pool`（v28.1） |
 | **部署** | gateway 用 Docker / docker compose；ingress / worker 用 systemd 或 screen；Linux 生产、Windows 开发 |
 | **外部服务** | NapCat（QQ 协议）、DeepSeek（主对话）、豆包 / 火山方舟（视觉）、ALAPI（搜图） |
-| **测试** | 13134 条：功能 13086 + 环境/迁移 37 |
+| **测试** | 13139 条：tests 13102 + checks 37 |
 
 > 当前拓扑不是“网关直接 HTTP 打后端”：
 >
@@ -270,7 +270,7 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | C++ 网关 | 用户自己的 CommonNet（Boost.Asio/Beast）；客户端 27005 → TCP 27004 帧 → ingress；worker 只走 Unix socket |
 | 查版本 | `!version` 看版本号、提交、运行时长 |
 
-**13134 条测试**（功能 13086 + 环境/迁移 37），静态检查零未定义名字。
+**13139 条测试**（tests 13102 + checks 37），静态检查零未定义名字。
 
 ---
 
@@ -301,7 +301,7 @@ v34.1.0.0   次版本
 每个大版本最后固定一个收尾次版本：统计 + 修复本阶段 P0/P1/P2，只修 bug，不加功能。
 
 
-**当前：v34.3.0.0 已完成（接口层收口 + 13105 测试）**｜待真实 NapCat 全量演练。
+**当前：v35.1.0.0（本机服务健康检查，13139 测试）**｜上一阶段 v34.3.0.0 已完成。
 
 > v22 试运行 1 天后，进入约 1 天的 v23 启动 + v22 介绍视频，再开始 v23 子版本开发。
 
@@ -1103,7 +1103,7 @@ AI 摘要（≤100 字）→ 记进度
 ### 测试
 
 ```bash
-python3 scripts/run_tests.py             # 13134 条（tests 13068 + checks 37）
+python3 scripts/run_tests.py             # 13139 条（tests 13102 + checks 37）
 python3 scripts/check_names.py            # 静态检查：未定义名字 / 先用后赋值
 ```
 

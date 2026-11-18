@@ -12,7 +12,7 @@ from ..log import log_system
 from . import config as apicfg
 from .common import json_response
 from .routes_meta import (
-    handle_health, handle_status, handle_usage,
+    handle_health, handle_healthz, handle_readyz, handle_status, handle_usage,
     handle_memory, handle_logs, handle_get_token,
 )
 from .routes_chat import handle_chat, handle_command
@@ -272,8 +272,8 @@ async def handle_internal_shelf(request):
 
 @web.middleware
 async def auth_middleware(request, handler):
-    """Bearer Token 鉴权；/api/health 与 /internal/* 免鉴权（只监听本机）"""
-    if request.path == "/api/health" or request.path.startswith("/internal/"):
+    """Bearer Token 鉴权；/healthz、/readyz、/api/health、/internal/* 免鉴权（只监听本机）"""
+    if request.path in ("/api/health", "/healthz", "/readyz") or request.path.startswith("/internal/"):
         return await handler(request)
 
     auth_header = request.headers.get("Authorization", "")
@@ -297,6 +297,8 @@ async def start_api_server():
     apicfg.load_api_token()
 
     app = web.Application(middlewares=[auth_middleware])
+    app.router.add_get("/healthz", handle_healthz)
+    app.router.add_get("/readyz", handle_readyz)
     app.router.add_get("/api/health", handle_health)
     app.router.add_get("/api/status", handle_status)
     app.router.add_get("/api/usage", handle_usage)

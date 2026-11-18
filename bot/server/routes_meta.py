@@ -165,3 +165,40 @@ async def handle_get_token(request):
         ]
     })
 
+
+async def handle_healthz(request):
+    """v35.1：本机服务存活检查；不查 DB，进程活着就 200。"""
+    from ..core.version import get_version
+    return json_response({
+        "status": "ok",
+        "service": "local",
+        "version": get_version(),
+    })
+
+
+async def handle_readyz(request):
+    """v35.1：本机服务就绪检查；DB 可读且 schema_version 匹配才 200。"""
+    from ..core.version import get_version
+    from ..infra.conn import get_cursor
+
+    checks = {"db": "ok", "schema": "unknown"}
+    ready = True
+    try:
+        c = get_cursor()
+        c.execute("SELECT 1")
+        c.execute("SELECT v FROM bot_meta WHERE k='schema_version'")
+        row = c.fetchone()
+        schema = str(row["v"]) if row else ""
+        checks["schema"] = schema or "missing"
+        if schema != "32":
+            ready = False
+    except Exception:
+        checks["db"] = "error"
+        ready = False
+
+    return json_response({
+        "status": "ready" if ready else "not_ready",
+        "service": "local",
+        "version": get_version(),
+        "checks": checks,
+    }, status=200 if ready else 503)
