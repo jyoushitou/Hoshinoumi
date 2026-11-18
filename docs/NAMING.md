@@ -13,9 +13,9 @@
 示例：
 
 ```text
-Hoshinoumi（REC）· 友利奈绪 v20.5
+Hoshinoumi（REC）· 友利奈绪 v35.2.0.0
 Hoshinoumi 服务：hoshinoumi.service
-发布包：hoshinoumi-v20.5.bundle
+发布包：hoshinoumi-v35.2.0.0.bundle
 ```
 
 ## 为什么是 Hoshinoumi

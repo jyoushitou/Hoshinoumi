@@ -1,12 +1,12 @@
-# 架构图（v32.4.0 / v27–v37 接口规划）
+# 架构图（v35.2.0.0 / v27–v40 接口规划）
 
-> 当前后端 v32.4.0；网关 v26.4.0；schema 31。
+> 当前后端 v35.2.0.0；网关 v26.4.0；schema 32。
 >
 > 已部署架构：ingress 持有 3001/27004，worker 只走 Unix socket，蓝绿热更新。
 >
-> v27/v28 插件注册表/运行时、v29–v32 模型/记忆层已完成；v33 起为规划。
+> v27–v34 已完成；v35.1/v35.2 已实现；v35.2.1 起为规划。
 >
-> 配套：v27–v37 总纲见 [INTERFACE-PLAN-v27-v36.md](INTERFACE-PLAN-v27-v36.md)。
+ > 配套：v27–v36 总纲见 [INTERFACE-PLAN-v27-v36.md](INTERFACE-PLAN-v27-v36.md)。
 
 ---
 
@@ -153,7 +153,9 @@ NapCat WS 3001
 ```text
 supervisor
   ├─ data/workers/current
-  ├─ /api/health（Unix socket）
+  ├─ /healthz /readyz（Unix socket）
+├─ /api/health（兼容）
+├─ /api/tools（DSH 只读工具）
   ├─ 切换时清理 + 1h 后清理
   └─ worker.pid / worker.log
 
