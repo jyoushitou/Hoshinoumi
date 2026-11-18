@@ -55,5 +55,7 @@ def format_api_token_info():
         f"    GET  /api/token    - Token信息"
         f"    POST /api/chat     - AI对话"
         f"    POST /api/command  - 执行命令"
+        f"    GET  /api/tools     - DSH 只读工具清单"
+        f"    POST /api/tools/<name>/call - 调用只读工具"
     )
 

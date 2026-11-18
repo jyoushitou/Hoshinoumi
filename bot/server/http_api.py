@@ -18,6 +18,7 @@ from .routes_meta import (
 from .routes_chat import handle_chat, handle_command
 from .routes_plan import handle_get as handle_plan_get, handle_put as handle_plan_put, handle_import as handle_plan_import, handle_export as handle_plan_export
 from .routes_presence import handle_get as handle_presence_get, handle_post as handle_presence_post, handle_delete as handle_presence_delete
+from .routes_tools import handle_list as handle_tools_list, handle_call as handle_tool_call
 
 
 async def handle_internal_history(request):
@@ -307,6 +308,8 @@ async def start_api_server():
     app.router.add_get("/api/token", handle_get_token)
     app.router.add_post("/api/chat", handle_chat)
     app.router.add_post("/api/command", handle_command)
+    app.router.add_get("/api/tools", handle_tools_list)
+    app.router.add_post("/api/tools/{name}/call", handle_tool_call)
     app.router.add_get("/api/plan", handle_plan_get)
     app.router.add_post("/api/plan", handle_plan_put)
     app.router.add_post("/api/plan/import", handle_plan_import)

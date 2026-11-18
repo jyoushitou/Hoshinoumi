@@ -1,0 +1,31 @@
+{
+  "name": "hoshinoumi-dsh",
+  "version": "35.2.0.0",
+  "api_version": 1,
+  "description": "Hoshinoumi 只读工具桥，供 DSH/Qoder 等 IDE 调用",
+  "transport": {
+    "type": "http",
+    "base_url": "http://127.0.0.1:27004"
+  },
+  "auth": {
+    "type": "bearer",
+    "header": "Authorization"
+  },
+  "read_only": true,
+  "tools": [
+    {
+      "name": "recall",
+      "description": "检索记忆，参数是要搜的词",
+      "method": "POST",
+      "path": "/api/tools/recall/call",
+      "body": {"arg": "string"}
+    },
+    {
+      "name": "search_images",
+      "description": "搜图库，参数是关键词",
+      "method": "POST",
+      "path": "/api/tools/search_images/call",
+      "body": {"arg": "string"}
+    }
+  ]
+}
