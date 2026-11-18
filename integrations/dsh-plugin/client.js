@@ -3,7 +3,9 @@
  * Adds a compact "nao" entry to the session header and opens the
  * Hoshinoumi interface in a same-origin full-screen iframe.
  */
-window.__ModuleLoader__.load({
+if (!window.__HOSHINOMI_DSH_CLIENT_LOADED__) {
+  window.__HOSHINOMI_DSH_CLIENT_LOADED__ = true
+  window.__ModuleLoader__.load({
   id: 'hoshinoumi_dsh',
   factory(require) {
     const React = require('react')
@@ -75,3 +77,4 @@ window.__ModuleLoader__.load({
     }
   },
 })
+}

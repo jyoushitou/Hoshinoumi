@@ -81,7 +81,7 @@ async function gatewayFetch(cfg, path, init = {}) {
 
 async function handleApi(req, res, path) {
   if (path === '/api/hoshinoumi/health' && req.method === 'GET') {
-    return sendJson(res, 200, { ok: true, version: '35.2.4.0', config: CONFIG_FILE })
+    return sendJson(res, 200, { ok: true, version: '35.2.5.0', config: CONFIG_FILE })
   }
 
   if (path === '/api/hoshinoumi/ui' && req.method === 'GET') {
