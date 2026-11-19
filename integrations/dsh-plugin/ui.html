@@ -136,11 +136,13 @@ button,input{font:inherit}
 .mbtn:hover{background:#f4f4ef}.mbtn.primary{background:#3457d5;border-color:#3457d5;color:#fff;font-weight:700}.mbtn.primary:hover{background:#2949c8}
 .mstatus{font-size:9px;color:#8a8b82;margin-top:9px;min-height:14px}.mstatus.ok{color:#247d58}.mstatus.err{color:#c25b5b}
 .mskip{text-align:center;font-size:9px;color:#9a9b91;margin-top:9px;cursor:pointer}
+html[data-theme="dark"] .app{filter:invert(.9) hue-rotate(180deg)}
+html[data-theme="dark"]{background:#111}
 </style>
 </head>
 <body>
 <div class="app" id="app">
- <div class="top"><div class="mac"><i></i><i></i><i></i></div><span id="breadcrumb">应用 / 工作区 / nao</span><div class="right"><span id="clock">21:04</span><span onclick="openSetup()" title="后端设置" style="cursor:pointer">⚙</span><span>◐</span><span>⌕</span><span>☰</span></div></div>
+ <div class="top"><div class="mac"><i></i><i></i><i></i></div><span id="breadcrumb">应用 / 工作区 / nao</span><div class="right"><span id="clock">21:04</span><span id="themeBtn" onclick="toggleTheme()" title="切换主题" style="cursor:pointer">☾</span><span onclick="openSetup()" title="后端设置" style="cursor:pointer">⚙</span><span>◐</span><span>⌕</span><span>☰</span></div></div>
  <div class="body">
   <aside class="side">
    <div class="logo">deepseek <b>HARNESS</b></div>
@@ -308,6 +310,8 @@ function reply(text){
  return '嗯，我在听。你继续说。';
 }
 let backendReady=false;
+function toggleTheme(){const root=document.documentElement;const dark=root.getAttribute('data-theme')==='dark';root.setAttribute('data-theme',dark?'light':'dark');document.getElementById('themeBtn').textContent=dark?'☾':'☀';localStorage.setItem('hoshinoumi_theme',dark?'light':'dark');}
+function initTheme(){const saved=localStorage.getItem('hoshinoumi_theme');if(saved==='dark'){document.documentElement.setAttribute('data-theme','dark');document.getElementById('themeBtn').textContent='☀';}}
 function setBackendStatus(ready){backendReady=!!ready;const t=document.getElementById('hstatus');const d=document.getElementById('hdot');if(t)t.textContent=ready?'已连接':'未配置';if(d)d.classList.toggle('off',!ready);}
 function hideAll(){document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));document.querySelectorAll('.nav .item').forEach(x=>x.classList.remove('on'));document.getElementById('tabs').style.display='none';}
 function setHead(title,mode,status){document.getElementById('htitle').textContent=title;document.getElementById('hmode').textContent=mode;document.getElementById('hstatus').textContent=status;}
@@ -316,7 +320,7 @@ function showNew(){hideAll();document.getElementById('breadcrumb').textContent='
 function showCmd(tab){hideAll();document.getElementById('breadcrumb').textContent='应用 / 自动化任务 / 命令';document.getElementById('pageCmd').classList.add('on');setHead('命令','自动化任务 / Hoshinoumi','只读');renderCmdGroups();}
 function showScheduled(){hideAll();document.getElementById('breadcrumb').textContent='应用 / 自动化任务 / 定时任务';document.getElementById('pageScheduled').classList.add('on');setHead('定时任务','自动化任务 / 定时任务','3 个启用');}
 function showLogs(){hideAll();document.getElementById('breadcrumb').textContent='应用 / 自动化任务 / 运行日志';document.getElementById('pageLogs').classList.add('on');setHead('运行日志','自动化任务 / 运行日志','24h');}
-function showHome(){hideAll();document.getElementById('breadcrumb').textContent='应用 / 工作区 / nao / 主页';document.getElementById('pageOverview').classList.add('on');setHead('主页','工作区 / nao','9 个功能模块');}
+function showHome(){hideAll();document.querySelectorAll('.ocard .om').forEach(e=>{e.innerHTML=backendReady?'<b>示例</b> 数据':'未连接'});document.getElementById('breadcrumb').textContent='应用 / 工作区 / nao / 主页';document.getElementById('pageOverview').classList.add('on');setHead('主页','工作区 / nao','9 个功能模块');}
 function showOverview(){showHome();}
 const MODULES={
  memory:{t:'记忆',d:'记忆本、画像、关系、事件和关键词。',stats:[['1,284','记忆'],['328','事件'],['12','关系'],['46','关键词']],cards:[['用户画像',['偏好 · 晚上聊天','称呼 · 你','边界 · 财务仅私聊']],['关系',['奈绪 · 恋人','信任 86','最近互动 · 今天']],['记忆本',['昨天方案通过','旅行目标 60%','担心过不了']],['关键词',['旅行','方案','猫','读书']]]},
@@ -326,7 +330,7 @@ const MODULES={
  settings:{t:'设置',d:'后端地址、连接测试、页面可见性、动画。',stats:[['未配置','后端'],['—','延迟'],['开','动画'],['9','主页面']],cards:[['后端',['首次打开时填写','token 不显示','连接测试 · 设置']],['页面可见性',['主页面 · 6','子页面 · 8','导航球 · 关']],['动画',['消息 · 开','页面 · 开','减少动态 · 跟随系统']],['数据',['日志 · 7 天','财务 · 仅主人']]]},
  plugins:{t:'插件',d:'DSH 插件的安装、审批、权限和错误。',stats:[['2','已安装'],['1','待审批'],['0','错误'],['read','权限']],cards:[['Hoshinoumi',['v35.2.1','已启用','read-only']],['Search Images',['已启用','只读']],['待审批',['memory-write','需要 owner']],['权限',['recall · 允许','remember · 拒绝']]]}
 };
-function showModule(key){const m=MODULES[key];if(!m)return;hideAll();document.getElementById('breadcrumb').textContent='应用 / 工作区 / nao / '+m.t;document.getElementById('pageModule').classList.add('on');document.getElementById('moduleBody').innerHTML='<div class="crumb">工作区 / nao / '+m.t+'</div><div class="ch1">'+m.t+' <span class="ok">● 测试版</span></div><div class="cdesc">'+m.d+'</div><div class="stats">'+m.stats.map(x=>'<div class="stat"><div class="n">'+x[0]+'</div><div class="l">'+x[1]+'</div></div>').join('')+'</div><div class="mgrid">'+m.cards.map(c=>'<div class="mcard"><h3>'+c[0]+'</h3>'+c[1].map(x=>'<div class="mline">'+x+'<span class="r">›</span></div>').join('')+'</div>').join('')+'</div>';setHead(m.t,'工作区 / nao','');setBackendStatus(backendReady);}
+function showModule(key){const m=MODULES[key];if(!m)return;hideAll();if(!backendReady){document.getElementById('pageModule').classList.add('on');document.getElementById('moduleBody').innerHTML='<div class="crumb">工作区 / nao / '+m.t+'</div><div class="ch1">'+m.t+'</div><div class="cdesc">后端未连接，暂时没有数据。</div><div class="mgrid" style="margin-top:12px"><div class="mcard"><h3>需要先配置</h3><div class="mline">后端地址 / token / QQ<span class="r">设置</span></div></div></div>';setHead(m.t,'工作区 / nao','');setBackendStatus(false);return;}document.getElementById('breadcrumb').textContent='应用 / 工作区 / nao / '+m.t;document.getElementById('pageModule').classList.add('on');document.getElementById('moduleBody').innerHTML='<div class="crumb">工作区 / nao / '+m.t+'</div><div class="ch1">'+m.t+' <span class="ok">● 示例数据</span></div><div class="cdesc">'+m.d+'</div><div class="stats">'+m.stats.map(x=>'<div class="stat"><div class="n">'+x[0]+'</div><div class="l">'+x[1]+'</div></div>').join('')+'</div><div class="mgrid">'+m.cards.map(c=>'<div class="mcard"><h3>'+c[0]+'</h3>'+c[1].map(x=>'<div class="mline">'+x+'<span class="r">›</span></div>').join('')+'</div>').join('')+'</div>';setHead(m.t,'工作区 / nao','');setBackendStatus(backendReady);}
 function toggleAuto(){document.getElementById('autoSub').style.display=document.getElementById('autoSub').style.display==='none'?'block':'none';}
 function cmdTab(el){document.querySelectorAll('.ctab').forEach(x=>x.classList.remove('on'));el.classList.add('on');}
 function runTool(){const r=document.getElementById('cmdResult');r.style.opacity=.25;setTimeout(()=>{r.style.opacity=1;r.innerHTML='<b>recall</b> · 200 OK · 12ms<br>找到 1 条：<br>· 昨天方案通过，很高兴'},650);}
@@ -348,8 +352,8 @@ async function saveBackend(){
  const token=document.getElementById('tokenInput').value.trim();const target=document.getElementById('targetInput').value.trim();
  if(!token){st.className='mstatus err';st.textContent='请填写访问 token';return;}
  if(!target){st.className='mstatus err';st.textContent='请填写主人 QQ';return;}
- st.className='mstatus';st.textContent='正在保存…';
- try{const r=await fetch('/api/hoshinoumi/config',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({base_url:url,token,target_id:target})});const j=await r.json();if(!r.ok)throw new Error(j.message||('HTTP '+r.status));localStorage.setItem('hoshinoumi_target',document.getElementById('targetInput').value||'owner');setBackendStatus(true);st.className='mstatus ok';st.textContent='已保存，正在进入…';setTimeout(()=>{closeSetup();toast('后端已配置 · '+url);},450);}catch(e){st.className='mstatus err';st.textContent='保存失败：'+e.message;}
+ st.className='mstatus';st.textContent='正在测试连接…';
+ try{const tr=await fetch('/api/hoshinoumi/test',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({base_url:url,token,target_id:target})});const tj=await tr.json();if(!tr.ok||!tj.ok)throw new Error(tj.message||'连接失败');st.className='mstatus';st.textContent='测试通过，正在保存…';const r=await fetch('/api/hoshinoumi/config',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({base_url:url,token,target_id:target})});const j=await r.json();if(!r.ok)throw new Error(j.message||('HTTP '+r.status));localStorage.setItem('hoshinoumi_target',document.getElementById('targetInput').value||'owner');setBackendStatus(true);st.className='mstatus ok';st.textContent='已保存，正在进入…';setTimeout(()=>{closeSetup();toast('后端已配置 · '+url);},450);}catch(e){st.className='mstatus err';st.textContent='保存失败：'+e.message;}
 }
 async function loadHistory(){
  try{
@@ -362,10 +366,10 @@ async function loadHistory(){
   rows.forEach(x=>appendMsg({who:x.role==='user'?'me':'bot',text:String(x.content||''),meta:String(x.created_at||'').slice(11,16)||''}));
  }catch{}
 }
-async function loadBackendConfig(){try{const r=await fetch('/api/hoshinoumi/config');const j=await r.json();if(j.target_id)localStorage.setItem('hoshinoumi_target',j.target_id);setBackendStatus(Boolean(j.configured&&j.hasToken));if(!j.configured||!j.hasToken)setTimeout(()=>openSetup(),500);else setTimeout(loadHistory,900);}catch{setTimeout(()=>openSetup(),500);}}
+async function loadBackendConfig(){try{const r=await fetch('/api/hoshinoumi/config');const j=await r.json();if(j.target_id)localStorage.setItem('hoshinoumi_target',j.target_id);if(!j.configured||!j.hasToken){setBackendStatus(false);setTimeout(()=>openSetup(),500);return;}try{const tr=await fetch('/api/hoshinoumi/test',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({base_url:j.base_url,token:'',target_id:j.target_id})});const tj=await tr.json();if(tr.ok&&tj.ok){setBackendStatus(true);setTimeout(loadHistory,900);}else{setBackendStatus(false);toast('后端连接失败，请检查配置');}}catch{setBackendStatus(false);toast('后端连接失败，请检查配置');}}catch{setBackendStatus(false);setTimeout(()=>openSetup(),500);}}
 function checkSetup(force){if(force||!localStorage.getItem(GW_KEY))setTimeout(()=>openSetup(),500);}
 
-clock();setInterval(clock,30000);loadBackendConfig();
+initTheme();clock();setInterval(clock,30000);loadBackendConfig();
 const h=location.hash.slice(1);
 if(h==='cmd')setTimeout(()=>showCmd('tools'),400);
 if(h==='overview')setTimeout(()=>showOverview(),400);

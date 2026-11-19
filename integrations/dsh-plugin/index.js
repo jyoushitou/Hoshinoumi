@@ -65,11 +65,16 @@ async function backendFetch(cfg, path, init = {}) {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), 20000)
   try {
-    const res = await fetch(`${cfg.base_url}${path}`, {
+    let res
+    try {
+      res = await fetch(`${cfg.base_url}${path}`, {
       ...init,
       headers: { 'content-type': 'application/json', ...authHeaders(cfg), ...(init.headers || {}) },
-      signal: controller.signal,
-    })
+        signal: controller.signal,
+      })
+    } catch (e) {
+      throw new Error(`无法连接后端 ${cfg.base_url}：${e instanceof Error ? e.message : String(e)}`)
+    }
     const text = await res.text()
     let data
     try { data = text ? JSON.parse(text) : {} } catch { data = { raw: text } }
@@ -81,7 +86,7 @@ async function backendFetch(cfg, path, init = {}) {
 
 async function handleApi(req, res, path) {
   if (path === '/api/hoshinoumi/health' && req.method === 'GET') {
-    return sendJson(res, 200, { ok: true, version: '35.2.12.0', config: CONFIG_FILE })
+    return sendJson(res, 200, { ok: true, version: '35.2.13.0', config: CONFIG_FILE })
   }
 
   if (path === '/api/hoshinoumi/ui' && req.method === 'GET') {
@@ -104,7 +109,7 @@ async function handleApi(req, res, path) {
 
   if (path === '/api/hoshinoumi/test' && req.method === 'POST') {
     const body = await readBody(req)
-    const cfg = { ...readConfig(), ...(body.base_url ? { base_url: String(body.base_url).trim().replace(/\/+$/, '') } : {}), ...(typeof body.token === 'string' ? { token: body.token.trim() } : {}) }
+    const cfg = { ...readConfig(), ...(body.base_url ? { base_url: String(body.base_url).trim().replace(/\/+$/, '') } : {}), ...(typeof body.token === 'string' && body.token.trim() ? { token: body.token.trim() } : {}) }
     if (!cfg.base_url) throw new Error('请先填写后端地址')
     const started = Date.now()
     const health = await backendFetch(cfg, '/healthz', { method: 'GET' })
