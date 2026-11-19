@@ -6,7 +6,7 @@
 if (typeof window !== 'undefined' && window.__ModuleLoader__ && !window.__HOSHINOMI_DSH_CLIENT_LOADED__) {
   window.__HOSHINOMI_DSH_CLIENT_LOADED__ = true
   window.__ModuleLoader__.load({
-  id: 'hoshinoumi_dsh',
+  id: 'hoshinoumi-dsh',
   factory(require) {
     const React = require('react')
 

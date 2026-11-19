@@ -25,6 +25,7 @@ class DshPluginPackageTests(unittest.TestCase):
         client = (PLUGIN / "client.js").read_text(encoding="utf-8")
         self.assertIn("__ModuleLoader__", client)
         self.assertIn("HOSHINOMI_DSH_CLIENT_LOADED", client)
+        self.assertIn("id: 'hoshinoumi-dsh'", client)
         self.assertIn("conversation.session.header.actions", client)
         self.assertIn("/api/hoshinoumi/ui", client)
         self.assertIn("nao", client)
