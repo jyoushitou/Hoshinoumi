@@ -550,6 +550,7 @@ async function showModule(key) {
     }
     if (key === 'savings') {
       const j = await jsonApi('/api/hoshinoumi/savings');
+      const b = await jsonApi('/api/hoshinoumi/balance').catch(() => null);
       const accounts = Array.isArray(j.accounts) ? j.accounts : [];
       const entries = Array.isArray(j.entries) ? j.entries : [];
       const money = (c) => '¥' + ((Number(c) || 0) / 100).toFixed(2);
