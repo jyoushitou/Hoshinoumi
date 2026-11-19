@@ -138,7 +138,7 @@ button,input{font:inherit}
 .mskip{text-align:center;font-size:9px;color:#9a9b91;margin-top:9px;cursor:pointer}
 html[data-theme="dark"] .app{filter:invert(.9) hue-rotate(180deg)}
 html[data-theme="dark"]{background:#111}
-.wktable{border-collapse:collapse;width:100%;min-width:760px;font-size:11px}.wktable th,.wktable td{border:1px solid #e8e8e2;padding:5px;vertical-align:top}.wktable th{background:#f6f6f2;color:#77786f;font-weight:600}.wkp{background:#fafaf7;color:#77786f;white-space:nowrap;width:46px}.wkcell{height:56px;cursor:pointer}.wkcell:hover{background:#f7f9ff}.wkadd{color:#c7c8c1}.wkc b{display:block;color:#2d2e28;font-size:11px;line-height:1.35}.wkc span{display:block;color:#8a8b82;font-size:10px;margin-top:2px}</style>
+.wktable{border-collapse:collapse;width:100%;min-width:760px;font-size:11px}.wktable th,.wktable td{border:1px solid #e8e8e2;padding:5px;vertical-align:top}.wktable th{background:#f6f6f2;color:#77786f;font-weight:600}.wkp{background:#fafaf7;color:#77786f;white-space:nowrap;width:46px}.wkcell{height:56px;cursor:pointer}.wkcell:hover{background:#f7f9ff}.wkadd{color:#c7c8c1}.wkc b{display:block;color:#2d2e28;font-size:11px;line-height:1.35}.wkc span{display:block;color:#8a8b82;font-size:10px;margin-top:2px}.wkc{position:relative;padding-right:14px}.wkdel{position:absolute;right:-3px;top:-3px;border:0;background:transparent;color:#b7b8b0;font-size:14px;cursor:pointer;line-height:1}.wkdel:hover{color:#c33}</style>
 </head>
 <body>
 <div class="app" id="app">
@@ -160,7 +160,7 @@ html[data-theme="dark"]{background:#111}
     <div class="item" onclick="showScheduled()">◷ 定时任务</div>
     <div class="item" onclick="showLogs()">▥ 运行日志</div>
    </div>
-   <div class="foot"><div class="ava">奈</div><div>友利奈绪<br><span style="color:#a7a89e">v35.2.24.1 · 测试版</span></div></div>
+   <div class="foot"><div class="ava">奈</div><div>友利奈绪<br><span style="color:#a7a89e">v35.2.24.2 · 测试版</span></div></div>
   </aside>
   <main class="main">
    <div class="mhead"><div class="mtitle" id="htitle">nao</div><div class="mode" id="hmode">◈ 工作区 · 本机后端</div><div class="mright"><span class="dot off" id="hdot"></span><span id="hstatus">未配置</span><span>⟳</span><span>⋯</span></div></div>
@@ -171,7 +171,7 @@ html[data-theme="dark"]{background:#111}
     <div class="statusline"><span id="backendLine">⌁ 后端未配置</span><span id="historyLine">▤ 历史 —</span><span>nao</span></div>
    </div>
    <div class="page" id="pageCmd">
-    <div class="cmdpage"><div class="crumb">自动化任务 / 命令</div><div class="ch1">命令 <span class="ok">● 命令目录</span></div><div class="cdesc">全量 51 个命令 · 按功能分组 · manifest v35.2.24.1 · 后端地址在设置中配置</div>
+    <div class="cmdpage"><div class="crumb">自动化任务 / 命令</div><div class="ch1">命令 <span class="ok">● 命令目录</span></div><div class="cdesc">全量 51 个命令 · 按功能分组 · manifest v35.2.24.2 · 后端地址在设置中配置</div>
      <div class="cmdsearch">⌕ <input id="cmdSearch" placeholder="搜索命令 / 参数" oninput="renderCmdGroups()"><span id="cmdCount">全部 51 个 · 9 个分类</span></div>
      <div class="cmdwrap"><div class="groups" id="cmdGroups"></div>
       <div class="card" id="cmdDetail"><h3>命令详情</h3><div class="dsel" id="dsel">!status</div><div class="ddesc" id="ddesc">查看运行状态、配置、API、记忆、定时和连接信息。</div>
@@ -514,7 +514,7 @@ async function loadWeekly(week){
       body+='<tr><td class="wkp">'+label+'</td>';
       for(let d=1;d<=7;d++){
         const arr=weeklyCourses.filter(x=>Number(x.weekday)===d && Number(x.period_start)===ps);
-        const inner=arr.map(x=>'<div class="wkc"><b>'+esc(x.name)+'</b><span>'+esc(x.location||'')+'</span></div>').join('');
+        const inner=arr.map(x=>{const idx=weeklyCourses.indexOf(x);return '<div class="wkc"><button class="wkdel" title="删除" onclick="event.stopPropagation();removeWeeklyCourse('+idx+')">×</button><b>'+esc(x.name)+'</b><span>'+esc(x.location||'')+'</span></div>'}).join('');
         body+='<td class="wkcell" onclick="addWeeklyCourse('+d+','+ps+','+pe+')">'+(inner||'<span class="wkadd">＋</span>')+'</td>';
       }
       body+='</tr>';
@@ -533,6 +533,14 @@ async function addWeeklyCourse(day,ps,pe){
   const courses=weeklyCourses.slice();
   courses.push({name,teacher,location,weekday:day,period_start:ps,period_end:pe,source:'grid'});
   try{await saveWeekly(courses,week);await loadWeekly(week);}catch(e){toast('保存失败：'+e.message);}
+}
+async function removeWeeklyCourse(idx){
+  if(idx<0||idx>=weeklyCourses.length)return;
+  const x=weeklyCourses[idx];
+  if(!confirm('删除「'+x.name+'」？'))return;
+  const week=weeklyWeek();
+  const courses=weeklyCourses.filter((_,i)=>i!==idx);
+  try{await saveWeekly(courses,week);await loadWeekly(week);}catch(e){toast('删除失败：'+e.message);}
 }
 async function importWeekly(){
   const f=document.getElementById('weekFile')?.files?.[0];const msg=document.getElementById('weekMsg');
