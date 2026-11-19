@@ -20,6 +20,22 @@ EventSource / fetch SSE
 CSS Variables（ThemeToken）
 ```
 
+## 2.1 会话列表规则
+
+```text
+只列 QQ 私聊 + QQ 群
+群名 / 群成员数 / 未读来自后端同步
+存钱、记忆、周计划、人设、设置是功能页，只从左侧导航进入
+功能页不能当会话显示
+```
+
+后端接口（v35.5.12）：
+
+```text
+GET /internal/conversations
+→ [{type:'private'|'group', id, name, member_count, unread, last_message, updated_at}]
+```
+
 ## 3. 布局
 
 ```text

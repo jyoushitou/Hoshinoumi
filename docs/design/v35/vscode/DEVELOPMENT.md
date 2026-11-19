@@ -21,6 +21,10 @@ v35.4 的侧栏页面复用 DSH 客户端结构：v35.4.0 骨架阶段已带入�
 
 VS Code 入口使用单色版 [docs/design/logo/hoshinoumi-mono.svg](../logo/hoshinoumi-mono.svg)：四芒星 + 轨道，`currentColor`。文档/README 使用彩色版 `hoshinoumi.svg`。扩展副本在 `media/nao.svg`。
 
+## 1.3 后续会话同步
+
+v35.4.16：聊天区只列 QQ 私聊/群，功能页从导航进入，复用 v35.5.12 的 `/internal/conversations`。
+
 ## 2. 模块拆分
 
 ### 2.1 扩展宿主

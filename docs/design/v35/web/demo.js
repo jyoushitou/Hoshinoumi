@@ -9,25 +9,25 @@
       { r: 'bot', t: '本月收入 ¥8,000，支出 ¥3,200，存钱 ¥1,500，结余 ¥3,300。旅行目标已经 60% 了。', m: '21:03 · 财务摘要（仅主人私聊）' },
       { r: 'bot', t: '不过我想先听你说说方案过的时候，是什么感觉。', m: '21:04 · 已读' }
     ] },
-    group: { name: '星之海 · 群', sub: '群聊 · 4 人', msgs: [
-      { r: 'bot', t: '[图片] 晚上的房间。窗边那盏灯还是没修。', m: '20:41 · 群聊' },
-      { r: 'me', t: '明天我去买灯泡。', m: '20:43 · 已读' },
-      { r: 'bot', t: '那我给你留门。别又忘了。', m: '20:44 · 已读' }
+    seagroup: { name: '星之海学园', sub: 'QQ 群 · 12 人 · 已同步', msgs: [
+      { r: 'bot', a: '星', t: '晚上的教室灯又没关。谁最后走的？', m: '20:41 · 星之海学园' },
+      { r: 'me', t: '我走的时候关了，可能后来又有人进去。', m: '20:43 · 已读' },
+      { r: 'bot', a: '奈', t: '我去看看吧。你们先回去，别在楼下等。', m: '20:44 · 已读' }
     ] },
-    savings: { name: '存钱 / 流水', sub: '财务 · 仅主人私聊', msgs: [
-      { r: 'bot', t: '本月收入 ¥8,000，支出 ¥3,200，存钱 ¥1,500，结余 ¥3,300。旅行目标 60%。', m: '19:22 · 财务摘要' },
-      { r: 'me', t: '旅行目标还差多少？', m: '19:23 · 已读' },
-      { r: 'bot', t: '还差 ¥2,200。按现在的节奏，下个月能完成。', m: '19:23 · 已读' }
+    student: { name: '学生会室', sub: 'QQ 群 · 8 人 · 已同步', msgs: [
+      { r: 'bot', a: '学', t: '明天放学后开个短会，十分钟。', m: '19:58 · 学生会室' },
+      { r: 'me', t: '收到，我会到。', m: '19:59 · 已读' },
+      { r: 'bot', a: '奈', t: '那我把上次的活动记录带过去。', m: '20:00 · 已读' }
     ] },
-    memory: { name: '记忆本', sub: '记忆 · 最近 7 天', msgs: [
-      { r: 'bot', t: '今天值得高兴的事：方案终于过了。我已经把它写进长期记忆。', m: '18:50 · 记忆已更新' },
-      { r: 'me', t: '还有别的吗？', m: '18:51 · 已读' },
-      { r: 'bot', t: '你不喜欢太吵的地方；最近在看的书是《十日终焉》。', m: '18:51 · 记忆召回' }
+    photo: { name: '摄影部', sub: 'QQ 群 · 6 人 · 已同步', msgs: [
+      { r: 'bot', a: '摄', t: '周末去海边拍吗？天气看起来不错。', m: '昨天 · 摄影部' },
+      { r: 'me', t: '可以，早上几点？', m: '昨天 · 已读' },
+      { r: 'bot', a: '摄', t: '七点校门口，带长焦。', m: '昨天 · 已读' }
     ] },
-    weekly: { name: '周计划表', sub: '第 12 周 · 3 门课', msgs: [
-      { r: 'bot', t: '第 12 周：周一 高等数学、周三 大学英语、周五 数据结构。', m: '昨天 · 来自后端' },
-      { r: 'me', t: '周五有考试吗？', m: '昨天 · 已读' },
-      { r: 'bot', t: '没有，周五是最后一节课，之后放假。', m: '昨天 · 已读' }
+    test: { name: 'NapCat 测试群', sub: 'QQ 群 · 3 人 · 已同步', msgs: [
+      { r: 'bot', a: '测', t: '消息同步测试：收到请回复。', m: '昨天 · NapCat 测试群' },
+      { r: 'me', t: '收到。', m: '昨天 · 已读' },
+      { r: 'bot', a: '奈', t: '收到。同步正常。', m: '昨天 · 已读' }
     ] }
   };
 
@@ -82,7 +82,7 @@
 
   function msgHtml(x) {
     return '<div class="msg ' + (x.r === 'me' ? 'me' : '') + '">' +
-      (x.r === 'me' ? '' : '<div class="avatar">奈</div>') +
+      (x.r === 'me' ? '' : '<div class="avatar">' + esc(x.a || '奈') + '</div>') +
       '<div><div class="bubble">' + esc(x.t) + '</div>' +
       (x.mem ? '<div class="memchip"><span class="i">✦</span> ' + esc(x.mem) + '</div>' : '') +
       '<div class="meta">' + esc(x.m) + '</div></div>' +
@@ -105,7 +105,7 @@
     msgs.scrollTop = msgs.scrollHeight;
   }
 
-  const convIds = ['nao', 'group', 'savings', 'memory', 'weekly'];
+  const convIds = ['nao', 'seagroup', 'student', 'photo', 'test'];
   document.querySelectorAll('.conv').forEach((x, i) => {
     x.dataset.conv = convIds[i] || 'nao';
     x.addEventListener('click', () => { renderChat(x.dataset.conv); x.querySelector('.unread')?.remove(); });
