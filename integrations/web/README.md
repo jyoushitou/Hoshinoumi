@@ -19,4 +19,4 @@ deploy/nginx.conf
 deploy/DEPLOY.md
 ```
 
-27006 同源：静态 dist + /api、/ws 反代 gateway 27005。
+27006 同源：静态 dist + /api、/ws 反代 frpc 映射端口 27015（后端 gateway 27005）。

@@ -24,22 +24,52 @@ sudo nginx -t
 sudo systemctl reload nginx
 ```
 
-## 4. 启动 gateway
+## 4. 后端（无公网）→ frpc → 公网前端
 
-Web 的 `/api` 转发到 gateway 27005：
+后端启动 gateway：
 
 ```bash
-# gateway 按现有部署启动，监听 127.0.0.1:27005
+# gateway 监听 127.0.0.1:27005
 curl -s http://127.0.0.1:27005/healthz
+```
+
+后端用 `deploy/frpc.toml` 主动连公网前端，把 gateway 27005 映射到前端 27015：
+
+```bash
+frpc -c deploy/frpc.toml
+```
+
+公网前端启动 frps：
+
+```bash
+frps -c deploy/frps.toml
+```
+
+nginx 的 `/api` 指向：
+
+```text
+127.0.0.1:27015
 ```
 
 ## 5. 访问
 
 ```text
-http://服务器:27006
+http://公网前端:27006
 ```
 
-## 6. 边界
+
+
+## 6. 网络边界
+
+```text
+后端无公网：只主动出站 frpc
+公网前端：frps 7000 + nginx 27006
+frpc remotePort 27015 只允许本机 nginx 访问
+公网防火墙：只放行 27006；7000 仅允许后端 IP
+27004 / 27005 / internal 不对公网
+```
+
+## 7. 边界
 
 ```text
 公网只开 27006
@@ -50,7 +80,7 @@ http://服务器:27006
 SSE/WS 不缓冲
 ```
 
-## 7. HTTPS
+## 8. HTTPS
 
 有域名后加 443：
 

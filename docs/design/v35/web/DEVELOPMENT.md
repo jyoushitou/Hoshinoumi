@@ -347,9 +347,14 @@ integrations/web/deploy/DEPLOY.md
 
 ```text
 27006 → dist 静态
-/api/ → gateway 27005
-/ws/  → gateway 27005（Upgrade）
+/api/ → frpc 映射 127.0.0.1:27015
+/ws/  → 127.0.0.1:27015（Upgrade）
 /internal/ → 404
+
+后端无公网：
+frpc 主动连公网前端 frps
+gateway 27005 → remotePort 27015
+nginx 只访问 127.0.0.1:27015
 ```
 
 ## 4. 次次版本

@@ -1,0 +1,6 @@
+# 公网前端：frps 接收后端 frpc
+bindPort = 7000
+auth.method = "token"
+auth.token = "CHANGE_ME_FRP_TOKEN"
+
+# remotePort 27015 只允许本机 nginx 访问；公网防火墙不要放行 27015
