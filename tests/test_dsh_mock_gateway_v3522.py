@@ -75,6 +75,18 @@ class MockGatewayTests(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertIn("schema", data["result"])
 
+    def test_new_plugin_endpoints(self):
+        _, persona = self.get("/api/persona", token=True)
+        self.assertTrue(persona["data"])
+        _, savings = self.get("/api/savings", token=True)
+        self.assertIn("total_cents", savings)
+        _, balance = self.get("/api/balance", token=True)
+        self.assertTrue(balance["ok"])
+        status, weekly = self.post("/api/weekly-plan", {"week": 3, "courses": [{"name": "测试课", "weekday": 1, "period_start": 1}]})
+        self.assertEqual(status, 200)
+        _, loaded = self.get("/api/weekly-plan?week=3", token=True)
+        self.assertEqual(loaded["count"], 1)
+
     def test_cron_and_logs(self):
         _, cron = self.get("/internal/cron")
         self.assertTrue(cron["data"])

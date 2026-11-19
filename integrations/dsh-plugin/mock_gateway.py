@@ -23,7 +23,7 @@ from datetime import datetime, timedelta
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
-VERSION = "35.2.20.0"
+VERSION = "35.2.23.1"
 SCHEMA = 34
 OWNER_QQ = "822891053"
 
@@ -67,6 +67,31 @@ PLAN = {
         {"date": "2026-11-16", "items": [{"text": "读书 30 分钟", "done": True}]},
         {"date": "2026-11-17", "items": [{"text": "整理笔记", "done": False}]},
     ],
+}
+
+PERSONAS = [
+    {"name": "nao", "active": True,
+     "files": {"prompt": True, "life": True, "supplement": True, "state": True, "voice": True},
+     "prompt_excerpt": "你是友利奈绪(Charlotte)，15岁傲娇毒舌学生会会长。",
+     "state": {"mood": 0.1, "energy": 0.7, "lonely": 0.15},
+     "voice": {"voice": "zh-CN-XiaoxiaoNeural"},
+     "prompt": "你是友利奈绪(Charlotte)。", "supplement": "mock supplement", "life": "mock life"},
+]
+
+SAVINGS = {
+    "total_cents": 330000,
+    "accounts": [{"account": "银行卡", "balance_cents": 330000}],
+    "entries": [
+        {"id": 2, "account": "银行卡", "kind": "income", "amount_cents": 800000, "category": "工资", "note": "mock", "occurred_at": "2026-11-01 09:00:00", "source": "manual"},
+        {"id": 1, "account": "银行卡", "kind": "expense", "amount_cents": -470000, "category": "生活", "note": "mock", "occurred_at": "2026-11-02 12:00:00", "source": "manual"},
+    ],
+}
+
+WEEKLY = {
+    3: [
+        {"name": "大学物理实验C9903班", "teacher": "5106.罗水平", "location": "未定", "weekday": 1, "weekday_name": "星期一", "period_start": 1, "period_end": 2, "weeks_raw": "3-5,7(未定)", "weeks": [3, 4, 5, 7], "start_week": 3, "end_week": 7, "source": "jwc_html"},
+        {"name": "大学英语Ⅲ0203班", "teacher": "4930.徐小芳", "location": "5-628（南楼）", "weekday": 1, "weekday_name": "星期一", "period_start": 3, "period_end": 4, "weeks_raw": "3-17(5-628（南楼）)", "weeks": list(range(3, 18)), "start_week": 3, "end_week": 17, "source": "jwc_html"},
+    ]
 }
 
 
@@ -169,6 +194,30 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/usage":
             self._json(200, {"records": [], "summary": {"total_prompt_tokens": 0, "total_completion_tokens": 0, "total_tokens": 0, "count": 0}, "mock": True})
             return
+        if path == "/api/persona":
+            name = (q.get("name") or [""])[0]
+            if name:
+                item = next((x for x in PERSONAS if x["name"] == name), None)
+                self._json(200 if item else 404, {"ok": bool(item), "data": item, "active": "nao"})
+            else:
+                self._json(200, {"ok": True, "data": PERSONAS, "active": "nao", "count": len(PERSONAS)})
+            return
+        if path == "/api/persona/export":
+            name = (q.get("name") or [""])[0]
+            item = next((x for x in PERSONAS if x["name"] == name), None)
+            self._json(200 if item else 404, {"ok": bool(item), "data": item})
+            return
+        if path == "/api/savings":
+            self._json(200, {"ok": True, **SAVINGS, "mock": True})
+            return
+        if path == "/api/balance":
+            self._json(200, {"ok": True, "is_available": True, "balance_infos": [{"currency": "CNY", "total_balance": "42.00", "granted_balance": "2.00", "topped_up_balance": "40.00"}], "fetched_at": _now(), "mock": True})
+            return
+        if path == "/api/weekly-plan":
+            week = int((q.get("week") or ["1"])[0])
+            rows = WEEKLY.get(week, [])
+            self._json(200, {"ok": True, "week": week, "courses": rows, "count": len(rows), "mock": True})
+            return
         if path == "/api/token":
             self._json(200, {"token_prefix": "mock...", "host": "127.0.0.1", "port": self.server.server_port, "mock": True})
             return
@@ -196,6 +245,45 @@ class Handler(BaseHTTPRequestHandler):
             self._json(401, {"error": "unauthorized", "message": "bad token"})
             return
 
+        if path == "/api/persona/import":
+            data = body.get("data") if isinstance(body.get("data"), dict) else body
+            name = str(data.get("name") or "").strip()
+            if not name or not data.get("prompt"):
+                self._json(400, {"ok": False, "error": "prompt_required"})
+                return
+            item = next((x for x in PERSONAS if x["name"] == name), None)
+            if item and not body.get("overwrite"):
+                self._json(409, {"ok": False, "error": "exists"})
+                return
+            if item is None:
+                item = {"name": name, "files": {"prompt": True, "life": False, "supplement": False, "state": False, "voice": False}, "prompt_excerpt": str(data.get("prompt"))[:160], "state": data.get("state"), "voice": data.get("voice"), "active": False}
+                PERSONAS.append(item)
+            item["prompt"] = str(data.get("prompt"))
+            item["prompt_excerpt"] = item["prompt"][:160]
+            self._json(200, {"ok": True, "data": item, "mock": True})
+            return
+        if path == "/api/persona/activate":
+            name = str(body.get("name") or "")
+            for x in PERSONAS:
+                x["active"] = x["name"] == name
+            self._json(200 if any(x["name"] == name for x in PERSONAS) else 404, {"ok": True, "active": name})
+            return
+        if path == "/api/savings/import":
+            rows = body.get("rows") or []
+            if body.get("dry_run"):
+                self._json(200, {"ok": True, "dry_run": True, "rows": len(rows), "new": len(rows), "duplicates": 0, "preview": rows[:50]})
+                return
+            self._json(200, {"ok": True, "batch_id": "mock", "rows": len(rows), "inserted": len(rows), "duplicates": 0, "mock": True})
+            return
+        if path == "/api/weekly-plan":
+            week = int(body.get("week") or 1)
+            WEEKLY[week] = body.get("courses") or []
+            self._json(200, {"ok": True, "week": week, "count": len(WEEKLY[week]), "mock": True})
+            return
+        if path == "/api/weekly-plan/import":
+            week = int(body.get("week") or 1)
+            self._json(200, {"ok": True, "week": week, "count": len(WEEKLY.get(week, [])), "all_weeks_count": len(WEEKLY.get(week, [])), "dry_run": bool(body.get("dry_run")), "courses": WEEKLY.get(week, []), "mock": True})
+            return
         if path == "/api/chat":
             message = str(body.get("message", "")).strip()
             target = str(body.get("target_id", OWNER_QQ))
