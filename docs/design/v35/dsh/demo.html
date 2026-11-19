@@ -11,7 +11,7 @@ button,input{font:inherit}
 .app{position:absolute;inset:22px;background:#fbfbf8;border:1px solid #d8d8d2;border-radius:14px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 25px 70px rgba(30,30,25,.16);animation:appIn .7s cubic-bezier(.2,.7,.2,1) both}
 @keyframes appIn{from{opacity:0;transform:translateY(10px) scale(.995)}to{opacity:1;transform:none}}
 .top{height:42px;flex:none;background:#f2f2ee;border-bottom:1px solid #e3e3dd;display:flex;align-items:center;gap:11px;padding:0 14px;font-size:11px;color:#77786f}
-.mac{display:flex;gap:6px}.mac i{width:10px;height:10px;border-radius:50%;background:#ff605c}.mac i:nth-child(2){background:#ffbd44}.mac i:nth-child(3){background:#00ca4e}
+.mac{display:flex;gap:6px}.brandline{font-size:11px;font-weight:700;color:#3b3c35;letter-spacing:.01em}.mac i{width:10px;height:10px;border-radius:50%;background:#ff605c}.mac i:nth-child(2){background:#ffbd44}.mac i:nth-child(3){background:#00ca4e}
 .top .right{margin-left:auto;display:flex;gap:16px;align-items:center}
 .replay{border:1px solid #deded7;background:#fff;border-radius:7px;padding:5px 9px;color:#5f6058;cursor:pointer;transition:.2s}
 .replay:hover{background:#f0f0eb;transform:translateY(-1px)}
@@ -69,7 +69,7 @@ button,input{font:inherit}
 .composer input::placeholder{color:#a0a197}
 .cbot{display:flex;align-items:center;gap:8px;font-size:9px;color:#8b8c82}
 .plus{width:23px;height:23px;border:1px solid #deded8;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#77786f}
-.perm{border:1px solid #e2e2dc;border-radius:5px;padding:4px 6px}.model{margin-left:auto;color:#5e5f57;max-width:230px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.model{margin-left:auto;color:#5e5f57;max-width:230px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .send{width:28px;height:28px;border:0;border-radius:50%;background:#3d5cf5;color:#fff;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center}
 .send:hover{transform:scale(1.06);background:#2f4ee6}
 .statusline{height:22px;flex:none;border-top:1px solid #ecece6;display:flex;align-items:center;justify-content:center;gap:14px;font-size:8px;color:#9a9b91;background:#fbfbf8}
@@ -140,10 +140,10 @@ button,input{font:inherit}
 </head>
 <body>
 <div class="app" id="app">
- <div class="top"><div class="mac"><i></i><i></i><i></i></div><span id="breadcrumb">应用 / 工作区 / nao</span><div class="right"><span id="clock">21:04</span><span onclick="openSetup()" title="后端设置" style="cursor:pointer">⚙</span><button class="replay" onclick="replay()">↻ 重播</button><span>◐</span><span>⌕</span><span>☰</span></div></div>
+ <div class="top"><span id="breadcrumb" class="brandline">Hoshinoumi · nao</span><div class="right"><span id="clock">21:04</span><span onclick="openSetup()" title="后端设置" style="cursor:pointer">⚙</span><button class="replay" onclick="replay()">↻ 重播</button><span>◐</span><span>⌕</span><span>☰</span></div></div>
  <div class="body">
   <aside class="side">
-   <div class="logo">deepseek <b>HARNESS</b></div>
+   <div class="logo">Hoshinoumi <b>nao</b></div>
    <div class="new" onclick="showNew()">＋ 新会话</div>
    <div class="nav">
     <div class="item" onclick="showHome()">⌂ 主页</div>
@@ -168,7 +168,7 @@ button,input{font:inherit}
      <div class="load" id="load"><span>↑ 加载更早的 20 条</span></div>
      <div class="day" id="day1">昨天 21:01</div>
     </div>
-    <div class="composer"><input id="input" placeholder="发消息或创建任务，/ 调用指令，@ 文件或对话" onkeydown="if(event.key==='Enter')sendMsg()"><div class="cbot"><div class="plus">＋</div><div class="perm">⌘ 完全权限 ⌄</div><div class="model">nao ⌄</div><button class="send" onclick="sendMsg()">↑</button></div></div>
+    <div class="composer"><input id="input" placeholder="发消息或创建任务，/ 调用指令，@ 文件或对话" onkeydown="if(event.key==='Enter')sendMsg()"><div class="cbot"><div class="plus">＋</div><div class="model">nao ⌄</div><button class="send" onclick="sendMsg()">↑</button></div></div>
     <div class="statusline"><span>⌁ 本机后端 · 127.0.0.1:27004</span><span>▤ 历史 1,284 条 · 自动同步</span><span>◔ 57%</span></div>
    </div>
    <div class="page" id="pageCmd">
@@ -298,12 +298,12 @@ function reply(text){
 }
 function hideAll(){document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));document.querySelectorAll('.nav .item').forEach(x=>x.classList.remove('on'));document.getElementById('tabs').style.display='none';}
 function setHead(title,mode,status){document.getElementById('htitle').textContent=title;document.getElementById('hmode').textContent=mode;document.getElementById('hstatus').textContent=status;}
-function showChat(){hideAll();document.getElementById('app').classList.remove('cmd-mode');document.getElementById('breadcrumb').textContent='应用 / 工作区 / nao';document.getElementById('pageChat').classList.add('on');setHead('nao','◈ 工作区 · 私聊','已连接');document.getElementById('tabs').style.display='flex';}
-function showNew(){hideAll();document.getElementById('breadcrumb').textContent='应用 / 工作区 / nao / 新会话';document.getElementById('pageModule').classList.add('on');document.getElementById('moduleBody').innerHTML='<div class="crumb">工作区 / nao / 新会话</div><div class="ch1">新会话</div><div class="cdesc">和 nao 开始新对话，历史不会丢。</div><div class="mgrid" style="margin-top:12px"><div class="mcard"><h3>你可以这样开始</h3><div class="mline">“今天有点累”<span class="r">情绪</span></div><div class="mline">“午饭 35”<span class="r">记账</span></div><div class="mline">“这周有什么安排”<span class="r">日程</span></div></div><div class="mcard"><h3>上下文</h3><div class="mline">人设<span class="r">友利奈绪</span></div><div class="mline">记忆<span class="r">1,284 条</span></div><div class="mline">后端<span class="r">已连接</span></div></div></div>';setHead('新会话','◈ 工作区 · 私聊','已连接');}
+function showChat(){hideAll();document.getElementById('app').classList.remove('cmd-mode');document.getElementById('breadcrumb').textContent='Hoshinoumi · nao';document.getElementById('pageChat').classList.add('on');setHead('nao','◈ 工作区 · 私聊','已连接');document.getElementById('tabs').style.display='flex';}
+function showNew(){hideAll();document.getElementById('breadcrumb').textContent='Hoshinoumi · nao / 新会话';document.getElementById('pageModule').classList.add('on');document.getElementById('moduleBody').innerHTML='<div class="crumb">工作区 / nao / 新会话</div><div class="ch1">新会话</div><div class="cdesc">和 nao 开始新对话，历史不会丢。</div><div class="mgrid" style="margin-top:12px"><div class="mcard"><h3>你可以这样开始</h3><div class="mline">“今天有点累”<span class="r">情绪</span></div><div class="mline">“午饭 35”<span class="r">记账</span></div><div class="mline">“这周有什么安排”<span class="r">日程</span></div></div><div class="mcard"><h3>上下文</h3><div class="mline">人设<span class="r">友利奈绪</span></div><div class="mline">记忆<span class="r">1,284 条</span></div><div class="mline">后端<span class="r">已连接</span></div></div></div>';setHead('新会话','◈ 工作区 · 私聊','已连接');}
 function showCmd(tab){hideAll();document.getElementById('breadcrumb').textContent='应用 / 自动化任务 / 命令';document.getElementById('pageCmd').classList.add('on');setHead('命令','自动化任务 / Hoshinoumi','只读');renderCmdGroups();}
 function showScheduled(){hideAll();document.getElementById('breadcrumb').textContent='应用 / 自动化任务 / 定时任务';document.getElementById('pageScheduled').classList.add('on');setHead('定时任务','自动化任务 / 定时任务','3 个启用');}
 function showLogs(){hideAll();document.getElementById('breadcrumb').textContent='应用 / 自动化任务 / 运行日志';document.getElementById('pageLogs').classList.add('on');setHead('运行日志','自动化任务 / 运行日志','24h');}
-function showHome(){hideAll();document.getElementById('breadcrumb').textContent='应用 / 工作区 / nao / 主页';document.getElementById('pageOverview').classList.add('on');setHead('主页','工作区 / nao','9 个功能模块');}
+function showHome(){hideAll();document.getElementById('breadcrumb').textContent='Hoshinoumi · nao / 主页';document.getElementById('pageOverview').classList.add('on');setHead('主页','工作区 / nao','9 个功能模块');}
 function showOverview(){showHome();}
 const MODULES={
  memory:{t:'记忆',d:'记忆本、画像、关系、事件和关键词。',stats:[['1,284','记忆'],['328','事件'],['12','关系'],['46','关键词']],cards:[['用户画像',['偏好 · 晚上聊天','称呼 · 你','边界 · 财务仅私聊']],['关系',['奈绪 · 恋人','信任 86','最近互动 · 今天']],['记忆本',['昨天方案通过','旅行目标 60%','担心过不了']],['关键词',['旅行','方案','猫','读书']]]},
@@ -313,7 +313,7 @@ const MODULES={
  settings:{t:'设置',d:'后端地址、连接测试、页面可见性、动画。',stats:[['已连接','后端'],['42ms','延迟'],['开','动画'],['6','主页面']],cards:[['后端',['127.0.0.1:27004','Bearer · 只读','测试 · 通过']],['页面可见性',['主页面 · 6','子页面 · 8','导航球 · 关']],['动画',['消息 · 开','页面 · 开','减少动态 · 跟随系统']],['数据',['日志 · 7 天','财务 · 仅主人']]]},
  plugins:{t:'插件',d:'DSH 插件的安装、审批、权限和错误。',stats:[['2','已安装'],['1','待审批'],['0','错误'],['read','权限']],cards:[['Hoshinoumi',['v35.2.1','已启用','read-only']],['Search Images',['已启用','只读']],['待审批',['memory-write','需要 owner']],['权限',['recall · 允许','remember · 拒绝']]]}
 };
-function showModule(key){const m=MODULES[key];if(!m)return;hideAll();document.getElementById('breadcrumb').textContent='应用 / 工作区 / nao / '+m.t;document.getElementById('pageModule').classList.add('on');document.getElementById('moduleBody').innerHTML='<div class="crumb">工作区 / nao / '+m.t+'</div><div class="ch1">'+m.t+' <span class="ok">● 已同步</span></div><div class="cdesc">'+m.d+'</div><div class="stats">'+m.stats.map(x=>'<div class="stat"><div class="n">'+x[0]+'</div><div class="l">'+x[1]+'</div></div>').join('')+'</div><div class="mgrid">'+m.cards.map(c=>'<div class="mcard"><h3>'+c[0]+'</h3>'+c[1].map(x=>'<div class="mline">'+x+'<span class="r">›</span></div>').join('')+'</div>').join('')+'</div>';setHead(m.t,'工作区 / nao','已同步');}
+function showModule(key){const m=MODULES[key];if(!m)return;hideAll();document.getElementById('breadcrumb').textContent='Hoshinoumi · nao / '+m.t;document.getElementById('pageModule').classList.add('on');document.getElementById('moduleBody').innerHTML='<div class="crumb">工作区 / nao / '+m.t+'</div><div class="ch1">'+m.t+' <span class="ok">● 已同步</span></div><div class="cdesc">'+m.d+'</div><div class="stats">'+m.stats.map(x=>'<div class="stat"><div class="n">'+x[0]+'</div><div class="l">'+x[1]+'</div></div>').join('')+'</div><div class="mgrid">'+m.cards.map(c=>'<div class="mcard"><h3>'+c[0]+'</h3>'+c[1].map(x=>'<div class="mline">'+x+'<span class="r">›</span></div>').join('')+'</div>').join('')+'</div>';setHead(m.t,'工作区 / nao','已同步');}
 function toggleAuto(){document.getElementById('autoSub').style.display=document.getElementById('autoSub').style.display==='none'?'block':'none';}
 function cmdTab(el){document.querySelectorAll('.ctab').forEach(x=>x.classList.remove('on'));el.classList.add('on');}
 function runTool(){const r=document.getElementById('cmdResult');r.style.opacity=.25;setTimeout(()=>{r.style.opacity=1;r.innerHTML='<b>recall</b> · 200 OK · 12ms<br>找到 1 条：<br>· 昨天方案通过，很高兴'},650);}

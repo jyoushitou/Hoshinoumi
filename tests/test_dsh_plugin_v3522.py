@@ -13,7 +13,7 @@ class DshPluginPackageTests(unittest.TestCase):
     def test_package_manifest(self):
         data = json.loads((PLUGIN / "package.json").read_text(encoding="utf-8"))
         self.assertEqual(data["name"], "hoshinoumi-dsh")
-        self.assertRegex(data["version"], r"^\d+\.\d+\.\d+$")
+        self.assertRegex(data["version"], r"^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$")
         self.assertEqual(data["exports"]["./client"], "./client.js")
         self.assertEqual(data["dsh"]["client"]["platform"], "web")
         self.assertEqual(data["dsh"]["bundle"]["patch"], "./cordis.patch.yml")
@@ -26,7 +26,7 @@ class DshPluginPackageTests(unittest.TestCase):
         self.assertIn("__ModuleLoader__", client)
         self.assertIn("HOSHINOMI_DSH_CLIENT_LOADED", client)
         self.assertIn("id: 'hoshinoumi-dsh'", client)
-        self.assertIn("conversation.session.header.actions", client)
+        self.assertIn("conversation.input.right", client)
         self.assertIn("/api/hoshinoumi/ui", client)
         self.assertIn("nao", client)
 

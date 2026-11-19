@@ -11,7 +11,7 @@ button,input{font:inherit}
 .app{position:absolute;inset:22px;background:#fbfbf8;border:1px solid #d8d8d2;border-radius:14px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 25px 70px rgba(30,30,25,.16);animation:appIn .7s cubic-bezier(.2,.7,.2,1) both}
 @keyframes appIn{from{opacity:0;transform:translateY(10px) scale(.995)}to{opacity:1;transform:none}}
 .top{height:42px;flex:none;background:#f2f2ee;border-bottom:1px solid #e3e3dd;display:flex;align-items:center;gap:11px;padding:0 14px;font-size:11px;color:#77786f}
-.mac{display:flex;gap:6px}.mac i{width:10px;height:10px;border-radius:50%;background:#ff605c}.mac i:nth-child(2){background:#ffbd44}.mac i:nth-child(3){background:#00ca4e}
+.mac{display:flex;gap:6px}.brandline{font-size:11px;font-weight:700;color:#3b3c35;letter-spacing:.01em}.mac i{width:10px;height:10px;border-radius:50%;background:#ff605c}.mac i:nth-child(2){background:#ffbd44}.mac i:nth-child(3){background:#00ca4e}
 .top .right{margin-left:auto;display:flex;gap:16px;align-items:center}
 .replay{border:1px solid #deded7;background:#fff;border-radius:7px;padding:5px 9px;color:#5f6058;cursor:pointer;transition:.2s}
 .replay:hover{background:#f0f0eb;transform:translateY(-1px)}
@@ -69,7 +69,7 @@ button,input{font:inherit}
 .composer input::placeholder{color:#a0a197}
 .cbot{display:flex;align-items:center;gap:8px;font-size:9px;color:#8b8c82}
 .plus{width:23px;height:23px;border:1px solid #deded8;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#77786f}
-.perm{border:1px solid #e2e2dc;border-radius:5px;padding:4px 6px}.model{margin-left:auto;color:#5e5f57;max-width:230px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.model{margin-left:auto;color:#5e5f57;max-width:230px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .send{width:28px;height:28px;border:0;border-radius:50%;background:#3d5cf5;color:#fff;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center}
 .send:hover{transform:scale(1.06);background:#2f4ee6}
 .statusline{height:22px;flex:none;border-top:1px solid #ecece6;display:flex;align-items:center;justify-content:center;gap:14px;font-size:8px;color:#9a9b91;background:#fbfbf8}
@@ -142,10 +142,10 @@ html[data-theme="dark"]{background:#111}
 </head>
 <body>
 <div class="app" id="app">
- <div class="top"><div class="mac"><i></i><i></i><i></i></div><span id="breadcrumb">应用 / 工作区 / nao</span><div class="right"><span id="clock">21:04</span><span id="themeBtn" onclick="toggleTheme()" title="切换主题" style="cursor:pointer">☾</span><span onclick="openSetup()" title="后端设置" style="cursor:pointer">⚙</span><span>◐</span><span>⌕</span><span>☰</span></div></div>
+ <div class="top"><span id="breadcrumb" class="brandline">Hoshinoumi · nao</span><div class="right"><span id="clock">21:04</span><span id="themeBtn" onclick="toggleTheme()" title="切换主题" style="cursor:pointer">☾</span><span onclick="closeOverlay()" title="关闭（Esc）" style="cursor:pointer;font-size:18px;padding:0 4px">×</span><span onclick="openSetup()" title="后端设置" style="cursor:pointer">⚙</span><span>◐</span><span>⌕</span><span>☰</span></div></div>
  <div class="body">
   <aside class="side">
-   <div class="logo">deepseek <b>HARNESS</b></div>
+   <div class="logo">Hoshinoumi <b>nao</b></div>
    <div class="new" onclick="showNew()">＋ 新会话</div>
    <div class="nav">
     <div class="item" onclick="showHome()">⌂ 主页</div>
@@ -159,19 +159,15 @@ html[data-theme="dark"]{background:#111}
     <div class="item" onclick="showScheduled()">◷ 定时任务</div>
     <div class="item" onclick="showLogs()">▥ 运行日志</div>
    </div>
-   <div class="foot"><div class="ava">奈</div><div>友利奈绪<br><span style="color:#a7a89e">v35.2.12 · 测试版</span></div></div>
+   <div class="foot"><div class="ava">奈</div><div>友利奈绪<br><span style="color:#a7a89e">v35.2.17 · 测试版</span></div></div>
   </aside>
   <main class="main">
    <div class="mhead"><div class="mtitle" id="htitle">nao</div><div class="mode" id="hmode">◈ 工作区 · 本机后端</div><div class="mright"><span class="dot off" id="hdot"></span><span id="hstatus">未配置</span><span>⟳</span><span>⋯</span></div></div>
    <div class="tabs" id="tabs"><div class="tab on" onclick="toast('对话')">对话</div><div class="tab" onclick="toast('轨迹（暂未开放）')">轨迹</div><div class="tab" onclick="toast('更多')">⋯</div></div>
    <div class="page on" id="pageChat">
-    <div class="chat" id="chat">
-     <div class="banner" id="banner">● 已自动加载历史对话 · 1,284 条 · 最后一条 21:03<div class="bar"><i id="barfill"></i></div></div>
-     <div class="load" id="load"><span>↑ 加载更早的 20 条</span></div>
-     <div class="day" id="day1">昨天 21:01</div>
-    </div>
-    <div class="composer"><input id="input" placeholder="发消息或创建任务，/ 调用指令，@ 文件或对话" onkeydown="if(event.key==='Enter')sendMsg()"><div class="cbot"><div class="plus">＋</div><div class="perm">⌘ 完全权限 ⌄</div><div class="model">nao ⌄</div><button class="send" onclick="sendMsg()">↑</button></div></div>
-    <div class="statusline"><span>⌁ 本机后端 · 127.0.0.1:27004</span><span>▤ 历史 1,284 条 · 自动同步</span><span>◔ 57%</span></div>
+    <div class="chat" id="chat"></div>
+    <div class="composer"><input id="input" placeholder="发消息或创建任务，/ 调用指令，@ 文件或对话" onkeydown="if(event.key==='Enter')sendMsg()"><div class="cbot"><div class="plus">＋</div><div class="model">nao ⌄</div><button class="send" onclick="sendMsg()">↑</button></div></div>
+    <div class="statusline"><span id="backendLine">⌁ 后端未配置</span><span id="historyLine">▤ 历史 —</span><span>nao</span></div>
    </div>
    <div class="page" id="pageCmd">
     <div class="cmdpage"><div class="crumb">自动化任务 / 命令</div><div class="ch1">命令 <span class="ok">● 命令目录</span></div><div class="cdesc">全量 51 个命令 · 按功能分组 · manifest v35.2.12 · 后端地址在设置中配置</div>
@@ -225,14 +221,6 @@ html[data-theme="dark"]{background:#111}
  </div></div>
 <div id="toast" style="position:fixed;left:50%;bottom:24px;transform:translate(-50%,12px);background:#22231f;color:#fff;font-size:11px;padding:8px 13px;border-radius:8px;opacity:0;pointer-events:none;transition:.25s;z-index:20"></div>
 <script>
-const history = [
- {who:'bot', text:'你回来啦。今天外面有点冷，先喝点热的吧。', meta:'20:58 · 已读'},
- {who:'me', text:'刚到家，方案终于过了。', meta:'21:00 · 已读'},
- {who:'bot', text:'那很好啊。要不要记进“今天值得高兴的事”？', meta:'21:01 · 记忆已更新'},
- {who:'bot', text:'本月结余 ¥3,300，旅行目标 60% 了。', meta:'21:03 · 仅主人私聊'}
-];
-let timers=[];
-function clearTimers(){timers.forEach(clearTimeout);timers=[]}
 function appendMsg(m){
  const chat=document.getElementById('chat');
  const el=document.createElement('div');el.className='msg '+(m.who==='me'?'me':'');
@@ -282,17 +270,6 @@ async function runCmd(){
  }catch(e){r.style.opacity=1;r.innerHTML='<b>!'+selectedCmd+'</b> · 失败<br>'+e.message;}
 }
 
-function replay(){
- clearTimers();document.getElementById('chat').innerHTML='<div class="banner" id="banner">● 已自动加载历史对话 · 1,284 条 · 最后一条 21:03<div class="bar"><i id="barfill"></i></div></div><div class="load" id="load"><span>↑ 加载更早的 20 条</span></div><div class="day" id="day1">昨天 21:01</div>';
- document.getElementById('input').value='';showChat();
- timers.push(setTimeout(()=>{document.getElementById('banner').classList.add('show');document.getElementById('barfill').style.width='100%'},250));
- timers.push(setTimeout(()=>document.getElementById('load').classList.add('show'),650));
- history.forEach((m,i)=>timers.push(setTimeout(()=>appendMsg(m),900+i*520)));
- timers.push(setTimeout(()=>typing(true),3100));
- timers.push(setTimeout(()=>{typing(false);appendMsg({who:'me',text:'早。今天有什么安排？',meta:'09:12 · 已读'});},3700));
- timers.push(setTimeout(()=>typing(true),4100));
- timers.push(setTimeout(()=>{typing(false);appendMsg({who:'bot',text:'上午看书，下午把房间收拾一下。你忙你的，我在。',meta:'09:13 · 情境已同步'});},4700));
-}
 async function sendMsg(){
  const inp=document.getElementById('input');const text=inp.value.trim();if(!text)return;
  appendMsg({who:'me',text,meta:'现在 · 已发送本机后端'});inp.value='';typing(true);
@@ -310,20 +287,22 @@ function reply(text){
  return '嗯，我在听。你继续说。';
 }
 let backendReady=false;
+function closeOverlay(){try{window.parent.postMessage({type:'hoshinoumi:close'},'*')}catch{}}
 function toggleTheme(){const root=document.documentElement;const dark=root.getAttribute('data-theme')==='dark';root.setAttribute('data-theme',dark?'light':'dark');document.getElementById('themeBtn').textContent=dark?'☾':'☀';localStorage.setItem('hoshinoumi_theme',dark?'light':'dark');}
 function initTheme(){const saved=localStorage.getItem('hoshinoumi_theme');if(saved==='dark'){document.documentElement.setAttribute('data-theme','dark');document.getElementById('themeBtn').textContent='☀';}}
+function setBackendAddress(url){const el=document.getElementById('backendLine');if(el)el.textContent='⌁ 后端 · '+(url||'未配置');}
 function setBackendStatus(ready){backendReady=!!ready;const t=document.getElementById('hstatus');const d=document.getElementById('hdot');if(t)t.textContent=ready?'已连接':'未配置';if(d)d.classList.toggle('off',!ready);}
 function hideAll(){document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));document.querySelectorAll('.nav .item').forEach(x=>x.classList.remove('on'));document.getElementById('tabs').style.display='none';}
 function setHead(title,mode,status){document.getElementById('htitle').textContent=title;document.getElementById('hmode').textContent=mode;document.getElementById('hstatus').textContent=status;}
-function showChat(){hideAll();document.getElementById('app').classList.remove('cmd-mode');document.getElementById('breadcrumb').textContent='应用 / 工作区 / nao';document.getElementById('pageChat').classList.add('on');setHead('nao','◈ 工作区 · 私聊','');setBackendStatus(backendReady);document.getElementById('tabs').style.display='flex';}
-function showNew(){hideAll();document.getElementById('breadcrumb').textContent='应用 / 工作区 / nao / 新会话';document.getElementById('pageModule').classList.add('on');document.getElementById('moduleBody').innerHTML='<div class="crumb">工作区 / nao / 新会话</div><div class="ch1">新会话</div><div class="cdesc">和 nao 开始新对话，历史不会丢。</div><div class="mgrid" style="margin-top:12px"><div class="mcard"><h3>你可以这样开始</h3><div class="mline">“今天有点累”<span class="r">情绪</span></div><div class="mline">“午饭 35”<span class="r">记账</span></div><div class="mline">“这周有什么安排”<span class="r">日程</span></div></div><div class="mcard"><h3>上下文</h3><div class="mline">人设<span class="r">友利奈绪</span></div><div class="mline">记忆<span class="r">1,284 条</span></div><div class="mline">后端<span class="r">见设置</span></div></div></div>';setHead('新会话','◈ 工作区 · 私聊','');setBackendStatus(backendReady);}
+function showChat(){hideAll();document.getElementById('app').classList.remove('cmd-mode');document.getElementById('breadcrumb').textContent='Hoshinoumi · nao';document.getElementById('pageChat').classList.add('on');setHead('nao','◈ 工作区 · 私聊','');setBackendStatus(backendReady);document.getElementById('tabs').style.display='flex';}
+function showNew(){hideAll();document.getElementById('breadcrumb').textContent='Hoshinoumi · nao / 新会话';document.getElementById('pageModule').classList.add('on');document.getElementById('moduleBody').innerHTML='<div class="crumb">工作区 / nao / 新会话</div><div class="ch1">新会话</div><div class="cdesc">和 nao 开始新对话，历史不会丢。</div><div class="mgrid" style="margin-top:12px"><div class="mcard"><h3>你可以这样开始</h3><div class="mline">“今天有点累”<span class="r">情绪</span></div><div class="mline">“午饭 35”<span class="r">记账</span></div><div class="mline">“这周有什么安排”<span class="r">日程</span></div></div><div class="mcard"><h3>上下文</h3><div class="mline">人设<span class="r">见人设页</span></div><div class="mline">记忆<span class="r">见记忆页</span></div><div class="mline">后端<span class="r">见设置</span></div></div></div>';setHead('新会话','◈ 工作区 · 私聊','');setBackendStatus(backendReady);}
 function showCmd(tab){hideAll();document.getElementById('breadcrumb').textContent='应用 / 自动化任务 / 命令';document.getElementById('pageCmd').classList.add('on');setHead('命令','自动化任务 / Hoshinoumi','只读');renderCmdGroups();}
 async function showScheduled(){
   hideAll(); const title='定时任务';
   if(!backendReady){moduleEmpty(title,'后端未连接，暂时没有任务数据。');return}
   try{
     const j=await jsonApi('/api/hoshinoumi/cron');
-    const rows=Array.isArray(j.data)?j.data:[];
+    const rows=Array.isArray(j.data)?j.data:[];const hl0=document.getElementById('historyLine');if(hl0&&!rows.length)hl0.textContent='▤ 历史 0 条';
     renderModule(title,'来自后端 /internal/cron 的真实任务。',
       [[String(rows.length),'任务'],[String(rows.filter(x=>x.enabled).length),'启用'],['实时','来源'],['—','下次执行']],
       rows.length?rows.slice(0,8).map(x=>['#'+String(x.id||'—'),[String(x.content||'—'),'时间 · '+String(x.at_time||x.rule||x.once_at||'—'),'状态 · '+(x.enabled?'启用':'暂停')]]):[['暂无任务',['后端没有返回定时任务']]]);
@@ -340,7 +319,7 @@ async function showLogs(){
       rows.length?[['最近日志',rows.slice(0,12).map(x=>String(x))]]:[['暂无日志',['后端没有返回日志']]]);
   }catch(e){moduleEmpty(title,'读取失败：'+e.message)}
 }
-function showHome(){hideAll();document.querySelectorAll('.ocard .om').forEach(e=>{e.innerHTML=backendReady?'读取中…':'未连接'});loadHomeStats();document.getElementById('breadcrumb').textContent='应用 / 工作区 / nao / 主页';document.getElementById('pageOverview').classList.add('on');setHead('主页','工作区 / nao','9 个功能模块');}
+function showHome(){hideAll();document.querySelectorAll('.ocard .om').forEach(e=>{e.innerHTML=backendReady?'读取中…':'未连接'});loadHomeStats();document.getElementById('breadcrumb').textContent='Hoshinoumi · nao / 主页';document.getElementById('pageOverview').classList.add('on');setHead('主页','工作区 / nao','9 个功能模块');}
 function showOverview(){showHome();}
 const MODULES={
  memory:{t:'记忆',d:'记忆本、画像、关系、事件和关键词。',stats:[['1,284','记忆'],['328','事件'],['12','关系'],['46','关键词']],cards:[['用户画像',['偏好 · 晚上聊天','称呼 · 你','边界 · 财务仅私聊']],['关系',['奈绪 · 恋人','信任 86','最近互动 · 今天']],['记忆本',['昨天方案通过','旅行目标 60%','担心过不了']],['关键词',['旅行','方案','猫','读书']]]},
@@ -357,11 +336,11 @@ async function loadHomeStats() {
       jsonApi('/api/hoshinoumi/status').catch(() => null),
       jsonApi('/api/hoshinoumi/memory').catch(() => null),
       jsonApi('/api/hoshinoumi/cron').catch(() => null),
-      jsonApi('/api/hoshinoumi/logs?limit=1').catch(() => null),
+      jsonApi('/api/hoshinoumi/logs?limit=100').catch(() => null),
     ]);
     const counts = {
       '记忆': mem ? (mem.targets || []).reduce((n, t) => n + Number(t.count || 0), 0) : '—',
-      '信息': st ? (st.stats?.memories ?? '—') : '—',
+      '信息': st ? (st.status || '运行中') : '—',
       '存钱': '未接入',
       '人设': '未接入',
       '设置': '已配置',
@@ -467,23 +446,23 @@ async function saveBackend(){
  if(!token){st.className='mstatus err';st.textContent='请填写访问 token';return;}
  if(!target){st.className='mstatus err';st.textContent='请填写主人 QQ';return;}
  st.className='mstatus';st.textContent='正在保存…';
- try{const r=await fetch('/api/hoshinoumi/config',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({base_url:url,token,target_id:target})});const j=await r.json();if(!r.ok)throw new Error(j.message||('HTTP '+r.status));localStorage.setItem('hoshinoumi_target',document.getElementById('targetInput').value||'owner');setBackendStatus(false);st.className='mstatus ok';st.textContent='已保存，未连接；启动后端后点测试连接';setTimeout(()=>{closeSetup();toast('配置已保存 · 等待连接');},700);}catch(e){st.className='mstatus err';st.textContent='保存失败：'+e.message;}
+ try{const r=await fetch('/api/hoshinoumi/config',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({base_url:url,token,target_id:target})});const j=await r.json();if(!r.ok)throw new Error(j.message||('HTTP '+r.status));localStorage.setItem('hoshinoumi_target',target);setBackendAddress(url);st.className='mstatus';st.textContent='已保存，正在测试连接…';try{const tr=await fetch('/api/hoshinoumi/test',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({base_url:url,token,target_id:target})});const tj=await tr.json();if(tr.ok&&tj.ok){setBackendStatus(true);st.className='mstatus ok';st.textContent='连接成功 · '+(tj.latency_ms||0)+'ms';setTimeout(()=>{closeSetup();toast('后端已连接');},500);}else{setBackendStatus(false);st.className='mstatus err';st.textContent='配置已保存，但连接失败：'+(tj.message||'请检查后端');}}catch(e){setBackendStatus(false);st.className='mstatus err';st.textContent='配置已保存，但连接失败：'+e.message;}}catch(e){st.className='mstatus err';st.textContent='保存失败：'+e.message;}
 }
 async function loadHistory(){
  try{
   const target=localStorage.getItem('hoshinoumi_target')||'';
   const r=await fetch('/api/hoshinoumi/history?limit=30'+(target?'&target_id='+encodeURIComponent(target):''));
-  if(!r.ok)return;const j=await r.json();const rows=Array.isArray(j.data)?j.data:[];
-  if(!rows.length)return;
+  if(!r.ok)return;const j=await r.json();const rows=Array.isArray(j.data)?j.data:[];const hl0=document.getElementById('historyLine');if(hl0&&!rows.length)hl0.textContent='▤ 历史 0 条';
+  const hl=document.getElementById('historyLine');if(hl)hl.textContent='▤ 历史 '+rows.length+' 条 · 已加载';if(!rows.length)return;
   const chat=document.getElementById('chat');
   chat.innerHTML='<div class="banner show">● 已从本机后端加载历史 · '+rows.length+' 条</div><div class="load show"><span>↑ 更早的消息</span></div>';
   rows.forEach(x=>appendMsg({who:x.role==='user'?'me':'bot',text:String(x.content||''),meta:String(x.created_at||'').slice(11,16)||''}));
  }catch{}
 }
-async function loadBackendConfig(){try{const r=await fetch('/api/hoshinoumi/config');const j=await r.json();if(j.target_id)localStorage.setItem('hoshinoumi_target',j.target_id);if(!j.configured||!j.hasToken){setBackendStatus(false);setTimeout(()=>openSetup(),500);return;}try{const tr=await fetch('/api/hoshinoumi/test',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({base_url:j.base_url,token:'',target_id:j.target_id})});const tj=await tr.json();if(tr.ok&&tj.ok){setBackendStatus(true);setTimeout(loadHistory,900);}else{setBackendStatus(false);toast('后端连接失败，请检查配置');}}catch{setBackendStatus(false);toast('后端连接失败，请检查配置');}}catch{setBackendStatus(false);setTimeout(()=>openSetup(),500);}}
+async function loadBackendConfig(){try{const r=await fetch('/api/hoshinoumi/config');const j=await r.json();if(j.target_id)localStorage.setItem('hoshinoumi_target',j.target_id);setBackendAddress(j.base_url||'');if(!j.configured||!j.hasToken){setBackendStatus(false);setTimeout(()=>openSetup(),500);return;}try{const tr=await fetch('/api/hoshinoumi/test',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({base_url:j.base_url,token:'',target_id:j.target_id})});const tj=await tr.json();if(tr.ok&&tj.ok){setBackendStatus(true);setTimeout(loadHistory,900);}else{setBackendStatus(false);toast('后端连接失败，请检查配置');}}catch{setBackendStatus(false);toast('后端连接失败，请检查配置');}}catch{setBackendStatus(false);setTimeout(()=>openSetup(),500);}}
 function checkSetup(force){if(force||!localStorage.getItem(GW_KEY))setTimeout(()=>openSetup(),500);}
 
-initTheme();clock();setInterval(clock,30000);loadBackendConfig();
+document.addEventListener('keydown',(e)=>{if(e.key==='Escape')closeOverlay()});initTheme();clock();setInterval(clock,30000);loadBackendConfig();
 const h=location.hash.slice(1);
 if(h==='cmd')setTimeout(()=>showCmd('tools'),400);
 if(h==='overview')setTimeout(()=>showOverview(),400);
