@@ -20,6 +20,7 @@ from .routes_persona import handle_persona, handle_export as handle_persona_expo
 from .routes_savings import handle_savings, handle_savings_import, handle_savings_add, handle_savings_events
 from .routes_weekly_plan import handle_weekly_get, handle_weekly_put, handle_weekly_import
 from .routes_balance import handle_balance
+from .routes_relation import handle_relation
 from .routes_plan import handle_get as handle_plan_get, handle_put as handle_plan_put, handle_import as handle_plan_import, handle_export as handle_plan_export
 from .routes_presence import handle_get as handle_presence_get, handle_post as handle_presence_post, handle_delete as handle_presence_delete
 from .routes_tools import handle_list as handle_tools_list, handle_call as handle_tool_call
@@ -335,6 +336,7 @@ async def start_api_server():
     app.router.add_post("/api/savings/entries", handle_savings_add)
     app.router.add_get("/api/savings/events", handle_savings_events)
     app.router.add_get("/api/balance", handle_balance)
+    app.router.add_get("/api/relation", handle_relation)
     app.router.add_get("/api/weekly-plan", handle_weekly_get)
     app.router.add_post("/api/weekly-plan", handle_weekly_put)
     app.router.add_post("/api/weekly-plan/import", handle_weekly_import)

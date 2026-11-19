@@ -24,7 +24,7 @@ from datetime import datetime, timedelta
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
-VERSION = "35.2.24.2"
+VERSION = "35.2.25.0"
 SCHEMA = 35
 OWNER_QQ = "822891053"
 
@@ -216,6 +216,14 @@ class Handler(BaseHTTPRequestHandler):
             return
         if path == "/api/balance":
             self._json(200, {"ok": True, "is_available": True, "balance_infos": [{"currency": "CNY", "total_balance": "42.00", "granted_balance": "2.00", "topped_up_balance": "40.00"}], "fetched_at": _now(), "mock": True})
+            return
+        if path == "/api/relation":
+            tid = (q.get("target_id") or [OWNER_QQ])[0]
+            if tid == OWNER_QQ:
+                aff, tier, desc = 0.62, "熟", "算是熟人：可以开玩笑，但别太热络"
+            else:
+                aff, tier, desc = 0.18, "认识", "只是认识：礼貌、有距离，不主动交底"
+            self._json(200, {"ok": True, "target_id": tid, "affinity": aff, "tier": tier, "description": desc, "events": [{"delta": 0.02 if tid == OWNER_QQ else -0.01, "reason": "聊天", "severity": "minor", "created_at": "2026-11-19 12:00:00"}], "mock": True})
             return
         if path == "/api/weekly-plan":
             week = int((q.get("week") or ["1"])[0])

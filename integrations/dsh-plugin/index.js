@@ -86,7 +86,7 @@ async function backendFetch(cfg, path, init = {}) {
 
 async function handleApi(req, res, path) {
   if (path === '/api/hoshinoumi/health' && req.method === 'GET') {
-    return sendJson(res, 200, { ok: true, version: '35.2.24.11', config: CONFIG_FILE })
+    return sendJson(res, 200, { ok: true, version: '35.2.25.0', config: CONFIG_FILE })
   }
 
   if (path === '/api/hoshinoumi/ui' && req.method === 'GET') {
@@ -152,6 +152,11 @@ async function handleApi(req, res, path) {
   }
 
   if (path === '/api/hoshinoumi/balance' && req.method === 'GET') return proxyGet('/api/balance')
+  if (path === '/api/hoshinoumi/relation' && req.method === 'GET') {
+    const u = new URL(req.url || '/', 'http://127.0.0.1')
+    const tid = u.searchParams.get('target_id') || ''
+    return proxyGet('/api/relation' + (tid ? '?target_id=' + encodeURIComponent(tid) : ''))
+  }
   if (path === '/api/hoshinoumi/savings' && req.method === 'GET') return proxyGet('/api/savings')
   if (path === '/api/hoshinoumi/savings/events' && req.method === 'GET') return proxyGet('/api/savings/events')
   if (path === '/api/hoshinoumi/savings/entries' && req.method === 'POST') {

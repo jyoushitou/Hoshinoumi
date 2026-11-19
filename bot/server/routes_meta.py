@@ -163,6 +163,7 @@ async def handle_get_token(request):
             {"path": "/api/savings/entries", "method": "POST", "auth": True},
             {"path": "/api/savings/events", "method": "GET", "auth": True},
             {"path": "/api/balance", "method": "GET", "auth": True},
+            {"path": "/api/relation", "method": "GET", "auth": True},
             {"path": "/api/savings/import", "method": "POST", "auth": True},
             {"path": "/api/weekly-plan", "method": "GET", "auth": True},
             {"path": "/api/weekly-plan", "method": "POST", "auth": True},

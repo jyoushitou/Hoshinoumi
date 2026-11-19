@@ -151,6 +151,7 @@ html[data-theme="dark"]{background:#111}
     <div class="item" onclick="showHome()">⌂ 主页</div>
     <div class="item" id="wsNao" onclick="showChat()">◌ nao（聊天）</div>
     <div class="item" onclick="showModule('memory')">◈ 记忆</div>
+        <div class="item" onclick="showRelation()">♡ 关系</div>
     <div class="item" onclick="showModule('savings')">¥ 存钱</div>
     <div class="item" onclick="showWeekly()">▦ 周计划表</div>
         <div class="item" onclick="showModule('info')">▤ 信息</div>
@@ -160,7 +161,7 @@ html[data-theme="dark"]{background:#111}
     <div class="item" onclick="showScheduled()">◷ 定时任务</div>
     <div class="item" onclick="showLogs()">▥ 运行日志</div>
    </div>
-   <div class="foot"><div class="ava">奈</div><div>友利奈绪<br><span style="color:#a7a89e">v35.2.24.11 · 测试版</span></div></div>
+   <div class="foot"><div class="ava">奈</div><div>友利奈绪<br><span style="color:#a7a89e">v35.2.25.0 · 测试版</span></div></div>
   </aside>
   <main class="main">
    <div class="mhead"><div class="mtitle" id="htitle">nao</div><div class="mode" id="hmode">◈ 工作区 · 本机后端</div><div class="mright"><span class="dot off" id="hdot"></span><span id="hstatus">未配置</span><span>⟳</span><span>⋯</span></div></div>
@@ -171,7 +172,7 @@ html[data-theme="dark"]{background:#111}
     <div class="statusline"><span id="backendLine">⌁ 后端未配置</span><span id="historyLine">▤ 历史 —</span><span>nao</span></div>
    </div>
    <div class="page" id="pageCmd">
-    <div class="cmdpage"><div class="crumb">自动化任务 / 命令</div><div class="ch1">命令 <span class="ok">● 命令目录</span></div><div class="cdesc">全量 51 个命令 · 按功能分组 · manifest v35.2.24.11 · 后端地址在设置中配置</div>
+    <div class="cmdpage"><div class="crumb">自动化任务 / 命令</div><div class="ch1">命令 <span class="ok">● 命令目录</span></div><div class="cdesc">全量 51 个命令 · 按功能分组 · manifest v35.2.25.0 · 后端地址在设置中配置</div>
      <div class="cmdsearch">⌕ <input id="cmdSearch" placeholder="搜索命令 / 参数" oninput="renderCmdGroups()"><span id="cmdCount">全部 51 个 · 9 个分类</span></div>
      <div class="cmdwrap"><div class="groups" id="cmdGroups"></div>
       <div class="card" id="cmdDetail"><h3>命令详情</h3><div class="dsel" id="dsel">!status</div><div class="ddesc" id="ddesc">查看运行状态、配置、API、记忆、定时和连接信息。</div>
@@ -554,6 +555,37 @@ async function importWeekly(){
     if(msg)msg.textContent=`已导入第 ${week} 周 ${j2.count} 条`;
     await loadWeekly(week);
   }catch(e){if(msg)msg.textContent='导入失败：'+e.message;}
+}
+async function showRelation(target){
+  hideAll();document.getElementById('pageModule').classList.add('on');
+  document.getElementById('breadcrumb').textContent='Hoshinoumi · nao / 关系';
+  setHead('关系','♡ 工作区 · 关系','');
+  if(!backendReady){moduleEmpty('关系','后端未连接，暂时没有数据。');return;}
+  const root=document.getElementById('moduleBody');
+  let targets=[];
+  try{const mem=await jsonApi('/api/hoshinoumi/memory');targets=Array.isArray(mem.targets)?mem.targets:[];}catch{}
+  const saved=target||localStorage.getItem('hoshinoumi_relation_target')||'';
+  const selected=targets.some(x=>String(x.target_id)===String(saved))?String(saved):(targets[0]?String(targets[0].target_id):'');
+  const opts='<option value="">主人</option>'+targets.map(x=>'<option value="'+esc(String(x.target_id))+'"'+(String(x.target_id)===selected?' selected':'')+'>'+esc(String(x.target_id))+' · '+Number(x.count||0)+' 条</option>').join('');
+  root.innerHTML='<div class="crumb">工作区 / 关系</div><div class="ch1">关系</div><div class="cdesc">选择对应用户，查看该用户和机器人的真实亲密度、档位与最近变化。</div>'+
+    '<div class="mcard" style="margin-top:10px"><div class="mline">对象 <select id="relTarget" style="margin-left:auto;min-width:220px;height:34px" onchange="loadRelation(this.value)">'+opts+'</select></div></div>'+
+    '<div id="relBody" style="margin-top:10px"><div class="mline">加载中…</div></div>';
+  await loadRelation(selected);
+}
+async function loadRelation(tid){
+  const body=document.getElementById('relBody');if(!body)return;
+  localStorage.setItem('hoshinoumi_relation_target',tid||'');
+  body.innerHTML='<div class="mline">加载中…</div>';
+  try{
+    const j=await jsonApi('/api/hoshinoumi/relation'+(tid?('?target_id='+encodeURIComponent(tid)):''));
+    const events=Array.isArray(j.events)?j.events:[];
+    const aff=Number(j.affinity||0);
+    const pct=Math.max(0,Math.min(100,Math.round((aff+1)*50)));
+    const color=aff>=0.7?'#2fa56b':aff>=0.45?'#5b8def':aff>=0?'#c9a227':'#c25b5b';
+    body.innerHTML='<div class="stats"><div class="stat"><div class="n" style="color:'+color+'">'+aff.toFixed(2)+'</div><div class="l">亲密度（-1 ~ 1）</div></div><div class="stat"><div class="n">'+esc(j.tier||'—')+'</div><div class="l">档位</div></div><div class="stat"><div class="n">'+esc(j.target_id||'—')+'</div><div class="l">对象</div></div><div class="stat"><div class="n">'+events.length+'</div><div class="l">最近变化</div></div></div>'+
+      '<div class="mcard"><h3>关系档位</h3><div class="mline">'+esc(j.description||'—')+'</div><div style="height:8px;background:#eef0f4;border-radius:99px;margin-top:10px;overflow:hidden"><i style="display:block;height:100%;width:'+pct+'%;background:'+color+'"></i></div><div class="mline" style="color:#9a9b91">'+pct+' / 100</div></div>'+
+      '<div class="mcard" style="margin-top:10px"><h3>最近变化</h3>'+(events.length?events.map(x=>'<div class="mline">'+(Number(x.delta)>=0?'+':'')+Number(x.delta||0).toFixed(3)+' · '+esc(x.reason||'')+'<span class="r">'+esc(String(x.created_at||''))+'</span></div>').join(''):'<div class="mline">还没有关系变化记录</div>')+'</div>';
+  }catch(e){body.innerHTML='<div class="mline" style="color:#b23">加载失败：'+esc(e.message)+'</div>';}
 }
 async function showModule(key) {
   const titles = { memory: '记忆', savings: '存钱', info: '信息', persona: '人设', settings: '设置' };
