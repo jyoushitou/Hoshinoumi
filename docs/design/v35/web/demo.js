@@ -142,6 +142,18 @@
     .entry{display:flex;align-items:center;gap:8px;border-bottom:1px solid #eef3fb;padding:5px 2px;font-size:10px;color:#4b5f78}
     .entry:last-child{border-bottom:0}.entry .amt{margin-left:auto;font-weight:600}.entry .amt.neg{color:#c0264a}.entry .amt.pos{color:#1f9d6b}
     .entry .tag{font-size:8px;color:#8a9bb0;border:1px solid #e3ebf7;border-radius:4px;padding:1px 4px}
+    .info-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:10px}
+    .info-stat{border:1px solid #e3ebf7;border-radius:11px;background:#fff;padding:10px 12px}
+    .info-stat .k{font-size:9px;color:#8a9bb0;margin-bottom:2px}.info-stat .v{font-size:18px;font-weight:700;color:#17263b}
+    .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+    .info-panel{border:1px solid #e3ebf7;border-radius:11px;background:#fff;padding:11px 12px;transition:border-color .18s,transform .18s,box-shadow .18s}
+    .info-panel:hover{border-color:#bcd4f7;transform:translateY(-2px);box-shadow:0 8px 18px rgba(37,99,235,.06)}
+    .info-panel h3{display:flex;align-items:center;font-size:10.5px;margin:0 0 7px;color:#1e3a5f}
+    .info-panel h3 span{margin-left:auto;font-size:8.5px;color:#8a9bb0;font-weight:400}
+    .info-row{display:flex;justify-content:space-between;gap:10px;font-size:9.5px;color:#6b7c95;padding:3px 0;border-bottom:1px solid #f1f5fb}
+    .info-row:last-child{border-bottom:0}.info-row b{font-weight:500;color:#243b55;text-align:right}
+    .info-row .ok{color:#1f9d6b}.info-row .warn{color:#b45309}
+
     .week-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:9px}
     .week-toolbar label{font-size:9.5px;color:#6b7c95;display:flex;align-items:center;gap:5px}
     .week-toolbar input[type=number]{width:52px;border:1px solid #dbe8ff;border-radius:6px;background:#fff;color:#243b55;font:10px inherit;padding:4px 6px;outline:0}
@@ -337,6 +349,23 @@
   }));
 
   function showPage(name) {
+    if (name === 'info') {
+      pageView.innerHTML = '<div class="page-head"><div><h2>信息</h2><p>v35.5 Web 演示 · MOCK 数据 · 运行状态 / 数据库 / 计划 / 阅读</p></div><button class="back" id="backChat">← 返回聊天</button></div>' +
+        '<div class="info-stats"><div class="info-stat"><div class="k">版本</div><div class="v">v35.5</div></div><div class="info-stat"><div class="k">schema</div><div class="v">35</div></div><div class="info-stat"><div class="k">数据表</div><div class="v">42</div></div><div class="info-stat"><div class="k">命令</div><div class="v">51</div></div></div>' +
+        '<div class="info-grid">' +
+        '<div class="info-panel"><h3>运行 <span>已连接</span></h3><div class="info-row"><span>后端</span><b>127.0.0.1:27004</b></div><div class="info-row"><span>延迟</span><b class="ok">42ms</b></div><div class="info-row"><span>运行时长</span><b>6 天 4 小时</b></div><div class="info-row"><span>API 余额</span><b>¥126.40</b></div></div>' +
+        '<div class="info-panel"><h3>数据库 <span>schema 35</span></h3><div class="info-row"><span>引擎</span><b>MySQL 8</b></div><div class="info-row"><span>表数量</span><b>42</b></div><div class="info-row"><span>记忆 / 事件</span><b>4 / 7</b></div><div class="info-row"><span>日志</span><b>24 条</b></div></div>' +
+        '<div class="info-panel"><h3>日志 <span>最近 24h</span></h3><div class="info-row"><span>INFO</span><b>23 条</b></div><div class="info-row"><span>WARN</span><b class="warn">1 条</b></div><div class="info-row"><span>最新</span><b>09:13 chat len=18</b></div><div class="info-row"><span>失败</span><b class="warn">search_images timeout</b></div></div>' +
+        '<div class="info-panel"><h3>学习计划 <span>已读取</span></h3><div class="info-row"><span>当前</span><b>读书 · 《十日终焉》</b></div><div class="info-row"><span>进度</span><b>60%</b></div><div class="info-row"><span>本周</span><b>3 小时</b></div><div class="info-row"><span>下一项</span><b>复盘 · 周日</b></div></div>' +
+        '<div class="info-panel"><h3>阅读 <span>书架</span></h3><div class="info-row"><span>在读</span><b>《十日终焉》</b></div><div class="info-row"><span>进度</span><b>62%</b></div><div class="info-row"><span>本周</span><b>3h 20m</b></div><div class="info-row"><span>读完</span><b>12 本</b></div></div>' +
+        '<div class="info-panel"><h3>多端 <span>在线</span></h3><div class="info-row"><span>Web</span><b class="ok">当前</b></div><div class="info-row"><span>VS Code</span><b class="ok">已连接</b></div><div class="info-row"><span>DSH</span><b class="ok">已连接</b></div><div class="info-row"><span>网关</span><b>v26.4 · TCP</b></div></div>' +
+        '</div>';
+      [top, msgs, composer, searchBar].forEach(x => x.classList.add('chat-hide'));
+      pageView.classList.add('on');
+      document.querySelectorAll('.rnav').forEach(x => x.classList.toggle('on', x.dataset.page === name));
+      document.getElementById('backChat').addEventListener('click', () => showChat());
+      return;
+    }
     if (name === 'weekly') {
       const WD = ['周一','周二','周三','周四','周五','周六','周日'];
       const W = window.__weekly || (window.__weekly = {

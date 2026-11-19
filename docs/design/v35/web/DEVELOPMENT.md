@@ -101,6 +101,18 @@ v35.5 演示先给全部入口和命令页；完整功能页在 v35.7 实现。
 
 演示数据为 MOCK；最终走 `/api/savings`、`/api/savings/entries`、`/api/savings/import`。
 
+## 3.6 信息页
+
+```text
+版本 / schema / 表数量 / 命令数量
+运行：地址、延迟、运行时长、API 余额
+数据库：引擎、表数、记忆/事件、日志
+日志：最近 24h、WARN、失败
+学习计划 / 阅读 / 多端在线状态
+```
+
+演示数据为 MOCK；最终走 `/api/status`、`/api/logs`、`/api/plan`、`/api/balance`。
+
 ## 4. 次次版本
 
 | 版本 | 交付 | 验收 |
