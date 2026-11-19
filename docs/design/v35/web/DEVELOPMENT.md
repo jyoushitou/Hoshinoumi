@@ -96,7 +96,16 @@ GET /api/commands
 → name / group / help / owner / risk
 ```
 
-客户端只渲染接口返回；执行仍走 `POST /api/command`。演示里的 51 条是 MOCK，最终版删除硬编码。
+客户端只渲染接口返回；执行仍走 `POST /api/command`。
+
+命令页布局：
+
+```text
+上半：命令目录（分组/搜索/参数）
+下半：固定执行结果区
+```
+
+演示里的 51 条是 MOCK，最终版删除硬编码。
 
 ## 5. 接口
 

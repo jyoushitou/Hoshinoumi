@@ -84,6 +84,16 @@
     .cmd-chip{border:1px solid #e3ebf7;border-radius:6px;background:#f8fbff;color:#4b5f78;font-size:9px;padding:4px 7px;cursor:pointer;transition:background .16s,color .16s,border-color .16s,transform .16s}
     .cmd-chip:hover{background:#eef4ff;color:#2563eb;border-color:#bcd4f7;transform:translateY(-1px)}
     .cmd-chip.owner:after{content:' owner';color:#c0264a;font-size:8px}
+    .cmd-page{display:flex;flex-direction:column;height:100%;min-height:0}
+    .cmd-catalog{flex:1;min-height:0;overflow:auto;padding-right:2px}
+    .cmd-result{flex:none;height:40%;min-height:150px;border-top:1px solid #e3ebf7;margin-top:10px;padding-top:10px;display:flex;flex-direction:column}
+    .cmd-result-head{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:10px;color:#6b7c95}
+    .cmd-result-head b{color:#1e3a5f;font-size:10.5px;font-weight:600}
+    .cmd-result-head .st{margin-left:auto;color:#93a3b8;font-size:9.5px}
+    .cmd-output{flex:1;min-height:0;overflow:auto;border:1px solid #e3ebf7;border-radius:9px;background:#f8fbff;padding:9px 10px;color:#4b5f78;font:10px/1.6 "Cascadia Code","Consolas",monospace;white-space:pre-wrap}
+    .cmd-output .cmdline{color:#2563eb;margin-bottom:4px}
+    .cmd-chip.on{background:#dbeafe;color:#1d4ed8;border-color:#93b7fa}
+
 
   `;
   document.head.appendChild(css);
@@ -179,12 +189,31 @@
         '<div class="cmd-group"><h3>' + esc(g) + '<span>' + cmds.length + '</span></h3><div class="cmd-chips">' +
         cmds.map(c => '<button class="cmd-chip' + (/!(reload|set|exit|quit|clear|say|sayg|backup|plugin|adduser|gw|config|code|apikeys)/.test(c) ? ' owner' : '') + '">' + esc(c) + '</button>').join('') +
         '</div></div>').join('');
-      pageView.innerHTML = '<div class="page-head"><div><h2>命令</h2><p>51 个命令 · MOCK 目录 · v35.14 改为 /api/commands 读取</p></div><button class="back" id="backChat">← 返回聊天</button></div><div class="cmd-grid">' + groups + '</div>';
+      pageView.innerHTML = '<div class="cmd-page"><div class="cmd-catalog"><div class="page-head"><div><h2>命令</h2><p>51 个命令 · MOCK 目录 · v35.14 改为 /api/commands 读取</p></div><button class="back" id="backChat">← 返回聊天</button></div><div class="cmd-grid">' + groups + '</div></div><div class="cmd-result"><div class="cmd-result-head"><b>执行结果</b><span class="st" id="cmdState">选择上方命令运行</span></div><div class="cmd-output" id="cmdOutput">点击任意命令，结果显示在这里。\n\n提示：最终版通过 POST /api/command 执行。</div></div></div>';
       [top, msgs, composer].forEach(x => x.classList.add('chat-hide'));
       pageView.classList.add('on');
       document.querySelectorAll('.rnav').forEach(x => x.classList.toggle('on', x.dataset.page === name));
       document.getElementById('backChat').addEventListener('click', () => showChat());
-      pageView.querySelectorAll('.cmd-chip').forEach(c => c.addEventListener('click', () => toast(c.textContent.trim() + '：MOCK 命令目录')));
+      const RESULTS = {
+        '!ping': '🏓 Pong！奈绪在线~',
+        '!status': '运行中（MOCK）\n主人 QQ：822891053\n记忆：4 条\nschema：35',
+        '!help': '命令目录：51 个\n基础 / 记忆 / 媒体 / 日常 / 阅读 / 计划 / 插件 / 账号 / 多端',
+        '!memory': '822891053：3 条记忆\n10001：1 条记忆',
+        '!logs': '09:13 INFO chat len=18\n09:04 WARN search_images timeout',
+        '!persona': 'nao · 当前人设\n只读预览 · 仅 owner'
+      };
+      function runMock(cmd) {
+        const output = document.getElementById('cmdOutput');
+        const state = document.getElementById('cmdState');
+        if (!output) return;
+        pageView.querySelectorAll('.cmd-chip').forEach(x => x.classList.toggle('on', x.textContent.trim() === cmd));
+        state.textContent = '刚刚 · MOCK';
+        output.innerHTML = '<div class="cmdline">&gt; ' + esc(cmd) + '</div>' + esc(RESULTS[cmd] || ('已执行 ' + cmd + '（MOCK）'));
+      }
+      pageView.querySelectorAll('.cmd-chip').forEach(c => c.addEventListener('click', () => {
+        const cmd = c.textContent.replace(' owner', '').trim();
+        runMock(cmd);
+      }));
       return;
     }
     const rows = PAGES[name] || [];
