@@ -45,6 +45,20 @@
     settings: [['后端地址', 'http://127.0.0.1:27004'], ['连接状态', '已连接 · schema 35'], ['主人 QQ', '822891053'], ['视觉', '深色 · 动画默认关闭']],
     plugins: [['已安装', '0 个'], ['权限', '只读优先'], ['审批', '安装前确认'], ['状态', 'MOCK 演示']]
   };
+  const COMMAND_META = {
+    '!memory': { usage: '!memory <me|QQ号> [页码]', args: 'me / QQ号 / 页码', required: true },
+    '!memorybook': { usage: '!memorybook [页码]', args: '页码（可选）', required: false },
+    '!event': { usage: '!event <today|week|all>', args: 'today / week / all', required: true },
+    '!persona': { usage: '!persona <list|activate|import> [名字]', args: 'list / activate / import', sub: ['list', 'activate', 'import'], required: true },
+    '!backup': { usage: '!backup run', args: 'run', required: true },
+    '!update': { usage: '!update <status|latest|apply>', args: 'status / latest / apply', sub: ['status', 'latest', 'apply'], required: true },
+    '!config': { usage: '!config <get|set> [键] [值]', args: 'get / set / 键 / 值', sub: ['get', 'set'], required: true },
+    '!say': { usage: '!say <内容>', args: '文本内容', required: true },
+    '!sayg': { usage: '!sayg <群号> <内容>', args: '群号 / 内容', required: true },
+    '!adduser': { usage: '!adduser <QQ号>', args: 'QQ号', required: true },
+    '!route': { usage: '!route <status|reset>', args: 'status / reset', required: false }
+  };
+
   const COMMAND_GROUPS = {
     '基础': ['!help','!ping','!status','!version','!uptime','!meta','!usage','!log','!db','!stats','!history','!reload','!set','!exit','!quit'],
     '记忆': ['!memory','!memorybook','!event','!keywords','!clear','!profile','!growth','!relation'],
@@ -104,6 +118,14 @@
     .home-card h3{font-size:11px;margin:0 0 3px;color:#1e3a5f}
     .home-card p{font-size:9.5px;line-height:1.5;color:#6b7c95;margin:0}
     .home-card .st{font-size:9px;color:#1f9d6b;margin-top:7px}
+    .cmd-runbar{display:flex;align-items:center;gap:7px;margin:0 0 10px;border:1px solid #dbe8ff;border-radius:9px;background:#f8fbff;padding:6px 8px}
+    .cmd-runbar .prompt{color:#2563eb;font:11px "Cascadia Code",monospace}
+    .cmd-runbar input{flex:1;border:0;outline:0;background:transparent;color:#243b55;font:11px "Cascadia Code",monospace}
+    .cmd-runbar button{border:1px solid #dbe8ff;background:#fff;color:#2563eb;border-radius:6px;font-size:10px;padding:4px 9px;cursor:pointer;transition:background .16s}
+    .cmd-runbar button:hover{background:#eef4ff}
+    .cmd-hint{font-size:9.5px;color:#8a9bb0;margin:-4px 0 9px;min-height:14px}
+    .cmd-hint b{color:#4b5f78;font-weight:500}
+
 
     .chat-search{display:none;align-items:center;gap:7px;padding:7px 18px;border-bottom:1px solid #e3ebf7;background:#f8fbff;flex:none}
     .chat-search.on{display:flex}
@@ -294,7 +316,7 @@
         '<div class="cmd-group"><h3>' + esc(g) + '<span>' + cmds.length + '</span></h3><div class="cmd-chips">' +
         cmds.map(c => '<button class="cmd-chip' + (/!(reload|set|exit|quit|clear|say|sayg|backup|plugin|adduser|gw|config|code|apikeys)/.test(c) ? ' owner' : '') + '">' + esc(c) + '</button>').join('') +
         '</div></div>').join('');
-      pageView.innerHTML = '<div class="cmd-page"><div class="cmd-catalog"><div class="page-head"><div><h2>命令</h2><p>51 个命令 · MOCK 目录 · v35.14 改为 /api/commands 读取</p></div><button class="back" id="backChat">← 返回聊天</button></div><div class="cmd-grid">' + groups + '</div></div><div class="cmd-result"><div class="cmd-result-head"><b>执行结果</b><span class="st" id="cmdState">选择上方命令运行</span></div><div class="cmd-output" id="cmdOutput">点击任意命令，结果显示在这里。\n\n提示：最终版通过 POST /api/command 执行。</div></div></div>';
+      pageView.innerHTML = '<div class="cmd-page"><div class="cmd-catalog"><div class="page-head"><div><h2>命令</h2><p>51 个命令 · MOCK 目录 · v35.14 改为 /api/commands 读取</p></div><button class="back" id="backChat">← 返回聊天</button></div><div class="cmd-runbar"><span class="prompt">&gt;</span><input id="cmdInput" placeholder="输入命令，例如 !persona activate nao"><button id="cmdRun">执行</button></div><div class="cmd-hint" id="cmdHint">无参命令直接执行；带参命令先填参数；二级命令点上方命令后按提示输入。</div><div class="cmd-grid">' + groups + '</div></div><div class="cmd-result"><div class="cmd-result-head"><b>执行结果</b><span class="st" id="cmdState">选择上方命令运行</span></div><div class="cmd-output" id="cmdOutput">点击任意命令，结果显示在这里。\n\n提示：最终版通过 POST /api/command 执行。</div></div></div>';
       [top, msgs, composer, searchBar].forEach(x => x.classList.add('chat-hide'));
       pageView.classList.add('on');
       document.querySelectorAll('.rnav').forEach(x => x.classList.toggle('on', x.dataset.page === name));
@@ -307,18 +329,45 @@
         '!logs': '09:13 INFO chat len=18\n09:04 WARN search_images timeout',
         '!persona': 'nao · 当前人设\n只读预览 · 仅 owner'
       };
-      function runMock(cmd) {
+      function runCommand(raw) {
         const output = document.getElementById('cmdOutput');
         const state = document.getElementById('cmdState');
-        if (!output) return;
-        pageView.querySelectorAll('.cmd-chip').forEach(x => x.classList.toggle('on', x.textContent.trim() === cmd));
+        const hint = document.getElementById('cmdHint');
+        const input = document.getElementById('cmdInput');
+        if (!output || !input) return;
+        const value = String(raw || input.value || '').trim();
+        if (!value) { hint.textContent = '先输入命令'; return; }
+        const parts = value.split(/\s+/);
+        const base = parts[0];
+        const meta = COMMAND_META[base];
         state.textContent = '刚刚 · MOCK';
-        output.innerHTML = '<div class="cmdline">&gt; ' + esc(cmd) + '</div>' + esc(RESULTS[cmd] || ('已执行 ' + cmd + '（MOCK）'));
+        hint.innerHTML = meta ? '<b>用法</b> ' + esc(meta.usage) : '无参命令可以直接执行';
+        if (meta && meta.required && parts.length < 2) {
+          output.innerHTML = '<div class="cmdline">&gt; ' + esc(value) + '</div>需要参数：' + esc(meta.args) + '\n用法：' + esc(meta.usage);
+          state.textContent = '缺少参数';
+          return;
+        }
+        let result = RESULTS[base] || ('已执行 ' + value + '（MOCK）');
+        if (meta && meta.sub && parts[1]) result = '已执行 ' + value + '\n二级命令：' + parts[1] + '（MOCK）';
+        output.innerHTML = '<div class="cmdline">&gt; ' + esc(value) + '</div>' + esc(result);
+        pageView.querySelectorAll('.cmd-chip').forEach(x => x.classList.toggle('on', x.textContent.replace(' owner', '').trim() === base));
       }
       pageView.querySelectorAll('.cmd-chip').forEach(c => c.addEventListener('click', () => {
         const cmd = c.textContent.replace(' owner', '').trim();
-        runMock(cmd);
+        const input = document.getElementById('cmdInput');
+        const meta = COMMAND_META[cmd];
+        input.value = cmd + ' ';
+        if (meta && (meta.required || meta.sub)) {
+          document.getElementById('cmdHint').innerHTML = '<b>需要参数</b> ' + esc(meta.usage) + (meta.sub ? '<br>二级命令：' + esc(meta.sub.join(' / ')) : '');
+          input.focus();
+          document.getElementById('cmdOutput').innerHTML = '<div class="cmdline">&gt; ' + esc(cmd) + '</div>等待参数…';
+          document.getElementById('cmdState').textContent = '等待参数';
+        } else {
+          runCommand(cmd);
+        }
       }));
+      document.getElementById('cmdRun').addEventListener('click', () => runCommand(document.getElementById('cmdInput').value));
+      document.getElementById('cmdInput').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); runCommand(e.target.value); } });
       return;
     }
     const rows = PAGES[name] || [];
