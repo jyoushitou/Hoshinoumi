@@ -160,9 +160,9 @@ class SidebarProvider {
 
 function activate(context) {
   context.subscriptions.push(
-    vscode.commands.registerCommand('hoshinoumi.open', () => vscode.commands.executeCommand('hoshinoumi.scm.focus')),
-    vscode.commands.registerCommand('hoshinoumi.configure', () => vscode.commands.executeCommand('hoshinoumi.scm.focus')),
-    vscode.window.registerWebviewViewProvider('hoshinoumi.scm', new SidebarProvider(context)),
+    vscode.commands.registerCommand('hoshinoumi.open', () => vscode.commands.executeCommand('hoshinoumi.sidebar.focus')),
+    vscode.commands.registerCommand('hoshinoumi.configure', () => vscode.commands.executeCommand('hoshinoumi.sidebar.focus')),
+    vscode.window.registerWebviewViewProvider('hoshinoumi.sidebar', new SidebarProvider(context)),
   )
 }
 
