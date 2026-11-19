@@ -100,3 +100,27 @@ python3 scripts/nao_supervisor.py \
 ```
 
 ingress 不重启；新 TCP/WS 连接走新 worker，旧连接 drain 后退出。
+
+## 8. v33 → v35.4：必须冷重启
+
+这是 schema 变更 + 启动入口变更，不能只切 worker：
+
+```text
+schema 33 → 34 → 35（财务表）
+run.py → nao-run / nao-run.service
+```
+
+步骤：
+
+```text
+备份 DB / data / personas
+停 ingress、supervisor、worker、gateway
+更新代码 + pip install -r requirements.txt
+python3 scripts/migrate.py --apply
+python3 checks/env_check.py
+systemctl daemon-reload
+启动 nao-run.service
+验证 /readyz schema=35
+```
+
+登记见 [RESTART-LEDGER.md](RESTART-LEDGER.md)。v35.4 之后的普通业务版本可以恢复 worker 蓝绿热更。
