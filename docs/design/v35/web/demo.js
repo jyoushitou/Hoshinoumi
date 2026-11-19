@@ -93,6 +93,16 @@
     .cmd-output{flex:1;min-height:0;overflow:auto;border:1px solid #e3ebf7;border-radius:9px;background:#f8fbff;padding:9px 10px;color:#4b5f78;font:10px/1.6 "Cascadia Code","Consolas",monospace;white-space:pre-wrap}
     .cmd-output .cmdline{color:#2563eb;margin-bottom:4px}
     .cmd-chip.on{background:#dbeafe;color:#1d4ed8;border-color:#93b7fa}
+    .chat-search{display:none;align-items:center;gap:7px;padding:7px 18px;border-bottom:1px solid #e3ebf7;background:#f8fbff;flex:none}
+    .chat-search.on{display:flex}
+    .chat-search input{flex:1;border:1px solid #dbe8ff;border-radius:7px;background:#fff;color:#243b55;font:11px inherit;outline:0;padding:5px 8px}
+    .chat-search input:focus{border-color:#93b7fa;box-shadow:0 0 0 3px rgba(37,99,235,.08)}
+    .chat-search .count{font-size:9px;color:#8a9bb0;min-width:42px;text-align:right}
+    .chat-search button{border:1px solid #dbe8ff;background:#fff;color:#4b5f78;border-radius:6px;font-size:10px;padding:3px 7px;cursor:pointer}
+    .chat-search button:hover{background:#eef4ff;color:#2563eb}
+    .msg .bubble mark{background:#fde68a;color:#7a4b00;border-radius:2px;padding:0 1px}
+    .msg .bubble.search-hit{box-shadow:0 0 0 2px #93b7fa inset}
+
 
 
   `;
@@ -127,16 +137,73 @@
   }
 
   function showChat() {
-    [top, msgs, composer].forEach(x => x.classList.remove('chat-hide'));
+    [top, msgs, composer, searchBar].forEach(x => x.classList.remove('chat-hide'));
     pageView.classList.remove('on');
     document.querySelectorAll('.rnav').forEach(x => x.classList.toggle('on', x.dataset.page === 'chat'));
   }
+
+  // 聊天内搜索
+  const searchBtn = top.querySelector('.tbtn');
+  const searchBar = document.createElement('div');
+  searchBar.className = 'chat-search';
+  searchBar.innerHTML = '<span>⌕</span><input id="chatSearchInput" placeholder="搜索当前聊天"><span class="count" id="chatSearchCount"></span><button id="searchPrev" title="上一条">↑</button><button id="searchNext" title="下一条">↓</button><button id="searchClose" title="关闭">×</button>';
+  top.after(searchBar);
+  let hitEls = [], hitIndex = -1;
+  function clearSearchMarks() {
+    msgs.querySelectorAll('.msg .bubble').forEach(b => {
+      if (b.dataset.orig !== undefined) { b.textContent = b.dataset.orig; }
+      b.classList.remove('search-hit');
+    });
+    hitEls = []; hitIndex = -1;
+  }
+  function runSearch() {
+    clearSearchMarks();
+    const q = searchBar.querySelector('input').value.trim();
+    const count = searchBar.querySelector('.count');
+    if (!q) { count.textContent = ''; return; }
+    const lower = q.toLowerCase();
+    msgs.querySelectorAll('.msg .bubble').forEach(b => {
+      const text = b.dataset.orig !== undefined ? b.dataset.orig : b.textContent;
+      b.dataset.orig = text;
+      const i = text.toLowerCase().indexOf(lower);
+      if (i < 0) return;
+      b.innerHTML = esc(text.slice(0, i)) + '<mark>' + esc(text.slice(i, i + q.length)) + '</mark>' + esc(text.slice(i + q.length));
+      hitEls.push(b);
+    });
+    count.textContent = hitEls.length ? '1/' + hitEls.length : '0 条';
+    if (hitEls.length) { hitIndex = 0; focusHit(); }
+  }
+  function focusHit() {
+    hitEls.forEach(b => b.classList.remove('search-hit'));
+    if (hitIndex < 0 || !hitEls.length) return;
+    hitIndex = (hitIndex + hitEls.length) % hitEls.length;
+    const el = hitEls[hitIndex];
+    el.classList.add('search-hit');
+    el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    searchBar.querySelector('.count').textContent = (hitIndex + 1) + '/' + hitEls.length;
+  }
+  function openSearch(force) {
+    const on = force !== undefined ? force : !searchBar.classList.contains('on');
+    searchBar.classList.toggle('on', on);
+    if (on) { searchBar.querySelector('input').focus(); }
+    else { clearSearchMarks(); searchBar.querySelector('input').value = ''; searchBar.querySelector('.count').textContent = ''; }
+  }
+  searchBtn.addEventListener('click', () => openSearch());
+  searchBar.querySelector('input').addEventListener('input', runSearch);
+  searchBar.querySelector('input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); hitIndex++; focusHit(); }
+    if (e.key === 'Escape') { openSearch(false); }
+  });
+  searchBar.querySelector('#searchNext').addEventListener('click', () => { hitIndex++; focusHit(); });
+  searchBar.querySelector('#searchPrev').addEventListener('click', () => { hitIndex--; if (hitIndex < 0) hitIndex = hitEls.length - 1; focusHit(); });
+  searchBar.querySelector('#searchClose').addEventListener('click', () => openSearch(false));
 
   function renderChat(id) {
     const c = CHATS[id] || CHATS.nao;
     nameEl.textContent = c.name;
     subEl.innerHTML = esc(c.sub) + ' <span class="pill">在线</span>';
     msgs.innerHTML = '<div class="day"><b>今天</b> · 20:58</div>' + c.msgs.map(msgHtml).join('');
+    openSearch(false);
     document.querySelectorAll('.conv').forEach(x => x.classList.toggle('on', x.dataset.conv === id));
     showChat();
     msgs.scrollTop = msgs.scrollHeight;
@@ -190,7 +257,7 @@
         cmds.map(c => '<button class="cmd-chip' + (/!(reload|set|exit|quit|clear|say|sayg|backup|plugin|adduser|gw|config|code|apikeys)/.test(c) ? ' owner' : '') + '">' + esc(c) + '</button>').join('') +
         '</div></div>').join('');
       pageView.innerHTML = '<div class="cmd-page"><div class="cmd-catalog"><div class="page-head"><div><h2>命令</h2><p>51 个命令 · MOCK 目录 · v35.14 改为 /api/commands 读取</p></div><button class="back" id="backChat">← 返回聊天</button></div><div class="cmd-grid">' + groups + '</div></div><div class="cmd-result"><div class="cmd-result-head"><b>执行结果</b><span class="st" id="cmdState">选择上方命令运行</span></div><div class="cmd-output" id="cmdOutput">点击任意命令，结果显示在这里。\n\n提示：最终版通过 POST /api/command 执行。</div></div></div>';
-      [top, msgs, composer].forEach(x => x.classList.add('chat-hide'));
+      [top, msgs, composer, searchBar].forEach(x => x.classList.add('chat-hide'));
       pageView.classList.add('on');
       document.querySelectorAll('.rnav').forEach(x => x.classList.toggle('on', x.dataset.page === name));
       document.getElementById('backChat').addEventListener('click', () => showChat());
@@ -220,7 +287,7 @@
     pageView.innerHTML = '<div class="page-head"><div><h2>' + esc(TITLES[name] || name) +
       '</h2><p>v35.5 Web 演示 · MOCK 数据</p></div><button class="back" id="backChat">← 返回聊天</button></div>' +
       '<div class="pgrid">' + rows.map(r => '<div class="pcard2"><h3>' + esc(r[0]) + '</h3><p>' + esc(r[1]) + '</p></div>').join('') + '</div>';
-    [top, msgs, composer].forEach(x => x.classList.add('chat-hide'));
+    [top, msgs, composer, searchBar].forEach(x => x.classList.add('chat-hide'));
     pageView.classList.add('on');
     document.querySelectorAll('.rnav').forEach(x => x.classList.toggle('on', x.dataset.page === name));
     document.getElementById('backChat').addEventListener('click', () => showChat());
