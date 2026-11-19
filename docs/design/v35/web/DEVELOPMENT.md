@@ -258,6 +258,16 @@ presence 超过 TTL → unknown
 
 Web 需要同源 `/api/state`、`/api/presence` 的 owner 只读代理。
 
+## 3.16 多端同步边界
+
+```text
+Web：拉取，不做 Web Push
+插件：host notification / badge
+手机：前台服务或 ntfy 系统通知
+所有端：after_seq + ack + read，按 message_id 去重
+推送只带 message_id，打开再拉正文
+```
+
 ## 4. 次次版本
 
 | 版本 | 交付 | 验收 |
@@ -268,7 +278,7 @@ Web 需要同源 `/api/state`、`/api/presence` 的 owner 只读代理。
 | v35.5.3.0 | QQ 会话列表、历史分页、已读位点 | 群列表一致 |
 | v35.5.4.0 | 文本发送、乐观更新、失败回滚、幂等 | 能聊天 |
 | v35.5.5.0 | 图片发送/预览、上传 | 图片可用 |
-| v35.5.6.0 | SSE 实时接收、event id 去重、重连 | 实时收消息 |
+| v35.5.6.0 | 增量拉取、after_seq、focus/visibility、重连 | 拉取不丢消息 |
 | v35.5.7.0 | 未读 badge、多标签、已读上报、导航总数 | 刷新/断网不丢 |
 | v35.5.8.0 | 语音/表情/识图/搜图媒体工具 | 媒体可用 |
 | v35.5.9.0 | 在线/已读/seq 缺口；mood/energy/presence | 缺失显示未知 |
@@ -278,6 +288,7 @@ Web 需要同源 `/api/state`、`/api/presence` 的 owner 只读代理。
 | v35.5.13.0 | 窄屏/手机浏览器适配 | 手机可用 |
 | v35.5.14.0 | 会话数据源统一 QQ 私聊/群 | 群列表一致 |
 | v35.5.15.0 | Vite build、Mock 标注、视觉/接口回归 | 可演示 |
+| v35.5.16.0 | Web 消息同步：seq/ack/read/多标签 | 与后端一致 |
 
 ## 4.1 命令目录
 
