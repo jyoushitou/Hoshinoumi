@@ -141,6 +141,8 @@ async def handle_history(request):
         item = dict(r)
         if item.get("created_at") is not None:
             item["created_at"] = str(item["created_at"])
+        from ..infra import image_store
+        image_store.attach_image(item)
         data.append(item)
     return json_response({"ok": True, "data": data})
 

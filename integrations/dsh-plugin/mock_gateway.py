@@ -365,7 +365,7 @@ class Handler(BaseHTTPRequestHandler):
                 return
             if image:
                 reply = "收到一张图片（mock）。"
-                HISTORY.append({"id": len(HISTORY) + 1, "role": "user", "content": message or "[图片]", "created_at": _now()})
+                HISTORY.append({"id": len(HISTORY) + 1, "role": "user", "content": message or "[图片]", "image_url": image, "created_at": _now()})
                 HISTORY.append({"id": len(HISTORY) + 1, "role": "assistant", "content": reply, "created_at": _now()})
                 self._json(200, {"reply": reply, "target_id": target, "mock": True, "time": _now()})
                 return

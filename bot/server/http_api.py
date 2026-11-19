@@ -57,6 +57,8 @@ async def handle_internal_history(request):
         item = dict(r)
         if item.get("created_at") is not None:
             item["created_at"] = str(item["created_at"])
+        from ..infra import image_store
+        image_store.attach_image(item)
         data.append(item)
     return json_response({"ok": True, "data": data})
 
@@ -93,9 +95,15 @@ async def handle_internal_chat(request):
 
     user_text = message or "[图片]"
     image_desc = ""
+    image_path = ""
     if image:
+        image_mime = "image/png"
         try:
-            raw = image.split(",", 1)[1] if image.startswith("data:image/") and "," in image else image
+            if image.startswith("data:image/") and "," in image:
+                head, raw = image.split(",", 1)
+                image_mime = head[5:].split(";", 1)[0] or image_mime
+            else:
+                raw = image
             img_bytes = base64.b64decode(raw, validate=True)
         except Exception:
             return json_response({"error": "image_invalid", "message": "图片数据无法解码"}, 400)
@@ -109,6 +117,10 @@ async def handle_internal_chat(request):
             desc = None
         if not desc:
             return json_response({"error": "image_vision_failed", "message": "图片识别失败，未发送"}, 502)
+        from ..infra import image_store
+        image_path = image_store.save(img_bytes, image_mime)
+        if not image_path:
+            return json_response({"error": "image_save_failed", "message": "图片保存失败"}, 500)
         image_desc = str(desc)[:200]
         message = f"{message}\n[用户发来一张图片：{image_desc}]" if message else f"[用户发来一张图片：{image_desc}]"
 
@@ -126,7 +138,7 @@ async def handle_internal_chat(request):
         repo_conversation.append(
             user_id=user_id, target_id=target_id, content=user_text,
             role="user", channel="gateway", thread_id=f"gateway:{target_id}",
-            message_id=f"gw-user:{client_id}", meta={"source": "gateway", "image": bool(image), "image_desc": image_desc},
+            message_id=f"gw-user:{client_id}", meta={"source": "gateway", "image": bool(image), "image_path": image_path, "image_desc": image_desc},
         )
         repo_conversation.append(
             user_id=user_id, target_id=target_id, content=reply,
