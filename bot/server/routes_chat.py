@@ -115,7 +115,10 @@ async def handle_command(request):
 async def handle_conversations(request):
     """GET /api/conversations：owner 的 QQ 会话列表。"""
     from ..infra import repo_conversation, tenant
-    rows = repo_conversation.threads(tenant.owner_id(), limit=50)
+    uid = tenant.owner_id()
+    rows = repo_conversation.threads(uid, limit=50)
+    if not rows and uid != tenant.OWNER_ID:
+        rows = repo_conversation.threads(tenant.OWNER_ID, limit=50)
     return json_response({"ok": True, "data": rows})
 
 
@@ -129,7 +132,10 @@ async def handle_history(request):
         limit = int(request.query.get("limit") or 100)
     except ValueError:
         limit = 100
-    rows = repo_conversation.recent(target, limit=limit, user_id=tenant.owner_id())
+    uid = tenant.owner_id()
+    rows = repo_conversation.recent(target, limit=limit, user_id=uid)
+    if not rows and uid != tenant.OWNER_ID:
+        rows = repo_conversation.recent(target, limit=limit, user_id=tenant.OWNER_ID)
     data = []
     for r in rows:
         item = dict(r)
