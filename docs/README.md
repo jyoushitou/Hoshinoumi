@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="design/logo/hoshinoumi.svg" width="72" height="72" alt="Hoshinoumi Logo">
+</p>
+
 # Hoshinoumi（REC）· 文档索引
 
 > **当前事实：后端 v35.2.1.0，网关 v26.4.0，schema 33，测试 13150 条**（2026-11-18）

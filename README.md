@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/design/logo/hoshinoumi.svg" width="96" height="96" alt="Hoshinoumi Logo">
+</p>
+
 # Hoshinoumi（REC） v35.2.25.1
 
 > 后端 **v35.2.25.1** · 网关 **v26.4.0**（8+4+body TCP / protobuf / 模糊指令）
