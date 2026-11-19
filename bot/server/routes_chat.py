@@ -143,3 +143,28 @@ async def handle_history(request):
             item["created_at"] = str(item["created_at"])
         data.append(item)
     return json_response({"ok": True, "data": data})
+
+# v35.7.23：命令目录从注册表动态生成，客户端不硬编码
+_OWNER_COMMANDS = {
+    "reload", "set", "exit", "quit", "clear", "say", "sayg",
+    "backup", "plugin", "adduser", "gw", "config", "code", "apikeys",
+}
+
+
+async def handle_commands(request):
+    """GET /api/commands：命令目录元数据。"""
+    from ..cmd import registry
+    from ..cmd import formatters
+
+    rows = []
+    for cmd in sorted(registry.COMMANDS.values(), key=lambda c: c.name):
+        rows.append({
+            "name": "!" + cmd.name,
+            "group": formatters._cmd_group(cmd.name),
+            "help": formatters._cmd_desc(cmd),
+            "owner": cmd.name in _OWNER_COMMANDS,
+            "usage": None,
+            "args": [],
+            "subcommands": [],
+        })
+    return json_response({"ok": True, "count": len(rows), "data": rows})
