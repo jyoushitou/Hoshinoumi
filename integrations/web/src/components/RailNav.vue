@@ -30,10 +30,7 @@ const nav = [
       class="rnav"
       :title="n.title"
     >
-      {{ n.icon }}<span
-        v-if="n.page === 'chat'"
-        class="badge"
-      >2</span>
+      {{ n.icon }}<span v-if="n.page === 'chat' && session.unread > 0" class="badge">{{ session.unread }}</span>
     </RouterLink>
     <div class="spacer" />
     <RouterLink
