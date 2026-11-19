@@ -1,4 +1,5 @@
 # ===================== v35.2.23.0 API 余额 =====================
+import json
 import sys
 import types
 import unittest
@@ -12,7 +13,7 @@ def _stub_aiohttp():
     except ImportError:
         pass
     web = types.ModuleType("aiohttp.web")
-    web.json_response = lambda data, status=200, dumps=None: type("R", (), {"text": str(data), "status": status})()
+    web.json_response = lambda data, status=200, dumps=None: type("R", (), {"text": (dumps or (lambda x: json.dumps(x, ensure_ascii=False)))(data), "status": status})()
     web.Application = object
     web.middleware = lambda fn: fn
     web.RouteTableDef = lambda: []
