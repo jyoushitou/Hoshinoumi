@@ -228,7 +228,7 @@
     .wpe-row .wpe-del{border:1px solid #f3c7d2;border-radius:5px;background:#fff;color:#c0264a;font-size:8.5px;padding:3px 5px;cursor:pointer}
     .wpe-actions{display:flex;align-items:center;gap:7px;margin-top:6px}
     .wpe-actions button{border:0;border-radius:5px;background:#2563eb;color:#fff;font-size:9px;padding:4px 8px;cursor:pointer}.wpe-actions .msg{font-size:9px;color:#8a9bb0}
-    .week-form{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:7px;margin-top:10px;border:1px solid #e3ebf7;border-radius:10px;background:#fff;padding:10px}
+    .week-form{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px;border:1px solid #e3ebf7;border-radius:10px;background:#fff;padding:10px}
     .week-form label{display:block;font-size:8.5px;color:#8a9bb0;margin-bottom:2px}
     .week-form input,.week-form select{border:1px solid #e3ebf7;border-radius:6px;background:#f8fbff;color:#243b55;font:9.5px inherit;outline:0;padding:5px 6px;width:100%}
     .week-form .full{grid-column:1/-1;display:flex;align-items:center;gap:7px}
@@ -602,7 +602,7 @@
         });
         html += '</div></div>';
         const c = editIdx >= 0 ? W.courses[editIdx] : null;
-        html += '<div class="week-form"><div><label>课程名</label><input id="wkName" value="' + esc(c ? c.name : '') + '"></div><div><label>教师</label><input id="wkTeacher" value="' + esc(c ? c.teacher : '') + '"></div><div><label>地点</label><input id="wkLoc" value="' + esc(c ? c.loc : '') + '"></div><div><label>周次</label><input id="wkWeeks" value="' + esc(c ? (c.weeks || '1-16周') : '1-16周') + '"></div><div class="full"><button id="wkSave">' + (editIdx >= 0 ? '保存修改' : '添加到格子') + '</button>' + (editIdx >= 0 ? '<button class="del" id="wkDel">删除课程</button>' : '') + '<span class="msg" id="wkFormMsg"></span></div></div>';
+        html += '<div class="week-form"><div><label>课程名</label><input id="wkName" value="' + esc(c ? c.name : '') + '"></div><div><label>地点</label><input id="wkLoc" value="' + esc(c ? c.loc : '') + '"></div><div class="full"><button id="wkSave">' + (editIdx >= 0 ? '保存修改' : '添加到格子') + '</button>' + (editIdx >= 0 ? '<button class="del" id="wkDel">删除课程</button>' : '') + '<span class="msg" id="wkFormMsg"></span></div></div>';
         pageView.innerHTML = html;
         document.getElementById('backChat').addEventListener('click', () => showChat());
         document.getElementById('wkGo').addEventListener('click', () => {
@@ -635,12 +635,10 @@
         }));
         document.getElementById('wkSave').addEventListener('click', () => {
           const name = document.getElementById('wkName').value.trim();
-          const teacher = document.getElementById('wkTeacher').value.trim();
           const loc = document.getElementById('wkLoc').value.trim();
-          const weeks = document.getElementById('wkWeeks').value.trim() || '1-16周';
           if (!name) { document.getElementById('wkFormMsg').textContent = '先填课程名'; return; }
-          if (editIdx >= 0) W.courses[editIdx] = { ...W.courses[editIdx], name, teacher, loc, weeks };
-          else W.courses.push({ day: sel.day, period: sel.period, name, teacher, loc, weeks });
+          if (editIdx >= 0) W.courses[editIdx] = { ...W.courses[editIdx], name, loc };
+          else W.courses.push({ day: sel.day, period: sel.period, name, loc });
           editIdx = -1; renderWeekly(); toast('周计划已更新（MOCK）');
         });
         const del = document.getElementById('wkDel');
