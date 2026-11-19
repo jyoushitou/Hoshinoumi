@@ -394,9 +394,9 @@ nginx 只访问 127.0.0.1:27015
 补全顺序：
 
 ```text
-v35.7.23  /api/commands
+v35.7.23  /api/commands ✅
 v35.7.24  /api/cron
-v35.7.25  /api/state + /api/presence
+v35.7.25  /api/state + /api/presence ✅
 v35.7.26  /api/shelf
 v35.7.27  插件管理
 ```
