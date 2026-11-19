@@ -2,10 +2,10 @@
 
 `hoshinoumi-sidebar-demo.html`
 
-- 位置：源代码管理侧栏底部卡片
+- 位置：独占整个源代码管理（SCM）侧栏
+- 不在“更改 / 存储库 / 图表”下面追加卡片
 - 不占代码区
-- 不新增独立 Activity Bar 图标
-- 风格：VS Code Dark+（使用 VS Code 颜色变量对应值）
+- 风格：VS Code Dark+
 - 页面：聊天/记忆/存钱/周计划/人设/关系/设置
 - 交互：折叠、切换、发送、mock toast
 

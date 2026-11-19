@@ -35,7 +35,7 @@ button{border:0;background:none;padding:0;cursor:pointer}
 .repo{height:23px;display:flex;align-items:center;gap:6px;padding:0 6px;font-size:11px;color:#cccccc}.repo .br{color:#9d9d9d;font-size:10px;margin-left:auto}
 .graph{padding:6px 18px;color:#9d9d9d;font-size:10px;line-height:1.7}
 /* Hoshinoumi inside SCM */
-.hoshi{flex:none;height:405px;min-height:280px;background:#1f1f1f;border-top:1px solid #3c3c3c;display:flex;flex-direction:column;overflow:hidden;position:relative}
+.hoshi{flex:1;height:auto;min-height:0;background:#1f1f1f;border-top:0;display:flex;flex-direction:column;overflow:hidden;position:relative}
 .hoshi:before{content:"";position:absolute;left:0;right:0;top:-3px;height:6px;cursor:ns-resize;z-index:2}
 .h-head{height:30px;flex:none;display:flex;align-items:center;gap:6px;padding:0 9px;background:#252526;border-bottom:1px solid #333;color:#cccccc;font-size:11px;cursor:pointer;user-select:none}
 .h-head .chev{color:#9d9d9d;font-size:10px;width:12px}
@@ -44,7 +44,7 @@ button{border:0;background:none;padding:0;cursor:pointer}
 .h-head .state{font-size:10px;color:#2fa56b;margin-left:1px}
 .h-head .act{margin-left:auto;color:#9d9d9d;font-size:13px;display:flex;gap:9px;align-items:center}
 .hoshi.collapsed .h-body,.hoshi.collapsed .h-tabs,.hoshi.collapsed .h-compose{display:none}
-.hoshi.collapsed{height:30px!important;min-height:30px}
+.hoshi.collapsed{flex:none;height:30px!important;min-height:30px}
 .h-tabs{flex:none;display:flex;gap:1px;padding:5px 6px;overflow-x:auto;border-bottom:1px solid #2f2f2f;scrollbar-width:none}
 .h-tabs::-webkit-scrollbar{display:none}
 .h-tab{height:22px;padding:0 6px;border-radius:2px;font-size:10px;color:#a5a5a5;white-space:nowrap}
@@ -75,7 +75,7 @@ button{border:0;background:none;padding:0;cursor:pointer}
 .minimap{width:58px;flex:none;background:#1e1e1e;border-left:1px solid #252526;padding:8px 6px;color:#3a3a3a;font-size:2px;line-height:3px;overflow:hidden;opacity:.65}
 .statusbar{height:22px;flex:none;background:#007acc;color:#fff;display:flex;align-items:center;gap:13px;padding:0 10px;font-size:10.5px}.statusbar .right{margin-left:auto;display:flex;gap:13px;align-items:center}.statusbar .icon{font-size:12px}
 .toast{position:fixed;right:16px;bottom:34px;background:#252526;border:1px solid #454545;color:#cccccc;font-size:11px;padding:7px 11px;border-radius:2px;box-shadow:0 4px 16px rgba(0,0,0,.4);opacity:0;transform:translateY(5px);transition:.18s;pointer-events:none;z-index:20}.toast.on{opacity:1;transform:none}
-</style>
+.scm-head .branch{margin-left:8px;font-size:10px;color:#9d9d9d;font-weight:400;text-transform:none;letter-spacing:0}.h-head .scope{font-size:9px;color:#8f8f8f;border:1px solid #3c3c3c;border-radius:2px;padding:0 4px;margin-left:2px}</style>
 </head>
 <body>
 <div class="window">
@@ -97,24 +97,9 @@ button{border:0;background:none;padding:0;cursor:pointer}
   </nav>
 
   <aside class="sidebar">
-   <div class="scm-head"><span>源代码管理</span><div class="actions"><span>✓</span><span>⟳</span><span>⋯</span></div></div>
-   <div class="scm">
-    <div class="scm-box"><input class="scm-input" placeholder="消息(Ctrl+Enter 在“main”提交)"><button class="commit" onclick="toast('已提交（模拟）')">✓ 提交</button></div>
-    <div class="sec"><span class="chev">⌄</span>更改<span class="count">7</span></div>
-    <div class="change"><span class="f">◇</span>.vscodeignore<span class="u">U</span></div>
-    <div class="change"><span class="f">JS</span>extension.js<span class="u">U</span></div>
-    <div class="change"><span class="f">{}</span>package.json<span class="u">U</span></div>
-    <div class="change"><span class="f">ⓘ</span>README.md<span class="u">U</span></div>
-    <div class="change"><span class="f">◈</span>nao.svg<span class="u">U</span></div>
-    <div class="change"><span class="f">◇</span>sidebar.html<span class="u">U</span></div>
-    <div class="sec" style="margin-top:7px"><span class="chev">⌄</span>存储库<span class="count">1</span></div>
-    <div class="repo"><span>▰</span>NapCat+Python<span class="br">main*</span></div>
-    <div class="sec" style="margin-top:5px"><span class="chev">⌄</span>图表</div>
-    <div class="graph">查询结果 · PS D:\...\NapCat+Python<br>分支 main · 7 个更改 · 0 个冲突</div>
-   </div>
-
+   <div class="scm-head"><span>源代码管理</span><span class="branch">⑂ main*</span><div class="actions"><span>⟳</span><span>⋯</span></div></div>
    <section class="hoshi" id="hoshi">
-    <div class="h-head" onclick="toggleHoshi(event)"><span class="chev" id="chev">⌄</span><b>Hoshinoumi</b><span class="dot"></span><span class="state">已连接</span><span class="act" onclick="event.stopPropagation();toast('Hoshinoumi 设置（模拟）')">⚙</span></div>
+    <div class="h-head" onclick="toggleHoshi(event)"><span class="chev" id="chev">⌄</span><b>Hoshinoumi</b><span class="dot"></span><span class="state">已连接</span><span class="scope">SCM</span><span class="act" onclick="event.stopPropagation();toast('Hoshinoumi 设置（模拟）')">⚙</span></div>
     <div class="h-tabs" id="tabs">
      <button class="h-tab on" data-p="chat">聊天</button><button class="h-tab" data-p="memory">记忆</button><button class="h-tab" data-p="savings">存钱</button><button class="h-tab" data-p="weekly">周计划</button><button class="h-tab" data-p="persona">人设</button><button class="h-tab" data-p="relation">关系</button><button class="h-tab" data-p="settings">设置</button>
     </div>
