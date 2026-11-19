@@ -1,4 +1,4 @@
-# 旧服务名，兼容保留；新部署请用 deploy/hoshinoumi.service
+# 旧服务名，兼容保留；进程名已是 nao-run，新部署请用 deploy/hoshinoumi.service
 [Unit]
 Description=TomoriNao QQ Bot (legacy nao-bot unit)
 After=network-online.target
@@ -9,7 +9,7 @@ Type=simple
 User=jyoushitou
 WorkingDirectory=/home/jyoushitou/NapCat-Pyhon
 Environment=PYTHONIOENCODING=utf-8
-ExecStart=/usr/bin/python3 /home/jyoushitou/NapCat-Pyhon/run.py
+ExecStart=/home/jyoushitou/NapCat-Pyhon/nao-run
 Restart=always
 RestartSec=5
 # 给足时间优雅退出

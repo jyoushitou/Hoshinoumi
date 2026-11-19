@@ -9,11 +9,13 @@ User=jyoushitou
 # 目录暂时保留旧路径，改名时一起改这里
 WorkingDirectory=/home/jyoushitou/NapCat-Pyhon
 Environment=PYTHONIOENCODING=utf-8
-ExecStart=/usr/bin/python3 /home/jyoushitou/NapCat-Pyhon/run.py
+Environment=NAO_PROCESS_NAME=nao-run
+ExecStart=/home/jyoushitou/NapCat-Pyhon/nao-run
 Restart=always
 RestartSec=5
 TimeoutStopSec=20
 KillSignal=SIGINT
+SyslogIdentifier=nao-run
 StandardOutput=journal
 StandardError=journal
 

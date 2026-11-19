@@ -231,7 +231,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--base", default=str(ROOT / "data" / "workers"))
     ap.add_argument("--version", required=True)
-    ap.add_argument("--worker-cmd", default=f"{sys.executable} -u run.py")
+    ap.add_argument("--worker-cmd", default=f"{sys.executable} -u nao_run.py")
     ap.add_argument("--timeout", type=float, default=30)
     ap.add_argument("--drain-seconds", type=float, default=60)
     ap.add_argument("--keep-versions", type=int,

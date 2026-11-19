@@ -8,6 +8,13 @@ import sys              # 系统模块：退出程序、获取解释器路径
 import subprocess       # 子进程：执行 pip install
 import importlib.util   # 导入工具：动态检查模块是否已安装
 
+# v35.4.15：后端进程显示名统一为 nao-run；失败不影响启动
+try:
+    from bot.core.process_name import set_process_name as _set_process_name
+    _set_process_name()
+except Exception:
+    pass
+
 # ===================== 依赖检查与自动安装 =====================
 # 项目所需的所有依赖包列表
 REQUIRED_PACKAGES = [

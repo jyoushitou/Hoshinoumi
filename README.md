@@ -438,7 +438,10 @@ v34.1.0.0   次版本
 ├── release/         打包与发布产物（不进版本库）
 ├── config.example.json   配置模板
 ├── config.local.json    真实配置（不进版本库）
-└── run.py           启动入口
+├── nao_run.py       nao-run 启动器
+├── nao-run          Linux/macOS 启动脚本
+├── nao-run.cmd      Windows 启动脚本
+└── run.py           兼容入口（仍可用）
 ```
 
 `release/` 里放所有交付物：
@@ -470,7 +473,7 @@ python3 scripts/run_tests.py --fast     # 只跑功能测试
 
 ```
 本地单进程（仅调试）：
-run.py（start.py 是旧兼容入口）
+nao-run（run.py / start.py 是旧兼容入口）
   → app.runtime_checks → app.bootstrap → app.loop（3001 / 27004）
 
 生产：
@@ -511,7 +514,8 @@ worker 内部：
 > ```bash
 > python3 scripts/migrate.py --apply   # 1. 迁移（首次/升级；幂等，没东西可迁也会跳过）
 > python3 checks/env_check.py          # 2. 严格环境监测（任何 FAIL 都不启动）
-> python3 run.py                       # 3. 启动
+> ./nao-run                            # 3. 启动（Linux/macOS）
+# 或 python3 nao_run.py；run.py 仍兼容
 > ```
 >
 > 首次机器先 `python3 -m pip install -r requirements.txt`。完整升级/回滚：
@@ -704,10 +708,10 @@ sudo python3 -m playwright install-deps chromium
 **本地调试（单进程）**
 
 ```bash
-python3 run.py
+./nao-run
 ```
 
-`start.py` 仍保留为旧兼容入口，但新部署不要用它。
+Windows 用 `nao-run.cmd` 或 `python nao_run.py`；`run.py` 仍兼容，`start.py` 只作旧调试入口。
 
 顺序固定：
 
@@ -715,10 +719,10 @@ python3 run.py
 1. 数据库迁移（有迁移脚本时执行，幂等）
 2. 第一次启动 / API 缺失时，运行 configure_api.py
 3. 环境监测（checks/env_check.py）
-4. 启动 run.py
+4. 启动 nao-run（run.py 仍兼容）
 ```
 
-网关是独立进程，不跟 `run.py` 同生共死；本地需要 API 时单独启动 `gateway/build/rec_gateway` 或 Docker。
+网关是独立进程，不跟 `nao-run` 同生共死；本地需要 API 时单独启动 `gateway/build/rec_gateway` 或 Docker。
 
 **手动分步**
 

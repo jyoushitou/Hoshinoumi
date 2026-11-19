@@ -1,0 +1,2 @@
+nao-run text eol=lf
+deploy/*.service text eol=lf

@@ -70,7 +70,7 @@ def main():
     ap.add_argument("--base", default=str(ROOT / "release"))
     ap.add_argument("--candidate", default="")
     ap.add_argument("--latest", action="store_true")
-    ap.add_argument("--worker-cmd", default=f"{sys.executable} run.py")
+    ap.add_argument("--worker-cmd", default=f"{sys.executable} -u nao_run.py")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
     base = Path(args.base)

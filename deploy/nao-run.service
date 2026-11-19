@@ -1,0 +1,22 @@
+[Unit]
+Description=Hoshinoumi (REC) - Tomori Nao companion (nao-run)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=jyoushitou
+WorkingDirectory=/home/jyoushitou/NapCat-Pyhon
+Environment=PYTHONIOENCODING=utf-8
+Environment=NAO_PROCESS_NAME=nao-run
+ExecStart=/home/jyoushitou/NapCat-Pyhon/nao-run
+Restart=always
+RestartSec=5
+TimeoutStopSec=20
+KillSignal=SIGINT
+SyslogIdentifier=nao-run
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
