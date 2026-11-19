@@ -14,7 +14,7 @@ import subprocess
 import sys
 import time
 
-VERSION = "35.2.24.9"         # 与 README / tag 对齐；发版时改这里
+VERSION = "35.2.24.10"         # 与 README / tag 对齐；发版时改这里
 _started_at = time.time()
 _cache = {}
 
