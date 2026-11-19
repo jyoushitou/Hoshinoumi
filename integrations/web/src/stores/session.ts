@@ -14,6 +14,13 @@ export interface ChatMessage {
   created_at?: string
   pending?: boolean
   image_url?: string
+  audio_url?: string
+  kind?: string
+}
+export interface Attachment {
+  image?: string
+  sticker?: string
+  audio?: string
 }
 import { defineStore } from 'pinia'
 import { http } from '@/api/client'
@@ -75,14 +82,17 @@ export const useSessionStore = defineStore('session', () => {
     await loadHistory(target)
   }
 
-  async function sendMessage(content: string, image = '') {
+  async function sendMessage(content: string, attachment: Attachment = {}) {
     const text = content.trim()
-    if ((!text && !image) || sending.value) return false
+    const { image, sticker, audio } = attachment
+    if ((!text && !image && !sticker && !audio) || sending.value) return false
     if (!activeTarget.value) { sendError.value = '请先选择会话'; return false }
+    const kind = sticker ? 'sticker' : audio ? 'voice' : image ? 'image' : ''
+    const imageUrl = image || sticker
     const clientId = (globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`)
     const localId = 'local-' + clientId
     const stamp = new Date().toISOString().slice(0, 19).replace('T', ' ')
-    messages.value.push({ id: localId, role: 'user', content: text, image_url: image || undefined, created_at: stamp, pending: true })
+    messages.value.push({ id: localId, role: 'user', content: text, image_url: imageUrl || undefined, audio_url: audio || undefined, kind, created_at: stamp, pending: true })
     sending.value = true; sendError.value = ''
     try {
       const r = await http.post<{ success?: boolean; reply?: string; error?: string; message?: string }>('/api/chat', {
@@ -90,10 +100,12 @@ export const useSessionStore = defineStore('session', () => {
         target_id: activeTarget.value,
         client_message_id: clientId,
         ...(image ? { image } : {}),
+        ...(sticker ? { sticker } : {}),
+        ...(audio ? { audio } : {}),
       })
       if (!r.reply) throw new Error(r.message || r.error || '发送失败')
       messages.value = messages.value.filter(m => m.id !== localId)
-      messages.value.push({ role: 'user', content: text, image_url: image || undefined, created_at: stamp })
+      messages.value.push({ role: 'user', content: text, image_url: imageUrl || undefined, audio_url: audio || undefined, kind, created_at: stamp })
       messages.value.push({ role: 'assistant', content: r.reply, created_at: new Date().toISOString().slice(0, 19).replace('T', ' ') })
       return true
     } catch (e) {

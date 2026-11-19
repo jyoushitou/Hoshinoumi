@@ -88,41 +88,67 @@ async def handle_internal_chat(request):
     message = body.get("message", "").strip()
     target_id = str(body.get("target_id", "")).strip()
     image = str(body.get("image") or "").strip()
+    sticker = str(body.get("sticker") or "").strip()
+    audio = str(body.get("audio") or "").strip()
     if not target_id:
         return json_response({"error": "missing_target_id", "message": "target_id 不能为空"}, 400)
-    if not message and not image:
-        return json_response({"error": "empty_message", "message": "message/image 不能同时为空"}, 400)
+    if not message and not image and not sticker and not audio:
+        return json_response({"error": "empty_message", "message": "message/附件不能同时为空"}, 400)
+    if sum(bool(x) for x in (image, sticker, audio)) > 1:
+        return json_response({"error": "too_many_attachments", "message": "一次只能发一个附件"}, 400)
 
-    user_text = message or "[图片]"
-    image_desc = ""
-    image_path = ""
-    if image:
-        image_mime = "image/png"
+    base_text = message
+    user_text = base_text or "[图片]" if image else base_text or "[表情包]" if sticker else base_text or "[语音]" if audio else base_text or "[附件]"
+    kind = "image" if image else "sticker" if sticker else "voice" if audio else ""
+    attachment_path = ""
+    attachment_desc = ""
+    attachment_bytes = b""
+    attachment_mime = ""
+    attachment_src = sticker or image or audio
+
+    if attachment_src:
+        attachment_mime = "image/png" if kind != "voice" else "audio/webm"
         try:
-            if image.startswith("data:image/") and "," in image:
-                head, raw = image.split(",", 1)
-                image_mime = head[5:].split(";", 1)[0] or image_mime
+            if attachment_src.startswith("data:") and "," in attachment_src:
+                head, raw = attachment_src.split(",", 1)
+                attachment_mime = head[5:].split(";", 1)[0] or attachment_mime
             else:
-                raw = image
-            img_bytes = base64.b64decode(raw, validate=True)
+                raw = attachment_src
+            attachment_bytes = base64.b64decode(raw, validate=True)
         except Exception:
-            return json_response({"error": "image_invalid", "message": "图片数据无法解码"}, 400)
-        if not img_bytes or len(img_bytes) > 4 * 1024 * 1024:
-            return json_response({"error": "image_too_large", "message": "图片不能超过 4MB"}, 413)
-        try:
-            from ..ai.vision import describe_image
-            desc, _tags = await describe_image(img_bytes)
-        except Exception as e:
-            log_err(f"图片识别失败: {e}")
-            desc = None
-        if not desc:
-            return json_response({"error": "image_vision_failed", "message": "图片识别失败，未发送"}, 502)
+            return json_response({"error": "attachment_invalid", "message": "附件数据无法解码"}, 400)
+        if not attachment_bytes or len(attachment_bytes) > 4 * 1024 * 1024:
+            return json_response({"error": "attachment_too_large", "message": "附件不能超过 4MB"}, 413)
+
+        if kind == "image":
+            try:
+                from ..ai.vision import describe_image
+                desc, _tags = await describe_image(attachment_bytes)
+            except Exception as e:
+                log_err(f"图片识别失败: {e}")
+                desc = None
+            if not desc:
+                return json_response({"error": "image_vision_failed", "message": "图片识别失败，未发送"}, 502)
+            attachment_desc = str(desc)[:200]
+            message = f"{base_text}\n[用户发来一张图片：{attachment_desc}]" if base_text else f"[用户发来一张图片：{attachment_desc}]"
+        elif kind == "sticker":
+            message = f"{base_text}\n[用户发来一个表情包]" if base_text else "[用户发来一个表情包]"
+        else:
+            transcript = ""
+            try:
+                from ..speech import asr
+                transcript = await asr.transcribe(attachment_bytes, "voice.webm") or ""
+            except Exception as e:
+                log_err(f"语音识别失败: {e}")
+            attachment_desc = str(transcript)[:300]
+            message = f"{base_text}\n[用户发来一段语音{'，转写：' + transcript if transcript else '，未识别出文字'}]" if base_text else f"[用户发来一段语音{'，转写：' + transcript if transcript else '，未识别出文字'}]"
+
+    # 同一轮成功后再落盘，避免 AI 失败留下孤儿附件
+    if attachment_bytes:
         from ..infra import image_store
-        image_path = image_store.save(img_bytes, image_mime)
-        if not image_path:
-            return json_response({"error": "image_save_failed", "message": "图片保存失败"}, 500)
-        image_desc = str(desc)[:200]
-        message = f"{message}\n[用户发来一张图片：{image_desc}]" if message else f"[用户发来一张图片：{image_desc}]"
+        attachment_path = image_store.save(attachment_bytes, attachment_mime)
+        if not attachment_path:
+            return json_response({"error": "attachment_save_failed", "message": "附件保存失败"}, 500)
 
     user_id = _internal_uid(request)
     # v21 单用户：JWT sub=owner，但历史/QQ 统一存 __owner__
@@ -138,7 +164,7 @@ async def handle_internal_chat(request):
         repo_conversation.append(
             user_id=user_id, target_id=target_id, content=user_text,
             role="user", channel="gateway", thread_id=f"gateway:{target_id}",
-            message_id=f"gw-user:{client_id}", meta={"source": "gateway", "image": bool(image), "image_path": image_path, "image_desc": image_desc},
+            message_id=f"gw-user:{client_id}", meta={"source": "gateway", "kind": kind, "attachment_path": attachment_path, "attachment_desc": attachment_desc},
         )
         repo_conversation.append(
             user_id=user_id, target_id=target_id, content=reply,

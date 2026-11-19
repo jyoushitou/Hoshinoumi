@@ -360,12 +360,26 @@ class Handler(BaseHTTPRequestHandler):
             message = str(body.get("message", "")).strip()
             target = str(body.get("target_id", OWNER_QQ))
             image = str(body.get("image", "")).strip()
-            if not message and not image:
-                self._json(400, {"error": "empty_message", "message": "message/image is empty"})
+            sticker = str(body.get("sticker", "")).strip()
+            audio = str(body.get("audio", "")).strip()
+            if not message and not image and not sticker and not audio:
+                self._json(400, {"error": "empty_message", "message": "message/attachment is empty"})
+                return
+            if audio:
+                reply = "收到一段语音（mock）。"
+                HISTORY.append({"id": len(HISTORY) + 1, "role": "user", "content": message or "[语音]", "audio_url": audio, "kind": "voice", "created_at": _now()})
+                HISTORY.append({"id": len(HISTORY) + 1, "role": "assistant", "content": reply, "created_at": _now()})
+                self._json(200, {"reply": reply, "target_id": target, "mock": True, "time": _now()})
+                return
+            if sticker:
+                reply = "收到一个表情包（mock）。"
+                HISTORY.append({"id": len(HISTORY) + 1, "role": "user", "content": message or "[表情包]", "image_url": sticker, "kind": "sticker", "created_at": _now()})
+                HISTORY.append({"id": len(HISTORY) + 1, "role": "assistant", "content": reply, "created_at": _now()})
+                self._json(200, {"reply": reply, "target_id": target, "mock": True, "time": _now()})
                 return
             if image:
                 reply = "收到一张图片（mock）。"
-                HISTORY.append({"id": len(HISTORY) + 1, "role": "user", "content": message or "[图片]", "image_url": image, "created_at": _now()})
+                HISTORY.append({"id": len(HISTORY) + 1, "role": "user", "content": message or "[图片]", "image_url": image, "kind": "image", "created_at": _now()})
                 HISTORY.append({"id": len(HISTORY) + 1, "role": "assistant", "content": reply, "created_at": _now()})
                 self._json(200, {"reply": reply, "target_id": target, "mock": True, "time": _now()})
                 return

@@ -24,6 +24,12 @@ class ImageStoreTests(unittest.TestCase):
         self.assertTrue(item["image_url"].startswith("data:image/png;base64,"))
         self.assertTrue(base64.b64decode(item["image_url"].split(",", 1)[1]))
 
+    def test_save_audio_attach(self):
+        rel = image_store.save(b"webm-data", "audio/webm")
+        item = image_store.attach_media({"meta": json.dumps({"attachment_path": rel, "kind": "voice"})})
+        self.assertEqual(item["kind"], "voice")
+        self.assertTrue(item["audio_url"].startswith("data:audio/webm;base64,"))
+
     def test_reject_traversal(self):
         self.assertEqual(image_store.to_data_url("../../etc/passwd"), "")
 

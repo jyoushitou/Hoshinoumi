@@ -16,6 +16,12 @@ _EXT = {
     "image/jpg": ".jpg",
     "image/webp": ".webp",
     "image/gif": ".gif",
+    "audio/webm": ".webm",
+    "audio/ogg": ".ogg",
+    "audio/mpeg": ".mp3",
+    "audio/mp4": ".m4a",
+    "audio/wav": ".wav",
+    "audio/x-wav": ".wav",
 }
 
 
@@ -46,12 +52,13 @@ def to_data_url(rel: str) -> str:
     p = _resolve(rel)
     if p is None or not p.is_file():
         return ""
-    mime = mimetypes.guess_type(p.name)[0] or "image/png"
+    forced = {".webm": "audio/webm", ".ogg": "audio/ogg", ".m4a": "audio/mp4", ".wav": "audio/wav"}
+    mime = forced.get(p.suffix.lower()) or mimetypes.guess_type(p.name)[0] or "image/png"
     return f"data:{mime};base64," + base64.b64encode(p.read_bytes()).decode()
 
 
-def attach_image(item: dict) -> dict:
-    """把 conversation_messages.meta 里的 image_path 转成 image_url。"""
+def attach_media(item: dict) -> dict:
+    """把 meta 里的附件路径转成 image_url / audio_url。"""
     meta = item.get("meta")
     if isinstance(meta, str):
         try:
@@ -59,9 +66,19 @@ def attach_image(item: dict) -> dict:
         except Exception:
             meta = None
     if isinstance(meta, dict):
-        rel = str(meta.get("image_path") or "")
+        rel = str(meta.get("attachment_path") or meta.get("image_path") or "")
+        kind = str(meta.get("kind") or ("image" if meta.get("image") else ""))
         if rel:
             url = to_data_url(rel)
             if url:
-                item["image_url"] = url
+                item["kind"] = kind or "image"
+                if kind == "voice":
+                    item["audio_url"] = url
+                else:
+                    item["image_url"] = url
     return item
+
+
+def attach_image(item: dict) -> dict:
+    """兼容旧调用：等价于 attach_media。"""
+    return attach_media(item)
