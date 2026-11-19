@@ -2,6 +2,10 @@
 # 只读 personas/<name>/，给 DSH 插件展示真实人设卡。
 # 不返回完整 prompt 给非 owner；DSH 的 API token 本身是 owner。
 from pathlib import Path
+import json
+import os
+import shutil
+import tempfile
 
 from ..ai import persona_loader
 from .common import json_response
@@ -9,6 +13,8 @@ from .common import json_response
 ROOT = Path(__file__).resolve().parents[2]
 CARD_ROOT = ROOT / "personas"
 TEXT_FILES = ("prompt.txt", "supplement.txt", "life.txt")
+MAX_TEXT = 100_000
+MAX_JSON = 20_000
 JSON_FILES = ("state.json", "voice.json")
 
 
@@ -91,3 +97,91 @@ async def handle_persona(request):
         "active": persona_loader.active_name(),
         "count": len(data),
     })
+
+
+async def handle_export(request):
+    name = _safe_name(request.query.get("name", ""))
+    if not name:
+        return json_response({"ok": False, "error": "bad_name"}, 400)
+    item = _summary(name, full=True)
+    if not item:
+        return json_response({"ok": False, "error": "persona_not_found"}, 404)
+    return json_response({"ok": True, "data": item})
+
+
+async def handle_import(request):
+    try:
+        body = await request.json()
+    except Exception:
+        return json_response({"ok": False, "error": "invalid_json"}, 400)
+    if not isinstance(body, dict):
+        return json_response({"ok": False, "error": "invalid_body"}, 400)
+    data = body.get("data") if isinstance(body.get("data"), dict) else body
+    name = _safe_name(data.get("name", ""))
+    if not name:
+        return json_response({"ok": False, "error": "bad_name"}, 400)
+    prompt = data.get("prompt")
+    if not isinstance(prompt, str) or not prompt.strip():
+        return json_response({"ok": False, "error": "prompt_required"}, 400)
+    if len(prompt) > MAX_TEXT:
+        return json_response({"ok": False, "error": "prompt_too_large"}, 413)
+    target = CARD_ROOT / name
+    overwrite = bool(data.get("overwrite"))
+    if target.exists() and not overwrite:
+        return json_response({"ok": False, "error": "exists", "message": "需要 overwrite=true"}, 409)
+    tmp = Path(tempfile.mkdtemp(prefix=".import-", dir=CARD_ROOT))
+    backup = None
+    try:
+        files = {
+            "prompt.txt": prompt.strip() + "\n",
+            "supplement.txt": str(data.get("supplement") or "").strip() + ("\n" if data.get("supplement") else ""),
+            "life.txt": str(data.get("life") or "").strip() + ("\n" if data.get("life") else ""),
+        }
+        for fn, text in files.items():
+            if len(text) > MAX_TEXT:
+                raise ValueError(fn + " too large")
+            (tmp / fn).write_text(text, encoding="utf-8")
+        for fn, key in (("state.json", "state"), ("voice.json", "voice")):
+            value = data.get(key)
+            if value is not None:
+                if not isinstance(value, (dict, list)):
+                    raise ValueError(key + " must be object")
+                raw = json.dumps(value, ensure_ascii=False, indent=2) + "\n"
+                if len(raw) > MAX_JSON:
+                    raise ValueError(key + " too large")
+                (tmp / fn).write_text(raw, encoding="utf-8")
+        if target.exists():
+            backup = CARD_ROOT / (".backup-" + name)
+            if backup.exists():
+                shutil.rmtree(backup)
+            os.replace(target, backup)
+        os.replace(tmp, target)
+        tmp = None
+        if backup and backup.exists():
+            shutil.rmtree(backup)
+        return json_response({"ok": True, "data": _summary(name, full=False)})
+    except Exception as e:
+        if tmp and tmp.exists():
+            shutil.rmtree(tmp, ignore_errors=True)
+        if backup and backup.exists() and not target.exists():
+            os.replace(backup, target)
+        return json_response({"ok": False, "error": "import_failed", "message": str(e)}, 400)
+
+
+async def handle_activate(request):
+    try:
+        body = await request.json()
+    except Exception:
+        return json_response({"ok": False, "error": "invalid_json"}, 400)
+    name = _safe_name((body or {}).get("name", ""))
+    if not name or not (CARD_ROOT / name).is_dir():
+        return json_response({"ok": False, "error": "persona_not_found"}, 404)
+    from ..core import state as cfg
+    from ..ai import prompt as prompt_mod
+    cfg.persona_name = name
+    persona_loader.save_active(name)
+    try:
+        prompt_mod.reload_personality_supplement()
+    except Exception:
+        pass
+    return json_response({"ok": True, "active": name})

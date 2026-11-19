@@ -383,6 +383,47 @@ async function jsonApi(path) {
   if (!r.ok) throw new Error(j.message || j.error || ('HTTP ' + r.status));
   return j;
 }
+async function importPersona() {
+  const f = document.getElementById('personaFile')?.files?.[0];
+  const msg = document.getElementById('personaMsg');
+  if (!f) { if (msg) msg.textContent = '先选择 JSON 文件'; return; }
+  try {
+    const data = JSON.parse(await f.text());
+    const overwrite = Boolean(document.getElementById('personaOverwrite')?.checked);
+    if (overwrite && !confirm('覆盖同名角色卡？原文件会先备份再替换。')) return;
+    const r = await fetch('/api/hoshinoumi/persona/import', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...data, overwrite }) });
+    const j = await r.json();
+    if (!r.ok || !j.ok) throw new Error(j.message || j.error || ('HTTP ' + r.status));
+    if (msg) msg.textContent = '已导入：' + (j.data?.name || '');
+    await showModule('persona');
+  } catch (e) { if (msg) msg.textContent = '导入失败：' + e.message; }
+}
+async function exportPersona() {
+  const name = prompt('要导出的角色卡名（例如 nao）');
+  if (!name) return;
+  try {
+    const r = await fetch('/api/hoshinoumi/persona/export?name=' + encodeURIComponent(name));
+    const j = await r.json();
+    if (!r.ok || !j.ok) throw new Error(j.message || j.error || ('HTTP ' + r.status));
+    const blob = new Blob([JSON.stringify(j.data, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name + '.persona.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  } catch (e) { toast('导出失败：' + e.message); }
+}
+async function activatePersona() {
+  const name = prompt('要激活的角色卡名（例如 nao）');
+  if (!name) return;
+  try {
+    const r = await fetch('/api/hoshinoumi/persona/activate', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name }) });
+    const j = await r.json();
+    if (!r.ok || !j.ok) throw new Error(j.message || j.error || ('HTTP ' + r.status));
+    toast('已激活：' + name);
+    await showModule('persona');
+  } catch (e) { toast('激活失败：' + e.message); }
+}
 async function showModule(key) {
   const titles = { memory: '记忆', savings: '存钱', info: '信息', persona: '人设', settings: '设置' };
   const title = titles[key] || key;
@@ -411,6 +452,7 @@ async function showModule(key) {
           '语音 · ' + (x.voice && x.voice.voice ? x.voice.voice : '—'),
           '摘要 · ' + (x.prompt_excerpt || '—')
         ]]) : [['没有读到 personas/*', ['检查 personas 目录和后端权限']]]);
+      document.getElementById('moduleBody').insertAdjacentHTML('beforeend', '<div class="mcard" style="margin-top:10px"><h3>导入 / 导出</h3><div class="mline">导入 JSON 人设卡 <input id="personaFile" type="file" accept=".json,application/json" style="margin-left:auto;max-width:220px"></div><div class="mline">覆盖同名 <input id="personaOverwrite" type="checkbox" style="margin-left:auto"></div><div style="display:flex;gap:7px;margin-top:8px"><button class="run" style="flex:1;height:30px" onclick="importPersona()">导入 JSON</button><button class="run" style="flex:1;height:30px;background:#fff;color:#3457d5;border:1px solid #c9d7f7" onclick="exportPersona()">导出当前</button><button class="run" style="flex:1;height:30px;background:#fff;color:#3457d5;border:1px solid #c9d7f7" onclick="activatePersona()">激活当前</button></div><div id="personaMsg" class="mline" style="color:#8a8b82"></div></div>');
       return;
     }
     if (key === 'info') {

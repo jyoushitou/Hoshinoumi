@@ -16,7 +16,7 @@ from .routes_meta import (
     handle_memory, handle_logs, handle_get_token,
 )
 from .routes_chat import handle_chat, handle_command
-from .routes_persona import handle_persona
+from .routes_persona import handle_persona, handle_export as handle_persona_export, handle_import as handle_persona_import, handle_activate as handle_persona_activate
 from .routes_plan import handle_get as handle_plan_get, handle_put as handle_plan_put, handle_import as handle_plan_import, handle_export as handle_plan_export
 from .routes_presence import handle_get as handle_presence_get, handle_post as handle_presence_post, handle_delete as handle_presence_delete
 from .routes_tools import handle_list as handle_tools_list, handle_call as handle_tool_call
@@ -328,6 +328,9 @@ async def start_api_server():
     app.router.add_get("/api/tools", handle_tools_list)
     app.router.add_post("/api/tools/{name}/call", handle_tool_call)
     app.router.add_get("/api/persona", handle_persona)
+    app.router.add_get("/api/persona/export", handle_persona_export)
+    app.router.add_post("/api/persona/import", handle_persona_import)
+    app.router.add_post("/api/persona/activate", handle_persona_activate)
     app.router.add_get("/api/plan", handle_plan_get)
     app.router.add_post("/api/plan", handle_plan_put)
     app.router.add_post("/api/plan/import", handle_plan_import)

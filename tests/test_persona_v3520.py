@@ -34,7 +34,17 @@ def _stub_aiohttp():
 
 _stub_aiohttp()
 
+from bot.server import routes_persona  # noqa: E402
 from bot.server.routes_persona import cards, handle_persona  # noqa: E402
+
+
+class _PostReq:
+    def __init__(self, body, query=None):
+        self._body = body
+        self.query = query or {}
+
+    async def json(self):
+        return self._body
 
 
 class _Req:
@@ -66,6 +76,28 @@ class PersonaApiTests(unittest.TestCase):
         self.assertEqual(data["data"]["name"], "nao")
         bad = asyncio.run(handle_persona(_Req({"name": "../nao"})))
         self.assertEqual(bad.status, 404)
+
+    def test_import_export_with_temp_card(self):
+        import tempfile
+        from pathlib import Path as _Path
+        with tempfile.TemporaryDirectory() as td:
+            old = routes_persona.CARD_ROOT
+            routes_persona.CARD_ROOT = _Path(td)
+            try:
+                body = {"name": "test_card", "prompt": "你是测试角色", "state": {"mood": 0.2}}
+                resp = asyncio.run(routes_persona.handle_import(_PostReq(body)))
+                data = json.loads(resp.text)
+                self.assertTrue(data["ok"])
+                self.assertTrue((_Path(td) / "test_card" / "prompt.txt").is_file())
+                # 不覆盖同名
+                resp2 = asyncio.run(routes_persona.handle_import(_PostReq(body)))
+                self.assertEqual(resp2.status, 409)
+                resp3 = asyncio.run(routes_persona.handle_export(_Req({"name": "test_card"})))
+                exported = json.loads(resp3.text)
+                self.assertEqual(exported["data"]["name"], "test_card")
+                self.assertIn("prompt", exported["data"])
+            finally:
+                routes_persona.CARD_ROOT = old
 
     def test_full_only_on_request(self):
         resp = asyncio.run(handle_persona(_Req({"name": "nao", "full": "1"})))
