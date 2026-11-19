@@ -146,22 +146,17 @@ button,input{font:inherit}
    <div class="logo">deepseek <b>HARNESS</b></div>
    <div class="new" onclick="showNew()">＋ 新会话</div>
    <div class="nav">
-    <div class="item" onclick="showModule('plugins')">◇ 插件</div>
-    <div class="item" id="navAuto" onclick="toggleAuto()">◷ 自动化任务</div>
-    <div class="sub" id="autoSub"><div onclick="showCmd('tools')">命令</div><div onclick="showScheduled()">◷ 定时任务</div><div onclick="showLogs()">▤ 运行日志</div></div>
-    <div class="item" onclick="showOverview()">▦ 全部功能</div>
+    <div class="item" onclick="showHome()">⌂ 主页</div>
+    <div class="item" id="wsNao" onclick="showChat()">◌ nao（聊天）</div>
+    <div class="item" onclick="showModule('memory')">◈ 记忆</div>
+    <div class="item" onclick="showModule('savings')">¥ 存钱</div>
+    <div class="item" onclick="showModule('info')">▤ 信息</div>
+    <div class="item" onclick="showModule('persona')">奈 人设</div>
+    <div class="item" onclick="showModule('settings')">⚙ 设置</div>
+    <div class="item" onclick="showCmd('tools')">⌘ 命令</div>
+    <div class="item" onclick="showScheduled()">◷ 定时任务</div>
+    <div class="item" onclick="showLogs()">▥ 运行日志</div>
    </div>
-   <div class="sec">工作区</div>
-   <div class="ws on" id="wsNao" onclick="showChat()"><i></i> nao</div>
-   <div class="ws" onclick="showOverview()"><i></i> nao 功能</div>
-   <div class="ws" onclick="toast('NapCat+Python（演示）')"><i></i> NapCat+Python</div>
-   <div class="sess on">和 nao 的对话 <span>刚刚</span></div>
-   <div class="sess">昨天 · 存钱与旅行目标 <span>昨天</span></div>
-   <div class="sess">前天 · 工作上的事 <span>2天</span></div>
-   <div class="sess" style="color:#a1a298">更早的 46 个会话 <span>›</span></div>
-   <div class="sec">GateWay</div>
-   <div class="sess">编写后端冒烟测试脚本 (2) <span>9小时</span></div>
-   <div class="sess">编写后端冒烟测试脚本 (1) <span>22小时</span></div>
    <div class="foot"><div class="ava">奈</div><div>友利奈绪<br><span style="color:#a7a89e">v35.2.1</span></div><div style="margin-left:auto">↧ 新版本</div></div>
   </aside>
   <main class="main">
@@ -200,7 +195,7 @@ button,input{font:inherit}
     <div class="mgrid"><div class="mcard"><h3>日志</h3><div class="logrow"><span class="tm">21:04:12</span><span class="nm">!status</span><span class="ok">200</span><span class="du">12ms</span></div><div class="logrow"><span class="tm">20:51:33</span><span class="nm">search_images</span><span class="ok">200</span><span class="du">84ms</span></div><div class="logrow"><span class="tm">20:32:07</span><span class="nm">recall</span><span class="ok">200</span><span class="du">12ms</span></div><div class="logrow"><span class="tm">19:20:09</span><span class="nm">search_images</span><span class="err">500</span><span class="du">1200ms</span></div><div class="logrow"><span class="tm">18:00:00</span><span class="nm">每日早报</span><span class="ok">200</span><span class="du">312ms</span></div></div>
     <div class="mcard"><h3>详情</h3><div class="dsel">search_images</div><div class="dkv">状态<span class="r" style="color:#c25b5b">500 失败</span></div><div class="dkv">耗时<span class="r">1200ms</span></div><div class="dkv">来源<span class="r">DSH · 命令</span></div><div class="result"><b>错误</b><br>图库服务超时 · upstream timeout<br>未重试，避免阻塞 DSH。</div></div></div></div>
    </div>
-   <div class="page" id="pageOverview"><div class="ovpage"><div class="crumb">工作区 / nao / 全部功能</div><div class="ch1">全部功能 <span class="ok">● 10 个模块</span></div><div class="cdesc">DSH 插件不是只有命令页；聊天、记忆、财务、信息、人设、设置、插件、自动化都在这里。</div>
+   <div class="page" id="pageOverview"><div class="ovpage"><div class="crumb">工作区 / nao / 主页</div><div class="ch1">主页 <span class="ok">● 9 个功能模块</span></div><div class="cdesc">从主页进入聊天、记忆、存钱、信息、人设、设置、命令、定时任务和运行日志。</div>
     <div class="ogrid">
      <div class="ocard" onclick="showChat()"><div class="oi">◌</div><div class="on">聊天</div><div class="od">和 nao 对话，自动加载历史。</div><div class="om"><b>1,284</b> 条历史</div></div>
      <div class="ocard" onclick="showModule('memory')"><div class="oi">◈</div><div class="on">记忆</div><div class="od">记忆本、画像、关系、事件。</div><div class="om"><b>1,284</b> 条记忆</div></div>
@@ -208,7 +203,6 @@ button,input{font:inherit}
      <div class="ocard" onclick="showModule('info')"><div class="oi">▤</div><div class="on">信息</div><div class="od">运行状态、日志、计划、阅读。</div><div class="om"><b>42</b> 张表</div></div>
      <div class="ocard" onclick="showModule('persona')"><div class="oi">奈</div><div class="on">人设</div><div class="od">角色卡、预览、激活、导入。</div><div class="om"><b>3</b> 个人设</div></div>
      <div class="ocard" onclick="showModule('settings')"><div class="oi">⚙</div><div class="on">设置</div><div class="od">后端地址、连接测试、页面可见性。</div><div class="om"><b>已连接</b></div></div>
-     <div class="ocard" onclick="showModule('plugins')"><div class="oi">◇</div><div class="on">插件</div><div class="od">安装、审批、权限、错误。</div><div class="om"><b>2</b> 个已装</div></div>
      <div class="ocard" onclick="showCmd('tools')"><div class="oi">⌘</div><div class="on">命令</div><div class="od">全量 51 个命令，按功能分组。</div><div class="om"><b>51</b> 个命令</div></div>
      <div class="ocard" onclick="showScheduled()"><div class="oi">◷</div><div class="on">定时任务</div><div class="od">早报、日记提醒、健康检查。</div><div class="om"><b>3</b> 个启用</div></div>
      <div class="ocard" onclick="showLogs()"><div class="oi">▥</div><div class="on">运行日志</div><div class="od">命令与任务执行记录。</div><div class="om"><b>24</b> 今日运行</div></div>
@@ -313,14 +307,15 @@ function reply(text){
  if(text.includes('命令')||text.includes('工具'))return '命令在左侧“自动化任务”下面，我已经连上本机服务。';
  return '嗯，我在听。你继续说。';
 }
-function hideAll(){document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));document.getElementById('tabs').style.display='none';}
+function hideAll(){document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));document.querySelectorAll('.nav .item').forEach(x=>x.classList.remove('on'));document.getElementById('tabs').style.display='none';}
 function setHead(title,mode,status){document.getElementById('htitle').textContent=title;document.getElementById('hmode').textContent=mode;document.getElementById('hstatus').textContent=status;}
 function showChat(){hideAll();document.getElementById('app').classList.remove('cmd-mode');document.getElementById('breadcrumb').textContent='应用 / 工作区 / nao';document.getElementById('pageChat').classList.add('on');setHead('nao','◈ 工作区 · 私聊','已连接');document.getElementById('tabs').style.display='flex';}
 function showNew(){hideAll();document.getElementById('breadcrumb').textContent='应用 / 工作区 / nao / 新会话';document.getElementById('pageModule').classList.add('on');document.getElementById('moduleBody').innerHTML='<div class="crumb">工作区 / nao / 新会话</div><div class="ch1">新会话</div><div class="cdesc">和 nao 开始新对话，历史不会丢。</div><div class="mgrid" style="margin-top:12px"><div class="mcard"><h3>你可以这样开始</h3><div class="mline">“今天有点累”<span class="r">情绪</span></div><div class="mline">“午饭 35”<span class="r">记账</span></div><div class="mline">“这周有什么安排”<span class="r">日程</span></div></div><div class="mcard"><h3>上下文</h3><div class="mline">人设<span class="r">友利奈绪</span></div><div class="mline">记忆<span class="r">1,284 条</span></div><div class="mline">后端<span class="r">已连接</span></div></div></div>';setHead('新会话','◈ 工作区 · 私聊','已连接');}
 function showCmd(tab){hideAll();document.getElementById('breadcrumb').textContent='应用 / 自动化任务 / 命令';document.getElementById('pageCmd').classList.add('on');setHead('命令','自动化任务 / Hoshinoumi','只读');renderCmdGroups();}
 function showScheduled(){hideAll();document.getElementById('breadcrumb').textContent='应用 / 自动化任务 / 定时任务';document.getElementById('pageScheduled').classList.add('on');setHead('定时任务','自动化任务 / 定时任务','3 个启用');}
 function showLogs(){hideAll();document.getElementById('breadcrumb').textContent='应用 / 自动化任务 / 运行日志';document.getElementById('pageLogs').classList.add('on');setHead('运行日志','自动化任务 / 运行日志','24h');}
-function showOverview(){hideAll();document.getElementById('breadcrumb').textContent='应用 / 工作区 / nao / 全部功能';document.getElementById('pageOverview').classList.add('on');setHead('全部功能','工作区 / nao','10 个模块');}
+function showHome(){hideAll();document.getElementById('breadcrumb').textContent='应用 / 工作区 / nao / 主页';document.getElementById('pageOverview').classList.add('on');setHead('主页','工作区 / nao','9 个功能模块');}
+function showOverview(){showHome();}
 const MODULES={
  memory:{t:'记忆',d:'记忆本、画像、关系、事件和关键词。',stats:[['1,284','记忆'],['328','事件'],['12','关系'],['46','关键词']],cards:[['用户画像',['偏好 · 晚上聊天','称呼 · 你','边界 · 财务仅私聊']],['关系',['奈绪 · 恋人','信任 86','最近互动 · 今天']],['记忆本',['昨天方案通过','旅行目标 60%','担心过不了']],['关键词',['旅行','方案','猫','读书']]]},
  savings:{t:'存钱',d:'总余额、分账户、目标和最近流水。',stats:[['¥3,300','本月结余'],['¥18,420','总余额'],['60%','旅行目标'],['¥420','今日支出']],cards:[['账户',['银行卡 · ¥12,000','支付宝 · ¥3,420','微信 · ¥1,800','现金 · ¥1,200']],['目标',['旅行基金 · 60%','应急金 · 80%']],['最近流水',['午饭 -35','工资 +8,000','书 -58']],['对账',['上次 · 昨天','差额 · 0']]]},
