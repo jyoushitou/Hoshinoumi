@@ -194,6 +194,25 @@ dimensions: [{key,label,value,visible}]
 
 保存到 localStorage，不写入仓库；设置页可重新打开配置。
 
+## 3.15 她的状态
+
+右侧只显示后端真实字段：
+
+```text
+/internal/state   → mood / energy / lonely / emotion
+/internal/presence → activity / detail / idle_min / stale
+```
+
+规则：
+
+```text
+presence 超过 TTL → unknown
+没有数据 → 显示未知
+不展示前端虚构的“今日互动次数”
+```
+
+Web 需要同源 `/api/state`、`/api/presence` 的 owner 只读代理。
+
 ## 4. 次次版本
 
 | 版本 | 交付 | 验收 |

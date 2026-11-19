@@ -919,5 +919,5 @@
 
   renderChat('nao');
   updateUnread();
-  if (!localStorage.getItem('hsh_web_login')) setTimeout(openLogin, 80);
+  if (!localStorage.getItem('hsh_web_login') && !location.search.includes('skipLogin')) setTimeout(openLogin, 80);
 })();
