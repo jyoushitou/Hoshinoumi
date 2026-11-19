@@ -170,6 +170,20 @@
     .log-line .lv.INFO{color:#1d4ed8}.log-line .lv.WARN{color:#b45309}.log-line .lv.ERROR{color:#c0264a}
     .log-line .lm{overflow:hidden;text-overflow:ellipsis}
     .log-empty{padding:16px;color:#8a9bb0;font-size:10px}
+    .persona-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .persona-card{border:1px solid #e3ebf7;border-radius:12px;background:#fff;padding:12px 13px;transition:border-color .18s,transform .18s,box-shadow .18s}
+    .persona-card:hover{border-color:#bcd4f7;transform:translateY(-2px);box-shadow:0 8px 18px rgba(37,99,235,.06)}
+    .persona-top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+    .persona-ava{width:27px;height:27px;border-radius:8px;background:#dbeafe;color:#1d4ed8;display:grid;place-items:center;font-size:11px;font-weight:700}
+    .persona-card h3{font-size:11px;margin:0;color:#1e3a5f}.persona-card .pill{font-size:8px;color:#1f9d6b;border:1px solid #cdeee0;background:#eefbf5;border-radius:4px;padding:1px 4px;margin-left:auto}
+    .persona-card p{font-size:9.5px;line-height:1.55;color:#6b7c95;margin:5px 0 8px;min-height:30px}
+    .persona-files{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}.persona-files span{font-size:8px;color:#6b7c95;border:1px solid #e3ebf7;border-radius:4px;padding:1px 4px}
+    .persona-actions{display:flex;gap:5px}.persona-actions button{border:1px solid #dbe8ff;border-radius:5px;background:#fff;color:#2563eb;font-size:8.5px;padding:3px 6px;cursor:pointer}.persona-actions button:hover{background:#eef4ff}
+    .persona-actions button.on{background:#dbeafe;color:#1d4ed8}
+    .persona-toolbar{display:flex;gap:7px;align-items:center;margin-bottom:9px}.persona-toolbar button{border:1px solid #dbe8ff;border-radius:6px;background:#fff;color:#2563eb;font-size:9.5px;padding:5px 8px;cursor:pointer}.persona-toolbar button:hover{background:#eef4ff}
+    .persona-toolbar .msg{font-size:9px;color:#8a9bb0;margin-left:auto}
+    .persona-toolbar input{display:none}
+
 
 
     .info-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:10px}
@@ -379,6 +393,43 @@
   }));
 
   function showPage(name) {
+    if (name === 'persona') {
+      const PS = window.__personas || (window.__personas = [
+        { name: 'nao', display: '友利奈绪', active: true, files: ['prompt','life','supplement','state','voice'], desc: '口语、简短、带行动；优先记住对话里的细枝末节。' },
+        { name: 'student', display: '学生会长', active: false, files: ['prompt','state'], desc: '更正式、更克制的学生会语气，适合公共群。' }
+      ]);
+      function renderPersona() {
+        const cards = PS.map((p, i) => '<div class="persona-card"><div class="persona-top"><div class="persona-ava">' + esc(p.display.slice(0,1)) + '</div><h3>' + esc(p.display) + ' · ' + esc(p.name) + '</h3>' + (p.active ? '<span class="pill">当前</span>' : '') + '</div><p>' + esc(p.desc) + '</p><div class="persona-files">' + p.files.map(f => '<span>' + esc(f) + '</span>').join('') + '</div><div class="persona-actions"><button data-act="preview" data-i="' + i + '">预览</button><button data-act="activate" data-i="' + i + '">' + (p.active ? '已激活' : '激活') + '</button><button data-act="export" data-i="' + i + '">导出</button></div></div>').join('');
+        pageView.innerHTML = '<div class="page-head"><div><h2>人设</h2><p>v35.5 Web 演示 · MOCK 数据 · 导入 / 导出 / 激活</p></div><button class="back" id="backChat">← 返回聊天</button></div><div class="persona-toolbar"><button id="psImport">导入人设卡 JSON</button><input id="psFile" type="file" accept=".json,application/json"><span class="msg" id="psMsg">只读预览 · 仅 owner 可激活/导入</span></div><div class="persona-grid">' + cards + '</div>';
+        [top, msgs, composer, searchBar].forEach(x => x.classList.add('chat-hide'));
+        pageView.classList.add('on');
+        document.querySelectorAll('.rnav').forEach(x => x.classList.toggle('on', x.dataset.page === name));
+        document.getElementById('backChat').addEventListener('click', () => showChat());
+        document.getElementById('psImport').addEventListener('click', () => document.getElementById('psFile').click());
+        document.getElementById('psFile').addEventListener('change', e => {
+          const f = e.target.files[0]; if (!f) return;
+          f.text().then(txt => {
+            try {
+              const d = JSON.parse(txt);
+              PS.push({ name: d.name || ('imported' + (PS.length + 1)), display: d.display || d.name || '导入人设', active: false, files: Object.keys(d.files || d).filter(k => ['prompt','life','supplement','state','voice'].includes(k)), desc: d.desc || (d.prompt || '').slice(0, 60) || '导入的人设卡' });
+              localStorage.setItem('hsh_personas', JSON.stringify(PS));
+              renderPersona(); toast('已导入人设卡（MOCK）');
+            } catch (err) { document.getElementById('psMsg').textContent = 'JSON 解析失败：' + err.message; }
+          });
+        });
+        pageView.querySelectorAll('.persona-actions button').forEach(b => b.addEventListener('click', () => {
+          const i = Number(b.dataset.i), p = PS[i], act = b.dataset.act;
+          if (act === 'activate') { PS.forEach(x => x.active = false); p.active = true; renderPersona(); toast('已激活 ' + p.display + '（MOCK）'); }
+          else if (act === 'preview') { toast('预览 ' + p.display + ' · prompt/life/state/voice'); }
+          else if (act === 'export') {
+            const blob = new Blob([JSON.stringify(p, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = p.name + '.json'; a.click(); toast('已导出 ' + p.name + '.json');
+          }
+        }));
+      }
+      renderPersona();
+      return;
+    }
     if (name === 'logs') {
       const LOGS = window.__logs || (window.__logs = [
         ['09:13','INFO','chat','len=18 target=822891053'],

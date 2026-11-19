@@ -144,6 +144,18 @@ dimensions: [{key,label,value,visible}]
 
 记忆详情归记忆页，不在聊天右侧重复堆卡片。
 
+## 3.11 人设页
+
+```text
+人设卡列表：名称 / 文件清单 / 摘要 / 当前标记
+导入 JSON
+导出 JSON
+激活（仅 owner）
+预览
+```
+
+最终接口：`/api/persona`、`/api/persona/import`、`/api/persona/export`、`/api/persona/activate`。
+
 ## 4. 次次版本
 
 | 版本 | 交付 | 验收 |
