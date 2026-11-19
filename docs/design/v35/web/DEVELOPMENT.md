@@ -334,6 +334,24 @@ nginx :27006
 
 nginx 要点：SPA fallback、上传大小、SSE/WebSocket 不缓冲、API 不缓存。
 
+## 3.18 nginx 生产配置
+
+文件：
+
+```text
+integrations/web/deploy/nginx.conf
+integrations/web/deploy/DEPLOY.md
+```
+
+入口：
+
+```text
+27006 → dist 静态
+/api/ → gateway 27005
+/ws/  → gateway 27005（Upgrade）
+/internal/ → 404
+```
+
 ## 4. 次次版本
 
 | 版本 | 交付 | 验收 |
@@ -355,6 +373,7 @@ nginx 要点：SPA fallback、上传大小、SSE/WebSocket 不缓冲、API 不�
 | v35.5.14.0 | 会话数据源统一 QQ 私聊/群 | 群列表一致 |
 | v35.5.15.0 | Vite build、Mock 标注、视觉/接口回归 | 可演示 |
 | v35.5.16.0 | Web 消息同步：seq/ack/read/多标签 | 与后端一致 |
+| v35.5.17.0 | Web nginx 生产部署（27006） | nginx -t 通过 |
 
 ## 4.1 命令目录
 
