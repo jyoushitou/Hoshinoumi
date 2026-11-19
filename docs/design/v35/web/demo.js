@@ -42,7 +42,7 @@
     weekly: [['第 12 周', '3 门课'], ['周一 1-2 节', '高等数学 · 教三 201'], ['周三 3-4 节', '大学英语 · 文科楼 104'], ['周五 5-6 节', '数据结构 · 实验楼 302']],
     persona: [['当前人设', 'nao · 友利奈绪'], ['风格', '口语 · 简短 · 行动回复'], ['文件', 'prompt / life / supplement / state / voice'], ['状态', '只读预览 · 仅 owner']],
     relation: [['亲密度', '0.62 · 熟'], ['档位', '熟'], ['最近变化', '+0.020 · 聊天'], ['可见范围', '仅 owner 全量；普通用户只看自己']],
-    settings: [['后端地址', 'http://127.0.0.1:27004'], ['连接状态', '已连接 · schema 35'], ['主人 QQ', '822891053'], ['视觉', '深色 · 动画默认关闭']],
+    settings: [['后端地址', 'http://127.0.0.1:27004'], ['连接状态', '已连接 · schema 35'], ['主人 QQ', '未配置'], ['视觉', '深色 · 动画默认关闭']],
     plugins: [['已安装', '0 个'], ['权限', '只读优先'], ['审批', '安装前确认'], ['状态', 'MOCK 演示']]
   };
   const COMMAND_META = {
@@ -303,7 +303,7 @@
       loginMask.innerHTML = '<div class="login-card"><h2>连接 Hoshinoumi</h2><div class="sub">你已经在 Web 上，后端地址直接使用当前站点。<br>只填写访问 token 和主人 QQ。</div>' +
         '<div class="login-field"><label>后端</label><div class="login-url">当前 Web 站点 · 同源（无需填写 URL）</div></div>' +
         '<div class="login-field"><label>访问 token</label><input id="loginToken" type="password" value="' + esc(saved.token || '') + '" placeholder="Bearer token"></div>' +
-        '<div class="login-field"><label>主人 QQ</label><input id="loginQQ" value="' + esc(saved.qq || '822891053') + '" placeholder="822891053"></div>' +
+        '<div class="login-field"><label>主人 QQ</label><input id="loginQQ" value="' + esc(saved.qq || '') + '" placeholder="请输入主人 QQ"></div>' +
         '<div class="login-actions"><button id="loginTest">测试连接</button><button class="primary" id="loginSave">保存并进入</button></div>' +
         '<div class="login-status" id="loginStatus"></div><button class="login-skip" id="loginSkip">稍后配置</button></div>';
       document.body.appendChild(loginMask);
@@ -472,7 +472,7 @@
     if (name === 'settings') {
       let saved = {}; try { saved = JSON.parse(localStorage.getItem('hsh_web_login') || '{}'); } catch {}
       pageView.innerHTML = '<div class="page-head"><div><h2>设置</h2><p>v35.5 Web 演示 · 登录 / 后端 / 连接</p></div><button class="back" id="backChat">← 返回聊天</button></div>' +
-        '<div class="info-grid"><div class="info-panel"><h3>登录配置</h3><div class="info-row"><span>后端</span><b>' + esc(location.origin === 'null' ? '当前 Web 站点' : location.origin) + ' · 同源</b></div><div class="info-row"><span>token</span><b>' + (saved.token ? '已保存 · 掩码' : '未配置') + '</b></div><div class="info-row"><span>主人 QQ</span><b>' + esc(saved.qq || '822891053') + '</b></div><div class="info-row"><span>操作</span><b><button class="back" id="relogin">登录 / 重新配置</button></b></div></div>' +
+        '<div class="info-grid"><div class="info-panel"><h3>登录配置</h3><div class="info-row"><span>后端</span><b>' + esc(location.origin === 'null' ? '当前 Web 站点' : location.origin) + ' · 同源</b></div><div class="info-row"><span>token</span><b>' + (saved.token ? '已保存 · 掩码' : '未配置') + '</b></div><div class="info-row"><span>主人 QQ</span><b>' + esc(saved.qq || '') + '</b></div><div class="info-row"><span>操作</span><b><button class="back" id="relogin">登录 / 重新配置</button></b></div></div>' +
         '<div class="info-panel"><h3>连接</h3><div class="info-row"><span>状态</span><b class="ok">已连接 · MOCK</b></div><div class="info-row"><span>schema</span><b>35</b></div><div class="info-row"><span>延迟</span><b>42ms</b></div></div></div>';
       [top, msgs, composer, searchBar].forEach(x => x.classList.add('chat-hide'));
       pageView.classList.add('on');
@@ -520,7 +520,7 @@
     }
     if (name === 'logs') {
       const LOGS = window.__logs || (window.__logs = [
-        ['09:13','INFO','chat','len=18 target=822891053'],
+        ['09:13','INFO','chat','len=18 target=10001'],
         ['09:12','INFO','command','status'],
         ['09:11','INFO','memory','append 2 条'],
         ['09:08','INFO','relation','affinity +0.020'],
@@ -844,9 +844,9 @@
       document.getElementById('backChat').addEventListener('click', () => showChat());
       const RESULTS = {
         '!ping': '🏓 Pong！奈绪在线~',
-        '!status': '运行中（MOCK）\n主人 QQ：822891053\n记忆：4 条\nschema：35',
+        '!status': '运行中（MOCK）\n主人 QQ：未配置\n记忆：4 条\nschema：35',
         '!help': '命令目录：51 个\n基础 / 记忆 / 媒体 / 日常 / 阅读 / 计划 / 插件 / 账号 / 多端',
-        '!memory': '822891053：3 条记忆\n10001：1 条记忆',
+        '!memory': '10001：3 条记忆\n10002：1 条记忆',
         '!logs': '09:13 INFO chat len=18\n09:04 WARN search_images timeout',
         '!persona': 'nao · 当前人设\n只读预览 · 仅 owner'
       };

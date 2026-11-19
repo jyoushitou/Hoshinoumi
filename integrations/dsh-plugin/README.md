@@ -137,7 +137,7 @@ python integrations/dsh-plugin/mock_gateway.py --port 27005 --token mock-token
 ```text
 后端地址  http://127.0.0.1:27005
 token     mock-token
-主人 QQ   822891053
+主人 QQ   <主人QQ>
 ```
 
 Mock 支持：

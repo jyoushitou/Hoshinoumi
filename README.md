@@ -2011,7 +2011,7 @@ curl -s -H "Authorization: Bearer $TOKEN" http://127.0.0.1:27004/api/status
 ```json
 {
   "message": "在吗",
-  "target_id": "822891053",
+  "target_id": "<你的QQ号>",
   "keywords": ["可选"]
 }
 ```
@@ -2020,7 +2020,7 @@ curl -s -H "Authorization: Bearer $TOKEN" http://127.0.0.1:27004/api/status
 {
   "success": true,
   "reply": "...",
-  "target_id": "822891053"
+  "target_id": "<你的QQ号>"
 }
 ```
 

@@ -25,7 +25,7 @@ function skip() { auth.enterGuest() }
     <div class="card">
       <h2>连接 Hoshinoumi</h2>
       <p class="sub">第一次使用，填写主人 QQ 和访问 token。<br>后端地址使用当前站点，不需要填写 URL。</p>
-      <label>主人 QQ<input v-model="qq" placeholder="822891053"></label>
+      <label>主人 QQ<input v-model="qq" placeholder="请输入主人 QQ"></label>
       <label>访问 token<input v-model="token" type="password" placeholder="Bearer token"></label>
       <div class="actions"><button class="primary" :disabled="saving" @click="save">{{ saving ? '连接中…' : '保存并进入' }}</button><button @click="skip">稍后配置</button></div>
       <div class="status">{{ status }}</div>
