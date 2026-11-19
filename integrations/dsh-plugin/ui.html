@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DSH · nao 演示</title>
+<title>nao · Hoshinoumi 测试版</title>
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:#e8e8e3;color:#23241f;font-family:"Microsoft YaHei","Noto Sans SC",sans-serif;overflow:hidden}
@@ -140,7 +140,7 @@ button,input{font:inherit}
 </head>
 <body>
 <div class="app" id="app">
- <div class="top"><div class="mac"><i></i><i></i><i></i></div><span id="breadcrumb">应用 / 工作区 / nao</span><div class="right"><span id="clock">21:04</span><span onclick="openSetup()" title="后端设置" style="cursor:pointer">⚙</span><button class="replay" onclick="replay()">↻ 重播</button><span>◐</span><span>⌕</span><span>☰</span></div></div>
+ <div class="top"><div class="mac"><i></i><i></i><i></i></div><span id="breadcrumb">应用 / 工作区 / nao</span><div class="right"><span id="clock">21:04</span><span onclick="openSetup()" title="后端设置" style="cursor:pointer">⚙</span><span>◐</span><span>⌕</span><span>☰</span></div></div>
  <div class="body">
   <aside class="side">
    <div class="logo">deepseek <b>HARNESS</b></div>
@@ -157,11 +157,11 @@ button,input{font:inherit}
     <div class="item" onclick="showScheduled()">◷ 定时任务</div>
     <div class="item" onclick="showLogs()">▥ 运行日志</div>
    </div>
-   <div class="foot"><div class="ava">奈</div><div>友利奈绪<br><span style="color:#a7a89e">v35.2.1</span></div><div style="margin-left:auto">↧ 新版本</div></div>
+   <div class="foot"><div class="ava">奈</div><div>友利奈绪<br><span style="color:#a7a89e">v35.2.9 · 测试版</span></div></div>
   </aside>
   <main class="main">
    <div class="mhead"><div class="mtitle" id="htitle">nao</div><div class="mode" id="hmode">◈ 工作区 · 本机后端</div><div class="mright"><span class="dot"></span><span id="hstatus">已连接</span><span>⟳</span><span>⋯</span></div></div>
-   <div class="tabs" id="tabs"><div class="tab on" onclick="toast('对话')">对话</div><div class="tab" onclick="toast('轨迹（演示）')">轨迹</div><div class="tab" onclick="toast('更多')">⋯</div></div>
+   <div class="tabs" id="tabs"><div class="tab on" onclick="toast('对话')">对话</div><div class="tab" onclick="toast('轨迹（暂未开放）')">轨迹</div><div class="tab" onclick="toast('更多')">⋯</div></div>
    <div class="page on" id="pageChat">
     <div class="chat" id="chat">
      <div class="banner" id="banner">● 已自动加载历史对话 · 1,284 条 · 最后一条 21:03<div class="bar"><i id="barfill"></i></div></div>
@@ -213,10 +213,10 @@ button,input{font:inherit}
  </div>
 </div>
 <div class="modal" id="setupModal">
- <div class="modalcard"><h2>连接 Hoshinoumi</h2><div class="sub">第一次打开 DSH 插件，需要先配置 Hoshinoumi 后端地址。聊天和记忆都会发到这台服务器。</div>
+ <div class="modalcard"><h2>连接 Hoshinoumi</h2><div class="sub">第一次打开 DSH 插件，请填写 Hoshinoumi 后端地址、访问 token 和主人 QQ。聊天和记忆都会发到这台服务器。</div>
   <div class="mlabel">后端地址</div><div class="minput"><input id="baseInput" placeholder="http://127.0.0.1:27004"></div>
-  <div class="mlabel">访问 token（可选）</div><div class="minput"><input id="tokenInput" type="password" placeholder="Bearer token"></div>
-  <div class="mlabel">主人 target_id（QQ）</div><div class="minput"><input id="targetInput" placeholder="owner"></div>
+  <div class="mlabel">访问 token</div><div class="minput"><input id="tokenInput" type="password" placeholder="Bearer token"></div>
+  <div class="mlabel">主人 QQ（target_id）</div><div class="minput"><input id="targetInput" placeholder="例如 123456789"></div>
   <div class="mstatus" id="setupStatus"></div>
   <div class="mrow"><button class="mbtn" onclick="testBackend()">测试连接</button><button class="mbtn primary" onclick="saveBackend()">保存并连接</button></div>
   <div class="mskip" onclick="closeSetup()">稍后配置</div>
@@ -335,15 +335,19 @@ function openSetup(){const m=document.getElementById('setupModal');document.getE
 function closeSetup(){document.getElementById('setupModal').classList.remove('show');}
 async function testBackend(){
  const url=document.getElementById('baseInput').value.trim();const st=document.getElementById('setupStatus');
+ const token=document.getElementById('tokenInput').value.trim();const target=document.getElementById('targetInput').value.trim();
  if(!/^https?:\/\//.test(url)){st.className='mstatus err';st.textContent='地址需要以 http:// 或 https:// 开头';return;}
  st.className='mstatus';st.textContent='正在连接 '+url+' …';
- try{const r=await fetch('/api/hoshinoumi/test',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({base_url:url,token:document.getElementById('tokenInput').value,target_id:document.getElementById('targetInput').value})});const j=await r.json();if(!r.ok||!j.ok)throw new Error(j.message||('HTTP '+r.status));st.className='mstatus ok';st.textContent='连接成功 · '+(j.latency_ms||0)+'ms · schema '+(j.ready?.schema??'33');}catch(e){st.className='mstatus err';st.textContent='连接失败：'+e.message;}
+ try{const r=await fetch('/api/hoshinoumi/test',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({base_url:url,token,target_id:target})});const j=await r.json();if(!r.ok||!j.ok)throw new Error(j.message||('HTTP '+r.status));st.className='mstatus ok';st.textContent='连接成功 · '+(j.latency_ms||0)+'ms · schema '+(j.ready?.schema??'33');}catch(e){st.className='mstatus err';st.textContent='连接失败：'+e.message;}
 }
 async function saveBackend(){
  const url=document.getElementById('baseInput').value.trim();const st=document.getElementById('setupStatus');
  if(!/^https?:\/\//.test(url)){st.className='mstatus err';st.textContent='地址需要以 http:// 或 https:// 开头';return;}
+ const token=document.getElementById('tokenInput').value.trim();const target=document.getElementById('targetInput').value.trim();
+ if(!token){st.className='mstatus err';st.textContent='请填写访问 token';return;}
+ if(!target){st.className='mstatus err';st.textContent='请填写主人 QQ';return;}
  st.className='mstatus';st.textContent='正在保存…';
- try{const r=await fetch('/api/hoshinoumi/config',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({base_url:url,token:document.getElementById('tokenInput').value,target_id:document.getElementById('targetInput').value})});const j=await r.json();if(!r.ok)throw new Error(j.message||('HTTP '+r.status));localStorage.setItem('hoshinoumi_target',document.getElementById('targetInput').value||'owner');st.className='mstatus ok';st.textContent='已保存，正在进入…';setTimeout(()=>{closeSetup();toast('后端已配置 · '+url);},450);}catch(e){st.className='mstatus err';st.textContent='保存失败：'+e.message;}
+ try{const r=await fetch('/api/hoshinoumi/config',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({base_url:url,token,target_id:target})});const j=await r.json();if(!r.ok)throw new Error(j.message||('HTTP '+r.status));localStorage.setItem('hoshinoumi_target',document.getElementById('targetInput').value||'owner');st.className='mstatus ok';st.textContent='已保存，正在进入…';setTimeout(()=>{closeSetup();toast('后端已配置 · '+url);},450);}catch(e){st.className='mstatus err';st.textContent='保存失败：'+e.message;}
 }
 async function loadHistory(){
  try{
@@ -356,11 +360,10 @@ async function loadHistory(){
   rows.forEach(x=>appendMsg({who:x.role==='user'?'me':'bot',text:String(x.content||''),meta:String(x.created_at||'').slice(11,16)||''}));
  }catch{}
 }
-async function loadBackendConfig(){try{const r=await fetch('/api/hoshinoumi/config');const j=await r.json();if(j.target_id)localStorage.setItem('hoshinoumi_target',j.target_id);if(!j.configured)setTimeout(()=>openSetup(),500);else setTimeout(loadHistory,900);}catch{setTimeout(()=>openSetup(),500);}}
+async function loadBackendConfig(){try{const r=await fetch('/api/hoshinoumi/config');const j=await r.json();if(j.target_id)localStorage.setItem('hoshinoumi_target',j.target_id);if(!j.configured||!j.hasToken)setTimeout(()=>openSetup(),500);else setTimeout(loadHistory,900);}catch{setTimeout(()=>openSetup(),500);}}
 function checkSetup(force){if(force||!localStorage.getItem(GW_KEY))setTimeout(()=>openSetup(),500);}
 
-clock();setInterval(clock,30000);replay();
-loadBackendConfig();
+clock();setInterval(clock,30000);loadBackendConfig();
 const h=location.hash.slice(1);
 if(h==='cmd')setTimeout(()=>showCmd('tools'),400);
 if(h==='overview')setTimeout(()=>showOverview(),400);
