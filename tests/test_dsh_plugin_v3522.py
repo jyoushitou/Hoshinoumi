@@ -37,6 +37,7 @@ class DshPluginPackageTests(unittest.TestCase):
             self.assertIn(route, host)
         self.assertIn("hoshinoumi.json", host)
         self.assertIn("Bearer", host)
+        self.assertIn("base_url", host)
 
     def test_ui_checks_gateway_and_calls_backend(self):
         ui = (PLUGIN / "ui.html").read_text(encoding="utf-8")
@@ -46,6 +47,7 @@ class DshPluginPackageTests(unittest.TestCase):
         self.assertIn("/api/hoshinoumi/chat", ui)
         self.assertIn("/api/hoshinoumi/command", ui)
         self.assertIn("target_id", ui)
+        self.assertIn("后端地址", ui)
 
     def test_no_secret_in_ui(self):
         ui = (PLUGIN / "ui.html").read_text(encoding="utf-8")

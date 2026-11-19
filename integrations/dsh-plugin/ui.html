@@ -219,12 +219,12 @@ button,input{font:inherit}
  </div>
 </div>
 <div class="modal" id="setupModal">
- <div class="modalcard"><h2>连接 Hoshinoumi</h2><div class="sub">第一次打开 DSH 插件，需要先配置后端网关地址。聊天和记忆都会发到这台服务器。</div>
-  <div class="mlabel">网关地址</div><div class="minput"><input id="gwInput" placeholder="http://127.0.0.1:27004"></div>
+ <div class="modalcard"><h2>连接 Hoshinoumi</h2><div class="sub">第一次打开 DSH 插件，需要先配置 Hoshinoumi 后端地址。聊天和记忆都会发到这台服务器。</div>
+  <div class="mlabel">后端地址</div><div class="minput"><input id="baseInput" placeholder="http://127.0.0.1:27004"></div>
   <div class="mlabel">访问 token（可选）</div><div class="minput"><input id="tokenInput" type="password" placeholder="Bearer token"></div>
   <div class="mlabel">主人 target_id（QQ）</div><div class="minput"><input id="targetInput" placeholder="owner"></div>
   <div class="mstatus" id="setupStatus"></div>
-  <div class="mrow"><button class="mbtn" onclick="testGateway()">测试连接</button><button class="mbtn primary" onclick="saveGateway()">保存并连接</button></div>
+  <div class="mrow"><button class="mbtn" onclick="testBackend()">测试连接</button><button class="mbtn primary" onclick="saveBackend()">保存并连接</button></div>
   <div class="mskip" onclick="closeSetup()">稍后配置</div>
  </div></div>
 <div id="toast" style="position:fixed;left:50%;bottom:24px;transform:translate(-50%,12px);background:#22231f;color:#fff;font-size:11px;padding:8px 13px;border-radius:8px;opacity:0;pointer-events:none;transition:.25s;z-index:20"></div>
@@ -336,19 +336,19 @@ function runTool(){const r=document.getElementById('cmdResult');r.style.opacity=
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.opacity=1;t.style.transform='translate(-50%,0)';clearTimeout(t._h);t._h=setTimeout(()=>{t.style.opacity=0;t.style.transform='translate(-50%,12px)'},1600);}
 function clock(){const d=new Date();document.getElementById('clock').textContent=d.toTimeString().slice(0,5)}
 
-function openSetup(){const m=document.getElementById('setupModal');document.getElementById('setupStatus').textContent='';fetch('/api/hoshinoumi/config').then(r=>r.json()).then(c=>{document.getElementById('gwInput').value=c.gateway||'http://127.0.0.1:27004';document.getElementById('targetInput').value=c.target_id||'owner';}).catch(()=>{});m.classList.add('show');}
+function openSetup(){const m=document.getElementById('setupModal');document.getElementById('setupStatus').textContent='';fetch('/api/hoshinoumi/config').then(r=>r.json()).then(c=>{document.getElementById('baseInput').value=c.base_url||'http://127.0.0.1:27004';document.getElementById('targetInput').value=c.target_id||'owner';}).catch(()=>{});m.classList.add('show');}
 function closeSetup(){document.getElementById('setupModal').classList.remove('show');}
-async function testGateway(){
- const url=document.getElementById('gwInput').value.trim();const st=document.getElementById('setupStatus');
+async function testBackend(){
+ const url=document.getElementById('baseInput').value.trim();const st=document.getElementById('setupStatus');
  if(!/^https?:\/\//.test(url)){st.className='mstatus err';st.textContent='地址需要以 http:// 或 https:// 开头';return;}
  st.className='mstatus';st.textContent='正在连接 '+url+' …';
- try{const r=await fetch('/api/hoshinoumi/test',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({gateway:url,token:document.getElementById('tokenInput').value,target_id:document.getElementById('targetInput').value})});const j=await r.json();if(!r.ok||!j.ok)throw new Error(j.message||('HTTP '+r.status));st.className='mstatus ok';st.textContent='连接成功 · '+(j.latency_ms||0)+'ms · schema '+(j.ready?.schema??'33');}catch(e){st.className='mstatus err';st.textContent='连接失败：'+e.message;}
+ try{const r=await fetch('/api/hoshinoumi/test',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({base_url:url,token:document.getElementById('tokenInput').value,target_id:document.getElementById('targetInput').value})});const j=await r.json();if(!r.ok||!j.ok)throw new Error(j.message||('HTTP '+r.status));st.className='mstatus ok';st.textContent='连接成功 · '+(j.latency_ms||0)+'ms · schema '+(j.ready?.schema??'33');}catch(e){st.className='mstatus err';st.textContent='连接失败：'+e.message;}
 }
-async function saveGateway(){
- const url=document.getElementById('gwInput').value.trim();const st=document.getElementById('setupStatus');
+async function saveBackend(){
+ const url=document.getElementById('baseInput').value.trim();const st=document.getElementById('setupStatus');
  if(!/^https?:\/\//.test(url)){st.className='mstatus err';st.textContent='地址需要以 http:// 或 https:// 开头';return;}
  st.className='mstatus';st.textContent='正在保存…';
- try{const r=await fetch('/api/hoshinoumi/config',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({gateway:url,token:document.getElementById('tokenInput').value,target_id:document.getElementById('targetInput').value})});const j=await r.json();if(!r.ok)throw new Error(j.message||('HTTP '+r.status));localStorage.setItem('hoshinoumi_target',document.getElementById('targetInput').value||'owner');st.className='mstatus ok';st.textContent='已保存，正在进入…';setTimeout(()=>{closeSetup();toast('后端已配置 · '+url);},450);}catch(e){st.className='mstatus err';st.textContent='保存失败：'+e.message;}
+ try{const r=await fetch('/api/hoshinoumi/config',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({base_url:url,token:document.getElementById('tokenInput').value,target_id:document.getElementById('targetInput').value})});const j=await r.json();if(!r.ok)throw new Error(j.message||('HTTP '+r.status));localStorage.setItem('hoshinoumi_target',document.getElementById('targetInput').value||'owner');st.className='mstatus ok';st.textContent='已保存，正在进入…';setTimeout(()=>{closeSetup();toast('后端已配置 · '+url);},450);}catch(e){st.className='mstatus err';st.textContent='保存失败：'+e.message;}
 }
 async function loadHistory(){
  try{

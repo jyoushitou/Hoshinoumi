@@ -2,8 +2,8 @@
  * hoshinoumi-dsh — host half.
  *
  * The plugin is intentionally thin:
- *   - stores the Hoshinoumi gateway/token locally
- *   - proxies chat/command to that gateway
+ *   - stores the Hoshinoumi backend address/token locally
+ *   - proxies chat/command to that backend
  *   - serves the full client UI at /api/hoshinoumi/ui
  */
 import { readFileSync, writeFileSync, mkdirSync, existsSync, chmodSync } from 'node:fs'
@@ -21,23 +21,23 @@ function readConfig() {
   try {
     const raw = JSON.parse(readFileSync(CONFIG_FILE, 'utf8'))
     return {
-      gateway: typeof raw.gateway === 'string' ? raw.gateway.replace(/\/+$/, '') : '',
+      base_url: typeof raw.base_url === 'string' ? raw.base_url.replace(/\/+$/, '') : (typeof raw.gateway === 'string' ? raw.gateway.replace(/\/+$/, '') : ''),
       token: typeof raw.token === 'string' ? raw.token : '',
       target_id: typeof raw.target_id === 'string' && raw.target_id.trim() ? raw.target_id.trim() : 'owner',
     }
   } catch {
-    return { gateway: '', token: '', target_id: 'owner' }
+    return { base_url: '', token: '', target_id: 'owner' }
   }
 }
 
 function saveConfig(patch) {
   const current = readConfig()
   const next = {
-    gateway: typeof patch.gateway === 'string' ? patch.gateway.trim().replace(/\/+$/, '') : current.gateway,
+    base_url: typeof patch.base_url === 'string' ? patch.base_url.trim().replace(/\/+$/, '') : current.base_url,
     token: typeof patch.token === 'string' ? patch.token.trim() : current.token,
     target_id: typeof patch.target_id === 'string' && patch.target_id.trim() ? patch.target_id.trim() : current.target_id,
   }
-  if (next.gateway && !/^https?:\/\//i.test(next.gateway)) throw new Error('gateway must start with http:// or https://')
+  if (next.base_url && !/^https?:\/\//i.test(next.base_url)) throw new Error('后端地址必须以 http:// 或 https:// 开头')
   mkdirSync(CONFIG_DIR, { recursive: true })
   writeFileSync(CONFIG_FILE, JSON.stringify(next, null, 2) + '\n', 'utf8')
   try { chmodSync(CONFIG_FILE, 0o600) } catch {}
@@ -60,12 +60,12 @@ function authHeaders(cfg) {
   return cfg.token ? { authorization: `Bearer ${cfg.token}` } : {}
 }
 
-async function gatewayFetch(cfg, path, init = {}) {
-  if (!cfg.gateway) throw new Error('gateway is not configured')
+async function backendFetch(cfg, path, init = {}) {
+  if (!cfg.base_url) throw new Error('后端地址未配置')
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), 20000)
   try {
-    const res = await fetch(`${cfg.gateway}${path}`, {
+    const res = await fetch(`${cfg.base_url}${path}`, {
       ...init,
       headers: { 'content-type': 'application/json', ...authHeaders(cfg), ...(init.headers || {}) },
       signal: controller.signal,
@@ -81,7 +81,7 @@ async function gatewayFetch(cfg, path, init = {}) {
 
 async function handleApi(req, res, path) {
   if (path === '/api/hoshinoumi/health' && req.method === 'GET') {
-    return sendJson(res, 200, { ok: true, version: '35.2.6.0', config: CONFIG_FILE })
+    return sendJson(res, 200, { ok: true, version: '35.2.7.0', config: CONFIG_FILE })
   }
 
   if (path === '/api/hoshinoumi/ui' && req.method === 'GET') {
@@ -93,22 +93,22 @@ async function handleApi(req, res, path) {
 
   if (path === '/api/hoshinoumi/config' && req.method === 'GET') {
     const cfg = readConfig()
-    return sendJson(res, 200, { configured: Boolean(cfg.gateway), gateway: cfg.gateway, target_id: cfg.target_id, hasToken: Boolean(cfg.token) })
+    return sendJson(res, 200, { configured: Boolean(cfg.base_url), base_url: cfg.base_url, target_id: cfg.target_id, hasToken: Boolean(cfg.token) })
   }
 
   if (path === '/api/hoshinoumi/config' && req.method === 'POST') {
     const body = await readBody(req)
     const cfg = saveConfig(body)
-    return sendJson(res, 200, { ok: true, configured: Boolean(cfg.gateway), gateway: cfg.gateway, target_id: cfg.target_id, hasToken: Boolean(cfg.token) })
+    return sendJson(res, 200, { ok: true, configured: Boolean(cfg.base_url), base_url: cfg.base_url, target_id: cfg.target_id, hasToken: Boolean(cfg.token) })
   }
 
   if (path === '/api/hoshinoumi/test' && req.method === 'POST') {
     const body = await readBody(req)
-    const cfg = { ...readConfig(), ...(body.gateway ? { gateway: String(body.gateway).trim().replace(/\/+$/, '') } : {}), ...(typeof body.token === 'string' ? { token: body.token.trim() } : {}) }
-    if (!cfg.gateway) throw new Error('请先填写网关地址')
+    const cfg = { ...readConfig(), ...(body.base_url ? { base_url: String(body.base_url).trim().replace(/\/+$/, '') } : {}), ...(typeof body.token === 'string' ? { token: body.token.trim() } : {}) }
+    if (!cfg.base_url) throw new Error('请先填写后端地址')
     const started = Date.now()
-    const health = await gatewayFetch(cfg, '/healthz', { method: 'GET' })
-    const ready = health.status < 400 ? await gatewayFetch(cfg, '/readyz', { method: 'GET' }) : null
+    const health = await backendFetch(cfg, '/healthz', { method: 'GET' })
+    const ready = health.status < 400 ? await backendFetch(cfg, '/readyz', { method: 'GET' }) : null
     return sendJson(res, 200, {
       ok: health.status < 400,
       status: health.status,
@@ -121,10 +121,10 @@ async function handleApi(req, res, path) {
   if (path === '/api/hoshinoumi/history' && req.method === 'GET') {
     const url = new URL(req.url || '/', 'http://127.0.0.1')
     const cfg = readConfig()
-    if (!cfg.gateway) throw new Error('gateway is not configured')
+    if (!cfg.base_url) throw new Error('后端地址未配置')
     const target = url.searchParams.get('target_id') || cfg.target_id || 'owner'
     const limit = Math.max(1, Math.min(Number(url.searchParams.get('limit') || 30), 100))
-    const out = await gatewayFetch(cfg, `/internal/history?target_id=${encodeURIComponent(target)}&limit=${limit}`, { method: 'GET' })
+    const out = await backendFetch(cfg, `/internal/history?target_id=${encodeURIComponent(target)}&limit=${limit}`, { method: 'GET' })
     return sendJson(res, out.status, out.data)
   }
 
@@ -134,14 +134,14 @@ async function handleApi(req, res, path) {
     if (!message) throw new Error('message is empty')
     const cfg = readConfig()
     const target_id = typeof body.target_id === 'string' && body.target_id.trim() ? body.target_id.trim() : cfg.target_id
-    const out = await gatewayFetch(cfg, '/api/chat', { method: 'POST', body: JSON.stringify({ message, target_id }) })
+    const out = await backendFetch(cfg, '/api/chat', { method: 'POST', body: JSON.stringify({ message, target_id }) })
     return sendJson(res, out.status, out.data)
   }
 
   if (path === '/api/hoshinoumi/command' && req.method === 'POST') {
     const body = await readBody(req)
     const cfg = readConfig()
-    const out = await gatewayFetch(cfg, '/api/command', { method: 'POST', body: JSON.stringify({ command: String(body.command || ''), args: Array.isArray(body.args) ? body.args : [] }) })
+    const out = await backendFetch(cfg, '/api/command', { method: 'POST', body: JSON.stringify({ command: String(body.command || ''), args: Array.isArray(body.args) ? body.args : [] }) })
     return sendJson(res, out.status, out.data)
   }
 

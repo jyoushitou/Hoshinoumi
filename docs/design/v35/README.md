@@ -32,7 +32,7 @@ docs/design/v35/
    ├─ plugin.png / plugin.html        自动化任务 > 命令
    ├─ scheduled.png / scheduled.html  自动化任务 > 定时任务
    ├─ logs.png / logs.html            自动化任务 > 运行日志
-   ├─ setup.png                       首次打开：配置后端网关
+   ├─ setup.png                       首次打开：配置后端地址
    ├─ demo.html / demo.png            可交互动画演示
    └─ demo-overview.png               全部功能总览演示预览
 ```
@@ -63,11 +63,11 @@ dsh       浅色桌面页；聊天在工作区 nao；命令页保留侧栏，无
 ## DSH 首次配置
 
 ```text
-打开插件 → 检查 localStorage 网关地址
+打开插件 → 检查 localStorage 后端地址
 没有 → 弹出“连接 Hoshinoumi”对话框
 有   → 直接进入
 
-对话框：网关地址 / token / 测试连接 / 保存并连接 / 稍后配置
+对话框：后端地址 / token / 测试连接 / 保存并连接 / 稍后配置
 右上角 ⚙ 可重新打开
 ```
 

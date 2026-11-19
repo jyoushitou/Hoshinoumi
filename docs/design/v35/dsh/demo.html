@@ -219,11 +219,11 @@ button,input{font:inherit}
  </div>
 </div>
 <div class="modal" id="setupModal">
- <div class="modalcard"><h2>连接 Hoshinoumi</h2><div class="sub">第一次打开 DSH 插件，需要先配置后端网关地址。聊天和记忆都会发到这台服务器。</div>
-  <div class="mlabel">网关地址</div><div class="minput"><input id="gwInput" placeholder="http://127.0.0.1:27004"></div>
+ <div class="modalcard"><h2>连接 Hoshinoumi</h2><div class="sub">第一次打开 DSH 插件，需要先配置 Hoshinoumi 后端地址。聊天和记忆都会发到这台服务器。</div>
+  <div class="mlabel">后端地址</div><div class="minput"><input id="baseInput" placeholder="http://127.0.0.1:27004"></div>
   <div class="mlabel">访问 token（可选）</div><div class="minput"><input id="tokenInput" type="password" placeholder="Bearer token"></div>
   <div class="mstatus" id="setupStatus"></div>
-  <div class="mrow"><button class="mbtn" onclick="testGateway()">测试连接</button><button class="mbtn primary" onclick="saveGateway()">保存并连接</button></div>
+  <div class="mrow"><button class="mbtn" onclick="testBackend()">测试连接</button><button class="mbtn primary" onclick="saveBackend()">保存并连接</button></div>
   <div class="mskip" onclick="closeSetup()">稍后配置</div>
  </div></div>
 <div id="toast" style="position:fixed;left:50%;bottom:24px;transform:translate(-50%,12px);background:#22231f;color:#fff;font-size:11px;padding:8px 13px;border-radius:8px;opacity:0;pointer-events:none;transition:.25s;z-index:20"></div>
@@ -326,16 +326,16 @@ function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t
 function clock(){const d=new Date();document.getElementById('clock').textContent=d.toTimeString().slice(0,5)}
 
 const GW_KEY='hoshinoumi_gateway';
-function openSetup(){const m=document.getElementById('setupModal');document.getElementById('gwInput').value=localStorage.getItem(GW_KEY)||'http://127.0.0.1:27004';document.getElementById('setupStatus').textContent='';m.classList.add('show');}
+function openSetup(){const m=document.getElementById('setupModal');document.getElementById('baseInput').value=localStorage.getItem(GW_KEY)||'http://127.0.0.1:27004';document.getElementById('setupStatus').textContent='';m.classList.add('show');}
 function closeSetup(){document.getElementById('setupModal').classList.remove('show');}
-function testGateway(){
- const url=document.getElementById('gwInput').value.trim();const st=document.getElementById('setupStatus');
+function testBackend(){
+ const url=document.getElementById('baseInput').value.trim();const st=document.getElementById('setupStatus');
  if(!/^https?:\/\//.test(url)){st.className='mstatus err';st.textContent='地址需要以 http:// 或 https:// 开头';return;}
  st.className='mstatus';st.textContent='正在连接 '+url+' …';
  setTimeout(()=>{st.className='mstatus ok';st.textContent='连接成功 · Hoshinoumi v35.2.1 · schema 33';},700);
 }
-function saveGateway(){
- const url=document.getElementById('gwInput').value.trim();const st=document.getElementById('setupStatus');
+function saveBackend(){
+ const url=document.getElementById('baseInput').value.trim();const st=document.getElementById('setupStatus');
  if(!/^https?:\/\//.test(url)){st.className='mstatus err';st.textContent='地址需要以 http:// 或 https:// 开头';return;}
  localStorage.setItem(GW_KEY,url);localStorage.setItem('hoshinoumi_token',document.getElementById('tokenInput').value);
  st.className='mstatus ok';st.textContent='已保存，正在进入…';
