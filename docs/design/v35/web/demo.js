@@ -39,7 +39,7 @@
     logs: [['09:13 INFO chat', 'len=18'], ['09:12 INFO command', 'status'], ['09:04 WARN search_images', 'timeout'], ['08:58 INFO memory', 'append']],
     memory: [['记忆本', '最近 7 天 · 4 条'], ['今天值得高兴的事', '方案通过 · 已写入长期记忆'], ['你不喜欢太吵的地方', '偏好安静 · 来自对话'], ['正在读', '《十日终焉》 · 窗边']],
     savings: [['总余额', '¥3,300.00'], ['本月收入', '¥8,000'], ['本月支出', '¥3,200'], ['旅行目标', '60% · 还差 ¥2,200']],
-    weekly: [['第 12 周', '3 门课'], ['周一 1-2 节', '高等数学 · 教三 201'], ['周三 3-4 节', '大学英语 · 文科楼 104'], ['周五 5-6 节', '数据结构 · 实验楼 302']],
+    weekly: [['本周', '3 门课'], ['周一 1-2 节', '高等数学 · 教三 201'], ['周三 3-4 节', '大学英语 · 文科楼 104'], ['周五 5-6 节', '数据结构 · 实验楼 302']],
     persona: [['当前人设', 'nao · 友利奈绪'], ['风格', '口语 · 简短 · 行动回复'], ['文件', 'prompt / life / supplement / state / voice'], ['状态', '只读预览 · 仅 owner']],
     relation: [['亲密度', '0.62 · 熟'], ['档位', '熟'], ['最近变化', '+0.020 · 聊天'], ['可见范围', '仅 owner 全量；普通用户只看自己']],
     settings: [['后端地址', 'http://127.0.0.1:27004'], ['连接状态', '已连接 · schema 35'], ['主人 QQ', '未配置'], ['视觉', '深色 · 动画默认关闭']],
@@ -58,6 +58,14 @@
     '!adduser': { usage: '!adduser <QQ号>', args: 'QQ号', required: true },
     '!route': { usage: '!route <status|reset>', args: 'status / reset', required: false }
   };
+
+  function currentIsoWeek() {
+    const d = new Date(Date.UTC(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()))
+    const day = d.getUTCDay() || 7
+    d.setUTCDate(d.getUTCDate() + 4 - day)
+    const start = new Date(Date.UTC(d.getUTCFullYear(), 0, 1))
+    return Math.ceil((((d.getTime() - start.getTime()) / 86400000) + 1) / 7)
+  }
 
   const COMMAND_GROUPS = {
     '基础': ['!help','!ping','!status','!version','!uptime','!meta','!usage','!log','!db','!stats','!history','!reload','!set','!exit','!quit'],
@@ -632,7 +640,7 @@
     if (name === 'weekly') {
       const WD = ['周一','周二','周三','周四','周五','周六','周日'];
       const W = window.__weekly || (window.__weekly = {
-        week: 12,
+        week: currentIsoWeek(),
         periods: {},
         courses: [
           { day: 0, period: 1, name: '高等数学', teacher: '李老师', loc: '教三 201' },
@@ -656,7 +664,7 @@
       let sel = { day: 0, period: 1 }, editIdx = -1, showPeriods = false;
       function renderWeekly() {
         let html = '<div class="page-head"><div><h2>周计划表</h2><p>v35.5 Web 演示 · MOCK 数据 · 第 ' + W.week + ' 周</p></div><button class="back" id="backChat">← 返回聊天</button></div>';
-        html += '<div class="week-toolbar"><label>周次 <input id="wkNum" type="number" min="1" max="60" value="' + W.week + '"></label><button id="wkGo">跳转</button><button id="wkPeriods">节次设置</button><label class="file-btn">导入 HTML<input id="wkFile" type="file" accept=".html,text/html"></label><span class="week-msg" id="wkMsg">点击空格子新增；点课程编辑/删除</span></div>';
+        html += '<div class="week-toolbar"><label>周次 <input id="wkNum" type="number" min="1" max="53" value="' + W.week + '"></label><button id="wkGo">跳转</button><button id="wkPeriods">节次设置</button><label class="file-btn">导入 HTML<input id="wkFile" type="file" accept=".html,text/html"></label><span class="week-msg" id="wkMsg">点击空格子新增；点课程编辑/删除</span></div>';
         if (showPeriods) {
           const ps = getPeriods(W.week);
           html += '<div class="week-period-editor"><div class="wpe-head"><b>第 ' + W.week + ' 周节次</b><button id="wpeAdd">＋ 添加节次</button></div>' + ps.map((p, i) => '<div class="wpe-row"><span>第 ' + p.no + ' 节</span><input data-pi="' + i + '" value="' + esc(p.time) + '"><button class="wpe-del" data-pi="' + i + '">删除</button></div>').join('') + '<div class="wpe-actions"><button id="wpeSave">保存本周节次</button><span class="msg" id="wpeMsg"></span></div></div>';
@@ -683,7 +691,7 @@
         pageView.innerHTML = html;
         document.getElementById('backChat').addEventListener('click', () => showChat());
         document.getElementById('wkGo').addEventListener('click', () => {
-          const n = Number(document.getElementById('wkNum').value); if (n >= 1 && n <= 60) { W.week = n; getPeriods(n); renderWeekly(); }
+          const n = Number(document.getElementById('wkNum').value); if (n >= 1 && n <= 53) { W.week = n; getPeriods(n); renderWeekly(); }
         });
         document.getElementById('wkPeriods').addEventListener('click', () => { showPeriods = !showPeriods; renderWeekly(); });
         const wpeAdd = document.getElementById('wpeAdd');
