@@ -30,7 +30,7 @@ const session = useSessionStore()
           发送
         </button>
       </div><div class="hint">
-        <span>Enter 发送 · Shift+Enter 换行</span><span>MOCK · Web v35.5</span>
+        <span>Enter 发送 · Shift+Enter 换行</span><span>Web v35.5</span>
       </div>
     </div>
   </div>

@@ -24,7 +24,6 @@ onMounted(() => { if (auth.loggedIn) session.refresh(); else session.error = 'æœ
 <style scoped>
 .shell{display:grid;grid-template-columns:64px 292px minmax(0,1fr) 304px;height:100vh;overflow:hidden}
 .main{min-width:0;display:flex;flex-direction:column;background:#fff}
-.mock{position:fixed;right:14px;top:12px;z-index:20;font-size:9px;letter-spacing:.1em;color:#8a5a00;border:1px solid #f2d491;background:#fff8e6;border-radius:20px;padding:4px 9px;backdrop-filter:blur(8px)}
 @media(max-width:1180px){.shell{grid-template-columns:64px 270px minmax(0,1fr)}:deep(.context){display:none}}
 @media(max-width:820px){.shell{grid-template-columns:54px minmax(0,1fr)}:deep(.side){display:none}}
 </style>
