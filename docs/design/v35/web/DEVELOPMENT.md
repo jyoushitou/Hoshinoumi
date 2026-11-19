@@ -20,6 +20,51 @@ EventSource / fetch SSE
 CSS Variables（ThemeToken）
 ```
 
+## 2.2 Vue 前置
+
+```text
+Node 20+ / pnpm 9+
+Vue 3 + Vite + TypeScript
+Vue Router 4 + Pinia
+ESLint + Prettier
+Vitest + Playwright
+API client / env 约定
+```
+
+要求：
+
+```text
+pnpm dev / build / test 可跑
+Mock adapter 与真实 API 同一接口
+token 只在客户端存储，不写入仓库
+```
+
+## 2.3 页面框架
+
+```text
+src/
+├─ main.ts
+├─ App.vue
+├─ router/
+├─ stores/
+├─ api/            # fetch + SSE + 错误
+├─ layouts/        # AppShell / Rail / Side / Context
+├─ components/     # 通用卡片/气泡/表单/空态
+├─ views/          # chat / home / memory / ...
+├─ styles/         # ThemeToken / light / dark
+└─ mocks/          # MOCK 数据
+```
+
+框架要求：
+
+```text
+AppShell 固定四区：rail / side / main / context
+导航配置驱动 12 个入口
+路由懒加载
+统一 loading / empty / error / offline 态
+动画开关由 MotionPreset 控制
+```
+
 ## 2.1 会话列表规则
 
 ```text
@@ -217,20 +262,22 @@ Web 需要同源 `/api/state`、`/api/presence` 的 owner 只读代理。
 
 | 版本 | 交付 | 验收 |
 |---|---|---|
-| v35.5.0.0 | Vue 基座、ThemeToken/MotionPreset、首次登录 token/QQ（后端同源） | 浏览器能登录 |
-| v35.5.1.0 | QQ 会话列表、历史分页、已读位点 | 群列表与 QQ 一致 |
-| v35.5.2.0 | 文本发送、乐观更新、失败回滚、幂等 | 能聊天 |
-| v35.5.3.0 | 图片发送/预览、上传 | 图片可用 |
-| v35.5.4.0 | SSE 实时接收、event id 去重、重连 | 实时收消息 |
-| v35.5.5.0 | 未读 badge、多标签、已读上报 | 刷新/断网不丢 |
-| v35.5.6.0 | 语音/表情/识图/搜图媒体工具 | 媒体可用 |
-| v35.5.7.0 | 在线状态、已读回执、seq 缺口提示 | 多端一致 |
-| v35.5.8.0 | 话题结束判断与追问、频控/免打扰 | 能判断并追问 |
-| v35.5.9.0 | 聊天动画，默认关闭 | 动画可关 |
-| v35.5.10.0 | 聊天内搜索：高亮/上下条 | 搜索可用 |
-| v35.5.11.0 | 窄屏/手机浏览器适配 | 手机可用 |
-| v35.5.12.0 | 会话数据源统一 QQ 私聊/群 | 群列表一致 |
-| v35.5.13.0 | Vite build、Mock 标注、视觉/接口回归 | 可演示 |
+| v35.5.0.0 | Node 20+/pnpm、Vue 3 + Vite + TS、Router/Pinia、ESLint/Vitest/Playwright、API client/env | 空项目可构建、可测 |
+| v35.5.1.0 | AppShell/Router/导航/ThemeToken/错误空态/Mock adapter | 12 个导航空壳 |
+| v35.5.2.0 | 首次登录 token/QQ（同源）、深浅色主题 | 能登录 |
+| v35.5.3.0 | QQ 会话列表、历史分页、已读位点 | 群列表一致 |
+| v35.5.4.0 | 文本发送、乐观更新、失败回滚、幂等 | 能聊天 |
+| v35.5.5.0 | 图片发送/预览、上传 | 图片可用 |
+| v35.5.6.0 | SSE 实时接收、event id 去重、重连 | 实时收消息 |
+| v35.5.7.0 | 未读 badge、多标签、已读上报、导航总数 | 刷新/断网不丢 |
+| v35.5.8.0 | 语音/表情/识图/搜图媒体工具 | 媒体可用 |
+| v35.5.9.0 | 在线/已读/seq 缺口；mood/energy/presence | 缺失显示未知 |
+| v35.5.10.0 | 话题结束判断与追问、频控/免打扰 | 能判断并追问 |
+| v35.5.11.0 | 聊天动画，默认关闭 | 动画可关 |
+| v35.5.12.0 | 聊天内搜索：高亮/上下条 | 搜索可用 |
+| v35.5.13.0 | 窄屏/手机浏览器适配 | 手机可用 |
+| v35.5.14.0 | 会话数据源统一 QQ 私聊/群 | 群列表一致 |
+| v35.5.15.0 | Vite build、Mock 标注、视觉/接口回归 | 可演示 |
 
 ## 4.1 命令目录
 
