@@ -142,6 +142,33 @@
     .entry{display:flex;align-items:center;gap:8px;border-bottom:1px solid #eef3fb;padding:5px 2px;font-size:10px;color:#4b5f78}
     .entry:last-child{border-bottom:0}.entry .amt{margin-left:auto;font-weight:600}.entry .amt.neg{color:#c0264a}.entry .amt.pos{color:#1f9d6b}
     .entry .tag{font-size:8px;color:#8a9bb0;border:1px solid #e3ebf7;border-radius:4px;padding:1px 4px}
+    .week-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:9px}
+    .week-toolbar label{font-size:9.5px;color:#6b7c95;display:flex;align-items:center;gap:5px}
+    .week-toolbar input[type=number]{width:52px;border:1px solid #dbe8ff;border-radius:6px;background:#fff;color:#243b55;font:10px inherit;padding:4px 6px;outline:0}
+    .week-toolbar button,.week-toolbar .file-btn{border:1px solid #dbe8ff;border-radius:6px;background:#fff;color:#2563eb;font-size:9.5px;padding:5px 8px;cursor:pointer}
+    .week-toolbar button:hover,.week-toolbar .file-btn:hover{background:#eef4ff}
+    .week-toolbar .file-btn input{display:none}
+    .week-msg{margin-left:auto;font-size:9px;color:#8a9bb0}
+    .week-wrap{border:1px solid #e3ebf7;border-radius:12px;background:#fff;overflow:hidden}
+    .week-grid{display:grid;grid-template-columns:44px repeat(7,1fr);width:100%;font-size:9px}
+    .week-grid .h{background:#f8fbff;border-bottom:1px solid #e3ebf7;border-right:1px solid #e3ebf7;padding:6px 4px;text-align:center;color:#6b7c95;font-weight:600}
+    .week-grid .h:last-child{border-right:0}
+    .week-grid .p{background:#f8fbff;border-right:1px solid #e3ebf7;border-bottom:1px solid #e3ebf7;display:flex;align-items:center;justify-content:center;color:#8a9bb0;font-size:8.5px}
+    .week-cell{min-height:42px;border-right:1px solid #eef3fb;border-bottom:1px solid #eef3fb;padding:3px;cursor:pointer;transition:background .15s}
+    .week-cell:nth-child(8n){border-right:0}
+    .week-cell:hover{background:#f8fbff}
+    .week-cell.sel{background:#eef4ff;box-shadow:inset 0 0 0 1px #93b7fa}
+    .course{background:#eef4ff;border-left:2px solid #2563eb;border-radius:4px;padding:3px 4px;color:#1e3a5f;font-size:8.5px;line-height:1.35;cursor:pointer}
+    .course b{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .course span{display:block;color:#6b7c95;font-size:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .week-form{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:7px;margin-top:10px;border:1px solid #e3ebf7;border-radius:10px;background:#fff;padding:10px}
+    .week-form label{display:block;font-size:8.5px;color:#8a9bb0;margin-bottom:2px}
+    .week-form input,.week-form select{border:1px solid #e3ebf7;border-radius:6px;background:#f8fbff;color:#243b55;font:9.5px inherit;outline:0;padding:5px 6px;width:100%}
+    .week-form .full{grid-column:1/-1;display:flex;align-items:center;gap:7px}
+    .week-form button{border:0;border-radius:6px;background:#2563eb;color:#fff;font-size:9.5px;padding:5px 10px;cursor:pointer}
+    .week-form button.del{background:#fff;color:#c0264a;border:1px solid #f3c7d2}
+    .week-form .msg{font-size:9px;color:#8a9bb0}
+
 
     .cmd-runbar{display:flex;align-items:center;gap:7px;margin:0 0 10px;border:1px solid #dbe8ff;border-radius:9px;background:#f8fbff;padding:6px 8px}
     .cmd-runbar .prompt{color:#2563eb;font:11px "Cascadia Code",monospace}
@@ -310,6 +337,89 @@
   }));
 
   function showPage(name) {
+    if (name === 'weekly') {
+      const WD = ['周一','周二','周三','周四','周五','周六','周日'];
+      const W = window.__weekly || (window.__weekly = {
+        week: 12,
+        courses: [
+          { day: 0, period: 1, name: '高等数学', teacher: '李老师', loc: '教三 201' },
+          { day: 2, period: 3, name: '大学英语', teacher: '王老师', loc: '文科楼 104' },
+          { day: 4, period: 5, name: '数据结构', teacher: '陈老师', loc: '实验楼 302' }
+        ]
+      });
+      let sel = { day: 0, period: 1 }, editIdx = -1;
+      function renderWeekly() {
+        let html = '<div class="page-head"><div><h2>周计划表</h2><p>v35.5 Web 演示 · MOCK 数据 · 第 ' + W.week + ' 周</p></div><button class="back" id="backChat">← 返回聊天</button></div>';
+        html += '<div class="week-toolbar"><label>周次 <input id="wkNum" type="number" min="1" max="60" value="' + W.week + '"></label><button id="wkGo">跳转</button><label class="file-btn">导入 HTML<input id="wkFile" type="file" accept=".html,text/html"></label><span class="week-msg" id="wkMsg">点击空格子新增；点课程编辑/删除</span></div>';
+        html += '<div class="week-wrap"><div class="week-grid">';
+        html += '<div class="h">节次</div>' + WD.map(d => '<div class="h">' + d + '</div>').join('');
+        for (let p = 1; p <= 6; p++) {
+          html += '<div class="p">' + p + '</div>';
+          for (let d = 0; d < 7; d++) {
+            const idx = W.courses.findIndex(c => c.day === d && c.period === p);
+            html += '<div class="week-cell' + (sel.day === d && sel.period === p ? ' sel' : '') + '" data-day="' + d + '" data-period="' + p + '">';
+            if (idx >= 0) {
+              const c = W.courses[idx];
+              html += '<div class="course" data-idx="' + idx + '"><b>' + esc(c.name) + '</b><span>' + esc(c.loc) + '</span></div>';
+            }
+            html += '</div>';
+          }
+        }
+        html += '</div></div>';
+        const c = editIdx >= 0 ? W.courses[editIdx] : null;
+        html += '<div class="week-form"><div><label>课程名</label><input id="wkName" value="' + esc(c ? c.name : '') + '"></div><div><label>教师</label><input id="wkTeacher" value="' + esc(c ? c.teacher : '') + '"></div><div><label>地点</label><input id="wkLoc" value="' + esc(c ? c.loc : '') + '"></div><div><label>周次</label><input id="wkWeeks" value="' + esc(c ? (c.weeks || '1-16周') : '1-16周') + '"></div><div class="full"><button id="wkSave">' + (editIdx >= 0 ? '保存修改' : '添加到格子') + '</button>' + (editIdx >= 0 ? '<button class="del" id="wkDel">删除课程</button>' : '') + '<span class="msg" id="wkFormMsg"></span></div></div>';
+        pageView.innerHTML = html;
+        document.getElementById('backChat').addEventListener('click', () => showChat());
+        document.getElementById('wkGo').addEventListener('click', () => {
+          const n = Number(document.getElementById('wkNum').value); if (n >= 1 && n <= 60) { W.week = n; renderWeekly(); }
+        });
+        pageView.querySelectorAll('.week-cell').forEach(cell => cell.addEventListener('click', e => {
+          if (e.target.closest('.course')) return;
+          sel = { day: Number(cell.dataset.day), period: Number(cell.dataset.period) }; editIdx = -1; renderWeekly();
+        }));
+        pageView.querySelectorAll('.course').forEach(c => c.addEventListener('click', e => {
+          e.stopPropagation(); editIdx = Number(c.dataset.idx);
+          const cc = W.courses[editIdx]; sel = { day: cc.day, period: cc.period }; renderWeekly();
+        }));
+        document.getElementById('wkSave').addEventListener('click', () => {
+          const name = document.getElementById('wkName').value.trim();
+          const teacher = document.getElementById('wkTeacher').value.trim();
+          const loc = document.getElementById('wkLoc').value.trim();
+          const weeks = document.getElementById('wkWeeks').value.trim() || '1-16周';
+          if (!name) { document.getElementById('wkFormMsg').textContent = '先填课程名'; return; }
+          if (editIdx >= 0) W.courses[editIdx] = { ...W.courses[editIdx], name, teacher, loc, weeks };
+          else W.courses.push({ day: sel.day, period: sel.period, name, teacher, loc, weeks });
+          editIdx = -1; renderWeekly(); toast('周计划已更新（MOCK）');
+        });
+        const del = document.getElementById('wkDel');
+        if (del) del.addEventListener('click', () => { W.courses.splice(editIdx, 1); editIdx = -1; renderWeekly(); toast('课程已删除（MOCK）'); });
+        const file = document.getElementById('wkFile');
+        file.addEventListener('change', () => {
+          const f = file.files[0]; if (!f) return; const msg = document.getElementById('wkMsg');
+          f.text().then(txt => {
+            const doc = new DOMParser().parseFromString(txt, 'text/html');
+            const table = doc.querySelector('#KebiaoTable1') || doc.querySelector('table');
+            if (!table) { msg.textContent = '没有找到课表表格'; return; }
+            let n = 0;
+            table.querySelectorAll('tr').forEach((tr, ri) => {
+              if (ri === 0) return;
+              tr.querySelectorAll('td').forEach((td, di) => {
+                const t = td.innerText.trim(); if (!t) return;
+                const lines = t.split(/\n+/).map(x => x.trim()).filter(Boolean);
+                W.courses.push({ day: Math.max(0, Math.min(6, di)), period: Math.min(6, ri), name: lines[0] || '课程', teacher: lines[1] || '', loc: lines[2] || '', weeks: '1-16周' });
+                n++;
+              });
+            });
+            renderWeekly(); toast('HTML 导入 ' + n + ' 条（MOCK）');
+          });
+        });
+      }
+      renderWeekly();
+      [top, msgs, composer, searchBar].forEach(x => x.classList.add('chat-hide'));
+      pageView.classList.add('on');
+      document.querySelectorAll('.rnav').forEach(x => x.classList.toggle('on', x.dataset.page === name));
+      return;
+    }
     if (name === 'savings') {
       const S = window.__savings || (window.__savings = {
         income: 8000, expense: 3200, saved: 3300, target: 5500,
