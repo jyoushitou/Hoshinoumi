@@ -71,3 +71,17 @@ REC-vX.Y.Z-bundle.bundle
 
 迁移顺序：先改可见品牌（README / 服务 / 版本输出 / 文档），再改目录和包名。
 改包名时保留 `bot` 兼容层，不要一次性全仓替换。
+
+## Logo
+
+正式 Logo：
+
+```text
+docs/design/logo/hoshinoumi.svg
+```
+
+- 形态：四芒星 + 轨道
+- 颜色：`currentColor`，跟随宿主主题
+- 禁止：加气泡、加号、文字、拉伸、贴边
+
+所有后续界面/图标/文档需要 Logo 时，统一使用这个文件。

@@ -17,6 +17,10 @@
 
 v35.4 的侧栏页面复用 DSH 客户端结构：v35.4.0 骨架阶段已带入全部页面预览。v35.4.1–13 是按页验收/修正，不再从零逐页实现；每个次次版本仍需独立提交和验收。
 
+## 1.2 Logo
+
+统一使用 [docs/design/logo/hoshinoumi.svg](../logo/hoshinoumi.svg)：四芒星 + 轨道，`currentColor`。VS Code 入口图标副本在 `media/nao.svg`。
+
 ## 2. 模块拆分
 
 ### 2.1 扩展宿主

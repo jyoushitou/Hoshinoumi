@@ -23,6 +23,7 @@
 | 文档 | 内容 | 维护状态 |
 |---|---|---|
 | [../README.md](../README.md) | 总览、快速开始、命令、配置、限制 | ✅ 现行（v35.2.1.0） |
+| [design/logo/README.md](design/logo/README.md) | 项目 Logo 唯一来源与使用规则 | ✅ 现行 |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | 分层图、消息生命周期、调度/出站 | ✅ 现行（以实际代码为准） |
 | [DB-DESIGN.md](DB-DESIGN.md) | 数据库设计与表职责 | ✅ 现行（DDL 以 `bot/infra/schema.py` 为准） |
 | [存储后端与备份.md](存储后端与备份.md) | MySQL/SQLite 备份、恢复、换后端 | ✅ 现行 |
