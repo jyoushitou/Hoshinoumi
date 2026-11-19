@@ -158,6 +158,7 @@ async def handle_get_token(request):
             {"path": "/api/status", "method": "GET", "auth": True},
             {"path": "/api/usage", "method": "GET", "auth": True},
             {"path": "/api/memory", "method": "GET", "auth": True},
+            {"path": "/api/persona", "method": "GET", "auth": True},
             {"path": "/api/logs", "method": "GET", "auth": True},
             {"path": "/api/chat", "method": "POST", "auth": True},
             {"path": "/api/command", "method": "POST", "auth": True},

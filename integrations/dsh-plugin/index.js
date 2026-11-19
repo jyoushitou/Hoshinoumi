@@ -86,7 +86,7 @@ async function backendFetch(cfg, path, init = {}) {
 
 async function handleApi(req, res, path) {
   if (path === '/api/hoshinoumi/health' && req.method === 'GET') {
-    return sendJson(res, 200, { ok: true, version: '35.2.17.1', config: CONFIG_FILE })
+    return sendJson(res, 200, { ok: true, version: '35.2.18.0', config: CONFIG_FILE })
   }
 
   if (path === '/api/hoshinoumi/ui' && req.method === 'GET') {
@@ -134,6 +134,8 @@ async function handleApi(req, res, path) {
     const u = new URL(req.url || '/', 'http://127.0.0.1')
     return proxyGet('/api/logs?limit=' + Math.max(1, Math.min(Number(u.searchParams.get('limit') || 20), 100)))
   }
+  if (path === '/api/hoshinoumi/persona' && req.method === 'GET') return proxyGet('/api/persona')
+
   if (path === '/api/hoshinoumi/memory' && req.method === 'GET') {
     const u = new URL(req.url || '/', 'http://127.0.0.1')
     const t = u.searchParams.get('target_id')

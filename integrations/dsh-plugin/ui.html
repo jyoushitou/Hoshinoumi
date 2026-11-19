@@ -332,17 +332,18 @@ const MODULES={
 async function loadHomeStats() {
   if (!backendReady) return;
   try {
-    const [st, mem, cron, logs] = await Promise.all([
+    const [st, mem, cron, logs, persona] = await Promise.all([
       jsonApi('/api/hoshinoumi/status').catch(() => null),
       jsonApi('/api/hoshinoumi/memory').catch(() => null),
       jsonApi('/api/hoshinoumi/cron').catch(() => null),
       jsonApi('/api/hoshinoumi/logs?limit=100').catch(() => null),
+      jsonApi('/api/hoshinoumi/persona').catch(() => null),
     ]);
     const counts = {
       '记忆': mem ? (mem.targets || []).reduce((n, t) => n + Number(t.count || 0), 0) : '—',
       '信息': st ? (st.status || '运行中') : '—',
       '存钱': '未接入',
-      '人设': '未接入',
+      '人设': persona ? String((persona.data || []).length) : '—',
       '设置': '已配置',
       '命令': '51',
       '定时任务': cron && Array.isArray(cron.data) ? cron.data.length : '—',
@@ -395,6 +396,21 @@ async function showModule(key) {
       renderModule('记忆', '来自 Hoshinoumi 后端的真实记忆统计。',
         [[String(total), '记忆条数'], [String(j.total_targets || 0), '会话'], [String(targets.filter(t => Number(t.count) > 0).length), '有记忆会话'], ['实时', '来源']],
         targets.length ? targets.slice(0, 8).map(t => [String(t.target_id), [String(t.count || 0) + ' 条', t.last_message || '—']]) : [['暂无记忆', ['后端没有返回记忆数据']]]);
+      return;
+    }
+    if (key === 'persona') {
+      const j = await jsonApi('/api/hoshinoumi/persona');
+      const arr = Array.isArray(j.data) ? j.data : [];
+      const fileNames = { prompt: 'prompt', life: 'life', supplement: 'supplement', state: 'state', voice: 'voice' };
+      renderModule('人设', '从 personas/* 读取的真实人设卡，只读；完整 prompt 不在这里展开。',
+        [[String(arr.length), '人设卡'], [String(j.active || '—'), '当前'], [String(arr.filter(x => x.active).length), '激活'], ['只读', '模式']],
+        arr.length ? arr.slice(0, 6).map(x => [String(x.name), [
+          x.active ? '当前激活' : '未激活',
+          '文件 · ' + Object.keys(fileNames).filter(k => x.files && x.files[k]).map(k => fileNames[k]).join(' / '),
+          '状态 · ' + (x.state ? JSON.stringify(x.state) : '—'),
+          '语音 · ' + (x.voice && x.voice.voice ? x.voice.voice : '—'),
+          '摘要 · ' + (x.prompt_excerpt || '—')
+        ]]) : [['没有读到 personas/*', ['检查 personas 目录和后端权限']]]);
       return;
     }
     if (key === 'info') {
