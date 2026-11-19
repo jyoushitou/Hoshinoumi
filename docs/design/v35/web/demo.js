@@ -50,19 +50,19 @@
   const css = document.createElement('style');
   css.textContent = `
     .chat-hide{display:none!important}
-    .page-view{display:none;flex:1;min-height:0;overflow:auto;padding:22px 24px}
+    .page-view{display:none;flex:1;min-height:0;overflow:auto;padding:22px 24px;background:#fff;color:#17263b}
     .page-view.on{display:block}
     .page-head{display:flex;align-items:center;gap:12px;margin-bottom:16px}
-    .page-head h2{font-size:17px;margin:0;font-weight:650}
-    .page-head p{font-size:10.5px;color:var(--muted);margin:3px 0 0}
-    .back{margin-left:auto;font-size:10px;color:var(--cyan);border:1px solid rgba(126,231,255,.2);border-radius:8px;padding:5px 9px;background:none;cursor:pointer}
+    .page-head h2{font-size:17px;margin:0;font-weight:650;color:#17263b}
+    .page-head p{font-size:10.5px;color:#6b7c95;margin:3px 0 0}
+    .back{margin-left:auto;font-size:10px;color:#2563eb;border:1px solid #dbe8ff;border-radius:8px;padding:5px 9px;background:#fff;cursor:pointer;transition:background .18s}
     .pgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .pcard2{border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.022);padding:12px 13px}
+    .pcard2{border:1px solid #e3ebf7;border-radius:12px;background:#fff;padding:12px 13px;transition:border-color .18s,transform .18s,box-shadow .18s}
     .pcard2 h3{font-size:11px;margin:0 0 5px;color:#dbe8fb}
     .pcard2 p{font-size:10px;line-height:1.6;color:var(--muted);margin:0}
-    .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(12px);opacity:0;pointer-events:none;z-index:30;transition:.2s;background:rgba(13,23,40,.96);border:1px solid rgba(126,231,255,.22);color:#dbe8fb;font-size:10.5px;border-radius:9px;padding:8px 13px;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+    .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(12px);opacity:0;pointer-events:none;z-index:30;transition:.2s;background:#fff;border:1px solid #dbe8ff;color:#243b55;font-size:10.5px;border-radius:9px;padding:8px 13px;box-shadow:0 10px 24px rgba(37,99,235,.12)}
     .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
-    .typing{color:var(--muted);font-size:10px;padding:3px 4px 8px}
+    .typing{color:#8a9bb0;font-size:10px;padding:3px 4px 8px}
   `;
   document.head.appendChild(css);
 

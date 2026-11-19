@@ -119,6 +119,91 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .tagdraft{position:fixed;left:76px;bottom:8px;font-size:8.5px;letter-spacing:.08em;color:#4d5f7b;z-index:20}
 @media(max-width:1180px){.app{grid-template-columns:64px 270px minmax(0,1fr)}.context{display:none}}
 @media(max-width:820px){.app{grid-template-columns:54px minmax(0,1fr)}.side{display:none}.tagdraft{left:64px}.msgs{padding:16px 14px}.top{padding:0 14px}.composer{padding:9px 12px 11px}}
+
+/* ===== v35.5 light flat theme ===== */
+:root{
+  --bg:#f3f7ff;--bg2:#eef4ff;--panel:#ffffff;--panel2:#f8fbff;
+  --line:#e3ebf7;--line2:#cfe0f7;
+  --text:#17263b;--muted:#6b7c95;--dim:#93a3b8;
+  --cyan:#2563eb;--blue:#2563eb;--violet:#7c5cff;--green:#1f9d6b;
+  --bubble:#eef4ff;--me:#2563eb;
+}
+body{background:linear-gradient(180deg,#f8fbff 0%,#eef4ff 100%);color:var(--text)}
+button{color:inherit}
+.rail{background:#fff;border-right:1px solid var(--line)}
+.logo{background:#eef4ff;border:1px solid #dbe8ff;border-radius:10px}
+.rnav{color:#7d8ca3;border-radius:9px;transition:background .18s,color .18s,transform .18s}
+.rnav:hover{background:#eaf2ff;color:#1d4ed8;transform:translateY(-1px)}
+.rnav.on{background:#dbeafe;color:#1d4ed8;box-shadow:none}
+.rnav.on:before{background:#2563eb}
+.rnav .badge{background:#2563eb;color:#fff}
+.side{background:#f8fbff;border-right:1px solid var(--line)}
+.brand .word{color:#1e3a5f}
+.brand .ver{color:#7d8ca3;border-color:#dbe8ff;background:#fff}
+.search{background:#fff;border-color:#e3ebf7;color:#8a9bb0}
+.search:focus-within{border-color:#93b7fa;box-shadow:0 0 0 3px rgba(37,99,235,.08)}
+.search kbd{background:#f3f7ff;border-color:#dbe8ff;color:#7d8ca3}
+.slabel{color:#8a9bb0}
+.conv{border:1px solid transparent;transition:background .18s,border-color .18s,transform .18s}
+.conv:hover{background:#eef4ff;border-color:#dbe8ff;transform:translateX(2px)}
+.conv.on{background:#e7f0ff;border-color:#c7dcff;box-shadow:none}
+.avatar{background:#dbeafe;color:#1d4ed8;border-radius:10px}
+.avatar.p{background:#fde8d7;color:#9a3412}
+.avatar.g{background:#d1fae5;color:#047857}
+.avatar.v{background:#ede9fe;color:#5b21b6}
+.avatar.o{background:#ffedd5;color:#9a3412}
+.conv .nm{color:#1e3a5f}
+.conv .last,.conv .tm{color:#8a9bb0}
+.conv .unread{background:#2563eb;color:#fff}
+.conn{background:#fff;border-color:#e3ebf7}
+.conn .k{color:#8a9bb0}.conn .meta{color:#8a9bb0}
+.main{background:#fff}
+.top{background:#fff;border-bottom:1px solid var(--line)}
+.top .nm{color:#17263b}.top .sub{color:#7d8ca3}
+.top .pill{color:#1d4ed8;border-color:#dbe8ff;background:#eef4ff}
+.tbtn{background:#fff;border-color:#e3ebf7;color:#5f7189;transition:background .18s,border-color .18s,color .18s,transform .18s}
+.tbtn:hover{background:#eef4ff;border-color:#bcd4f7;color:#1d4ed8;transform:translateY(-1px)}
+.msgs{background:#fff}
+.day{color:#93a3b8}.day b{color:#7d8ca3}
+.msg .bubble{background:#eef4ff;border-color:#e3ebf7;color:#243b55;border-radius:12px 12px 12px 4px}
+.msg.me .bubble{background:#2563eb;border-color:#2563eb;color:#fff;border-radius:12px 12px 4px 12px}
+.msg .meta{color:#93a3b8}.msg .meta .sync{color:#2563eb}
+.memchip{background:#f3efff;border-color:#e4dcff;color:#6d4fd6}
+.memchip .i{color:#7c5cff}
+.composer{background:#fff;border-top:1px solid var(--line)}
+.tool{color:#8a9bb0;transition:background .18s,color .18s,transform .18s}
+.tool:hover{background:#eef4ff;color:#1d4ed8;border-color:#dbe8ff;transform:translateY(-1px)}
+.inputbox{background:#f8fbff;border-color:#dbe8ff;transition:border-color .18s,box-shadow .18s}
+.inputbox:focus-within{border-color:#93b7fa;box-shadow:0 0 0 3px rgba(37,99,235,.08)}
+.inputbox textarea{color:#243b55}.inputbox textarea::placeholder{color:#9aabbe}
+.send{background:#2563eb;color:#fff;transition:background .18s,transform .18s,box-shadow .18s}
+.send:hover{background:#1d4ed8;transform:translateY(-1px);box-shadow:0 6px 14px rgba(37,99,235,.18)}
+.hint{color:#9aabbe}
+.context{background:#f8fbff;border-left:1px solid var(--line)}
+.pcard{background:#fff;border-color:#e3ebf7}
+.pcard .biga{background:#dbeafe;color:#1d4ed8}
+.pcard .name{color:#17263b}.pcard .tag{color:#7d8ca3}
+.sec{color:#93a3b8}
+.bar .lb{color:#6b7c95}.bar .lb span:last-child{color:#2563eb}
+.track{background:#e8effa}.track i{background:#2563eb}
+.card{background:#fff;border-color:#e3ebf7;transition:border-color .18s,transform .18s,box-shadow .18s}
+.card:hover{border-color:#bcd4f7;transform:translateY(-2px);box-shadow:0 8px 18px rgba(37,99,235,.07)}
+.card h4{color:#1e3a5f}.card p{color:#6b7c95}
+.quick .q{background:#fff;border-color:#e3ebf7;color:#6b7c95;transition:border-color .18s,transform .18s,box-shadow .18s}
+.quick .q:hover{border-color:#bcd4f7;transform:translateY(-2px);box-shadow:0 8px 18px rgba(37,99,235,.07)}
+.quick .q b{color:#1e3a5f}
+.life .row{color:#6b7c95}.life .row b{color:#1e3a5f}
+.mock{color:#8a5a00;border-color:#f2d491;background:#fff8e6;box-shadow:none}
+.tagdraft{color:#9aabbe}
+.toast{background:#fff;border-color:#dbe8ff;color:#243b55;box-shadow:0 10px 24px rgba(37,99,235,.12)}
+.page-view{background:#fff}
+.pcard2{background:#fff;border-color:#e3ebf7;transition:border-color .18s,transform .18s,box-shadow .18s}
+.pcard2:hover{border-color:#bcd4f7;transform:translateY(-2px);box-shadow:0 8px 18px rgba(37,99,235,.07)}
+.pcard2 h3{color:#1e3a5f}.pcard2 p{color:#6b7c95}
+.page-head h2{color:#17263b}
+.back{color:#2563eb;border-color:#dbe8ff;background:#fff;transition:background .18s}
+.back:hover{background:#eef4ff}
+.typing{color:#8a9bb0}
 </style>
 </head>
 <body>
@@ -232,7 +317,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
           <div class="bubble">刚到家。今天那个方案终于过了。</div>
           <div class="meta">21:00 <span>· 已读</span></div>
         </div>
-        <div class="avatar" style="background:linear-gradient(135deg,#8ad7e8,#7f9cff);color:#071322">你</div>
+        <div class="avatar" style="background:#2563eb;color:#fff">你</div>
       </div>
 
       <div class="msg">
@@ -249,7 +334,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
           <div class="bubble">好。顺便帮我看下这个月还剩多少。</div>
           <div class="meta">21:03 <span>· 已读</span></div>
         </div>
-        <div class="avatar" style="background:linear-gradient(135deg,#8ad7e8,#7f9cff);color:#071322">你</div>
+        <div class="avatar" style="background:#2563eb;color:#fff">你</div>
       </div>
 
       <div class="msg">
