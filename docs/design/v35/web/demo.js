@@ -44,6 +44,18 @@
     relation: [['亲密度', '0.62 · 熟'], ['信任', '0.82'], ['理解', '0.76'], ['最近变化', '+0.020 · 聊天']],
     settings: [['后端地址', 'http://127.0.0.1:27004'], ['连接状态', '已连接 · schema 35'], ['主人 QQ', '822891053'], ['视觉', '深色 · 动画默认关闭']]
   };
+  const COMMAND_GROUPS = {
+    '基础': ['!help','!ping','!status','!version','!uptime','!meta','!usage','!log','!db','!stats','!history','!reload','!set','!exit','!quit'],
+    '记忆': ['!memory','!memorybook','!event','!keywords','!clear','!profile','!growth','!relation'],
+    '媒体': ['!img','!acg','!sticker','!clip','!voice','!vision','!say','!sayg'],
+    '日常': ['!diary','!todo','!cron','!hooks','!backup','!update','!task'],
+    '阅读': ['!books','!book'],
+    '计划': ['!plan'],
+    '插件': ['!plugin'],
+    '账号': ['!adduser','!persona'],
+    '多端': ['!doing','!presence','!route','!gw','!config','!code','!apikeys']
+  };
+
   const TITLES = { home: '主页', memory: '记忆', savings: '存钱', weekly: '周计划表', persona: '人设', relation: '关系', info: '信息', commands: '命令', cron: '定时任务', logs: '运行日志', settings: '设置' };
 
   // 注入演示用样式
@@ -63,6 +75,16 @@
     .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(12px);opacity:0;pointer-events:none;z-index:30;transition:.2s;background:#fff;border:1px solid #dbe8ff;color:#243b55;font-size:10.5px;border-radius:9px;padding:8px 13px;box-shadow:0 10px 24px rgba(37,99,235,.12)}
     .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
     .typing{color:#8a9bb0;font-size:10px;padding:3px 4px 8px}
+    .cmd-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .cmd-group{border:1px solid #e3ebf7;border-radius:12px;background:#fff;padding:11px 12px;transition:border-color .18s,transform .18s,box-shadow .18s}
+    .cmd-group:hover{border-color:#bcd4f7;transform:translateY(-2px);box-shadow:0 8px 18px rgba(37,99,235,.06)}
+    .cmd-group h3{display:flex;align-items:center;font-size:11px;color:#1e3a5f;margin:0 0 7px}
+    .cmd-group h3 span{margin-left:auto;font-weight:400;color:#93a3b8;font-size:9px}
+    .cmd-chips{display:flex;flex-wrap:wrap;gap:5px}
+    .cmd-chip{border:1px solid #e3ebf7;border-radius:6px;background:#f8fbff;color:#4b5f78;font-size:9px;padding:4px 7px;cursor:pointer;transition:background .16s,color .16s,border-color .16s,transform .16s}
+    .cmd-chip:hover{background:#eef4ff;color:#2563eb;border-color:#bcd4f7;transform:translateY(-1px)}
+    .cmd-chip.owner:after{content:' owner';color:#c0264a;font-size:8px}
+
   `;
   document.head.appendChild(css);
 
@@ -152,6 +174,19 @@
   }));
 
   function showPage(name) {
+    if (name === 'commands') {
+      const groups = Object.entries(COMMAND_GROUPS).map(([g, cmds]) =>
+        '<div class="cmd-group"><h3>' + esc(g) + '<span>' + cmds.length + '</span></h3><div class="cmd-chips">' +
+        cmds.map(c => '<button class="cmd-chip' + (/!(reload|set|exit|quit|clear|say|sayg|backup|plugin|adduser|gw|config|code|apikeys)/.test(c) ? ' owner' : '') + '">' + esc(c) + '</button>').join('') +
+        '</div></div>').join('');
+      pageView.innerHTML = '<div class="page-head"><div><h2>命令</h2><p>51 个命令 · MOCK 目录 · v35.14 改为 /api/commands 读取</p></div><button class="back" id="backChat">← 返回聊天</button></div><div class="cmd-grid">' + groups + '</div>';
+      [top, msgs, composer].forEach(x => x.classList.add('chat-hide'));
+      pageView.classList.add('on');
+      document.querySelectorAll('.rnav').forEach(x => x.classList.toggle('on', x.dataset.page === name));
+      document.getElementById('backChat').addEventListener('click', () => showChat());
+      pageView.querySelectorAll('.cmd-chip').forEach(c => c.addEventListener('click', () => toast(c.textContent.trim() + '：MOCK 命令目录')));
+      return;
+    }
     const rows = PAGES[name] || [];
     pageView.innerHTML = '<div class="page-head"><div><h2>' + esc(TITLES[name] || name) +
       '</h2><p>v35.5 Web 演示 · MOCK 数据</p></div><button class="back" id="backChat">← 返回聊天</button></div>' +

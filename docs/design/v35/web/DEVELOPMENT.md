@@ -87,10 +87,23 @@ v35.5 演示先给全部入口和命令页；完整功能页在 v35.7 实现。
 | v35.5.10.0 | 窄屏/手机浏览器适配 | 手机可用 |
 | v35.5.11.0 | Vite build、Mock 标注、视觉/接口回归 | 可演示 |
 
+## 4.1 命令目录
+
+命令页最终不硬编码：
+
+```text
+GET /api/commands
+→ name / group / help / owner / risk
+```
+
+客户端只渲染接口返回；执行仍走 `POST /api/command`。演示里的 51 条是 MOCK，最终版删除硬编码。
+
 ## 5. 接口
 
 ```text
 POST /api/chat                 发送
+GET  /api/commands             命令目录
+POST /api/command              执行命令
 GET  /internal/history         历史
 GET  /api/memory               记忆
 GET  /api/relation             关系
