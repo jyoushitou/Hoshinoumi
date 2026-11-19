@@ -75,7 +75,7 @@ function mapPath(rawPath) {
   const map = {
     '/health': '/healthz',
     '/chat': '/api/chat',
-    '/history': '/internal/history',
+    '/history': '/api/history',
     '/command': '/api/command',
     '/status': '/api/status',
     '/logs': '/api/logs',
@@ -137,7 +137,11 @@ async function handleRequest(context, msg, post) {
     const endpoint = mapPath(rawPath)
     if (!endpoint) return send(404, { ok: false, error: 'unknown_route', message: rawPath })
     const cfg = readConfig(context)
-    const out = await backendFetch(cfg, endpoint, method, msg.body)
+    let finalEndpoint = endpoint
+    if (finalEndpoint.startsWith('/api/history') && !finalEndpoint.includes('target_id=')) {
+      finalEndpoint += (finalEndpoint.includes('?') ? '&' : '?') + 'target_id=' + encodeURIComponent(cfg.target_id || 'owner')
+    }
+    const out = await backendFetch(cfg, finalEndpoint, method, msg.body)
     return send(out.status, out.data)
   } catch (e) {
     return send(502, { ok: false, error: 'proxy_failed', message: e instanceof Error ? e.message : String(e) })
