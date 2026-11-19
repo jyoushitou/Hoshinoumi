@@ -193,7 +193,7 @@
 - **v35.1 本机服务**：`/healthz` `/readyz` 已实现。
 - **v35.2 DSH**：只读工具桥 `api/tools` 已实现。
 - **v35.2.1**：Endpoint 注册表 + DeliveryHub + schema 33 已实现。
-- **v35.2.2+**：Qoder/WorkBuddy、VS Code、Web/Qt/Android/EMUI/CLI，按次次版本推进。
+- **v35.2.2+**：VS Code、Web/Qt/Android/EMUI/CLI，按次次版本推进；Qoder/WorkBuddy 方向已取消。
 
 ## 热修记录（不等大版本）
 

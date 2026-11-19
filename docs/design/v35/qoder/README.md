@@ -1,6 +1,8 @@
-﻿# Hoshinoumi for Qoder · 演示稿
+﻿# Hoshinoumi for Qoder · 已取消（仅留档）
 
-`qoder-hoshinoumi-demo.html` 是 **Qoder 扩展接入 Hoshinoumi 机器人** 的界面演示，不是 DSH 插件，也不是 Qoder Agent 任务面板。
+> Qoder 插件方向已取消，不再开发/安装；本目录只保留此前的界面演示稿。
+
+`qoder-hoshinoumi-demo.html` 是 **Qoder 扩展接入 Hoshinoumi 机器人** 的界面演示，不是 DSH 插件。
 
 ## 入口
 
