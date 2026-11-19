@@ -1,4 +1,18 @@
 import { ref } from 'vue'
+export interface Conversation {
+  target_id: string
+  name: string
+  type?: string
+  count?: number
+  last_message?: string
+  updated_at?: string
+}
+export interface ChatMessage {
+  id?: number
+  role: string
+  content: string
+  created_at?: string
+}
 import { defineStore } from 'pinia'
 import { http } from '@/api/client'
 import { useAuthStore } from './auth'
@@ -14,8 +28,11 @@ export const useSessionStore = defineStore('session', () => {
   const connected = ref(false)
   const error = ref('')
   const status = ref<Record<string, unknown> | null>(null)
-  const conversations = ref<unknown[]>([])
-  const messages = ref<unknown[]>([])
+  const conversations = ref<Conversation[]>([])
+  const messages = ref<ChatMessage[]>([])
+  const activeTarget = ref('')
+  const conversationsError = ref('')
+  const historyError = ref('')
   const unread = ref(0)
   const persona = ref<Record<string, unknown> | null>(null)
   const relation = ref<Record<string, unknown> | null>(null)
@@ -23,6 +40,35 @@ export const useSessionStore = defineStore('session', () => {
   const weekly = ref<Record<string, unknown> | null>(null)
   const memoryTargets = ref<unknown[]>([])
   const week = ref(getIsoWeek())
+  async function loadConversations() {
+    conversationsError.value = ''
+    try {
+      const r = await http.get<{ data?: Conversation[] }>('/api/conversations')
+      conversations.value = Array.isArray(r.data) ? r.data : []
+      if (!activeTarget.value && conversations.value.length) {
+        await selectConversation(conversations.value[0].target_id)
+      }
+    } catch (e) {
+      conversations.value = []
+      conversationsError.value = e instanceof Error ? e.message : String(e)
+    }
+  }
+  async function loadHistory(target: string) {
+    if (!target) { messages.value = []; return }
+    historyError.value = ''
+    try {
+      const r = await http.get<{ data?: ChatMessage[] }>('/api/history?target_id=' + encodeURIComponent(target) + '&limit=100')
+      messages.value = Array.isArray(r.data) ? r.data : []
+    } catch (e) {
+      messages.value = []
+      historyError.value = e instanceof Error ? e.message : String(e)
+    }
+  }
+  async function selectConversation(target: string) {
+    activeTarget.value = target
+    await loadHistory(target)
+  }
+
   async function refresh() {
     const auth = useAuthStore()
     if (!auth.loggedIn) { connected.value = false; error.value = '未登录'; return }
@@ -49,12 +95,11 @@ export const useSessionStore = defineStore('session', () => {
       savings.value = sav.status === 'fulfilled' ? sav.value : null
       memoryTargets.value = mem.status === 'fulfilled' && Array.isArray(mem.value.targets) ? mem.value.targets : []
       weekly.value = wk.status === 'fulfilled' ? wk.value : null
-      // v35.5.2 只验证连接；会话/历史在 v35.5.3 接入
-      conversations.value = []; messages.value = []
+      await loadConversations()
     } catch (e) {
       connected.value = false
       error.value = e instanceof Error ? e.message : String(e)
     } finally { loading.value = false }
   }
-  return { loading, connected, error, status, conversations, messages, unread, persona, relation, savings, weekly, memoryTargets, week, refresh }
+  return { loading, connected, error, status, conversations, activeTarget, conversationsError, messages, historyError, unread, persona, relation, savings, weekly, memoryTargets, week, refresh, selectConversation, loadHistory }
 })

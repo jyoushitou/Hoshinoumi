@@ -83,6 +83,49 @@ def recent(target_id, limit=100, before_id=None, user_id=None, cursor=None):
     return list(reversed(rows))
 
 
+
+def threads(user_id=None, limit=50, cursor=None):
+    """按 target 汇总最近会话，供 Web 会话列表使用。"""
+    from . import tenant
+    if user_id is None:
+        user_id = tenant.owner_id()
+    limit = max(1, min(int(limit or 50), 100))
+    c = _cursor(cursor)
+    try:
+        c.execute(
+            "SELECT target_id, COUNT(*) AS n, MAX(created_at) AS updated_at "
+            "FROM conversation_messages WHERE user_id=%s "
+            "GROUP BY target_id ORDER BY updated_at DESC LIMIT %s",
+            (str(user_id), limit),
+        )
+        rows = list(c.fetchall() or [])
+    except Exception as e:
+        log.warning("conversation threads failed: %s", e)
+        rows = []
+    out = []
+    for r in rows:
+        tid = str(r["target_id"])
+        last = None
+        try:
+            c.execute(
+                "SELECT role,content,created_at FROM conversation_messages "
+                "WHERE user_id=%s AND target_id=%s ORDER BY id DESC LIMIT 1",
+                (str(user_id), tid),
+            )
+            last = c.fetchone()
+        except Exception:
+            pass
+        out.append({
+            "target_id": tid,
+            "name": tid,
+            "type": "unknown",
+            "count": int(r["n"] or 0),
+            "last_message": (last["content"] or "")[:80] if last else "",
+            "last_role": (last["role"] or "") if last else "",
+            "updated_at": str(r["updated_at"] or ""),
+        })
+    return out
+
 def cleanup(days=RETENTION_DAYS, max_per_thread=MAX_PER_THREAD, cursor=None):
     """删 1 天前，并把每个 (user_id,target_id) 截到最近 100 条"""
     c = _cursor(cursor)

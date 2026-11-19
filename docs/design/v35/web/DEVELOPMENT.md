@@ -434,6 +434,8 @@ GET /api/commands
 
 ```text
 POST /api/chat                 发送
+GET  /api/conversations        会话列表
+GET  /api/history              会话历史
 GET  /api/commands             命令目录
 POST /api/command              执行命令
 GET  /internal/history         历史
