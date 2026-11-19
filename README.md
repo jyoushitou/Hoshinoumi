@@ -1,7 +1,7 @@
-# Hoshinoumi（REC） v35.2.1.0
+# Hoshinoumi（REC） v35.2.25.1
 
-> 后端 **v35.2.1.0** · 网关 **v26.4.0**（8+4+body TCP / protobuf / 模糊指令）
-> v35.2.1.0 是当前仓库版本；v26 已封板。**v25 之后普通版本只切 worker，热更前提是 worker 归 supervisor 管**；策略见 [HOT-UPDATE-POLICY.md](docs/HOT-UPDATE-POLICY.md)，部署见 [DEPLOY-v26.md](docs/DEPLOY-v26.md)。
+> 后端 **v35.2.25.1** · 网关 **v26.4.0**（8+4+body TCP / protobuf / 模糊指令）
+> v35.2.25.1 是当前仓库版本；v26 已封板。**v25 之后普通版本只切 worker，热更前提是 worker 归 supervisor 管**；策略见 [HOT-UPDATE-POLICY.md](docs/HOT-UPDATE-POLICY.md)，部署见 [DEPLOY-v26.md](docs/DEPLOY-v26.md)。
 >
 > 状态规则：**下一个大版本进入试运行，则上一个大版本视为完成。**
 
@@ -14,10 +14,10 @@
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-5C2D91)](#)
 [![NapCat](https://img.shields.io/badge/NapCat-QQ-12B7F5)](#)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
-![Backend](https://img.shields.io/badge/Backend-v35.2.1.0-yellow)
+![Backend](https://img.shields.io/badge/Backend-v35.2.25.1-yellow)
 ![Gateway](https://img.shields.io/badge/Gateway-v26.4.0-blue)
-![Version](https://img.shields.io/badge/Version-v35.2.1.0-orange)
-![Tests](https://img.shields.io/badge/Tests-13150%20passing-brightgreen)
+![Version](https://img.shields.io/badge/Version-v35.2.25.1-orange)
+![Tests](https://img.shields.io/badge/Tests-13%2C140%2B%20passing-brightgreen)
 
 > **Hoshinoumi（REC，记录）** · 友利奈绪 · 星之海学园学生会室
 >
@@ -236,10 +236,10 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | **C++ 网关（v26.4）** | C++17、Boost.Asio / Boost.Beast、CommonNet（NetWorkCommunication / Utils）、CMake 3.20+、vcpkg overlay ports；对客户端提供 HTTP/JWT **27005** |
 | **热更新** | `supervisor` + `data/workers/versions/<version>` + `current` 蓝绿切换；`prepare_worker` 复制代码、共享 `data`、`logs`、`personas`；旧 worker drain 后退出 |
 | **插件接口** | v27.8 已完成 Manifest / PluginRegistry / MasterRegistry；v28.3+ 做运行时。核心 native 仍默认，不把现有功能插件化 |
-| **存储** | MySQL 8（默认，schema 33）/ SQLite（自动回退）；已统一到 `infra/pool`（v28.1） |
+| **存储** | MySQL 8（默认，schema 35）/ SQLite（自动回退）；已统一到 `infra/pool`（v28.1） |
 | **部署** | gateway 用 Docker / docker compose；ingress / worker 用 systemd 或 screen；Linux 生产、Windows 开发 |
 | **外部服务** | NapCat（QQ 协议）、DeepSeek（主对话）、豆包 / 火山方舟（视觉）、ALAPI（搜图） |
-| **测试** | 13150 条：tests 13113 + checks 37 |
+| **测试** | 13,140+ 条；全量 unittest 已通过 |
 
 > 当前拓扑不是“网关直接 HTTP 打后端”：
 >
@@ -270,7 +270,30 @@ MySQL（连不上自动退 SQLite）存记忆与日志。图片由她自己一�
 | C++ 网关 | 用户自己的 CommonNet（Boost.Asio/Beast）；客户端 27005 → TCP 27004 帧 → ingress；worker 只走 Unix socket |
 | 查版本 | `!version` 看版本号、提交、运行时长 |
 
-**13150 条测试**（tests 13113 + checks 37），静态检查零未定义名字。
+### DSH 客户端插件（v35.2.18–25）
+
+路径：[`integrations/dsh-plugin`](integrations/dsh-plugin)
+
+```text
+入口        输入框右侧 nao，全屏覆盖
+聊天/命令   历史、发送、51 命令、定时任务、运行日志
+记忆        真实统计；关系页按 target 选择
+人设        读取 personas/*；JSON 导入/导出/激活
+存钱        schema 35 账户/流水；CSV/JSON 导入；记一笔；关联/新建事件；AI 可见开关；API 余额
+周计划表    按周查看；点格子录入/删除；教务 HTML 导入
+权限        owner 看全部关系，普通用户只能看自己
+mock        integrations/dsh-plugin/mock_gateway.py
+```
+
+正式后端启动前必须迁移：
+
+```powershell
+.venv\Scripts\python.exe scripts\migrate.py --apply
+```
+
+DSH 插件详细说明：[integrations/dsh-plugin/README.md](integrations/dsh-plugin/README.md)
+
+**13,140+ 条测试**，全量 unittest 已通过。
 
 ---
 
@@ -301,7 +324,7 @@ v34.1.0.0   次版本
 每个大版本最后固定一个收尾次版本：统计 + 修复本阶段 P0/P1/P2，只修 bug，不加功能。
 
 
-**当前：v35.2.1.0（Endpoint/DeliveryHub，13150 测试）**｜上一阶段 v35.1.0.0 已完成。
+**当前：v35.2.25.1（DSH 人设/存钱/周计划表/关系，schema 35）**｜v35.2.1.0 Endpoint/DeliveryHub 已完成。
 
 > v22 试运行 1 天后，进入约 1 天的 v23 启动 + v22 介绍视频，再开始 v23 子版本开发。
 
@@ -342,7 +365,7 @@ v34.1.0.0   次版本
 | v32 | 记忆层插件接入 + 钩子批量修改 + 多行命令 | ✅ 已完成（v32.4.0） | [v32.md](docs/versions/v32.md) |
 | v33 | 接口层收口（v33.1–v33.7）：通道/工具/存储/调度/出站/默认链路 | ✅ 已完成（v34.3.0.0） | [v33.md](docs/versions/v33.md) |
 | v34 | 学习规划（手动 JSON）+ 主账号情境感知（v34.0–v34.3） | ✅ 已完成（v34.3.0.0） | [v34.md](docs/versions/v34.md) |
-| v35 | 多端与客户端（v35.0–v35.12）：本机服务/DSH/VS Code/Qt桌宠/Android/EMUI/CLI。已实现 v35.1.0.0、v35.2.0.0、v35.2.1.0<br>⚠️ QQ 消息同步可能不完整，断线期间可能永久缺失 | 🚧 v35 进行中（v35.2.1 已实现） | [v35.md](docs/versions/v35.md) |
+| v35 | 多端与客户端（v35.0–v35.12）：本机服务/DSH/VS Code/Qt桌宠/Android/EMUI/CLI。已实现 v35.1.0.0、v35.2.0.0、v35.2.1.0，以及 DSH 插件 v35.2.18–25<br>⚠️ QQ 消息同步可能不完整，断线期间可能永久缺失 | 🚧 v35 进行中（v35.2.25 已实现） | [v35.md](docs/versions/v35.md) |
 | v36 | 插件增强（v36.0–v36.6）：后端+前端插件接口 | 📋 已规划 | [v36.md](docs/versions/v36.md) |
 | v37 | 情感增强（v37.0–v37.5）：20维关系/可扩展标签/人设卡 v2 客户端编写（默认开启） | 📋 已规划 | [v37.md](docs/versions/v37.md) |
 | v38 | 生态接入（v38.0–v38.10）：微博/贴吧/知乎/视频 + 随机内容 | 📋 已规划 | [v38.md](docs/versions/v38.md) |
@@ -495,7 +518,7 @@ worker 内部：
 ### 环境要求
 
 - Python 3.10+
-- MySQL 8（42 张表，schema 33，见下文）
+- MySQL 8（schema 35，新增 finance_* 表，见下文）
 - NapCat（QQ 协议端，WebSocket 连到本机 3001）
 
 ### 首次配置（v16 起必做）
@@ -1279,7 +1302,7 @@ QQ 私聊：
 !config
 ```
 
-`!version` 应为 `v35.2.1.0`。
+`!version` 应为 `v35.2.25.1`。
 
 如果 `/readyz` 返回 `backend: starting`，而后端 health 已经 200：
 
@@ -1801,17 +1824,17 @@ python3 checks/env_check.py --init-db   # 环境监测时自动建
 
 第三方组件遵循其各自许可证；本项目不包含《Charlotte》的官方素材。
 
-## 附录 A · 当前状态（v35.2.1.0）
+## 附录 A · 当前状态（v35.2.25.1）
 
 | 项 | 当前事实 |
 |---|---|
-| 后端 | v35.2.1.0，`bot/`，Python 3.10+ |
+| 后端 | v35.2.25.1，`bot/`，Python 3.10+ |
 | 网关 | v26.4.0，`gateway/`，C++17 + Boost.Asio/Beast |
-| 阶段 | v35.2.1.0 已实现，待部署验收 |
+| 阶段 | v35.2.25.1；DSH 插件已实现，正式环境需迁移 schema 35 |
 | 前序 | v19–v34 已完成；v35.1/v35.2 已实现 |
-| 数据表 | schema 33；42 张表；6 张 plugin_* 表 |
+| 数据表 | schema 35；新增 finance_* 表；6 张 plugin_* 表 |
 | 命令 | 51 个注册命令（`!task` 仅提示迁移） |
-| 测试 | 13150 条：tests 13113 + checks 37 |
+| 测试 | 13,140+ 条；全量 unittest 已通过 |
 | 账号 | 默认单主人 `__owner__`；多用户 v23 已支持 |
 | 后端鉴权 | `/api/*` 除 health 外要 Bearer Token；`/healthz` `/readyz` 免鉴权；`/internal/*` 只给本机 |
 | 网关鉴权 | 有 owner 登录/JWT；无按用户限流、无 TLS |
@@ -1902,7 +1925,7 @@ python3 checks/env_check.py --init-db   # 环境监测时自动建
 |---|---|---|
 | `/api/health` | 无 | 存活检查 |
 | `/healthz` | 无 | 本机服务存活检查 |
-| `/readyz` | 无 | 本机服务就绪检查（DB + schema 33） |
+| `/readyz` | 无 | 本机服务就绪检查（DB + schema 35） |
 | `/api/tools` | `Authorization: Bearer <API_SERVER_TOKEN>` | DSH 只读工具清单 |
 | `/api/endpoints` | `Authorization: Bearer <API_SERVER_TOKEN>` | 注册/列出/停用客户端 endpoint |
 | `/api/endpoints/<id>/messages` | `X-Endpoint-Token` | endpoint 拉取 outbox |
@@ -2012,7 +2035,7 @@ POST   /api/endpoints/<id>/ack           确认 message_id
 
 ---
 
-## 附录 D · 数据库字典（42 表 + 1 视图，schema 33）
+## 附录 D · 数据库字典（schema 35；新增 finance_* 表）
 
 | 表 | 职责 | 关键列 |
 |---|---|---|
