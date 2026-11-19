@@ -2,5 +2,7 @@
 bindPort = 7000
 auth.method = "token"
 auth.token = "CHANGE_ME_FRP_TOKEN"
+# 映射端口只绑本机，nginx 访问；公网不能直连 27015
+proxyBindAddr = "127.0.0.1"
 
 # remotePort 27015 只允许本机 nginx 访问；公网防火墙不要放行 27015

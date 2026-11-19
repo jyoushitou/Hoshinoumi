@@ -3,6 +3,7 @@ serverAddr = "FRONT_PUBLIC_IP"
 serverPort = 7000
 auth.method = "token"
 auth.token = "CHANGE_ME_FRP_TOKEN"
+transport.tls.enable = true
 
 # 只映射 gateway 27005；不要映射 27004 / internal
 [[proxies]]
