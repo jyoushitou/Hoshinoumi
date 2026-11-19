@@ -16,7 +16,7 @@ button,input{font:inherit}
 .replay{border:1px solid #deded7;background:#fff;border-radius:7px;padding:5px 9px;color:#5f6058;cursor:pointer;transition:.2s}
 .replay:hover{background:#f0f0eb;transform:translateY(-1px)}
 .body{flex:1;display:flex;min-height:0}
-.side{width:288px;flex:none;background:#f5f5f1;border-right:1px solid #e3e3dd;padding:14px 11px;display:flex;flex-direction:column;overflow:hidden}
+.side{width:288px;flex:none;overflow-y:auto;background:#f5f5f1;border-right:1px solid #e3e3dd;padding:14px 11px;display:flex;flex-direction:column;overflow:hidden}
 .logo{display:flex;align-items:center;gap:8px;padding:0 6px 14px;font-size:16px;font-weight:800;letter-spacing:-.03em}
 .logo b{background:#1e1f1c;color:#fff;border-radius:4px;padding:2px 6px;font-size:9px;letter-spacing:.06em}
 .new{height:36px;border:1px solid #dadad3;background:#fff;border-radius:9px;display:flex;align-items:center;justify-content:center;gap:7px;font-size:12px;color:#44453f;cursor:pointer;transition:.2s}
@@ -43,7 +43,7 @@ button,input{font:inherit}
 .tab{display:flex;align-items:center;border-bottom:2px solid transparent;cursor:pointer;transition:.2s}.tab:hover{color:#33342e}.tab.on{color:#3457d5;border-bottom-color:#3457d5}
 .page{flex:1;min-height:0;display:none;flex-direction:column}.page.on{display:flex;animation:pageIn .35s ease both}
 @keyframes pageIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
-.chat{flex:1;min-height:0;overflow:hidden;padding:16px 48px 0;max-width:1040px;width:100%;margin:0 auto}
+.chat{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:16px 48px 0;max-width:1040px;width:100%;margin:0 auto}
 .banner{display:flex;align-items:center;gap:7px;font-size:10px;color:#247d58;background:#edf7f1;border:1px solid #d9ecdf;border-radius:8px;padding:7px 10px;opacity:0;transform:translateY(-4px);transition:.4s}
 .banner.show{opacity:1;transform:none}
 .bar{height:2px;background:#dcefe2;border-radius:2px;margin-top:6px;overflow:hidden}.bar i{display:block;width:0;height:100%;background:#54b37d;transition:width 1.5s ease}
@@ -73,7 +73,7 @@ button,input{font:inherit}
 .send{width:28px;height:28px;border:0;border-radius:50%;background:#3d5cf5;color:#fff;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center}
 .send:hover{transform:scale(1.06);background:#2f4ee6}
 .statusline{height:22px;flex:none;border-top:1px solid #ecece6;display:flex;align-items:center;justify-content:center;gap:14px;font-size:8px;color:#9a9b91;background:#fbfbf8}
-.cmdpage{padding:20px 30px;overflow:hidden}
+.cmdpage{padding:20px 30px;overflow-y:auto}
 .crumb{font-size:9px;color:#8b8c82;margin-bottom:5px}
 .ch1{font-size:21px;font-weight:750;display:flex;gap:8px;align-items:center}
 .ok{font-size:9px;font-weight:400;color:#247d58;background:#e8f5ed;border:1px solid #d5ecdd;border-radius:20px;padding:3px 7px}
