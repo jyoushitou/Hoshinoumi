@@ -125,6 +125,25 @@ nao（聊天）
 
 v35.5 演示先给全部入口和命令页；完整功能页在 v35.7 实现。
 
+## 2.4 页面框架已落地
+
+```text
+integrations/web/src/layouts/AppShell.vue
+integrations/web/src/components/RailNav.vue
+integrations/web/src/components/ConversationList.vue
+integrations/web/src/components/ContextPanel.vue
+integrations/web/src/views/ChatView.vue
+integrations/web/src/views/PageView.vue
+```
+
+路由 12 项：home / chat / memory / relation / savings / weekly / info / persona / commands / cron / logs / settings。
+
+开发端口固定：
+
+```text
+http://127.0.0.1:27006
+```
+
 ## 3. 布局
 
 ```text
@@ -296,7 +315,7 @@ Web：拉取，不做 Web Push
 | 版本 | 交付 | 验收 |
 |---|---|---|
 | v35.5.0.0 ✅ | Node 20+/pnpm、Vue 3 + Vite + TS、Router/Pinia、ESLint/Vitest/Playwright、API client/env | 空项目可构建、可测 |
-| v35.5.1.0 | AppShell/Router/导航/ThemeToken/错误空态/Mock adapter | 12 个导航空壳 |
+| v35.5.1.0 ✅ | AppShell/Router/导航/ThemeToken/错误空态/Mock adapter | 12 个导航空壳 |
 | v35.5.2.0 | 首次登录 token/QQ（同源）、深浅色主题 | 能登录 |
 | v35.5.3.0 | QQ 会话列表、历史分页、已读位点 | 群列表一致 |
 | v35.5.4.0 | 文本发送、乐观更新、失败回滚、幂等 | 能聊天 |

@@ -4,6 +4,6 @@ import vue from '@vitejs/plugin-vue'
 export default defineConfig({
   plugins: [vue()],
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
-  server: { port: 5175 },
+  server: { port: 27006, host: '127.0.0.1' },
   test: { environment: 'jsdom', globals: true, exclude: ['e2e/**', 'node_modules/**'] },
 })

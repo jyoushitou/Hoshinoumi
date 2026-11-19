@@ -1,10 +1,10 @@
 # Hoshinoumi Web
 
-v35.5.0.0 Vue 前置。
+v35.5.0.0 Vue 前置 + v35.5.1.0 AppShell 框架。
 
 ```bash
 pnpm install
-pnpm dev      # http://127.0.0.1:5175
+pnpm dev      # http://127.0.0.1:27006
 pnpm build
 pnpm test
 pnpm lint

@@ -6,6 +6,6 @@ import router from '@/router'
 describe('App', () => {
   it('renders shell', async () => {
     const wrapper = mount(App, { global: { plugins: [createPinia(), router] } })
-    expect(wrapper.text()).toContain('Hoshinoumi Web')
+    expect(wrapper.text()).toContain('HOSHINOUMI')
   })
 })
