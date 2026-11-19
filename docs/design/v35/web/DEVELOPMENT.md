@@ -22,6 +22,29 @@ CSS Variables（ThemeToken）
 
 ## 2.2 Vue 前置
 
+已落地：
+
+```text
+integrations/web/
+  pnpm dev / build / test / lint
+  Vue 3 + Vite + TS
+  Vue Router + Pinia
+  API client + env
+  Vitest + Playwright 配置
+```
+
+命令：
+
+```bash
+cd integrations/web
+pnpm install
+pnpm dev
+pnpm build
+pnpm test
+pnpm lint
+```
+
+
 ```text
 Node 20+ / pnpm 9+
 Vue 3 + Vite + TypeScript
@@ -272,7 +295,7 @@ Web：拉取，不做 Web Push
 
 | 版本 | 交付 | 验收 |
 |---|---|---|
-| v35.5.0.0 | Node 20+/pnpm、Vue 3 + Vite + TS、Router/Pinia、ESLint/Vitest/Playwright、API client/env | 空项目可构建、可测 |
+| v35.5.0.0 ✅ | Node 20+/pnpm、Vue 3 + Vite + TS、Router/Pinia、ESLint/Vitest/Playwright、API client/env | 空项目可构建、可测 |
 | v35.5.1.0 | AppShell/Router/导航/ThemeToken/错误空态/Mock adapter | 12 个导航空壳 |
 | v35.5.2.0 | 首次登录 token/QQ（同源）、深浅色主题 | 能登录 |
 | v35.5.3.0 | QQ 会话列表、历史分页、已读位点 | 群列表一致 |
