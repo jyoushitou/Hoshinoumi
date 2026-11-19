@@ -9,9 +9,6 @@ const auth = useAuthStore(); const session = useSessionStore()
 onMounted(() => { if (auth.loggedIn) session.refresh(); else session.error = '未登录，请先填写 QQ 和 token' })
 </script>
 <template>
-  <div class="mock">
-    MOCK 演示 · 数据非真实
-  </div>
   <div class="shell">
     <RailNav />
     <ConversationList />
