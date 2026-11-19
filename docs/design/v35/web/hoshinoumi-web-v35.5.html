@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hoshinoumi · Web v35.5</title>
+<style>
+:root{
+  --bg:#070d18; --bg2:#0a1322; --panel:#0d1728; --panel2:#101d31;
+  --line:rgba(139,170,220,.13); --line2:rgba(139,170,220,.22);
+  --text:#e9f1ff; --muted:#7f91ad; --dim:#586a86;
+  --cyan:#7ee7ff; --blue:#5b8cff; --violet:#c18cff; --green:#52d6a0;
+  --bubble:#15243b; --me:#244a7a;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;background:
+    radial-gradient(900px 520px at 76% -8%,rgba(91,140,255,.16),transparent 60%),
+    radial-gradient(700px 440px at 6% 104%,rgba(193,140,255,.10),transparent 60%),
+    var(--bg);
+  color:var(--text);font:13px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif;
+  overflow:hidden;
+}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+.app{display:grid;grid-template-columns:64px 292px minmax(0,1fr) 304px;height:100vh}
+/* rail */
+.rail{background:rgba(8,15,27,.92);border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding:14px 0;gap:8px}
+.logo{width:38px;height:38px;display:grid;place-items:center;margin-bottom:14px;border-radius:12px;background:linear-gradient(145deg,rgba(126,231,255,.16),rgba(193,140,255,.12));border:1px solid rgba(126,231,255,.18)}
+.logo img{width:24px;height:24px}
+.rnav{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;color:#7f93b3;font-size:17px;position:relative}
+.rnav:hover{background:rgba(255,255,255,.045);color:#dbe9ff}
+.rnav.on{background:linear-gradient(145deg,rgba(126,231,255,.18),rgba(91,140,255,.16));color:#eaf9ff;box-shadow:inset 0 0 0 1px rgba(126,231,255,.2)}
+.rnav.on:before{content:"";position:absolute;left:-12px;width:3px;height:18px;border-radius:3px;background:linear-gradient(180deg,var(--cyan),var(--violet))}
+.rnav .badge{position:absolute;top:3px;right:2px;min-width:14px;height:14px;border-radius:8px;background:linear-gradient(135deg,var(--cyan),var(--blue));color:#06111f;font-size:9px;font-weight:700;display:grid;place-items:center;padding:0 3px}
+.rail .spacer{flex:1}
+/* side */
+.side{background:linear-gradient(180deg,rgba(13,23,40,.96),rgba(10,19,34,.96));border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.brand{padding:18px 18px 12px;display:flex;align-items:center;gap:9px}
+.brand .word{font-size:12px;letter-spacing:.19em;font-weight:700;color:#dfeaff}
+.brand .ver{margin-left:auto;font-size:9px;color:var(--dim);border:1px solid var(--line);border-radius:20px;padding:2px 7px}
+.search{margin:0 14px 12px;height:34px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.025);display:flex;align-items:center;gap:7px;padding:0 10px;color:var(--dim);font-size:11px}
+.search kbd{margin-left:auto;font:9px ui-monospace,monospace;border:1px solid var(--line);border-radius:4px;padding:1px 4px}
+.slabel{font-size:9px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase;padding:6px 18px}
+.convs{overflow:auto;padding:0 8px;min-height:0}
+.conv{display:flex;gap:9px;padding:9px 9px;border-radius:11px;position:relative;cursor:pointer}
+.conv:hover{background:rgba(255,255,255,.035)}
+.conv.on{background:linear-gradient(110deg,rgba(126,231,255,.12),rgba(91,140,255,.08));box-shadow:inset 0 0 0 1px rgba(126,231,255,.1)}
+.avatar{width:33px;height:33px;border-radius:11px;display:grid;place-items:center;font-size:11px;font-weight:700;flex:none;color:#071322;background:linear-gradient(135deg,var(--cyan),var(--blue))}
+.avatar.p{background:linear-gradient(135deg,#f0c2a0,#d78b74);color:#2a140b}
+.avatar.g{background:linear-gradient(135deg,#9ce6c2,#67b9d8);color:#0b241c}
+.avatar.v{background:linear-gradient(135deg,#c7b1ff,#8b8dff);color:#170f33}
+.avatar.o{background:linear-gradient(135deg,#ffd28c,#f09b83);color:#321b0b}
+.conv .nm{font-size:12px;font-weight:600;color:#dbe8ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.conv .last{font-size:10.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.conv .tm{font-size:9px;color:var(--dim);margin-left:auto;flex:none}
+.conv .unread{position:absolute;right:8px;bottom:8px;min-width:15px;height:15px;border-radius:8px;background:var(--cyan);color:#06111f;font-size:9px;font-weight:700;display:grid;place-items:center}
+.conn{margin:10px 14px 14px;padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.022)}
+.conn .k{font-size:9px;letter-spacing:.08em;color:var(--dim);margin-bottom:5px}
+.conn .v{font-size:11px;color:var(--green);display:flex;align-items:center;gap:6px}
+.conn .dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 12px rgba(82,214,160,.9)}
+.conn .meta{font-size:9.5px;color:var(--dim);margin-top:4px}
+/* main */
+.main{display:flex;flex-direction:column;min-width:0;background:rgba(8,15,27,.35)}
+.top{height:66px;flex:none;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 20px;gap:12px;background:rgba(9,17,30,.55)}
+.top .who{display:flex;align-items:center;gap:11px;min-width:0}
+.top .nm{font-size:14px;font-weight:650}
+.top .sub{font-size:10px;color:var(--muted);display:flex;align-items:center;gap:7px;margin-top:2px}
+.top .pill{font-size:9px;color:#a9e9ff;border:1px solid rgba(126,231,255,.18);background:rgba(126,231,255,.06);border-radius:20px;padding:2px 7px}
+.top .right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.tbtn{height:30px;padding:0 10px;border-radius:9px;border:1px solid var(--line);background:rgba(255,255,255,.025);color:var(--muted);font-size:10.5px;display:flex;align-items:center;gap:5px}
+.tbtn:hover{border-color:var(--line2);color:#dfeaff}
+.msgs{flex:1;overflow:auto;padding:20px 22px 16px;min-height:0}
+.day{text-align:center;font-size:9px;letter-spacing:.08em;color:var(--dim);margin:2px 0 18px}
+.day b{font-weight:500;color:#8fa3c0}
+.msg{display:flex;gap:9px;margin-bottom:14px;max-width:92%}
+.msg .bubble{padding:9px 12px;border-radius:13px 13px 13px 4px;background:var(--bubble);border:1px solid rgba(139,170,220,.10);font-size:12.5px;line-height:1.65;color:#dbe8fb;white-space:pre-wrap}
+.msg .meta{font-size:9px;color:var(--dim);margin:4px 2px 0;display:flex;gap:7px;align-items:center}
+.msg .meta .sync{color:var(--cyan);opacity:.8}
+.msg.me{margin-left:auto;flex-direction:row-reverse}
+.msg.me .bubble{background:linear-gradient(135deg,rgba(36,74,122,.88),rgba(30,57,96,.92));border-color:rgba(126,231,255,.14);border-radius:13px 13px 4px 13px;color:#eaf5ff}
+.msg.me .meta{justify-content:flex-end}
+.msg .avatar{margin-top:2px;width:28px;height:28px;border-radius:9px;font-size:10px}
+.memchip{display:flex;align-items:center;gap:7px;margin-top:6px;padding:5px 8px;border-radius:8px;border:1px solid rgba(193,140,255,.16);background:rgba(193,140,255,.055);font-size:9.5px;color:#cbb6f8}
+.memchip .i{color:var(--violet)}
+.composer{flex:none;border-top:1px solid var(--line);padding:11px 18px 13px;background:rgba(9,17,30,.62)}
+.tools{display:flex;gap:6px;margin-bottom:7px}
+.tool{font-size:10px;color:var(--dim);padding:4px 8px;border-radius:7px;border:1px solid transparent}
+.tool:hover{color:#cfe3ff;background:rgba(255,255,255,.035);border-color:var(--line)}
+.inputbox{display:flex;align-items:flex-end;gap:9px;border:1px solid var(--line2);border-radius:12px;background:rgba(10,19,33,.9);padding:9px 10px}
+.inputbox textarea{flex:1;resize:none;border:0;outline:0;background:none;color:#dbe8fb;font:12.5px/1.5 inherit;height:22px;max-height:90px}
+.inputbox textarea::placeholder{color:#5e718d}
+.send{height:30px;padding:0 14px;border-radius:8px;background:linear-gradient(135deg,var(--cyan),var(--blue));color:#04101e;font-size:11px;font-weight:700;flex:none}
+.send:hover{filter:brightness(1.07)}
+.hint{font-size:9px;color:var(--dim);margin-top:6px;display:flex;justify-content:space-between}
+/* context */
+.context{border-left:1px solid var(--line);background:linear-gradient(180deg,rgba(12,22,38,.94),rgba(8,16,29,.94));padding:16px 15px;overflow:auto}
+.pcard{border:1px solid var(--line);border-radius:14px;background:linear-gradient(150deg,rgba(126,231,255,.065),rgba(193,140,255,.045));padding:13px;display:flex;gap:11px;align-items:center}
+.pcard .biga{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,var(--cyan),var(--blue) 58%,var(--violet));color:#071322;display:grid;place-items:center;font-size:16px;font-weight:800}
+.pcard .name{font-size:13px;font-weight:650}
+.pcard .tag{font-size:9.5px;color:#b6c7e0;margin-top:2px}
+.pcard .state{margin-left:auto;width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 10px rgba(82,214,160,.8)}
+.sec{font-size:9px;letter-spacing:.13em;color:var(--dim);text-transform:uppercase;margin:17px 2px 8px}
+.bars{display:flex;flex-direction:column;gap:7px}
+.bar .lb{display:flex;justify-content:space-between;font-size:10px;color:#aabdd8;margin-bottom:3px}
+.bar .lb span:last-child{color:var(--cyan);font-family:ui-monospace,monospace;font-size:9px}
+.track{height:4px;border-radius:4px;background:rgba(255,255,255,.06);overflow:hidden}
+.track i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--blue),var(--cyan))}
+.card{border:1px solid var(--line);border-radius:11px;background:rgba(255,255,255,.022);padding:10px 11px;margin-bottom:8px}
+.card h4{margin:0 0 3px;font-size:10.5px;font-weight:600;color:#dbe8fb}
+.card p{margin:0;font-size:9.5px;color:var(--muted);line-height:1.55}
+.quick{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.quick .q{border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.02);padding:8px;font-size:9.5px;color:#aebfd9}
+.quick .q b{display:block;color:#e1ecff;font-size:10.5px;margin-bottom:1px}
+.life{display:flex;flex-direction:column;gap:6px}
+.life .row{display:flex;justify-content:space-between;font-size:10px;color:#a9bbd5}
+.life .row b{color:#dce9ff;font-weight:500}
+.mock{position:fixed;right:14px;top:12px;z-index:20;font-size:9px;letter-spacing:.1em;color:#f6d58c;border:1px solid rgba(246,213,140,.22);background:rgba(28,22,9,.72);border-radius:20px;padding:4px 9px;backdrop-filter:blur(8px)}
+.tagdraft{position:fixed;left:76px;bottom:8px;font-size:8.5px;letter-spacing:.08em;color:#4d5f7b;z-index:20}
+@media(max-width:1180px){.app{grid-template-columns:64px 270px minmax(0,1fr)}.context{display:none}}
+@media(max-width:820px){.app{grid-template-columns:54px minmax(0,1fr)}.side{display:none}.tagdraft{left:64px}.msgs{padding:16px 14px}.top{padding:0 14px}.composer{padding:9px 12px 11px}}
+</style>
+</head>
+<body>
+<div class="mock">MOCK 演示 · 数据非真实</div>
+<div class="app">
+
+  <aside class="rail">
+    <div class="logo"><img src="../../logo/hoshinoumi.svg" alt="Hoshinoumi"></div>
+    <button class="rnav on" title="聊天">◉<span class="badge">2</span></button>
+    <button class="rnav" title="记忆">◈</button>
+    <button class="rnav" title="存钱">¥</button>
+    <button class="rnav" title="周计划">▦</button>
+    <button class="rnav" title="人设">◇</button>
+    <button class="rnav" title="关系">◎</button>
+    <div class="spacer"></div>
+    <button class="rnav" title="设置">⚙</button>
+  </aside>
+
+  <aside class="side">
+    <div class="brand">
+      <div class="word">HOSHINOUMI</div>
+      <div class="ver">WEB v35.5</div>
+    </div>
+    <div class="search">⌕ 搜索会话 / 记忆 / 命令 <kbd>⌘K</kbd></div>
+    <div class="slabel">会话</div>
+    <div class="convs">
+      <div class="conv on">
+        <div class="avatar">奈</div>
+        <div style="min-width:0">
+          <div class="nm">友利奈绪</div>
+          <div class="last">今天也一起加油吧</div>
+        </div>
+        <div class="tm">21:04</div>
+        <div class="unread">2</div>
+      </div>
+      <div class="conv">
+        <div class="avatar g">星</div>
+        <div style="min-width:0">
+          <div class="nm">星之海 · 群</div>
+          <div class="last">[图片] 晚上的房间</div>
+        </div>
+        <div class="tm">20:41</div>
+      </div>
+      <div class="conv">
+        <div class="avatar o">存</div>
+        <div style="min-width:0">
+          <div class="nm">存钱 / 流水</div>
+          <div class="last">本月已存 ¥1,500</div>
+        </div>
+        <div class="tm">19:22</div>
+      </div>
+      <div class="conv">
+        <div class="avatar v">记</div>
+        <div style="min-width:0">
+          <div class="nm">记忆本</div>
+          <div class="last">“今天值得高兴的事”</div>
+        </div>
+        <div class="tm">18:50</div>
+      </div>
+      <div class="conv">
+        <div class="avatar p">周</div>
+        <div style="min-width:0">
+          <div class="nm">周计划表</div>
+          <div class="last">第 12 周 · 3 门课</div>
+        </div>
+        <div class="tm">昨天</div>
+      </div>
+    </div>
+    <div class="conn">
+      <div class="k">后端连接</div>
+      <div class="v"><span class="dot"></span> 已连接 · schema 35</div>
+      <div class="meta">127.0.0.1:27004 · 42ms · owner</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="top">
+      <div class="who">
+        <div class="avatar">奈</div>
+        <div>
+          <div class="nm">友利奈绪</div>
+          <div class="sub">私聊 · 记忆同步 <span class="pill">在线</span></div>
+        </div>
+      </div>
+      <div class="right">
+        <button class="tbtn">⌕ 聊天内搜索</button>
+        <button class="tbtn">⋯</button>
+      </div>
+    </div>
+
+    <div class="msgs">
+      <div class="day"><b>今天</b> · 20:58</div>
+
+      <div class="msg">
+        <div class="avatar">奈</div>
+        <div>
+          <div class="bubble">你回来啦。今天外面有点冷，先喝点热的吧。</div>
+          <div class="meta">20:58 · 已读</div>
+        </div>
+      </div>
+
+      <div class="msg me">
+        <div>
+          <div class="bubble">刚到家。今天那个方案终于过了。</div>
+          <div class="meta">21:00 <span>· 已读</span></div>
+        </div>
+        <div class="avatar" style="background:linear-gradient(135deg,#8ad7e8,#7f9cff);color:#071322">你</div>
+      </div>
+
+      <div class="msg">
+        <div class="avatar">奈</div>
+        <div>
+          <div class="bubble">那很好啊。你上次说怕过不了，我还记着呢。要不要把这件事记进“今天值得高兴的事”？</div>
+          <div class="memchip"><span class="i">✦</span> 关联记忆 · 方案汇报 · 11 月 19 日</div>
+          <div class="meta">21:01 · 记忆已更新</div>
+        </div>
+      </div>
+
+      <div class="msg me">
+        <div>
+          <div class="bubble">好。顺便帮我看下这个月还剩多少。</div>
+          <div class="meta">21:03 <span>· 已读</span></div>
+        </div>
+        <div class="avatar" style="background:linear-gradient(135deg,#8ad7e8,#7f9cff);color:#071322">你</div>
+      </div>
+
+      <div class="msg">
+        <div class="avatar">奈</div>
+        <div>
+          <div class="bubble">本月收入 ¥8,000，支出 ¥3,200，存钱 ¥1,500，结余 ¥3,300。旅行目标已经 60% 了。</div>
+          <div class="meta">21:03 · 财务摘要（仅主人私聊）</div>
+        </div>
+      </div>
+
+      <div class="msg">
+        <div class="avatar">奈</div>
+        <div>
+          <div class="bubble">不过我想先听你说说方案过的时候，是什么感觉。</div>
+          <div class="meta">21:04 · 已读</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="composer">
+      <div class="tools">
+        <button class="tool">＋ 图片</button>
+        <button class="tool">◌ 语音</button>
+        <button class="tool">◇ 表情</button>
+        <button class="tool">⌕ 搜图</button>
+        <button class="tool">✦ 记忆</button>
+      </div>
+      <div class="inputbox">
+        <textarea placeholder="和奈绪说点什么……"></textarea>
+        <button class="send">发送</button>
+      </div>
+      <div class="hint"><span>Enter 发送 · Shift+Enter 换行</span><span>MOCK · Web v35.5</span></div>
+    </div>
+  </main>
+
+  <aside class="context">
+    <div class="pcard">
+      <div class="biga">奈</div>
+      <div>
+        <div class="name">友利奈绪</div>
+        <div class="tag">亲近 · 知己 · 搭档</div>
+      </div>
+      <div class="state"></div>
+    </div>
+
+    <div class="sec">关系</div>
+    <div class="bars">
+      <div class="bar"><div class="lb"><span>信任</span><span>0.82</span></div><div class="track"><i style="width:82%"></i></div></div>
+      <div class="bar"><div class="lb"><span>理解</span><span>0.76</span></div><div class="track"><i style="width:76%"></i></div></div>
+      <div class="bar"><div class="lb"><span>安全感</span><span>0.69</span></div><div class="track"><i style="width:69%"></i></div></div>
+    </div>
+
+    <div class="sec">她记得</div>
+    <div class="card"><h4>今天值得高兴的事</h4><p>方案通过 · 已写入长期记忆</p></div>
+    <div class="card"><h4>你不喜欢太吵的地方</h4><p>上次提到过，约会偏好安静</p></div>
+    <div class="card"><h4>旅行目标 · 60%</h4><p>还差 ¥2,200，预计下个月完成</p></div>
+
+    <div class="sec">她的状态</div>
+    <div class="life">
+      <div class="row"><span>心情</span><b>平静</b></div>
+      <div class="row"><span>精力</span><b>0.61</b></div>
+      <div class="row"><span>正在</span><b>看书 · 窗边</b></div>
+      <div class="row"><span>今日互动</span><b>3 次</b></div>
+    </div>
+
+    <div class="sec">快捷</div>
+    <div class="quick">
+      <div class="q"><b>存钱</b>本月流水</div>
+      <div class="q"><b>记忆</b>最近 7 天</div>
+      <div class="q"><b>周计划</b>第 12 周</div>
+      <div class="q"><b>人设</b>nao · 当前</div>
+    </div>
+  </aside>
+</div>
+<div class="tagdraft">DESIGN DRAFT · v35.5 · WEB</div>
+</body>
+</html>

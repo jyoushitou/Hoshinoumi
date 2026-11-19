@@ -1,7 +1,7 @@
 # v35 多端页面设计稿
 
-> 当前代码版本：v35.2.1.0  
-> 设计稿版本：v35 多端，2026-11-18  
+> 当前代码版本：v35.4.15  
+> 设计稿版本：v35 多端，2026-11-19  
 > 每个终端一个文件夹；相同页面在不同端使用相同文件名。
 
 ## 目录
@@ -11,7 +11,9 @@ docs/design/v35/
 ├─ common.css
 ├─ render.ps1
 ├─ web/
-│  ├─ chat.png / chat.html
+│  ├─ hoshinoumi-web-v35.5.html / .png    v35.5 聊天室演示
+│  ├─ DEVELOPMENT.md                     v35.5 开发拆分
+│  ├─ chat.png / chat.html                旧版页面留档
 │  ├─ command.png / command.html
 │  ├─ savings.png / savings.html
 │  ├─ info.png / info.html
@@ -36,6 +38,18 @@ docs/design/v35/
    ├─ demo.html / demo.png            可交互动画演示
    └─ demo-overview.png               全部功能总览演示预览
 ```
+
+## Web v35.5 演示
+
+```text
+web/hoshinoumi-web-v35.5.html
+```
+
+- 四栏：导航 / 会话 / 聊天 / 上下文
+- 使用 Hoshinoumi 彩色 Logo
+- 数据全部标注 MOCK
+- 窄屏会隐藏上下文和会话栏
+- 开发拆分见 `web/DEVELOPMENT.md`
 
 ## 同名规则
 
