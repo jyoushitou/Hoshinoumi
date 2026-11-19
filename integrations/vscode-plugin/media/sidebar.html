@@ -44,7 +44,7 @@ h1{font-size:13px;font-weight:600;margin:0 0 2px;color:var(--vscode-foreground)}
 .msgline{font-size:10px;color:var(--vscode-descriptionForeground);margin-top:5px;word-break:break-word}
 .empty{font-size:11px;color:var(--vscode-descriptionForeground);padding:7px 0}
 @media(max-height:520px){.nav{max-height:64px;overflow:auto}}
-.cmdout{margin-top:7px;padding:7px;border:1px solid var(--vscode-sideBar-border,#333);border-radius:2px;background:var(--vscode-editor-background,#161616);color:var(--vscode-foreground,#b8c4d0);font:10px/1.55 "Cascadia Code","Consolas",monospace;white-space:pre-wrap;min-height:42px}</style>
+.cmdout{margin-top:7px;padding:7px;border:1px solid var(--vscode-sideBar-border,#333);border-radius:2px;background:var(--vscode-editor-background,#161616);color:var(--vscode-foreground,#b8c4d0);font:10px/1.55 "Cascadia Code","Consolas",monospace;white-space:pre-wrap;min-height:42px}.setup-mask{position:fixed;inset:0;z-index:10;background:rgba(0,0,0,.45);display:none;align-items:flex-start;justify-content:center;padding:38px 12px;overflow:auto}.setup-mask.open{display:flex}.setup-card{width:100%;max-width:420px;background:var(--vscode-editor-background,#252526);border:1px solid var(--vscode-panel-border,#454545);border-radius:4px;padding:16px 16px 12px;box-shadow:0 12px 32px rgba(0,0,0,.45);color:var(--vscode-foreground,#ccc)}.setup-title{font-size:15px;font-weight:600;margin-bottom:4px}.setup-sub{font-size:11px;line-height:1.55;color:var(--vscode-descriptionForeground,#999);margin-bottom:12px}.setup-actions{display:flex;gap:6px;margin-top:6px}.setup-actions .btn{flex:1;margin:0}.setup-status{font-size:10px;line-height:1.5;color:var(--vscode-descriptionForeground,#999);margin-top:8px;min-height:15px}.setup-skip{display:block;margin:10px auto 0;font-size:10px;color:var(--vscode-textLink-foreground,#4daafc)}</style>
 </head>
 <body>
 <div class="top"><div class="logo">◈</div><div class="title">Hoshinoumi</div><span class="dot" id="dot"></span></div>
@@ -53,6 +53,18 @@ h1{font-size:13px;font-weight:600;margin:0 0 2px;color:var(--vscode-foreground)}
 </div>
 <div class="page" id="page"></div>
 <div class="composer" id="composer"><textarea id="msg" placeholder="和 nao 说话…"></textarea><div class="sendrow"><span class="hint">Enter 发送</span><button onclick="sendMsg()">发送</button></div></div>
+<div class="setup-mask" id="setupModal">
+ <div class="setup-card">
+  <div class="setup-title">连接 Hoshinoumi</div>
+  <div class="setup-sub">第一次使用，请填写后端地址、访问 token 和主人 QQ。配置只保存在 VS Code 扩展里。</div>
+  <div class="field"><label>后端地址</label><input id="setupBase" placeholder="http://127.0.0.1:27004"></div>
+  <div class="field"><label>访问 token</label><input id="setupToken" type="password" placeholder="Bearer token"></div>
+  <div class="field"><label>主人 QQ</label><input id="setupTarget" placeholder="例如 123456789"></div>
+  <div class="setup-actions"><button class="btn" onclick="testSetup()">测试连接</button><button class="btn primary" onclick="saveSetup()">保存并连接</button></div>
+  <div class="setup-status" id="setupStatus"></div>
+  <button class="setup-skip" onclick="hideSetup()">稍后配置</button>
+ </div>
+</div>
 <script>
 const vscode=acquireVsCodeApi();
 let seq=0;const pending=new Map();
@@ -62,7 +74,11 @@ let page='chat',cfg={};
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 const money=c=>'¥'+((Number(c)||0)/100).toFixed(2);
 function setDot(ok,bad){const d=document.getElementById('dot');d.className='dot '+(ok?'on':bad?'err':'')}
-async function loadConfig(){const r=await api('/api/hoshinoumi/config');cfg=r.data||{};setDot(Boolean(cfg.configured),!cfg.configured);}
+function showSetup(){const m=document.getElementById('setupModal');if(!m)return;document.getElementById('setupBase').value=cfg.base_url||'';document.getElementById('setupTarget').value=cfg.target_id||'';document.getElementById('setupStatus').textContent='';m.classList.add('open')}
+function hideSetup(){document.getElementById('setupModal')?.classList.remove('open')}
+async function testSetup(){const base=document.getElementById('setupBase')?.value.trim();const token=document.getElementById('setupToken')?.value.trim();const target=document.getElementById('setupTarget')?.value.trim();const st=document.getElementById('setupStatus');st.textContent='测试中…';const r=await api('/api/hoshinoumi/test','POST',{base_url:base,token:token||undefined,target_id:target});st.textContent=r.ok?'连接成功 · '+(r.data?.latency_ms||0)+'ms':'连接失败：'+(r.data?.message||r.status);setDot(r.ok,!r.ok)}
+async function saveSetup(){const base=document.getElementById('setupBase')?.value.trim();const token=document.getElementById('setupToken')?.value.trim();const target=document.getElementById('setupTarget')?.value.trim();const st=document.getElementById('setupStatus');if(!base||!token||!target){st.textContent='后端地址、token、主人 QQ 都必须填写';return}st.textContent='保存中…';const r=await api('/api/hoshinoumi/config','POST',{base_url:base,token,target_id:target});if(!r.ok){st.textContent='保存失败：'+(r.data?.message||r.status);return}cfg=r.data||{};st.textContent='正在测试连接…';const t=await api('/api/hoshinoumi/test','POST',{});if(t.ok){setDot(true,false);hideSetup();render()}else{setDot(false,true);st.textContent='已保存，但连接失败：'+(t.data?.message||t.status)}}
+async function loadConfig(){const r=await api('/api/hoshinoumi/config');cfg=r.data||{};setDot(Boolean(cfg.configured),!cfg.configured);if(!cfg.configured)showSetup();}
 async function render(){document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.page===page));const p=document.getElementById('page');document.getElementById('composer').style.display=page==='chat'?'block':'none';p.innerHTML='<div class="empty">加载中…</div>';try{if(page==='chat')return renderChat();if(page==='memory')return renderMemory();if(page==='savings')return renderSavings();if(page==='weekly')return renderWeekly();if(page==='persona')return renderPersona();if(page==='relation')return renderRelation();if(page==='commands')return renderCommands();if(page==='settings')return renderSettings()}catch(e){p.innerHTML='<div class="msgline">加载失败：'+esc(e.message)+'</div>'}}
 async function renderChat(){const r=await api('/api/hoshinoumi/history?limit=20');const rows=Array.isArray(r.data?.data)?r.data.data:[];setDot(r.ok,r.status>=500);const p=document.getElementById('page');p.innerHTML='<h1>nao</h1><p class="sub">最近 '+rows.length+' 条 · 来自后端</p>'+rows.slice(-20).map(x=>'<div class="msg '+(x.role==='user'?'me':'')+'"><div class="a">'+(x.role==='user'?'你':'奈')+'</div><div class="b">'+esc(x.content||'')+'</div></div>').join('')+(rows.length?'':'<div class="empty">暂无历史</div>')}
 async function renderMemory(){const r=await api('/api/hoshinoumi/memory');const d=r.data||{};const t=Array.isArray(d.targets)?d.targets:[];const total=t.reduce((n,x)=>n+Number(x.count||0),0);document.getElementById('page').innerHTML='<h1>记忆</h1><p class="sub">来自后端</p><div class="stats"><div class="stat"><div class="n">'+total+'</div><div class="l">记忆</div></div><div class="stat"><div class="n">'+t.length+'</div><div class="l">会话</div></div></div>'+t.map(x=>'<div class="card"><h3>'+esc(x.target_id)+'</h3><div class="row">'+Number(x.count||0)+' 条<span class="r">'+esc(x.last_message||'')+'</span></div></div>').join('')}
