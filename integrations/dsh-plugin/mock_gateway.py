@@ -173,6 +173,41 @@ class Handler(BaseHTTPRequestHandler):
                 "runtime": {"dialogue_targets": len(MEMORY), "global_keywords": 9, "stickers": 0, "daily_triggers": 2},
             })
             return
+        if path == "/api/conversations":
+            rows = []
+            for tid, items in MEMORY.items():
+                rows.append({
+                    "target_id": tid,
+                    "name": "测试私聊" if tid == OWNER_QQ else "测试群 " + tid,
+                    "type": "private" if tid == OWNER_QQ else "group",
+                    "count": len(items),
+                    "last_message": items[-1][0][:40] if items else "",
+                    "updated_at": "2026-11-19 21:04:00",
+                })
+            self._json(200, {"ok": True, "data": rows, "mock": True})
+            return
+        if path == "/api/history":
+            target = (q.get("target_id") or [OWNER_QQ])[0]
+            limit = int((q.get("limit") or ["100"])[0])
+            self._json(200, {"ok": True, "target_id": target, "data": HISTORY[-max(1, min(limit, 100)):], "mock": True})
+            return
+        if path == "/api/state":
+            self._json(200, {"ok": True, "data": {"mood": 0.1, "energy": 0.7, "lonely": 0.15, "emotion": "平静"}, "mock": True})
+            return
+        if path == "/api/presence":
+            self._json(200, {"activity": "看书", "detail": "窗边", "idle_min": 0, "mock": True})
+            return
+        if path == "/api/commands":
+            data = [
+                {"name": "!help", "group": "基础", "help": "命令帮助", "owner": False},
+                {"name": "!status", "group": "基础", "help": "运行状态", "owner": False},
+                {"name": "!memory", "group": "记忆", "help": "记忆查询", "owner": False},
+                {"name": "!savings", "group": "日常", "help": "存钱统计", "owner": False},
+                {"name": "!persona", "group": "配置", "help": "人设", "owner": False},
+                {"name": "!cron", "group": "日常", "help": "定时任务", "owner": False},
+            ]
+            self._json(200, {"ok": True, "count": len(data), "data": data, "mock": True})
+            return
         if path == "/api/memory":
             target = (q.get("target_id") or [""])[0]
             if target:

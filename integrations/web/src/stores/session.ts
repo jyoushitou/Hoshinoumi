@@ -39,6 +39,8 @@ export const useSessionStore = defineStore('session', () => {
   const savings = ref<Record<string, unknown> | null>(null)
   const weekly = ref<Record<string, unknown> | null>(null)
   const memoryTargets = ref<unknown[]>([])
+  const lifeState = ref<Record<string, unknown> | null>(null)
+  const presence = ref<Record<string, unknown> | null>(null)
   const week = ref(getIsoWeek())
   async function loadConversations() {
     conversationsError.value = ''
@@ -86,6 +88,12 @@ export const useSessionStore = defineStore('session', () => {
       try {
         relation.value = await http.get<Record<string, unknown>>('/api/relation')
       } catch { relation.value = null }
+      try {
+        lifeState.value = (await http.get<{ data?: Record<string, unknown> }>('/api/state')).data ?? null
+      } catch { lifeState.value = null }
+      try {
+        presence.value = await http.get<Record<string, unknown>>('/api/presence')
+      } catch { presence.value = null }
       week.value = getIsoWeek()
       const [sav, mem, wk] = await Promise.allSettled([
         http.get<Record<string, unknown>>('/api/savings'),
@@ -101,5 +109,5 @@ export const useSessionStore = defineStore('session', () => {
       error.value = e instanceof Error ? e.message : String(e)
     } finally { loading.value = false }
   }
-  return { loading, connected, error, status, conversations, activeTarget, conversationsError, messages, historyError, unread, persona, relation, savings, weekly, memoryTargets, week, refresh, selectConversation, loadHistory }
+  return { loading, connected, error, status, conversations, activeTarget, conversationsError, messages, historyError, unread, persona, relation, savings, weekly, memoryTargets, lifeState, presence, week, refresh, selectConversation, loadHistory }
 })

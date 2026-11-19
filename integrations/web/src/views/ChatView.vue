@@ -20,8 +20,18 @@ const session = useSessionStore()
         ⋯
       </button>
     </div>
-    <div class="msgs"><div v-if="session.loading" class="state">加载中…</div><EmptyState v-else-if="session.error" :text="'未获取到聊天记录：' + session.error" /><EmptyState v-else text="暂无聊天记录" />
+    <div class="msgs">
+      <div v-if="session.loading" class="state">加载中…</div>
+      <EmptyState v-else-if="session.historyError" :text="'未获取到聊天记录：' + session.historyError" />
+      <EmptyState v-else-if="!session.messages.length" text="暂无聊天记录" />
+      <template v-else>
+        <div v-for="(m, i) in session.messages" :key="m.id || i" class="msg" :class="{ me: m.role === 'user' }">
+          <span v-if="m.role !== 'user'" class="avatar">{{ String(session.persona?.name || '?').slice(0, 1) }}</span>
+          <div><div class="bubble">{{ m.content }}</div><div class="meta">{{ String(m.created_at || '').slice(0, 16) }}</div></div>
+          <span v-if="m.role === 'user'" class="avatar mea">你</span>
         </div>
+      </template>
+    </div>
     <div class="composer">
       <div class="tools">
         <span>＋ 图片</span><span>◌ 语音</span><span>◇ 表情</span><span>⌕ 搜图</span><span>✦ 记忆</span>

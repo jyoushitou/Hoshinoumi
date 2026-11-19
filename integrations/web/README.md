@@ -20,3 +20,17 @@ deploy/DEPLOY.md
 ```
 
 27006 同源：静态 dist + /api、/ws 反代 frpc 映射端口 27015（后端 gateway 27005）。
+
+## 本地生产模式（nginx）
+
+```text
+27006 nginx → integrations/web/dist
+27005 mock gateway 或真实 gateway
+```
+
+登录测试：
+
+```text
+QQ: 10001
+token: mock-token
+```

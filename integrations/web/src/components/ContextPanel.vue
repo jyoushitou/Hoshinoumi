@@ -22,7 +22,13 @@ const session = useSessionStore()
     <div class="sec">
       她的状态
     </div>
-    <div class="note">
+    <div v-if="session.lifeState" class="life">
+      <div class="row"><span>心情</span><b>{{ session.lifeState.mood ?? '未知' }}</b></div>
+      <div class="row"><span>精力</span><b>{{ session.lifeState.energy ?? '未知' }}</b></div>
+      <div class="row"><span>孤独</span><b>{{ session.lifeState.lonely ?? '未知' }}</b></div>
+      <div class="row"><span>正在</span><b>{{ session.presence?.activity || '未知' }}</b></div>
+    </div>
+    <div v-else class="note">
       {{ session.connected ? '未获取到 state / presence' : '未连接后端' }}
     </div>
     <div class="sec">
