@@ -190,6 +190,7 @@
     .login-field{margin-bottom:9px}.login-field label{display:block;font-size:9px;color:#8a9bb0;margin-bottom:3px}
     .login-field input{width:100%;border:1px solid #dbe8ff;border-radius:7px;background:#f8fbff;color:#243b55;font:10.5px inherit;outline:0;padding:7px 8px}
     .login-field input:focus{border-color:#93b7fa;box-shadow:0 0 0 3px rgba(37,99,235,.08)}
+    .login-url{border:1px solid #e3ebf7;border-radius:7px;background:#f8fbff;color:#6b7c95;font:10px inherit;padding:7px 8px}
     .login-actions{display:flex;gap:6px;margin-top:10px}.login-actions button{flex:1;border:1px solid #dbe8ff;border-radius:7px;background:#fff;color:#2563eb;font-size:10px;padding:7px;cursor:pointer}
     .login-actions button.primary{background:#2563eb;border-color:#2563eb;color:#fff}.login-actions button:hover{filter:brightness(.97)}
     .login-status{font-size:9px;color:#8a9bb0;margin-top:8px;min-height:14px}
@@ -299,8 +300,8 @@
       const saved = (() => { try { return JSON.parse(localStorage.getItem('hsh_web_login') || '{}'); } catch { return {}; } })();
       loginMask = document.createElement('div');
       loginMask.className = 'login-mask';
-      loginMask.innerHTML = '<div class="login-card"><h2>连接 Hoshinoumi</h2><div class="sub">第一次使用，填写后端地址、访问 token 和主人 QQ。<br>只在本地浏览器保存，不写入仓库。</div>' +
-        '<div class="login-field"><label>后端 URL</label><input id="loginUrl" value="' + esc(saved.url || 'http://127.0.0.1:27004') + '" placeholder="http://127.0.0.1:27004"></div>' +
+      loginMask.innerHTML = '<div class="login-card"><h2>连接 Hoshinoumi</h2><div class="sub">你已经在 Web 上，后端地址直接使用当前站点。<br>只填写访问 token 和主人 QQ。</div>' +
+        '<div class="login-field"><label>后端</label><div class="login-url">当前 Web 站点 · 同源（无需填写 URL）</div></div>' +
         '<div class="login-field"><label>访问 token</label><input id="loginToken" type="password" value="' + esc(saved.token || '') + '" placeholder="Bearer token"></div>' +
         '<div class="login-field"><label>主人 QQ</label><input id="loginQQ" value="' + esc(saved.qq || '822891053') + '" placeholder="822891053"></div>' +
         '<div class="login-actions"><button id="loginTest">测试连接</button><button class="primary" id="loginSave">保存并进入</button></div>' +
@@ -308,21 +309,20 @@
       document.body.appendChild(loginMask);
       document.getElementById('loginSkip').addEventListener('click', () => loginMask.classList.remove('on'));
       document.getElementById('loginTest').addEventListener('click', () => {
-        const url = document.getElementById('loginUrl').value.trim();
-        const st = document.getElementById('loginStatus');
-        st.textContent = /^https?:\/\//i.test(url) ? '连接成功（MOCK）· 42ms' : 'URL 需要以 http:// 或 https:// 开头';
-      });
-      document.getElementById('loginSave').addEventListener('click', () => {
-        const url = document.getElementById('loginUrl').value.trim();
         const token = document.getElementById('loginToken').value.trim();
         const qq = document.getElementById('loginQQ').value.trim();
         const st = document.getElementById('loginStatus');
-        if (!/^https?:\/\//i.test(url)) { st.textContent = '后端 URL 不合法'; return; }
+        st.textContent = token && qq ? '连接成功（MOCK）· 42ms' : 'token 和 QQ 都要填';
+      });
+      document.getElementById('loginSave').addEventListener('click', () => {
+        const token = document.getElementById('loginToken').value.trim();
+        const qq = document.getElementById('loginQQ').value.trim();
+        const st = document.getElementById('loginStatus');
         if (!token || !qq) { st.textContent = 'token 和 QQ 都要填'; return; }
-        localStorage.setItem('hsh_web_login', JSON.stringify({ url, token, qq }));
+        localStorage.setItem('hsh_web_login', JSON.stringify({ token, qq }));
         loginMask.classList.remove('on');
         toast('已保存登录配置（MOCK）');
-        updateConn(url, qq);
+        updateConn('当前 Web 站点', qq);
       });
     }
     loginMask.classList.add('on');
@@ -331,7 +331,7 @@
     const v = document.querySelector('.conn .v');
     const meta = document.querySelector('.conn .meta');
     if (v) v.innerHTML = '<span class="dot"></span> 已连接 · schema 35';
-    if (meta) meta.textContent = (url || '127.0.0.1:27004').replace(/^https?:\/\//, '') + ' · 42ms · owner ' + (qq || '');
+    if (meta) meta.textContent = '当前 Web 站点 · 42ms · owner ' + (qq || '');
   }
 
   function msgHtml(x) {
@@ -472,7 +472,7 @@
     if (name === 'settings') {
       let saved = {}; try { saved = JSON.parse(localStorage.getItem('hsh_web_login') || '{}'); } catch {}
       pageView.innerHTML = '<div class="page-head"><div><h2>设置</h2><p>v35.5 Web 演示 · 登录 / 后端 / 连接</p></div><button class="back" id="backChat">← 返回聊天</button></div>' +
-        '<div class="info-grid"><div class="info-panel"><h3>登录配置</h3><div class="info-row"><span>后端 URL</span><b>' + esc(saved.url || 'http://127.0.0.1:27004') + '</b></div><div class="info-row"><span>token</span><b>' + (saved.token ? '已保存 · 掩码' : '未配置') + '</b></div><div class="info-row"><span>主人 QQ</span><b>' + esc(saved.qq || '822891053') + '</b></div><div class="info-row"><span>操作</span><b><button class="back" id="relogin">登录 / 重新配置</button></b></div></div>' +
+        '<div class="info-grid"><div class="info-panel"><h3>登录配置</h3><div class="info-row"><span>后端</span><b>' + esc(location.origin === 'null' ? '当前 Web 站点' : location.origin) + ' · 同源</b></div><div class="info-row"><span>token</span><b>' + (saved.token ? '已保存 · 掩码' : '未配置') + '</b></div><div class="info-row"><span>主人 QQ</span><b>' + esc(saved.qq || '822891053') + '</b></div><div class="info-row"><span>操作</span><b><button class="back" id="relogin">登录 / 重新配置</button></b></div></div>' +
         '<div class="info-panel"><h3>连接</h3><div class="info-row"><span>状态</span><b class="ok">已连接 · MOCK</b></div><div class="info-row"><span>schema</span><b>35</b></div><div class="info-row"><span>延迟</span><b>42ms</b></div></div></div>';
       [top, msgs, composer, searchBar].forEach(x => x.classList.add('chat-hide'));
       pageView.classList.add('on');

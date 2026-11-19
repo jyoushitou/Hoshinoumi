@@ -184,7 +184,7 @@ dimensions: [{key,label,value,visible}]
 第一次打开没有本地登录配置时，弹窗：
 
 ```text
-后端 URL（默认 http://127.0.0.1:27004）
+后端：当前 Web 站点同源，不填 URL
 访问 token
 主人 QQ
 测试连接
@@ -198,7 +198,7 @@ dimensions: [{key,label,value,visible}]
 
 | 版本 | 交付 | 验收 |
 |---|---|---|
-| v35.5.0.0 | Vue 基座、ThemeToken/MotionPreset、首次登录 URL/token/QQ | 浏览器能登录 |
+| v35.5.0.0 | Vue 基座、ThemeToken/MotionPreset、首次登录 token/QQ（后端同源） | 浏览器能登录 |
 | v35.5.1.0 | QQ 会话列表、历史分页、已读位点 | 群列表与 QQ 一致 |
 | v35.5.2.0 | 文本发送、乐观更新、失败回滚、幂等 | 能聊天 |
 | v35.5.3.0 | 图片发送/预览、上传 | 图片可用 |
