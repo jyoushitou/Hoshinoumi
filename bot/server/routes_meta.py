@@ -100,33 +100,71 @@ async def handle_usage(request):
         return json_response({"error": "query_failed", "message": str(e)}, 500)
 
 
+def _db_memory_targets(uid):
+    """从数据库汇总所有 target；内存池只是当前活跃会话，不能代表全部账号。"""
+    from ..infra.conn import get_cursor
+    c = get_cursor()
+    out = {}
+    try:
+        c.execute("SELECT target_id, COUNT(*) AS n FROM user_memory GROUP BY target_id")
+        for r in (c.fetchall() or []):
+            out[str(r["target_id"])] = int(r["n"] or 0)
+    except Exception:
+        pass
+    try:
+        c.execute("SELECT target_id, COUNT(*) AS n FROM memories "
+                  "WHERE user_id=%s AND deleted_at IS NULL GROUP BY target_id", (uid,))
+        for r in (c.fetchall() or []):
+            tid = str(r["target_id"])
+            out[tid] = out.get(tid, 0) + int(r["n"] or 0)
+    except Exception:
+        pass
+    try:
+        c.close()
+    except Exception:
+        pass
+    return out
+
+
 async def handle_memory(request):
+    from ..infra import tenant
+    uid = tenant.owner_id()
     target_id = request.query.get("target_id", "")
     if target_id:
+        records = []
         if target_id in cfg.user_memory_pool:
-            deq = cfg.user_memory_pool[target_id]
-            records = []
-            for u, b in deq:
-                records.append({"user": u, "bot": b})
-            return json_response({
-                "target_id": target_id,
-                "count": len(records),
-                "records": records[-20:],
-            })
+            records = [{"user": u, "bot": b} for u, b in cfg.user_memory_pool[target_id]]
+        else:
+            try:
+                from ..infra.conn import get_cursor
+                c = get_cursor()
+                c.execute("SELECT user_msg, bot_msg FROM user_memory WHERE target_id=%s "
+                          "ORDER BY id DESC LIMIT 20", (target_id,))
+                records = [{"user": r["user_msg"] or "", "bot": r["bot_msg"] or ""} for r in (c.fetchall() or [])]
+                c.close()
+            except Exception:
+                records = []
         return json_response({
             "target_id": target_id,
-            "count": 0,
-            "records": [],
+            "count": len(records),
+            "records": records[-20:],
         })
+    db = _db_memory_targets(uid)
     targets = []
+    seen = set()
     for tid, deq in cfg.user_memory_pool.items():
         targets.append({
             "target_id": tid,
-            "count": len(deq),
+            "count": max(len(deq), db.get(tid, 0)),
             "last_message": deq[-1][0][:30] if deq else "",
         })
+        seen.add(tid)
+    for tid, n in sorted(db.items(), key=lambda x: (-x[1], x[0])):
+        if tid in seen or n <= 0:
+            continue
+        targets.append({"target_id": tid, "count": n, "last_message": ""})
     return json_response({
-        "total_targets": len(cfg.user_memory_pool),
+        "total_targets": len(targets),
         "targets": targets,
     })
 
