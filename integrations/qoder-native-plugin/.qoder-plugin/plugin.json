@@ -1,0 +1,13 @@
+{
+  "name": "hoshinoumi",
+  "displayName": "Hoshinoumi",
+  "version": "1.0.0",
+  "description": "把 Hoshinoumi 机器人接入 Qoder：nao 聊天、记忆、存钱、人设、关系、周计划表和命令。",
+  "descriptionZh": "把 Hoshinoumi 机器人接入 Qoder：nao 聊天、记忆、存钱、人设、关系、周计划表和命令。",
+  "author": {
+    "name": "Hoshinoumi"
+  },
+  "skills": "./skills/",
+  "commands": "./commands/",
+  "mcpServers": "./.mcp.json"
+}

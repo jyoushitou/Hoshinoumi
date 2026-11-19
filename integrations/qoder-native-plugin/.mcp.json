@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "hoshinoumi": {
+      "command": "${QODER_NODE_RUNTIME}",
+      "args": [
+        "${QODER_PLUGIN_ROOT}/runtime/server.cjs"
+      ],
+      "env": {
+        "HOSHINOUMI_QODER_CONFIG": "${QODER_PLUGIN_ROOT}/config.json"
+      },
+      "timeout": 120000
+    }
+  }
+}
