@@ -1,6 +1,6 @@
 {
   "name": "hoshinoumi-dsh",
-  "version": "35.2.24-2",
+  "version": "35.2.24-4",
   "description": "Hoshinoumi DSH client: nao chat, commands, workspace UI",
   "license": "MIT",
   "type": "module",

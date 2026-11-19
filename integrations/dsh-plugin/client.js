@@ -41,7 +41,7 @@ if (typeof window !== 'undefined' && window.__ModuleLoader__ && !window.__HOSHIN
       const frame = document.createElement('iframe')
       frame.setAttribute('data-nao-frame', '')
       frame.setAttribute('title', 'Hoshinoumi nao')
-      frame.src = '/api/hoshinoumi/ui?v=35.2.24.2&t=' + Date.now()
+      frame.src = '/api/hoshinoumi/ui?v=35.2.24.4&t=' + Date.now()
       const onKey = (e) => { if (e.key === 'Escape') { e.preventDefault(); closeNao() } }
       const onMessage = (e) => { if (e.data && e.data.type === 'hoshinoumi:close') closeNao() }
       const closeNao = () => {
