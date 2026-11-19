@@ -383,6 +383,24 @@ gateway 27005 → remotePort 27015
 nginx 只访问 127.0.0.1:27015
 ```
 
+## 3.19 后端能力审计
+
+```text
+已有：chat/history、memory、relation、savings/entries/events/balance/import、persona、logs
+部分：weekly（缺按周节次）、info（缺 shelf）、commands（缺目录）、cron（缺公开 CRUD）、state/presence（缺公开 API）
+没有：插件管理公开接口
+```
+
+补全顺序：
+
+```text
+v35.7.23  /api/commands
+v35.7.24  /api/cron
+v35.7.25  /api/state + /api/presence
+v35.7.26  /api/shelf
+v35.7.27  插件管理
+```
+
 ## 4. 次次版本
 
 | 版本 | 交付 | 验收 |
