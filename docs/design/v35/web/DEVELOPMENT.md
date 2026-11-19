@@ -401,6 +401,16 @@ v35.7.26  /api/shelf
 v35.7.27  插件管理
 ```
 
+## 3.20 网关路由边界
+
+```text
+nginx /api/* → gateway 27005
+gateway 已鉴权 GET → worker HTTP API（v35.7 通配）
+chat/history/state/cron/diary/shelf 仍走内部专用路径
+```
+
+注意：gateway 是 C++ 二进制，改 router.cpp 后必须重新构建/部署；当前已安装旧二进制不会自动生效。
+
 ## 4. 次次版本
 
 | 版本 | 交付 | 验收 |

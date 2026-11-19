@@ -55,6 +55,16 @@ class ApiRouteAuditTests(unittest.TestCase):
         for path in plugin_targets():
             self.assertTrue(any(matches(r, path) for r in routes), f"插件目标无后端路由: {path}")
 
+    def test_gateway_has_generic_api_fallback(self):
+        text = (ROOT / "gateway" / "src" / "router.cpp").read_text(encoding="utf-8")
+        self.assertIn('rfind("/api/", 0) == 0', text)
+        self.assertIn("url.target, \"GET\", owner", text)
+
+    def test_internal_tcp_forwards_api(self):
+        text = (ROOT / "bot" / "server" / "tcp_internal.py").read_text(encoding="utf-8")
+        self.assertIn('startswith(("/internal/", "/api/"))', text)
+        self.assertIn('is_public_api', text)
+
     def test_vscode_history_uses_public_history(self):
         text = (ROOT / "integrations" / "vscode-plugin" / "extension.js").read_text(encoding="utf-8")
         self.assertIn("'/history': '/api/history'", text)

@@ -31,17 +31,22 @@ async def dispatch(req: P.InternalRequest):
     if method == "/internal/health":
         return P.InternalResponse(req.request_id, 200, "",
                                   P.encode_json_value({"ok": True, "status": "ok"}))
-    path = method if method.startswith("/internal/") else ""
+    path = method if method.startswith(("/internal/", "/api/")) else ""
     if not path:
         return P.InternalResponse(req.request_id, 404, "unknown method",
                                   P.encode_json_value({"ok": False, "error": "unknown method"}))
     import aiohttp
+    from . import config as apicfg
 
-    get_like = path in (
+    is_public_api = path.startswith("/api/")
+    get_like = is_public_api or path in (
         "/internal/history", "/internal/state", "/internal/cron",
         "/internal/diary", "/internal/shelf", "/internal/auth/owner",
     )
     headers = {"X-User-Id": req.user_id or "__owner__", "X-Role": req.role or "owner"}
+    if is_public_api:
+        # gateway 已校验 JWT；这里用本机 API token 访问 worker HTTP API
+        headers["Authorization"] = "Bearer " + apicfg.API_TOKEN
     connector = aiohttp.UnixConnector(path=worker.internal_api_socket())
     timeout = aiohttp.ClientTimeout(total=60)
     try:

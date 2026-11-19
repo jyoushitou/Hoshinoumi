@@ -142,6 +142,13 @@ namespace Gateway
             Proxy(session, url, "/internal/shelf", "GET", owner);
             return;
         }
+        // v35.7：其余已鉴权的 GET API 直接透传到 worker 的 HTTP API
+        // （chat/history/state/cron/diary/shelf 仍走内部专用路径）
+        if (url.target.rfind("/api/", 0) == 0)
+        {
+            Proxy(session, url, url.target, "GET", owner);
+            return;
+        }
         NotFound(session, url);
     }
 
