@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hoshinoumi · VS Code 侧栏设计稿</title>
+<style>
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:#1e1e1e;color:#cccccc;font:12px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif;-webkit-font-smoothing:antialiased;overflow:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+button{border:0;background:none;padding:0;cursor:pointer}
+.window{height:100vh;display:flex;flex-direction:column;background:#1e1e1e}
+.titlebar{height:35px;flex:none;display:flex;align-items:center;gap:10px;background:#3c3c3c;border-bottom:1px solid #252526;padding:0 10px;user-select:none;font-size:12px;color:#cccccc}
+.traffic{display:flex;gap:8px;margin-right:4px}.traffic i{width:12px;height:12px;border-radius:50%}.traffic i:nth-child(1){background:#ff5f57}.traffic i:nth-child(2){background:#febc2e}.traffic i:nth-child(3){background:#28c840}
+.menu{display:flex;gap:13px;color:#cccccc;font-size:12px}.menu span{padding:2px 0}.menu span:hover{background:#505050}
+.center{position:absolute;left:50%;transform:translateX(-50%);width:min(520px,32vw);height:22px;background:#2d2d2d;border:1px solid #454545;border-radius:4px;display:flex;align-items:center;justify-content:center;color:#9d9d9d;font-size:11px}
+.win-actions{margin-left:auto;display:flex;gap:11px;color:#cccccc;font-size:12px}
+.workbench{flex:1;min-height:0;display:flex}
+.activity{width:48px;flex:none;background:#333333;display:flex;flex-direction:column;align-items:center;padding-top:4px;border-right:1px solid #252526}
+.act{width:48px;height:48px;display:flex;align-items:center;justify-content:center;color:#858585;font-size:20px;position:relative}
+.act:hover{color:#cccccc}.act.active{color:#ffffff}.act.active:before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:#007acc}
+.act .badge{position:absolute;right:8px;top:8px;min-width:14px;height:14px;border-radius:7px;background:#007acc;color:#fff;font-size:9px;display:flex;align-items:center;justify-content:center;padding:0 3px}
+.act.spacer{margin-top:auto}
+.sidebar{width:310px;flex:none;min-height:0;background:#252526;border-right:1px solid #1e1e1e;display:flex;flex-direction:column;overflow:hidden}
+.scm-head{height:35px;flex:none;display:flex;align-items:center;gap:7px;padding:0 12px;color:#bbbbbb;font-size:11px;text-transform:uppercase;letter-spacing:.04em;font-weight:600}
+.scm-head .actions{margin-left:auto;display:flex;gap:13px;color:#cccccc;font-size:13px}
+.scm{flex:1;min-height:0;overflow:auto;padding:0 8px 8px}
+.scm-box{margin:0 0 5px}
+.scm-input{width:100%;height:26px;background:#3c3c3c;border:1px solid #3c3c3c;border-radius:2px;padding:0 7px;color:#cccccc;font-size:11px;outline:0}.scm-input:focus{border-color:#007acc}
+.scm-input::placeholder{color:#8a8a8a}
+.commit{width:100%;height:26px;margin-top:5px;background:#007acc;color:#fff;border-radius:2px;font-size:11px;display:flex;align-items:center;justify-content:center;gap:5px}.commit:hover{background:#1177bb}
+.sec{display:flex;align-items:center;gap:5px;height:24px;padding:0 5px;font-size:11px;font-weight:700;color:#cccccc;margin-top:2px}.sec .chev{font-size:10px;color:#9d9d9d}.sec .count{margin-left:auto;font-weight:400;color:#9d9d9d;font-size:10px}
+.change{height:23px;display:flex;align-items:center;gap:6px;padding:0 6px 0 18px;color:#cccccc;font-size:11px;white-space:nowrap;overflow:hidden}.change:hover{background:#2a2d2e}.change .f{color:#e2c08d}.change .n{margin-left:auto;color:#9d9d9d;font-size:10px}.change .u{color:#73c991}
+.repo{height:23px;display:flex;align-items:center;gap:6px;padding:0 6px;font-size:11px;color:#cccccc}.repo .br{color:#9d9d9d;font-size:10px;margin-left:auto}
+.graph{padding:6px 18px;color:#9d9d9d;font-size:10px;line-height:1.7}
+/* Hoshinoumi inside SCM */
+.hoshi{flex:none;height:405px;min-height:280px;background:#1f1f1f;border-top:1px solid #3c3c3c;display:flex;flex-direction:column;overflow:hidden;position:relative}
+.hoshi:before{content:"";position:absolute;left:0;right:0;top:-3px;height:6px;cursor:ns-resize;z-index:2}
+.h-head{height:30px;flex:none;display:flex;align-items:center;gap:6px;padding:0 9px;background:#252526;border-bottom:1px solid #333;color:#cccccc;font-size:11px;cursor:pointer;user-select:none}
+.h-head .chev{color:#9d9d9d;font-size:10px;width:12px}
+.h-head b{font-weight:600;letter-spacing:.02em}
+.h-head .dot{width:6px;height:6px;border-radius:50%;background:#2fa56b;margin-left:2px}
+.h-head .state{font-size:10px;color:#2fa56b;margin-left:1px}
+.h-head .act{margin-left:auto;color:#9d9d9d;font-size:13px;display:flex;gap:9px;align-items:center}
+.hoshi.collapsed .h-body,.hoshi.collapsed .h-tabs,.hoshi.collapsed .h-compose{display:none}
+.hoshi.collapsed{height:30px!important;min-height:30px}
+.h-tabs{flex:none;display:flex;gap:1px;padding:5px 6px;overflow-x:auto;border-bottom:1px solid #2f2f2f;scrollbar-width:none}
+.h-tabs::-webkit-scrollbar{display:none}
+.h-tab{height:22px;padding:0 6px;border-radius:2px;font-size:10px;color:#a5a5a5;white-space:nowrap}
+.h-tab:hover{background:#2a2d2e;color:#e8e8e8}
+.h-tab.on{background:#37373d;color:#ffffff;font-weight:500}
+.h-body{flex:1;min-height:0;overflow:auto;padding:7px 9px;font-size:11px;color:#cccccc}
+.h-body h2{font-size:12px;font-weight:600;margin:0 0 2px;color:#e8e8e8}
+.h-sub{font-size:10px;color:#8f8f8f;margin:0 0 7px}
+.h-stats{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin:5px 0}
+.h-stat{border:1px solid #333;border-radius:2px;padding:5px 6px;background:#252526}.h-stat .n{font-size:14px;font-weight:600;color:#e8e8e8}.h-stat .l{font-size:9px;color:#8f8f8f;margin-top:1px}
+.h-row{display:flex;gap:5px;padding:3px 0;border-bottom:1px solid #2b2b2b;color:#b8b8b8;font-size:10.5px;min-height:19px}.h-row:last-child{border:0}.h-row .r{margin-left:auto;color:#d0d0d0;max-width:64%;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.h-msg{display:flex;gap:6px;margin:6px 0}.h-msg .a{width:18px;height:18px;border-radius:50%;background:#2b3a55;color:#8fb4ff;display:flex;align-items:center;justify-content:center;font-size:8px;flex:none}.h-msg .b{background:#252526;border:1px solid #333;border-radius:3px;padding:4px 6px;line-height:1.5;color:#cccccc;font-size:10.5px}.h-msg.me{flex-direction:row-reverse}.h-msg.me .b{background:#24384b;border-color:#24384b;color:#dce9f7}
+.h-field{margin:5px 0}.h-field label{display:block;font-size:9px;color:#8f8f8f;margin-bottom:2px}.h-field input,.h-field select{width:100%;height:25px;border:1px solid #3c3c3c;border-radius:2px;background:#3c3c3c;color:#cccccc;padding:0 6px;font-size:10.5px;outline:0}.h-field input:focus,.h-field select:focus{border-color:#007acc}
+.h-btn{height:24px;border-radius:2px;border:1px solid #454545;background:#3c3c3c;color:#cccccc;padding:0 8px;font-size:10px;margin:5px 4px 0 0}.h-btn:hover{background:#454545}.h-btn.primary{background:#007acc;border-color:#007acc;color:#fff}.h-btn.primary:hover{background:#1177bb}
+.h-note{font-size:9.5px;color:#8f8f8f;margin-top:5px;line-height:1.5}
+.h-compose{flex:none;border-top:1px solid #333;padding:5px 7px;background:#1f1f1f}
+.h-compose textarea{width:100%;height:36px;resize:none;background:#3c3c3c;border:1px solid #3c3c3c;border-radius:2px;color:#cccccc;padding:4px 6px;font-size:10.5px;outline:0}.h-compose textarea:focus{border-color:#007acc}
+.h-sendrow{display:flex;align-items:center;gap:6px;margin-top:4px}.h-sendrow .hint{font-size:9px;color:#7d7d7d}.h-sendrow button{margin-left:auto;height:22px;padding:0 9px;border-radius:2px;background:#007acc;color:#fff;font-size:10px}
+/* editor */
+.editor{flex:1;min-width:0;display:flex;flex-direction:column;background:#1e1e1e}
+.tabs{height:35px;flex:none;display:flex;align-items:stretch;background:#252526;border-bottom:1px solid #1e1e1e}
+.tab{display:flex;align-items:center;gap:7px;padding:0 11px;border-right:1px solid #1e1e1e;background:#2d2d2d;color:#9d9d9d;font-size:11px;min-width:0}.tab.active{background:#1e1e1e;color:#ffffff;border-top:1px solid #007acc}.tab .x{color:#9d9d9d;margin-left:7px;font-size:11px}
+.breadcrumb{height:24px;flex:none;display:flex;align-items:center;gap:6px;padding:0 14px;color:#9d9d9d;font-size:10.5px;border-bottom:1px solid #252526}.breadcrumb span{color:#cccccc}
+.content{flex:1;min-height:0;display:flex}
+.code{flex:1;min-width:0;overflow:auto;padding:16px 0;font:12px/1.65 "Cascadia Code","Consolas",monospace;color:#d4d4d4}
+.line{display:flex;min-height:19px}.ln{width:44px;flex:none;text-align:right;padding-right:12px;color:#6e7681;user-select:none;font-size:11px}.code-txt{white-space:pre;padding-right:20px}
+.kw{color:#569cd6}.str{color:#ce9178}.fn{color:#dcdcaa}.cm{color:#6a9955}.var{color:#9cdcfe}.num{color:#b5cea8}
+.minimap{width:58px;flex:none;background:#1e1e1e;border-left:1px solid #252526;padding:8px 6px;color:#3a3a3a;font-size:2px;line-height:3px;overflow:hidden;opacity:.65}
+.statusbar{height:22px;flex:none;background:#007acc;color:#fff;display:flex;align-items:center;gap:13px;padding:0 10px;font-size:10.5px}.statusbar .right{margin-left:auto;display:flex;gap:13px;align-items:center}.statusbar .icon{font-size:12px}
+.toast{position:fixed;right:16px;bottom:34px;background:#252526;border:1px solid #454545;color:#cccccc;font-size:11px;padding:7px 11px;border-radius:2px;box-shadow:0 4px 16px rgba(0,0,0,.4);opacity:0;transform:translateY(5px);transition:.18s;pointer-events:none;z-index:20}.toast.on{opacity:1;transform:none}
+</style>
+</head>
+<body>
+<div class="window">
+ <div class="titlebar">
+  <div class="traffic"><i></i><i></i><i></i></div>
+  <div class="menu"><span>文件(F)</span><span>编辑(E)</span><span>选择(S)</span><span>查看(V)</span><span>转到(G)</span><span>运行(R)</span><span>终端(T)</span><span>帮助(H)</span></div>
+  <div class="center">NapCat+Python [管理员]</div>
+  <div class="win-actions"><span>—</span><span>□</span><span>×</span></div>
+ </div>
+ <div class="workbench">
+  <nav class="activity">
+   <div class="act" title="资源管理器">▤</div>
+   <div class="act" title="搜索">⌕</div>
+   <div class="act active" title="源代码管理">⑂<span class="badge">7</span></div>
+   <div class="act" title="运行和调试">▷</div>
+   <div class="act" title="扩展">⌘</div>
+   <div class="act spacer" title="账户">◉</div>
+   <div class="act" title="管理">⚙</div>
+  </nav>
+
+  <aside class="sidebar">
+   <div class="scm-head"><span>源代码管理</span><div class="actions"><span>✓</span><span>⟳</span><span>⋯</span></div></div>
+   <div class="scm">
+    <div class="scm-box"><input class="scm-input" placeholder="消息(Ctrl+Enter 在“main”提交)"><button class="commit" onclick="toast('已提交（模拟）')">✓ 提交</button></div>
+    <div class="sec"><span class="chev">⌄</span>更改<span class="count">7</span></div>
+    <div class="change"><span class="f">◇</span>.vscodeignore<span class="u">U</span></div>
+    <div class="change"><span class="f">JS</span>extension.js<span class="u">U</span></div>
+    <div class="change"><span class="f">{}</span>package.json<span class="u">U</span></div>
+    <div class="change"><span class="f">ⓘ</span>README.md<span class="u">U</span></div>
+    <div class="change"><span class="f">◈</span>nao.svg<span class="u">U</span></div>
+    <div class="change"><span class="f">◇</span>sidebar.html<span class="u">U</span></div>
+    <div class="sec" style="margin-top:7px"><span class="chev">⌄</span>存储库<span class="count">1</span></div>
+    <div class="repo"><span>▰</span>NapCat+Python<span class="br">main*</span></div>
+    <div class="sec" style="margin-top:5px"><span class="chev">⌄</span>图表</div>
+    <div class="graph">查询结果 · PS D:\...\NapCat+Python<br>分支 main · 7 个更改 · 0 个冲突</div>
+   </div>
+
+   <section class="hoshi" id="hoshi">
+    <div class="h-head" onclick="toggleHoshi(event)"><span class="chev" id="chev">⌄</span><b>Hoshinoumi</b><span class="dot"></span><span class="state">已连接</span><span class="act" onclick="event.stopPropagation();toast('Hoshinoumi 设置（模拟）')">⚙</span></div>
+    <div class="h-tabs" id="tabs">
+     <button class="h-tab on" data-p="chat">聊天</button><button class="h-tab" data-p="memory">记忆</button><button class="h-tab" data-p="savings">存钱</button><button class="h-tab" data-p="weekly">周计划</button><button class="h-tab" data-p="persona">人设</button><button class="h-tab" data-p="relation">关系</button><button class="h-tab" data-p="settings">设置</button>
+    </div>
+    <div class="h-body" id="body"></div>
+    <div class="h-compose" id="compose"><textarea id="msg" placeholder="和 nao 说话，Enter 发送"></textarea><div class="h-sendrow"><span class="hint">MOCK · 后端 27004</span><button onclick="send()">发送</button></div></div>
+   </section>
+  </aside>
+
+  <main class="editor">
+   <div class="tabs"><div class="tab active">README.md<span class="x">×</span></div><div class="tab">package.json<span class="x">×</span></div></div>
+   <div class="breadcrumb">integrations <span>›</span> vscode-plugin <span>›</span> README.md <span style="margin-left:auto">预览</span></div>
+   <div class="content">
+    <div class="code">
+     <div class="line"><span class="ln">1</span><span class="code-txt"><span class="kw"># Hoshinoumi for VS Code</span></span></div>
+     <div class="line"><span class="ln">2</span><span class="code-txt"></span></div>
+     <div class="line"><span class="ln">3</span><span class="code-txt">在 VS Code 的源代码管理侧栏接入 Hoshinoumi：</span></div>
+     <div class="line"><span class="ln">4</span><span class="code-txt">nao 聊天、记忆、存钱、人设、关系、周计划表。</span></div>
+     <div class="line"><span class="ln">5</span><span class="code-txt"></span></div>
+     <div class="line"><span class="ln">6</span><span class="code-txt"><span class="kw">## 显示位置</span></span></div>
+     <div class="line"><span class="ln">7</span><span class="code-txt">源代码管理侧栏底部卡片，不占代码区，不新增活动栏图标。</span></div>
+     <div class="line"><span class="ln">8</span><span class="code-txt"></span></div>
+     <div class="line"><span class="ln">9</span><span class="code-txt"><span class="kw">## 配置</span></span></div>
+     <div class="line"><span class="ln">10</span><span class="code-txt"><span class="str">"base_url": "http://127.0.0.1:27004"</span></span></div>
+     <div class="line"><span class="ln">11</span><span class="code-txt"><span class="str">"token": "••••••••"</span></span></div>
+     <div class="line"><span class="ln">12</span><span class="code-txt"><span class="str">"target_id": "822891053"</span></span></div>
+     <div class="line"><span class="ln">13</span><span class="code-txt"></span></div>
+     <div class="line"><span class="ln">14</span><span class="code-txt"><span class="cm">// 扩展宿主代理 HTTP，Webview 不直接接触 token</span></span></div>
+     <div class="line"><span class="ln">15</span><span class="code-txt"><span class="kw">async function</span> <span class="fn">activate</span>(context) { ... }</span></div>
+     <div class="line"><span class="ln">16</span><span class="code-txt">  vscode.commands.<span class="fn">registerCommand</span>(<span class="str">'hoshinoumi.open'</span>, ...)</span></div>
+     <div class="line"><span class="ln">17</span><span class="code-txt">}</span></div>
+     <div class="line"><span class="ln">18</span><span class="code-txt"></span></div>
+     <div class="line"><span class="ln">19</span><span class="code-txt"><span class="cm">// 侧栏卡片：源代码管理 → Hoshinoumi</span></span></div>
+     <div class="line"><span class="ln">20</span><span class="code-txt"><span class="kw">const</span> provider = <span class="kw">new</span> <span class="fn">SidebarProvider</span>(context);</span></div>
+    </div>
+    <div class="minimap">▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤</div>
+   </div>
+  </main>
+ </div>
+ <div class="statusbar"><span>⑂ main*</span><span>⟳ 0↓ 0↑</span><span>⚠ 0</span><div class="right"><span>Ln 1, Col 1</span><span>UTF-8</span><span>Markdown</span><span>Hoshinoumi</span><span>◔</span></div></div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const pages={
+ chat:()=>`<h2>nao</h2><p class="h-sub">最近 6 条 · 来自后端</p><div class="h-msg"><div class="a">奈</div><div class="b">你回来啦。今天外面有点冷，先喝点热的吧。</div></div><div class="h-msg me"><div class="a">你</div><div class="b">刚到家，方案终于过了。</div></div><div class="h-msg"><div class="a">奈</div><div class="b">那很好啊。要不要记进“今天值得高兴的事”？</div></div><div class="h-msg"><div class="a">奈</div><div class="b">本月结余 ¥3,300，旅行目标 60% 了。</div></div>`,
+ memory:()=>`<h2>记忆</h2><p class="h-sub">来自后端 · MOCK</p><div class="h-stats"><div class="h-stat"><div class="n">4</div><div class="l">记忆</div></div><div class="h-stat"><div class="n">2</div><div class="l">会话</div></div></div><div class="h-row">822891053 · 3 条<span class="r">今天外面有点冷</span></div><div class="h-row">10001 · 1 条<span class="r">《十日终焉》</span></div>`,
+ savings:()=>`<h2>存钱</h2><p class="h-sub">来自后端 · MOCK</p><div class="h-stats"><div class="h-stat"><div class="n">¥3300.00</div><div class="l">总余额</div></div><div class="h-stat"><div class="n">¥42.00</div><div class="l">API 余额</div></div></div><div class="h-row">银行卡<span class="r">¥3300.00</span></div><div class="h-row">午饭<span class="r">−¥12.50</span></div><div class="h-field"><label>金额</label><input placeholder="35.50"></div><button class="h-btn primary" onclick="toast('已保存一笔（模拟）')">保存这一笔</button>`,
+ weekly:()=>`<h2>周计划表</h2><p class="h-sub">第 3 周 · MOCK</p><div class="h-field"><label>周次</label><input value="3"></div><div class="h-row">周一 1-2 节<span class="r">大学物理实验</span></div><div class="h-row">周一 3-4 节<span class="r">大学英语Ⅲ</span></div><button class="h-btn" onclick="toast('导入 HTML（模拟）')">导入 HTML</button>`,
+ persona:()=>`<h2>人设</h2><p class="h-sub">personas/* · 只读</p><div class="h-row">当前<span class="r">nao</span></div><div class="h-row">文件<span class="r">prompt / life / supplement</span></div><div class="h-row">摘要<span class="r">友利奈绪 · 傲娇毒舌</span></div>`,
+ relation:()=>`<h2>关系</h2><p class="h-sub">822891053 · MOCK</p><div class="h-stats"><div class="h-stat"><div class="n">0.62</div><div class="l">亲密度</div></div><div class="h-stat"><div class="n">熟</div><div class="l">档位</div></div></div><div class="h-row">+0.020 · 聊天<span class="r">11-19 12:00</span></div>`,
+ settings:()=>`<h2>设置</h2><p class="h-sub">保存在扩展 globalState</p><div class="h-field"><label>后端地址</label><input value="http://127.0.0.1:27004"></div><div class="h-field"><label>访问 token</label><input type="password" value="••••••••"></div><div class="h-field"><label>主人 QQ</label><input value="822891053"></div><button class="h-btn">测试连接</button><button class="h-btn primary">保存并连接</button>`
+};
+let page='chat';
+function render(){document.querySelectorAll('.h-tab').forEach(x=>x.classList.toggle('on',x.dataset.p===page));document.getElementById('body').innerHTML=pages[page]();document.getElementById('compose').style.display=page==='chat'?'block':'none';}
+document.querySelectorAll('.h-tab').forEach(x=>x.onclick=()=>{page=x.dataset.p;render()});
+function toggleHoshi(e){if(e.target.closest('.act'))return;document.getElementById('hoshi').classList.toggle('collapsed');document.getElementById('chev').textContent=document.getElementById('hoshi').classList.contains('collapsed')?'›':'⌄'}
+function send(){const m=document.getElementById('msg');if(!m.value.trim()){toast('先输入内容');return}const b=document.getElementById('body');const d=document.createElement('div');d.className='h-msg me';d.innerHTML='<div class="a">你</div><div class="b"></div>';d.querySelector('.b').textContent=m.value.trim();b.appendChild(d);m.value='';toast('已发送（模拟）')}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),1400)}
+document.getElementById('msg').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}});
+render();
+</script>
+</body>
+</html>
