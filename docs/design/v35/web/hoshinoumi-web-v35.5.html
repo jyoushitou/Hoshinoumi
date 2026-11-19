@@ -204,7 +204,7 @@ button{color:inherit}
 .back{color:#2563eb;border-color:#dbe8ff;background:#fff;transition:background .18s}
 .back:hover{background:#eef4ff}
 .typing{color:#8a9bb0}
-</style>
+.rel-head{display:flex;align-items:center;justify-content:space-between;font-size:10px;color:#6b7c95;margin-bottom:5px}.rel-head b{font-size:11px;color:#2563eb}.rel-head em{font-style:normal;font-size:9px;color:#1f9d6b;border:1px solid #cdeee0;background:#eefbf5;border-radius:4px;padding:1px 4px;margin-left:3px}.rel-meta{font-size:9px;color:#8a9bb0;margin-top:5px;display:flex;justify-content:space-between}.rel-meta span{color:#4b5f78}.rel-more{margin-top:7px;border:1px solid #dbe8ff;background:#fff;color:#2563eb;border-radius:6px;font-size:9px;padding:4px 7px;cursor:pointer;transition:background .18s}.rel-more:hover{background:#eef4ff}</style>
 </head>
 <body>
 <div class="mock">MOCK 演示 · 数据非真实</div>
@@ -381,11 +381,10 @@ button{color:inherit}
     </div>
 
     <div class="sec">关系</div>
-    <div class="bars">
-      <div class="bar"><div class="lb"><span>信任</span><span>0.82</span></div><div class="track"><i style="width:82%"></i></div></div>
-      <div class="bar"><div class="lb"><span>理解</span><span>0.76</span></div><div class="track"><i style="width:76%"></i></div></div>
-      <div class="bar"><div class="lb"><span>安全感</span><span>0.69</span></div><div class="track"><i style="width:69%"></i></div></div>
-    </div>
+    <div class="rel-head"><span>亲密度</span><b>0.62 <em>熟</em></b></div>
+    <div class="track"><i style="width:62%"></i></div>
+    <div class="rel-meta">最近变化 <span>+0.020 · 聊天</span></div>
+    <button class="rel-more" data-page="relation">查看关系详情 / 维度</button>
 
     <div class="sec">她记得</div>
     <div class="card"><h4>今天值得高兴的事</h4><p>方案通过 · 已写入长期记忆</p></div>
@@ -410,6 +409,6 @@ button{color:inherit}
   </aside>
 </div>
 <div class="tagdraft">DESIGN DRAFT · v35.5 · WEB · 2026-11-19</div>
-<script src="demo.js?v=35.5.22"></script>
+<script src="demo.js?v=35.5.23"></script>
 </body>
 </html>

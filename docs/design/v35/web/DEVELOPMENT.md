@@ -113,6 +113,25 @@ v35.5 演示先给全部入口和命令页；完整功能页在 v35.7 实现。
 
 演示数据为 MOCK；最终走 `/api/status`、`/api/logs`、`/api/plan`、`/api/balance`。
 
+## 3.9 关系卡规则
+
+```text
+只展示后端真实字段：
+  亲密度 affinity
+  档位 tier
+  最近变化 events
+```
+
+未来多维关系用后端 `dimensions` 数组动态渲染：
+
+```text
+dimensions: [{key,label,value,visible}]
+→ 默认展示前 3 个
+→ 更多折叠为“展开全部”
+```
+
+不要写死“信任 / 理解 / 安全感”这类前端虚构维度。
+
 ## 4. 次次版本
 
 | 版本 | 交付 | 验收 |
