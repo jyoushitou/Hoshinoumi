@@ -196,7 +196,7 @@ async function handleApi(req, res, path) {
     return proxyGet('/api/memory' + (t ? '?target_id=' + encodeURIComponent(t) : ''))
   }
   if (path === '/api/hoshinoumi/plan' && req.method === 'GET') return proxyGet('/api/plan')
-  if (path === '/api/hoshinoumi/cron' && req.method === 'GET') return proxyGet('/internal/cron')
+  if (path === '/api/hoshinoumi/cron' && req.method === 'GET') return proxyGet('/api/cron')
 
   if (path === '/api/hoshinoumi/history' && req.method === 'GET') {
     const url = new URL(req.url || '/', 'http://127.0.0.1')
@@ -204,7 +204,7 @@ async function handleApi(req, res, path) {
     if (!cfg.base_url) throw new Error('后端地址未配置')
     const target = url.searchParams.get('target_id') || cfg.target_id || 'owner'
     const limit = Math.max(1, Math.min(Number(url.searchParams.get('limit') || 30), 100))
-    const out = await backendFetch(cfg, `/internal/history?target_id=${encodeURIComponent(target)}&limit=${limit}`, { method: 'GET' })
+    const out = await backendFetch(cfg, `/api/history?target_id=${encodeURIComponent(target)}&limit=${limit}`, { method: 'GET' })
     return sendJson(res, out.status, out.data)
   }
 

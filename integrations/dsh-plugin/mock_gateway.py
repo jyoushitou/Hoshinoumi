@@ -197,6 +197,9 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/presence":
             self._json(200, {"activity": "看书", "detail": "窗边", "idle_min": 0, "mock": True})
             return
+        if path == "/api/cron":
+            self._json(200, {"ok": True, "data": TASKS, "mock": True})
+            return
         if path == "/api/commands":
             data = [
                 {"name": "!help", "group": "基础", "help": "命令帮助", "owner": False},

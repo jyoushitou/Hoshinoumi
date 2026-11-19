@@ -92,7 +92,7 @@ function mapPath(rawPath) {
     '/weekly-plan/import': '/api/weekly-plan/import',
     '/balance': '/api/balance',
     '/relation': '/api/relation',
-    '/cron': '/internal/cron',
+    '/cron': '/api/cron',
   }
   const endpoint = map[suffix]
   if (!endpoint) return null

@@ -363,6 +363,7 @@ async def start_api_server():
     app.router.add_post("/internal/auth/register", handle_internal_auth_register)
     app.router.add_get("/api/state", handle_internal_state)
     app.router.add_get("/internal/state", handle_internal_state)
+    app.router.add_get("/api/cron", handle_internal_cron)
     app.router.add_get("/internal/cron", handle_internal_cron)
     app.router.add_get("/internal/diary", handle_internal_diary)
     app.router.add_get("/internal/shelf", handle_internal_shelf)
