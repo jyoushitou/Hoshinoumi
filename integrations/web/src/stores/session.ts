@@ -13,6 +13,7 @@ export interface ChatMessage {
   content: string
   created_at?: string
   pending?: boolean
+  image_url?: string
 }
 import { defineStore } from 'pinia'
 import { http } from '@/api/client'
@@ -74,24 +75,25 @@ export const useSessionStore = defineStore('session', () => {
     await loadHistory(target)
   }
 
-  async function sendMessage(content: string) {
+  async function sendMessage(content: string, image = '') {
     const text = content.trim()
-    if (!text || sending.value) return false
+    if ((!text && !image) || sending.value) return false
     if (!activeTarget.value) { sendError.value = '请先选择会话'; return false }
     const clientId = (globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`)
     const localId = 'local-' + clientId
     const stamp = new Date().toISOString().slice(0, 19).replace('T', ' ')
-    messages.value.push({ id: localId, role: 'user', content: text, created_at: stamp, pending: true })
+    messages.value.push({ id: localId, role: 'user', content: text, image_url: image || undefined, created_at: stamp, pending: true })
     sending.value = true; sendError.value = ''
     try {
       const r = await http.post<{ success?: boolean; reply?: string; error?: string; message?: string }>('/api/chat', {
         message: text,
         target_id: activeTarget.value,
         client_message_id: clientId,
+        ...(image ? { image } : {}),
       })
       if (!r.reply) throw new Error(r.message || r.error || '发送失败')
       messages.value = messages.value.filter(m => m.id !== localId)
-      messages.value.push({ role: 'user', content: text, created_at: stamp })
+      messages.value.push({ role: 'user', content: text, image_url: image || undefined, created_at: stamp })
       messages.value.push({ role: 'assistant', content: r.reply, created_at: new Date().toISOString().slice(0, 19).replace('T', ' ') })
       return true
     } catch (e) {

@@ -71,6 +71,7 @@ def _internal_uid(request):
 
 async def handle_internal_chat(request):
     """POST /internal/chat：网关转发 + 写入网关对话历史（v21.2）"""
+    import base64
     import uuid
 
     from ..ai.client import get_character_reply
@@ -84,10 +85,32 @@ async def handle_internal_chat(request):
 
     message = body.get("message", "").strip()
     target_id = str(body.get("target_id", "")).strip()
-    if not message:
-        return json_response({"error": "empty_message", "message": "message 不能为空"}, 400)
+    image = str(body.get("image") or "").strip()
     if not target_id:
         return json_response({"error": "missing_target_id", "message": "target_id 不能为空"}, 400)
+    if not message and not image:
+        return json_response({"error": "empty_message", "message": "message/image 不能同时为空"}, 400)
+
+    user_text = message or "[图片]"
+    image_desc = ""
+    if image:
+        try:
+            raw = image.split(",", 1)[1] if image.startswith("data:image/") and "," in image else image
+            img_bytes = base64.b64decode(raw, validate=True)
+        except Exception:
+            return json_response({"error": "image_invalid", "message": "图片数据无法解码"}, 400)
+        if not img_bytes or len(img_bytes) > 4 * 1024 * 1024:
+            return json_response({"error": "image_too_large", "message": "图片不能超过 4MB"}, 413)
+        try:
+            from ..ai.vision import describe_image
+            desc, _tags = await describe_image(img_bytes)
+        except Exception as e:
+            log_err(f"图片识别失败: {e}")
+            desc = None
+        if not desc:
+            return json_response({"error": "image_vision_failed", "message": "图片识别失败，未发送"}, 502)
+        image_desc = str(desc)[:200]
+        message = f"{message}\n[用户发来一张图片：{image_desc}]" if message else f"[用户发来一张图片：{image_desc}]"
 
     user_id = _internal_uid(request)
     # v21 单用户：JWT sub=owner，但历史/QQ 统一存 __owner__
@@ -101,9 +124,9 @@ async def handle_internal_chat(request):
 
         # 只写成功的一轮；user/assistant 各自稳定 id，重试不会重复
         repo_conversation.append(
-            user_id=user_id, target_id=target_id, content=message,
+            user_id=user_id, target_id=target_id, content=user_text,
             role="user", channel="gateway", thread_id=f"gateway:{target_id}",
-            message_id=f"gw-user:{client_id}", meta={"source": "gateway"},
+            message_id=f"gw-user:{client_id}", meta={"source": "gateway", "image": bool(image), "image_desc": image_desc},
         )
         repo_conversation.append(
             user_id=user_id, target_id=target_id, content=reply,

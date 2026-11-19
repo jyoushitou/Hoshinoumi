@@ -359,8 +359,15 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/chat":
             message = str(body.get("message", "")).strip()
             target = str(body.get("target_id", OWNER_QQ))
-            if not message:
-                self._json(400, {"error": "empty_message", "message": "message is empty"})
+            image = str(body.get("image", "")).strip()
+            if not message and not image:
+                self._json(400, {"error": "empty_message", "message": "message/image is empty"})
+                return
+            if image:
+                reply = "收到一张图片（mock）。"
+                HISTORY.append({"id": len(HISTORY) + 1, "role": "user", "content": message or "[图片]", "created_at": _now()})
+                HISTORY.append({"id": len(HISTORY) + 1, "role": "assistant", "content": reply, "created_at": _now()})
+                self._json(200, {"reply": reply, "target_id": target, "mock": True, "time": _now()})
                 return
             reply = {
                 "你好": "你好呀。",
