@@ -120,7 +120,7 @@ button{border:0;background:none;padding:0;cursor:pointer}
 .palette .item{display:flex;align-items:center;gap:8px;padding:8px 13px;font-size:10px;color:#5d646c;cursor:pointer}.palette .item:hover,.palette .item.sel{background:#eef3ff;color:#294b94}
 .palette .hint{margin-left:auto;color:#b0b5bb;font-size:8px}
 .toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,8px);background:#22262b;color:#fff;font-size:10px;padding:7px 12px;border-radius:6px;opacity:0;pointer-events:none;transition:.2s;z-index:40}.toast.on{opacity:1;transform:translate(-50%,0)}
-@media (max-width:1050px){.inspector{display:none}.wvbody{grid-template-columns:1fr}.side{width:210px}.command{width:210px}}
+.demo-banner{flex:none;display:flex;align-items:center;gap:7px;padding:6px 14px;background:#f4f8ff;border-bottom:1px solid #e2eafb;color:#55709e;font-size:9.5px}.demo-banner b{color:#2f4f86;font-size:10px}.demo-dot{width:6px;height:6px;border-radius:50%;background:#2f6df6;box-shadow:0 0 0 3px rgba(47,109,246,.12)}.demo-btn{margin-left:auto;height:22px;border:1px solid #c9d8f4;background:#fff;color:#315aa7;border-radius:5px;padding:0 8px;font-size:9px}.demo-x{width:20px;height:20px;color:#93a3bd;font-size:13px}.ext-mask{position:fixed;inset:0;background:rgba(20,26,34,.2);display:none;align-items:center;justify-content:center;z-index:32;backdrop-filter:blur(1px)}.ext-mask.open{display:flex}.ext-panel{width:min(520px,92vw);background:#fff;border:1px solid #d9dde3;border-radius:10px;box-shadow:0 24px 70px rgba(20,30,45,.24);overflow:hidden}.ext-title{height:36px;display:flex;align-items:center;padding:0 13px;border-bottom:1px solid #eceef1;font-size:10px;color:#6f767e}.ext-title b{color:#2f3339;margin-left:5px}.ext-body{padding:13px}.ext-card{border:1px solid #dce4f2;background:#f8fbff;border-radius:8px;padding:11px;display:flex;align-items:flex-start;gap:9px}.ext-logo{width:30px;height:30px;border-radius:7px;background:linear-gradient(135deg,#2f6df6,#79a1ff);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex:none}.ext-card b{display:block;font-size:11px;color:#263b60}.ext-card small{display:block;font-size:9px;color:#7f8fa8;line-height:1.55;margin-top:3px}.ext-open{margin-left:auto;height:27px;border:1px solid #2f6df6;background:#2f6df6;color:#fff;border-radius:6px;padding:0 10px;font-size:9px;white-space:nowrap}.ext-meta{font-size:8.5px;color:#9aa5b5;margin-top:10px;line-height:1.7}.ext-close{margin-left:auto;color:#9aa0a7;font-size:14px}@media (max-width:1050px){.inspector{display:none}.wvbody{grid-template-columns:1fr}.side{width:210px}.command{width:210px}}
 </style>
 </head>
 <body>
@@ -139,7 +139,7 @@ button{border:0;background:none;padding:0;cursor:pointer}
       <button class="act" title="搜索">⌕</button>
       <button class="act" title="源代码管理">⑂</button>
       <button class="act" title="运行和调试">▷</button>
-      <button class="act" title="扩展">⌘</button>
+      <button class="act" id="extAct" title="扩展" onclick="showExtensions()">⌘</button>
       <div style="height:10px"></div>
       <button class="act active" id="qAct" title="Qoder 任务面板" onclick="toggleQoder()">Q<span class="badge"></span></button>
       <button class="act spacer" title="账户">◉</button>
@@ -175,6 +175,7 @@ button{border:0;background:none;padding:0;cursor:pointer}
       </div>
       <div class="webview">
         <div class="wvhead"><span class="crumb">Qoder 任务</span><span class="sep">/</span><span id="crumb">期末复习规划</span><div class="right"><span>⌘</span><span>◐</span><span>⋯</span></div></div>
+        <div class="demo-banner" id="demoBanner"><span class="demo-dot"></span><b>Qoder Agent 已安装</b><span>入口：左侧 Q 图标 / 扩展面板 / Ctrl+Shift+P</span><button class="demo-btn" onclick="showExtensions()">查看入口</button><button class="demo-x" onclick="document.getElementById('demoBanner').remove()">×</button></div>
         <div class="wvbody">
           <div class="docwrap"><div class="doc" id="doc"></div></div>
           <aside class="inspector">
@@ -203,6 +204,15 @@ button{border:0;background:none;padding:0;cursor:pointer}
     <div class="item" onclick="toast('Qoder: 刷新上下文（模拟）')">Qoder: 刷新上下文<span class="hint">⌘R</span></div>
   </div>
 </div>
+<div class="ext-mask" id="extModal" onclick="if(event.target===this)closeExtensions()">
+  <div class="ext-panel">
+    <div class="ext-title"><span>扩展</span><b>Qoder Agent</b><button class="ext-close" onclick="closeExtensions()">×</button></div>
+    <div class="ext-body">
+      <div class="ext-card"><div class="ext-logo">Q</div><div><b>Qoder Agent</b><small>把任务、文档、产出和上下文放进一个 Webview。已安装 · 已启用。</small></div><button class="ext-open" onclick="openFromExtensions()">打开任务面板</button></div>
+      <div class="ext-meta">入口：左侧 Activity Bar 的 Q 图标，或 Ctrl+Shift+P 执行“Qoder: 打开任务面板”。这是模拟演示，不会真的安装扩展。</div>
+    </div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 <script>
 const finalDoc=`<h1>期末复习规划</h1><p>听力还能做，今天就以听力为主；日语课本那几格全部挪到周五以后了。</p><h2>今天（四）</h2><ul><li>12:30 听力真题①：25′ 做题 + 对答案</li><li>13:20 错处跟读 3 遍</li><li>14:00 概率刷题 30 道</li><li>15:00 库初七集合运算，15:40 接着做，16:00 习索引①、17:00 毛索引③ 照旧</li></ul><h2>日语课文 11-15 顺延</h2><ul><li>周五 12:30 精读 11、13:20 语法点 11；周五晚 19:30 精读 12、20:30 语法点 12，这两格原本是初七 SQL，因为初七今天做了，空出来正好用</li><li>周六 18:30 精读 13；周日 8:00 语法点 13、9:00 精读 14、10:00 语法点 14、11:00 精读 15、15:40 语法点 15</li><li>周日 12:30 习思想笔记、13:20 索引①，没动</li></ul><p>听力编号顺延：① 今天做完，②③④ 放第 13 周，⑤ 放 12/1，12/2 改成重听错处；第 13 周周日和第 14 周周一的“重听错处”也改成了对应的套数范围。</p><p>库：初七分两段（今天集合运算、周五 17:00 收尾提交），中级一/二回到周六早上，原来周五晚的两格用来补日语。<span class="blue">期末规划.md 的周表和第 12 周说明都已同步。</span></p><div class="filecard"><div class="file-ic">MD</div><div><div class="file-name">期末规划.md</div><div class="file-type">MD</div></div><div class="more">⋯</div></div><div class="editcard"><div class="edit-head"><b>已编辑 1 个文件</b><span class="soft">+26 −27</span><div class="actions"><button class="small" onclick="toast('已撤销（模拟）')">撤销</button><button class="small primary" onclick="toast('审阅面板（模拟）')">审阅</button></div></div><div class="edit-row"><span style="color:#2f6df6">▤</span><span>期末规划.md</span><span class="num">+26 <span>−27</span></span></div></div><div class="docfooter"><span>▢</span><span>♡</span><span>↧</span><span>↥</span><span>⋯</span><span class="sp">由 AI 生成 · 2026-11-19 09:23</span></div>`;
@@ -213,6 +223,9 @@ const pages={
  bug:{title:'修复启动问题',note:'启动失败：先看日志、再复现、最后最小修复并验证。',html:`<h1>修复启动问题</h1><h2>现象</h2><p>最新构建启动 2 秒后退出，控制台无堆栈。</p><h2>排查</h2><ul><li>查看启动日志最后 100 行</li><li>对比上一版配置差异</li><li>用最小配置复现</li></ul>`}
 };
 const doc=document.getElementById('doc');doc.innerHTML=finalDoc;
+function showExtensions(){document.getElementById('extModal').classList.add('open')}
+function closeExtensions(){document.getElementById('extModal').classList.remove('open')}
+function openFromExtensions(){closeExtensions();document.getElementById('qSide').style.display='flex';document.getElementById('qAct').classList.add('active');toast('已从扩展面板打开 Qoder 任务面板')}
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),1400)}
 function setTask(key){
  const el=document.querySelector('.task[data-task="'+key+'"]');if(!el)return;
