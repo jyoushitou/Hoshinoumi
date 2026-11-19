@@ -75,7 +75,7 @@ button{border:0;background:none;padding:0;cursor:pointer}
 .minimap{width:58px;flex:none;background:#1e1e1e;border-left:1px solid #252526;padding:8px 6px;color:#3a3a3a;font-size:2px;line-height:3px;overflow:hidden;opacity:.65}
 .statusbar{height:22px;flex:none;background:#007acc;color:#fff;display:flex;align-items:center;gap:13px;padding:0 10px;font-size:10.5px}.statusbar .right{margin-left:auto;display:flex;gap:13px;align-items:center}.statusbar .icon{font-size:12px}
 .toast{position:fixed;right:16px;bottom:34px;background:#252526;border:1px solid #454545;color:#cccccc;font-size:11px;padding:7px 11px;border-radius:2px;box-shadow:0 4px 16px rgba(0,0,0,.4);opacity:0;transform:translateY(5px);transition:.18s;pointer-events:none;z-index:20}.toast.on{opacity:1;transform:none}
-.scm-head .branch{margin-left:8px;font-size:10px;color:#9d9d9d;font-weight:400;text-transform:none;letter-spacing:0}.h-head .scope{font-size:9px;color:#8f8f8f;border:1px solid #3c3c3c;border-radius:2px;padding:0 4px;margin-left:2px}</style>
+.scm-head .branch{margin-left:8px;font-size:10px;color:#9d9d9d;font-weight:400;text-transform:none;letter-spacing:0}.h-head .scope{font-size:9px;color:#8f8f8f;border:1px solid #3c3c3c;border-radius:2px;padding:0 4px;margin-left:2px}.h-nav{flex:none;padding:5px 7px 3px;border-bottom:1px solid #2f2f2f}.hn-row{display:flex;align-items:center;gap:2px;min-height:24px}.hn-label{width:36px;flex:none;font-size:9px;color:#7d7d7d;letter-spacing:.04em}.hn-row .h-tab{height:20px;padding:0 6px;font-size:10px}</style>
 </head>
 <body>
 <div class="window">
@@ -100,8 +100,11 @@ button{border:0;background:none;padding:0;cursor:pointer}
    <div class="scm-head"><span>源代码管理</span><span class="branch">⑂ main*</span><div class="actions"><span>⟳</span><span>⋯</span></div></div>
    <section class="hoshi" id="hoshi">
     <div class="h-head" onclick="toggleHoshi(event)"><span class="chev" id="chev">⌄</span><b>Hoshinoumi</b><span class="dot"></span><span class="state">已连接</span><span class="scope">SCM</span><span class="act" onclick="event.stopPropagation();toast('Hoshinoumi 设置（模拟）')">⚙</span></div>
-    <div class="h-tabs" id="tabs">
-     <button class="h-tab on" data-p="chat">聊天</button><button class="h-tab" data-p="memory">记忆</button><button class="h-tab" data-p="savings">存钱</button><button class="h-tab" data-p="weekly">周计划</button><button class="h-tab" data-p="persona">人设</button><button class="h-tab" data-p="relation">关系</button><button class="h-tab" data-p="settings">设置</button>
+    <div class="h-nav" id="tabs">
+     <div class="hn-row"><span class="hn-label">对话</span><button class="h-tab on" data-p="chat">聊天</button></div>
+     <div class="hn-row"><span class="hn-label">数据</span><button class="h-tab" data-p="memory">记忆</button><button class="h-tab" data-p="savings">存钱</button><button class="h-tab" data-p="relation">关系</button></div>
+     <div class="hn-row"><span class="hn-label">计划</span><button class="h-tab" data-p="weekly">周计划</button><button class="h-tab" data-p="persona">人设</button></div>
+     <div class="hn-row"><span class="hn-label">系统</span><button class="h-tab" data-p="settings">设置</button></div>
     </div>
     <div class="h-body" id="body"></div>
     <div class="h-compose" id="compose"><textarea id="msg" placeholder="和 nao 说话，Enter 发送"></textarea><div class="h-sendrow"><span class="hint">MOCK · 后端 27004</span><button onclick="send()">发送</button></div></div>
