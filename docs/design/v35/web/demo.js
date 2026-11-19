@@ -159,6 +159,18 @@
     .cron-form .full button{border:0;border-radius:6px;background:#2563eb;color:#fff;font-size:9.5px;padding:5px 10px;cursor:pointer}
     .cron-form .full button.cancel{background:#fff;color:#4b5f78;border:1px solid #dbe8ff}
     .cron-form .msg{font-size:9px;color:#8a9bb0}
+    .log-toolbar{display:flex;align-items:center;gap:7px;margin-bottom:8px;flex-wrap:wrap}
+    .log-toolbar select,.log-toolbar input{border:1px solid #dbe8ff;border-radius:6px;background:#fff;color:#243b55;font:9.5px inherit;outline:0;padding:5px 7px}
+    .log-toolbar input{flex:1;max-width:280px}
+    .log-toolbar .hint{font-size:9px;color:#8a9bb0;margin-left:auto}
+    .log-console{border:1px solid #dbe8ff;border-radius:9px;background:#f8fbff;overflow:auto;height:calc(100% - 86px);min-height:260px;padding:5px 0;font:10px/1.55 "Cascadia Code","Consolas",monospace}
+    .log-line{display:grid;grid-template-columns:62px 44px 1fr;gap:8px;padding:2px 9px;border-left:2px solid transparent;color:#4b5f78;white-space:nowrap}
+    .log-line:hover{background:#eef4ff;border-left-color:#93b7fa}
+    .log-line .lt{color:#8a9bb0}.log-line .lv{font-size:8.5px;font-weight:700}
+    .log-line .lv.INFO{color:#1d4ed8}.log-line .lv.WARN{color:#b45309}.log-line .lv.ERROR{color:#c0264a}
+    .log-line .lm{overflow:hidden;text-overflow:ellipsis}
+    .log-empty{padding:16px;color:#8a9bb0;font-size:10px}
+
 
     .info-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:10px}
     .info-stat{border:1px solid #e3ebf7;border-radius:11px;background:#fff;padding:10px 12px}
@@ -367,6 +379,56 @@
   }));
 
   function showPage(name) {
+    if (name === 'logs') {
+      const LOGS = window.__logs || (window.__logs = [
+        ['09:13','INFO','chat','len=18 target=822891053'],
+        ['09:12','INFO','command','status'],
+        ['09:11','INFO','memory','append 2 条'],
+        ['09:08','INFO','relation','affinity +0.020'],
+        ['09:04','WARN','search_images','timeout after 5000ms'],
+        ['08:58','INFO','memory','append 1 条'],
+        ['08:55','INFO','chat','reply len=32'],
+        ['08:42','INFO','cron','每日早报 已触发'],
+        ['08:31','INFO','gateway','client connected 127.0.0.1'],
+        ['08:22','INFO','chat','reply len=21'],
+        ['08:10','WARN','vision','OCR slow 3210ms'],
+        ['08:02','INFO','savings','entry +500.00 saving'],
+        ['07:58','INFO','persona','active nao'],
+        ['07:45','INFO','chat','reply len=16'],
+        ['07:31','INFO','db','schema 35 · 42 tables'],
+        ['07:20','INFO','gw','tcp frame 27004 ok'],
+        ['07:02','INFO','cron','日记提醒 已触发'],
+        ['06:58','INFO','chat','reply len=24'],
+        ['06:40','ERROR','search_images','connection reset'],
+        ['06:31','INFO','memory','recall 3 条']
+      ]);
+      let level = 'ALL', q = '';
+      function renderLogs() {
+        pageView.innerHTML = '<div class="page-head"><div><h2>运行日志</h2><p>v35.5 Web 演示 · MOCK 数据 · 一行一条</p></div><button class="back" id="backChat">← 返回聊天</button></div>' +
+          '<div class="log-toolbar"><select id="logLevel"><option value="ALL">全部级别</option><option>INFO</option><option>WARN</option><option>ERROR</option></select><input id="logQ" placeholder="搜索日志…"><button class="back" id="logRefresh">刷新</button><button class="back" id="logClear">清空</button><span class="hint" id="logCount"></span></div>' +
+          '<div class="log-console" id="logConsole"></div>';
+        document.getElementById('backChat').addEventListener('click', () => showChat());
+        document.getElementById('logLevel').value = level;
+        document.getElementById('logLevel').addEventListener('change', e => { level = e.target.value; paintLogs(); });
+        document.getElementById('logQ').value = q;
+        document.getElementById('logQ').addEventListener('input', e => { q = e.target.value; paintLogs(); });
+        document.getElementById('logRefresh').addEventListener('click', () => { paintLogs(); toast('日志已刷新（MOCK）'); });
+        document.getElementById('logClear').addEventListener('click', () => { window.__logs = []; LOGS.length = 0; paintLogs(); });
+        paintLogs();
+      }
+      function paintLogs() {
+        const box = document.getElementById('logConsole');
+        const list = LOGS.filter(l => (level === 'ALL' || l[1] === level) && (!q || l.join(' ').toLowerCase().includes(q.toLowerCase())));
+        document.getElementById('logCount').textContent = list.length + ' 条';
+        box.innerHTML = list.length ? list.map(l => '<div class="log-line"><span class="lt">' + esc(l[0]) + '</span><span class="lv ' + esc(l[1]) + '">' + esc(l[1]) + '</span><span class="lm">' + esc(l[2] + '  ' + l[3]) + '</span></div>').join('') : '<div class="log-empty">没有匹配的日志</div>';
+        box.scrollTop = box.scrollHeight;
+      }
+      renderLogs();
+      [top, msgs, composer, searchBar].forEach(x => x.classList.add('chat-hide'));
+      pageView.classList.add('on');
+      document.querySelectorAll('.rnav').forEach(x => x.classList.toggle('on', x.dataset.page === name));
+      return;
+    }
     if (name === 'cron') {
       const C = window.__cron || (window.__cron = {
         nextId: 4,
