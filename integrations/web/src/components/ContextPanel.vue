@@ -1,3 +1,7 @@
+<script setup lang="ts">
+import { useSessionStore } from '@/stores/session'
+const session = useSessionStore()
+</script>
 <template>
   <aside class="context">
     <div class="pcard">
@@ -14,31 +18,17 @@
     <div class="sec">
       关系
     </div>
-    <div class="rel-head">
-      <span>亲密度</span><b>0.62 <em>熟</em></b>
+    <div v-if="session.error" class="note">
+      未获取到关系数据：{{ session.error }}
     </div>
-    <div class="track">
-      <i style="width:62%" />
-    </div>
-    <div class="rel-meta">
-      最近变化 <span>+0.020 · 聊天</span>
+    <div v-else class="note">
+      暂无关系数据
     </div>
     <div class="sec">
       她的状态
     </div>
-    <div class="life">
-      <div class="row">
-        <span>心情</span><b>平静</b>
-      </div><div class="row">
-        <span>精力</span><b>0.70</b>
-      </div><div class="row">
-        <span>孤独</span><b>0.15</b>
-      </div><div class="row">
-        <span>正在</span><b>未知</b>
-      </div>
-    </div>
     <div class="note">
-      来自 state / presence · 未上报时显示未知
+      未获取到 state / presence
     </div>
     <div class="sec">
       快捷

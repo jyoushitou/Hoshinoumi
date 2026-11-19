@@ -2,6 +2,11 @@
 import RailNav from '@/components/RailNav.vue'
 import ConversationList from '@/components/ConversationList.vue'
 import ContextPanel from '@/components/ContextPanel.vue'
+import { onMounted } from 'vue'
+import { useAuthStore } from '@/stores/auth'
+import { useSessionStore } from '@/stores/session'
+const auth = useAuthStore(); const session = useSessionStore()
+onMounted(() => { if (auth.loggedIn) session.refresh(); else session.error = '未登录，请先填写 QQ 和 token' })
 </script>
 <template>
   <div class="mock">

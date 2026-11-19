@@ -144,6 +144,14 @@ integrations/web/src/views/PageView.vue
 http://127.0.0.1:27006
 ```
 
+## 2.5 登录与数据态
+
+- 首次打开无凭据：弹窗填主人 QQ + token
+- 后端同源，不填 URL
+- 保存前调用 `/healthz` + `/api/status`
+- 失败显示错误；未登录/未连接不展示假会话、假消息
+- 会话/历史/关系/state 在后续版本接入，接口失败显示提示
+
 ## 3. 布局
 
 ```text
@@ -363,7 +371,7 @@ nginx 只访问 127.0.0.1:27015
 |---|---|---|
 | v35.5.0.0 ✅ | Node 20+/pnpm、Vue 3 + Vite + TS、Router/Pinia、ESLint/Vitest/Playwright、API client/env | 空项目可构建、可测 |
 | v35.5.1.0 ✅ | AppShell/Router/导航/ThemeToken/错误空态/Mock adapter | 12 个导航空壳 |
-| v35.5.2.0 | 首次登录 token/QQ（同源）、深浅色主题 | 能登录 |
+| v35.5.2.0 ✅ | 首次登录 QQ/token（同源）、连接测试、错误态 | 能登录，失败有提示 |
 | v35.5.3.0 | QQ 会话列表、历史分页、已读位点 | 群列表一致 |
 | v35.5.4.0 | 文本发送、乐观更新、失败回滚、幂等 | 能聊天 |
 | v35.5.5.0 | 图片发送/预览、上传 | 图片可用 |

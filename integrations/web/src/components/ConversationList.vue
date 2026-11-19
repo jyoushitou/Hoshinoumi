@@ -1,11 +1,7 @@
 <script setup lang="ts">
-const chats = [
-  { id: 'nao', name: '友利奈绪', last: '今天也一起加油吧', time: '21:04', unread: 2, avatar: '奈', color: '#dbeafe' },
-  { id: 'seagroup', name: '星之海学园', last: '[图片] 晚上的教室', time: '20:41', unread: 0, avatar: '星', color: '#d1fae5' },
-  { id: 'student', name: '学生会室', last: '明天放学后开个短会', time: '19:58', unread: 5, avatar: '学', color: '#ffedd5' },
-  { id: 'photo', name: '摄影部', last: '周末去海边拍吗', time: '昨天', unread: 0, avatar: '摄', color: '#ede9fe' },
-  { id: 'test', name: 'NapCat 测试群', last: '消息同步测试', time: '昨天', unread: 0, avatar: '测', color: '#fde8d7' },
-]
+import EmptyState from '@/components/EmptyState.vue'
+import { useSessionStore } from '@/stores/session'
+const session = useSessionStore()
 </script>
 <template>
   <aside class="side">
@@ -19,40 +15,11 @@ const chats = [
       QQ 会话 <em>同步中</em>
     </div>
     <div class="convs">
-      <RouterLink
-        v-for="c in chats"
-        :key="c.id"
-        :to="'/chat'"
-        class="conv"
-        :class="{ on: c.id === 'nao' }"
-      >
-        <span
-          class="avatar"
-          :style="{ background: c.color }"
-        >{{ c.avatar }}</span>
-        <div class="body">
-          <div class="nm">
-            {{ c.name }}
-          </div><div class="last">
-            {{ c.last }}
-          </div>
-        </div>
-        <span class="tm">{{ c.time }}</span>
-        <span
-          v-if="c.unread"
-          class="unread"
-        >{{ c.unread }}</span>
-      </RouterLink>
+      <div v-if="session.loading" class="load">加载中…</div>
+      <EmptyState v-else-if="session.error" :text="'未获取到 QQ 会话：' + session.error" />
+      <EmptyState v-else text="暂无 QQ 会话" />
     </div>
-    <div class="conn">
-      <div class="k">
-        后端连接
-      </div><div class="v">
-        <span class="dot" /> 已连接 · schema 35
-      </div><div class="meta">
-        127.0.0.1:27004 · 42ms · owner
-      </div>
-    </div>
+    <div class="conn"><div class="k">后端连接</div><div class="v"><span class="dot" :class="{ off: !session.connected }"></span> {{ session.connected ? '已连接' : '未连接' }}</div><div class="meta">{{ session.error || '等待后端数据' }}</div></div>
   </aside>
 </template>
 <style scoped>
@@ -63,5 +30,5 @@ const chats = [
 .convs{overflow:auto;padding:0 8px;min-height:0}.conv{display:flex;gap:9px;padding:9px;border-radius:11px;position:relative;text-decoration:none;color:inherit;border:1px solid transparent;transition:background .18s,border-color .18s,transform .18s}.conv:hover{background:#eef4ff;border-color:#dbe8ff;transform:translateX(2px)}.conv.on{background:#e7f0ff;border-color:#c7dcff}
 .avatar{width:33px;height:33px;border-radius:10px;display:grid;place-items:center;font-size:11px;font-weight:700;color:#1d4ed8;flex:none}
 .body{min-width:0}.nm{font-size:12px;font-weight:600;color:#1e3a5f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.last{font-size:10.5px;color:#8a9bb0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}.tm{font-size:9px;color:#8a9bb0;margin-left:auto;flex:none}.unread{position:absolute;right:8px;bottom:8px;min-width:15px;height:15px;border-radius:8px;background:#2563eb;color:#fff;font-size:9px;font-weight:700;display:grid;place-items:center}
-.conn{margin:10px 14px 14px;padding:11px 12px;border:1px solid #e3ebf7;border-radius:12px;background:#fff}.conn .k{font-size:9px;letter-spacing:.08em;color:#8a9bb0;margin-bottom:5px}.conn .v{font-size:11px;color:#1f9d6b;display:flex;align-items:center;gap:6px}.dot{width:6px;height:6px;border-radius:50%;background:#1f9d6b}.conn .meta{font-size:9.5px;color:#8a9bb0;margin-top:4px}
+.conn{margin:10px 14px 14px;padding:11px 12px;border:1px solid #e3ebf7;border-radius:12px;background:#fff}.conn .k{font-size:9px;letter-spacing:.08em;color:#8a9bb0;margin-bottom:5px}.conn .v{font-size:11px;color:#1f9d6b;display:flex;align-items:center;gap:6px}.dot{width:6px;height:6px;border-radius:50%;background:#1f9d6b}.dot.off{background:#c0264a}.load{padding:18px 12px;text-align:center;font-size:10px;color:#8a9bb0}.conn .meta{font-size:9.5px;color:#8a9bb0;margin-top:4px}
 </style>
