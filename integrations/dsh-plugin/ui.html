@@ -138,7 +138,7 @@ button,input{font:inherit}
 .mskip{text-align:center;font-size:9px;color:#9a9b91;margin-top:9px;cursor:pointer}
 html[data-theme="dark"] .app{filter:invert(.9) hue-rotate(180deg)}
 html[data-theme="dark"]{background:#111}
-</style>
+.wktable{border-collapse:collapse;width:100%;min-width:760px;font-size:11px}.wktable th,.wktable td{border:1px solid #e8e8e2;padding:5px;vertical-align:top}.wktable th{background:#f6f6f2;color:#77786f;font-weight:600}.wkp{background:#fafaf7;color:#77786f;white-space:nowrap;width:46px}.wkcell{height:56px;cursor:pointer}.wkcell:hover{background:#f7f9ff}.wkadd{color:#c7c8c1}.wkc b{display:block;color:#2d2e28;font-size:11px;line-height:1.35}.wkc span{display:block;color:#8a8b82;font-size:10px;margin-top:2px}</style>
 </head>
 <body>
 <div class="app" id="app">
@@ -152,7 +152,8 @@ html[data-theme="dark"]{background:#111}
     <div class="item" id="wsNao" onclick="showChat()">◌ nao（聊天）</div>
     <div class="item" onclick="showModule('memory')">◈ 记忆</div>
     <div class="item" onclick="showModule('savings')">¥ 存钱</div>
-    <div class="item" onclick="showModule('info')">▤ 信息</div>
+    <div class="item" onclick="showWeekly()">▦ 周计划表</div>
+        <div class="item" onclick="showModule('info')">▤ 信息</div>
     <div class="item" onclick="showModule('persona')">奈 人设</div>
     <div class="item" onclick="showModule('settings')">⚙ 设置</div>
     <div class="item" onclick="showCmd('tools')">⌘ 命令</div>
@@ -193,7 +194,7 @@ html[data-theme="dark"]{background:#111}
     <div class="mgrid"><div class="mcard"><h3>日志</h3><div class="logrow"><span class="tm">21:04:12</span><span class="nm">!status</span><span class="ok">200</span><span class="du">12ms</span></div><div class="logrow"><span class="tm">20:51:33</span><span class="nm">search_images</span><span class="ok">200</span><span class="du">84ms</span></div><div class="logrow"><span class="tm">20:32:07</span><span class="nm">recall</span><span class="ok">200</span><span class="du">12ms</span></div><div class="logrow"><span class="tm">19:20:09</span><span class="nm">search_images</span><span class="err">500</span><span class="du">1200ms</span></div><div class="logrow"><span class="tm">18:00:00</span><span class="nm">每日早报</span><span class="ok">200</span><span class="du">312ms</span></div></div>
     <div class="mcard"><h3>详情</h3><div class="dsel">search_images</div><div class="dkv">状态<span class="r" style="color:#c25b5b">500 失败</span></div><div class="dkv">耗时<span class="r">1200ms</span></div><div class="dkv">来源<span class="r">DSH · 命令</span></div><div class="result"><b>错误</b><br>图库服务超时 · upstream timeout<br>未重试，避免阻塞 DSH。</div></div></div></div>
    </div>
-   <div class="page" id="pageOverview"><div class="ovpage"><div class="crumb">工作区 / nao / 主页</div><div class="ch1">主页 <span class="ok">● 9 个功能模块</span></div><div class="cdesc">从主页进入聊天、记忆、存钱、信息、人设、设置、命令、定时任务和运行日志。</div>
+   <div class="page" id="pageOverview"><div class="ovpage"><div class="crumb">工作区 / nao / 主页</div><div class="ch1">主页 <span class="ok">● 10 个功能模块</span></div><div class="cdesc">从主页进入聊天、记忆、存钱、信息、人设、设置、命令、定时任务和运行日志。</div>
     <div class="ogrid">
      <div class="ocard" onclick="showChat()"><div class="oi">◌</div><div class="on">聊天</div><div class="od">和 nao 对话，自动加载历史。</div><div class="om"><b>1,284</b> 条历史</div></div>
      <div class="ocard" onclick="showModule('memory')"><div class="oi">◈</div><div class="on">记忆</div><div class="od">记忆本、画像、关系、事件。</div><div class="om"><b>1,284</b> 条记忆</div></div>
@@ -319,7 +320,7 @@ async function showLogs(){
       rows.length?[['最近日志',rows.slice(0,12).map(x=>String(x))]]:[['暂无日志',['后端没有返回日志']]]);
   }catch(e){moduleEmpty(title,'读取失败：'+e.message)}
 }
-function showHome(){hideAll();document.querySelectorAll('.ocard .om').forEach(e=>{e.innerHTML=backendReady?'读取中…':'未连接'});loadHomeStats();document.getElementById('breadcrumb').textContent='Hoshinoumi · nao / 主页';document.getElementById('pageOverview').classList.add('on');setHead('主页','工作区 / nao','9 个功能模块');}
+function showHome(){hideAll();document.querySelectorAll('.ocard .om').forEach(e=>{e.innerHTML=backendReady?'读取中…':'未连接'});loadHomeStats();document.getElementById('breadcrumb').textContent='Hoshinoumi · nao / 主页';document.getElementById('pageOverview').classList.add('on');setHead('主页','工作区 / nao','10 个功能模块');}
 function showOverview(){showHome();}
 const MODULES={
  memory:{t:'记忆',d:'记忆本、画像、关系、事件和关键词。',stats:[['1,284','记忆'],['328','事件'],['12','关系'],['46','关键词']],cards:[['用户画像',['偏好 · 晚上聊天','称呼 · 你','边界 · 财务仅私聊']],['关系',['奈绪 · 恋人','信任 86','最近互动 · 今天']],['记忆本',['昨天方案通过','旅行目标 60%','担心过不了']],['关键词',['旅行','方案','猫','读书']]]},
@@ -450,6 +451,71 @@ async function activatePersona() {
     toast('已激活：' + name);
     await showModule('persona');
   } catch (e) { toast('激活失败：' + e.message); }
+}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+let weeklyCourses=[];
+function weeklyWeek(){return Math.max(1,Math.min(60,parseInt(localStorage.getItem('hoshinoumi_week')||'1',10)||1));}
+function weeklyPeriods(){return [[1,2,'1-2'],[3,4,'3-4'],[5,6,'5-6'],[7,7,'7'],[8,8,'8'],[9,10,'9-10'],[11,11,'11']];}
+async function showWeekly(){
+  hideAll();document.getElementById('pageModule').classList.add('on');
+  document.getElementById('breadcrumb').textContent='Hoshinoumi · nao / 周计划表';
+  setHead('周计划表','▦ 工作区 · 周计划表','');
+  if(!backendReady){moduleEmpty('周计划表','后端未连接，暂时没有数据。');return;}
+  const root=document.getElementById('moduleBody');
+  root.innerHTML='<div class="crumb">工作区 / 周计划表</div><div class="ch1">周计划表</div><div class="cdesc">按周查看；点格子录入课程，或导入教务 HTML。数据来自后端，不是前端写死。</div>'+
+   '<div class="mcard" style="margin-top:10px"><div class="mline">周次 <input id="weekInput" type="number" min="1" max="60" value="'+weeklyWeek()+'" style="width:68px;margin-left:auto" onchange="loadWeekly(this.value)"></div>'+
+   '<div class="mline">HTML <input id="weekFile" type="file" accept=".html,.htm,text/html" style="margin-left:auto;max-width:220px"></div>'+
+   '<div style="display:flex;gap:7px;margin-top:8px"><button class="run" style="flex:1;height:30px" onclick="importWeekly()">导入 HTML</button><button class="run" style="flex:1;height:30px;background:#fff;color:#3457d5;border:1px solid #c9d7f7" onclick="loadWeekly(weeklyWeek())">刷新</button></div><div id="weekMsg" class="mline" style="color:#8a8b82"></div></div>'+
+   '<div id="weekGrid" style="margin-top:10px"></div>';
+  await loadWeekly(weeklyWeek());
+}
+async function loadWeekly(week){
+  week=Math.max(1,Math.min(60,parseInt(week,10)||1));localStorage.setItem('hoshinoumi_week',String(week));
+  const grid=document.getElementById('weekGrid');if(!grid)return;
+  grid.innerHTML='<div class="mline">加载中…</div>';
+  try{
+    const j=await jsonApi('/api/hoshinoumi/weekly-plan?week='+week);
+    weeklyCourses=Array.isArray(j.courses)?j.courses:[];
+    const periods=weeklyPeriods();
+    const head=['节次'].concat(['一','二','三','四','五','六','日']).map(x=>'<th>'+x+'</th>').join('');
+    let body='';
+    periods.forEach(([ps,pe,label])=>{
+      body+='<tr><td class="wkp">'+label+'</td>';
+      for(let d=1;d<=7;d++){
+        const arr=weeklyCourses.filter(x=>Number(x.weekday)===d && Number(x.period_start)===ps);
+        const inner=arr.map(x=>'<div class="wkc"><b>'+esc(x.name)+'</b><span>'+esc(x.location||'')+'</span></div>').join('');
+        body+='<td class="wkcell" onclick="addWeeklyCourse('+d+','+ps+','+pe+')">'+(inner||'<span class="wkadd">＋</span>')+'</td>';
+      }
+      body+='</tr>';
+    });
+    grid.innerHTML='<div style="overflow:auto"><table class="wktable"><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table></div>';
+  }catch(e){grid.innerHTML='<div class="mline" style="color:#b23">加载失败：'+esc(e.message)+'</div>';}
+}
+async function saveWeekly(courses,week){
+  const r=await fetch('/api/hoshinoumi/weekly-plan',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({week,courses})});
+  const j=await r.json();if(!r.ok||!j.ok)throw new Error(j.message||j.error||('HTTP '+r.status));return j;
+}
+async function addWeeklyCourse(day,ps,pe){
+  const name=prompt('课程名');if(!name)return;
+  const teacher=prompt('教师（可空）')||'';const location=prompt('地点（可空）')||'';
+  const week=weeklyWeek();
+  const courses=weeklyCourses.slice();
+  courses.push({name,teacher,location,weekday:day,period_start:ps,period_end:pe,source:'grid'});
+  try{await saveWeekly(courses,week);await loadWeekly(week);}catch(e){toast('保存失败：'+e.message);}
+}
+async function importWeekly(){
+  const f=document.getElementById('weekFile')?.files?.[0];const msg=document.getElementById('weekMsg');
+  if(!f){if(msg)msg.textContent='先选择 HTML 文件';return;}
+  try{
+    const html=await f.text();const week=weeklyWeek();
+    const r=await fetch('/api/hoshinoumi/weekly-plan/import',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({html,week,dry_run:true})});
+    const j=await r.json();if(!r.ok||!j.ok)throw new Error(j.message||j.error||('HTTP '+r.status));
+    if(!confirm(`第 ${week} 周：解析 ${j.all_weeks_count} 条，命中 ${j.count} 条。确认导入？`))return;
+    const r2=await fetch('/api/hoshinoumi/weekly-plan/import',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({html,week,dry_run:false})});
+    const j2=await r2.json();if(!r2.ok||!j2.ok)throw new Error(j2.message||j2.error||('HTTP '+r2.status));
+    if(msg)msg.textContent=`已导入第 ${week} 周 ${j2.count} 条`;
+    await loadWeekly(week);
+  }catch(e){if(msg)msg.textContent='导入失败：'+e.message;}
 }
 async function showModule(key) {
   const titles = { memory: '记忆', savings: '存钱', info: '信息', persona: '人设', settings: '设置' };
