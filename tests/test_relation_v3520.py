@@ -27,10 +27,13 @@ def _stub_aiohttp():
 
 _stub_aiohttp()
 from bot.server import routes_relation  # noqa: E402
+from bot.infra import tenant  # noqa: E402
 
 
 class _Req:
-    query = {}
+    def __init__(self, query=None, headers=None):
+        self.query = query or {}
+        self.headers = headers or {}
 
 
 class RelationTests(unittest.TestCase):
@@ -43,6 +46,24 @@ class RelationTests(unittest.TestCase):
         self.assertEqual(data["affinity"], 0.62)
         self.assertEqual(data["tier"], "熟")
         self.assertEqual(len(data["events"]), 1)
+
+    def test_non_owner_forced_to_self(self):
+        req = _Req({"target_id": "822891053"}, {"X-User-Id": "10001"})
+        with patch.object(routes_relation.relation, "get", return_value=0.18), \
+             patch.object(routes_relation.relation, "recent_events", return_value=[]):
+            resp = asyncio.run(routes_relation.handle_relation(req))
+        data = json.loads(resp.text)
+        self.assertFalse(data["can_view_all"])
+        self.assertEqual(data["target_id"], "10001")
+
+    def test_owner_can_view_other(self):
+        req = _Req({"target_id": "10001"}, {"X-User-Id": tenant.owner_id()})
+        with patch.object(routes_relation.relation, "get", return_value=0.2), \
+             patch.object(routes_relation.relation, "recent_events", return_value=[]):
+            resp = asyncio.run(routes_relation.handle_relation(req))
+        data = json.loads(resp.text)
+        self.assertTrue(data["can_view_all"])
+        self.assertEqual(data["target_id"], "10001")
 
     def test_relation_failure_is_json(self):
         with patch.object(routes_relation.relation, "get", side_effect=RuntimeError("db down")):

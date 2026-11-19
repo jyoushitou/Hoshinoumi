@@ -161,7 +161,7 @@ html[data-theme="dark"]{background:#111}
     <div class="item" onclick="showScheduled()">◷ 定时任务</div>
     <div class="item" onclick="showLogs()">▥ 运行日志</div>
    </div>
-   <div class="foot"><div class="ava">奈</div><div>友利奈绪<br><span style="color:#a7a89e">v35.2.25.0 · 测试版</span></div></div>
+   <div class="foot"><div class="ava">奈</div><div>友利奈绪<br><span style="color:#a7a89e">v35.2.25.1 · 测试版</span></div></div>
   </aside>
   <main class="main">
    <div class="mhead"><div class="mtitle" id="htitle">nao</div><div class="mode" id="hmode">◈ 工作区 · 本机后端</div><div class="mright"><span class="dot off" id="hdot"></span><span id="hstatus">未配置</span><span>⟳</span><span>⋯</span></div></div>
@@ -172,7 +172,7 @@ html[data-theme="dark"]{background:#111}
     <div class="statusline"><span id="backendLine">⌁ 后端未配置</span><span id="historyLine">▤ 历史 —</span><span>nao</span></div>
    </div>
    <div class="page" id="pageCmd">
-    <div class="cmdpage"><div class="crumb">自动化任务 / 命令</div><div class="ch1">命令 <span class="ok">● 命令目录</span></div><div class="cdesc">全量 51 个命令 · 按功能分组 · manifest v35.2.25.0 · 后端地址在设置中配置</div>
+    <div class="cmdpage"><div class="crumb">自动化任务 / 命令</div><div class="ch1">命令 <span class="ok">● 命令目录</span></div><div class="cdesc">全量 51 个命令 · 按功能分组 · manifest v35.2.25.1 · 后端地址在设置中配置</div>
      <div class="cmdsearch">⌕ <input id="cmdSearch" placeholder="搜索命令 / 参数" oninput="renderCmdGroups()"><span id="cmdCount">全部 51 个 · 9 个分类</span></div>
      <div class="cmdwrap"><div class="groups" id="cmdGroups"></div>
       <div class="card" id="cmdDetail"><h3>命令详情</h3><div class="dsel" id="dsel">!status</div><div class="ddesc" id="ddesc">查看运行状态、配置、API、记忆、定时和连接信息。</div>
@@ -579,6 +579,10 @@ async function loadRelation(tid){
   try{
     const j=await jsonApi('/api/hoshinoumi/relation'+(tid?('?target_id='+encodeURIComponent(tid)):''));
     const events=Array.isArray(j.events)?j.events:[];
+    if(j.can_view_all===false){
+      const sel=document.getElementById('relTarget');
+      if(sel){sel.innerHTML='<option>'+esc(j.target_id||'')+' · 仅自己</option>';sel.disabled=true;}
+    }
     const aff=Number(j.affinity||0);
     const pct=Math.max(0,Math.min(100,Math.round((aff+1)*50)));
     const color=aff>=0.7?'#2fa56b':aff>=0.45?'#5b8def':aff>=0?'#c9a227':'#c25b5b';
