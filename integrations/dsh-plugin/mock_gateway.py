@@ -23,8 +23,8 @@ from datetime import datetime, timedelta
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
-VERSION = "35.2.16.0"
-SCHEMA = 33
+VERSION = "35.2.20.0"
+SCHEMA = 34
 OWNER_QQ = "822891053"
 
 MEMORY = {

@@ -22,7 +22,7 @@ Web profile：
 dsh plugin --profile web add link:D:\Desktop\Desktop\develop\NapCat+Pyhon\integrations\dsh-plugin
 ```
 
-桌面版通过 DSH 插件管理安装本地目录（本机已安装到 desktop/web 两个 profile，版本 35.2.19）。
+桌面版通过 DSH 插件管理安装本地目录（本机已安装到 desktop/web 两个 profile，版本 35.2.20）。
 
 ## 使用
 

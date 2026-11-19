@@ -47,7 +47,7 @@ except ImportError:
 from bot.infra import conn, schema  # noqa: E402
 from bot.infra import repo_delivery  # noqa: E402
 from bot.delivery import hub  # noqa: E402
-from scripts import migrate_v33  # noqa: E402
+from scripts import migrate_v33, migrate_v34  # noqa: E402
 
 
 class FakeRequest:
@@ -75,6 +75,7 @@ class TestDelivery(unittest.TestCase):
         self.c = conn.get_cursor()
         schema.ensure_tables(self.c)
         migrate_v33.apply(self.c)
+        migrate_v34.apply(self.c)
         self.c.close()
 
     def tearDown(self):

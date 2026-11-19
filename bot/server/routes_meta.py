@@ -159,6 +159,8 @@ async def handle_get_token(request):
             {"path": "/api/usage", "method": "GET", "auth": True},
             {"path": "/api/memory", "method": "GET", "auth": True},
             {"path": "/api/persona", "method": "GET", "auth": True},
+            {"path": "/api/savings", "method": "GET", "auth": True},
+            {"path": "/api/savings/import", "method": "POST", "auth": True},
             {"path": "/api/logs", "method": "GET", "auth": True},
             {"path": "/api/chat", "method": "POST", "auth": True},
             {"path": "/api/command", "method": "POST", "auth": True},
@@ -191,7 +193,7 @@ async def handle_readyz(request):
         row = c.fetchone()
         schema = str(row["v"]) if row else ""
         checks["schema"] = schema or "missing"
-        if schema != "33":
+        if schema != "34":
             ready = False
     except Exception:
         checks["db"] = "error"

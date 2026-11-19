@@ -567,6 +567,37 @@ PURE = {
                        ON UPDATE CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """,
+    "finance_entries": """
+        CREATE TABLE IF NOT EXISTS finance_entries (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            user_id VARCHAR(64) NOT NULL DEFAULT '__owner__',
+            account VARCHAR(64) NOT NULL,
+            kind VARCHAR(16) NOT NULL DEFAULT 'expense',
+            amount_cents BIGINT NOT NULL,
+            category VARCHAR(64) NULL,
+            note VARCHAR(200) NULL,
+            occurred_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            raw_hash VARCHAR(64) NOT NULL,
+            source VARCHAR(16) NOT NULL DEFAULT 'manual',
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY uk_finance_hash (user_id, raw_hash),
+            KEY idx_finance_time (user_id, occurred_at)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
+    "finance_imports": """
+        CREATE TABLE IF NOT EXISTS finance_imports (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            user_id VARCHAR(64) NOT NULL DEFAULT '__owner__',
+            batch_id VARCHAR(64) NOT NULL,
+            source VARCHAR(16) NOT NULL DEFAULT 'json',
+            rows_count INT NOT NULL DEFAULT 0,
+            ok_count INT NOT NULL DEFAULT 0,
+            status VARCHAR(16) NOT NULL DEFAULT 'done',
+            meta TEXT NULL,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY uk_finance_batch (user_id, batch_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
 }
 
 TABLES = dict(CURRENT)

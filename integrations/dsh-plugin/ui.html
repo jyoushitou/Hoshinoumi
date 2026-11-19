@@ -332,17 +332,18 @@ const MODULES={
 async function loadHomeStats() {
   if (!backendReady) return;
   try {
-    const [st, mem, cron, logs, persona] = await Promise.all([
+    const [st, mem, cron, logs, persona, savings] = await Promise.all([
       jsonApi('/api/hoshinoumi/status').catch(() => null),
       jsonApi('/api/hoshinoumi/memory').catch(() => null),
       jsonApi('/api/hoshinoumi/cron').catch(() => null),
       jsonApi('/api/hoshinoumi/logs?limit=100').catch(() => null),
       jsonApi('/api/hoshinoumi/persona').catch(() => null),
+      jsonApi('/api/hoshinoumi/savings').catch(() => null),
     ]);
     const counts = {
       '记忆': mem ? (mem.targets || []).reduce((n, t) => n + Number(t.count || 0), 0) : '—',
       '信息': st ? (st.status || '运行中') : '—',
-      '存钱': '未接入',
+      '存钱': savings ? ('¥' + ((Number(savings.total_cents)||0)/100).toFixed(2)) : '—',
       '人设': persona ? String((persona.data || []).length) : '—',
       '设置': '已配置',
       '命令': '51',
@@ -382,6 +383,32 @@ async function jsonApi(path) {
   const j = await r.json();
   if (!r.ok) throw new Error(j.message || j.error || ('HTTP ' + r.status));
   return j;
+}
+async function importSavings() {
+  const f = document.getElementById('savingsFile')?.files?.[0];
+  const msg = document.getElementById('savingsMsg');
+  if (!f) { if (msg) msg.textContent = '先选择 CSV/JSON 文件'; return; }
+  try {
+    const text = await f.text();
+    let payload;
+    if (text.trim().startsWith('{') || text.trim().startsWith('[')) {
+      const parsed = JSON.parse(text);
+      payload = Array.isArray(parsed) ? { rows: parsed } : parsed;
+    } else {
+      payload = { csv: text };
+    }
+    payload.dry_run = true;
+    const r = await fetch('/api/hoshinoumi/savings/import', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) });
+    const j = await r.json();
+    if (!r.ok || !j.ok) throw new Error(j.message || j.error || ('HTTP ' + r.status));
+    if (!confirm(`预览：${j.rows} 行，新增 ${j.new}，重复 ${j.duplicates}。确认写入？`)) return;
+    payload.dry_run = false;
+    const r2 = await fetch('/api/hoshinoumi/savings/import', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) });
+    const j2 = await r2.json();
+    if (!r2.ok || !j2.ok) throw new Error(j2.message || j2.error || ('HTTP ' + r2.status));
+    if (msg) msg.textContent = `已导入 ${j2.inserted} 行，重复 ${j2.duplicates} 行`;
+    await showModule('savings');
+  } catch (e) { if (msg) msg.textContent = '导入失败：' + e.message; }
 }
 async function importPersona() {
   const f = document.getElementById('personaFile')?.files?.[0];
@@ -453,6 +480,19 @@ async function showModule(key) {
           '摘要 · ' + (x.prompt_excerpt || '—')
         ]]) : [['没有读到 personas/*', ['检查 personas 目录和后端权限']]]);
       document.getElementById('moduleBody').insertAdjacentHTML('beforeend', '<div class="mcard" style="margin-top:10px"><h3>导入 / 导出</h3><div class="mline">导入 JSON 人设卡 <input id="personaFile" type="file" accept=".json,application/json" style="margin-left:auto;max-width:220px"></div><div class="mline">覆盖同名 <input id="personaOverwrite" type="checkbox" style="margin-left:auto"></div><div style="display:flex;gap:7px;margin-top:8px"><button class="run" style="flex:1;height:30px" onclick="importPersona()">导入 JSON</button><button class="run" style="flex:1;height:30px;background:#fff;color:#3457d5;border:1px solid #c9d7f7" onclick="exportPersona()">导出当前</button><button class="run" style="flex:1;height:30px;background:#fff;color:#3457d5;border:1px solid #c9d7f7" onclick="activatePersona()">激活当前</button></div><div id="personaMsg" class="mline" style="color:#8a8b82"></div></div>');
+      return;
+    }
+    if (key === 'savings') {
+      const j = await jsonApi('/api/hoshinoumi/savings');
+      const accounts = Array.isArray(j.accounts) ? j.accounts : [];
+      const entries = Array.isArray(j.entries) ? j.entries : [];
+      const money = (c) => '¥' + ((Number(c) || 0) / 100).toFixed(2);
+      renderModule('存钱', '来自后端的真实账户/流水；金额按整数分存储。',
+        [[money(j.total_cents), '总余额'], [String(accounts.length), '账户'], [String(entries.length), '最近流水'], ['实时', '来源']],
+        (accounts.length ? accounts.map(a => [String(a.account), [money(a.balance_cents), '余额']]) : [['暂无流水', ['还没有导入任何账户/流水']]]).concat([
+          ['导入流水', ['CSV: account,kind,amount,date,note,category', 'JSON: rows 数组', '先预览，确认后写入']]
+        ]));
+      document.getElementById('moduleBody').insertAdjacentHTML('beforeend', '<div class="mcard" style="margin-top:10px"><h3>手动导入</h3><div class="mline">CSV / JSON <input id="savingsFile" type="file" accept=".csv,.json,text/csv,application/json" style="margin-left:auto;max-width:220px"></div><div class="mline">重复行自动跳过；先 dry-run</div><div style="display:flex;gap:7px;margin-top:8px"><button class="run" style="height:30px" onclick="importSavings()">预览并导入</button></div><div id="savingsMsg" class="mline" style="color:#8a8b82"></div></div>');
       return;
     }
     if (key === 'info') {
