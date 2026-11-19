@@ -31,11 +31,11 @@ class TestOnceCleanup(unittest.TestCase):
         cur = _Cursor()
         with mock.patch("bot.infra.conn.get_cursor", return_value=cur), \
              mock.patch("bot.schedule.cron.get", return_value={
-                 "id": 11, "user_id": "822891053", "schedule_type": "once"}), \
+                 "id": 11, "user_id": "10001", "schedule_type": "once"}), \
              mock.patch("bot.schedule.cron.remove", return_value=True) as rm, \
              mock.patch("bot.schedule.cron.cancel") as cancel:
             ex._mark(11, ok=True)
-        rm.assert_called_once_with(11, user_id="822891053")
+        rm.assert_called_once_with(11, user_id="10001")
         cancel.assert_called_once_with(11)
         self.assertFalse(any("UPDATE cron_tasks" in s for s, _ in cur.sql))
 
@@ -45,7 +45,7 @@ class TestOnceCleanup(unittest.TestCase):
         cur = _Cursor()
         with mock.patch("bot.infra.conn.get_cursor", return_value=cur), \
              mock.patch("bot.schedule.cron.get", return_value={
-                 "id": 12, "user_id": "822891053", "schedule_type": "once"}), \
+                 "id": 12, "user_id": "10001", "schedule_type": "once"}), \
              mock.patch("bot.schedule.cron.remove") as rm, \
              mock.patch("bot.schedule.cron.cancel") as cancel:
             ex._mark(12, ok=False)

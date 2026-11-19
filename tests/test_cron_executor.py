@@ -51,7 +51,7 @@ class TestCronExecutor(unittest.TestCase):
         self.prompts = []
         self.marked = []
 
-        self.task = {"id": 7, "target_id": "822891053", "content": "叫我起床",
+        self.task = {"id": 7, "target_id": "10001", "content": "叫我起床",
                      "enabled": 1, "schedule_type": "daily", "at_time": "07:30"}
         self._orig = (cron.get, X._mark)
 

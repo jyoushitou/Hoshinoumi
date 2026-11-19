@@ -48,7 +48,7 @@ class RelationTests(unittest.TestCase):
         self.assertEqual(len(data["events"]), 1)
 
     def test_non_owner_forced_to_self(self):
-        req = _Req({"target_id": "822891053"}, {"X-User-Id": "10001"})
+        req = _Req({"target_id": "10001"}, {"X-User-Id": "10001"})
         with patch.object(routes_relation.relation, "get", return_value=0.18), \
              patch.object(routes_relation.relation, "recent_events", return_value=[]):
             resp = asyncio.run(routes_relation.handle_relation(req))

@@ -355,9 +355,9 @@ class TestEvent(unittest.TestCase):
         self.assertEqual(asyncio.run(ev.fn()), None)
 
     def test_str_readable(self):
-        ev = self._make(kind="chat", key="822891053")
+        ev = self._make(kind="chat", key="10001")
         text = str(ev)
-        self.assertIn("chat:822891053", text)
+        self.assertIn("chat:10001", text)
         self.assertIn("p=2", text)
 
 class TestMetrics(unittest.TestCase):

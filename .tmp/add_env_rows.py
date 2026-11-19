@@ -4,7 +4,7 @@ path = "docs/发布检查清单.md"
 lines = open(path, encoding="utf-8").read().splitlines()
 BT = chr(96)
 rows = [
-    ("NAO_MASTER_QQ", "822891053", "主人 QQ（决定谁能用命令）", "core/constants.py"),
+    ("NAO_MASTER_QQ", "10001", "主人 QQ（决定谁能用命令）", "core/constants.py"),
     ("NAO_LISTEN_HOST", "0.0.0.0", "WebSocket 监听地址", "core/constants.py"),
     ("NAO_WS_PORT", "3001", "NapCat 连进来的端口", "core/constants.py"),
     ("NAO_API_PORT", "60908", "HTTP API 端口", "core/constants.py"),

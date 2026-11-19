@@ -59,16 +59,16 @@ class MockGatewayTests(unittest.TestCase):
         self.assertEqual(ctx.exception.code, 401)
         status, data = self.get("/api/status", token=True)
         self.assertEqual(status, 200)
-        self.assertEqual(data["master_qq"], "822891053")
+        self.assertEqual(data["master_qq"], "10001")
 
     def test_memory_and_history(self):
         _, mem = self.get("/api/memory", token=True)
         self.assertEqual(mem["total_targets"], 2)
-        _, hist = self.get("/internal/history?target_id=822891053&limit=10")
+        _, hist = self.get("/internal/history?target_id=10001&limit=10")
         self.assertGreaterEqual(len(hist["data"]), 1)
 
     def test_chat_and_command(self):
-        status, data = self.post("/api/chat", {"message": "存钱", "target_id": "822891053"})
+        status, data = self.post("/api/chat", {"message": "存钱", "target_id": "10001"})
         self.assertEqual(status, 200)
         self.assertIn("3,300", data["reply"])
         status, data = self.post("/api/command", {"command": "status"})

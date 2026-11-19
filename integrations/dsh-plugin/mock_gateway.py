@@ -11,7 +11,7 @@ Run:
 Then configure the plugin:
     backend address: http://127.0.0.1:27005
     token:           mock-token
-    owner QQ:        822891053
+    owner QQ:        10001
 """
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ from urllib.parse import parse_qs, urlparse
 
 VERSION = "35.2.25.0"
 SCHEMA = 35
-OWNER_QQ = "822891053"
+OWNER_QQ = "10001"
 
 MEMORY = {
     OWNER_QQ: [
@@ -34,7 +34,7 @@ MEMORY = {
         ("这个月结余三千三，旅行目标到六成了。", "嗯，离旅行又近了一点。"),
         ("今天外面有点冷。", "先喝点热的吧，别急着出门。"),
     ],
-    "10001": [
+    "10002": [
         ("最近在看的书是《十日终焉》。", "窗边光线好的时候看，会舒服一点。"),
     ],
 }
@@ -49,10 +49,10 @@ HISTORY = [
 ]
 
 LOGS = [
-    "2026-11-19 09:13:00 INFO  chat target=822891053 len=18",
+    "2026-11-19 09:13:00 INFO  chat target=10001 len=18",
     "2026-11-19 09:12:00 INFO  command status",
     "2026-11-19 09:04:00 WARN  search_images upstream timeout, no retry",
-    "2026-11-19 08:58:00 INFO  memory append target=822891053",
+    "2026-11-19 08:58:00 INFO  memory append target=10001",
     "2026-11-19 08:40:00 INFO  scheduler tick tasks=3",
 ]
 
@@ -339,7 +339,7 @@ class Handler(BaseHTTPRequestHandler):
             elif cmd == "help":
                 result = "mock 命令目录：status / help / memory / logs"
             elif cmd == "memory":
-                result = "822891053：3 条记忆"
+                result = "10001：3 条记忆"
             else:
                 self._json(400, {"error": "unknown_command", "message": f"未知命令: {cmd}"})
                 return

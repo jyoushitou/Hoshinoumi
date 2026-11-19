@@ -29,13 +29,13 @@ class TestMigrateV23(unittest.TestCase):
 
         self.c.execute(
             "INSERT INTO memories(target_id, kind, summary) VALUES(%s,%s,%s)",
-            ("822891053", "event", "旧数据"))
+            ("10001", "event", "旧数据"))
         self.c.connection.commit()
 
         made = migrate_v23.apply(self.c)
         self.assertIn("memories", made)
 
-        self.c.execute("SELECT user_id FROM memories WHERE target_id=%s", ("822891053",))
+        self.c.execute("SELECT user_id FROM memories WHERE target_id=%s", ("10001",))
         self.assertEqual(self.c.fetchone()["user_id"], "__owner__")
 
         self.c.execute("PRAGMA table_info(memories)")

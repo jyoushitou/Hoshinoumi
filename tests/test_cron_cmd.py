@@ -76,7 +76,7 @@ class TestCronCommand(unittest.TestCase):
     def _run(self, text):
         from bot.cmd.registry import CommandContext
 
-        ctx = CommandContext(parts=text.split(), uid="822891053",
+        ctx = CommandContext(parts=text.split(), uid="10001",
                              ws=None, is_group=False, gid=0)
         return asyncio.run(self.cmd.handler(ctx))
 

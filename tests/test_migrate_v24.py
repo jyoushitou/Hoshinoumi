@@ -17,11 +17,11 @@ class TestOwnerMigration(unittest.TestCase):
         migrate_v23.apply(self.c)
         self.c.execute("INSERT INTO users(id,nickname,role) VALUES('__owner__','owner','owner')")
         self.c.execute("INSERT INTO identities(user_id,channel,external_id) "
-                       "VALUES('__owner__','qq','822891053')")
+                       "VALUES('__owner__','qq','10001')")
         self.c.execute("INSERT INTO memories(user_id,target_id,summary) "
-                       "VALUES('__owner__','822891053','旧记忆')")
+                       "VALUES('__owner__','10001','旧记忆')")
         self.c.execute("INSERT INTO relation_events(user_id,target_id,delta,reason) "
-                       "VALUES('__owner__','822891053',-0.1,'x')")
+                       "VALUES('__owner__','10001',-0.1,'x')")
         self.c.execute("INSERT INTO gateway_log(owner,path,status) "
                        "VALUES('__owner__','/api/state',200)")
         self.c.connection.commit()
@@ -39,20 +39,20 @@ class TestOwnerMigration(unittest.TestCase):
         import bot.config
         from scripts import migrate_v24
         orig = bot.config.MASTER_QQ
-        bot.config.MASTER_QQ = 822891053
+        bot.config.MASTER_QQ = 10001
         try:
             out = migrate_v24.apply(self.c)
         finally:
             bot.config.MASTER_QQ = orig
-        self.assertEqual(out["new"], "822891053")
-        self.c.execute("SELECT id FROM users WHERE id='822891053'")
+        self.assertEqual(out["new"], "10001")
+        self.c.execute("SELECT id FROM users WHERE id='10001'")
         self.assertIsNotNone(self.c.fetchone())
-        self.c.execute("SELECT user_id FROM memories WHERE target_id='822891053'")
-        self.assertEqual(self.c.fetchone()["user_id"], "822891053")
-        self.c.execute("SELECT user_id FROM identities WHERE external_id='822891053'")
-        self.assertEqual(self.c.fetchone()["user_id"], "822891053")
+        self.c.execute("SELECT user_id FROM memories WHERE target_id='10001'")
+        self.assertEqual(self.c.fetchone()["user_id"], "10001")
+        self.c.execute("SELECT user_id FROM identities WHERE external_id='10001'")
+        self.assertEqual(self.c.fetchone()["user_id"], "10001")
         self.c.execute("SELECT owner FROM gateway_log LIMIT 1")
-        self.assertEqual(self.c.fetchone()["owner"], "822891053")
+        self.assertEqual(self.c.fetchone()["owner"], "10001")
 
 
 if __name__ == "__main__":
