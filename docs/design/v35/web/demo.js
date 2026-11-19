@@ -118,6 +118,31 @@
     .home-card h3{font-size:11px;margin:0 0 3px;color:#1e3a5f}
     .home-card p{font-size:9.5px;line-height:1.5;color:#6b7c95;margin:0}
     .home-card .st{font-size:9px;color:#1f9d6b;margin-top:7px}
+    .savings-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:11px}
+    .savings-stat{border:1px solid #e3ebf7;border-radius:11px;background:#fff;padding:11px 12px}
+    .savings-stat .k{font-size:9px;color:#8a9bb0;margin-bottom:3px}.savings-stat .v{font-size:17px;font-weight:700;color:#17263b;letter-spacing:-.03em}
+    .savings-stat .v.blue{color:#2563eb}
+    .savings-panel{border:1px solid #e3ebf7;border-radius:12px;background:#fff;padding:12px 13px;margin-bottom:10px}
+    .savings-panel h3{font-size:11px;margin:0 0 9px;color:#1e3a5f}
+    .savings-form{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+    .savings-form .full{grid-column:1/-1}
+    .savings-form label{display:block;font-size:9px;color:#8a9bb0;margin-bottom:3px}
+    .savings-form input,.savings-form select{border:1px solid #e3ebf7;border-radius:7px;background:#f8fbff;color:#243b55;font:10.5px inherit;outline:0;padding:6px 7px;width:100%}
+    .savings-form input:focus,.savings-form select:focus{border-color:#93b7fa;box-shadow:0 0 0 3px rgba(37,99,235,.08)}
+    .savings-form .actions{grid-column:1/-1;display:flex;align-items:center;gap:8px;margin-top:2px}
+    .savings-form .actions button{border:0;border-radius:7px;background:#2563eb;color:#fff;font-size:10px;padding:6px 11px;cursor:pointer}
+    .savings-form .actions button:hover{background:#1d4ed8}
+    .savings-form .ai{font-size:9.5px;color:#6b7c95;display:flex;align-items:center;gap:4px}
+    .import-row{display:flex;gap:8px;align-items:center}
+    .import-row input[type=file]{flex:1;border:1px dashed #dbe8ff;border-radius:8px;background:#f8fbff;color:#6b7c95;font-size:9.5px;padding:7px}
+    .import-row button{border:1px solid #dbe8ff;border-radius:7px;background:#fff;color:#2563eb;font-size:10px;padding:6px 9px;cursor:pointer}
+    .import-row button:hover{background:#eef4ff}
+    .import-status{font-size:9.5px;color:#8a9bb0;margin-top:6px;min-height:14px}
+    .entry-list{display:flex;flex-direction:column;gap:5px;max-height:220px;overflow:auto}
+    .entry{display:flex;align-items:center;gap:8px;border-bottom:1px solid #eef3fb;padding:5px 2px;font-size:10px;color:#4b5f78}
+    .entry:last-child{border-bottom:0}.entry .amt{margin-left:auto;font-weight:600}.entry .amt.neg{color:#c0264a}.entry .amt.pos{color:#1f9d6b}
+    .entry .tag{font-size:8px;color:#8a9bb0;border:1px solid #e3ebf7;border-radius:4px;padding:1px 4px}
+
     .cmd-runbar{display:flex;align-items:center;gap:7px;margin:0 0 10px;border:1px solid #dbe8ff;border-radius:9px;background:#f8fbff;padding:6px 8px}
     .cmd-runbar .prompt{color:#2563eb;font:11px "Cascadia Code",monospace}
     .cmd-runbar input{flex:1;border:0;outline:0;background:transparent;color:#243b55;font:11px "Cascadia Code",monospace}
@@ -285,6 +310,65 @@
   }));
 
   function showPage(name) {
+    if (name === 'savings') {
+      const S = window.__savings || (window.__savings = {
+        income: 8000, expense: 3200, saved: 3300, target: 5500,
+        accounts: [['银行卡', 3300.00], ['支付宝', 0], ['微信', 0], ['现金', 0]],
+        entries: [
+          ['11-19', 'expense', '银行卡', '午饭', -35.5],
+          ['11-18', 'saving', '银行卡', '旅行目标', 500],
+          ['11-17', 'income', '银行卡', '兼职', 800]
+        ]
+      });
+      function money(n){ return '¥' + Number(n || 0).toLocaleString('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
+      function renderSavings() {
+        const rows = S.entries.map(e => '<div class="entry"><span class="tag">' + esc(e[1]) + '</span><span>' + esc(e[2]) + ' · ' + esc(e[3]) + '</span><span class="amt ' + (e[4] < 0 ? 'neg' : 'pos') + '">' + (e[4] > 0 ? '+' : '') + money(e[4]) + '</span><span style="color:#9aabbe">' + esc(e[0]) + '</span></div>').join('');
+        const total = S.accounts.reduce((n, a) => n + Number(a[1] || 0), 0);
+        pageView.innerHTML = '<div class="page-head"><div><h2>存钱</h2><p>v35.5 Web 演示 · MOCK 数据 · 仅主人私聊</p></div><button class="back" id="backChat">← 返回聊天</button></div>' +
+          '<div class="savings-grid"><div class="savings-stat"><div class="k">总余额</div><div class="v blue">' + money(total) + '</div></div><div class="savings-stat"><div class="k">本月收入</div><div class="v">' + money(S.income) + '</div></div><div class="savings-stat"><div class="k">本月支出</div><div class="v">' + money(S.expense) + '</div></div><div class="savings-stat"><div class="k">旅行目标</div><div class="v">' + Math.round(S.target ? (S.saved / S.target * 100) : 0) + '%</div></div></div>' +
+          '<div class="savings-panel"><h3>记一笔</h3><div class="savings-form"><div><label>金额</label><input id="svAmount" type="number" step="0.01" placeholder="35.50"></div><div><label>账户</label><select id="svAccount">' + S.accounts.map(a => '<option>' + esc(a[0]) + '</option>').join('') + '</select></div><div><label>类型</label><select id="svKind"><option value="expense">支出</option><option value="income">收入</option><option value="saving">存钱</option></select></div><div class="full"><label>备注</label><input id="svNote" placeholder="午饭 / 旅行目标 / 兼职"></div><div class="actions"><button id="svSave">保存</button><label class="ai"><input type="checkbox" id="svAI" checked> AI 可见</label><span class="import-status" id="svMsg"></span></div></div></div>' +
+          '<div class="savings-panel"><h3>导入 CSV</h3><div class="import-row"><input id="csvFile" type="file" accept=".csv,text/csv"><button id="csvPreview">预览并导入</button></div><div class="import-status" id="csvMsg">CSV 表头：account,kind,amount,date,note</div></div>' +
+          '<div class="savings-panel"><h3>最近流水</h3><div class="entry-list">' + rows + '</div></div>';
+        document.getElementById('backChat').addEventListener('click', () => showChat());
+        document.getElementById('svSave').addEventListener('click', () => {
+          const amount = Number(document.getElementById('svAmount').value);
+          if (!amount || amount <= 0) { document.getElementById('svMsg').textContent = '先填正确金额'; return; }
+          const kind = document.getElementById('svKind').value;
+          const account = document.getElementById('svAccount').value;
+          const note = document.getElementById('svNote').value || (kind === 'expense' ? '支出' : kind === 'income' ? '收入' : '存钱');
+          const delta = kind === 'expense' ? -amount : amount;
+          S.entries.unshift([new Date().toISOString().slice(5, 10), kind, account, note, delta]);
+          if (kind === 'expense') S.expense += amount; else if (kind === 'income') S.income += amount;
+          const acc = S.accounts.find(a => a[0] === account); if (acc) acc[1] = Number(acc[1] || 0) + delta;
+          renderSavings(); toast('已记一笔 · MOCK');
+        });
+        document.getElementById('csvPreview').addEventListener('click', () => {
+          const f = document.getElementById('csvFile').files[0];
+          const msg = document.getElementById('csvMsg');
+          if (!f) { msg.textContent = '先选择 CSV 文件'; return; }
+          f.text().then(text => {
+            const lines = text.split(/\r?\n/).filter(Boolean);
+            const rows = lines.slice(1).map(x => x.split(','));
+            if (!rows.length) { msg.textContent = 'CSV 没有数据行'; return; }
+            msg.textContent = '已读取 ' + rows.length + ' 行，确认导入…';
+            rows.forEach(r => {
+              const amount = Math.abs(Number((r[2] || '0').replace(/[^\d.-]/g, '')));
+              if (!amount) return;
+              const kind = (r[1] || 'expense').trim();
+              const delta = kind === 'expense' ? -amount : amount;
+              S.entries.unshift([(r[3] || '').slice(5, 10) || new Date().toISOString().slice(5, 10), kind, (r[0] || '银行卡').trim(), (r[4] || 'CSV 导入').trim(), delta]);
+              if (kind === 'expense') S.expense += amount; else if (kind === 'income') S.income += amount;
+            });
+            renderSavings(); toast('CSV 已导入 ' + rows.length + ' 行（MOCK）');
+          });
+        });
+      }
+      renderSavings();
+      [top, msgs, composer, searchBar].forEach(x => x.classList.add('chat-hide'));
+      pageView.classList.add('on');
+      document.querySelectorAll('.rnav').forEach(x => x.classList.toggle('on', x.dataset.page === name));
+      return;
+    }
     if (name === 'home') {
       const modules = [
         ['chat','◉','聊天','和 nao 对话，自动加载历史。'],
