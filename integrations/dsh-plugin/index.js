@@ -86,7 +86,7 @@ async function backendFetch(cfg, path, init = {}) {
 
 async function handleApi(req, res, path) {
   if (path === '/api/hoshinoumi/health' && req.method === 'GET') {
-    return sendJson(res, 200, { ok: true, version: '35.2.23.4', config: CONFIG_FILE })
+    return sendJson(res, 200, { ok: true, version: '35.2.24.0', config: CONFIG_FILE })
   }
 
   if (path === '/api/hoshinoumi/ui' && req.method === 'GET') {
@@ -153,6 +153,13 @@ async function handleApi(req, res, path) {
 
   if (path === '/api/hoshinoumi/balance' && req.method === 'GET') return proxyGet('/api/balance')
   if (path === '/api/hoshinoumi/savings' && req.method === 'GET') return proxyGet('/api/savings')
+  if (path === '/api/hoshinoumi/savings/events' && req.method === 'GET') return proxyGet('/api/savings/events')
+  if (path === '/api/hoshinoumi/savings/entries' && req.method === 'POST') {
+    const body = await readBody(req)
+    const cfg = readConfig()
+    const out = await backendFetch(cfg, '/api/savings/entries', { method: 'POST', body: JSON.stringify(body) })
+    return sendJson(res, out.status, out.data)
+  }
   if (path === '/api/hoshinoumi/savings/import' && req.method === 'POST') {
     const body = await readBody(req)
     const cfg = readConfig()

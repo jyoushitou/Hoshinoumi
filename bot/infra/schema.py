@@ -584,6 +584,13 @@ PURE = {
             KEY idx_finance_time (user_id, occurred_at)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """,
+    "finance_entry_meta": """
+        CREATE TABLE IF NOT EXISTS finance_entry_meta (
+            entry_id BIGINT PRIMARY KEY,
+            event_id BIGINT NULL,
+            ai_visible TINYINT(1) NOT NULL DEFAULT 1
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
     "finance_imports": """
         CREATE TABLE IF NOT EXISTS finance_imports (
             id BIGINT AUTO_INCREMENT PRIMARY KEY,

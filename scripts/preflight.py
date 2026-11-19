@@ -358,9 +358,9 @@ def step_schema_version():
     from bot.infra.repo_meta import get_value
 
     v = str(get_value("schema_version") or "")
-    if v != "34":
-        raise RuntimeError(f"schema_version={v or '空'}，应为 34（先跑 scripts/migrate.py --apply）")
-    return "schema_version=34"
+    if v != "35":
+        raise RuntimeError(f"schema_version={v or '空'}，应为 35（先跑 scripts/migrate.py --apply）")
+    return "schema_version=35"
 
 
 _FEATURE_LABELS = {

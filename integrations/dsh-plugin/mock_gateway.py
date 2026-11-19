@@ -25,7 +25,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
 VERSION = "35.2.23.2"
-SCHEMA = 34
+SCHEMA = 35
 OWNER_QQ = "822891053"
 
 MEMORY = {
@@ -211,6 +211,9 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/savings":
             self._json(200, {"ok": True, **SAVINGS, "mock": True})
             return
+        if path == "/api/savings/events":
+            self._json(200, {"ok": True, "events": [{"id": 1, "summary": "旅行计划", "created_at": "2026-11-01"}], "mock": True})
+            return
         if path == "/api/balance":
             self._json(200, {"ok": True, "is_available": True, "balance_infos": [{"currency": "CNY", "total_balance": "42.00", "granted_balance": "2.00", "topped_up_balance": "40.00"}], "fetched_at": _now(), "mock": True})
             return
@@ -268,6 +271,15 @@ class Handler(BaseHTTPRequestHandler):
             for x in PERSONAS:
                 x["active"] = x["name"] == name
             self._json(200 if any(x["name"] == name for x in PERSONAS) else 404, {"ok": True, "active": name})
+            return
+        if path == "/api/savings/entries":
+            amount = int(round(float(body.get("amount") or 0) * 100))
+            kind = str(body.get("kind") or "expense")
+            signed = amount if kind == "income" else -abs(amount)
+            SAVINGS["entries"].insert(0, {"id": len(SAVINGS["entries"]) + 1, "account": str(body.get("account") or "银行卡"), "kind": kind, "amount_cents": signed, "category": "", "note": str(body.get("note") or ""), "occurred_at": str(body.get("date") or _now()), "source": "manual", "event_id": body.get("event_id"), "ai_visible": bool(body.get("ai_visible", True))})
+            SAVINGS["total_cents"] = sum(int(x.get("amount_cents") or 0) for x in SAVINGS["entries"])
+            SAVINGS["accounts"] = [{"account": "银行卡", "balance_cents": SAVINGS["total_cents"]}]
+            self._json(200, {"ok": True, "id": len(SAVINGS["entries"]), "event_id": body.get("event_id"), "ai_visible": bool(body.get("ai_visible", True)), "mock": True})
             return
         if path == "/api/savings/import":
             rows = body.get("rows") or []

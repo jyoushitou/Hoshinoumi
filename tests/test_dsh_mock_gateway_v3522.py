@@ -51,7 +51,7 @@ class MockGatewayTests(unittest.TestCase):
         self.assertEqual(self.get("/healthz")[0], 200)
         status, data = self.get("/readyz")
         self.assertEqual(status, 200)
-        self.assertEqual(data["schema"], 34)
+        self.assertEqual(data["schema"], 35)
 
     def test_status_requires_token(self):
         with self.assertRaises(urllib.error.HTTPError) as ctx:

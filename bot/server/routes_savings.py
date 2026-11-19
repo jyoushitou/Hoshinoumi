@@ -120,8 +120,10 @@ async def handle_savings(request):
         for r in rows:
             item = accounts.setdefault(r["account"], {"account": r["account"], "balance_cents": 0})
             item["balance_cents"] += int(r["total"] or 0)
-        c.execute("SELECT id,account,kind,amount_cents,category,note,occurred_at,source "
-                  "FROM finance_entries WHERE user_id=%s ORDER BY id DESC LIMIT 50", (uid,))
+        c.execute("SELECT e.id,e.account,e.kind,e.amount_cents,e.category,e.note,e.occurred_at,e.source,"
+                  "m.event_id,m.ai_visible FROM finance_entries e "
+                  "LEFT JOIN finance_entry_meta m ON m.entry_id=e.id "
+                  "WHERE e.user_id=%s ORDER BY e.id DESC LIMIT 50", (uid,))
         entries = [dict(r) for r in (c.fetchall() or [])]
         total = sum(x["balance_cents"] for x in accounts.values())
         return json_response({
@@ -189,6 +191,78 @@ async def handle_savings_import(request):
         except Exception:
             pass
         return json_response({"ok": False, "error": "import_failed", "message": str(e)}, 500)
+    finally:
+        try:
+            c.close()
+        except Exception:
+            pass
+
+
+async def handle_savings_events(request):
+    uid = _uid(request)
+    from ..infra.conn import get_cursor
+    c = get_cursor()
+    try:
+        c.execute("SELECT id,summary,created_at FROM memories WHERE user_id=%s AND target_id=%s "
+                  "AND kind='event' AND deleted_at IS NULL ORDER BY id DESC LIMIT 50", (uid, uid))
+        rows = [dict(r) for r in (c.fetchall() or [])]
+        return json_response({"ok": True, "events": rows})
+    except Exception as e:
+        return json_response({"ok": False, "error": "events_failed", "message": str(e)}, 500)
+    finally:
+        try:
+            c.close()
+        except Exception:
+            pass
+
+
+async def handle_savings_add(request):
+    uid = _uid(request)
+    try:
+        body = await request.json()
+    except Exception:
+        return json_response({"ok": False, "error": "invalid_json"}, 400)
+    if not isinstance(body, dict):
+        return json_response({"ok": False, "error": "invalid_body"}, 400)
+    try:
+        row = _row(body)
+    except Exception as e:
+        return json_response({"ok": False, "error": "invalid_row", "message": str(e)}, 400)
+    event_id = body.get("event_id")
+    event_title = str(body.get("event_title") or "").strip()
+    ai_visible = 1 if bool(body.get("ai_visible", True)) else 0
+    from ..infra.conn import get_cursor
+    c = get_cursor()
+    try:
+        if event_title:
+            c.execute("INSERT INTO memories(user_id,target_id,kind,summary,tags,importance,weight,tier,"
+                      "source,due_date,last_seen) VALUES(%s,%s,'event',%s,%s,3,0.6,'medium','manual',%s,%s)",
+                      (uid, uid, event_title[:500], "finance" + ("" if ai_visible else ",no_ai"),
+                       row["occurred_at"][:10], row["occurred_at"]))
+            event_id = getattr(c, "lastrowid", None)
+        elif event_id:
+            c.execute("SELECT id FROM memories WHERE id=%s AND user_id=%s AND target_id=%s AND deleted_at IS NULL",
+                      (event_id, uid, uid))
+            if not c.fetchone():
+                return json_response({"ok": False, "error": "event_not_found"}, 404)
+        c.execute("INSERT INTO finance_entries(user_id,account,kind,amount_cents,category,note,occurred_at,raw_hash,source) "
+                  "VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+                  (uid, row["account"], row["kind"], row["amount_cents"], row["category"], row["note"],
+                   row["occurred_at"], _hash(uid, row), row["source"]))
+        entry_id = getattr(c, "lastrowid", None)
+        c.execute("INSERT INTO finance_entry_meta(entry_id,event_id,ai_visible) VALUES(%s,%s,%s)",
+                  (entry_id, event_id or None, ai_visible))
+        try:
+            c.connection.commit()
+        except Exception:
+            pass
+        return json_response({"ok": True, "id": entry_id, "event_id": event_id, "ai_visible": bool(ai_visible)})
+    except Exception as e:
+        try:
+            c.connection.rollback()
+        except Exception:
+            pass
+        return json_response({"ok": False, "error": "add_failed", "message": str(e)}, 500)
     finally:
         try:
             c.close()

@@ -34,7 +34,7 @@ class DshPluginPackageTests(unittest.TestCase):
         host = (PLUGIN / "index.js").read_text(encoding="utf-8")
         for route in ("/api/hoshinoumi/health", "/api/hoshinoumi/config",
                       "/api/hoshinoumi/test", "/api/hoshinoumi/chat", "/api/hoshinoumi/history",
-                      "/api/hoshinoumi/command", "/api/hoshinoumi/ui", "/api/hoshinoumi/status", "/api/hoshinoumi/persona", "/api/hoshinoumi/persona/import", "/api/hoshinoumi/persona/export", "/api/hoshinoumi/persona/activate", "/api/hoshinoumi/savings", "/api/hoshinoumi/savings/import", "/api/hoshinoumi/weekly-plan", "/api/hoshinoumi/weekly-plan/import", "/api/hoshinoumi/balance", "/api/hoshinoumi/memory", "/api/hoshinoumi/logs", "/api/hoshinoumi/plan", "/api/hoshinoumi/cron"):
+                      "/api/hoshinoumi/command", "/api/hoshinoumi/ui", "/api/hoshinoumi/status", "/api/hoshinoumi/persona", "/api/hoshinoumi/persona/import", "/api/hoshinoumi/persona/export", "/api/hoshinoumi/persona/activate", "/api/hoshinoumi/savings", "/api/hoshinoumi/savings/import", "/api/hoshinoumi/savings/entries", "/api/hoshinoumi/savings/events", "/api/hoshinoumi/weekly-plan", "/api/hoshinoumi/weekly-plan/import", "/api/hoshinoumi/balance", "/api/hoshinoumi/memory", "/api/hoshinoumi/logs", "/api/hoshinoumi/plan", "/api/hoshinoumi/cron"):
             self.assertIn(route, host)
         self.assertIn("hoshinoumi.json", host)
         self.assertIn("Bearer", host)

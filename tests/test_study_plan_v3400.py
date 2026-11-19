@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 
 from bot.infra import conn, schema
-from scripts import migrate_v32, migrate_v33, migrate_v34
+from scripts import migrate_v32, migrate_v33, migrate_v34, migrate_v35
 
 
 class TestStudySchemaV3400(unittest.TestCase):
@@ -23,11 +23,12 @@ class TestStudySchemaV3400(unittest.TestCase):
         migrate_v32.apply(self.c)
         migrate_v33.apply(self.c)
         migrate_v34.apply(self.c)
+        migrate_v35.apply(self.c)
         for t in ("study_plans","owner_presence"):
             self.c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=%s",(t,))
             self.assertTrue(self.c.fetchone())
         self.c.execute("SELECT v FROM bot_meta WHERE k='schema_version'")
-        self.assertEqual(self.c.fetchone()["v"],"34")
+        self.assertEqual(self.c.fetchone()["v"],"35")
 
     def test_unique_week(self):
         migrate_v32.apply(self.c)
