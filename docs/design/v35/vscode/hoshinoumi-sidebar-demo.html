@@ -75,7 +75,7 @@ button{border:0;background:none;padding:0;cursor:pointer}
 .minimap{width:58px;flex:none;background:#1e1e1e;border-left:1px solid #252526;padding:8px 6px;color:#3a3a3a;font-size:2px;line-height:3px;overflow:hidden;opacity:.65}
 .statusbar{height:22px;flex:none;background:#007acc;color:#fff;display:flex;align-items:center;gap:13px;padding:0 10px;font-size:10.5px}.statusbar .right{margin-left:auto;display:flex;gap:13px;align-items:center}.statusbar .icon{font-size:12px}
 .toast{position:fixed;right:16px;bottom:34px;background:#252526;border:1px solid #454545;color:#cccccc;font-size:11px;padding:7px 11px;border-radius:2px;box-shadow:0 4px 16px rgba(0,0,0,.4);opacity:0;transform:translateY(5px);transition:.18s;pointer-events:none;z-index:20}.toast.on{opacity:1;transform:none}
-.scm-head .branch{margin-left:8px;font-size:10px;color:#9d9d9d;font-weight:400;text-transform:none;letter-spacing:0}.h-head .scope{font-size:9px;color:#8f8f8f;border:1px solid #3c3c3c;border-radius:2px;padding:0 4px;margin-left:2px}.h-nav{flex:none;padding:5px 7px 3px;border-bottom:1px solid #2f2f2f}.hn-row{display:flex;align-items:center;gap:2px;min-height:24px}.hn-label{width:36px;flex:none;font-size:9px;color:#7d7d7d;letter-spacing:.04em}.hn-row .h-tab{height:20px;padding:0 6px;font-size:10px}</style>
+.scm-head .branch{margin-left:8px;font-size:10px;color:#9d9d9d;font-weight:400;text-transform:none;letter-spacing:0}.h-head .scope{font-size:9px;color:#8f8f8f;border:1px solid #3c3c3c;border-radius:2px;padding:0 4px;margin-left:2px}.h-nav{flex:none;padding:5px 7px 3px;border-bottom:1px solid #2f2f2f}.hn-row{display:flex;align-items:center;gap:2px;min-height:24px}.hn-label{width:36px;flex:none;font-size:9px;color:#7d7d7d;letter-spacing:.04em}.hn-row .h-tab{height:20px;padding:0 6px;font-size:10px}.scm-head .hbrand{font-size:12px;letter-spacing:0;text-transform:none;color:#e8e8e8;font-weight:650}.scm-head .hstatus{margin-left:8px;font-size:9.5px;color:#2fa56b;font-weight:400;text-transform:none;letter-spacing:0}</style>
 </head>
 <body>
 <div class="window">
@@ -97,14 +97,15 @@ button{border:0;background:none;padding:0;cursor:pointer}
   </nav>
 
   <aside class="sidebar">
-   <div class="scm-head"><span>源代码管理</span><span class="branch">⑂ main*</span><div class="actions"><span>⟳</span><span>⋯</span></div></div>
+   <div class="scm-head"><span class="hbrand">◈ Hoshinoumi</span><span class="hstatus">● 已连接</span><div class="actions"><span>⟳</span><span>⋯</span></div></div>
    <section class="hoshi" id="hoshi">
-    <div class="h-head" onclick="toggleHoshi(event)"><span class="chev" id="chev">⌄</span><b>Hoshinoumi</b><span class="dot"></span><span class="state">已连接</span><span class="scope">SCM</span><span class="act" onclick="event.stopPropagation();toast('Hoshinoumi 设置（模拟）')">⚙</span></div>
+    <div class="h-head" onclick="toggleHoshi(event)"><span class="chev" id="chev">⌄</span><b>nao · 工作区</b><span class="dot"></span><span class="state">已连接</span><span class="act" onclick="event.stopPropagation();toast('Hoshinoumi 设置（模拟）')">⚙</span></div>
     <div class="h-nav" id="tabs">
-     <div class="hn-row"><span class="hn-label">对话</span><button class="h-tab on" data-p="chat">聊天</button></div>
+     <div class="hn-row"><span class="hn-label">对话</span><button class="h-tab" data-p="home">主页</button><button class="h-tab on" data-p="chat">聊天</button></div>
      <div class="hn-row"><span class="hn-label">数据</span><button class="h-tab" data-p="memory">记忆</button><button class="h-tab" data-p="savings">存钱</button><button class="h-tab" data-p="relation">关系</button></div>
-     <div class="hn-row"><span class="hn-label">计划</span><button class="h-tab" data-p="weekly">周计划</button><button class="h-tab" data-p="persona">人设</button></div>
-     <div class="hn-row"><span class="hn-label">系统</span><button class="h-tab" data-p="settings">设置</button></div>
+     <div class="hn-row"><span class="hn-label">计划</span><button class="h-tab" data-p="weekly">周计划</button></div>
+     <div class="hn-row"><span class="hn-label">信息</span><button class="h-tab" data-p="info">信息</button><button class="h-tab" data-p="commands">命令</button><button class="h-tab" data-p="cron">定时</button><button class="h-tab" data-p="logs">日志</button></div>
+     <div class="hn-row"><span class="hn-label">系统</span><button class="h-tab" data-p="persona">人设</button><button class="h-tab" data-p="settings">设置</button></div>
     </div>
     <div class="h-body" id="body"></div>
     <div class="h-compose" id="compose"><textarea id="msg" placeholder="和 nao 说话，Enter 发送"></textarea><div class="h-sendrow"><span class="hint">MOCK · 后端 27004</span><button onclick="send()">发送</button></div></div>
@@ -146,6 +147,11 @@ button{border:0;background:none;padding:0;cursor:pointer}
 <div class="toast" id="toast"></div>
 <script>
 const pages={
+ home:()=>`<h2>主页</h2><p class="h-sub">Hoshinoumi · 本机后端</p><div class="h-stats"><div class="h-stat"><div class="n">9</div><div class="l">功能</div></div><div class="h-stat"><div class="n">已连接</div><div class="l">后端</div></div></div><div class="h-row">聊天<span class="r">6 条历史</span></div><div class="h-row">记忆<span class="r">4 条 / 2 会话</span></div><div class="h-row">存钱<span class="r">¥3,300</span></div><div class="h-row">周计划<span class="r">第 3 周</span></div><div class="h-row">人设<span class="r">nao</span></div><div class="h-row">关系<span class="r">熟 0.62</span></div>`,
+ info:()=>`<h2>信息</h2><p class="h-sub">运行状态 · 数据库 · 计划</p><div class="h-stats"><div class="h-stat"><div class="n">running</div><div class="l">状态</div></div><div class="h-stat"><div class="n">35</div><div class="l">schema</div></div></div><div class="h-row">数据库<span class="r">已连接</span></div><div class="h-row">记忆 / 事件<span class="r">4 / 7</span></div><div class="h-row">图片 / 关键词<span class="r">12 / 9</span></div><div class="h-row">学习计划<span class="r">已读取</span></div>`,
+ commands:()=>`<h2>命令</h2><p class="h-sub">51 个命令 · 按功能分组</p><div class="h-row">基础<span class="r">help / status / logs</span></div><div class="h-row">记忆<span class="r">memory / event / relation</span></div><div class="h-row">媒体<span class="r">img / clip / voice</span></div><div class="h-row">日常<span class="r">diary / todo / cron</span></div><div class="h-row">账号<span class="r">persona / adduser</span></div><button class="h-btn" onclick="toast('执行 !status（模拟）')">执行 !status</button>`,
+ cron:()=>`<h2>定时任务</h2><p class="h-sub">本机调度 · Asia/Shanghai</p><div class="h-row">每日早报<span class="r">08:00 · 启用</span></div><div class="h-row">日记提醒<span class="r">22:30 · 启用</span></div><div class="h-row">健康检查<span class="r">每小时 · 停用</span></div><button class="h-btn" onclick="toast('立即运行（模拟）')">立即运行</button>`,
+ logs:()=>`<h2>运行日志</h2><p class="h-sub">最近 24 小时</p><div class="h-row">09:13 INFO chat<span class="r">len=18</span></div><div class="h-row">09:12 INFO command<span class="r">status</span></div><div class="h-row">09:04 WARN search_images<span class="r">timeout</span></div><div class="h-row">08:58 INFO memory<span class="r">append</span></div>`,
  chat:()=>`<h2>nao</h2><p class="h-sub">最近 6 条 · 来自后端</p><div class="h-msg"><div class="a">奈</div><div class="b">你回来啦。今天外面有点冷，先喝点热的吧。</div></div><div class="h-msg me"><div class="a">你</div><div class="b">刚到家，方案终于过了。</div></div><div class="h-msg"><div class="a">奈</div><div class="b">那很好啊。要不要记进“今天值得高兴的事”？</div></div><div class="h-msg"><div class="a">奈</div><div class="b">本月结余 ¥3,300，旅行目标 60% 了。</div></div>`,
  memory:()=>`<h2>记忆</h2><p class="h-sub">来自后端 · MOCK</p><div class="h-stats"><div class="h-stat"><div class="n">4</div><div class="l">记忆</div></div><div class="h-stat"><div class="n">2</div><div class="l">会话</div></div></div><div class="h-row">822891053 · 3 条<span class="r">今天外面有点冷</span></div><div class="h-row">10001 · 1 条<span class="r">《十日终焉》</span></div>`,
  savings:()=>`<h2>存钱</h2><p class="h-sub">来自后端 · MOCK</p><div class="h-stats"><div class="h-stat"><div class="n">¥3300.00</div><div class="l">总余额</div></div><div class="h-stat"><div class="n">¥42.00</div><div class="l">API 余额</div></div></div><div class="h-row">银行卡<span class="r">¥3300.00</span></div><div class="h-row">午饭<span class="r">−¥12.50</span></div><div class="h-field"><label>金额</label><input placeholder="35.50"></div><button class="h-btn primary" onclick="toast('已保存一笔（模拟）')">保存这一笔</button>`,
