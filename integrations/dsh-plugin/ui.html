@@ -344,7 +344,7 @@ async function testBackend(){
  const token=document.getElementById('tokenInput').value.trim();const target=document.getElementById('targetInput').value.trim();
  if(!/^https?:\/\//.test(url)){st.className='mstatus err';st.textContent='地址需要以 http:// 或 https:// 开头';return;}
  st.className='mstatus';st.textContent='正在连接 '+url+' …';
- try{const r=await fetch('/api/hoshinoumi/test',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({base_url:url,token,target_id:target})});const j=await r.json();if(!r.ok||!j.ok)throw new Error(j.message||('HTTP '+r.status));st.className='mstatus ok';st.textContent='连接成功 · '+(j.latency_ms||0)+'ms · schema '+(j.ready?.schema??'33');}catch(e){st.className='mstatus err';st.textContent='连接失败：'+e.message;}
+ try{const r=await fetch('/api/hoshinoumi/test',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({base_url:url,token,target_id:target})});const j=await r.json();if(!r.ok||!j.ok)throw new Error(j.message||('HTTP '+r.status));setBackendStatus(true);st.className='mstatus ok';st.textContent='连接成功 · '+(j.latency_ms||0)+'ms · schema '+(j.ready?.schema??'33');}catch(e){st.className='mstatus err';st.textContent='连接失败：'+e.message;}
 }
 async function saveBackend(){
  const url=document.getElementById('baseInput').value.trim();const st=document.getElementById('setupStatus');
@@ -352,8 +352,8 @@ async function saveBackend(){
  const token=document.getElementById('tokenInput').value.trim();const target=document.getElementById('targetInput').value.trim();
  if(!token){st.className='mstatus err';st.textContent='请填写访问 token';return;}
  if(!target){st.className='mstatus err';st.textContent='请填写主人 QQ';return;}
- st.className='mstatus';st.textContent='正在测试连接…';
- try{const tr=await fetch('/api/hoshinoumi/test',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({base_url:url,token,target_id:target})});const tj=await tr.json();if(!tr.ok||!tj.ok)throw new Error(tj.message||'连接失败');st.className='mstatus';st.textContent='测试通过，正在保存…';const r=await fetch('/api/hoshinoumi/config',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({base_url:url,token,target_id:target})});const j=await r.json();if(!r.ok)throw new Error(j.message||('HTTP '+r.status));localStorage.setItem('hoshinoumi_target',document.getElementById('targetInput').value||'owner');setBackendStatus(true);st.className='mstatus ok';st.textContent='已保存，正在进入…';setTimeout(()=>{closeSetup();toast('后端已配置 · '+url);},450);}catch(e){st.className='mstatus err';st.textContent='保存失败：'+e.message;}
+ st.className='mstatus';st.textContent='正在保存…';
+ try{const r=await fetch('/api/hoshinoumi/config',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({base_url:url,token,target_id:target})});const j=await r.json();if(!r.ok)throw new Error(j.message||('HTTP '+r.status));localStorage.setItem('hoshinoumi_target',document.getElementById('targetInput').value||'owner');setBackendStatus(false);st.className='mstatus ok';st.textContent='已保存，未连接；启动后端后点测试连接';setTimeout(()=>{closeSetup();toast('配置已保存 · 等待连接');},700);}catch(e){st.className='mstatus err';st.textContent='保存失败：'+e.message;}
 }
 async function loadHistory(){
  try{

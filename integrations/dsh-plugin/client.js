@@ -41,7 +41,7 @@ if (typeof window !== 'undefined' && window.__ModuleLoader__ && !window.__HOSHIN
       const frame = document.createElement('iframe')
       frame.setAttribute('data-nao-frame', '')
       frame.setAttribute('title', 'Hoshinoumi nao')
-      frame.src = '/api/hoshinoumi/ui?v=35.2.13&t=' + Date.now()
+      frame.src = '/api/hoshinoumi/ui?v=35.2.14&t=' + Date.now()
       close.addEventListener('click', () => overlay.remove())
       overlay.addEventListener('keydown', (e) => { if (e.key === 'Escape') overlay.remove() })
       bar.appendChild(close)
