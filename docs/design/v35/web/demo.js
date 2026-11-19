@@ -42,7 +42,8 @@
     weekly: [['第 12 周', '3 门课'], ['周一 1-2 节', '高等数学 · 教三 201'], ['周三 3-4 节', '大学英语 · 文科楼 104'], ['周五 5-6 节', '数据结构 · 实验楼 302']],
     persona: [['当前人设', 'nao · 友利奈绪'], ['风格', '口语 · 简短 · 行动回复'], ['文件', 'prompt / life / supplement / state / voice'], ['状态', '只读预览 · 仅 owner']],
     relation: [['亲密度', '0.62 · 熟'], ['信任', '0.82'], ['理解', '0.76'], ['最近变化', '+0.020 · 聊天']],
-    settings: [['后端地址', 'http://127.0.0.1:27004'], ['连接状态', '已连接 · schema 35'], ['主人 QQ', '822891053'], ['视觉', '深色 · 动画默认关闭']]
+    settings: [['后端地址', 'http://127.0.0.1:27004'], ['连接状态', '已连接 · schema 35'], ['主人 QQ', '822891053'], ['视觉', '深色 · 动画默认关闭']],
+    plugins: [['已安装', '0 个'], ['权限', '只读优先'], ['审批', '安装前确认'], ['状态', 'MOCK 演示']]
   };
   const COMMAND_GROUPS = {
     '基础': ['!help','!ping','!status','!version','!uptime','!meta','!usage','!log','!db','!stats','!history','!reload','!set','!exit','!quit'],
@@ -56,7 +57,7 @@
     '多端': ['!doing','!presence','!route','!gw','!config','!code','!apikeys']
   };
 
-  const TITLES = { home: '主页', memory: '记忆', savings: '存钱', weekly: '周计划表', persona: '人设', relation: '关系', info: '信息', commands: '命令', cron: '定时任务', logs: '运行日志', settings: '设置' };
+  const TITLES = { home: '主页', memory: '记忆', savings: '存钱', weekly: '周计划表', persona: '人设', relation: '关系', info: '信息', commands: '命令', cron: '定时任务', logs: '运行日志', settings: '设置', plugins: '插件' };
 
   // 注入演示用样式
   const css = document.createElement('style');
@@ -93,6 +94,17 @@
     .cmd-output{flex:1;min-height:0;overflow:auto;border:1px solid #e3ebf7;border-radius:9px;background:#f8fbff;padding:9px 10px;color:#4b5f78;font:10px/1.6 "Cascadia Code","Consolas",monospace;white-space:pre-wrap}
     .cmd-output .cmdline{color:#2563eb;margin-bottom:4px}
     .cmd-chip.on{background:#dbeafe;color:#1d4ed8;border-color:#93b7fa}
+    .home-head{display:flex;align-items:center;gap:9px;margin-bottom:6px}
+    .home-head h2{font-size:18px;margin:0;color:#17263b}
+    .home-pill{font-size:9px;color:#1d4ed8;border:1px solid #dbe8ff;background:#eef4ff;border-radius:20px;padding:3px 8px}
+    .home-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:13px}
+    .home-card{border:1px solid #e3ebf7;border-radius:12px;background:#fff;padding:13px;cursor:pointer;transition:border-color .18s,transform .18s,box-shadow .18s}
+    .home-card:hover{border-color:#bcd4f7;transform:translateY(-2px);box-shadow:0 8px 18px rgba(37,99,235,.07)}
+    .home-ico{width:22px;height:22px;border-radius:7px;display:grid;place-items:center;background:#eef4ff;color:#2563eb;font-size:12px;margin-bottom:8px}
+    .home-card h3{font-size:11px;margin:0 0 3px;color:#1e3a5f}
+    .home-card p{font-size:9.5px;line-height:1.5;color:#6b7c95;margin:0}
+    .home-card .st{font-size:9px;color:#1f9d6b;margin-top:7px}
+
     .chat-search{display:none;align-items:center;gap:7px;padding:7px 18px;border-bottom:1px solid #e3ebf7;background:#f8fbff;flex:none}
     .chat-search.on{display:flex}
     .chat-search input{flex:1;border:1px solid #dbe8ff;border-radius:7px;background:#fff;color:#243b55;font:11px inherit;outline:0;padding:5px 8px}
@@ -251,6 +263,32 @@
   }));
 
   function showPage(name) {
+    if (name === 'home') {
+      const modules = [
+        ['chat','◉','聊天','和 nao 对话，自动加载历史。'],
+        ['memory','◈','记忆','记忆本、画像、关系、事件。'],
+        ['savings','¥','存钱','总余额、分账户、目标、流水。'],
+        ['info','≡','信息','运行状态、日志、计划、阅读。'],
+        ['persona','◇','人设','角色卡、预览、激活、导入。'],
+        ['settings','⚙','设置','后端地址、连接测试、页面可见性。'],
+        ['commands','⌘','命令','全量 51 个命令，按功能分组。'],
+        ['cron','◷','定时任务','早报、日记提醒、健康检查。'],
+        ['logs','≣','运行日志','命令与任务执行记录。'],
+        ['plugins','▣','插件','安装 / 审批 / 权限 / 错误。']
+      ];
+      pageView.innerHTML = '<div class="page-head"><div><div class="home-head"><h2>主页</h2><span class="home-pill">10 个功能模块</span></div><p>从主页进入聊天、记忆、存钱、信息、人设、设置、命令、定时任务和运行日志。</p></div><button class="back" id="backChat">← 返回聊天</button></div><div class="home-grid">' +
+        modules.map(m => '<div class="home-card" data-target="' + m[0] + '"><div class="home-ico">' + m[1] + '</div><h3>' + esc(m[2]) + '</h3><p>' + esc(m[3]) + '</p><div class="st">● 已连接 · MOCK</div></div>').join('') + '</div>';
+      [top, msgs, composer, searchBar].forEach(x => x.classList.add('chat-hide'));
+      pageView.classList.add('on');
+      document.querySelectorAll('.rnav').forEach(x => x.classList.toggle('on', x.dataset.page === name));
+      document.getElementById('backChat').addEventListener('click', () => showChat());
+      pageView.querySelectorAll('.home-card').forEach(c => c.addEventListener('click', () => {
+        const t = c.dataset.target;
+        if (t === 'chat') renderChat(document.querySelector('.conv.on')?.dataset.conv || 'nao');
+        else showPage(t);
+      }));
+      return;
+    }
     if (name === 'commands') {
       const groups = Object.entries(COMMAND_GROUPS).map(([g, cmds]) =>
         '<div class="cmd-group"><h3>' + esc(g) + '<span>' + cmds.length + '</span></h3><div class="cmd-chips">' +
