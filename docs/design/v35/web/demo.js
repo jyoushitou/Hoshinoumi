@@ -351,21 +351,32 @@
   searchBar.querySelector('#searchPrev').addEventListener('click', () => { hitIndex--; if (hitIndex < 0) hitIndex = hitEls.length - 1; focusHit(); });
   searchBar.querySelector('#searchClose').addEventListener('click', () => openSearch(false));
 
+  function updateUnread() {
+    const nums = [...document.querySelectorAll('.conv .unread')].map(x => Number(x.textContent) || 0);
+    const total = nums.reduce((a, b) => a + b, 0);
+    const badge = document.querySelector('.rnav[data-page="chat"] .badge');
+    if (badge) {
+      if (total > 0) { badge.textContent = total; badge.style.display = ''; }
+      else { badge.textContent = ''; badge.style.display = 'none'; }
+    }
+  }
+
   function renderChat(id) {
     const c = CHATS[id] || CHATS.nao;
     nameEl.textContent = c.name;
     subEl.innerHTML = esc(c.sub) + ' <span class="pill">在线</span>';
     msgs.innerHTML = '<div class="day"><b>今天</b> · 20:58</div>' + c.msgs.map(msgHtml).join('');
     openSearch(false);
-    document.querySelectorAll('.conv').forEach(x => x.classList.toggle('on', x.dataset.conv === id));
+    document.querySelectorAll('.conv').forEach(x => { const on = x.dataset.conv === id; x.classList.toggle('on', on); if (on) x.querySelector('.unread')?.remove(); });
     showChat();
+    updateUnread();
     msgs.scrollTop = msgs.scrollHeight;
   }
 
   const convIds = ['nao', 'seagroup', 'student', 'photo', 'test'];
   document.querySelectorAll('.conv').forEach((x, i) => {
     x.dataset.conv = convIds[i] || 'nao';
-    x.addEventListener('click', () => { renderChat(x.dataset.conv); x.querySelector('.unread')?.remove(); });
+    x.addEventListener('click', () => { x.querySelector('.unread')?.remove(); updateUnread(); renderChat(x.dataset.conv); });
   });
 
   function append(role, text, meta) {
@@ -841,4 +852,5 @@
   });
 
   renderChat('nao');
+  updateUnread();
 })();
