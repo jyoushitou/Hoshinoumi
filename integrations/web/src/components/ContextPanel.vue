@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useSessionStore } from '@/stores/session'
 const session = useSessionStore()
+function getWeek() { const d = new Date(); const s = new Date(d.getFullYear(), 0, 1); return Math.ceil((((d.getTime() - s.getTime()) / 86400000) + s.getDay() + 1) / 7) }
 </script>
 <template>
   <aside class="context">
@@ -29,15 +30,10 @@ const session = useSessionStore()
       快捷
     </div>
     <div class="quick">
-      <div class="q">
-        <b>存钱</b>本月流水
-      </div><div class="q">
-        <b>记忆</b>最近 7 天
-      </div><div class="q">
-        <b>周计划</b>第 12 周
-      </div><div class="q">
-        <b>人设</b>nao · 当前
-      </div>
+      <div class="q"><b>存钱</b>{{ session.savings ? '¥' + (Number(session.savings.total_cents || 0) / 100).toFixed(2) : '未获取' }}</div>
+      <div class="q"><b>记忆</b>{{ session.memoryTargets.length ? session.memoryTargets.length + ' 个会话' : '未获取' }}</div>
+      <div class="q"><b>周计划</b>{{ session.weekly ? '第 ' + (session.weekly.week || getWeek()) + ' 周 · ' + ((session.weekly.courses as unknown[]) || []).length + ' 门课' : '未获取' }}</div>
+      <div class="q"><b>人设</b>{{ session.persona?.name || '未获取' }}</div>
     </div>
   </aside>
 </template>

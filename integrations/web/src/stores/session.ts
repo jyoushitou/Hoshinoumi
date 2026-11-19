@@ -2,6 +2,11 @@ import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import { http } from '@/api/client'
 import { useAuthStore } from './auth'
+function getIsoWeek() {
+  const d = new Date()
+  const start = new Date(d.getFullYear(), 0, 1)
+  return Math.ceil((((d.getTime() - start.getTime()) / 86400000) + start.getDay() + 1) / 7)
+}
 export const useSessionStore = defineStore('session', () => {
   const loading = ref(false)
   const connected = ref(false)
@@ -12,6 +17,9 @@ export const useSessionStore = defineStore('session', () => {
   const unread = ref(0)
   const persona = ref<Record<string, unknown> | null>(null)
   const relation = ref<Record<string, unknown> | null>(null)
+  const savings = ref<Record<string, unknown> | null>(null)
+  const weekly = ref<Record<string, unknown> | null>(null)
+  const memoryTargets = ref<unknown[]>([])
   async function refresh() {
     const auth = useAuthStore()
     if (!auth.loggedIn) { connected.value = false; error.value = '未登录'; return }
@@ -29,6 +37,15 @@ export const useSessionStore = defineStore('session', () => {
       try {
         relation.value = await http.get<Record<string, unknown>>('/api/relation')
       } catch { relation.value = null }
+      const week = getIsoWeek()
+      const [sav, mem, wk] = await Promise.allSettled([
+        http.get<Record<string, unknown>>('/api/savings'),
+        http.get<{ targets?: unknown[] }>('/api/memory'),
+        http.get<Record<string, unknown>>('/api/weekly-plan?week=' + week),
+      ])
+      savings.value = sav.status === 'fulfilled' ? sav.value : null
+      memoryTargets.value = mem.status === 'fulfilled' && Array.isArray(mem.value.targets) ? mem.value.targets : []
+      weekly.value = wk.status === 'fulfilled' ? wk.value : null
       // v35.5.2 只验证连接；会话/历史在 v35.5.3 接入
       conversations.value = []; messages.value = []
     } catch (e) {
@@ -36,5 +53,5 @@ export const useSessionStore = defineStore('session', () => {
       error.value = e instanceof Error ? e.message : String(e)
     } finally { loading.value = false }
   }
-  return { loading, connected, error, status, conversations, messages, unread, persona, relation, refresh }
+  return { loading, connected, error, status, conversations, messages, unread, persona, relation, savings, weekly, memoryTargets, refresh }
 })
