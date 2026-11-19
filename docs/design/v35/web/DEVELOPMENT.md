@@ -156,6 +156,17 @@ dimensions: [{key,label,value,visible}]
 
 最终接口：`/api/persona`、`/api/persona/import`、`/api/persona/export`、`/api/persona/activate`。
 
+## 3.12 周计划按周配置
+
+```text
+节次数每周可不同
+上下课时间每周可不同
+节次设置：加/删/改时间
+切周加载该周配置
+```
+
+课程仍按星期 × 节次存；后端周计划需要保存该周的 period 配置。
+
 ## 4. 次次版本
 
 | 版本 | 交付 | 验收 |

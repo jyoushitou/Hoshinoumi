@@ -217,6 +217,17 @@
     .course{background:#eef4ff;border-left:2px solid #2563eb;border-radius:4px;padding:3px 4px;color:#1e3a5f;font-size:8.5px;line-height:1.35;cursor:pointer}
     .course b{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .course span{display:block;color:#6b7c95;font-size:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .week-grid .p{flex-direction:column;gap:1px;padding:4px 2px;font-size:8px;line-height:1.2}
+    .week-grid .p b{font-size:8.5px;color:#6b7c95;font-weight:600}
+    .week-grid .p span{font-size:7px;color:#9aabbe}
+    .week-period-editor{border:1px solid #dbe8ff;border-radius:10px;background:#f8fbff;padding:9px 10px;margin-bottom:9px}
+    .wpe-head{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:10px;color:#1e3a5f}
+    .wpe-head button{margin-left:auto;border:1px solid #dbe8ff;border-radius:5px;background:#fff;color:#2563eb;font-size:9px;padding:3px 7px;cursor:pointer}
+    .wpe-row{display:grid;grid-template-columns:50px 1fr 44px;gap:6px;align-items:center;margin-bottom:4px}
+    .wpe-row span{font-size:9px;color:#6b7c95}.wpe-row input{border:1px solid #e3ebf7;border-radius:5px;background:#fff;color:#243b55;font:9px inherit;padding:4px 6px;outline:0}
+    .wpe-row .wpe-del{border:1px solid #f3c7d2;border-radius:5px;background:#fff;color:#c0264a;font-size:8.5px;padding:3px 5px;cursor:pointer}
+    .wpe-actions{display:flex;align-items:center;gap:7px;margin-top:6px}
+    .wpe-actions button{border:0;border-radius:5px;background:#2563eb;color:#fff;font-size:9px;padding:4px 8px;cursor:pointer}.wpe-actions .msg{font-size:9px;color:#8a9bb0}
     .week-form{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:7px;margin-top:10px;border:1px solid #e3ebf7;border-radius:10px;background:#fff;padding:10px}
     .week-form label{display:block;font-size:8.5px;color:#8a9bb0;margin-bottom:2px}
     .week-form input,.week-form select{border:1px solid #e3ebf7;border-radius:6px;background:#f8fbff;color:#243b55;font:9.5px inherit;outline:0;padding:5px 6px;width:100%}
@@ -545,20 +556,40 @@
       const WD = ['周一','周二','周三','周四','周五','周六','周日'];
       const W = window.__weekly || (window.__weekly = {
         week: 12,
+        periods: {},
         courses: [
           { day: 0, period: 1, name: '高等数学', teacher: '李老师', loc: '教三 201' },
           { day: 2, period: 3, name: '大学英语', teacher: '王老师', loc: '文科楼 104' },
           { day: 4, period: 5, name: '数据结构', teacher: '陈老师', loc: '实验楼 302' }
         ]
       });
-      let sel = { day: 0, period: 1 }, editIdx = -1;
+      const PERIOD_DEFAULT = [
+        { no: 1, time: '08:00-08:45' }, { no: 2, time: '08:55-09:40' },
+        { no: 3, time: '10:00-10:45' }, { no: 4, time: '10:55-11:40' },
+        { no: 5, time: '14:00-14:45' }, { no: 6, time: '14:55-15:40' }
+      ];
+      function getPeriods(w) {
+        if (!W.periods[w]) {
+          const count = w === 13 ? 8 : w === 14 ? 4 : 6;
+          const base = PERIOD_DEFAULT.slice();
+          W.periods[w] = Array.from({ length: count }, (_, i) => base[i] || { no: i + 1, time: i === 7 ? '16:55-17:40' : '16:00-16:45' });
+        }
+        return W.periods[w];
+      }
+      let sel = { day: 0, period: 1 }, editIdx = -1, showPeriods = false;
       function renderWeekly() {
         let html = '<div class="page-head"><div><h2>周计划表</h2><p>v35.5 Web 演示 · MOCK 数据 · 第 ' + W.week + ' 周</p></div><button class="back" id="backChat">← 返回聊天</button></div>';
-        html += '<div class="week-toolbar"><label>周次 <input id="wkNum" type="number" min="1" max="60" value="' + W.week + '"></label><button id="wkGo">跳转</button><label class="file-btn">导入 HTML<input id="wkFile" type="file" accept=".html,text/html"></label><span class="week-msg" id="wkMsg">点击空格子新增；点课程编辑/删除</span></div>';
+        html += '<div class="week-toolbar"><label>周次 <input id="wkNum" type="number" min="1" max="60" value="' + W.week + '"></label><button id="wkGo">跳转</button><button id="wkPeriods">节次设置</button><label class="file-btn">导入 HTML<input id="wkFile" type="file" accept=".html,text/html"></label><span class="week-msg" id="wkMsg">点击空格子新增；点课程编辑/删除</span></div>';
+        if (showPeriods) {
+          const ps = getPeriods(W.week);
+          html += '<div class="week-period-editor"><div class="wpe-head"><b>第 ' + W.week + ' 周节次</b><button id="wpeAdd">＋ 添加节次</button></div>' + ps.map((p, i) => '<div class="wpe-row"><span>第 ' + p.no + ' 节</span><input data-pi="' + i + '" value="' + esc(p.time) + '"><button class="wpe-del" data-pi="' + i + '">删除</button></div>').join('') + '<div class="wpe-actions"><button id="wpeSave">保存本周节次</button><span class="msg" id="wpeMsg"></span></div></div>';
+        }
         html += '<div class="week-wrap"><div class="week-grid">';
         html += '<div class="h">节次</div>' + WD.map(d => '<div class="h">' + d + '</div>').join('');
-        for (let p = 1; p <= 6; p++) {
-          html += '<div class="p">' + p + '</div>';
+        const periods = getPeriods(W.week);
+        periods.forEach(period => {
+          const p = period.no;
+          html += '<div class="p"><b>' + p + '</b><span>' + esc(period.time || '') + '</span></div>';
           for (let d = 0; d < 7; d++) {
             const idx = W.courses.findIndex(c => c.day === d && c.period === p);
             html += '<div class="week-cell' + (sel.day === d && sel.period === p ? ' sel' : '') + '" data-day="' + d + '" data-period="' + p + '">';
@@ -568,14 +599,31 @@
             }
             html += '</div>';
           }
-        }
+        });
         html += '</div></div>';
         const c = editIdx >= 0 ? W.courses[editIdx] : null;
         html += '<div class="week-form"><div><label>课程名</label><input id="wkName" value="' + esc(c ? c.name : '') + '"></div><div><label>教师</label><input id="wkTeacher" value="' + esc(c ? c.teacher : '') + '"></div><div><label>地点</label><input id="wkLoc" value="' + esc(c ? c.loc : '') + '"></div><div><label>周次</label><input id="wkWeeks" value="' + esc(c ? (c.weeks || '1-16周') : '1-16周') + '"></div><div class="full"><button id="wkSave">' + (editIdx >= 0 ? '保存修改' : '添加到格子') + '</button>' + (editIdx >= 0 ? '<button class="del" id="wkDel">删除课程</button>' : '') + '<span class="msg" id="wkFormMsg"></span></div></div>';
         pageView.innerHTML = html;
         document.getElementById('backChat').addEventListener('click', () => showChat());
         document.getElementById('wkGo').addEventListener('click', () => {
-          const n = Number(document.getElementById('wkNum').value); if (n >= 1 && n <= 60) { W.week = n; renderWeekly(); }
+          const n = Number(document.getElementById('wkNum').value); if (n >= 1 && n <= 60) { W.week = n; getPeriods(n); renderWeekly(); }
+        });
+        document.getElementById('wkPeriods').addEventListener('click', () => { showPeriods = !showPeriods; renderWeekly(); });
+        const wpeAdd = document.getElementById('wpeAdd');
+        if (wpeAdd) wpeAdd.addEventListener('click', () => {
+          const ps = getPeriods(W.week); ps.push({ no: ps.length + 1, time: '16:00-16:45' }); renderWeekly();
+        });
+        pageView.querySelectorAll('.wpe-del').forEach(b => b.addEventListener('click', () => {
+          const ps = getPeriods(W.week); const i = Number(b.dataset.pi);
+          const no = ps[i].no; ps.splice(i, 1); ps.forEach((p, j) => p.no = j + 1);
+          W.courses = W.courses.filter(c => c.period !== no);
+          renderWeekly();
+        }));
+        const wpeSave = document.getElementById('wpeSave');
+        if (wpeSave) wpeSave.addEventListener('click', () => {
+          const ps = getPeriods(W.week);
+          pageView.querySelectorAll('[data-pi]').forEach(inp => { const i = Number(inp.dataset.pi); if (ps[i] && inp.value.trim()) ps[i].time = inp.value.trim(); });
+          showPeriods = false; renderWeekly(); toast('第 ' + W.week + ' 周节次已保存（MOCK）');
         });
         pageView.querySelectorAll('.week-cell').forEach(cell => cell.addEventListener('click', e => {
           if (e.target.closest('.course')) return;
