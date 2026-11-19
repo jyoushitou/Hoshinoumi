@@ -142,6 +142,24 @@
     .entry{display:flex;align-items:center;gap:8px;border-bottom:1px solid #eef3fb;padding:5px 2px;font-size:10px;color:#4b5f78}
     .entry:last-child{border-bottom:0}.entry .amt{margin-left:auto;font-weight:600}.entry .amt.neg{color:#c0264a}.entry .amt.pos{color:#1f9d6b}
     .entry .tag{font-size:8px;color:#8a9bb0;border:1px solid #e3ebf7;border-radius:4px;padding:1px 4px}
+    .cron-list{display:flex;flex-direction:column;gap:7px}
+    .cron-item{border:1px solid #e3ebf7;border-radius:10px;background:#fff;padding:10px 12px;display:flex;align-items:center;gap:10px;transition:border-color .18s,transform .18s,box-shadow .18s}
+    .cron-item:hover{border-color:#bcd4f7;transform:translateY(-1px);box-shadow:0 6px 14px rgba(37,99,235,.06)}
+    .cron-dot{width:7px;height:7px;border-radius:50%;background:#1f9d6b;flex:none}.cron-dot.off{background:#c4cedd}
+    .cron-main{min-width:0}.cron-main .n{font-size:11px;color:#1e3a5f;font-weight:600}.cron-main .e{font-size:9px;color:#8a9bb0;margin-top:2px}
+    .cron-state{margin-left:auto;font-size:9px;color:#1f9d6b}.cron-state.off{color:#8a9bb0}
+    .cron-btns{display:flex;gap:5px}
+    .cron-btns button{border:1px solid #dbe8ff;border-radius:6px;background:#fff;color:#4b5f78;font-size:9px;padding:3px 7px;cursor:pointer}
+    .cron-btns button:hover{background:#eef4ff;color:#2563eb}
+    .cron-btns button.danger{color:#c0264a;border-color:#f3c7d2}
+    .cron-form{border:1px solid #dbe8ff;border-radius:10px;background:#f8fbff;padding:10px 12px;margin-bottom:10px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+    .cron-form label{display:block;font-size:8.5px;color:#8a9bb0;margin-bottom:2px}
+    .cron-form input,.cron-form select{border:1px solid #e3ebf7;border-radius:6px;background:#fff;color:#243b55;font:9.5px inherit;outline:0;padding:5px 6px;width:100%}
+    .cron-form .full{grid-column:1/-1;display:flex;align-items:center;gap:7px}
+    .cron-form .full button{border:0;border-radius:6px;background:#2563eb;color:#fff;font-size:9.5px;padding:5px 10px;cursor:pointer}
+    .cron-form .full button.cancel{background:#fff;color:#4b5f78;border:1px solid #dbe8ff}
+    .cron-form .msg{font-size:9px;color:#8a9bb0}
+
     .info-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:10px}
     .info-stat{border:1px solid #e3ebf7;border-radius:11px;background:#fff;padding:10px 12px}
     .info-stat .k{font-size:9px;color:#8a9bb0;margin-bottom:2px}.info-stat .v{font-size:18px;font-weight:700;color:#17263b}
@@ -349,6 +367,50 @@
   }));
 
   function showPage(name) {
+    if (name === 'cron') {
+      const C = window.__cron || (window.__cron = {
+        nextId: 4,
+        items: [
+          { id: 1, name: '每日早报', expr: '0 8 * * *', desc: '每天 08:00', enabled: true },
+          { id: 2, name: '日记提醒', expr: '30 22 * * *', desc: '每天 22:30', enabled: true },
+          { id: 3, name: '健康检查', expr: '0 * * * *', desc: '每小时', enabled: false }
+        ]
+      });
+      let editing = null, showForm = false;
+      function renderCron() {
+        const list = C.items.map(x => '<div class="cron-item"><span class="cron-dot' + (x.enabled ? '' : ' off') + '"></span><div class="cron-main"><div class="n">' + esc(x.name) + '</div><div class="e">' + esc(x.expr) + ' · ' + esc(x.desc) + '</div></div><span class="cron-state' + (x.enabled ? '' : ' off') + '">' + (x.enabled ? '启用' : '停用') + '</span><div class="cron-btns"><button data-act="run" data-id="' + x.id + '">立即运行</button><button data-act="edit" data-id="' + x.id + '">编辑</button><button data-act="toggle" data-id="' + x.id + '">' + (x.enabled ? '停用' : '启用') + '</button><button class="danger" data-act="del" data-id="' + x.id + '">删除</button></div></div>').join('');
+        const form = showForm ? '<div class="cron-form"><div><label>名称</label><input id="crName" value="' + esc(editing ? editing.name : '') + '" placeholder="每日早报"></div><div><label>Cron</label><input id="crExpr" value="' + esc(editing ? editing.expr : '0 8 * * *') + '" placeholder="0 8 * * *"></div><div><label>说明</label><input id="crDesc" value="' + esc(editing ? editing.desc : '每天 08:00') + '"></div><div class="full"><label style="display:flex;align-items:center;gap:4px"><input type="checkbox" id="crEnabled" ' + (!editing || editing.enabled ? 'checked' : '') + '> 启用</label><button id="crSave">' + (editing ? '保存修改' : '新增任务') + '</button><button class="cancel" id="crCancel">取消</button><span class="msg" id="crMsg"></span></div></div>' : '';
+        pageView.innerHTML = '<div class="page-head"><div><h2>定时任务</h2><p>v35.5 Web 演示 · MOCK 数据 · 支持增加 / 修改 / 删除</p></div><div style="margin-left:auto;display:flex;gap:7px"><button class="back" id="crAdd">＋ 新增任务</button><button class="back" id="backChat">← 返回聊天</button></div></div>' + form + '<div class="cron-list">' + list + '</div>';
+        [top, msgs, composer, searchBar].forEach(x => x.classList.add('chat-hide'));
+        pageView.classList.add('on');
+        document.querySelectorAll('.rnav').forEach(x => x.classList.toggle('on', x.dataset.page === name));
+        document.getElementById('backChat').addEventListener('click', () => showChat());
+        document.getElementById('crAdd').addEventListener('click', () => { editing = null; showForm = true; renderCron(); });
+        pageView.querySelectorAll('.cron-btns button').forEach(b => b.addEventListener('click', () => {
+          const id = Number(b.dataset.id), act = b.dataset.act, item = C.items.find(x => x.id === id);
+          if (!item) return;
+          if (act === 'run') { toast('已运行 ' + item.name + '（MOCK）'); return; }
+          if (act === 'toggle') { item.enabled = !item.enabled; renderCron(); toast((item.enabled ? '已启用 ' : '已停用 ') + item.name); return; }
+          if (act === 'edit') { editing = item; showForm = true; renderCron(); return; }
+          if (act === 'del') { C.items = C.items.filter(x => x.id !== id); renderCron(); toast('已删除 ' + item.name); }
+        }));
+        const save = document.getElementById('crSave');
+        if (save) save.addEventListener('click', () => {
+          const name = document.getElementById('crName').value.trim();
+          const expr = document.getElementById('crExpr').value.trim();
+          const desc = document.getElementById('crDesc').value.trim();
+          const enabled = document.getElementById('crEnabled').checked;
+          if (!name || !expr) { document.getElementById('crMsg').textContent = '名称和 Cron 必填'; return; }
+          if (editing) Object.assign(editing, { name, expr, desc, enabled });
+          else C.items.push({ id: C.nextId++, name, expr, desc: desc || expr, enabled });
+          editing = null; showForm = false; renderCron(); toast('任务已保存（MOCK）');
+        });
+        const cancel = document.getElementById('crCancel');
+        if (cancel) cancel.addEventListener('click', () => { editing = null; showForm = false; renderCron(); });
+      }
+      renderCron();
+      return;
+    }
     if (name === 'info') {
       pageView.innerHTML = '<div class="page-head"><div><h2>信息</h2><p>v35.5 Web 演示 · MOCK 数据 · 运行状态 / 数据库 / 计划 / 阅读</p></div><button class="back" id="backChat">← 返回聊天</button></div>' +
         '<div class="info-stats"><div class="info-stat"><div class="k">版本</div><div class="v">v35.5</div></div><div class="info-stat"><div class="k">schema</div><div class="v">35</div></div><div class="info-stat"><div class="k">数据表</div><div class="v">42</div></div><div class="info-stat"><div class="k">命令</div><div class="v">51</div></div></div>' +
