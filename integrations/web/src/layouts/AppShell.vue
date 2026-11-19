@@ -19,8 +19,8 @@ onMounted(() => { if (auth.loggedIn) session.refresh(); else session.error = 'æœ
   </div>
 </template>
 <style scoped>
-.shell{display:grid;grid-template-columns:64px 292px minmax(0,1fr) 304px;height:100vh;overflow:hidden}
-.main{min-width:0;display:flex;flex-direction:column;background:#fff}
+.shell{display:grid;grid-template-columns:64px 292px minmax(0,1fr) 304px;height:100vh;height:100dvh;overflow:hidden;min-height:0}
+.main{min-width:0;min-height:0;height:100%;display:flex;flex-direction:column;background:#fff;overflow:hidden}
 @media(max-width:1180px){.shell{grid-template-columns:64px 270px minmax(0,1fr)}:deep(.context){display:none}}
 @media(max-width:820px){.shell{grid-template-columns:54px minmax(0,1fr)}:deep(.side){display:none}}
 </style>

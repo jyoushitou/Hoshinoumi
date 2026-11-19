@@ -1,2 +1,2 @@
 :root{--bg:#f3f7ff;--panel:#fff;--text:#17263b;--muted:#6b7c95;--line:#e3ebf7;--blue:#2563eb}
-*{box-sizing:border-box}html,body,#app{height:100%}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif}
+*{box-sizing:border-box}html,body,#app{height:100%;overflow:hidden}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif}
