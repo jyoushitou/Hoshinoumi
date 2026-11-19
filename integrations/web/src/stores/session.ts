@@ -8,10 +8,11 @@ export interface Conversation {
   updated_at?: string
 }
 export interface ChatMessage {
-  id?: number
+  id?: number | string
   role: string
   content: string
   created_at?: string
+  pending?: boolean
 }
 import { defineStore } from 'pinia'
 import { http } from '@/api/client'
@@ -42,6 +43,8 @@ export const useSessionStore = defineStore('session', () => {
   const lifeState = ref<Record<string, unknown> | null>(null)
   const presence = ref<Record<string, unknown> | null>(null)
   const week = ref(getIsoWeek())
+  const sending = ref(false)
+  const sendError = ref('')
   async function loadConversations() {
     conversationsError.value = ''
     try {
@@ -69,6 +72,35 @@ export const useSessionStore = defineStore('session', () => {
   async function selectConversation(target: string) {
     activeTarget.value = target
     await loadHistory(target)
+  }
+
+  async function sendMessage(content: string) {
+    const text = content.trim()
+    if (!text || sending.value) return false
+    if (!activeTarget.value) { sendError.value = '请先选择会话'; return false }
+    const clientId = (globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`)
+    const localId = 'local-' + clientId
+    const stamp = new Date().toISOString().slice(0, 19).replace('T', ' ')
+    messages.value.push({ id: localId, role: 'user', content: text, created_at: stamp, pending: true })
+    sending.value = true; sendError.value = ''
+    try {
+      const r = await http.post<{ success?: boolean; reply?: string; error?: string; message?: string }>('/api/chat', {
+        message: text,
+        target_id: activeTarget.value,
+        client_message_id: clientId,
+      })
+      if (!r.reply) throw new Error(r.message || r.error || '发送失败')
+      messages.value = messages.value.filter(m => m.id !== localId)
+      messages.value.push({ role: 'user', content: text, created_at: stamp })
+      messages.value.push({ role: 'assistant', content: r.reply, created_at: new Date().toISOString().slice(0, 19).replace('T', ' ') })
+      return true
+    } catch (e) {
+      messages.value = messages.value.filter(m => m.id !== localId)
+      sendError.value = e instanceof Error ? e.message : String(e)
+      return false
+    } finally {
+      sending.value = false
+    }
   }
 
   async function refresh() {
@@ -109,5 +141,5 @@ export const useSessionStore = defineStore('session', () => {
       error.value = e instanceof Error ? e.message : String(e)
     } finally { loading.value = false }
   }
-  return { loading, connected, error, status, conversations, activeTarget, conversationsError, messages, historyError, unread, persona, relation, savings, weekly, memoryTargets, lifeState, presence, week, refresh, selectConversation, loadHistory }
+  return { loading, connected, error, status, conversations, activeTarget, conversationsError, messages, historyError, unread, persona, relation, savings, weekly, memoryTargets, lifeState, presence, week, sending, sendError, refresh, selectConversation, loadHistory, sendMessage }
 })

@@ -76,6 +76,7 @@ v35.5.0.0 ✅ Vue 前置（Vue 3 + Vite + TS + Router/Pinia + Vitest/Playwright�
 v35.5.1.0 ✅ AppShell / 12 导航 / 浅色主题
 v35.5.2.0 ✅ 首次登录 QQ + token / 后端数据态 / 不造假数据
 v35.5.3.0 ✅ QQ 会话列表 + 历史（/api/conversations、/api/history）
+v35.5.4.0 ✅ 文本发送 / 乐观更新 / 失败回滚 / client_message_id 幂等
 ```
 
 已落地工程：
