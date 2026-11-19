@@ -8,6 +8,8 @@
 > v35.2.25.1 是当前仓库版本；v26 已封板。**v25 之后普通版本只切 worker，热更前提是 worker 归 supervisor 管**；策略见 [HOT-UPDATE-POLICY.md](docs/HOT-UPDATE-POLICY.md)，部署见 [DEPLOY-v26.md](docs/DEPLOY-v26.md)。
 >
 > 状态规则：**下一个大版本进入试运行，则上一个大版本视为完成。**
+>
+> 后端进程名 **nao-run**；`run.py` / `start.py` 保留兼容。
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 ![C++17](https://img.shields.io/badge/C%2B%2B-17-00599C)
@@ -676,7 +678,7 @@ NAO_VISION_MODEL=ep-xxxxxxxx
 ```text
 该功能当前被禁用。
 启用：config/features.json -> features.<name>.enabled = true
-然后：python3 scripts/preflight.py && python3 run.py
+然后：python3 scripts/preflight.py && ./nao-run
 ```
 
 注意：
@@ -740,7 +742,7 @@ python3 checks/env_check.py
 ./gateway/build/rec_gateway --config config/gateway.json &
 
 # 5. 启动 bot
-python3 run.py
+./nao-run
 ```
 
 预检逐项打勾，退出码 0 才算通过；任何 **FAIL** 都别启动。
@@ -872,7 +874,7 @@ personas/nao/
 | 方式 | 命令 | 生效时机 | 持久化 |
 |---|---|---|---|
 | **运行时切换** | `!persona <名字>` | 下一句话 | ✅ 写 `personas/.active` |
-| 环境变量 | `NAO_PERSONA=<名字> python3 run.py` | 启动时 | ❌ |
+| 环境变量 | `NAO_PERSONA=<名字> ./nao-run` | 启动时 | ❌ |
 | 默认 | 无 | 用 `nao` | — |
 
 优先级：**`!persona` > `.active` > `NAO_PERSONA` > `nao`**，每层都会检查目录是否存在，不存在就往下落。
@@ -1285,7 +1287,7 @@ set +a
 python3 scripts/nao_supervisor.py \
   --base data/workers \
   --version 35.2.1.0 \
-  --worker-cmd "python3 -u run.py" \
+  --worker-cmd "python3 -u nao_run.py" \
   --timeout 90 \
   --drain-seconds 60
 ```
@@ -1352,7 +1354,7 @@ python3 scripts/prepare_worker.py --version 31.x.y
 python3 scripts/nao_supervisor.py \
   --base data/workers \
   --version 31.x.y \
-  --worker-cmd "python3 -u run.py" \
+  --worker-cmd "python3 -u nao_run.py" \
   --timeout 90 \
   --drain-seconds 60
 ```
@@ -1405,12 +1407,12 @@ python3 scripts/nao_update.py --latest --dry-run
 
 ```bash
 pkill -f 'bot.ingress'
-pkill -f 'run.py'
+pkill -f 'nao_run.py'
 
 cd ~/Hoshinoumi
 git log --oneline -5
 git reset --hard <旧提交>
-python3 run.py
+./nao-run
 ```
 
 数据库没有结构变更时不需要恢复备份；有迁移时恢复 `~/nao-before-v35.2.1.0.sql`。
@@ -1422,7 +1424,7 @@ python3 run.py
 ### 旧版单进程（仅本地调试）
 
 ```bash
-python3 run.py
+./nao-run
 ```
 
 这种方式直接监听 3001/27004，不支持 ingress/蓝绿热更新，只适合本地调试或临时验证。`start.py` 仅是旧兼容包装。
@@ -2235,7 +2237,7 @@ docker compose -f docker-compose.release.yml logs -f
 python -m pip install -r requirements.txt
 python scripts\migrate.py --apply
 python checks\env_check.py
-python3 run.py
+nao-run.cmd
 ```
 
 - 端口占用用 `netstat -ano | findstr 3001` 查。
