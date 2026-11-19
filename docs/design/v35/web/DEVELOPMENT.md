@@ -36,6 +36,27 @@ GET /internal/conversations
 → [{type:'private'|'group', id, name, member_count, unread, last_message, updated_at}]
 ```
 
+## 3.1 全局导航
+
+导航必须对齐 DSH 功能，不是只做聊天：
+
+```text
+主页
+nao（聊天）
+记忆
+关系
+存钱
+周计划表
+信息
+人设
+设置
+命令
+定时任务
+运行日志
+```
+
+v35.5 演示先给全部入口和命令页；完整功能页在 v35.7 实现。
+
 ## 3. 布局
 
 ```text

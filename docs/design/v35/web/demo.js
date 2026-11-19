@@ -32,6 +32,11 @@
   };
 
   const PAGES = {
+    home: [['运行状态', 'running · schema 35'], ['记忆账号', '2 个 target'], ['本周课程', '3 门'], ['快捷', '聊天 / 记忆 / 存钱 / 周计划']],
+    info: [['后端', '127.0.0.1:27004 · 42ms'], ['数据库', '已连接 · schema 35'], ['记忆 / 事件', '4 / 7'], ['学习计划', '已读取']],
+    commands: [['!ping', '在线测试'], ['!status', '运行状态'], ['!memory', '记忆查询'], ['!logs', '最近日志']],
+    cron: [['每日早报', '08:00 · 启用'], ['日记提醒', '22:30 · 启用'], ['健康检查', '每小时 · 停用'], ['下一次', '明天 08:00']],
+    logs: [['09:13 INFO chat', 'len=18'], ['09:12 INFO command', 'status'], ['09:04 WARN search_images', 'timeout'], ['08:58 INFO memory', 'append']],
     memory: [['记忆本', '最近 7 天 · 4 条'], ['今天值得高兴的事', '方案通过 · 已写入长期记忆'], ['你不喜欢太吵的地方', '偏好安静 · 来自对话'], ['正在读', '《十日终焉》 · 窗边']],
     savings: [['总余额', '¥3,300.00'], ['本月收入', '¥8,000'], ['本月支出', '¥3,200'], ['旅行目标', '60% · 还差 ¥2,200']],
     weekly: [['第 12 周', '3 门课'], ['周一 1-2 节', '高等数学 · 教三 201'], ['周三 3-4 节', '大学英语 · 文科楼 104'], ['周五 5-6 节', '数据结构 · 实验楼 302']],
@@ -39,7 +44,7 @@
     relation: [['亲密度', '0.62 · 熟'], ['信任', '0.82'], ['理解', '0.76'], ['最近变化', '+0.020 · 聊天']],
     settings: [['后端地址', 'http://127.0.0.1:27004'], ['连接状态', '已连接 · schema 35'], ['主人 QQ', '822891053'], ['视觉', '深色 · 动画默认关闭']]
   };
-  const TITLES = { memory: '记忆', savings: '存钱', weekly: '周计划表', persona: '人设', relation: '关系', settings: '设置' };
+  const TITLES = { home: '主页', memory: '记忆', savings: '存钱', weekly: '周计划表', persona: '人设', relation: '关系', info: '信息', commands: '命令', cron: '定时任务', logs: '运行日志', settings: '设置' };
 
   // 注入演示用样式
   const css = document.createElement('style');
@@ -157,9 +162,9 @@
     document.getElementById('backChat').addEventListener('click', () => showChat());
   }
 
-  const railPages = ['chat', 'memory', 'savings', 'weekly', 'persona', 'relation', 'settings'];
+  const railPages = ['home', 'chat', 'memory', 'relation', 'savings', 'weekly', 'info', 'persona', 'commands', 'cron', 'logs', 'settings'];
   document.querySelectorAll('.rnav').forEach((b, i) => {
-    b.dataset.page = railPages[i] || 'chat';
+    b.dataset.page = b.dataset.page || railPages[i] || 'chat';
     b.addEventListener('click', () => {
       const p = b.dataset.page;
       if (p === 'chat') { renderChat(document.querySelector('.conv.on')?.dataset.conv || 'nao'); }
