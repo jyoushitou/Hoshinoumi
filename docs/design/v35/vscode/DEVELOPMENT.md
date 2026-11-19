@@ -19,7 +19,7 @@ v35.4 的侧栏页面复用 DSH 客户端结构：v35.4.0 骨架阶段已带入�
 
 ## 1.2 Logo
 
-统一使用 [docs/design/logo/hoshinoumi.svg](../logo/hoshinoumi.svg)：四芒星 + 轨道，`currentColor`。VS Code 入口图标副本在 `media/nao.svg`。
+VS Code 入口使用单色版 [docs/design/logo/hoshinoumi-mono.svg](../logo/hoshinoumi-mono.svg)：四芒星 + 轨道，`currentColor`。文档/README 使用彩色版 `hoshinoumi.svg`。扩展副本在 `media/nao.svg`。
 
 ## 2. 模块拆分
 

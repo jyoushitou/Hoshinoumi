@@ -74,14 +74,15 @@ REC-vX.Y.Z-bundle.bundle
 
 ## Logo
 
-正式 Logo：
+同一图形，两种导出：
 
 ```text
-docs/design/logo/hoshinoumi.svg
+文档/README/演示   docs/design/logo/hoshinoumi.svg       彩色渐变
+VS Code/托盘/安装器 docs/design/logo/hoshinoumi-mono.svg  currentColor 单色
 ```
 
 - 形态：四芒星 + 轨道
-- 颜色：`currentColor`，跟随宿主主题
+- 文档可以有多种颜色；平台图标只要求单色
+- 单色版必须 `currentColor`
 - 禁止：加气泡、加号、文字、拉伸、贴边
 
-所有后续界面/图标/文档需要 Logo 时，统一使用这个文件。

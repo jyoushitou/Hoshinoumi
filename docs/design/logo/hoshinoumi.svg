@@ -1,4 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-<ellipse cx="12" cy="12" rx="10.2" ry="3.5" transform="rotate(-30 12 12)" stroke="currentColor" stroke-width="1.1" opacity="0.45"/>
-<path d="M12 2.1c.62 6.2 3.7 9.28 9.9 9.9-6.2.62-9.28 3.7-9.9 9.9-.62-6.2-3.7-9.28-9.9-9.9 6.2-.62 9.28-3.7 9.9-9.9Z" fill="currentColor"/>
+<defs>
+<linearGradient id="hg" x1="3" y1="21" x2="21" y2="3" gradientUnits="userSpaceOnUse">
+<stop stop-color="#5B8CFF"/>
+<stop offset="0.52" stop-color="#7EE7FF"/>
+<stop offset="1" stop-color="#C18CFF"/>
+</linearGradient>
+</defs>
+<ellipse cx="12" cy="12" rx="10.2" ry="3.5" transform="rotate(-30 12 12)" stroke="url(#hg)" stroke-width="1.1" opacity="0.5"/>
+<path d="M12 2.1c.62 6.2 3.7 9.28 9.9 9.9-6.2.62-9.28 3.7-9.9 9.9-.62-6.2-3.7-9.28-9.9-9.9 6.2-.62 9.28-3.7 9.9-9.9Z" fill="url(#hg)"/>
 </svg>
