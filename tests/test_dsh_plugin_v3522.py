@@ -34,7 +34,7 @@ class DshPluginPackageTests(unittest.TestCase):
         host = (PLUGIN / "index.js").read_text(encoding="utf-8")
         for route in ("/api/hoshinoumi/health", "/api/hoshinoumi/config",
                       "/api/hoshinoumi/test", "/api/hoshinoumi/chat", "/api/hoshinoumi/history",
-                      "/api/hoshinoumi/command", "/api/hoshinoumi/ui"):
+                      "/api/hoshinoumi/command", "/api/hoshinoumi/ui", "/api/hoshinoumi/status", "/api/hoshinoumi/memory", "/api/hoshinoumi/logs", "/api/hoshinoumi/plan", "/api/hoshinoumi/cron"):
             self.assertIn(route, host)
         self.assertIn("hoshinoumi.json", host)
         self.assertIn("Bearer", host)

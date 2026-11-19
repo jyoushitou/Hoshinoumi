@@ -318,9 +318,29 @@ function setHead(title,mode,status){document.getElementById('htitle').textConten
 function showChat(){hideAll();document.getElementById('app').classList.remove('cmd-mode');document.getElementById('breadcrumb').textContent='应用 / 工作区 / nao';document.getElementById('pageChat').classList.add('on');setHead('nao','◈ 工作区 · 私聊','');setBackendStatus(backendReady);document.getElementById('tabs').style.display='flex';}
 function showNew(){hideAll();document.getElementById('breadcrumb').textContent='应用 / 工作区 / nao / 新会话';document.getElementById('pageModule').classList.add('on');document.getElementById('moduleBody').innerHTML='<div class="crumb">工作区 / nao / 新会话</div><div class="ch1">新会话</div><div class="cdesc">和 nao 开始新对话，历史不会丢。</div><div class="mgrid" style="margin-top:12px"><div class="mcard"><h3>你可以这样开始</h3><div class="mline">“今天有点累”<span class="r">情绪</span></div><div class="mline">“午饭 35”<span class="r">记账</span></div><div class="mline">“这周有什么安排”<span class="r">日程</span></div></div><div class="mcard"><h3>上下文</h3><div class="mline">人设<span class="r">友利奈绪</span></div><div class="mline">记忆<span class="r">1,284 条</span></div><div class="mline">后端<span class="r">见设置</span></div></div></div>';setHead('新会话','◈ 工作区 · 私聊','');setBackendStatus(backendReady);}
 function showCmd(tab){hideAll();document.getElementById('breadcrumb').textContent='应用 / 自动化任务 / 命令';document.getElementById('pageCmd').classList.add('on');setHead('命令','自动化任务 / Hoshinoumi','只读');renderCmdGroups();}
-function showScheduled(){hideAll();document.getElementById('breadcrumb').textContent='应用 / 自动化任务 / 定时任务';document.getElementById('pageScheduled').classList.add('on');setHead('定时任务','自动化任务 / 定时任务','3 个启用');}
-function showLogs(){hideAll();document.getElementById('breadcrumb').textContent='应用 / 自动化任务 / 运行日志';document.getElementById('pageLogs').classList.add('on');setHead('运行日志','自动化任务 / 运行日志','24h');}
-function showHome(){hideAll();document.querySelectorAll('.ocard .om').forEach(e=>{e.innerHTML=backendReady?'<b>示例</b> 数据':'未连接'});document.getElementById('breadcrumb').textContent='应用 / 工作区 / nao / 主页';document.getElementById('pageOverview').classList.add('on');setHead('主页','工作区 / nao','9 个功能模块');}
+async function showScheduled(){
+  hideAll(); const title='定时任务';
+  if(!backendReady){moduleEmpty(title,'后端未连接，暂时没有任务数据。');return}
+  try{
+    const j=await jsonApi('/api/hoshinoumi/cron');
+    const rows=Array.isArray(j.data)?j.data:[];
+    renderModule(title,'来自后端 /internal/cron 的真实任务。',
+      [[String(rows.length),'任务'],[String(rows.filter(x=>x.enabled).length),'启用'],['实时','来源'],['—','下次执行']],
+      rows.length?rows.slice(0,8).map(x=>['#'+String(x.id||'—'),[String(x.content||'—'),'时间 · '+String(x.at_time||x.rule||x.once_at||'—'),'状态 · '+(x.enabled?'启用':'暂停')]]):[['暂无任务',['后端没有返回定时任务']]]);
+  }catch(e){moduleEmpty(title,'读取失败：'+e.message)}
+}
+async function showLogs(){
+  hideAll(); const title='运行日志';
+  if(!backendReady){moduleEmpty(title,'后端未连接，暂时没有日志。');return}
+  try{
+    const j=await jsonApi('/api/hoshinoumi/logs?limit=30');
+    const rows=Array.isArray(j.logs)?j.logs:[];
+    renderModule(title,'来自后端 /api/logs 的真实日志。',
+      [[String(rows.length),'条数'],['实时','来源'],['—','时间范围'],['—','失败数']],
+      rows.length?[['最近日志',rows.slice(0,12).map(x=>String(x))]]:[['暂无日志',['后端没有返回日志']]]);
+  }catch(e){moduleEmpty(title,'读取失败：'+e.message)}
+}
+function showHome(){hideAll();document.querySelectorAll('.ocard .om').forEach(e=>{e.innerHTML=backendReady?'读取中…':'未连接'});loadHomeStats();document.getElementById('breadcrumb').textContent='应用 / 工作区 / nao / 主页';document.getElementById('pageOverview').classList.add('on');setHead('主页','工作区 / nao','9 个功能模块');}
 function showOverview(){showHome();}
 const MODULES={
  memory:{t:'记忆',d:'记忆本、画像、关系、事件和关键词。',stats:[['1,284','记忆'],['328','事件'],['12','关系'],['46','关键词']],cards:[['用户画像',['偏好 · 晚上聊天','称呼 · 你','边界 · 财务仅私聊']],['关系',['奈绪 · 恋人','信任 86','最近互动 · 今天']],['记忆本',['昨天方案通过','旅行目标 60%','担心过不了']],['关键词',['旅行','方案','猫','读书']]]},
@@ -330,8 +350,102 @@ const MODULES={
  settings:{t:'设置',d:'后端地址、连接测试、页面可见性、动画。',stats:[['未配置','后端'],['—','延迟'],['开','动画'],['9','主页面']],cards:[['后端',['首次打开时填写','token 不显示','连接测试 · 设置']],['页面可见性',['主页面 · 6','子页面 · 8','导航球 · 关']],['动画',['消息 · 开','页面 · 开','减少动态 · 跟随系统']],['数据',['日志 · 7 天','财务 · 仅主人']]]},
  plugins:{t:'插件',d:'DSH 插件的安装、审批、权限和错误。',stats:[['2','已安装'],['1','待审批'],['0','错误'],['read','权限']],cards:[['Hoshinoumi',['v35.2.1','已启用','read-only']],['Search Images',['已启用','只读']],['待审批',['memory-write','需要 owner']],['权限',['recall · 允许','remember · 拒绝']]]}
 };
-function showModule(key){const m=MODULES[key];if(!m)return;hideAll();if(!backendReady){document.getElementById('pageModule').classList.add('on');document.getElementById('moduleBody').innerHTML='<div class="crumb">工作区 / nao / '+m.t+'</div><div class="ch1">'+m.t+'</div><div class="cdesc">后端未连接，暂时没有数据。</div><div class="mgrid" style="margin-top:12px"><div class="mcard"><h3>需要先配置</h3><div class="mline">后端地址 / token / QQ<span class="r">设置</span></div></div></div>';setHead(m.t,'工作区 / nao','');setBackendStatus(false);return;}document.getElementById('breadcrumb').textContent='应用 / 工作区 / nao / '+m.t;document.getElementById('pageModule').classList.add('on');document.getElementById('moduleBody').innerHTML='<div class="crumb">工作区 / nao / '+m.t+'</div><div class="ch1">'+m.t+' <span class="ok">● 示例数据</span></div><div class="cdesc">'+m.d+'</div><div class="stats">'+m.stats.map(x=>'<div class="stat"><div class="n">'+x[0]+'</div><div class="l">'+x[1]+'</div></div>').join('')+'</div><div class="mgrid">'+m.cards.map(c=>'<div class="mcard"><h3>'+c[0]+'</h3>'+c[1].map(x=>'<div class="mline">'+x+'<span class="r">›</span></div>').join('')+'</div>').join('')+'</div>';setHead(m.t,'工作区 / nao','');setBackendStatus(backendReady);}
-function toggleAuto(){document.getElementById('autoSub').style.display=document.getElementById('autoSub').style.display==='none'?'block':'none';}
+async function loadHomeStats() {
+  if (!backendReady) return;
+  try {
+    const [st, mem, cron, logs] = await Promise.all([
+      jsonApi('/api/hoshinoumi/status').catch(() => null),
+      jsonApi('/api/hoshinoumi/memory').catch(() => null),
+      jsonApi('/api/hoshinoumi/cron').catch(() => null),
+      jsonApi('/api/hoshinoumi/logs?limit=1').catch(() => null),
+    ]);
+    const counts = {
+      '记忆': mem ? (mem.targets || []).reduce((n, t) => n + Number(t.count || 0), 0) : '—',
+      '信息': st ? (st.stats?.memories ?? '—') : '—',
+      '存钱': '未接入',
+      '人设': '未接入',
+      '设置': '已配置',
+      '命令': '51',
+      '定时任务': cron && Array.isArray(cron.data) ? cron.data.length : '—',
+      '运行日志': logs ? (logs.logs || []).length : '—',
+      '聊天': '进入',
+    };
+    document.querySelectorAll('.ocard').forEach(card => {
+      const name = card.querySelector('.on')?.textContent.trim();
+      const om = card.querySelector('.om');
+      if (om && Object.prototype.hasOwnProperty.call(counts, name)) om.innerHTML = '<b>' + counts[name] + '</b>';
+    });
+  } catch {}
+}
+function renderModule(title, desc, stats, cards) {
+  document.getElementById('pageModule').classList.add('on');
+  document.getElementById('moduleBody').innerHTML =
+    '<div class="crumb">工作区 / nao / ' + title + '</div>' +
+    '<div class="ch1">' + title + ' <span class="ok">● 实时数据</span></div>' +
+    '<div class="cdesc">' + desc + '</div>' +
+    '<div class="stats">' + stats.map(x => '<div class="stat"><div class="n">' + x[0] + '</div><div class="l">' + x[1] + '</div></div>').join('') + '</div>' +
+    '<div class="mgrid">' + cards.map(c => '<div class="mcard"><h3>' + c[0] + '</h3>' + c[1].map(x => '<div class="mline">' + x + '</div>').join('') + '</div>').join('') + '</div>';
+  setHead(title, '工作区 / nao', '');
+  setBackendStatus(backendReady);
+}
+function moduleEmpty(title, text) {
+  document.getElementById('pageModule').classList.add('on');
+  document.getElementById('moduleBody').innerHTML =
+    '<div class="crumb">工作区 / nao / ' + title + '</div><div class="ch1">' + title + '</div>' +
+    '<div class="cdesc">' + text + '</div>' +
+    '<div class="mgrid" style="margin-top:12px"><div class="mcard"><h3>接口状态</h3><div class="mline">' + text + '</div></div></div>';
+  setHead(title, '工作区 / nao', '');
+  setBackendStatus(backendReady);
+}
+async function jsonApi(path) {
+  const r = await fetch(path);
+  const j = await r.json();
+  if (!r.ok) throw new Error(j.message || j.error || ('HTTP ' + r.status));
+  return j;
+}
+async function showModule(key) {
+  const titles = { memory: '记忆', savings: '存钱', info: '信息', persona: '人设', settings: '设置' };
+  const title = titles[key] || key;
+  hideAll();
+  if (!backendReady) { moduleEmpty(title, '后端未连接，暂时没有数据。请先在设置中配置后端地址、token 和主人 QQ。'); return; }
+  try {
+    if (key === 'memory') {
+      const j = await jsonApi('/api/hoshinoumi/memory');
+      const targets = Array.isArray(j.targets) ? j.targets : [];
+      const total = targets.reduce((n, t) => n + Number(t.count || 0), 0);
+      renderModule('记忆', '来自 Hoshinoumi 后端的真实记忆统计。',
+        [[String(total), '记忆条数'], [String(j.total_targets || 0), '会话'], [String(targets.filter(t => Number(t.count) > 0).length), '有记忆会话'], ['实时', '来源']],
+        targets.length ? targets.slice(0, 8).map(t => [String(t.target_id), [String(t.count || 0) + ' 条', t.last_message || '—']]) : [['暂无记忆', ['后端没有返回记忆数据']]]);
+      return;
+    }
+    if (key === 'info') {
+      const [st, logs, plan] = await Promise.all([
+        jsonApi('/api/hoshinoumi/status'),
+        jsonApi('/api/hoshinoumi/logs?limit=20'),
+        jsonApi('/api/hoshinoumi/plan').catch(() => null),
+      ]);
+      const stats = st.stats || {};
+      renderModule('信息', '运行状态、数据库统计、日志和学习计划。',
+        [[String(st.status || '—'), '状态'], [String(stats.memories || 0), '记忆'], [String(stats.logs || 0), '日志'], [String(st.master_qq || '—'), '主人 QQ']],
+        [['运行', ['DeepSeek · ' + (st.deepseek ? '已配置' : '未配置'), 'CLIP · ' + (st.clip ? '开' : '关'), '图片来源 · ' + (st.sticker_api ? '已配置' : '未配置')]],
+         ['数据', ['图片 · ' + (stats.images || 0), '事件 · ' + (stats.events || 0), '关键词 · ' + (stats.keywords || 0)]],
+         ['最近日志', (Array.isArray(logs.logs) ? logs.logs.slice(0, 3) : []).length ? logs.logs.slice(0, 3).map(x => String(x)) : ['暂无日志']],
+         ['学习计划', plan ? ['已读取后端计划', '接口 /api/plan'] : ['未获取到计划']]]);
+      return;
+    }
+    if (key === 'settings') {
+      const cfg = await jsonApi('/api/hoshinoumi/config');
+      renderModule('设置', '当前 DSH 插件的后端配置，不显示 token 明文。',
+        [[cfg.configured ? '已配置' : '未配置', '后端'], [cfg.hasToken ? '已保存' : '无', 'token'], [String(cfg.target_id || '—'), '主人 QQ'], ['35.2.14', '版本']],
+        [['后端', [cfg.base_url || '—', 'token · ' + (cfg.hasToken ? '已保存' : '未保存'), 'target_id · ' + (cfg.target_id || '—')]],
+         ['操作', ['重新配置 · 点右上角 ⚙', '测试连接 · 配置框内']]]);
+      return;
+    }
+    moduleEmpty(title, '后端暂未提供该模块接口，不能编造数据。');
+  } catch (e) {
+    moduleEmpty(title, '读取失败：' + e.message);
+  }
+}function toggleAuto(){document.getElementById('autoSub').style.display=document.getElementById('autoSub').style.display==='none'?'block':'none';}
 function cmdTab(el){document.querySelectorAll('.ctab').forEach(x=>x.classList.remove('on'));el.classList.add('on');}
 function runTool(){const r=document.getElementById('cmdResult');r.style.opacity=.25;setTimeout(()=>{r.style.opacity=1;r.innerHTML='<b>recall</b> · 200 OK · 12ms<br>找到 1 条：<br>· 昨天方案通过，很高兴'},650);}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.opacity=1;t.style.transform='translate(-50%,0)';clearTimeout(t._h);t._h=setTimeout(()=>{t.style.opacity=0;t.style.transform='translate(-50%,12px)'},1600);}
