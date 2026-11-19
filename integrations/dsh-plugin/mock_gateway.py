@@ -17,13 +17,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 import threading
 import time
 from datetime import datetime, timedelta
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
-VERSION = "35.2.23.1"
+VERSION = "35.2.23.2"
 SCHEMA = 34
 OWNER_QQ = "822891053"
 
@@ -282,7 +283,20 @@ class Handler(BaseHTTPRequestHandler):
             return
         if path == "/api/weekly-plan/import":
             week = int(body.get("week") or 1)
-            self._json(200, {"ok": True, "week": week, "count": len(WEEKLY.get(week, [])), "all_weeks_count": len(WEEKLY.get(week, [])), "dry_run": bool(body.get("dry_run")), "courses": WEEKLY.get(week, []), "mock": True})
+            rows = WEEKLY.get(week, [])
+            total = len(rows)
+            try:
+                from pathlib import Path as _Path
+                sys.path.insert(0, str(_Path(__file__).resolve().parents[2]))
+                from bot.life.weekly_plan import parse_html
+                parsed = parse_html(str(body.get("html") or ""))
+                total = len(parsed)
+                rows = [x for x in parsed if not x["weeks"] or week in x["weeks"]]
+            except Exception:
+                pass
+            if not body.get("dry_run"):
+                WEEKLY[week] = rows
+            self._json(200, {"ok": True, "week": week, "count": len(rows), "all_weeks_count": total, "dry_run": bool(body.get("dry_run")), "courses": rows[:100], "mock": True})
             return
         if path == "/api/chat":
             message = str(body.get("message", "")).strip()
