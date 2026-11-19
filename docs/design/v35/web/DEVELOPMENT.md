@@ -310,6 +310,30 @@ Web：拉取，不做 Web Push
 推送只带 message_id，打开再拉正文
 ```
 
+## 3.17 开发转发与生产代理
+
+开发阶段不需要 nginx：
+
+```text
+Vite :27006
+  /api      → 127.0.0.1:27004
+  /internal → 127.0.0.1:27004
+  /healthz  → 127.0.0.1:27004
+  /readyz   → 127.0.0.1:27004
+```
+
+生产如果只需要本机访问，可以直接由后端静态托管；如果要同源 + TLS + 多端入口，再用 nginx：
+
+```text
+nginx :27006
+  /        → dist 静态文件
+  /api/    → gateway :27005
+  /ws      → gateway/ingress
+  其余内部接口不暴露公网
+```
+
+nginx 要点：SPA fallback、上传大小、SSE/WebSocket 不缓冲、API 不缓存。
+
 ## 4. 次次版本
 
 | 版本 | 交付 | 验收 |
