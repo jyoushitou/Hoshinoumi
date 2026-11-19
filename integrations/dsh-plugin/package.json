@@ -1,6 +1,6 @@
 {
   "name": "hoshinoumi-dsh",
-  "version": "35.2.15",
+  "version": "35.2.16",
   "description": "Hoshinoumi DSH client: nao chat, commands, workspace UI",
   "license": "MIT",
   "type": "module",
@@ -15,7 +15,8 @@
     "client.js",
     "ui.html",
     "cordis.patch.yml",
-    "README.md"
+    "README.md",
+    "mock_gateway.py"
   ],
   "engines": {
     "node": ">=22"

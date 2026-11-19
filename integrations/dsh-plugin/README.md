@@ -22,7 +22,7 @@ Web profile：
 dsh plugin --profile web add link:D:\Desktop\Desktop\develop\NapCat+Pyhon\integrations\dsh-plugin
 ```
 
-桌面版通过 DSH 插件管理安装本地目录（本机已安装到 desktop/web 两个 profile，版本 35.2.15）。
+桌面版通过 DSH 插件管理安装本地目录（本机已安装到 desktop/web 两个 profile，版本 35.2.16）。
 
 ## 使用
 
@@ -53,3 +53,21 @@ ui.html    完整前端界面
 ```
 
 改 `client.js` 由 DSH HMR 热换；改 `index.js` 需要重启 DSH。
+
+## Mock 网关
+
+没有启动真实 Bot 后端时，可以用 mock 网关测试插件：
+
+```powershell
+python integrations/dsh-plugin/mock_gateway.py
+```
+
+配置：
+
+```text
+后端地址  http://127.0.0.1:27005
+token     mock-token
+主人 QQ   822891053
+```
+
+mock 会返回状态、记忆、历史、日志、计划、定时任务、聊天和命令数据；页面上显示的是 mock 数据，不是真实 Bot 数据。

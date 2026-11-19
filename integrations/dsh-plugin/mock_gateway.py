@@ -1,0 +1,259 @@
+#!/usr/bin/env python3
+"""Hoshinoumi mock gateway for DSH plugin testing.
+
+This is NOT the real bot backend. It serves the same HTTP shapes the DSH
+plugin expects so the plugin can be tested without starting the bot.
+
+Run:
+    python integrations/dsh-plugin/mock_gateway.py
+    python integrations/dsh-plugin/mock_gateway.py --port 27005 --token mock-token
+
+Then configure the plugin:
+    backend address: http://127.0.0.1:27005
+    token:           mock-token
+    owner QQ:        822891053
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import threading
+import time
+from datetime import datetime, timedelta
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from urllib.parse import parse_qs, urlparse
+
+VERSION = "35.2.16.0"
+SCHEMA = 33
+OWNER_QQ = "822891053"
+
+MEMORY = {
+    OWNER_QQ: [
+        ("昨天方案过了，终于松了口气。", "那很好啊，要不要记进今天值得高兴的事？"),
+        ("这个月结余三千三，旅行目标到六成了。", "嗯，离旅行又近了一点。"),
+        ("今天外面有点冷。", "先喝点热的吧，别急着出门。"),
+    ],
+    "10001": [
+        ("最近在看的书是《十日终焉》。", "窗边光线好的时候看，会舒服一点。"),
+    ],
+}
+
+HISTORY = [
+    {"id": 1, "role": "assistant", "content": "你回来啦。今天外面有点冷，先喝点热的吧。", "created_at": "2026-11-18 20:58:00"},
+    {"id": 2, "role": "user", "content": "刚到家，方案终于过了。", "created_at": "2026-11-18 21:00:00"},
+    {"id": 3, "role": "assistant", "content": "那很好啊。要不要记进“今天值得高兴的事”？", "created_at": "2026-11-18 21:01:00"},
+    {"id": 4, "role": "assistant", "content": "本月结余 ¥3,300，旅行目标 60% 了。", "created_at": "2026-11-18 21:03:00"},
+    {"id": 5, "role": "user", "content": "早。今天有什么安排？", "created_at": "2026-11-19 09:12:00"},
+    {"id": 6, "role": "assistant", "content": "上午看书，下午把房间收拾一下。你忙你的，我在。", "created_at": "2026-11-19 09:13:00"},
+]
+
+LOGS = [
+    "2026-11-19 09:13:00 INFO  chat target=822891053 len=18",
+    "2026-11-19 09:12:00 INFO  command status",
+    "2026-11-19 09:04:00 WARN  search_images upstream timeout, no retry",
+    "2026-11-19 08:58:00 INFO  memory append target=822891053",
+    "2026-11-19 08:40:00 INFO  scheduler tick tasks=3",
+]
+
+TASKS = [
+    {"id": 1, "schedule_type": "daily", "content": "每日早报", "at_time": "08:00", "enabled": True, "next_ts": "2026-11-20 08:00:00"},
+    {"id": 2, "schedule_type": "daily", "content": "日记提醒", "at_time": "22:30", "enabled": True, "next_ts": "2026-11-19 22:30:00"},
+    {"id": 3, "schedule_type": "hourly", "content": "健康检查", "at_time": "每小时", "enabled": False, "next_ts": None},
+]
+
+PLAN = {
+    "week_start": "2026-11-16",
+    "days": [
+        {"date": "2026-11-16", "items": [{"text": "读书 30 分钟", "done": True}]},
+        {"date": "2026-11-17", "items": [{"text": "整理笔记", "done": False}]},
+    ],
+}
+
+
+def _now() -> str:
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+class Handler(BaseHTTPRequestHandler):
+    server_version = "HoshinoumiMock/" + VERSION
+    token = "mock-token"
+
+    def log_message(self, fmt, *args):
+        print(f"[mock] {self.address_string()} {fmt % args}")
+
+    def _send(self, status: int, data, content_type="application/json; charset=utf-8"):
+        if isinstance(data, str):
+            body = data.encode("utf-8")
+        else:
+            body = json.dumps(data, ensure_ascii=False).encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", content_type)
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _json(self, status: int, data):
+        self._send(status, data)
+
+    def _authorized(self) -> bool:
+        if not self.token:
+            return True
+        auth = self.headers.get("Authorization", "")
+        return auth == f"Bearer {self.token}"
+
+    def _body(self):
+        try:
+            n = int(self.headers.get("Content-Length", "0") or 0)
+            raw = self.rfile.read(n) if n else b"{}"
+            return json.loads(raw.decode("utf-8") or "{}")
+        except Exception:
+            return {}
+
+    def do_OPTIONS(self):
+        self.send_response(204)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Headers", "authorization,content-type")
+        self.send_header("Access-Control-Allow-Methods", "GET,POST,OPTIONS")
+        self.end_headers()
+
+    def do_GET(self):
+        u = urlparse(self.path)
+        path = u.path
+        q = parse_qs(u.query)
+
+        if path in ("/healthz", "/api/health"):
+            self._json(200, {"status": "ok", "mock": True, "version": VERSION, "time": _now()})
+            return
+        if path == "/readyz":
+            self._json(200, {"ok": True, "ready": True, "schema": SCHEMA, "version": VERSION, "mock": True})
+            return
+        if path.startswith("/internal/"):
+            return self._internal_get(path, q)
+        if not self._authorized():
+            self._json(401, {"error": "unauthorized", "message": "bad token"})
+            return
+
+        if path == "/api/status":
+            self._json(200, {
+                "status": "running",
+                "mock": True,
+                "master_qq": OWNER_QQ,
+                "deepseek": True,
+                "doubao": False,
+                "clip": False,
+                "sticker_api": False,
+                "stats": {"images": 12, "memories": 4, "events": 7, "logs": len(LOGS), "keywords": 9, "ai_responses": 21},
+                "runtime": {"dialogue_targets": len(MEMORY), "global_keywords": 9, "stickers": 0, "daily_triggers": 2},
+            })
+            return
+        if path == "/api/memory":
+            target = (q.get("target_id") or [""])[0]
+            if target:
+                records = [{"user": u, "bot": b} for u, b in MEMORY.get(target, [])]
+                self._json(200, {"target_id": target, "count": len(records), "records": records, "mock": True})
+            else:
+                targets = [
+                    {"target_id": tid, "count": len(items), "last_message": items[-1][0][:30] if items else ""}
+                    for tid, items in MEMORY.items()
+                ]
+                self._json(200, {"total_targets": len(targets), "targets": targets, "mock": True})
+            return
+        if path == "/api/logs":
+            limit = int((q.get("limit") or ["20"])[0])
+            self._json(200, {"count": min(limit, len(LOGS)), "logs": LOGS[: max(1, limit)], "mock": True})
+            return
+        if path == "/api/plan":
+            self._json(200, PLAN)
+            return
+        if path == "/api/usage":
+            self._json(200, {"records": [], "summary": {"total_prompt_tokens": 0, "total_completion_tokens": 0, "total_tokens": 0, "count": 0}, "mock": True})
+            return
+        if path == "/api/token":
+            self._json(200, {"token_prefix": "mock...", "host": "127.0.0.1", "port": self.server.server_port, "mock": True})
+            return
+        self._json(404, {"error": "not_found", "path": path})
+
+    def _internal_get(self, path, q):
+        if path == "/internal/history":
+            target = (q.get("target_id") or [OWNER_QQ])[0]
+            limit = int((q.get("limit") or ["30"])[0])
+            rows = HISTORY[-max(1, min(limit, 100)):]
+            self._json(200, {"ok": True, "data": rows, "target_id": target, "mock": True})
+            return
+        if path == "/internal/cron":
+            self._json(200, {"ok": True, "data": TASKS, "mock": True})
+            return
+        self._json(404, {"error": "not_found", "path": path})
+
+    def do_POST(self):
+        path = urlparse(self.path).path
+        body = self._body()
+        if path.startswith("/internal/"):
+            self._json(404, {"error": "not_found", "path": path})
+            return
+        if not self._authorized():
+            self._json(401, {"error": "unauthorized", "message": "bad token"})
+            return
+
+        if path == "/api/chat":
+            message = str(body.get("message", "")).strip()
+            target = str(body.get("target_id", OWNER_QQ))
+            if not message:
+                self._json(400, {"error": "empty_message", "message": "message is empty"})
+                return
+            reply = {
+                "你好": "你好呀。",
+                "在吗": "在的，你说。",
+                "存钱": "本月结余 ¥3,300，旅行目标 60%。",
+                "书": "我在看《十日终焉》，窗边光线刚好。",
+            }.get(message, f"收到：{message}（mock 网关）")
+            self._json(200, {"reply": reply, "target_id": target, "mock": True, "time": _now()})
+            return
+        if path == "/api/command":
+            cmd = str(body.get("command", "")).strip().lower()
+            if cmd == "status":
+                result = f"运行中（mock）\n主人 QQ：{OWNER_QQ}\n记忆：4 条\nschema：{SCHEMA}"
+            elif cmd == "help":
+                result = "mock 命令目录：status / help / memory / logs"
+            elif cmd == "memory":
+                result = "822891053：3 条记忆"
+            else:
+                self._json(400, {"error": "unknown_command", "message": f"未知命令: {cmd}"})
+                return
+            self._json(200, {"success": True, "command": cmd, "result": result, "mock": True})
+            return
+        self._json(404, {"error": "not_found", "path": path})
+
+
+class MockServer(ThreadingHTTPServer):
+    daemon_threads = True
+    allow_reuse_address = True
+
+
+def serve(port: int = 27005, host: str = "127.0.0.1", token: str = "mock-token") -> MockServer:
+    Handler.token = token
+    server = MockServer((host, port), Handler)
+    return server
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Hoshinoumi mock gateway")
+    parser.add_argument("--host", default="127.0.0.1")
+    parser.add_argument("--port", type=int, default=27005)
+    parser.add_argument("--token", default="mock-token", help="Bearer token; empty disables auth")
+    args = parser.parse_args()
+    server = serve(args.port, args.host, args.token)
+    print(f"Hoshinoumi mock gateway: http://{args.host}:{server.server_port}")
+    print(f"token: {args.token or '(disabled)'}  owner QQ: {OWNER_QQ}")
+    print("This is mock data, not the real bot backend.")
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        server.server_close()
+
+
+if __name__ == "__main__":
+    main()
