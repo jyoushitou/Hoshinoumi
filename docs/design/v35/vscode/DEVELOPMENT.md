@@ -50,6 +50,14 @@ v35.4.20  全功能验收 / VSIX 重打包
 
 v35.4.17 的命令页从 `GET /api/commands` 读目录，不在 `sidebar.html` 里写死 51 条；执行走 `POST /api/command`，owner/risk 由后端返回。
 
+## 1.6 连接路径
+
+```text
+后端同机插件：http://127.0.0.1:27005
+公网插件：https://公网前端:27006（nginx /api）
+不要直连 frpc 27015 / 后端 27004
+```
+
 ## 2. 模块拆分
 
 ### 2.1 扩展宿主

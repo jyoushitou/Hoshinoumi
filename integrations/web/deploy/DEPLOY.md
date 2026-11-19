@@ -80,7 +80,32 @@ frpc remotePort 27015 只允许本机 nginx 访问
 SSE/WS 不缓冲
 ```
 
-## 8. HTTPS
+## 8. 客户端连接路径
+
+```text
+Web 浏览器
+  → https://公网前端:27006
+  → nginx /api → 127.0.0.1:27015 → frpc → gateway 27005
+
+公网 VS Code / DSH 插件
+  → https://公网前端:27006
+  → nginx /api（同一路径，Bearer token）
+  → 不直连 27015，更不直连 27005
+
+本地插件（和 backend 同机）
+  → http://127.0.0.1:27005 直连即可
+```
+
+插件配置的 base_url：
+
+```text
+公网：https://公网前端:27006
+本地：http://127.0.0.1:27005
+```
+
+不要把 frpc 的 27015 或后端 27005 暴露给公网客户端。
+
+## 9. HTTPS
 
 有域名后加 443：
 
