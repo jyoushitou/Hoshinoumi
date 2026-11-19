@@ -179,11 +179,26 @@ dimensions: [{key,label,value,visible}]
   总数为 0 时隐藏 badge
 ```
 
+## 3.14 首次登录
+
+第一次打开没有本地登录配置时，弹窗：
+
+```text
+后端 URL（默认 http://127.0.0.1:27004）
+访问 token
+主人 QQ
+测试连接
+保存并进入
+稍后配置
+```
+
+保存到 localStorage，不写入仓库；设置页可重新打开配置。
+
 ## 4. 次次版本
 
 | 版本 | 交付 | 验收 |
 |---|---|---|
-| v35.5.0.0 | Vue 基座、ThemeToken/MotionPreset、Bearer 登录 | 浏览器能登录 |
+| v35.5.0.0 | Vue 基座、ThemeToken/MotionPreset、首次登录 URL/token/QQ | 浏览器能登录 |
 | v35.5.1.0 | QQ 会话列表、历史分页、已读位点 | 群列表与 QQ 一致 |
 | v35.5.2.0 | 文本发送、乐观更新、失败回滚、幂等 | 能聊天 |
 | v35.5.3.0 | 图片发送/预览、上传 | 图片可用 |

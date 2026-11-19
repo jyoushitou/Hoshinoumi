@@ -183,6 +183,18 @@
     .persona-toolbar{display:flex;gap:7px;align-items:center;margin-bottom:9px}.persona-toolbar button{border:1px solid #dbe8ff;border-radius:6px;background:#fff;color:#2563eb;font-size:9.5px;padding:5px 8px;cursor:pointer}.persona-toolbar button:hover{background:#eef4ff}
     .persona-toolbar .msg{font-size:9px;color:#8a9bb0;margin-left:auto}
     .persona-toolbar input{display:none}
+    .login-mask{position:fixed;inset:0;z-index:50;background:rgba(15,23,42,.35);backdrop-filter:blur(3px);display:none;align-items:flex-start;justify-content:center;padding:80px 16px;overflow:auto}
+    .login-mask.on{display:flex}
+    .login-card{width:100%;max-width:420px;background:#fff;border:1px solid #dbe8ff;border-radius:14px;padding:18px;box-shadow:0 18px 45px rgba(37,99,235,.16)}
+    .login-card h2{font-size:15px;margin:0 0 5px;color:#17263b}.login-card .sub{font-size:10px;color:#6b7c95;line-height:1.6;margin-bottom:13px}
+    .login-field{margin-bottom:9px}.login-field label{display:block;font-size:9px;color:#8a9bb0;margin-bottom:3px}
+    .login-field input{width:100%;border:1px solid #dbe8ff;border-radius:7px;background:#f8fbff;color:#243b55;font:10.5px inherit;outline:0;padding:7px 8px}
+    .login-field input:focus{border-color:#93b7fa;box-shadow:0 0 0 3px rgba(37,99,235,.08)}
+    .login-actions{display:flex;gap:6px;margin-top:10px}.login-actions button{flex:1;border:1px solid #dbe8ff;border-radius:7px;background:#fff;color:#2563eb;font-size:10px;padding:7px;cursor:pointer}
+    .login-actions button.primary{background:#2563eb;border-color:#2563eb;color:#fff}.login-actions button:hover{filter:brightness(.97)}
+    .login-status{font-size:9px;color:#8a9bb0;margin-top:8px;min-height:14px}
+    .login-skip{display:block;margin:9px auto 0;font-size:9px;color:#8a9bb0;background:none;border:0;cursor:pointer}.login-skip:hover{color:#2563eb}
+
 
 
 
@@ -278,6 +290,48 @@
     if (!t) { t = document.createElement('div'); t.className = 'toast'; document.body.appendChild(t); }
     t.textContent = msg; t.classList.add('on');
     clearTimeout(window.__toast); window.__toast = setTimeout(() => t.classList.remove('on'), 1400);
+  }
+
+  // 首次登录
+  let loginMask = null;
+  function openLogin() {
+    if (!loginMask) {
+      const saved = (() => { try { return JSON.parse(localStorage.getItem('hsh_web_login') || '{}'); } catch { return {}; } })();
+      loginMask = document.createElement('div');
+      loginMask.className = 'login-mask';
+      loginMask.innerHTML = '<div class="login-card"><h2>连接 Hoshinoumi</h2><div class="sub">第一次使用，填写后端地址、访问 token 和主人 QQ。<br>只在本地浏览器保存，不写入仓库。</div>' +
+        '<div class="login-field"><label>后端 URL</label><input id="loginUrl" value="' + esc(saved.url || 'http://127.0.0.1:27004') + '" placeholder="http://127.0.0.1:27004"></div>' +
+        '<div class="login-field"><label>访问 token</label><input id="loginToken" type="password" value="' + esc(saved.token || '') + '" placeholder="Bearer token"></div>' +
+        '<div class="login-field"><label>主人 QQ</label><input id="loginQQ" value="' + esc(saved.qq || '822891053') + '" placeholder="822891053"></div>' +
+        '<div class="login-actions"><button id="loginTest">测试连接</button><button class="primary" id="loginSave">保存并进入</button></div>' +
+        '<div class="login-status" id="loginStatus"></div><button class="login-skip" id="loginSkip">稍后配置</button></div>';
+      document.body.appendChild(loginMask);
+      document.getElementById('loginSkip').addEventListener('click', () => loginMask.classList.remove('on'));
+      document.getElementById('loginTest').addEventListener('click', () => {
+        const url = document.getElementById('loginUrl').value.trim();
+        const st = document.getElementById('loginStatus');
+        st.textContent = /^https?:\/\//i.test(url) ? '连接成功（MOCK）· 42ms' : 'URL 需要以 http:// 或 https:// 开头';
+      });
+      document.getElementById('loginSave').addEventListener('click', () => {
+        const url = document.getElementById('loginUrl').value.trim();
+        const token = document.getElementById('loginToken').value.trim();
+        const qq = document.getElementById('loginQQ').value.trim();
+        const st = document.getElementById('loginStatus');
+        if (!/^https?:\/\//i.test(url)) { st.textContent = '后端 URL 不合法'; return; }
+        if (!token || !qq) { st.textContent = 'token 和 QQ 都要填'; return; }
+        localStorage.setItem('hsh_web_login', JSON.stringify({ url, token, qq }));
+        loginMask.classList.remove('on');
+        toast('已保存登录配置（MOCK）');
+        updateConn(url, qq);
+      });
+    }
+    loginMask.classList.add('on');
+  }
+  function updateConn(url, qq) {
+    const v = document.querySelector('.conn .v');
+    const meta = document.querySelector('.conn .meta');
+    if (v) v.innerHTML = '<span class="dot"></span> 已连接 · schema 35';
+    if (meta) meta.textContent = (url || '127.0.0.1:27004').replace(/^https?:\/\//, '') + ' · 42ms · owner ' + (qq || '');
   }
 
   function msgHtml(x) {
@@ -415,6 +469,18 @@
   }));
 
   function showPage(name) {
+    if (name === 'settings') {
+      let saved = {}; try { saved = JSON.parse(localStorage.getItem('hsh_web_login') || '{}'); } catch {}
+      pageView.innerHTML = '<div class="page-head"><div><h2>设置</h2><p>v35.5 Web 演示 · 登录 / 后端 / 连接</p></div><button class="back" id="backChat">← 返回聊天</button></div>' +
+        '<div class="info-grid"><div class="info-panel"><h3>登录配置</h3><div class="info-row"><span>后端 URL</span><b>' + esc(saved.url || 'http://127.0.0.1:27004') + '</b></div><div class="info-row"><span>token</span><b>' + (saved.token ? '已保存 · 掩码' : '未配置') + '</b></div><div class="info-row"><span>主人 QQ</span><b>' + esc(saved.qq || '822891053') + '</b></div><div class="info-row"><span>操作</span><b><button class="back" id="relogin">登录 / 重新配置</button></b></div></div>' +
+        '<div class="info-panel"><h3>连接</h3><div class="info-row"><span>状态</span><b class="ok">已连接 · MOCK</b></div><div class="info-row"><span>schema</span><b>35</b></div><div class="info-row"><span>延迟</span><b>42ms</b></div></div></div>';
+      [top, msgs, composer, searchBar].forEach(x => x.classList.add('chat-hide'));
+      pageView.classList.add('on');
+      document.querySelectorAll('.rnav').forEach(x => x.classList.toggle('on', x.dataset.page === name));
+      document.getElementById('backChat').addEventListener('click', () => showChat());
+      document.getElementById('relogin').addEventListener('click', openLogin);
+      return;
+    }
     if (name === 'persona') {
       const PS = window.__personas || (window.__personas = [
         { name: 'nao', display: '友利奈绪', active: true, files: ['prompt','life','supplement','state','voice'], desc: '口语、简短、带行动；优先记住对话里的细枝末节。' },
@@ -853,4 +919,5 @@
 
   renderChat('nao');
   updateUnread();
+  if (!localStorage.getItem('hsh_web_login')) setTimeout(openLogin, 80);
 })();
