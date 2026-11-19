@@ -4,31 +4,26 @@ const session = useSessionStore()
 </script>
 <template>
   <aside class="context">
-    <div class="pcard">
-      <div class="biga">
-        奈
-      </div><div>
-        <div class="name">
-          友利奈绪
-        </div><div class="tag">
-          亲近 · 知己 · 搭档
-        </div>
-      </div><span class="state" :class="{ off: !session.connected }" />
+    <div v-if="session.persona" class="pcard">
+      <div class="biga">{{ String(session.persona.name || '?').slice(0,1) }}</div>
+      <div><div class="name">{{ session.persona.name || '未命名人设' }}</div><div class="tag">{{ session.relation?.tier ? '关系 · ' + session.relation.tier : '人设已加载' }}</div></div>
+      <span class="state" :class="{ off: !session.connected }" />
     </div>
+    <div v-else class="pcard empty-card">未获取到人设</div>
     <div class="sec">
       关系
     </div>
-    <div v-if="session.error" class="note">
-      未获取到关系数据：{{ session.error }}
+    <div v-if="session.relation" class="rel-head">
+      <span>亲密度</span><b>{{ Number(session.relation.affinity || 0).toFixed(2) }} <em>{{ session.relation.tier || '—' }}</em></b>
     </div>
     <div v-else class="note">
-      暂无关系数据
+      {{ session.error ? '未获取到关系数据：' + session.error : '暂无关系数据' }}
     </div>
     <div class="sec">
       她的状态
     </div>
     <div class="note">
-      未获取到 state / presence
+      {{ session.connected ? '未获取到 state / presence' : '未连接后端' }}
     </div>
     <div class="sec">
       快捷
@@ -48,6 +43,7 @@ const session = useSessionStore()
 </template>
 <style scoped>
 .context{border-left:1px solid var(--line);background:#f8fbff;padding:16px 15px;overflow:auto}
+.pcard.empty-card{color:#8a9bb0;font-size:11px;justify-content:center}
 .pcard{border:1px solid #e3ebf7;border-radius:14px;background:#fff;padding:13px;display:flex;gap:11px;align-items:center}.biga{width:44px;height:44px;border-radius:14px;background:#dbeafe;color:#1d4ed8;display:grid;place-items:center;font-size:16px;font-weight:800}.name{font-size:13px;font-weight:650}.tag{font-size:9.5px;color:#6b7c95;margin-top:2px}.state{margin-left:auto;width:7px;height:7px;border-radius:50%;background:#1f9d6b}.state.off{background:#c0264a}
 .sec{font-size:9px;letter-spacing:.13em;color:#8a9bb0;text-transform:uppercase;margin:17px 2px 8px}.rel-head{display:flex;align-items:center;justify-content:space-between;font-size:10px;color:#6b7c95;margin-bottom:5px}.rel-head b{font-size:11px;color:#2563eb}.rel-head em{font-style:normal;font-size:9px;color:#1f9d6b;border:1px solid #cdeee0;background:#eefbf5;border-radius:4px;padding:1px 4px;margin-left:3px}
 .track{height:4px;border-radius:4px;background:#e8effa;overflow:hidden}.track i{display:block;height:100%;background:#2563eb;border-radius:4px}.rel-meta{font-size:9px;color:#8a9bb0;margin-top:5px;display:flex;justify-content:space-between}.rel-meta span{color:#4b5f78}

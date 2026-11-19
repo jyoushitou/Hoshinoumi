@@ -10,6 +10,8 @@ export const useSessionStore = defineStore('session', () => {
   const conversations = ref<unknown[]>([])
   const messages = ref<unknown[]>([])
   const unread = ref(0)
+  const persona = ref<Record<string, unknown> | null>(null)
+  const relation = ref<Record<string, unknown> | null>(null)
   async function refresh() {
     const auth = useAuthStore()
     if (!auth.loggedIn) { connected.value = false; error.value = '未登录'; return }
@@ -19,6 +21,14 @@ export const useSessionStore = defineStore('session', () => {
       await http.get('/healthz')
       const s = await http.get<Record<string, unknown>>('/api/status')
       status.value = s; connected.value = true
+      try {
+        const p = await http.get<{ data?: Array<Record<string, unknown>> }>('/api/persona')
+        const list = Array.isArray(p.data) ? p.data : []
+        persona.value = list.find(x => x.active) ?? list[0] ?? null
+      } catch { persona.value = null }
+      try {
+        relation.value = await http.get<Record<string, unknown>>('/api/relation')
+      } catch { relation.value = null }
       // v35.5.2 只验证连接；会话/历史在 v35.5.3 接入
       conversations.value = []; messages.value = []
     } catch (e) {
@@ -26,5 +36,5 @@ export const useSessionStore = defineStore('session', () => {
       error.value = e instanceof Error ? e.message : String(e)
     } finally { loading.value = false }
   }
-  return { loading, connected, error, status, conversations, messages, unread, refresh }
+  return { loading, connected, error, status, conversations, messages, unread, persona, relation, refresh }
 })
