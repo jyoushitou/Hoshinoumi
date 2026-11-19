@@ -24,7 +24,7 @@ from datetime import datetime, timedelta
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
-VERSION = "35.2.23.2"
+VERSION = "35.2.24.2"
 SCHEMA = 35
 OWNER_QQ = "822891053"
 
