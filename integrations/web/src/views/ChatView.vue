@@ -7,9 +7,9 @@ const session = useSessionStore()
   <div class="chat">
     <div class="top">
       <div class="who">
-        <span class="avatar">奈</span><div>
+        <span class="avatar">{{ String(session.persona?.name || '?').slice(0, 1) }}</span><div>
           <div class="nm">
-            友利奈绪
+            {{ session.persona?.name || '未获取到人设' }}
           </div><div class="sub">
             私聊 · 记忆同步 <span v-if="session.connected" class="pill">在线</span>
           </div>
@@ -26,7 +26,7 @@ const session = useSessionStore()
       <div class="tools">
         <span>＋ 图片</span><span>◌ 语音</span><span>◇ 表情</span><span>⌕ 搜图</span><span>✦ 记忆</span>
       </div><div class="inputbox">
-        <textarea placeholder="和奈绪说点什么……" /><button class="send">
+        <textarea placeholder="说点什么…" /><button class="send">
           发送
         </button>
       </div><div class="hint">
