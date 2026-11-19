@@ -1,0 +1,43 @@
+{
+  "name": "hoshinoumi-vscode",
+  "displayName": "Hoshinoumi for VS Code",
+  "description": "在 VS Code 里连接 Hoshinoumi：nao 聊天、记忆、存钱、人设、周计划表",
+  "version": "35.2.25",
+  "publisher": "hoshinoumi",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onView:hoshinoumi.scm",
+    "onCommand:hoshinoumi.open",
+    "onCommand:hoshinoumi.configure"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "views": {
+      "scm": [
+        {
+          "id": "hoshinoumi.scm",
+          "name": "Hoshinoumi",
+          "type": "webview"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "hoshinoumi.open",
+        "title": "打开 nao",
+        "category": "Hoshinoumi"
+      },
+      {
+        "command": "hoshinoumi.configure",
+        "title": "配置后端",
+        "category": "Hoshinoumi"
+      }
+    ]
+  }
+}

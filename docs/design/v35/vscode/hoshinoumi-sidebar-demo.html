@@ -69,7 +69,7 @@ button{border:0;background:none;padding:0;cursor:pointer}
 .minimap{width:58px;flex:none;background:#1e1e1e;border-left:1px solid #252526;padding:8px 6px;color:#3a3a3a;font-size:2px;line-height:3px;overflow:hidden;opacity:.65}
 .statusbar{height:22px;flex:none;background:#007acc;color:#fff;display:flex;align-items:center;gap:13px;padding:0 10px;font-size:10.5px}.statusbar .right{margin-left:auto;display:flex;gap:13px;align-items:center}.statusbar .icon{font-size:12px}
 .toast{position:fixed;right:16px;bottom:34px;background:#252526;border:1px solid #454545;color:#cccccc;font-size:11px;padding:7px 11px;border-radius:2px;box-shadow:0 4px 16px rgba(0,0,0,.4);opacity:0;transform:translateY(5px);transition:.18s;pointer-events:none;z-index:20}.toast.on{opacity:1;transform:none}
-.scm-head .branch{margin-left:8px;font-size:10px;color:#9d9d9d;font-weight:400;text-transform:none;letter-spacing:0}.h-nav{flex:none;padding:5px 7px 3px;border-bottom:1px solid #2f2f2f}.hn-row{display:flex;align-items:center;gap:2px;min-height:24px}.hn-label{width:36px;flex:none;font-size:9px;color:#7d7d7d;letter-spacing:.04em}.hn-row .h-tab{height:20px;padding:0 6px;font-size:10px}.scm-head .hbrand{font-size:12px;letter-spacing:0;text-transform:none;color:#e8e8e8;font-weight:650}.scm-head .hstatus{margin-left:8px;font-size:9.5px;color:#2fa56b;font-weight:400;text-transform:none;letter-spacing:0}</style>
+.scm-head .branch{margin-left:8px;font-size:10px;color:#9d9d9d;font-weight:400;text-transform:none;letter-spacing:0}.h-nav{flex:none;padding:5px 7px 3px;border-bottom:1px solid #2f2f2f}.hn-row{display:flex;align-items:center;gap:2px;min-height:24px}.hn-label{width:36px;flex:none;font-size:9px;color:#7d7d7d;letter-spacing:.04em}.hn-row .h-tab{height:20px;padding:0 6px;font-size:10px}.scm-head .hbrand{font-size:12px;letter-spacing:0;text-transform:none;color:#e8e8e8;font-weight:650}.scm-head .hstatus{margin-left:8px;font-size:9.5px;color:#2fa56b;font-weight:400;text-transform:none;letter-spacing:0}.h-cmdout{margin-top:7px;padding:7px;border:1px solid #333;border-radius:2px;background:#161616;color:#b8c4d0;font:10px/1.55 "Cascadia Code","Consolas",monospace;white-space:pre-wrap;min-height:44px}</style>
 </head>
 <body>
 <div class="window">
@@ -142,7 +142,7 @@ button{border:0;background:none;padding:0;cursor:pointer}
 const pages={
  home:()=>`<h2>主页</h2><p class="h-sub">Hoshinoumi · 本机后端</p><div class="h-stats"><div class="h-stat"><div class="n">9</div><div class="l">功能</div></div><div class="h-stat"><div class="n">已连接</div><div class="l">后端</div></div></div><div class="h-row">聊天<span class="r">6 条历史</span></div><div class="h-row">记忆<span class="r">4 条 / 2 会话</span></div><div class="h-row">存钱<span class="r">¥3,300</span></div><div class="h-row">周计划<span class="r">第 3 周</span></div><div class="h-row">人设<span class="r">nao</span></div><div class="h-row">关系<span class="r">熟 0.62</span></div>`,
  info:()=>`<h2>信息</h2><p class="h-sub">运行状态 · 数据库 · 计划</p><div class="h-stats"><div class="h-stat"><div class="n">running</div><div class="l">状态</div></div><div class="h-stat"><div class="n">35</div><div class="l">schema</div></div></div><div class="h-row">数据库<span class="r">已连接</span></div><div class="h-row">记忆 / 事件<span class="r">4 / 7</span></div><div class="h-row">图片 / 关键词<span class="r">12 / 9</span></div><div class="h-row">学习计划<span class="r">已读取</span></div>`,
- commands:()=>`<h2>命令</h2><p class="h-sub">51 个命令 · 按功能分组</p><div class="h-row">基础<span class="r">help / status / logs</span></div><div class="h-row">记忆<span class="r">memory / event / relation</span></div><div class="h-row">媒体<span class="r">img / clip / voice</span></div><div class="h-row">日常<span class="r">diary / todo / cron</span></div><div class="h-row">账号<span class="r">persona / adduser</span></div><button class="h-btn" onclick="toast('执行 !status（模拟）')">执行 !status</button>`,
+ commands:()=>`<h2>命令</h2><p class="h-sub">51 个命令 · 按功能分组</p><div class="h-row">基础<span class="r">help / status / logs</span></div><div class="h-row">记忆<span class="r">memory / event / relation</span></div><div class="h-row">媒体<span class="r">img / clip / voice</span></div><div class="h-row">日常<span class="r">diary / todo / cron</span></div><div class="h-row">账号<span class="r">persona / adduser</span></div><div class="h-field"><label>命令（可带参数）</label><input id="cmdInput" placeholder="status 或 !memory 822891053"></div><button class="h-btn primary" onclick="runCmd()">执行命令</button><div class="h-cmdout" id="cmdOut">等待执行…</div>`,
  cron:()=>`<h2>定时任务</h2><p class="h-sub">本机调度 · Asia/Shanghai</p><div class="h-row">每日早报<span class="r">08:00 · 启用</span></div><div class="h-row">日记提醒<span class="r">22:30 · 启用</span></div><div class="h-row">健康检查<span class="r">每小时 · 停用</span></div><button class="h-btn" onclick="toast('立即运行（模拟）')">立即运行</button>`,
  logs:()=>`<h2>运行日志</h2><p class="h-sub">最近 24 小时</p><div class="h-row">09:13 INFO chat<span class="r">len=18</span></div><div class="h-row">09:12 INFO command<span class="r">status</span></div><div class="h-row">09:04 WARN search_images<span class="r">timeout</span></div><div class="h-row">08:58 INFO memory<span class="r">append</span></div>`,
  chat:()=>`<h2>nao</h2><p class="h-sub">最近 6 条 · 来自后端</p><div class="h-msg"><div class="a">奈</div><div class="b">你回来啦。今天外面有点冷，先喝点热的吧。</div></div><div class="h-msg me"><div class="a">你</div><div class="b">刚到家，方案终于过了。</div></div><div class="h-msg"><div class="a">奈</div><div class="b">那很好啊。要不要记进“今天值得高兴的事”？</div></div><div class="h-msg"><div class="a">奈</div><div class="b">本月结余 ¥3,300，旅行目标 60% 了。</div></div>`,
@@ -154,6 +154,21 @@ const pages={
  settings:()=>`<h2>设置</h2><p class="h-sub">保存在扩展 globalState</p><div class="h-field"><label>后端地址</label><input value="http://127.0.0.1:27004"></div><div class="h-field"><label>访问 token</label><input type="password" value="••••••••"></div><div class="h-field"><label>主人 QQ</label><input value="822891053"></div><button class="h-btn">测试连接</button><button class="h-btn primary">保存并连接</button>`
 };
 let page='chat';
+function runCmd(){
+  const el=document.getElementById('cmdInput');
+  const out=document.getElementById('cmdOut');
+  if(!el||!out)return;
+  const raw=el.value.trim();
+  if(!raw){out.textContent='先输入命令，例如 status';return}
+  const cmd=raw.replace(/^!/,'');
+  out.textContent='> !'+cmd+'\n执行中…';
+  setTimeout(()=>{
+    if(cmd.startsWith('status')) out.textContent='> !status\n运行中（mock）\n主人 QQ：822891053\n记忆：4 条\nschema：35';
+    else if(cmd.startsWith('memory')) out.textContent='> !'+cmd+'\n822891053：3 条记忆\n10001：1 条记忆';
+    else if(cmd.startsWith('logs')) out.textContent='> !logs\n09:13 INFO chat len=18\n09:04 WARN search_images timeout';
+    else out.textContent='> !'+cmd+'\n已执行（mock）';
+  },350);
+}
 function render(){document.querySelectorAll('.h-tab').forEach(x=>x.classList.toggle('on',x.dataset.p===page));document.getElementById('body').innerHTML=pages[page]();document.getElementById('compose').style.display=page==='chat'?'block':'none';}
 document.querySelectorAll('.h-tab').forEach(x=>x.onclick=()=>{page=x.dataset.p;render()});
 function send(){const m=document.getElementById('msg');if(!m.value.trim()){toast('先输入内容');return}const b=document.getElementById('body');const d=document.createElement('div');d.className='h-msg me';d.innerHTML='<div class="a">你</div><div class="b"></div>';d.querySelector('.b').textContent=m.value.trim();b.appendChild(d);m.value='';toast('已发送（模拟）')}

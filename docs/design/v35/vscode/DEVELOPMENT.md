@@ -57,7 +57,7 @@
 | 存钱 | `/api/savings`、`/api/balance`、`/api/savings/entries` | 总余额、账户、API 余额、记一笔 |
 | 周计划 | `/api/weekly-plan`、`/api/weekly-plan/import` | 周次、课程、导入 HTML |
 | 信息 | `/api/status`、`/api/plan`、`/api/logs` | 状态、数据库、学习计划 |
-| 命令 | `/api/command` | 51 个命令、分组、执行 |
+| 命令 | `/api/command` | 51 个命令、输入框、执行、结果区 |
 | 定时任务 | `/internal/cron` | 任务列表、启用状态、立即运行 |
 | 运行日志 | `/api/logs` | 最近日志、筛选、错误 |
 | 人设 | `/api/persona` | 卡片、文件清单、摘要、导入/导出 |
@@ -150,6 +150,7 @@ SCM 侧栏（整栏 Hoshinoumi）
 - 关系仅 owner 可查全部；普通用户只显示自己
 - 周计划表第 3 周导入你给的教务 HTML 能显示命中课程
 - 存钱新增后总余额刷新
+- 命令页可输入命令并显示后端结果
 - 关闭/重开 VS Code 后配置保留
 
 ## 6. 文件结构
