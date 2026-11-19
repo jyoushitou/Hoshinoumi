@@ -9,6 +9,7 @@ export const useSessionStore = defineStore('session', () => {
   const status = ref<Record<string, unknown> | null>(null)
   const conversations = ref<unknown[]>([])
   const messages = ref<unknown[]>([])
+  const unread = ref(0)
   async function refresh() {
     const auth = useAuthStore()
     if (!auth.loggedIn) { connected.value = false; error.value = '未登录'; return }
@@ -25,5 +26,5 @@ export const useSessionStore = defineStore('session', () => {
       error.value = e instanceof Error ? e.message : String(e)
     } finally { loading.value = false }
   }
-  return { loading, connected, error, status, conversations, messages, refresh }
+  return { loading, connected, error, status, conversations, messages, unread, refresh }
 })

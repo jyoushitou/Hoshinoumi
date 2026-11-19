@@ -11,7 +11,7 @@ const session = useSessionStore()
           <div class="nm">
             友利奈绪
           </div><div class="sub">
-            私聊 · 记忆同步 <span class="pill">在线</span>
+            私聊 · 记忆同步 <span v-if="session.connected" class="pill">在线</span>
           </div>
         </div>
       </div><button class="tbtn">

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useSessionStore } from '@/stores/session'
+const session = useSessionStore()
 const nav = [
   { page: 'home', icon: '⌂', title: '主页' },
   { page: 'chat', icon: '◉', title: 'nao（聊天）' },

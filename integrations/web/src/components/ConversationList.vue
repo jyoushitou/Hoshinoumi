@@ -12,7 +12,7 @@ const session = useSessionStore()
       ⌕ 搜索会话 / 记忆 / 命令 <kbd>⌘K</kbd>
     </div>
     <div class="slabel">
-      QQ 会话 <em>同步中</em>
+      QQ 会话 <em>{{ session.connected ? '同步中' : '未同步' }}</em>
     </div>
     <div class="convs">
       <div v-if="session.loading" class="load">加载中…</div>
