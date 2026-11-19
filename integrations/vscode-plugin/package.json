@@ -2,7 +2,7 @@
   "name": "hoshinoumi-vscode",
   "displayName": "Hoshinoumi for VS Code",
   "description": "在 VS Code 里连接 Hoshinoumi：nao 聊天、记忆、存钱、人设、周计划表",
-  "version": "35.4.2",
+  "version": "35.4.3",
   "publisher": "hoshinoumi",
   "license": "MIT",
   "engines": {

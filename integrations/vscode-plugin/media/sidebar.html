@@ -52,7 +52,7 @@ h1{font-size:13px;font-weight:600;margin:0 0 2px;color:var(--vscode-foreground)}
  <button data-page="home">主页</button><button data-page="chat">聊天</button><button data-page="memory">记忆</button><button data-page="savings">存钱</button><button data-page="weekly">周计划</button><button data-page="persona">人设</button><button data-page="relation">关系</button><button data-page="settings">设置</button>
 </div>
 <div class="page" id="page"></div>
-<div class="composer" id="composer"><textarea id="msg" placeholder="和 nao 说话…"></textarea><div class="sendrow"><span class="hint">Enter 发送</span><button onclick="sendMsg()">发送</button></div></div>
+<div class="composer" id="composer"><textarea id="msg" placeholder="和 nao 说话…"></textarea><div class="sendrow"><span class="hint">Enter 发送</span><button id="sendBtn" onclick="sendMsg()">发送</button></div><div class="msgline" id="chatMsg"></div></div>
 <div class="setup-mask" id="setupModal">
  <div class="setup-card">
   <div class="setup-title">连接 Hoshinoumi</div>
@@ -117,7 +117,17 @@ async function loadRelation(tid){
 async function renderSettings(){document.getElementById('page').innerHTML='<h1>设置</h1><p class="sub">保存在 VS Code 扩展 globalState</p><div class="field"><label>后端地址</label><input id="base" value="'+esc(cfg.base_url||'')+'"></div><div class="field"><label>访问 token</label><input id="token" type="password" value="" placeholder="'+(cfg.hasToken?'已保存，留空不修改':'未配置')+'"></div><div class="field"><label>主人 QQ</label><input id="target" value="'+esc(cfg.target_id||'owner')+'"></div><button class="btn" onclick="testConn()">测试连接</button><button class="btn primary" onclick="saveCfg()">保存并连接</button><div class="msgline" id="cfgMsg"></div>'}
 async function testConn(){const body={base_url:document.getElementById('base')?.value,token:document.getElementById('token')?.value||undefined,target_id:document.getElementById('target')?.value};const r=await api('/api/hoshinoumi/test','POST',body);const m=document.getElementById('cfgMsg');m.textContent=r.ok?'连接成功 · '+(r.data?.latency_ms||0)+'ms':'连接失败：'+(r.data?.message||r.status);setDot(r.ok,!r.ok)}
 async function saveCfg(){const body={base_url:document.getElementById('base')?.value,token:document.getElementById('token')?.value||undefined,target_id:document.getElementById('target')?.value};const r=await api('/api/hoshinoumi/config','POST',body);const m=document.getElementById('cfgMsg');if(!r.ok){m.textContent='保存失败：'+(r.data?.message||r.status);return}cfg=r.data||{};m.textContent='已保存，正在测试…';const t=await api('/api/hoshinoumi/test','POST',{});m.textContent=t.ok?'已连接':'已保存，但连接失败';setDot(t.ok,!t.ok)}
-async function sendMsg(){const el=document.getElementById('msg');const text=el.value.trim();if(!text)return;el.value='';const r=await api('/api/hoshinoumi/chat','POST',{message:text,target_id:cfg.target_id||'owner'});if(!r.ok){alert('发送失败：'+(r.data?.message||r.status));return}page='chat';await render()}
+function appendChat(role,text){const p=document.getElementById('page');if(!p)return;const d=document.createElement('div');d.className='msg '+(role==='user'?'me':'');d.innerHTML='<div class="a">'+(role==='user'?'你':'奈')+'</div><div class="b"></div>';d.querySelector('.b').textContent=text;p.appendChild(d);p.scrollTop=p.scrollHeight}
+async function sendMsg(){
+  const el=document.getElementById('msg');const btn=document.getElementById('sendBtn');const status=document.getElementById('chatMsg');
+  const text=el?.value.trim()||'';if(!text){if(status)status.textContent='先输入内容';return}
+  el.value='';if(btn){btn.disabled=true;btn.textContent='发送中…'}if(status)status.textContent='发送中…';
+  appendChat('user',text);
+  const r=await api('/api/hoshinoumi/chat','POST',{message:text,target_id:cfg.target_id||'owner'});
+  if(r.ok){const reply=r.data?.reply||r.data?.message||r.data?.content||'';if(reply)appendChat('bot',reply);if(status)status.textContent='已发送'}
+  else{appendChat('bot','发送失败：'+(r.data?.message||r.status));if(status)status.textContent='发送失败'}
+  if(btn){btn.disabled=false;btn.textContent='发送'}
+}
 document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>{page=b.dataset.page;render()});
 document.getElementById('msg').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg()}});
 (async()=>{await loadConfig();await render()})();

@@ -1,4 +1,4 @@
-# Hoshinoumi for VS Code · v35.4.2
+# Hoshinoumi for VS Code · v35.4.3
 
 在 VS Code 内连接 Hoshinoumi 后端：nao 聊天、历史、记忆、存钱、人设、周计划表、状态、日志、定时任务、命令。
 
