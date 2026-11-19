@@ -163,7 +163,8 @@ function runCmd(){
   const cmd=raw.replace(/^!/,'');
   out.textContent='> !'+cmd+'\n执行中…';
   setTimeout(()=>{
-    if(cmd.startsWith('status')) out.textContent='> !status\n运行中（mock）\n主人 QQ：822891053\n记忆：4 条\nschema：35';
+    if(cmd.startsWith('ping')) out.textContent='> !ping\n🏓 Pong！奈绪在线~';
+    else if(cmd.startsWith('status')) out.textContent='> !status\n运行中（mock）\n主人 QQ：822891053\n记忆：4 条\nschema：35';
     else if(cmd.startsWith('memory')) out.textContent='> !'+cmd+'\n822891053：3 条记忆\n10001：1 条记忆';
     else if(cmd.startsWith('logs')) out.textContent='> !logs\n09:13 INFO chat len=18\n09:04 WARN search_images timeout';
     else out.textContent='> !'+cmd+'\n已执行（mock）';
