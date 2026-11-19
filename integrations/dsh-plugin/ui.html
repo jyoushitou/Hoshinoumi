@@ -157,10 +157,10 @@ button,input{font:inherit}
     <div class="item" onclick="showScheduled()">◷ 定时任务</div>
     <div class="item" onclick="showLogs()">▥ 运行日志</div>
    </div>
-   <div class="foot"><div class="ava">奈</div><div>友利奈绪<br><span style="color:#a7a89e">v35.2.9 · 测试版</span></div></div>
+   <div class="foot"><div class="ava">奈</div><div>友利奈绪<br><span style="color:#a7a89e">v35.2.12 · 测试版</span></div></div>
   </aside>
   <main class="main">
-   <div class="mhead"><div class="mtitle" id="htitle">nao</div><div class="mode" id="hmode">◈ 工作区 · 本机后端</div><div class="mright"><span class="dot"></span><span id="hstatus">已连接</span><span>⟳</span><span>⋯</span></div></div>
+   <div class="mhead"><div class="mtitle" id="htitle">nao</div><div class="mode" id="hmode">◈ 工作区 · 本机后端</div><div class="mright"><span class="dot off" id="hdot"></span><span id="hstatus">未配置</span><span>⟳</span><span>⋯</span></div></div>
    <div class="tabs" id="tabs"><div class="tab on" onclick="toast('对话')">对话</div><div class="tab" onclick="toast('轨迹（暂未开放）')">轨迹</div><div class="tab" onclick="toast('更多')">⋯</div></div>
    <div class="page on" id="pageChat">
     <div class="chat" id="chat">
@@ -172,12 +172,12 @@ button,input{font:inherit}
     <div class="statusline"><span>⌁ 本机后端 · 127.0.0.1:27004</span><span>▤ 历史 1,284 条 · 自动同步</span><span>◔ 57%</span></div>
    </div>
    <div class="page" id="pageCmd">
-    <div class="cmdpage"><div class="crumb">自动化任务 / 命令</div><div class="ch1">命令 <span class="ok">● 已连接本机服务</span></div><div class="cdesc">全量 51 个命令 · 按功能分组 · manifest v35.2.1 · 127.0.0.1:27004 · 42ms</div>
+    <div class="cmdpage"><div class="crumb">自动化任务 / 命令</div><div class="ch1">命令 <span class="ok">● 命令目录</span></div><div class="cdesc">全量 51 个命令 · 按功能分组 · manifest v35.2.12 · 后端地址在设置中配置</div>
      <div class="cmdsearch">⌕ <input id="cmdSearch" placeholder="搜索命令 / 参数" oninput="renderCmdGroups()"><span id="cmdCount">全部 51 个 · 9 个分类</span></div>
      <div class="cmdwrap"><div class="groups" id="cmdGroups"></div>
       <div class="card" id="cmdDetail"><h3>命令详情</h3><div class="dsel" id="dsel">!status</div><div class="ddesc" id="ddesc">查看运行状态、配置、API、记忆、定时和连接信息。</div>
        <div class="dkv">权限<span class="r" id="dperm">owner</span></div><div class="dkv">风险<span class="r" id="drisk">低</span></div><div class="dkv">来源<span class="r">core / cmd.registry</span></div>
-       <div style="font-size:8px;color:#8a8b82;margin-top:7px">参数（可选）</div><div class="field" id="darg">all</div><button class="run" onclick="runCmd()">执行命令</button><div class="result" id="cmdResult"><b>!status</b> · 200 OK · 12ms<br>运行中 · 51 个命令 · DB 42ms<br>本机服务已连接 · schema 33</div>
+       <div style="font-size:8px;color:#8a8b82;margin-top:7px">参数（可选）</div><div class="field" id="darg">all</div><button class="run" onclick="runCmd()">执行命令</button><div class="result" id="cmdResult"><b>!status</b> · 200 OK · 12ms<br>运行中 · 51 个命令 · DB 42ms<br>等待后端返回 · schema 33</div>
        <div style="font-size:8px;color:#8a8b82;margin-top:7px">危险命令</div><div class="danger"><span>!clear</span><span>!backup</span><span>!exit</span><span>!set</span><span>!config</span></div>
       </div></div>
     </div>
@@ -202,7 +202,7 @@ button,input{font:inherit}
      <div class="ocard" onclick="showModule('savings')"><div class="oi">¥</div><div class="on">存钱</div><div class="od">总余额、分账户、目标、流水。</div><div class="om"><b>¥3,300</b> 本月结余</div></div>
      <div class="ocard" onclick="showModule('info')"><div class="oi">▤</div><div class="on">信息</div><div class="od">运行状态、日志、计划、阅读。</div><div class="om"><b>42</b> 张表</div></div>
      <div class="ocard" onclick="showModule('persona')"><div class="oi">奈</div><div class="on">人设</div><div class="od">角色卡、预览、激活、导入。</div><div class="om"><b>3</b> 个人设</div></div>
-     <div class="ocard" onclick="showModule('settings')"><div class="oi">⚙</div><div class="on">设置</div><div class="od">后端地址、连接测试、页面可见性。</div><div class="om"><b>已连接</b></div></div>
+     <div class="ocard" onclick="showModule('settings')"><div class="oi">⚙</div><div class="on">设置</div><div class="od">后端地址、连接测试、页面可见性。</div><div class="om"><b>查看</b></div></div>
      <div class="ocard" onclick="showCmd('tools')"><div class="oi">⌘</div><div class="on">命令</div><div class="od">全量 51 个命令，按功能分组。</div><div class="om"><b>51</b> 个命令</div></div>
      <div class="ocard" onclick="showScheduled()"><div class="oi">◷</div><div class="on">定时任务</div><div class="od">早报、日记提醒、健康检查。</div><div class="om"><b>3</b> 个启用</div></div>
      <div class="ocard" onclick="showLogs()"><div class="oi">▥</div><div class="on">运行日志</div><div class="od">命令与任务执行记录。</div><div class="om"><b>24</b> 今日运行</div></div>
@@ -307,10 +307,12 @@ function reply(text){
  if(text.includes('命令')||text.includes('工具'))return '命令在左侧“自动化任务”下面，我已经连上本机服务。';
  return '嗯，我在听。你继续说。';
 }
+let backendReady=false;
+function setBackendStatus(ready){backendReady=!!ready;const t=document.getElementById('hstatus');const d=document.getElementById('hdot');if(t)t.textContent=ready?'已连接':'未配置';if(d)d.classList.toggle('off',!ready);}
 function hideAll(){document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));document.querySelectorAll('.nav .item').forEach(x=>x.classList.remove('on'));document.getElementById('tabs').style.display='none';}
 function setHead(title,mode,status){document.getElementById('htitle').textContent=title;document.getElementById('hmode').textContent=mode;document.getElementById('hstatus').textContent=status;}
-function showChat(){hideAll();document.getElementById('app').classList.remove('cmd-mode');document.getElementById('breadcrumb').textContent='应用 / 工作区 / nao';document.getElementById('pageChat').classList.add('on');setHead('nao','◈ 工作区 · 私聊','已连接');document.getElementById('tabs').style.display='flex';}
-function showNew(){hideAll();document.getElementById('breadcrumb').textContent='应用 / 工作区 / nao / 新会话';document.getElementById('pageModule').classList.add('on');document.getElementById('moduleBody').innerHTML='<div class="crumb">工作区 / nao / 新会话</div><div class="ch1">新会话</div><div class="cdesc">和 nao 开始新对话，历史不会丢。</div><div class="mgrid" style="margin-top:12px"><div class="mcard"><h3>你可以这样开始</h3><div class="mline">“今天有点累”<span class="r">情绪</span></div><div class="mline">“午饭 35”<span class="r">记账</span></div><div class="mline">“这周有什么安排”<span class="r">日程</span></div></div><div class="mcard"><h3>上下文</h3><div class="mline">人设<span class="r">友利奈绪</span></div><div class="mline">记忆<span class="r">1,284 条</span></div><div class="mline">后端<span class="r">已连接</span></div></div></div>';setHead('新会话','◈ 工作区 · 私聊','已连接');}
+function showChat(){hideAll();document.getElementById('app').classList.remove('cmd-mode');document.getElementById('breadcrumb').textContent='应用 / 工作区 / nao';document.getElementById('pageChat').classList.add('on');setHead('nao','◈ 工作区 · 私聊','');setBackendStatus(backendReady);document.getElementById('tabs').style.display='flex';}
+function showNew(){hideAll();document.getElementById('breadcrumb').textContent='应用 / 工作区 / nao / 新会话';document.getElementById('pageModule').classList.add('on');document.getElementById('moduleBody').innerHTML='<div class="crumb">工作区 / nao / 新会话</div><div class="ch1">新会话</div><div class="cdesc">和 nao 开始新对话，历史不会丢。</div><div class="mgrid" style="margin-top:12px"><div class="mcard"><h3>你可以这样开始</h3><div class="mline">“今天有点累”<span class="r">情绪</span></div><div class="mline">“午饭 35”<span class="r">记账</span></div><div class="mline">“这周有什么安排”<span class="r">日程</span></div></div><div class="mcard"><h3>上下文</h3><div class="mline">人设<span class="r">友利奈绪</span></div><div class="mline">记忆<span class="r">1,284 条</span></div><div class="mline">后端<span class="r">见设置</span></div></div></div>';setHead('新会话','◈ 工作区 · 私聊','');setBackendStatus(backendReady);}
 function showCmd(tab){hideAll();document.getElementById('breadcrumb').textContent='应用 / 自动化任务 / 命令';document.getElementById('pageCmd').classList.add('on');setHead('命令','自动化任务 / Hoshinoumi','只读');renderCmdGroups();}
 function showScheduled(){hideAll();document.getElementById('breadcrumb').textContent='应用 / 自动化任务 / 定时任务';document.getElementById('pageScheduled').classList.add('on');setHead('定时任务','自动化任务 / 定时任务','3 个启用');}
 function showLogs(){hideAll();document.getElementById('breadcrumb').textContent='应用 / 自动化任务 / 运行日志';document.getElementById('pageLogs').classList.add('on');setHead('运行日志','自动化任务 / 运行日志','24h');}
@@ -319,12 +321,12 @@ function showOverview(){showHome();}
 const MODULES={
  memory:{t:'记忆',d:'记忆本、画像、关系、事件和关键词。',stats:[['1,284','记忆'],['328','事件'],['12','关系'],['46','关键词']],cards:[['用户画像',['偏好 · 晚上聊天','称呼 · 你','边界 · 财务仅私聊']],['关系',['奈绪 · 恋人','信任 86','最近互动 · 今天']],['记忆本',['昨天方案通过','旅行目标 60%','担心过不了']],['关键词',['旅行','方案','猫','读书']]]},
  savings:{t:'存钱',d:'总余额、分账户、目标和最近流水。',stats:[['¥3,300','本月结余'],['¥18,420','总余额'],['60%','旅行目标'],['¥420','今日支出']],cards:[['账户',['银行卡 · ¥12,000','支付宝 · ¥3,420','微信 · ¥1,800','现金 · ¥1,200']],['目标',['旅行基金 · 60%','应急金 · 80%']],['最近流水',['午饭 -35','工资 +8,000','书 -58']],['对账',['上次 · 昨天','差额 · 0']]]},
- info:{t:'信息',d:'运行状态、数据库、日志、计划与阅读。',stats:[['v35.2.1','版本'],['33','schema'],['42','表'],['51','命令']],cards:[['运行',['本机服务 · 已连接','DB 42ms','API 余额 ¥126.40']],['日志',['最近 24h · 24 条','失败 · 1']],['学习计划',['当前 · 读书','进度 · 60%']],['阅读',['《十日终焉》· 62%','本周 3h']]]},
+ info:{t:'信息',d:'运行状态、数据库、日志、计划与阅读。',stats:[['v35.2.12','版本'],['33','schema'],['42','表'],['51','命令']],cards:[['运行',['后端地址 · 在设置查看','DB 状态 · 配置后显示','API 余额 · 配置后显示']],['日志',['最近 24h · 24 条','失败 · 1']],['学习计划',['当前 · 读书','进度 · 60%']],['阅读',['《十日终焉》· 62%','本周 3h']]]},
  persona:{t:'人设',d:'角色卡、预览、激活和导入导出。',stats:[['3','人设'],['友利奈绪','当前'],['1,284','共享记忆'],['轻量','语气']],cards:[['友利奈绪',['激活 · 是','语气 · 轻量','记忆 · 共享']],['备用人设',['测试人格 · 未激活']],['预览',['“你回来啦。”','“先喝点热的吧。”']],['导入',['JSON / YAML','仅 owner']]]},
- settings:{t:'设置',d:'后端地址、连接测试、页面可见性、动画。',stats:[['已连接','后端'],['42ms','延迟'],['开','动画'],['6','主页面']],cards:[['后端',['127.0.0.1:27004','Bearer · 只读','测试 · 通过']],['页面可见性',['主页面 · 6','子页面 · 8','导航球 · 关']],['动画',['消息 · 开','页面 · 开','减少动态 · 跟随系统']],['数据',['日志 · 7 天','财务 · 仅主人']]]},
+ settings:{t:'设置',d:'后端地址、连接测试、页面可见性、动画。',stats:[['未配置','后端'],['—','延迟'],['开','动画'],['9','主页面']],cards:[['后端',['首次打开时填写','token 不显示','连接测试 · 设置']],['页面可见性',['主页面 · 6','子页面 · 8','导航球 · 关']],['动画',['消息 · 开','页面 · 开','减少动态 · 跟随系统']],['数据',['日志 · 7 天','财务 · 仅主人']]]},
  plugins:{t:'插件',d:'DSH 插件的安装、审批、权限和错误。',stats:[['2','已安装'],['1','待审批'],['0','错误'],['read','权限']],cards:[['Hoshinoumi',['v35.2.1','已启用','read-only']],['Search Images',['已启用','只读']],['待审批',['memory-write','需要 owner']],['权限',['recall · 允许','remember · 拒绝']]]}
 };
-function showModule(key){const m=MODULES[key];if(!m)return;hideAll();document.getElementById('breadcrumb').textContent='应用 / 工作区 / nao / '+m.t;document.getElementById('pageModule').classList.add('on');document.getElementById('moduleBody').innerHTML='<div class="crumb">工作区 / nao / '+m.t+'</div><div class="ch1">'+m.t+' <span class="ok">● 已同步</span></div><div class="cdesc">'+m.d+'</div><div class="stats">'+m.stats.map(x=>'<div class="stat"><div class="n">'+x[0]+'</div><div class="l">'+x[1]+'</div></div>').join('')+'</div><div class="mgrid">'+m.cards.map(c=>'<div class="mcard"><h3>'+c[0]+'</h3>'+c[1].map(x=>'<div class="mline">'+x+'<span class="r">›</span></div>').join('')+'</div>').join('')+'</div>';setHead(m.t,'工作区 / nao','已同步');}
+function showModule(key){const m=MODULES[key];if(!m)return;hideAll();document.getElementById('breadcrumb').textContent='应用 / 工作区 / nao / '+m.t;document.getElementById('pageModule').classList.add('on');document.getElementById('moduleBody').innerHTML='<div class="crumb">工作区 / nao / '+m.t+'</div><div class="ch1">'+m.t+' <span class="ok">● 测试版</span></div><div class="cdesc">'+m.d+'</div><div class="stats">'+m.stats.map(x=>'<div class="stat"><div class="n">'+x[0]+'</div><div class="l">'+x[1]+'</div></div>').join('')+'</div><div class="mgrid">'+m.cards.map(c=>'<div class="mcard"><h3>'+c[0]+'</h3>'+c[1].map(x=>'<div class="mline">'+x+'<span class="r">›</span></div>').join('')+'</div>').join('')+'</div>';setHead(m.t,'工作区 / nao','');setBackendStatus(backendReady);}
 function toggleAuto(){document.getElementById('autoSub').style.display=document.getElementById('autoSub').style.display==='none'?'block':'none';}
 function cmdTab(el){document.querySelectorAll('.ctab').forEach(x=>x.classList.remove('on'));el.classList.add('on');}
 function runTool(){const r=document.getElementById('cmdResult');r.style.opacity=.25;setTimeout(()=>{r.style.opacity=1;r.innerHTML='<b>recall</b> · 200 OK · 12ms<br>找到 1 条：<br>· 昨天方案通过，很高兴'},650);}
@@ -347,7 +349,7 @@ async function saveBackend(){
  if(!token){st.className='mstatus err';st.textContent='请填写访问 token';return;}
  if(!target){st.className='mstatus err';st.textContent='请填写主人 QQ';return;}
  st.className='mstatus';st.textContent='正在保存…';
- try{const r=await fetch('/api/hoshinoumi/config',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({base_url:url,token,target_id:target})});const j=await r.json();if(!r.ok)throw new Error(j.message||('HTTP '+r.status));localStorage.setItem('hoshinoumi_target',document.getElementById('targetInput').value||'owner');st.className='mstatus ok';st.textContent='已保存，正在进入…';setTimeout(()=>{closeSetup();toast('后端已配置 · '+url);},450);}catch(e){st.className='mstatus err';st.textContent='保存失败：'+e.message;}
+ try{const r=await fetch('/api/hoshinoumi/config',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({base_url:url,token,target_id:target})});const j=await r.json();if(!r.ok)throw new Error(j.message||('HTTP '+r.status));localStorage.setItem('hoshinoumi_target',document.getElementById('targetInput').value||'owner');setBackendStatus(true);st.className='mstatus ok';st.textContent='已保存，正在进入…';setTimeout(()=>{closeSetup();toast('后端已配置 · '+url);},450);}catch(e){st.className='mstatus err';st.textContent='保存失败：'+e.message;}
 }
 async function loadHistory(){
  try{
@@ -360,7 +362,7 @@ async function loadHistory(){
   rows.forEach(x=>appendMsg({who:x.role==='user'?'me':'bot',text:String(x.content||''),meta:String(x.created_at||'').slice(11,16)||''}));
  }catch{}
 }
-async function loadBackendConfig(){try{const r=await fetch('/api/hoshinoumi/config');const j=await r.json();if(j.target_id)localStorage.setItem('hoshinoumi_target',j.target_id);if(!j.configured||!j.hasToken)setTimeout(()=>openSetup(),500);else setTimeout(loadHistory,900);}catch{setTimeout(()=>openSetup(),500);}}
+async function loadBackendConfig(){try{const r=await fetch('/api/hoshinoumi/config');const j=await r.json();if(j.target_id)localStorage.setItem('hoshinoumi_target',j.target_id);setBackendStatus(Boolean(j.configured&&j.hasToken));if(!j.configured||!j.hasToken)setTimeout(()=>openSetup(),500);else setTimeout(loadHistory,900);}catch{setTimeout(()=>openSetup(),500);}}
 function checkSetup(force){if(force||!localStorage.getItem(GW_KEY))setTimeout(()=>openSetup(),500);}
 
 clock();setInterval(clock,30000);loadBackendConfig();
