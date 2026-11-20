@@ -47,6 +47,7 @@ async def handle_status(request):
         "status": "running",
         "version": get_version(),
         "schema": schema,
+        "self_qq": str(getattr(cfg, "self_qq", "") or ""),
         "master_qq": MASTER_QQ,
         "deepseek": bool(cfg.DS_API_KEY),
         "doubao": bool(cfg.DOUBAO_API_KEY),

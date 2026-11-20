@@ -2,8 +2,12 @@
 import { computed, nextTick, ref, watch } from 'vue'
 import { http } from '@/api/client'
 import EmptyState from '@/components/EmptyState.vue'
+import QqAvatar from '@/components/QqAvatar.vue'
 import { useSessionStore } from '@/stores/session'
+import { useAuthStore } from '@/stores/auth'
 const session = useSessionStore()
+const auth = useAuthStore()
+const botQq = computed(() => String(session.status?.self_qq || ''))
 const draft = ref('')
 const textarea = ref<HTMLTextAreaElement | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -187,7 +191,7 @@ watch(() => session.activeTarget, () => { searchOpen.value = false; searchQuery.
   <div class="chat" :class="{ motion }">
     <div class="top">
       <div class="who">
-        <span class="avatar">{{ String(activeConversation?.name || session.persona?.name || '?').slice(0, 1) }}</span><div>
+        <QqAvatar class="avatar" :group="activeConversation?.type === 'group' ? session.activeTarget : ''" :qq="activeConversation?.type === 'group' ? '' : botQq" :name="activeConversation?.name || String(session.persona?.name || '?')" /><div>
           <div class="nm">
             {{ activeConversation?.name || session.persona?.name || '未获取到人设' }}
           </div><div class="sub">
@@ -214,9 +218,9 @@ watch(() => session.activeTarget, () => { searchOpen.value = false; searchQuery.
       <EmptyState v-else-if="!session.messages.length" text="暂无聊天记录" />
       <template v-else>
         <div v-for="(m, i) in session.messages" :key="m.id || i" class="msg" :class="{ me: m.role === 'user', 'search-current': searchHits[searchIndex]?.i === i }">
-          <span v-if="m.role !== 'user'" class="avatar">{{ String(session.persona?.name || '?').slice(0, 1) }}</span>
+          <QqAvatar v-if="m.role !== 'user'" class="avatar" :qq="botQq" :name="String(session.persona?.name || '?')" />
           <div><div v-if="m.recalled" class="recalled">消息已撤回</div><template v-else><img v-if="m.image_url" :src="m.image_url" class="msg-img" :class="{ sticker: m.kind === 'sticker' }" alt="图片"><audio v-if="m.audio_url" :src="m.audio_url" controls class="msg-audio" /><div v-if="m.content && !((m.kind === 'voice' || m.kind === 'sticker') || (m.image_url && m.content === '[图片]'))" class="bubble" v-html="highlight(m.content)"></div></template><div class="meta"><span>{{ m.pending ? '发送中…' : String(m.created_at || '').slice(0, 16) }}</span><button v-if="canRecall(m)" type="button" class="recall-btn" @click="recall(m)">撤回</button></div></div>
-          <span v-if="m.role === 'user'" class="avatar mea">你</span>
+          <QqAvatar v-if="m.role === 'user'" class="avatar mea" :qq="auth.qq" name="你" />
         </div>
       </template>
     </div>

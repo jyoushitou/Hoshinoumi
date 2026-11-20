@@ -178,6 +178,7 @@ class Handler(BaseHTTPRequestHandler):
                 "status": "running",
                 "version": VERSION,
                 "schema": "36",
+                "self_qq": "10002",
                 "mock": True,
                 "master_qq": OWNER_QQ,
                 "deepseek": True,

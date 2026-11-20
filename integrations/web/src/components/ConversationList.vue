@@ -2,12 +2,14 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { http } from '@/api/client'
 import EmptyState from '@/components/EmptyState.vue'
+import QqAvatar from '@/components/QqAvatar.vue'
 import { useRouter } from 'vue-router'
 import { useSessionStore } from '@/stores/session'
 import { useAuthStore } from '@/stores/auth'
 const session = useSessionStore()
 const auth = useAuthStore()
 const appVersion = __APP_VERSION__
+const botQq = computed(() => String(session.status?.self_qq || ''))
 const router = useRouter()
 const tab = ref<'all' | 'private' | 'group'>('all')
 const searchQuery = ref('')
@@ -68,7 +70,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onShortcut))
       <EmptyState v-else-if="!filteredConversations.length" text="暂无 QQ 会话" />
       <template v-else>
         <div v-for="c in filteredConversations" :key="c.target_id" class="conv" :class="{ on: c.target_id === session.activeTarget }" @click="choose(c.target_id)">
-          <span class="avatar">{{ String(c.name || c.target_id).slice(0, 1) }}</span>
+          <QqAvatar class="avatar" :group="c.type === 'group' ? c.target_id : ''" :qq="c.type === 'group' ? '' : botQq" :name="c.name || c.target_id" />
           <div class="body"><div class="nm">{{ c.name || c.target_id }}</div><div class="last"><template v-if="c.type === 'group'">群聊 · {{ c.member_count || 0 }} 人 · </template>{{ c.last_message || '暂无消息' }}</div></div>
           <span class="tm">{{ String(c.updated_at || '').slice(11, 16) }}</span>
           <span v-if="Number(c.unread || 0) > 0" class="unread">{{ Number(c.unread) > 99 ? '99+' : c.unread }}</span>
