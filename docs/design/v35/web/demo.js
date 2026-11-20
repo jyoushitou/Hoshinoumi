@@ -879,6 +879,7 @@
             '<label>本金金额<input id="fxAmount" type="number" step="0.01" placeholder="1000.00"></label>' +
             '<div class="row"><label>期限<select id="fxMonths"><option value="3">3 个月</option><option value="6">6 个月</option><option value="12" selected>12 个月</option><option value="24">24 个月</option><option value="36">36 个月</option></select></label><label>年利率 %<input id="fxRate" type="number" step="0.01" placeholder="1.65"></label></div>' +
             '<div class="row"><label>到期日<input id="fxDue" placeholder="2027-06-01"></label><label>来源账户<select id="fxAccount">' + S.accounts.map(a => '<option>' + esc(a[0]) + '</option>').join('') + '</select></label></div>' +
+            '<label class="check"><input type="checkbox" id="fxExisting"> 之前已存入，仅补录（不扣来源账户）</label>' +
             '<div class="acts"><button id="fxCancel">取消</button><button class="primary" id="fxSave">确认存入</button></div></div>';
           pageView.appendChild(box);
           const close = () => box.remove();
