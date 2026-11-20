@@ -454,6 +454,35 @@ v35.7.28.2 分享/多端
 v35.7.28.3 大文件分片
 ```
 
+## 3.22 酒馆人设卡兼容
+
+人设导入页支持：
+
+```text
+SillyTavern V2/V3 JSON
+PNG tEXt chara / ccv3
+拖拽 / 选择文件
+预览映射 / warning / 冲突
+确认导入 / 覆盖
+```
+
+映射：
+
+```text
+description/personality/scenario/system_prompt
+post_history_instructions → prompt.txt
+mes_example/creator_notes/first_mes/lorebook → supplement.txt
+原始卡 → personas/<slug>/tavern.json
+```
+
+版本：
+
+```text
+v35.7.5.8  解析 / 映射 / preview API
+v35.7.5.9  导入页 UI
+v35.7.5.10 PNG/ccv3/lorebook/charx 增强
+```
+
 ## 4. 次次版本
 
 | 版本 | 交付 | 验收 |
