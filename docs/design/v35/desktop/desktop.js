@@ -25,7 +25,7 @@ function renderConvs(){
     <span class="avatar">${esc(c.avatar)}</span><span class="body"><b>${esc(c.name)}</b><small>${esc(c.last)}</small></span><span class="tm">${esc(c.time)}</span>${c.unread?`<span class="un">${c.unread}</span>`:''}
   </button>`).join('')
   document.querySelectorAll('.conv').forEach(el=>el.onclick=()=>{
-    current=chats.find(c=>c.id===el.dataset.id); current.unread=0; renderConvs(); renderChat()
+    current=chats.find(c=>c.id===el.dataset.id); current.unread=0; hidePage(); renderConvs(); renderChat()
   })
 }
 function renderChat(){
@@ -58,7 +58,26 @@ document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>setFilter(b.d
 $('#sendBtn').onclick=send
 $('#input').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}})
 $('#input').addEventListener('input',e=>{e.target.style.height='21px';e.target.style.height=Math.min(80,e.target.scrollHeight)+'px'})
-document.querySelectorAll('.rnav').forEach(b=>b.onclick=()=>{document.querySelectorAll('.rnav').forEach(x=>x.classList.remove('on'));b.classList.add('on');if(b.dataset.page==='settings'){openSettings()}else{toast(`打开：${b.title}`)}})
+const pageView = $('#pageView')
+function hidePage(){pageView.hidden=true;pageView.innerHTML=''}
+function showChat(){hidePage()}
+function pageHead(title,sub){return `<div class="pv-head"><div><h1>${title}</h1><p>${sub}</p></div></div>`}
+function showPage(page){
+  const pv=pageView; pv.hidden=false
+  if(page==='home') pv.innerHTML=pageHead('主页','10 个模块 · 设计稿')+`<div class="pv-grid"><div class="pv-card"><b>已连接</b><small>后端 · schema 36</small></div><div class="pv-card"><b>4</b><small>记忆会话</small></div><div class="pv-card"><b>¥3,300</b><small>本月结余</small></div><div class="pv-card"><b>第 47 周</b><small>周计划</small></div></div><div class="pv-sec">模块</div><div class="pv-chips"><button>聊天</button><button>记忆</button><button>关系</button><button>存钱</button><button>周计划</button><button>信息</button><button>人设</button><button>命令</button><button>定时</button><button>日志</button></div>`
+  else if(page==='memory') pv.innerHTML=pageHead('记忆','来自后端 · 设计稿')+`<div class="pv-grid"><div class="pv-card"><b>4</b><small>记忆条数</small></div><div class="pv-card"><b>2</b><small>会话</small></div></div><div class="pv-sec">会话</div><div class="pv-row">10001 · 3 条<span>今天外面有点冷</span></div><div class="pv-row">10002 · 1 条<span>《十日终焉》</span></div>`
+  else if(page==='relation') pv.innerHTML=pageHead('关系','仅 owner 可见 · 不显示数值')+`<div class="pv-card"><h3>关系档位</h3><b>熟</b><div class="track" style="margin-top:9px"><i style="width:45%"></i></div><small>最近变化：有更新 · 聊天</small></div><div class="pv-sec">最近事件</div><div class="pv-row">聊天<span>今天</span></div><div class="pv-row">一起看电影<span>昨天</span></div>`
+  else if(page==='savings') pv.innerHTML=pageHead('存钱','账户 / 流水 / 目标')+`<div class="pv-grid"><div class="pv-card"><b>¥3,300</b><small>总余额</small></div><div class="pv-card"><b>60%</b><small>旅行目标</small></div></div><div class="pv-sec">账户</div><div class="pv-row">银行卡<span>¥2,100</span></div><div class="pv-row">支付宝<span>¥1,200</span></div><div class="pv-sec">最近流水</div><div class="pv-row">午饭<span>-¥35</span></div><div class="pv-row">工资<span>+¥8,000</span></div>`
+  else if(page==='weekly') pv.innerHTML=pageHead('周计划表','ISO 年周 · 按周配置')+`<div class="pv-sec">第 47 周</div><div class="pv-week"><div class="th"></div><div class="th">周一</div><div class="th">周二</div><div class="th">周三</div><div class="th">周四</div><div class="th">周五</div><div class="th">1-2</div><div class="cell"><b>高等数学</b>教三 201</div><div class="cell"></div><div class="cell"><b>大学英语</b>文科楼 104</div><div class="cell"></div><div class="cell"></div><div class="th">3-4</div><div class="cell"></div><div class="cell"><b>数据结构</b>实验楼 302</div><div class="cell"></div><div class="cell"><b>读书</b>30 分钟</div><div class="cell"></div></div>`
+  else if(page==='info') pv.innerHTML=pageHead('信息','运行 / 数据库 / 计划 / 阅读')+`<div class="pv-row">后端<span>已连接 · 42ms</span></div><div class="pv-row">数据库<span>schema 36 · 正常</span></div><div class="pv-row">今日对话<span>12 次</span></div><div class="pv-row">记忆<span>4 条 / 2 会话</span></div><div class="pv-row">阅读<span>《十日终焉》· 60%</span></div>`
+  else if(page==='persona') pv.innerHTML=pageHead('人设','nao · 当前激活')+`<div class="pv-card"><b>nao</b><small>友利奈绪 · 星之海学园</small></div><div class="pv-sec">文件</div><div class="pv-row">prompt.txt<span>已加载</span></div><div class="pv-row">supplement.txt<span>已加载</span></div><div class="pv-row">life.txt<span>已加载</span></div><div class="pv-row">state.json<span>mood 0.1</span></div>`
+  else if(page==='commands') pv.innerHTML=pageHead('命令','来自 /api/commands · 设计稿')+`<div class="pv-chips"><button>基础</button><button>记忆</button><button>媒体</button><button>日常</button><button>配置</button></div><div class="pv-sec">命令</div><div class="pv-row">!status<span>运行状态</span></div><div class="pv-row">!memory<span>记忆查询</span></div><div class="pv-row">!savings<span>存钱统计</span></div><div class="pv-row">!persona<span>人设管理</span></div>`
+  else if(page==='cron') pv.innerHTML=pageHead('定时任务','列表 / 启停 / 立即运行')+`<div class="pv-row">每日早报 · 08:00<span>启用</span></div><div class="pv-row">日记提醒 · 22:30<span>启用</span></div><div class="pv-row">健康检查 · 每小时<span>停用</span></div>`
+  else if(page==='logs') pv.innerHTML=pageHead('运行日志','最近 3 条 · 设计稿')+`<div class="pv-code">09:13 INFO  chat target=10001 len=18
+09:12 INFO  command status
+09:04 WARN  search_images upstream timeout</div>`
+}
+document.querySelectorAll('.rnav').forEach(b=>b.onclick=()=>{document.querySelectorAll('.rnav').forEach(x=>x.classList.remove('on'));b.classList.add('on');if(b.dataset.page==='settings'){openSettings()}else if(b.dataset.page==='chat'){showChat()}else{showPage(b.dataset.page)}})
 function updateRoutePreview(){const base=$('#routeBase').value.trim().replace(/\/+$/,'');const api=$('#routeApi').value.trim()||'/api';$('#routePreview').textContent=`${base}${api}/status`}
 function openSettings(){$('#settingsModal').classList.add('open');updateRoutePreview()}
 function closeSettings(){$('#settingsModal').classList.remove('open')}
