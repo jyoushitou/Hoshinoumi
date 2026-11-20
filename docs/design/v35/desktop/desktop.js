@@ -88,12 +88,30 @@ function showPage(page){
   else if(page==='weekly') pv.innerHTML=pageHead('周计划表','ISO 年周 · 按周配置')+`<div class="pv-sec">第 47 周</div><div class="pv-week"><div class="th"></div><div class="th">周一</div><div class="th">周二</div><div class="th">周三</div><div class="th">周四</div><div class="th">周五</div><div class="th">1-2</div><div class="cell"><b>高等数学</b>教三 201</div><div class="cell"></div><div class="cell"><b>大学英语</b>文科楼 104</div><div class="cell"></div><div class="cell"></div><div class="th">3-4</div><div class="cell"></div><div class="cell"><b>数据结构</b>实验楼 302</div><div class="cell"></div><div class="cell"><b>读书</b>30 分钟</div><div class="cell"></div></div>`
   else if(page==='info') pv.innerHTML=pageHead('信息','运行 / 数据库 / 计划 / 阅读')+`<div class="pv-row">后端<span>已连接 · 42ms</span></div><div class="pv-row">数据库<span>schema 36 · 正常</span></div><div class="pv-row">今日对话<span>12 次</span></div><div class="pv-row">记忆<span>4 条 / 2 会话</span></div><div class="pv-row">阅读<span>《十日终焉》· 60%</span></div>`
   else if(page==='persona') pv.innerHTML=pageHead('人设','nao · 当前激活')+`<div class="pv-card"><b>nao</b><small>友利奈绪 · 星之海学园</small></div><div class="pv-sec">文件</div><div class="pv-row">prompt.txt<span>已加载</span></div><div class="pv-row">supplement.txt<span>已加载</span></div><div class="pv-row">life.txt<span>已加载</span></div><div class="pv-row">state.json<span>mood 0.1</span></div>`
-  else if(page==='commands') pv.innerHTML=pageHead('命令','来自 /api/commands · 设计稿')+`<div class="pv-chips"><button>基础</button><button>记忆</button><button>媒体</button><button>日常</button><button>配置</button></div><div class="pv-sec">命令</div><div class="pv-row">!status<span>运行状态</span></div><div class="pv-row">!memory<span>记忆查询</span></div><div class="pv-row">!savings<span>存钱统计</span></div><div class="pv-row">!persona<span>人设管理</span></div>`
+  else if(page==='commands') pv.innerHTML=pageHead('命令','51 个命令 · 设计稿 · 最终走 /api/commands')+
+    `<div class="cmd-run"><span>&gt;</span><input id="cmdInput" placeholder="输入命令，例如 !persona activate nao"><button id="cmdRun">执行</button></div><div class="cmd-hint" id="cmdHint">无参命令直接执行；带参命令先填参数；二级命令点上方命令后按提示输入。</div>`+
+    `<div class="cmd-grid">`+
+    [['基础',15,['!help','!ping','!status','!version','!uptime','!meta','!usage','!log','!db','!stats','!history','!reload owner','!set owner','!exit owner','!quit owner']],['记忆',8,['!memory','!memorybook','!event','!keywords','!clear owner','!profile','!growth','!relation']],['媒体',8,['!img','!acg','!sticker','!clip','!voice','!vision','!say owner','!sayg owner']],['日常',7,['!diary','!todo','!cron','!hooks','!backup owner','!update','!task']],['阅读',2,['!books','!book']],['计划',1,['!plan']],['插件',1,['!plugin owner']],['账号',2,['!adduser owner','!persona']],['多端',7,['!dding','!resence','!route','!ow owner','!config owner','!code owner','!lanikeys owner']]].map(([g,n,cs])=>
+      `<div class="cmd-group"><h3>${g}<span>${n}</span></h3><div class="cmd-chips">${cs.map(c=>`<i class="${c.includes('owner')?'owner':''}">${c}</i>`).join('')}</div></div>`).join('')+
+    `</div><div class="cmd-result"><div class="cmd-result-head"><b>执行结果</b><span id="cmdState">选择上方命令运行</span></div><pre id="cmdOutput">点击任意命令，结果显示在这里。\n\n提示：最终版通过 POST /api/command 执行。</pre></div>`
+
   else if(page==='cron') pv.innerHTML=pageHead('定时任务','列表 / 启停 / 立即运行')+`<div class="pv-row">每日早报 · 08:00<span>启用</span></div><div class="pv-row">日记提醒 · 22:30<span>启用</span></div><div class="pv-row">健康检查 · 每小时<span>停用</span></div>`
   else if(page==='logs') pv.innerHTML=pageHead('运行日志','最近 3 条 · 设计稿')+`<div class="pv-code">09:13 INFO  chat target=10001 len=18
 09:12 INFO  command status
 09:04 WARN  search_images upstream timeout</div>`
 }
+pageView.addEventListener('click', e => {
+  const chip = e.target.closest('.cmd-group .cmd-chips i');
+  if (chip) { const inp=document.getElementById('cmdInput'); if(inp)inp.value=chip.textContent; const st=document.getElementById('cmdState'); if(st)st.textContent='已选择 · 点执行'; }
+  const run = e.target.closest('#cmdRun');
+  if (run) {
+    const inp=document.getElementById('cmdInput'); const out=document.getElementById('cmdOutput'); const st=document.getElementById('cmdState');
+    const v=(inp?.value||'').trim(); if(!out||!st) return;
+    if(!v){st.textContent='先输入命令';return;}
+    st.textContent='刚刚 · MOCK';
+    out.textContent='> '+v+'\n\n已执行（设计稿）\n最终版通过 POST /api/command 返回真实结果。';
+  }
+})
 document.querySelectorAll('.rnav').forEach(b=>b.onclick=()=>{document.querySelectorAll('.rnav').forEach(x=>x.classList.remove('on'));b.classList.add('on');if(b.dataset.page==='settings'){openSettings()}else if(b.dataset.page==='chat'){showChat()}else{showPage(b.dataset.page)}})
 function updateRoutePreview(){const base=$('#routeBase').value.trim().replace(/\/+$/,'');const api=$('#routeApi').value.trim()||'/api';$('#routePreview').textContent=`${base}${api}/status`}
 function openSettings(){$('#settingsModal').classList.add('open');updateRoutePreview()}
