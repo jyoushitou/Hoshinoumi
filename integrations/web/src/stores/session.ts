@@ -47,6 +47,7 @@ export const useSessionStore = defineStore('session', () => {
   const connected = ref(false)
   const error = ref('')
   const status = ref<Record<string, unknown> | null>(null)
+  const statusLatencyMs = ref<number | null>(null)
   const conversations = ref<Conversation[]>([])
   const messages = ref<ChatMessage[]>([])
   const activeTarget = ref('')
@@ -247,7 +248,9 @@ export const useSessionStore = defineStore('session', () => {
     loading.value = true; error.value = ''
     try {
       await http.get('/healthz')
+      const t0 = performance.now()
       const s = await http.get<Record<string, unknown>>('/api/status')
+      statusLatencyMs.value = Math.round(performance.now() - t0)
       status.value = s; connected.value = true
       try {
         const p = await http.get<{ data?: Array<Record<string, unknown>> }>('/api/persona')
@@ -279,5 +282,5 @@ export const useSessionStore = defineStore('session', () => {
       error.value = e instanceof Error ? e.message : String(e)
     } finally { loading.value = false }
   }
-  return { loading, connected, error, status, conversations, activeTarget, conversationsError, messages, historyError, unread, persona, relation, savings, weekly, memoryTargets, lifeState, presence, week, sending, sendError, lastSeq, syncState, syncError, lastSyncAt, syncGap, refresh, selectConversation, loadHistory, sendMessage, syncNow, startSync, stopSync, markRead, recallMessage, refreshRecalls }
+  return { loading, connected, error, status, statusLatencyMs, conversations, activeTarget, conversationsError, messages, historyError, unread, persona, relation, savings, weekly, memoryTargets, lifeState, presence, week, sending, sendError, lastSeq, syncState, syncError, lastSyncAt, syncGap, refresh, selectConversation, loadHistory, sendMessage, syncNow, startSync, stopSync, markRead, recallMessage, refreshRecalls }
 })

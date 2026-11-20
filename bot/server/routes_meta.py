@@ -36,9 +36,17 @@ async def handle_status(request):
         return json_response({"error": "db_query_failed", "message": str(e)}, 500)
 
     from ..core.version import get_version
+    schema = "unknown"
+    try:
+        from ..infra.conn import get_cursor
+        c = get_cursor(); c.execute("SELECT v FROM bot_meta WHERE k='schema_version'"); row = c.fetchone(); c.close()
+        if row: schema = str(row["v"] if isinstance(row, dict) else row[0])
+    except Exception:
+        pass
     return json_response({
         "status": "running",
         "version": get_version(),
+        "schema": schema,
         "master_qq": MASTER_QQ,
         "deepseek": bool(cfg.DS_API_KEY),
         "doubao": bool(cfg.DOUBAO_API_KEY),

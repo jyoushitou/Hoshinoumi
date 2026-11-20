@@ -177,6 +177,7 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200, {
                 "status": "running",
                 "version": VERSION,
+                "schema": "36",
                 "mock": True,
                 "master_qq": OWNER_QQ,
                 "deepseek": True,
