@@ -222,4 +222,13 @@ watch(() => session.activeTarget, () => { searchOpen.value = false; searchQuery.
   .sub{font-size:9px}.sync-pill{display:none}.composer{padding:6px 8px 8px}
   .bubble{font-size:11.5px;line-height:1.55}.meta{font-size:8px}
 }
+@media(min-width:821px) and (max-width:1180px){
+  .top{padding:0 16px}.msgs{padding:16px 18px 14px}.composer{padding:10px 14px 12px}
+  .bubble{font-size:12.2px}.msg{max-width:96%}.msg-img{max-width:210px;max-height:210px}
+  .tools .tool,.tools span,.top .tbtn{min-height:32px;display:inline-flex;align-items:center}
+  .send{min-height:34px;padding:0 16px}.inputbox{padding:8px 9px}
+}
+@media(min-width:821px) and (max-width:1180px) and (orientation:portrait){
+  .top{height:60px}.msgs{padding:14px 16px 12px}.hint{font-size:8.5px}
+}
 </style>
