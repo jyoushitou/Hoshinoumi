@@ -149,7 +149,8 @@ async def handle_conversations(request):
 
 async def handle_topic(request):
     """POST /api/topic：判断当前话题是否结束，给出追问建议（规则版）。"""
-    from ..infra import repo_conversation, tenant
+    import time
+    from ..infra import repo_conversation, repo_meta, tenant
     try:
         body = await request.json()
     except Exception:
@@ -158,6 +159,14 @@ async def handle_topic(request):
     if not target:
         return json_response({"ok": False, "error": "target_id required"}, status=400)
     uid = tenant.owner_id()
+    key = f"topic_check:{uid}:{target}"
+    try:
+        last_ts = float(repo_meta.get_value(key, "0") or 0)
+    except (TypeError, ValueError):
+        last_ts = 0
+    if time.time() - last_ts < 30:
+        return json_response({"ok": False, "error": "rate_limited", "retry_after": 30 - int(time.time() - last_ts)}, status=429)
+    repo_meta.set_value(key, str(time.time()))
     rows = repo_conversation.recent(target, limit=8, user_id=uid)
     texts = [str(r.get("content") or "").strip() for r in rows if str(r.get("role")) == "user"]
     last = texts[-1] if texts else ""
