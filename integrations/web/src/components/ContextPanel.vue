@@ -1,6 +1,12 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useSessionStore } from '@/stores/session'
 const session = useSessionStore()
+const relationProgress = computed(() => {
+  const tier = String(session.relation?.tier || '')
+  const map: Record<string, number> = { '陌生': 12, '认识': 28, '熟': 45, '亲近': 65, '知己': 82, '搭档': 92 }
+  return map[tier] ?? (tier ? 50 : 0)
+})
 </script>
 <template>
   <aside class="context">
@@ -16,6 +22,7 @@ const session = useSessionStore()
     <div v-if="session.relation" class="rel-head">
       <span>关系档位</span><b>{{ session.relation.tier || '未获取' }}</b>
     </div>
+    <div v-if="session.relation" class="track"><i :style="{ width: relationProgress + '%' }"></i></div>
     <div v-else class="note">
       {{ session.error ? '未获取到关系数据：' + session.error : '暂无关系数据' }}
     </div>
@@ -47,7 +54,7 @@ const session = useSessionStore()
 .pcard.empty-card{color:#8a9bb0;font-size:11px;justify-content:center}
 .pcard{border:1px solid #e3ebf7;border-radius:14px;background:#fff;padding:13px;display:flex;gap:11px;align-items:center}.biga{width:44px;height:44px;border-radius:14px;background:#dbeafe;color:#1d4ed8;display:grid;place-items:center;font-size:16px;font-weight:800}.name{font-size:13px;font-weight:650}.tag{font-size:9.5px;color:#6b7c95;margin-top:2px}.state{margin-left:auto;width:7px;height:7px;border-radius:50%;background:#1f9d6b}.state.off{background:#c0264a}
 .sec{font-size:9px;letter-spacing:.13em;color:#8a9bb0;text-transform:uppercase;margin:17px 2px 8px}.rel-head{display:flex;align-items:center;justify-content:space-between;font-size:10px;color:#6b7c95;margin-bottom:5px}.rel-head b{font-size:11px;color:#2563eb}.rel-head em{font-style:normal;font-size:9px;color:#1f9d6b;border:1px solid #cdeee0;background:#eefbf5;border-radius:4px;padding:1px 4px;margin-left:3px}
-.track{height:4px;border-radius:4px;background:#e8effa;overflow:hidden}.track i{display:block;height:100%;background:#2563eb;border-radius:4px}.rel-meta{font-size:9px;color:#8a9bb0;margin-top:5px;display:flex;justify-content:space-between}.rel-meta span{color:#4b5f78}
+.track{height:4px;border-radius:4px;background:#e8effa;overflow:hidden}.track i{display:block;height:100%;background:#2563eb;border-radius:4px;transition:width .5s}.rel-meta{font-size:9px;color:#8a9bb0;margin-top:5px;display:flex;justify-content:space-between}.rel-meta span{color:#4b5f78}
 .life{display:flex;flex-direction:column;gap:6px}.life .row{display:flex;justify-content:space-between;font-size:10px;color:#6b7c95}.life .row b{color:#1e3a5f;font-weight:500}.note{font-size:8.5px;color:#9aabbe;margin-top:5px}
 .quick{display:grid;grid-template-columns:1fr 1fr;gap:7px}.quick .q{border:1px solid #e3ebf7;border-radius:9px;background:#fff;padding:8px;font-size:9.5px;color:#6b7c95}.quick .q b{display:block;color:#1e3a5f;font-size:10.5px;margin-bottom:1px}
 </style>
