@@ -436,6 +436,10 @@ class Handler(BaseHTTPRequestHandler):
             HISTORY.append({"id": len(HISTORY) + 1, "role": "assistant", "content": reply, "created_at": _now()})
             self._json(200, {"reply": reply, "target_id": target, "mock": True, "time": _now()})
             return
+        if path.startswith("/api/tools/") and path.endswith("/call"):
+            arg = str(body.get("arg") or "").strip()
+            self._json(200, {"ok": True, "tool": "search_images", "result": f"mock 搜图：{arg or '无关键词'}（3 张）", "mock": True})
+            return
         if path == "/api/command":
             cmd = str(body.get("command", "")).strip().lower()
             if cmd == "status":
