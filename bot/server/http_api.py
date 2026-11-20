@@ -352,7 +352,7 @@ async def handle_internal_shelf(request):
 @web.middleware
 async def auth_middleware(request, handler):
     """Bearer Token 鉴权；/healthz、/readyz、/api/health、/internal/* 免鉴权（只监听本机）"""
-    if request.path in ("/api/health", "/healthz", "/readyz") or request.path.startswith("/internal/"):
+    if request.path in ("/api/health", "/healthz", "/readyz", "/api/avatar") or request.path.startswith("/internal/"):
         return await handler(request)
     # endpoint 用自己的 token 拉消息/ack；注册/列表/停用仍走 owner Bearer
     if request.path.startswith("/api/endpoints/") and (
@@ -374,6 +374,24 @@ async def auth_middleware(request, handler):
     return await handler(request)
 
 
+async def handle_avatar(request):
+    """GET /api/avatar?type=qq&id=10001：后端头像缓存，前端不直连 qlogo。"""
+    from ..infra import avatar_store
+    kind = (request.query.get("type") or "qq").lower()
+    if kind not in ("qq", "group"):
+        kind = "qq"
+    ident = (request.query.get("id") or "").strip()
+    if not ident:
+        raise web.HTTPBadRequest(text="missing id")
+    body, ctype = await asyncio.to_thread(avatar_store.resolve, kind, ident)
+    if not body:
+        raise web.HTTPNotFound(text="avatar unavailable")
+    return web.Response(body=body, content_type=ctype, headers={
+        "Cache-Control": "public, max-age=86400",
+        "X-Avatar-Cache": "hoshinoumi",
+    })
+
+
 async def start_api_server():
     """启动 HTTP API 服务器，返回 AppRunner"""
     _semaphore = asyncio.Semaphore(apicfg.MAX_CONCURRENT_REQUESTS)
@@ -384,6 +402,7 @@ async def start_api_server():
     app.router.add_get("/readyz", handle_readyz)
     app.router.add_get("/api/health", handle_health)
     app.router.add_get("/api/status", handle_status)
+    app.router.add_get("/api/avatar", handle_avatar)
     app.router.add_get("/api/usage", handle_usage)
     app.router.add_get("/api/memory", handle_memory)
     app.router.add_get("/api/logs", handle_logs)
@@ -440,6 +459,15 @@ async def start_api_server():
     app.router.add_get("/internal/cron", handle_internal_cron)
     app.router.add_get("/internal/diary", handle_internal_diary)
     app.router.add_get("/internal/shelf", handle_internal_shelf)
+
+    async def _avatar_ctx(_app):
+        from ..infra import avatar_store
+        task = asyncio.create_task(avatar_store.loop_daily())
+        try:
+            yield
+        finally:
+            task.cancel()
+    app.cleanup_ctx.append(_avatar_ctx)
 
     runner = web.AppRunner(app, handle_signals=False)
     await runner.setup()

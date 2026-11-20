@@ -5,8 +5,8 @@ const failed = ref(false)
 const src = computed(() => {
   const group = String(props.group || '').trim()
   const qq = String(props.qq || '').trim()
-  if (group) return `https://p.qlogo.cn/gh/${encodeURIComponent(group)}/${encodeURIComponent(group)}/100`
-  if (qq && qq !== '0') return `https://q1.qlogo.cn/g?b=qq&nk=${encodeURIComponent(qq)}&s=100`
+  if (group) return `/api/avatar?type=group&id=${encodeURIComponent(group)}`
+  if (qq && qq !== '0') return `/api/avatar?type=qq&id=${encodeURIComponent(qq)}`
   return ''
 })
 const initial = computed(() => String(props.name || props.qq || '?').trim().slice(0, 1) || '?')

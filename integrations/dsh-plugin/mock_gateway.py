@@ -169,6 +169,18 @@ class Handler(BaseHTTPRequestHandler):
             return
         if path.startswith("/internal/"):
             return self._internal_get(path, q)
+        if path == "/api/avatar":
+            kind = (q.get("type") or ["qq"])[0]
+            ident = (q.get("id") or [""])[0]
+            if not ident:
+                self._json(400, {"error": "missing id"})
+                return
+            url = ("https://p.qlogo.cn/gh/" + ident + "/" + ident + "/100") if kind == "group" else ("https://q1.qlogo.cn/g?b=qq&nk=" + ident + "&s=100")
+            self.send_response(302)
+            self.send_header("Location", url)
+            self.send_header("Cache-Control", "public, max-age=86400")
+            self.end_headers()
+            return
         if not self._authorized():
             self._json(401, {"error": "unauthorized", "message": "bad token"})
             return
