@@ -85,7 +85,7 @@
   const css = document.createElement('style');
   css.textContent = `
     .chat-hide{display:none!important}
-    .page-view{display:none;flex:1;min-height:0;overflow:auto;padding:22px 24px;background:#fff;color:#17263b}
+    .page-view{display:none;flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;padding:22px 24px;background:#fff;color:#17263b}
     .page-view.on{display:block}
     .page-head{display:flex;align-items:center;gap:12px;margin-bottom:16px}
     .page-head h2{font-size:17px;margin:0;font-weight:650;color:#17263b}
@@ -813,6 +813,16 @@
       });
       function money(n){ return '¥' + Number(n || 0).toLocaleString('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
       function renderSavings() {
+        const today = new Date(); today.setHours(23, 59, 59, 999);
+        S.fixed = (S.fixed || []).filter(f => {
+          const due = new Date(String(f.due || '') + 'T00:00:00');
+          if (Number.isNaN(due.getTime()) || due > today) return true;
+          const interest = Number(f.amount || 0) * Number(f.rate || 0) / 100 * ((f.months || 12) / 12);
+          const acc = S.accounts.find(a => a[0] === (f.account || '银行卡')) || S.accounts[0];
+          if (acc) acc[1] = Number(acc[1] || 0) + Number(f.amount || 0) + interest;
+          S.entries.unshift([new Date().toISOString().slice(5, 10), 'income', acc ? acc[0] : '银行卡', f.name + ' 到期自动转回', Number(f.amount || 0) + interest]);
+          return false;
+        });
         const rows = S.entries.map(e => '<div class="entry"><span class="tag">' + esc(e[1]) + '</span><span>' + esc(e[2]) + ' · ' + esc(e[3]) + '</span><span class="amt ' + (e[4] < 0 ? 'neg' : 'pos') + '">' + (e[4] > 0 ? '+' : '') + money(e[4]) + '</span><span style="color:#9aabbe">' + esc(e[0]) + '</span></div>').join('');
         const total = S.accounts.reduce((n, a) => n + Number(a[1] || 0), 0);
         const frozen = (S.frozen || []).reduce((n, f) => n + Number(f.amount || 0), 0);
@@ -821,7 +831,7 @@
         const assetTotal = total + fixedTotal + fundTotal;
         const available = assetTotal - frozen - fixedTotal - fundTotal;
         const fundCards = (S.funds || []).map(f => '<div class="fund-row"><div><div class="fund-name">' + esc(f.name) + ' <span class="fund-tag">' + esc(f.type) + '</span></div><div class="fund-meta">' + (f.rate ? '7 日年化 ' + Number(f.rate).toFixed(2) + '% · ' : '') + '收益 ' + money(f.profit) + ' · ' + esc(f.account) + ' · ' + esc(f.redeem) + '</div></div><div class="fund-value">' + money(f.value) + '<small>持有金额</small></div></div>').join('');
-        const fixedCards = (S.fixed || []).map((f, i) => '<div class="fixed-card"><div class="main"><div class="name">' + esc(f.name) + '<span class="fixed-lock">锁定</span></div><div class="meta">年利率 ' + Number(f.rate).toFixed(2) + '% · 到期 ' + esc(f.due) + ' · 预计利息 ' + money(f.amount * f.rate / 100 * ((f.months || 12) / 12)) + ' · 到期回 ' + esc(f.account || '银行卡') + '</div></div><div class="val"><b>' + money(f.amount) + '</b><small>本金</small></div><div class="fixed-acts"><button data-mature="' + i + '">到期后</button><button class="cancel" data-cancel="' + i + '">取消</button></div></div>').join('');
+        const fixedCards = (S.fixed || []).map((f, i) => '<div class="fixed-card"><div class="main"><div class="name">' + esc(f.name) + '<span class="fixed-lock">锁定</span></div><div class="meta">年利率 ' + Number(f.rate).toFixed(2) + '% · 到期 ' + esc(f.due) + ' · 预计利息 ' + money(f.amount * f.rate / 100 * ((f.months || 12) / 12)) + ' · 到期回 ' + esc(f.account || '银行卡') + '</div></div><div class="val"><b>' + money(f.amount) + '</b><small>本金</small></div><div class="fixed-acts"><button class="cancel" data-cancel="' + i + '">取消</button></div></div>').join('');
         const goalCards = (S.goals || []).map(g => {
           const pct = g.target ? Math.min(100, Math.round(g.saved / g.target * 100)) : 0;
           return '<div class="goal-card"><div class="goal-top"><b>' + esc(g.name) + '</b><span>截止 ' + esc(g.due) + '</span></div><div class="goal-amt">' + money(g.saved) + ' <small>/ ' + money(g.target) + '</small></div><div class="gbar"><i style="width:' + pct + '%"></i></div><div class="goal-foot"><span>' + pct + '%</span><span>还差 ' + money(Math.max(0, g.target - g.saved)) + '</span></div></div>';
@@ -831,7 +841,7 @@
         pageView.innerHTML = '<div class="page-head"><div><h2>存钱</h2><p>v35.5 Web 演示 · 多目标 / 资金位置 / 冻结预留</p></div><button class="back" id="backChat">← 返回聊天</button></div>' +
           '<div class="savings-grid"><div class="savings-stat"><div class="k">可用余额</div><div class="v blue">' + money(available) + '</div></div><div class="savings-stat stat-amber"><div class="k">冻结 / 预留</div><div class="v">' + money(frozen) + '</div></div><div class="savings-stat"><div class="k">定期存款</div><div class="v">' + money(fixedTotal) + '</div></div><div class="savings-stat"><div class="k">总资产</div><div class="v">' + money(assetTotal) + '</div></div></div>' +
           '<div class="savings-panel"><div class="panel-head"><h3>存钱目标</h3><button class="mini-add" id="addGoal">＋ 新目标</button></div><div class="savings-goals">' + goalCards + '</div></div>' +
-          '<div class="savings-panel"><div class="panel-head"><h3>定期存款</h3><button class="mini-add" id="addFixed">＋ 存定期</button></div>' + fixedCards + '</div>' +
+          '<div class="savings-panel"><div class="panel-head"><h3>定期存款</h3><button class="mini-add" id="addFixed">＋ 存定期</button></div>' + fixedCards + '<div class="frozen-tip">到期自动按来源账户转回本金+利息，无需手动操作。</div></div>' +
           '<div class="savings-panel"><div class="panel-head"><h3>理财 / 基金</h3><button class="mini-add" id="addFund">＋ 买入</button></div>' + fundCards + '</div>' +
           '<div class="savings-two"><div class="savings-panel"><h3>钱存在哪</h3>' + accountRows + '<div class="frozen-tip">总余额 ' + money(total) + ' = 各账户余额合计</div></div><div class="savings-panel"><div class="panel-head"><h3>冻结 / 待缴费</h3><button class="mini-add" id="addFrozen">＋ 新增</button></div>' + frozenRows + '<div class="frozen-tip">可用余额 = 总资产 ' + money(assetTotal) + ' - 冻结 ' + money(frozen) + ' - 定期 ' + money(fixedTotal) + ' - 理财 ' + money(fundTotal) + ' = <b>' + money(available) + '</b></div></div></div>' +
           '<div class="savings-two"><div class="savings-panel"><h3>记一笔</h3><div class="savings-form"><div><label>金额</label><input id="svAmount" type="number" step="0.01" placeholder="35.50"></div><div><label>账户</label><select id="svAccount">' + S.accounts.map(a => '<option>' + esc(a[0]) + '</option>').join('') + '</select></div><div><label>类型</label><select id="svKind"><option value="expense">支出</option><option value="income">收入</option><option value="saving">存钱</option></select></div><div class="full"><label>备注</label><input id="svNote" placeholder="午饭 / 旅行目标 / 兼职"></div><div class="actions"><button id="svSave">保存</button><span class="import-status" id="svMsg"></span></div></div></div><div class="savings-panel"><h3>最近流水</h3><div class="entry-list">' + rows + '</div></div></div>';
@@ -896,13 +906,6 @@
         pageView.querySelectorAll('[data-del]').forEach(btn => btn.onclick = () => {
           const i = Number(btn.dataset.del); if (!S.frozen[i]) return;
           S.frozen.splice(i, 1); renderSavings(); toast('已删除冻结项（MOCK）');
-        });
-        pageView.querySelectorAll('[data-mature]').forEach(btn => btn.onclick = () => {
-          const i = Number(btn.dataset.mature); const f = S.fixed[i]; if (!f) return;
-          const interest = Number(f.amount || 0) * Number(f.rate || 0) / 100 * ((f.months || 12) / 12);
-          const acc = S.accounts.find(a => a[0] === (f.account || '银行卡')) || S.accounts[0]; if (acc) acc[1] = Number(acc[1] || 0) + Number(f.amount || 0) + interest;
-          S.entries.unshift([new Date().toISOString().slice(5, 10), 'income', acc ? acc[0] : '银行卡', f.name + ' 到期', Number(f.amount || 0) + interest]);
-          S.fixed.splice(i, 1); renderSavings(); toast('定期到期，本金和利息已转回账户（MOCK）');
         });
         pageView.querySelectorAll('[data-cancel]').forEach(btn => btn.onclick = () => {
           const i = Number(btn.dataset.cancel); const f = S.fixed[i]; if (!f) return;
