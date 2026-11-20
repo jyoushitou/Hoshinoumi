@@ -76,6 +76,7 @@ function mapPath(rawPath) {
     '/health': '/healthz',
     '/chat': '/api/chat',
     '/history': '/api/history',
+    '/conversations': '/api/conversations',
     '/command': '/api/command',
     '/status': '/api/status',
     '/logs': '/api/logs',
