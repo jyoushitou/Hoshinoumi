@@ -84,7 +84,32 @@ function showPage(page){
     `<div class="pv-sec">理财 / 基金</div><div class="sav-list"><div class="sav-row"><div><b>余额宝 <em>货币基金</em></b><small>7 日年化 1.35% · 收益 ¥0.05 · 支付宝 · 快速赎回</small></div><span>¥1,500</span></div><div class="sav-row"><div><b>沪深300指数 <em>基金</em></b><small>收益 ¥50 · 银行卡 · T+1</small></div><span>¥800</span></div></div>`+
     `<div class="mem-cols" style="margin-top:10px"><div class="pv-card"><h3>钱存在哪</h3><div class="pv-row">银行卡<span>¥5,300</span></div><div class="pv-row">支付宝<span>¥1,200</span></div><div class="pv-row">微信<span>¥300</span></div><div class="pv-row">现金<span>¥0</span></div></div><div class="pv-card"><h3>冻结 / 待缴费</h3><div class="pv-row">房租<span>¥1,800 · 每月 5 日</span></div><div class="pv-row">学费<span>¥2,000 · 2027-02-20</span></div><div class="pv-row">水电费<span>¥300 · 每月 20 日</span></div><div class="sav-tip">可用余额 = 总资产 ¥12,100 - 冻结 ¥4,100 - 定期 ¥3,000 - 理财 ¥2,300 = ¥2,700</div></div></div>`+
     `<div class="pv-sec">最近流水</div><div class="pv-row">午饭<span>-¥35.50</span></div><div class="pv-row">旅行目标<span>+¥500</span></div><div class="pv-row">兼职<span>+¥800</span></div>`
-  else if(page==='weekly') pv.innerHTML=pageHead('周计划表','ISO 年周 · 按周配置')+`<div class="pv-sec">第 47 周</div><div class="pv-week"><div class="th"></div><div class="th">周一</div><div class="th">周二</div><div class="th">周三</div><div class="th">周四</div><div class="th">周五</div><div class="th">1-2</div><div class="cell"><b>高等数学</b>教三 201</div><div class="cell"></div><div class="cell"><b>大学英语</b>文科楼 104</div><div class="cell"></div><div class="cell"></div><div class="th">3-4</div><div class="cell"></div><div class="cell"><b>数据结构</b>实验楼 302</div><div class="cell"></div><div class="cell"><b>读书</b>30 分钟</div><div class="cell"></div></div>`
+  else if(page==='weekly') {
+    const times = ['08:00-08:45','08:55-09:40','10:00-10:45','10:55-11:40','14:00-14:45','14:55-15:40'];
+    const days = ['周一','周二','周三','周四','周五','周六','周日'];
+    const courses = { 0: { 0: '高等数学|教三 201' }, 2: { 1: '大学英语|文科楼 104' }, 4: { 4: '数据结构|实验楼 302' }, 3: { 4: '读书|30 分钟' } };
+    let grid = '<div class="wk-dayhead"><span></span>' + days.map(d => `<span>${d}</span>`).join('') + '</div>';
+    for (let r = 0; r < 6; r++) {
+      grid += `<div class="wk-row"><div class="wk-period"><b>${r+1}</b><small>${times[r]}</small></div>`;
+      for (let c = 0; c < 7; c++) {
+        const v = courses[c]?.[r] || '';
+        grid += `<div class="wk-cell">${v ? `<div class="wk-course"><b>${v.split('|')[0]}</b><small>${v.split('|')[1]}</small></div>` : ''}</div>`;
+      }
+      grid += '</div>';
+    }
+    pv.innerHTML = pageHead('周计划表','独立应用客户端 · ISO 年周 · 按周配置') +
+      `<div class="wk-toolbar"><label>周次 <input value="47"></label><button>跳转</button><button>节次设置</button><button>导入 HTML</button><span>点击空格子新增；点课程编辑/删除</span></div>` +
+      `<div class="wk-grid">${grid}</div>` +
+      `<div class="wk-form"><label>课程名<input id="wkName" placeholder="课程名"></label><label>地点<input id="wkLoc" placeholder="地点"></label><button id="wkAdd">添加到格子</button></div>`;
+    pv.querySelectorAll('.wk-cell').forEach(cell => cell.onclick = () => {
+      if (cell.querySelector('.wk-course')) return;
+      const name = pv.querySelector('#wkName').value.trim(); if (!name) return;
+      const loc = pv.querySelector('#wkLoc').value.trim();
+      cell.innerHTML = `<div class="wk-course"><b>${name}</b><small>${loc || '未填写地点'}</small></div>`;
+    });
+    pv.querySelector('#wkAdd').onclick = () => toast('先点上方空格子，再添加课程（设计稿）');
+    return;
+  }
   else if(page==='info') pv.innerHTML=pageHead('信息','运行 / 数据库 / 计划 / 阅读')+`<div class="pv-row">后端<span>已连接 · 42ms</span></div><div class="pv-row">数据库<span>schema 36 · 正常</span></div><div class="pv-row">今日对话<span>12 次</span></div><div class="pv-row">记忆<span>4 条 / 2 会话</span></div><div class="pv-row">阅读<span>《十日终焉》· 60%</span></div>`
   else if(page==='persona') pv.innerHTML=pageHead('人设','nao · 当前激活')+`<div class="pv-card"><b>nao</b><small>友利奈绪 · 星之海学园</small></div><div class="pv-sec">文件</div><div class="pv-row">prompt.txt<span>已加载</span></div><div class="pv-row">supplement.txt<span>已加载</span></div><div class="pv-row">life.txt<span>已加载</span></div><div class="pv-row">state.json<span>mood 0.1</span></div>`
   else if(page==='commands') pv.innerHTML=pageHead('命令','51 个命令 · 设计稿 · 最终走 /api/commands')+
