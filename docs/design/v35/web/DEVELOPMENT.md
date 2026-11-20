@@ -582,6 +582,31 @@ UI：
 多端 5 秒内同步
 ```
 
+## 3.26 群会话切换
+
+现状：
+
+```text
+/api/conversations 只有 conversation_messages 聚合
+type=unknown，没有 QQ 群列表/群名/成员数
+所以只能看到私聊或 mock 群
+```
+
+计划：
+
+```text
+v35.5.20.0 API
+  NapCat get_friend_list / get_group_list
+  /api/conversations 返回 type/name/member_count
+  群资料缓存；失败不伪造
+
+v35.5.21.0 UI
+  私聊/群聊分段
+  群名/群号/成员数
+  切群加载历史
+  群聊发送 target_id=群号
+```
+
 ## 4. 次次版本
 
 | 版本 | 交付 | 验收 |
