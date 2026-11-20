@@ -26,6 +26,7 @@ async function choose(target: string) { await session.selectConversation(target)
           <span class="avatar">{{ String(c.name || c.target_id).slice(0, 1) }}</span>
           <div class="body"><div class="nm">{{ c.name || c.target_id }}</div><div class="last">{{ c.last_message || '暂无消息' }}</div></div>
           <span class="tm">{{ String(c.updated_at || '').slice(11, 16) }}</span>
+          <span v-if="Number(c.unread || 0) > 0" class="unread">{{ Number(c.unread) > 99 ? '99+' : c.unread }}</span>
         </div>
       </template>
     </div>

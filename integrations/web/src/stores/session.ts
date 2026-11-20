@@ -6,6 +6,8 @@ export interface Conversation {
   count?: number
   last_message?: string
   updated_at?: string
+  unread?: number
+  last_read_id?: number
 }
 export interface ChatMessage {
   id?: number | string
@@ -72,6 +74,7 @@ export const useSessionStore = defineStore('session', () => {
     try {
       const r = await http.get<{ data?: Conversation[] }>('/api/conversations')
       conversations.value = Array.isArray(r.data) ? r.data : []
+      unread.value = conversations.value.reduce((n, c) => n + Number(c.unread || 0), 0)
       if (!activeTarget.value && conversations.value.length) {
         await selectConversation(conversations.value[0].target_id)
       }
@@ -91,6 +94,17 @@ export const useSessionStore = defineStore('session', () => {
       messages.value.push(m)
     }
   }
+  async function markRead(target: string) {
+    if (!target) return
+    const last = Math.max(0, ...messages.value.map(seqOf))
+    if (!last) return
+    try {
+      await http.post('/api/read', { target_id: target, last_read_id: last })
+      const conv = conversations.value.find(c => c.target_id === target)
+      if (conv) { conv.unread = 0; conv.last_read_id = last }
+      unread.value = conversations.value.reduce((n, c) => n + Number(c.unread || 0), 0)
+    } catch { /* 未读上报失败不阻塞聊天 */ }
+  }
   async function loadHistory(target: string) {
     if (!target) { messages.value = []; lastSeq.value = 0; return }
     historyError.value = ''
@@ -109,6 +123,7 @@ export const useSessionStore = defineStore('session', () => {
   async function selectConversation(target: string) {
     activeTarget.value = target
     await loadHistory(target)
+    await markRead(target)
   }
   async function syncNow(force = false) {
     const auth = useAuthStore()
@@ -128,6 +143,8 @@ export const useSessionStore = defineStore('session', () => {
       lastSeq.value = after
       syncState.value = 'online'
       lastSyncAt.value = new Date().toLocaleTimeString()
+      await markRead(activeTarget.value)
+      await loadConversations()
       retryDelay = 5000
       if (retryTimer) { clearTimeout(retryTimer); retryTimer = null }
     } catch (e) {
@@ -229,5 +246,5 @@ export const useSessionStore = defineStore('session', () => {
       error.value = e instanceof Error ? e.message : String(e)
     } finally { loading.value = false }
   }
-  return { loading, connected, error, status, conversations, activeTarget, conversationsError, messages, historyError, unread, persona, relation, savings, weekly, memoryTargets, lifeState, presence, week, sending, sendError, lastSeq, syncState, syncError, lastSyncAt, refresh, selectConversation, loadHistory, sendMessage, syncNow, startSync, stopSync }
+  return { loading, connected, error, status, conversations, activeTarget, conversationsError, messages, historyError, unread, persona, relation, savings, weekly, memoryTargets, lifeState, presence, week, sending, sendError, lastSeq, syncState, syncError, lastSyncAt, refresh, selectConversation, loadHistory, sendMessage, syncNow, startSync, stopSync, markRead }
 })
