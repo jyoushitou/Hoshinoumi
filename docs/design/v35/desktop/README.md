@@ -68,3 +68,22 @@ API 路由：/api
 ```text
 hoshinoumi-desktop-v35.6-settings.png
 ```
+
+
+## 显示兜底
+
+```text
+启动前检测引擎/版本/能力
+A 完整模式
+B 兼容模式
+C 安全模式
+D 本地 fallback.html
+5 秒无心跳 → 兜底页
+绝不白屏
+```
+
+设计稿：
+
+```text
+hoshinoumi-desktop-v35.6-fallback.html
+```
