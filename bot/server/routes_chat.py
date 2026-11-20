@@ -113,49 +113,39 @@ async def handle_command(request):
         return json_response({"error": "command_failed", "message": str(e)}, 500)
 
 async def handle_conversations(request):
-    """GET /api/conversations：owner 的 QQ 会话列表（含未读）。"""
+    """GET /api/conversations：好友/群目录 + 历史聚合（含未读）。"""
+    from . import qq_directory
     from ..infra import read_state, repo_conversation, tenant
     uid = tenant.owner_id()
-    rows = repo_conversation.threads(uid, limit=50)
+    rows = repo_conversation.threads(uid, limit=100)
     if not rows and uid != tenant.OWNER_ID:
-        rows = repo_conversation.threads(tenant.OWNER_ID, limit=50)
-    for row in rows:
+        rows = repo_conversation.threads(tenant.OWNER_ID, limit=100)
+    merged = {str(r["target_id"]): dict(r) for r in rows}
+    for r in merged.values():
+        r.setdefault("type", "unknown")
+        r.setdefault("name", r["target_id"])
+        r.setdefault("member_count", 0)
+    try:
+        directory = await qq_directory.directory()
+    except Exception:
+        directory = {"groups": [], "friends": []}
+    for item in directory.get("groups", []):
+        row = merged.get(item["target_id"]) or {
+            "target_id": item["target_id"], "count": 0,
+            "last_message": "", "last_role": "", "updated_at": "",
+        }
+        row.update(item)
+        merged[item["target_id"]] = row
+    for item in directory.get("friends", []):
+        if item["target_id"] in merged:
+            merged[item["target_id"]].update(item)
+    for row in merged.values():
         row["last_read_id"] = read_state.last_read(uid, row["target_id"])
         row["unread"] = read_state.unread_count(uid, row["target_id"])
-    return json_response({"ok": True, "data": rows})
+    out = sorted(merged.values(), key=lambda x: str(x.get("updated_at") or ""), reverse=True)[:100]
+    return json_response({"ok": True, "data": out})
 
 
-async def handle_history(request):
-    """GET /api/history：owner 历史；after_seq 时增量拉取。"""
-    from ..infra import repo_conversation, tenant
-    target = (request.query.get("target_id") or "").strip()
-    if not target:
-        return json_response({"ok": False, "error": "target_id required"}, status=400)
-    try:
-        limit = int(request.query.get("limit") or 100)
-        after_seq = int(request.query["after_seq"]) if request.query.get("after_seq") not in (None, "") else None
-    except ValueError:
-        return json_response({"ok": False, "error": "bad limit/after_seq"}, status=400)
-    uid = tenant.owner_id()
-    if after_seq is not None:
-        rows = repo_conversation.after(target, after_id=after_seq, limit=limit, user_id=uid)
-        if not rows and uid != tenant.OWNER_ID:
-            rows = repo_conversation.after(target, after_id=after_seq, limit=limit, user_id=tenant.OWNER_ID)
-    else:
-        rows = repo_conversation.recent(target, limit=limit, user_id=uid)
-        if not rows and uid != tenant.OWNER_ID:
-            rows = repo_conversation.recent(target, limit=limit, user_id=tenant.OWNER_ID)
-    data = []
-    from ..infra import image_store
-    for r in rows:
-        item = dict(r)
-        if item.get("created_at") is not None:
-            item["created_at"] = str(item["created_at"])
-        image_store.attach_image(item)
-        data.append(item)
-    seqs = [int(x["id"]) for x in data if str(x.get("id", "")).isdigit()]
-    next_seq = max(seqs) if seqs else (after_seq or 0)
-    return json_response({"ok": True, "data": data, "next_seq": next_seq, "has_more": len(data) >= limit})
 
 async def handle_read_state(request):
     """GET /api/read-state?target_id=：最后已读位点。"""

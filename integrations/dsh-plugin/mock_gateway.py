@@ -181,6 +181,7 @@ class Handler(BaseHTTPRequestHandler):
                     "target_id": tid,
                     "name": "测试私聊" if tid == OWNER_QQ else "测试群 " + tid,
                     "type": "private" if tid == OWNER_QQ else "group",
+                    "member_count": 0 if tid == OWNER_QQ else 5,
                     "count": len(items),
                     "last_message": items[-1][0][:40] if items else "",
                     "updated_at": "2026-11-19 21:04:00",
