@@ -2,11 +2,23 @@
 import RailNav from '@/components/RailNav.vue'
 import ConversationList from '@/components/ConversationList.vue'
 import ContextPanel from '@/components/ContextPanel.vue'
-import { onMounted } from 'vue'
+import { onBeforeUnmount, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useSessionStore } from '@/stores/session'
 const auth = useAuthStore(); const session = useSessionStore()
-onMounted(() => { if (auth.loggedIn) session.refresh(); else session.error = '未登录，请先填写 QQ 和 token' })
+function onFocus() { if (auth.loggedIn) void session.syncNow(true) }
+function onVisibility() { if (document.visibilityState === 'visible' && auth.loggedIn) void session.syncNow() }
+onMounted(() => {
+  if (auth.loggedIn) { void session.refresh(); session.startSync() }
+  else session.error = '未登录，请先填写 QQ 和 token'
+  window.addEventListener('focus', onFocus)
+  document.addEventListener('visibilitychange', onVisibility)
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('focus', onFocus)
+  document.removeEventListener('visibilitychange', onVisibility)
+  session.stopSync()
+})
 </script>
 <template>
   <div class="shell">

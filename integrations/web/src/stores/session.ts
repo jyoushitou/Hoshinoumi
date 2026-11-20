@@ -17,6 +17,12 @@ export interface ChatMessage {
   audio_url?: string
   kind?: string
 }
+export interface HistoryResponse {
+  ok?: boolean
+  data?: ChatMessage[]
+  next_seq?: number
+  has_more?: boolean
+}
 export interface Attachment {
   image?: string
   sticker?: string
@@ -53,6 +59,14 @@ export const useSessionStore = defineStore('session', () => {
   const week = ref(getIsoWeek())
   const sending = ref(false)
   const sendError = ref('')
+  const lastSeq = ref(0)
+  const syncState = ref<'idle' | 'syncing' | 'online' | 'offline'>('idle')
+  const syncError = ref('')
+  const lastSyncAt = ref('')
+  let syncTimer: ReturnType<typeof setInterval> | null = null
+  let retryTimer: ReturnType<typeof setTimeout> | null = null
+  let syncInFlight = false
+  let retryDelay = 5000
   async function loadConversations() {
     conversationsError.value = ''
     try {
@@ -66,20 +80,74 @@ export const useSessionStore = defineStore('session', () => {
       conversationsError.value = e instanceof Error ? e.message : String(e)
     }
   }
+  function seqOf(m: ChatMessage) {
+    const n = Number(m.id)
+    return Number.isFinite(n) ? n : 0
+  }
+  function appendUnique(rows: ChatMessage[]) {
+    const seen = new Set(messages.value.map(m => String(m.id)))
+    for (const m of rows) {
+      if (m.id !== undefined && m.id !== null && seen.has(String(m.id))) continue
+      messages.value.push(m)
+    }
+  }
   async function loadHistory(target: string) {
-    if (!target) { messages.value = []; return }
+    if (!target) { messages.value = []; lastSeq.value = 0; return }
     historyError.value = ''
     try {
-      const r = await http.get<{ data?: ChatMessage[] }>('/api/history?target_id=' + encodeURIComponent(target) + '&limit=100')
+      const r = await http.get<HistoryResponse>('/api/history?target_id=' + encodeURIComponent(target) + '&limit=100')
       messages.value = Array.isArray(r.data) ? r.data : []
+      lastSeq.value = typeof r.next_seq === 'number' ? r.next_seq : Math.max(0, ...messages.value.map(seqOf))
+      syncState.value = 'online'; syncError.value = ''
+      lastSyncAt.value = new Date().toLocaleTimeString()
     } catch (e) {
       messages.value = []
       historyError.value = e instanceof Error ? e.message : String(e)
+      syncState.value = 'offline'; syncError.value = historyError.value
     }
   }
   async function selectConversation(target: string) {
     activeTarget.value = target
     await loadHistory(target)
+  }
+  async function syncNow(force = false) {
+    const auth = useAuthStore()
+    if (!auth.loggedIn || !activeTarget.value || syncInFlight) return
+    if (!force && typeof document !== 'undefined' && document.visibilityState === 'hidden') return
+    syncInFlight = true
+    syncState.value = 'syncing'; syncError.value = ''
+    try {
+      let after = lastSeq.value
+      for (let page = 0; page < 5; page++) {
+        const r = await http.get<HistoryResponse>('/api/history?target_id=' + encodeURIComponent(activeTarget.value) + '&after_seq=' + after + '&limit=100')
+        const rows = Array.isArray(r.data) ? r.data : []
+        appendUnique(rows)
+        if (typeof r.next_seq === 'number') after = Math.max(after, r.next_seq)
+        if (!r.has_more || rows.length === 0) break
+      }
+      lastSeq.value = after
+      syncState.value = 'online'
+      lastSyncAt.value = new Date().toLocaleTimeString()
+      retryDelay = 5000
+      if (retryTimer) { clearTimeout(retryTimer); retryTimer = null }
+    } catch (e) {
+      syncState.value = 'offline'
+      syncError.value = e instanceof Error ? e.message : String(e)
+      if (retryTimer) clearTimeout(retryTimer)
+      retryTimer = setTimeout(() => { retryTimer = null; void syncNow(true) }, retryDelay)
+      retryDelay = Math.min(retryDelay * 2, 30000)
+    } finally {
+      syncInFlight = false
+    }
+  }
+  function startSync() {
+    if (syncTimer !== null) return
+    syncTimer = setInterval(() => { void syncNow() }, 5000)
+  }
+  function stopSync() {
+    if (syncTimer !== null) { clearInterval(syncTimer); syncTimer = null }
+    if (retryTimer) { clearTimeout(retryTimer); retryTimer = null }
+    syncState.value = 'idle'
   }
 
   async function sendMessage(content: string, attachment: Attachment = {}) {
@@ -105,8 +173,13 @@ export const useSessionStore = defineStore('session', () => {
       })
       if (!r.reply) throw new Error(r.message || r.error || '发送失败')
       messages.value = messages.value.filter(m => m.id !== localId)
-      messages.value.push({ role: 'user', content: text, image_url: imageUrl || undefined, audio_url: audio || undefined, kind, created_at: stamp })
-      messages.value.push({ role: 'assistant', content: r.reply, created_at: new Date().toISOString().slice(0, 19).replace('T', ' ') })
+      const target = activeTarget.value
+      await loadHistory(target)
+      if (!messages.value.length) {
+        messages.value.push({ role: 'user', content: text, image_url: imageUrl || undefined, audio_url: audio || undefined, kind, created_at: stamp })
+        messages.value.push({ role: 'assistant', content: r.reply, created_at: new Date().toISOString().slice(0, 19).replace('T', ' ') })
+        lastSeq.value = Math.max(lastSeq.value, ...messages.value.map(seqOf))
+      }
       return true
     } catch (e) {
       messages.value = messages.value.filter(m => m.id !== localId)
@@ -150,10 +223,11 @@ export const useSessionStore = defineStore('session', () => {
       memoryTargets.value = mem.status === 'fulfilled' && Array.isArray(mem.value.targets) ? mem.value.targets : []
       weekly.value = wk.status === 'fulfilled' ? wk.value : null
       await loadConversations()
+      startSync()
     } catch (e) {
       connected.value = false
       error.value = e instanceof Error ? e.message : String(e)
     } finally { loading.value = false }
   }
-  return { loading, connected, error, status, conversations, activeTarget, conversationsError, messages, historyError, unread, persona, relation, savings, weekly, memoryTargets, lifeState, presence, week, sending, sendError, refresh, selectConversation, loadHistory, sendMessage }
+  return { loading, connected, error, status, conversations, activeTarget, conversationsError, messages, historyError, unread, persona, relation, savings, weekly, memoryTargets, lifeState, presence, week, sending, sendError, lastSeq, syncState, syncError, lastSyncAt, refresh, selectConversation, loadHistory, sendMessage, syncNow, startSync, stopSync }
 })

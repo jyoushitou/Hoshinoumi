@@ -34,7 +34,7 @@ from .routes_endpoints import (
 
 
 async def handle_internal_history(request):
-    """v19.2：本机内部历史接口，读 conversation_messages"""
+    """v19.2 / v35.5.6：本机内部历史接口，支持 after_seq 增量。"""
     from ..infra import repo_conversation
 
     target = (request.query.get("target_id") or "").strip()
@@ -43,24 +43,29 @@ async def handle_internal_history(request):
     try:
         limit = int(request.query.get("limit") or 100)
         before = int(request.query["before"]) if request.query.get("before") else None
+        after_seq = int(request.query["after_seq"]) if request.query.get("after_seq") not in (None, "") else None
     except ValueError:
-        return json_response({"ok": False, "error": "bad limit/before"}, status=400)
-    owner = request.headers.get("X-Owner-Id") or request.query.get("user_id") or "__owner__"
+        return json_response({"ok": False, "error": "bad limit/before/after_seq"}, status=400)
+    owner = (request.headers.get("X-User-Id")
+             or request.headers.get("X-Owner-Id")
+             or request.query.get("user_id") or "__owner__")
     if owner == "owner":
         owner = "__owner__"
-    rows = repo_conversation.recent(
-        target, limit=limit, before_id=before,
-        user_id=owner,
-    )
+    if after_seq is not None:
+        rows = repo_conversation.after(target, after_id=after_seq, limit=limit, user_id=owner)
+    else:
+        rows = repo_conversation.recent(target, limit=limit, before_id=before, user_id=owner)
     data = []
+    from ..infra import image_store
     for r in rows:
         item = dict(r)
         if item.get("created_at") is not None:
             item["created_at"] = str(item["created_at"])
-        from ..infra import image_store
         image_store.attach_image(item)
         data.append(item)
-    return json_response({"ok": True, "data": data})
+    seqs = [int(x["id"]) for x in data if str(x.get("id", "")).isdigit()]
+    next_seq = max(seqs) if seqs else (after_seq or 0)
+    return json_response({"ok": True, "data": data, "next_seq": next_seq, "has_more": len(data) >= limit})
 
 
 def _internal_uid(request):

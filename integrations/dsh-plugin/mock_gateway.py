@@ -188,8 +188,20 @@ class Handler(BaseHTTPRequestHandler):
             return
         if path == "/api/history":
             target = (q.get("target_id") or [OWNER_QQ])[0]
-            limit = int((q.get("limit") or ["100"])[0])
-            self._json(200, {"ok": True, "target_id": target, "data": HISTORY[-max(1, min(limit, 100)):], "mock": True})
+            limit = max(1, min(int((q.get("limit") or ["100"])[0]), 100))
+            after_raw = (q.get("after_seq") or [""])[0]
+            if after_raw != "":
+                try:
+                    after_seq = int(after_raw)
+                except ValueError:
+                    self._json(400, {"error": "bad_after_seq"})
+                    return
+                rows = [x for x in HISTORY if int(x.get("id") or 0) > after_seq]
+                rows = rows[:limit]
+            else:
+                rows = HISTORY[-limit:]
+            seqs = [int(x.get("id") or 0) for x in rows]
+            self._json(200, {"ok": True, "target_id": target, "data": rows, "next_seq": max(seqs) if seqs else int(after_raw or 0), "has_more": len(rows) >= limit, "mock": True})
             return
         if path == "/api/state":
             self._json(200, {"ok": True, "data": {"mood": 0.1, "energy": 0.7, "lonely": 0.15, "emotion": "平静"}, "mock": True})
@@ -389,6 +401,8 @@ class Handler(BaseHTTPRequestHandler):
                 "存钱": "本月结余 ¥3,300，旅行目标 60%。",
                 "书": "我在看《十日终焉》，窗边光线刚好。",
             }.get(message, f"收到：{message}（mock 网关）")
+            HISTORY.append({"id": len(HISTORY) + 1, "role": "user", "content": message, "created_at": _now()})
+            HISTORY.append({"id": len(HISTORY) + 1, "role": "assistant", "content": reply, "created_at": _now()})
             self._json(200, {"reply": reply, "target_id": target, "mock": True, "time": _now()})
             return
         if path == "/api/command":

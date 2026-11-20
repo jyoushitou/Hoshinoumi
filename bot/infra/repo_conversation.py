@@ -84,6 +84,27 @@ def recent(target_id, limit=100, before_id=None, user_id=None, cursor=None):
 
 
 
+def after(target_id, after_id=0, limit=100, user_id=None, cursor=None):
+    """增量拉取：id > after_id，时间正序，供 Web 轮询。"""
+    from . import tenant
+    if user_id is None:
+        user_id = tenant.current_user_id()
+    limit = max(1, min(int(limit or 100), MAX_PER_THREAD))
+    c = _cursor(cursor)
+    where = ["target_id=%s", "id>%s"]
+    params = [str(target_id), int(after_id or 0)]
+    if user_id is not None:
+        where.append("user_id=%s")
+        params.append(str(user_id))
+    sql = ("SELECT id,user_id,target_id,thread_id,channel,role,content,"
+           "speaker_id,message_id,meta,created_at FROM conversation_messages WHERE "
+           + " AND ".join(where) + " ORDER BY id ASC LIMIT %s")
+    params.append(limit)
+    c.execute(sql, tuple(params))
+    return list(c.fetchall() or [])
+
+
+
 def threads(user_id=None, limit=50, cursor=None):
     """按 target 汇总最近会话，供 Web 会话列表使用。"""
     from . import tenant

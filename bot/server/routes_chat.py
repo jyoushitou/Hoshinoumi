@@ -123,28 +123,36 @@ async def handle_conversations(request):
 
 
 async def handle_history(request):
-    """GET /api/history?target_id=...：owner 的会话历史。"""
+    """GET /api/history：owner 历史；after_seq 时增量拉取。"""
     from ..infra import repo_conversation, tenant
     target = (request.query.get("target_id") or "").strip()
     if not target:
         return json_response({"ok": False, "error": "target_id required"}, status=400)
     try:
         limit = int(request.query.get("limit") or 100)
+        after_seq = int(request.query["after_seq"]) if request.query.get("after_seq") not in (None, "") else None
     except ValueError:
-        limit = 100
+        return json_response({"ok": False, "error": "bad limit/after_seq"}, status=400)
     uid = tenant.owner_id()
-    rows = repo_conversation.recent(target, limit=limit, user_id=uid)
-    if not rows and uid != tenant.OWNER_ID:
-        rows = repo_conversation.recent(target, limit=limit, user_id=tenant.OWNER_ID)
+    if after_seq is not None:
+        rows = repo_conversation.after(target, after_id=after_seq, limit=limit, user_id=uid)
+        if not rows and uid != tenant.OWNER_ID:
+            rows = repo_conversation.after(target, after_id=after_seq, limit=limit, user_id=tenant.OWNER_ID)
+    else:
+        rows = repo_conversation.recent(target, limit=limit, user_id=uid)
+        if not rows and uid != tenant.OWNER_ID:
+            rows = repo_conversation.recent(target, limit=limit, user_id=tenant.OWNER_ID)
     data = []
+    from ..infra import image_store
     for r in rows:
         item = dict(r)
         if item.get("created_at") is not None:
             item["created_at"] = str(item["created_at"])
-        from ..infra import image_store
         image_store.attach_image(item)
         data.append(item)
-    return json_response({"ok": True, "data": data})
+    seqs = [int(x["id"]) for x in data if str(x.get("id", "")).isdigit()]
+    next_seq = max(seqs) if seqs else (after_seq or 0)
+    return json_response({"ok": True, "data": data, "next_seq": next_seq, "has_more": len(data) >= limit})
 
 # v35.7.23：命令目录从注册表动态生成，客户端不硬编码
 _OWNER_COMMANDS = {
