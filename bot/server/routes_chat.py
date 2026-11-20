@@ -147,6 +147,30 @@ async def handle_conversations(request):
 
 
 
+async def handle_topic(request):
+    """POST /api/topic：判断当前话题是否结束，给出追问建议（规则版）。"""
+    from ..infra import repo_conversation, tenant
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    target = str((body or {}).get("target_id") or "").strip()
+    if not target:
+        return json_response({"ok": False, "error": "target_id required"}, status=400)
+    uid = tenant.owner_id()
+    rows = repo_conversation.recent(target, limit=8, user_id=uid)
+    texts = [str(r.get("content") or "").strip() for r in rows if str(r.get("role")) == "user"]
+    last = texts[-1] if texts else ""
+    endings = ("晚安", "拜拜", "先这样", "去忙了", "睡了", "回头聊", "先不聊了", "好的", "嗯")
+    closed = bool(last) and any(last.endswith(x) for x in endings)
+    followup = "刚刚说到哪儿了？要接着聊吗？" if closed else "这个话题你还有什么想补充的吗？"
+    return json_response({
+        "ok": True, "target_id": target, "status": "closed" if closed else "open",
+        "reason": "last_message_ending" if closed else "no_closing_signal",
+        "followup": followup,
+    })
+
+
 async def handle_recall(request):
     """POST /api/messages/{id}/recall：2 分钟内撤回自己的消息。"""
     import json

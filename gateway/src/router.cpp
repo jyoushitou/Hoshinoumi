@@ -122,6 +122,11 @@ namespace Gateway
             Proxy(session, url, "/internal/history", "GET", owner);
             return;
         }
+        if (url.target == "/api/topic" || url.target.rfind("/api/topic?", 0) == 0)
+        {
+            Proxy(session, url, "/internal/topic", "POST", owner);
+            return;
+        }
         if (url.target.rfind("/api/messages/", 0) == 0 && url.target.find("/recall") != std::string::npos)
         {
             Proxy(session, url, "/internal/recall", "POST", owner);

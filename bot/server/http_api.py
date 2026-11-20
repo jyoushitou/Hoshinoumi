@@ -15,7 +15,7 @@ from .routes_meta import (
     handle_health, handle_healthz, handle_readyz, handle_status, handle_usage,
     handle_memory, handle_logs, handle_get_token,
 )
-from .routes_chat import handle_chat, handle_command, handle_conversations, handle_history, handle_commands, handle_read, handle_read_state, handle_recall
+from .routes_chat import handle_chat, handle_command, handle_conversations, handle_history, handle_commands, handle_read, handle_read_state, handle_recall, handle_topic
 from .routes_persona import handle_persona, handle_export as handle_persona_export, handle_import as handle_persona_import, handle_activate as handle_persona_activate
 from .routes_savings import handle_savings, handle_savings_import, handle_savings_add, handle_savings_events
 from .routes_weekly_plan import handle_weekly_get, handle_weekly_put, handle_weekly_import
@@ -395,6 +395,7 @@ async def start_api_server():
     app.router.add_get("/api/read-state", handle_read_state)
     app.router.add_post("/api/read", handle_read)
     app.router.add_post("/api/messages/{id}/recall", handle_recall)
+    app.router.add_post("/api/topic", handle_topic)
     app.router.add_get("/api/commands", handle_commands)
     app.router.add_get("/api/endpoints", handle_endpoints_list)
     app.router.add_post("/api/endpoints", handle_endpoint_register)
@@ -427,6 +428,7 @@ async def start_api_server():
     app.router.add_get("/internal/history", handle_internal_history)
     app.router.add_post("/internal/read", handle_read)
     app.router.add_post("/internal/recall", handle_recall)
+    app.router.add_post("/internal/topic", handle_topic)
     app.router.add_post("/internal/chat", handle_internal_chat)
     app.router.add_post("/internal/audit", handle_internal_audit)
     app.router.add_post("/internal/auth/verify", handle_internal_auth_verify)

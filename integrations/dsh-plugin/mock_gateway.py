@@ -332,6 +332,16 @@ class Handler(BaseHTTPRequestHandler):
             item.pop("audio_url", None)
             self._json(200, {"ok": True, "message_id": mid, "recalled": True, "mock": True})
             return
+        if path == "/api/topic":
+            target = str(body.get("target_id") or OWNER_QQ)
+            last = ""
+            for x in reversed(HISTORY):
+                if x.get("role") == "user":
+                    last = str(x.get("content") or "")
+                    break
+            closed = any(last.endswith(x) for x in ("晚安", "拜拜", "先这样", "去忙了", "睡了", "嗯"))
+            self._json(200, {"ok": True, "target_id": target, "status": "closed" if closed else "open", "reason": "mock", "followup": "要接着聊吗？", "mock": True})
+            return
         if path == "/api/read":
             target = str(body.get("target_id") or OWNER_QQ)
             last = int(body.get("last_read_id") or 0)
