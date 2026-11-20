@@ -411,6 +411,49 @@ chat/history/state/cron/diary/shelf 仍走内部专用路径
 
 注意：gateway 是 C++ 二进制，改 router.cpp 后必须重新构建/部署；当前已安装旧二进制不会自动生效。
 
+## 3.21 文件共享页
+
+顶级“文件”页面，不塞进 QQ 会话列表。
+
+```text
+拖拽 / 多选 / 上传进度
+文件列表：名称/大小/类型/时间
+搜索 / 下载 / 删除 / 分享链接
+图片/文本/音频预览
+空间用量
+```
+
+后端：
+
+```text
+GET  /api/files
+POST /api/files/init
+PUT  /api/files/{id}/chunk
+POST /api/files/{id}/complete
+GET  /api/files/{id}/download
+DELETE /api/files/{id}
+POST /api/files/{id}/share
+```
+
+规则：
+
+```text
+owner-only；多端同一账号同步
+单层文件库，不做目录树
+默认单文件 ≤ 30MB；分片 ≤ 4MB
+聊天附件与文件库分开
+分享链接只读、可过期、可限次
+```
+
+版本：
+
+```text
+v35.7.28.0 API
+v35.7.28.1 页面
+v35.7.28.2 分享/多端
+v35.7.28.3 大文件分片
+```
+
 ## 4. 次次版本
 
 | 版本 | 交付 | 验收 |
