@@ -49,6 +49,18 @@ HISTORY = [
     {"id": 6, "role": "assistant", "content": "上午看书，下午把房间收拾一下。你忙你的，我在。", "created_at": "2026-11-19 09:13:00"},
 ]
 
+GROUP_HISTORY = [
+    {"id": 1001, "role": "user", "content": "群里的大家晚上好。", "created_at": "2026-11-19 20:30:00"},
+    {"id": 1002, "role": "assistant", "content": "晚上好，今天群里安静得有点过分。", "created_at": "2026-11-19 20:31:00"},
+]
+
+
+def _history(target):
+    return HISTORY if str(target) in ("", OWNER_QQ) else (GROUP_HISTORY if str(target) == "10002" else [])
+
+def _all_history():
+    return list(HISTORY) + list(GROUP_HISTORY)
+
 LOGS = [
     "2026-11-19 09:13:00 INFO  chat target=10001 len=18",
     "2026-11-19 09:12:00 INFO  command status",
@@ -186,14 +198,14 @@ class Handler(BaseHTTPRequestHandler):
                     "last_message": items[-1][0][:40] if items else "",
                     "updated_at": "2026-11-19 21:04:00",
                     "last_read_id": int(READS.get(tid, 0)),
-                    "unread": len([x for x in HISTORY if int(x.get("id") or 0) > int(READS.get(tid, 0))]),
+                    "unread": len([x for x in _history(tid) if int(x.get("id") or 0) > int(READS.get(tid, 0))]),
                 })
             self._json(200, {"ok": True, "data": rows, "mock": True})
             return
         if path == "/api/read-state":
             target = (q.get("target_id") or [OWNER_QQ])[0]
             last = int(READS.get(target, 0))
-            self._json(200, {"ok": True, "target_id": target, "last_read_id": last, "unread": len([x for x in HISTORY if int(x.get("id") or 0) > last]), "mock": True})
+            self._json(200, {"ok": True, "target_id": target, "last_read_id": last, "unread": len([x for x in _history(target) if int(x.get("id") or 0) > last]), "mock": True})
             return
         if path == "/api/history":
             target = (q.get("target_id") or [OWNER_QQ])[0]
@@ -205,10 +217,10 @@ class Handler(BaseHTTPRequestHandler):
                 except ValueError:
                     self._json(400, {"error": "bad_after_seq"})
                     return
-                rows = [x for x in HISTORY if int(x.get("id") or 0) > after_seq]
+                rows = [x for x in _history(target) if int(x.get("id") or 0) > after_seq]
                 rows = rows[:limit]
             else:
-                rows = HISTORY[-limit:]
+                rows = _history(target)[-limit:]
             seqs = [int(x.get("id") or 0) for x in rows]
             self._json(200, {"ok": True, "target_id": target, "data": rows, "next_seq": max(seqs) if seqs else int(after_raw or 0), "has_more": len(rows) >= limit, "mock": True})
             return
@@ -298,7 +310,7 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/internal/history":
             target = (q.get("target_id") or [OWNER_QQ])[0]
             limit = int((q.get("limit") or ["30"])[0])
-            rows = HISTORY[-max(1, min(limit, 100)):]
+            rows = _history(target)[-max(1, min(limit, 100)):]
             self._json(200, {"ok": True, "data": rows, "target_id": target, "mock": True})
             return
         if path == "/internal/cron":
@@ -322,7 +334,7 @@ class Handler(BaseHTTPRequestHandler):
             except (TypeError, ValueError):
                 self._json(400, {"error": "bad_message_id"})
                 return
-            item = next((x for x in HISTORY if int(x.get("id") or 0) == mid), None)
+            item = next((x for x in _all_history() if int(x.get("id") or 0) == mid), None)
             if not item:
                 self._json(404, {"error": "message_not_found"})
                 return
@@ -335,7 +347,7 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/topic":
             target = str(body.get("target_id") or OWNER_QQ)
             last = ""
-            for x in reversed(HISTORY):
+            for x in reversed(_history(target)):
                 if x.get("role") == "user":
                     last = str(x.get("content") or "")
                     break
@@ -346,7 +358,7 @@ class Handler(BaseHTTPRequestHandler):
             target = str(body.get("target_id") or OWNER_QQ)
             last = int(body.get("last_read_id") or 0)
             READS[target] = max(int(READS.get(target, 0)), last)
-            self._json(200, {"ok": True, "target_id": target, "last_read_id": READS[target], "unread": len([x for x in HISTORY if int(x.get("id") or 0) > READS[target]]), "mock": True})
+            self._json(200, {"ok": True, "target_id": target, "last_read_id": READS[target], "unread": len([x for x in _history(target) if int(x.get("id") or 0) > READS[target]]), "mock": True})
             return
         if path == "/api/persona/import":
             data = body.get("data") if isinstance(body.get("data"), dict) else body
@@ -420,20 +432,20 @@ class Handler(BaseHTTPRequestHandler):
                 return
             if audio:
                 reply = "收到一段语音（mock）。"
-                HISTORY.append({"id": len(HISTORY) + 1, "role": "user", "content": message or "[语音]", "audio_url": audio, "kind": "voice", "created_at": _now()})
-                HISTORY.append({"id": len(HISTORY) + 1, "role": "assistant", "content": reply, "created_at": _now()})
+                _history(target).append({"id": len(_history(target)) + 1, "role": "user", "content": message or "[语音]", "audio_url": audio, "kind": "voice", "created_at": _now()})
+                _history(target).append({"id": len(_history(target)) + 1, "role": "assistant", "content": reply, "created_at": _now()})
                 self._json(200, {"reply": reply, "target_id": target, "mock": True, "time": _now()})
                 return
             if sticker:
                 reply = "收到一个表情包（mock）。"
-                HISTORY.append({"id": len(HISTORY) + 1, "role": "user", "content": message or "[表情包]", "image_url": sticker, "kind": "sticker", "created_at": _now()})
-                HISTORY.append({"id": len(HISTORY) + 1, "role": "assistant", "content": reply, "created_at": _now()})
+                _history(target).append({"id": len(_history(target)) + 1, "role": "user", "content": message or "[表情包]", "image_url": sticker, "kind": "sticker", "created_at": _now()})
+                _history(target).append({"id": len(_history(target)) + 1, "role": "assistant", "content": reply, "created_at": _now()})
                 self._json(200, {"reply": reply, "target_id": target, "mock": True, "time": _now()})
                 return
             if image:
                 reply = "收到一张图片（mock）。"
-                HISTORY.append({"id": len(HISTORY) + 1, "role": "user", "content": message or "[图片]", "image_url": image, "kind": "image", "created_at": _now()})
-                HISTORY.append({"id": len(HISTORY) + 1, "role": "assistant", "content": reply, "created_at": _now()})
+                _history(target).append({"id": len(_history(target)) + 1, "role": "user", "content": message or "[图片]", "image_url": image, "kind": "image", "created_at": _now()})
+                _history(target).append({"id": len(_history(target)) + 1, "role": "assistant", "content": reply, "created_at": _now()})
                 self._json(200, {"reply": reply, "target_id": target, "mock": True, "time": _now()})
                 return
             reply = {
@@ -442,8 +454,8 @@ class Handler(BaseHTTPRequestHandler):
                 "存钱": "本月结余 ¥3,300，旅行目标 60%。",
                 "书": "我在看《十日终焉》，窗边光线刚好。",
             }.get(message, f"收到：{message}（mock 网关）")
-            HISTORY.append({"id": len(HISTORY) + 1, "role": "user", "content": message, "created_at": _now()})
-            HISTORY.append({"id": len(HISTORY) + 1, "role": "assistant", "content": reply, "created_at": _now()})
+            _history(target).append({"id": len(_history(target)) + 1, "role": "user", "content": message, "created_at": _now()})
+            _history(target).append({"id": len(_history(target)) + 1, "role": "assistant", "content": reply, "created_at": _now()})
             self._json(200, {"reply": reply, "target_id": target, "mock": True, "time": _now()})
             return
         if path.startswith("/api/tools/") and path.endswith("/call"):
