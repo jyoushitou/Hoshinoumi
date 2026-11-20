@@ -821,6 +821,32 @@
           '<div class="savings-two"><div class="savings-panel"><h3>钱存在哪</h3>' + accountRows + '<div class="frozen-tip">总余额 ' + money(total) + ' = 各账户余额合计</div></div><div class="savings-panel"><div class="panel-head"><h3>冻结 / 待缴费</h3><button class="mini-add" id="addFrozen">＋ 新增</button></div>' + frozenRows + '<div class="frozen-tip">可用余额 = 总余额 ' + money(total) + ' - 冻结 ' + money(frozen) + ' = <b>' + money(available) + '</b></div></div></div>' +
           '<div class="savings-two"><div class="savings-panel"><h3>记一笔</h3><div class="savings-form"><div><label>金额</label><input id="svAmount" type="number" step="0.01" placeholder="35.50"></div><div><label>账户</label><select id="svAccount">' + S.accounts.map(a => '<option>' + esc(a[0]) + '</option>').join('') + '</select></div><div><label>类型</label><select id="svKind"><option value="expense">支出</option><option value="income">收入</option><option value="saving">存钱</option></select></div><div class="full"><label>备注</label><input id="svNote" placeholder="午饭 / 旅行目标 / 兼职"></div><div class="actions"><button id="svSave">保存</button><span class="import-status" id="svMsg"></span></div></div></div><div class="savings-panel"><h3>最近流水</h3><div class="entry-list">' + rows + '</div></div></div>';
         document.getElementById('backChat').addEventListener('click', () => showChat());
+        function openSavingModal(kind) {
+          const isGoal = kind === 'goal';
+          const box = document.createElement('div');
+          box.className = 'savings-modal';
+          box.innerHTML = '<div class="box"><h3>' + (isGoal ? '新增存钱目标' : '新增冻结 / 待缴费') + '</h3>' +
+            '<label>' + (isGoal ? '目标名称' : '缴费用途') + '<input id="smName" placeholder="' + (isGoal ? '旅行基金' : '房租') + '"></label>' +
+            '<div class="row"><label>' + (isGoal ? '目标金额' : '冻结金额') + '<input id="smAmount" type="number" step="0.01" placeholder="1000"></label><label>' + (isGoal ? '已存金额' : '预计日期') + '<input id="smSecond" ' + (isGoal ? 'type="number" step="0.01" placeholder="0"' : 'placeholder="2027-03-01"') + '></label></div>' +
+            '<label>' + (isGoal ? '截止日期' : '备注（可选）') + '<input id="smDue" placeholder="' + (isGoal ? '2027-06' : '每月固定 / 学费') + '"></label>' +
+            '<div class="acts"><button id="smCancel">取消</button><button class="primary" id="smSave">保存</button></div></div>';
+          pageView.appendChild(box);
+          const close = () => box.remove();
+          box.addEventListener('click', e => { if (e.target === box) close(); });
+          box.querySelector('#smCancel').onclick = close;
+          box.querySelector('#smSave').onclick = () => {
+            const name = box.querySelector('#smName').value.trim();
+            const amount = Number(box.querySelector('#smAmount').value);
+            if (!name || !amount || amount <= 0) { box.querySelector('#smName').focus(); return; }
+            if (isGoal) {
+              const saved = Number(box.querySelector('#smSecond').value) || 0;
+              S.goals.push({ name, saved, target: amount, due: box.querySelector('#smDue').value.trim() || '长期' });
+            } else {
+              S.frozen.push({ name, amount, due: box.querySelector('#smSecond').value.trim() || box.querySelector('#smDue').value.trim() || '待定' });
+            }
+            close(); renderSavings(); toast(isGoal ? '已新增存钱目标（MOCK）' : '已新增冻结 / 待缴费（MOCK）');
+          };
+        }
         document.getElementById('addGoal').onclick = () => openSavingModal('goal');
         document.getElementById('addFrozen').onclick = () => openSavingModal('frozen');
         document.getElementById('svSave').addEventListener('click', () => {
