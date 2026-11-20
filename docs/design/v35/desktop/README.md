@@ -22,6 +22,16 @@ hoshinoumi-desktop-v35.6.png
 导航 / 快捷入口 toast
 ```
 
+## 运行环境
+
+```text
+Windows：Tauri + WebView2 Fixed Version Runtime
+macOS：WKWebView 系统组件 + 最低版本检测
+Linux：WebKitGTK / AppImage 固定依赖
+```
+
+不是内置完整 Chromium；是固定 WebView2 运行时。
+
 ## 设计范围
 
 v35.6.0 只做 Tauri/WebView 套壳：
