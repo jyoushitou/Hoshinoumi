@@ -504,10 +504,11 @@ UI 版本：只接接口，不改契约
 入口：**设置 → 个性化设置**，不新增顶级导航；路由 `/settings/appearance`。
 
 ```text
-气泡：背景/文字/圆角/尾巴/宽度/对齐/边框/阴影
-头像：主人/角色/形状/大小/上传/重置
+气泡：QQ 式图片皮肤/左右/九宫格/文字/阴影/宽度
+头像：主人/角色/头像框/形状/大小/上传
+装饰：气泡旁装饰图/位置/开关
 字体：字体/字号/行高
-背景：纯色/渐变/图片/透明度/模糊
+背景：纯色/渐变/图片/透明度/模糊/暗化
 主题：浅色/深色/强调色
 预设：保存/切换/导入导出
 ```
@@ -516,20 +517,23 @@ API：
 
 ```text
 GET/PUT /api/appearance
-POST /api/appearance/avatar
 POST /api/appearance/reset
 POST /api/appearance/import
 GET /api/appearance/export
+GET/POST /api/appearance/assets
+DELETE /api/appearance/assets/{id}
 ```
 
 规则：
 
 ```text
 owner-only
+素材后端存储，多端同步
 白名单 CSS 变量
 不执行用户 CSS/HTML
-头像 ≤ 2MB
-多端同一 profile
+素材 ≤ 5MB；SVG 禁用
+气泡九宫格；头像框叠加；装饰可关
+多端同一 profile + 素材
 ```
 
 版本：
