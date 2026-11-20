@@ -126,7 +126,7 @@
     .home-card h3{font-size:11px;margin:0 0 3px;color:#1e3a5f}
     .home-card p{font-size:9.5px;line-height:1.5;color:#6b7c95;margin:0}
     .home-card .st{font-size:9px;color:#1f9d6b;margin-top:7px}
-    .savings-goals{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:10px}.goal-card{border:1px solid #e3ebf7;border-radius:11px;background:#fff;padding:11px 12px}.goal-top{display:flex;align-items:center;justify-content:space-between;gap:6px}.goal-top b{font-size:11px;color:#1e3a5f}.goal-top span{font-size:8.5px;color:#8a9bb0}.goal-amt{font-size:15px;font-weight:700;color:#2563eb;margin:6px 0 2px}.goal-amt small{font-size:9px;color:#8a9bb0;font-weight:400}.gbar{height:5px;border-radius:5px;background:#e8effa;overflow:hidden;margin:6px 0 4px}.gbar i{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,#6ea4ff,#2563eb)}.goal-foot{display:flex;justify-content:space-between;font-size:8.5px;color:#8a9bb0}.savings-two{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:10px}.money-row{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f1f5fb;padding:7px 0;font-size:10px;color:#405872}.money-row:last-child{border-bottom:0}.money-row .where{color:#8a9bb0;font-size:8.5px;margin-top:1px}.money-row .amt{font-family:ui-monospace,monospace;color:#1e3a5f}.frozen-row{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f1f5fb;padding:7px 0;font-size:10px}.frozen-row:last-child{border-bottom:0}.frozen-row .why{color:#8a9bb0;font-size:8.5px;margin-top:1px}.frozen-row .amt{color:#b7791f;font-family:ui-monospace,monospace}.frozen-tip{font-size:8.5px;color:#8a9bb0;background:#f8fbff;border:1px dashed #dbe8ff;border-radius:6px;padding:6px 7px;margin-top:8px;line-height:1.6}.stat-amber .v{color:#b7791f}.savings-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:11px}
+    .panel-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}.panel-head h3{margin:0}.mini-add{border:1px solid #dbe8ff;background:#f8fbff;color:#2563eb;border-radius:6px;padding:3px 7px;font:9px inherit;cursor:pointer}.mini-add:hover{background:#eef4ff}.savings-modal{position:fixed;inset:0;background:rgba(15,32,55,.28);backdrop-filter:blur(3px);z-index:60;display:grid;place-items:center}.savings-modal .box{width:320px;background:#fff;border:1px solid #e3ebf7;border-radius:12px;box-shadow:0 20px 50px rgba(30,60,100,.2);padding:15px}.savings-modal h3{margin:0 0 10px;font-size:13px;color:#17263b}.savings-modal label{display:block;font-size:9px;color:#8a9bb0;margin-bottom:7px}.savings-modal input,.savings-modal select{display:block;width:100%;border:1px solid #dbe8ff;border-radius:7px;background:#f8fbff;color:#243b55;font:10.5px inherit;padding:6px 7px;margin-top:3px;outline:0}.savings-modal .row{display:grid;grid-template-columns:1fr 1fr;gap:7px}.savings-modal .acts{display:flex;gap:6px;margin-top:10px}.savings-modal .acts button{flex:1;border:1px solid #dbe8ff;border-radius:7px;background:#fff;color:#2563eb;padding:6px;font:10px inherit;cursor:pointer}.savings-modal .acts button.primary{background:#2563eb;color:#fff;border-color:#2563eb}.savings-goals{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:10px}.goal-card{border:1px solid #e3ebf7;border-radius:11px;background:#fff;padding:11px 12px}.goal-top{display:flex;align-items:center;justify-content:space-between;gap:6px}.goal-top b{font-size:11px;color:#1e3a5f}.goal-top span{font-size:8.5px;color:#8a9bb0}.goal-amt{font-size:15px;font-weight:700;color:#2563eb;margin:6px 0 2px}.goal-amt small{font-size:9px;color:#8a9bb0;font-weight:400}.gbar{height:5px;border-radius:5px;background:#e8effa;overflow:hidden;margin:6px 0 4px}.gbar i{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,#6ea4ff,#2563eb)}.goal-foot{display:flex;justify-content:space-between;font-size:8.5px;color:#8a9bb0}.savings-two{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:10px}.money-row{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f1f5fb;padding:7px 0;font-size:10px;color:#405872}.money-row:last-child{border-bottom:0}.money-row .where{color:#8a9bb0;font-size:8.5px;margin-top:1px}.money-row .amt{font-family:ui-monospace,monospace;color:#1e3a5f}.frozen-row{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f1f5fb;padding:7px 0;font-size:10px}.frozen-row:last-child{border-bottom:0}.frozen-row .why{color:#8a9bb0;font-size:8.5px;margin-top:1px}.frozen-row .amt{color:#b7791f;font-family:ui-monospace,monospace}.frozen-tip{font-size:8.5px;color:#8a9bb0;background:#f8fbff;border:1px dashed #dbe8ff;border-radius:6px;padding:6px 7px;margin-top:8px;line-height:1.6}.stat-amber .v{color:#b7791f}.savings-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:11px}
     .savings-stat{border:1px solid #e3ebf7;border-radius:11px;background:#fff;padding:11px 12px}
     .savings-stat .k{font-size:9px;color:#8a9bb0;margin-bottom:3px}.savings-stat .v{font-size:17px;font-weight:700;color:#17263b;letter-spacing:-.03em}
     .savings-stat .v.blue{color:#2563eb}
@@ -500,6 +500,32 @@
         [top, msgs, composer, searchBar].forEach(x => x.classList.add('chat-hide'));
         pageView.classList.add('on');
         document.querySelectorAll('.rnav').forEach(x => x.classList.toggle('on', x.dataset.page === name));
+        function openSavingModal(kind) {
+          const isGoal = kind === 'goal';
+          const box = document.createElement('div');
+          box.className = 'savings-modal';
+          box.innerHTML = '<div class="box"><h3>' + (isGoal ? '新增存钱目标' : '新增冻结 / 待缴费') + '</h3>' +
+            '<label>' + (isGoal ? '目标名称' : '缴费用途') + '<input id="smName" placeholder="' + (isGoal ? '旅行基金' : '房租') + '"></label>' +
+            '<div class="row"><label>' + (isGoal ? '目标金额' : '冻结金额') + '<input id="smAmount" type="number" step="0.01" placeholder="1000"></label><label>' + (isGoal ? '已存金额' : '预计日期') + '<input id="smSecond" ' + (isGoal ? 'type="number" step="0.01" placeholder="0"' : 'placeholder="2027-03-01"') + '></label></div>' +
+            '<label>' + (isGoal ? '截止日期' : '备注（可选）') + '<input id="smDue" placeholder="' + (isGoal ? '2027-06' : '每月固定 / 学费') + '"></label>' +
+            '<div class="acts"><button id="smCancel">取消</button><button class="primary" id="smSave">保存</button></div></div>';
+          pageView.appendChild(box);
+          const close = () => box.remove();
+          box.addEventListener('click', e => { if (e.target === box) close(); });
+          box.querySelector('#smCancel').onclick = close;
+          box.querySelector('#smSave').onclick = () => {
+            const name = box.querySelector('#smName').value.trim();
+            const amount = Number(box.querySelector('#smAmount').value);
+            if (!name || !amount || amount <= 0) { box.querySelector('#smName').focus(); return; }
+            if (isGoal) {
+              const saved = Number(box.querySelector('#smSecond').value) || 0;
+              S.goals.push({ name, saved, target: amount, due: box.querySelector('#smDue').value.trim() || '长期' });
+            } else {
+              S.frozen.push({ name, amount, due: box.querySelector('#smSecond').value.trim() || box.querySelector('#smDue').value.trim() || '待定' });
+            }
+            close(); renderSavings(); toast(isGoal ? '已新增存钱目标（MOCK）' : '已新增冻结 / 待缴费（MOCK）');
+          };
+        }
         document.getElementById('backChat').addEventListener('click', () => showChat());
         document.getElementById('psImport').addEventListener('click', () => document.getElementById('psFile').click());
         document.getElementById('psFile').addEventListener('change', e => {
@@ -791,10 +817,12 @@
         const frozenRows = (S.frozen || []).map(f => '<div class="frozen-row"><div><div>' + esc(f.name) + '</div><div class="why">预计 ' + esc(f.due) + ' · 不可动用</div></div><span class="amt">' + money(f.amount) + '</span></div>').join('');
         pageView.innerHTML = '<div class="page-head"><div><h2>存钱</h2><p>v35.5 Web 演示 · 多目标 / 资金位置 / 冻结预留</p></div><button class="back" id="backChat">← 返回聊天</button></div>' +
           '<div class="savings-grid"><div class="savings-stat"><div class="k">可用余额</div><div class="v blue">' + money(available) + '</div></div><div class="savings-stat stat-amber"><div class="k">冻结 / 预留</div><div class="v">' + money(frozen) + '</div></div><div class="savings-stat"><div class="k">总余额</div><div class="v">' + money(total) + '</div></div><div class="savings-stat"><div class="k">本月结余</div><div class="v">' + money(S.income - S.expense) + '</div></div></div>' +
-          '<div class="savings-panel"><h3>存钱目标</h3><div class="savings-goals">' + goalCards + '</div></div>' +
-          '<div class="savings-two"><div class="savings-panel"><h3>钱存在哪</h3>' + accountRows + '<div class="frozen-tip">总余额 ' + money(total) + ' = 各账户余额合计</div></div><div class="savings-panel"><h3>冻结 / 待缴费</h3>' + frozenRows + '<div class="frozen-tip">可用余额 = 总余额 ' + money(total) + ' - 冻结 ' + money(frozen) + ' = <b>' + money(available) + '</b></div></div></div>' +
+          '<div class="savings-panel"><div class="panel-head"><h3>存钱目标</h3><button class="mini-add" id="addGoal">＋ 新目标</button></div><div class="savings-goals">' + goalCards + '</div></div>' +
+          '<div class="savings-two"><div class="savings-panel"><h3>钱存在哪</h3>' + accountRows + '<div class="frozen-tip">总余额 ' + money(total) + ' = 各账户余额合计</div></div><div class="savings-panel"><div class="panel-head"><h3>冻结 / 待缴费</h3><button class="mini-add" id="addFrozen">＋ 新增</button></div>' + frozenRows + '<div class="frozen-tip">可用余额 = 总余额 ' + money(total) + ' - 冻结 ' + money(frozen) + ' = <b>' + money(available) + '</b></div></div></div>' +
           '<div class="savings-two"><div class="savings-panel"><h3>记一笔</h3><div class="savings-form"><div><label>金额</label><input id="svAmount" type="number" step="0.01" placeholder="35.50"></div><div><label>账户</label><select id="svAccount">' + S.accounts.map(a => '<option>' + esc(a[0]) + '</option>').join('') + '</select></div><div><label>类型</label><select id="svKind"><option value="expense">支出</option><option value="income">收入</option><option value="saving">存钱</option></select></div><div class="full"><label>备注</label><input id="svNote" placeholder="午饭 / 旅行目标 / 兼职"></div><div class="actions"><button id="svSave">保存</button><span class="import-status" id="svMsg"></span></div></div></div><div class="savings-panel"><h3>最近流水</h3><div class="entry-list">' + rows + '</div></div></div>';
         document.getElementById('backChat').addEventListener('click', () => showChat());
+        document.getElementById('addGoal').onclick = () => openSavingModal('goal');
+        document.getElementById('addFrozen').onclick = () => openSavingModal('frozen');
         document.getElementById('svSave').addEventListener('click', () => {
           const amount = Number(document.getElementById('svAmount').value);
           if (!amount || amount <= 0) { document.getElementById('svMsg').textContent = '先填正确金额'; return; }
