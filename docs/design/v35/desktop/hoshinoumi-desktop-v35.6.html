@@ -29,18 +29,23 @@
     <div class="workspace">
       <nav class="rail">
         <div class="rail-logo"><img src="../../logo/hoshinoumi.svg" alt=""></div>
-        <button class="rnav on" data-page="chat" title="聊天">◉<span class="rbadge">2</span></button>
-        <button class="rnav" data-page="home" title="主页">⌂</button>
+        <button class="rnav on" data-page="home" title="主页">⌂</button>
+        <button class="rnav" data-page="chat" title="nao（聊天）">◉<span class="rbadge">2</span></button>
         <button class="rnav" data-page="memory" title="记忆">◈</button>
         <button class="rnav" data-page="relation" title="关系">♡</button>
         <button class="rnav" data-page="savings" title="存钱">¥</button>
-        <button class="rnav" data-page="weekly" title="周计划">▦</button>
+        <button class="rnav" data-page="weekly" title="周计划表">▦</button>
+        <button class="rnav" data-page="info" title="信息">≡</button>
+        <button class="rnav" data-page="persona" title="人设">◇</button>
         <button class="rnav" data-page="commands" title="命令">⌘</button>
+        <button class="rnav" data-page="cron" title="定时任务">◷</button>
+        <button class="rnav" data-page="logs" title="运行日志">≣</button>
+        <div class="rail-spacer"></div>
         <button class="rnav" data-page="settings" title="设置">⚙</button>
       </nav>
 
       <aside class="side">
-        <div class="side-head"><b>会话</b><button class="soft" id="newChat">＋</button></div>
+        <div class="side-head"><b>HOSHINOUMI</b><span class="side-ver">DESKTOP</span><button class="soft" id="newChat">＋</button></div>
         <div class="search">⌕ 搜索会话 / 记忆 / 命令 <kbd>⌘K</kbd></div>
         <div class="tabs"><button class="on" data-filter="all">全部</button><button data-filter="private">私聊</button><button data-filter="group">群聊</button></div>
         <div class="convs" id="convList"></div>
