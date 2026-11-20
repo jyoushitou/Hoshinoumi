@@ -85,7 +85,7 @@
   const css = document.createElement('style');
   css.textContent = `
     .chat-hide{display:none!important}
-    .page-view{display:none;flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;padding:22px 24px;background:#fff;color:#17263b}
+    .page-view{display:none;flex:1;min-height:0;max-height:100%;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;padding:22px 24px;background:#fff;color:#17263b}
     .page-view.on{display:block}
     .page-head{display:flex;align-items:center;gap:12px;margin-bottom:16px}
     .page-head h2{font-size:17px;margin:0;font-weight:650;color:#17263b}
