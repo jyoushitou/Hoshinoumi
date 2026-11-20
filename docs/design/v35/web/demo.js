@@ -791,8 +791,8 @@
           { name: '应急金', saved: 1200, target: 10000, due: '长期' }
         ],
         fixed: [
-          { name: '12 个月定期', amount: 2000, rate: 1.65, months: 12, due: '2027-06-01' },
-          { name: '3 个月定期', amount: 1000, rate: 1.15, months: 3, due: '2027-02-01' }
+          { name: '12 个月定期', amount: 2000, rate: 1.65, months: 12, due: '2027-06-01', account: '银行卡' },
+          { name: '3 个月定期', amount: 1000, rate: 1.15, months: 3, due: '2027-02-01', account: '支付宝' }
         ],
         frozen: [
           { name: '房租', amount: 1800, due: '每月 5 日' },
@@ -815,7 +815,7 @@
         const fixedTotal = (S.fixed || []).reduce((n, f) => n + Number(f.amount || 0), 0);
         const assetTotal = total + fixedTotal;
         const available = assetTotal - frozen - fixedTotal;
-        const fixedCards = (S.fixed || []).map((f, i) => '<div class="fixed-card"><div class="main"><div class="name">' + esc(f.name) + '<span class="fixed-lock">锁定</span></div><div class="meta">年利率 ' + Number(f.rate).toFixed(2) + '% · 到期 ' + esc(f.due) + ' · 预计利息 ' + money(f.amount * f.rate / 100 * ((f.months || 12) / 12)) + '</div></div><div class="val"><b>' + money(f.amount) + '</b><small>本金</small></div><div class="fixed-acts"><button data-mature="' + i + '">到期后</button><button class="cancel" data-cancel="' + i + '">取消</button></div></div>').join('');
+        const fixedCards = (S.fixed || []).map((f, i) => '<div class="fixed-card"><div class="main"><div class="name">' + esc(f.name) + '<span class="fixed-lock">锁定</span></div><div class="meta">年利率 ' + Number(f.rate).toFixed(2) + '% · 到期 ' + esc(f.due) + ' · 预计利息 ' + money(f.amount * f.rate / 100 * ((f.months || 12) / 12)) + ' · 到期回 ' + esc(f.account || '银行卡') + '</div></div><div class="val"><b>' + money(f.amount) + '</b><small>本金</small></div><div class="fixed-acts"><button data-mature="' + i + '">到期后</button><button class="cancel" data-cancel="' + i + '">取消</button></div></div>').join('');
         const goalCards = (S.goals || []).map(g => {
           const pct = g.target ? Math.min(100, Math.round(g.saved / g.target * 100)) : 0;
           return '<div class="goal-card"><div class="goal-top"><b>' + esc(g.name) + '</b><span>截止 ' + esc(g.due) + '</span></div><div class="goal-amt">' + money(g.saved) + ' <small>/ ' + money(g.target) + '</small></div><div class="gbar"><i style="width:' + pct + '%"></i></div><div class="goal-foot"><span>' + pct + '%</span><span>还差 ' + money(Math.max(0, g.target - g.saved)) + '</span></div></div>';
@@ -861,7 +861,7 @@
           box.innerHTML = '<div class="box"><h3>存入定期</h3>' +
             '<label>本金金额<input id="fxAmount" type="number" step="0.01" placeholder="1000.00"></label>' +
             '<div class="row"><label>期限<select id="fxMonths"><option value="3">3 个月</option><option value="6">6 个月</option><option value="12" selected>12 个月</option><option value="24">24 个月</option><option value="36">36 个月</option></select></label><label>年利率 %<input id="fxRate" type="number" step="0.01" placeholder="1.65"></label></div>' +
-            '<label>到期日<input id="fxDue" placeholder="2027-06-01"></label>' +
+            '<div class="row"><label>到期日<input id="fxDue" placeholder="2027-06-01"></label><label>来源账户<select id="fxAccount">' + S.accounts.map(a => '<option>' + esc(a[0]) + '</option>').join('') + '</select></label></div>' +
             '<div class="acts"><button id="fxCancel">取消</button><button class="primary" id="fxSave">确认存入</button></div></div>';
           pageView.appendChild(box);
           const close = () => box.remove();
@@ -872,9 +872,10 @@
             const rate = Number(box.querySelector('#fxRate').value);
             const months = Number(box.querySelector('#fxMonths').value);
             const due = box.querySelector('#fxDue').value.trim();
+            const account = box.querySelector('#fxAccount').value;
             if (!amount || amount <= 0) { box.querySelector('#fxAmount').focus(); return; }
             if (!rate || rate <= 0) { box.querySelector('#fxRate').focus(); return; }
-            S.fixed.push({ name: months + ' 个月定期', amount, rate, months, due: due || '待定' });
+            S.fixed.push({ name: months + ' 个月定期', amount, rate, months, due: due || '待定', account });
             close(); renderSavings(); toast('已存入定期（MOCK）');
           };
         }
@@ -892,13 +893,13 @@
         pageView.querySelectorAll('[data-mature]').forEach(btn => btn.onclick = () => {
           const i = Number(btn.dataset.mature); const f = S.fixed[i]; if (!f) return;
           const interest = Number(f.amount || 0) * Number(f.rate || 0) / 100 * ((f.months || 12) / 12);
-          const acc = S.accounts[0]; if (acc) acc[1] = Number(acc[1] || 0) + Number(f.amount || 0) + interest;
+          const acc = S.accounts.find(a => a[0] === (f.account || '银行卡')) || S.accounts[0]; if (acc) acc[1] = Number(acc[1] || 0) + Number(f.amount || 0) + interest;
           S.entries.unshift([new Date().toISOString().slice(5, 10), 'income', acc ? acc[0] : '银行卡', f.name + ' 到期', Number(f.amount || 0) + interest]);
           S.fixed.splice(i, 1); renderSavings(); toast('定期到期，本金和利息已转回账户（MOCK）');
         });
         pageView.querySelectorAll('[data-cancel]').forEach(btn => btn.onclick = () => {
           const i = Number(btn.dataset.cancel); const f = S.fixed[i]; if (!f) return;
-          const acc = S.accounts[0]; if (acc) acc[1] = Number(acc[1] || 0) + Number(f.amount || 0);
+          const acc = S.accounts.find(a => a[0] === (f.account || '银行卡')) || S.accounts[0]; if (acc) acc[1] = Number(acc[1] || 0) + Number(f.amount || 0);
           S.entries.unshift([new Date().toISOString().slice(5, 10), 'income', acc ? acc[0] : '银行卡', f.name + ' 取消转回', Number(f.amount || 0)]);
           S.fixed.splice(i, 1); renderSavings(); toast('已取消定期，本金转回活期（MOCK）');
         });
