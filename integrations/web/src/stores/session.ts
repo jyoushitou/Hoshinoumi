@@ -19,6 +19,7 @@ export interface ChatMessage {
   image_url?: string
   audio_url?: string
   kind?: string
+  recalled?: boolean
 }
 export interface HistoryResponse {
   ok?: boolean
@@ -144,6 +145,7 @@ export const useSessionStore = defineStore('session', () => {
       lastSeq.value = after
       syncState.value = 'online'
       lastSyncAt.value = new Date().toLocaleTimeString()
+      await refreshRecalls()
       await markRead(activeTarget.value)
       await loadConversations()
       retryDelay = 5000
@@ -208,6 +210,32 @@ export const useSessionStore = defineStore('session', () => {
     }
   }
 
+  async function recallMessage(messageId: number | string) {
+    try {
+      await http.post(`/api/messages/${encodeURIComponent(String(messageId))}/recall`, { message_id: messageId })
+      const m = messages.value.find(x => String(x.id) === String(messageId))
+      if (m) { m.recalled = true; m.content = ''; m.image_url = undefined; m.audio_url = undefined; m.kind = undefined }
+      return true
+    } catch (e) {
+      sendError.value = e instanceof Error ? e.message : String(e)
+      return false
+    }
+  }
+  async function refreshRecalls() {
+    if (!activeTarget.value) return
+    try {
+      const r = await http.get<HistoryResponse>('/api/history?target_id=' + encodeURIComponent(activeTarget.value) + '&limit=100')
+      const rows = Array.isArray(r.data) ? r.data : []
+      const map = new Map(rows.map(m => [String(m.id), m]))
+      for (const m of messages.value) {
+        const fresh = map.get(String(m.id))
+        if (fresh?.recalled && !m.recalled) {
+          m.recalled = true; m.content = ''; m.image_url = undefined; m.audio_url = undefined; m.kind = undefined
+        }
+      }
+    } catch { /* 静默，不能影响聊天 */ }
+  }
+
   async function refresh() {
     const auth = useAuthStore()
     if (!auth.loggedIn) { connected.value = false; error.value = '未登录'; return }
@@ -247,5 +275,5 @@ export const useSessionStore = defineStore('session', () => {
       error.value = e instanceof Error ? e.message : String(e)
     } finally { loading.value = false }
   }
-  return { loading, connected, error, status, conversations, activeTarget, conversationsError, messages, historyError, unread, persona, relation, savings, weekly, memoryTargets, lifeState, presence, week, sending, sendError, lastSeq, syncState, syncError, lastSyncAt, refresh, selectConversation, loadHistory, sendMessage, syncNow, startSync, stopSync, markRead }
+  return { loading, connected, error, status, conversations, activeTarget, conversationsError, messages, historyError, unread, persona, relation, savings, weekly, memoryTargets, lifeState, presence, week, sending, sendError, lastSeq, syncState, syncError, lastSyncAt, refresh, selectConversation, loadHistory, sendMessage, syncNow, startSync, stopSync, markRead, recallMessage, refreshRecalls }
 })
