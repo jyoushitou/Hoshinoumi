@@ -14,7 +14,7 @@ const session = useSessionStore()
       关系
     </div>
     <div v-if="session.relation" class="rel-head">
-      <span>亲密度</span><b>{{ Number(session.relation.affinity || 0).toFixed(2) }} <em>{{ session.relation.tier || '—' }}</em></b>
+      <span>关系档位</span><b>{{ session.relation.tier || '未获取' }}</b>
     </div>
     <div v-else class="note">
       {{ session.error ? '未获取到关系数据：' + session.error : '暂无关系数据' }}
