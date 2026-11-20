@@ -791,8 +791,8 @@
           { name: '应急金', saved: 1200, target: 10000, due: '长期' }
         ],
         fixed: [
-          { name: '12 个月定期', amount: 2000, rate: 1.65, due: '2027-06-01' },
-          { name: '3 个月定期', amount: 1000, rate: 1.15, due: '2027-02-01' }
+          { name: '12 个月定期', amount: 2000, rate: 1.65, months: 12, due: '2027-06-01' },
+          { name: '3 个月定期', amount: 1000, rate: 1.15, months: 3, due: '2027-02-01' }
         ],
         frozen: [
           { name: '房租', amount: 1800, due: '每月 5 日' },
@@ -815,7 +815,7 @@
         const fixedTotal = (S.fixed || []).reduce((n, f) => n + Number(f.amount || 0), 0);
         const assetTotal = total + fixedTotal;
         const available = assetTotal - frozen - fixedTotal;
-        const fixedCards = (S.fixed || []).map(f => '<div class="fixed-card"><div class="main"><div class="name">' + esc(f.name) + '<span class="fixed-lock">锁定</span></div><div class="meta">年利率 ' + Number(f.rate).toFixed(2) + '% · 到期 ' + esc(f.due) + ' · 预计利息 ' + money(f.amount * f.rate / 100) + '</div></div><div class="val"><b>' + money(f.amount) + '</b><small>本金</small></div></div>').join('');
+        const fixedCards = (S.fixed || []).map(f => '<div class="fixed-card"><div class="main"><div class="name">' + esc(f.name) + '<span class="fixed-lock">锁定</span></div><div class="meta">年利率 ' + Number(f.rate).toFixed(2) + '% · 到期 ' + esc(f.due) + ' · 预计利息 ' + money(f.amount * f.rate / 100 * ((f.months || 12) / 12)) + '</div></div><div class="val"><b>' + money(f.amount) + '</b><small>本金</small></div></div>').join('');
         const goalCards = (S.goals || []).map(g => {
           const pct = g.target ? Math.min(100, Math.round(g.saved / g.target * 100)) : 0;
           return '<div class="goal-card"><div class="goal-top"><b>' + esc(g.name) + '</b><span>截止 ' + esc(g.due) + '</span></div><div class="goal-amt">' + money(g.saved) + ' <small>/ ' + money(g.target) + '</small></div><div class="gbar"><i style="width:' + pct + '%"></i></div><div class="goal-foot"><span>' + pct + '%</span><span>还差 ' + money(Math.max(0, g.target - g.saved)) + '</span></div></div>';
@@ -855,8 +855,31 @@
             close(); renderSavings(); toast(isGoal ? '已新增存钱目标（MOCK）' : '已新增冻结 / 待缴费（MOCK）');
           };
         }
+        function openFixedModal() {
+          const box = document.createElement('div');
+          box.className = 'savings-modal';
+          box.innerHTML = '<div class="box"><h3>存入定期</h3>' +
+            '<label>本金金额<input id="fxAmount" type="number" step="0.01" placeholder="1000.00"></label>' +
+            '<div class="row"><label>期限<select id="fxMonths"><option value="3">3 个月</option><option value="6">6 个月</option><option value="12" selected>12 个月</option><option value="24">24 个月</option><option value="36">36 个月</option></select></label><label>年利率 %<input id="fxRate" type="number" step="0.01" placeholder="1.65"></label></div>' +
+            '<label>到期日<input id="fxDue" placeholder="2027-06-01"></label>' +
+            '<div class="acts"><button id="fxCancel">取消</button><button class="primary" id="fxSave">确认存入</button></div></div>';
+          pageView.appendChild(box);
+          const close = () => box.remove();
+          box.addEventListener('click', e => { if (e.target === box) close(); });
+          box.querySelector('#fxCancel').onclick = close;
+          box.querySelector('#fxSave').onclick = () => {
+            const amount = Number(box.querySelector('#fxAmount').value);
+            const rate = Number(box.querySelector('#fxRate').value);
+            const months = Number(box.querySelector('#fxMonths').value);
+            const due = box.querySelector('#fxDue').value.trim();
+            if (!amount || amount <= 0) { box.querySelector('#fxAmount').focus(); return; }
+            if (!rate || rate <= 0) { box.querySelector('#fxRate').focus(); return; }
+            S.fixed.push({ name: months + ' 个月定期', amount, rate, months, due: due || '待定' });
+            close(); renderSavings(); toast('已存入定期（MOCK）');
+          };
+        }
         document.getElementById('addGoal').onclick = () => openSavingModal('goal');
-        document.getElementById('addFixed').onclick = () => toast('新增定期存款（v35.9.1.12 设计）');
+        document.getElementById('addFixed').onclick = () => openFixedModal();
         document.getElementById('addFrozen').onclick = () => openSavingModal('frozen');
         document.getElementById('svSave').addEventListener('click', () => {
           const amount = Number(document.getElementById('svAmount').value);
