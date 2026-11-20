@@ -4,7 +4,7 @@ import { http } from '@/api/client'
 import { useAuthStore } from '@/stores/auth'
 import { useSessionStore } from '@/stores/session'
 const auth = useAuthStore(); const session = useSessionStore()
-const qq = ref(auth.qq); const token = ref(''); const status = ref(''); const saving = ref(false)
+const qq = ref(auth.qq); const token = ref(''); const status = ref(auth.authError || ''); const saving = ref(false)
 async function save() {
   if (!qq.value.trim() || !token.value.trim()) { status.value = 'QQ 和 token 都要填'; return }
   saving.value = true; status.value = '正在连接…'
