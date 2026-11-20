@@ -498,6 +498,51 @@ UI 版本：只接接口，不改契约
 不为了凑版本重复造 API
 ```
 
+## 3.24 个性化设置
+
+独立次版本 v35.18，不和普通设置页混用。
+
+```text
+气泡：背景/文字/圆角/尾巴/宽度/对齐/边框/阴影
+头像：主人/角色/形状/大小/上传/重置
+字体：字体/字号/行高
+背景：纯色/渐变/图片/透明度/模糊
+主题：浅色/深色/强调色
+预设：保存/切换/导入导出
+```
+
+API：
+
+```text
+GET/PUT /api/appearance
+POST /api/appearance/avatar
+POST /api/appearance/reset
+POST /api/appearance/import
+GET /api/appearance/export
+```
+
+规则：
+
+```text
+owner-only
+白名单 CSS 变量
+不执行用户 CSS/HTML
+头像 ≤ 2MB
+多端同一 profile
+```
+
+版本：
+
+```text
+v35.18.0.0 API
+v35.18.1.0 UI + 预览
+v35.18.2.0 气泡
+v35.18.3.0 头像
+v35.18.4.0 字体/背景/主题
+v35.18.5.0 同步/预设
+v35.18.6.0 验收
+```
+
 ## 4. 次次版本
 
 | 版本 | 交付 | 验收 |
