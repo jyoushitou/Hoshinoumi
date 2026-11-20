@@ -91,7 +91,7 @@
     .page-head h2{font-size:17px;margin:0;font-weight:650;color:#17263b}
     .page-head p{font-size:10.5px;color:#6b7c95;margin:3px 0 0}
     .back{margin-left:auto;font-size:10px;color:#2563eb;border:1px solid #dbe8ff;border-radius:8px;padding:5px 9px;background:#fff;cursor:pointer;transition:background .18s}
-    .pgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .rel-page{display:grid;grid-template-columns:1.6fr 1fr;gap:10px}.rel-card{border:1px solid #e3ebf7;border-radius:12px;background:#fff;padding:14px}.rel-card.wide{grid-column:span 2}.rel-k{font-size:9px;letter-spacing:.12em;color:#8a9bb0;text-transform:uppercase}.rel-tier{font-size:21px;font-weight:700;color:#2563eb;margin:7px 0 8px}.rel-bar{height:5px;border-radius:5px;background:#e8effa;overflow:hidden}.rel-bar i{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,#6ea4ff,#2563eb)}.rel-v{font-size:13px;color:#1e3a5f;margin:8px 0 4px}.rel-note{font-size:9.5px;color:#8a9bb0;margin-top:6px;line-height:1.6}.rel-events .rel-event{display:flex;justify-content:space-between;border-bottom:1px solid #f1f5fb;padding:7px 0;font-size:10px;color:#405872}.rel-events .rel-event:last-child{border-bottom:0}.rel-event small{color:#8a9bb0}.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
     .pcard2{border:1px solid #e3ebf7;border-radius:12px;background:#fff;padding:12px 13px;transition:border-color .18s,transform .18s,box-shadow .18s}
     .pcard2 h3{font-size:11px;margin:0 0 5px;color:#dbe8fb}
     .pcard2 p{font-size:10px;line-height:1.6;color:var(--muted);margin:0}
@@ -1086,6 +1086,18 @@
       }));
       document.getElementById('cmdRun').addEventListener('click', () => runCommand(document.getElementById('cmdInput').value));
       document.getElementById('cmdInput').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); runCommand(e.target.value); } });
+      return;
+    }
+    if (name === 'relation') {
+      pageView.innerHTML = '<div class="page-head"><div><h2>关系</h2><p>v35.5 Web 演示 · MOCK 数据 · 仅 owner 可见</p></div><button class="back" id="backChat">← 返回聊天</button></div>' +
+        '<div class="rel-page"><div class="rel-card wide"><div class="rel-k">关系档位</div><div class="rel-tier">熟</div><div class="rel-bar"><i style="width:45%"></i></div><div class="rel-note">算是熟人：可以开玩笑，但别太热络</div></div>' +
+        '<div class="rel-card"><div class="rel-k">最近变化</div><div class="rel-v">聊天</div><div class="rel-note">不展示具体增减数值</div></div>' +
+        '<div class="rel-card"><div class="rel-k">可见范围</div><div class="rel-v">仅 owner 全量</div><div class="rel-note">普通用户只能查看自己的关系</div></div>' +
+        '<div class="rel-card wide"><div class="rel-k">关系事件</div><div class="rel-events"><div class="rel-event"><span>聊天</span><small>2026-11-19 12:00</small></div></div></div></div>';
+      [top, msgs, composer, searchBar].forEach(x => x.classList.add('chat-hide'));
+      pageView.classList.add('on');
+      document.querySelectorAll('.rnav').forEach(x => x.classList.toggle('on', x.dataset.page === name));
+      document.getElementById('backChat').addEventListener('click', () => showChat());
       return;
     }
     const rows = PAGES[name] || [];
