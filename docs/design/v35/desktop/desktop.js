@@ -58,7 +58,16 @@ document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>setFilter(b.d
 $('#sendBtn').onclick=send
 $('#input').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}})
 $('#input').addEventListener('input',e=>{e.target.style.height='21px';e.target.style.height=Math.min(80,e.target.scrollHeight)+'px'})
-document.querySelectorAll('.rnav').forEach(b=>b.onclick=()=>{document.querySelectorAll('.rnav').forEach(x=>x.classList.remove('on'));b.classList.add('on');toast(`打开：${b.title}`)})
+document.querySelectorAll('.rnav').forEach(b=>b.onclick=()=>{document.querySelectorAll('.rnav').forEach(x=>x.classList.remove('on'));b.classList.add('on');if(b.dataset.page==='settings'){openSettings()}else{toast(`打开：${b.title}`)}})
+function updateRoutePreview(){const base=$('#routeBase').value.trim().replace(/\/+$/,'');const api=$('#routeApi').value.trim()||'/api';$('#routePreview').textContent=`${base}${api}/status`}
+function openSettings(){$('#settingsModal').classList.add('open');updateRoutePreview()}
+function closeSettings(){$('#settingsModal').classList.remove('open')}
+$('#settingsClose').onclick=closeSettings
+$('#settingsModal').addEventListener('click',e=>{if(e.target===$('#settingsModal'))closeSettings()})
+$('#routeBase').addEventListener('input',updateRoutePreview)
+$('#routeApi').addEventListener('input',updateRoutePreview)
+$('#testRoute').onclick=()=>{const st=$('#routeStatus');st.className='route-status';st.textContent='测试中…';setTimeout(()=>{st.className='route-status ok';st.textContent='连接成功 · 42ms · schema 36'},700)}
+$('#saveRoute').onclick=()=>{closeSettings();toast('路由已保存到系统安全存储（设计稿）')}
 $('#newChat').onclick=()=>toast('新建会话（设计稿）')
 $('#searchBtn').onclick=()=>toast('聊天内搜索（设计稿）')
 $('#moreBtn').onclick=()=>toast('会话菜单（设计稿）')

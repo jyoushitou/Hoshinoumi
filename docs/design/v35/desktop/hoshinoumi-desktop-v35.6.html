@@ -90,6 +90,21 @@
     <div class="mini-body" id="miniBody"></div>
     <div class="mini-input"><input id="miniInput" placeholder="快捷回复…"><button id="miniSend">→</button></div>
   </div>
+  <div class="modal" id="settingsModal">
+    <div class="modal-card">
+      <header class="modal-head"><div><b>设置</b><small>连接与路由</small></div><button id="settingsClose">×</button></header>
+      <div class="modal-body">
+        <label class="field"><span>连接方式</span><select id="routeMode"><option value="public">公网前端 nginx</option><option value="local">本机 gateway</option><option value="custom">自定义</option></select></label>
+        <label class="field"><span>后端入口</span><input id="routeBase" value="http://127.0.0.1:27006"></label>
+        <label class="field"><span>API 路由</span><input id="routeApi" value="/api"></label>
+        <div class="route-preview">实际请求：<code id="routePreview">http://127.0.0.1:27006/api/status</code></div>
+        <label class="field"><span>访问 token</span><input id="routeToken" type="password" value="mock-token"></label>
+        <label class="field"><span>启动页路由</span><select id="routeStart"><option>/chat</option><option>/home</option><option>上次会话</option></select></label>
+        <div class="modal-actions"><button class="soft" id="testRoute">测试连接</button><button class="primary" id="saveRoute">保存路由</button></div>
+        <div class="route-status" id="routeStatus"></div>
+      </div>
+    </div>
+  </div>
   <div class="toast" id="toast"></div>
 </div>
 <script src="desktop.js"></script>

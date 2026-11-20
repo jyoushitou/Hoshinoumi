@@ -35,3 +35,26 @@ v35.6.0 只做 Tauri/WebView 套壳：
 ```
 
 不重写 Web 页面。
+
+
+## 壳路由设置
+
+v35.6.0 设计稿的 ⚙ 设置内新增“连接与路由”：
+
+```text
+连接方式：公网前端 nginx / 本机 gateway / 自定义
+后端入口：http://127.0.0.1:27006
+API 路由：/api
+实际请求预览
+访问 token
+启动页路由：/chat / /home / 上次会话
+测试连接 / 保存路由
+```
+
+保存后由 Tauri 系统安全存储保存；WebView 内只拿运行时配置，不写死。
+
+设计截图：
+
+```text
+hoshinoumi-desktop-v35.6-settings.png
+```
