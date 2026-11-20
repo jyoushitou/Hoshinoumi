@@ -176,6 +176,7 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/status":
             self._json(200, {
                 "status": "running",
+                "version": VERSION,
                 "mock": True,
                 "master_qq": OWNER_QQ,
                 "deepseek": True,

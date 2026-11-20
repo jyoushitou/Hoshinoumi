@@ -35,8 +35,10 @@ async def handle_status(request):
     except Exception as e:
         return json_response({"error": "db_query_failed", "message": str(e)}, 500)
 
+    from ..core.version import get_version
     return json_response({
         "status": "running",
+        "version": get_version(),
         "master_qq": MASTER_QQ,
         "deepseek": bool(cfg.DS_API_KEY),
         "doubao": bool(cfg.DOUBAO_API_KEY),

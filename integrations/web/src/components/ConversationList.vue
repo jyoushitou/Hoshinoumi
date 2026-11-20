@@ -5,6 +5,7 @@ import EmptyState from '@/components/EmptyState.vue'
 import { useRouter } from 'vue-router'
 import { useSessionStore } from '@/stores/session'
 const session = useSessionStore()
+const appVersion = __APP_VERSION__
 const router = useRouter()
 const tab = ref<'all' | 'private' | 'group'>('all')
 const searchQuery = ref('')
@@ -33,7 +34,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onShortcut))
 <template>
   <aside class="side">
     <div class="brand">
-      <b>HOSHINOUMI</b><span>WEB v35.5</span>
+      <b>HOSHINOUMI</b><span>WEB v{{ appVersion }}</span>
     </div>
     <div class="searchbox">
       <div class="search"><span>⌕</span><input ref="searchInput" v-model="searchQuery" placeholder="搜索会话 / 记忆 / 命令" @focus="searchOpen = true" @keydown.esc="closeSearch"><kbd>⌘K</kbd></div>
@@ -71,7 +72,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onShortcut))
         </div>
       </template>
     </div>
-    <div class="conn"><div class="k">后端连接</div><div class="v"><span class="dot" :class="{ off: !session.connected }"></span> {{ session.connected ? '已连接' : '未连接' }}</div><div class="meta">{{ session.error || '等待后端数据' }}</div></div>
+    <div class="conn"><div class="k">后端连接</div><div class="v"><span class="dot" :class="{ off: !session.connected }"></span> {{ session.connected ? '已连接' : '未连接' }}</div><div class="meta">{{ session.error || ('后端 ' + (session.status?.version || '版本未知')) }}</div></div>
   </aside>
 </template>
 <style scoped>
