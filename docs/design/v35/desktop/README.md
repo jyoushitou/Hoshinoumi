@@ -1,5 +1,20 @@
 ﻿# Hoshinoumi Desktop · v35.6.0 设计稿
 
+## 视觉基准
+
+以 Vue Web 预览为基准，桌面壳只加原生外壳，不另起视觉：
+
+```text
+docs/design/v35/web/hoshinoumi-web-v35.5-nginx.png
+```
+
+```text
+rail 64 / side 292 / context 304
+聊天头 66
+消息区 20/22
+输入区 11/18/13
+```
+
 ## 文件
 
 ```text
