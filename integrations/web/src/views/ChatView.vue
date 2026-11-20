@@ -24,6 +24,7 @@ const searchHits = computed(() => {
   if (!q) return []
   return session.messages.map((m, i) => ({ m, i })).filter(x => (x.m.content || '').toLowerCase().includes(q))
 })
+const activeConversation = computed(() => session.conversations.find(c => c.target_id === session.activeTarget) || null)
 const syncLabel = computed(() => session.syncState === 'syncing' ? '同步中…' : session.syncState === 'offline' ? '连接中断' : session.syncState === 'online' ? '已同步' : '等待同步')
 async function send() {
   if (!canSend.value) return
@@ -139,11 +140,11 @@ watch(() => session.activeTarget, () => { searchOpen.value = false; searchQuery.
   <div class="chat" :class="{ motion }">
     <div class="top">
       <div class="who">
-        <span class="avatar">{{ String(session.persona?.name || '?').slice(0, 1) }}</span><div>
+        <span class="avatar">{{ String(activeConversation?.name || session.persona?.name || '?').slice(0, 1) }}</span><div>
           <div class="nm">
-            {{ session.persona?.name || '未获取到人设' }}
+            {{ activeConversation?.name || session.persona?.name || '未获取到人设' }}
           </div><div class="sub">
-            私聊 · 记忆同步 <span v-if="session.connected" class="pill">在线</span><span class="sync-pill" :class="session.syncState">{{ syncLabel }}</span>
+            <template v-if="activeConversation?.type === 'group'">群聊 · {{ activeConversation.member_count || 0 }} 人</template><template v-else>私聊 · 记忆同步</template> <span v-if="session.connected" class="pill">在线</span><span class="sync-pill" :class="session.syncState">{{ syncLabel }}</span>
           </div>
         </div>
       </div><button class="tbtn" @click="toggleSearch">

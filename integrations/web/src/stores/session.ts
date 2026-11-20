@@ -3,6 +3,7 @@ export interface Conversation {
   target_id: string
   name: string
   type?: string
+  member_count?: number
   count?: number
   last_message?: string
   updated_at?: string
