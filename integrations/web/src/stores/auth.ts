@@ -14,7 +14,7 @@ export const useAuthStore = defineStore('auth', () => {
     token.value = nextToken.trim(); qq.value = nextQQ.trim()
     localStorage.setItem(TOKEN_KEY, token.value); localStorage.setItem(QQ_KEY, qq.value)
   }
-  function logout() { token.value = ''; qq.value = ''; localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(QQ_KEY) }
+  function logout() { token.value = ''; qq.value = ''; guest.value = false; validated.value = true; authError.value = ''; localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(QQ_KEY) }
   function enterGuest() { guest.value = true }
   async function validate() {
     if (!token.value || !qq.value) { validated.value = true; return }

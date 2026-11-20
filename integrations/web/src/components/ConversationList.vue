@@ -4,7 +4,9 @@ import { http } from '@/api/client'
 import EmptyState from '@/components/EmptyState.vue'
 import { useRouter } from 'vue-router'
 import { useSessionStore } from '@/stores/session'
+import { useAuthStore } from '@/stores/auth'
 const session = useSessionStore()
+const auth = useAuthStore()
 const appVersion = __APP_VERSION__
 const router = useRouter()
 const tab = ref<'all' | 'private' | 'group'>('all')
@@ -24,6 +26,7 @@ function closeSearch() { searchOpen.value = false; searchQuery.value = '' }
 async function choose(target: string) { await session.selectConversation(target); closeSearch(); router.push('/chat') }
 function gotoMemory() { closeSearch(); router.push('/memory') }
 function gotoCommand() { closeSearch(); router.push('/commands') }
+function logout() { auth.logout(); session.connected = false; session.error = '已退出登录'; closeSearch(); router.push('/chat') }
 function onShortcut(e: KeyboardEvent) { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); searchOpen.value = true; searchInput.value?.focus() } }
 onMounted(async () => {
   window.addEventListener('keydown', onShortcut)
@@ -72,7 +75,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onShortcut))
         </div>
       </template>
     </div>
-    <div class="conn"><div class="k">后端连接</div><div class="v"><span class="dot" :class="{ off: !session.connected }"></span> {{ session.connected ? '已连接' : '未连接' }}</div><div class="meta">{{ session.error || ('后端 ' + (session.status?.version || '版本未知')) }}</div></div>
+    <div class="conn"><div class="k">后端连接 <button type="button" class="logout" @click="logout">退出登录</button></div><div class="v"><span class="dot" :class="{ off: !session.connected }"></span> {{ session.connected ? '已连接' : '未连接' }}</div><div class="meta">{{ session.error || ('后端 ' + (session.status?.version || '版本未知')) }}</div></div>
   </aside>
 </template>
 <style scoped>
@@ -83,5 +86,5 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onShortcut))
 .tabs{display:flex;gap:4px;padding:0 14px 8px}.tabs button{flex:1;border:1px solid #e3ebf7;background:#fff;color:#8a9bb0;font:9.5px inherit;border-radius:7px;padding:4px 0;cursor:pointer}.tabs button.on{background:#eef4ff;border-color:#c7dcff;color:#1d4ed8}.convs{overflow:auto;padding:0 8px;min-height:0}.conv{display:flex;gap:9px;padding:9px;border-radius:11px;position:relative;text-decoration:none;color:inherit;border:1px solid transparent;transition:background .18s,border-color .18s,transform .18s}.conv:hover{background:#eef4ff;border-color:#dbe8ff;transform:translateX(2px)}.conv.on{background:#e7f0ff;border-color:#c7dcff}
 .avatar{width:33px;height:33px;border-radius:10px;display:grid;place-items:center;font-size:11px;font-weight:700;color:#1d4ed8;flex:none}
 .body{min-width:0}.nm{font-size:12px;font-weight:600;color:#1e3a5f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.last{font-size:10.5px;color:#8a9bb0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}.tm{font-size:9px;color:#8a9bb0;margin-left:auto;flex:none}.unread{position:absolute;right:8px;bottom:8px;min-width:15px;height:15px;border-radius:8px;background:#2563eb;color:#fff;font-size:9px;font-weight:700;display:grid;place-items:center}
-.conn{margin:10px 14px 14px;padding:11px 12px;border:1px solid #e3ebf7;border-radius:12px;background:#fff}.conn .k{font-size:9px;letter-spacing:.08em;color:#8a9bb0;margin-bottom:5px}.conn .v{font-size:11px;color:#1f9d6b;display:flex;align-items:center;gap:6px}.dot{width:6px;height:6px;border-radius:50%;background:#1f9d6b}.dot.off{background:#c0264a}.load{padding:18px 12px;text-align:center;font-size:10px;color:#8a9bb0}.conn .meta{font-size:9.5px;color:#8a9bb0;margin-top:4px}
+.conn{margin:10px 14px 14px;padding:11px 12px;border:1px solid #e3ebf7;border-radius:12px;background:#fff}.conn .k{font-size:9px;letter-spacing:.08em;color:#8a9bb0;margin-bottom:5px;display:flex;align-items:center}.logout{margin-left:auto;border:1px solid #f0d7dd;background:#fff;color:#b23b52;border-radius:5px;padding:2px 6px;font:8.5px inherit;cursor:pointer}.logout:hover{background:#fff5f7}.conn .v{font-size:11px;color:#1f9d6b;display:flex;align-items:center;gap:6px}.dot{width:6px;height:6px;border-radius:50%;background:#1f9d6b}.dot.off{background:#c0264a}.load{padding:18px 12px;text-align:center;font-size:10px;color:#8a9bb0}.conn .meta{font-size:9.5px;color:#8a9bb0;margin-top:4px}
 </style>
