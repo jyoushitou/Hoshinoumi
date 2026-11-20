@@ -122,6 +122,11 @@ namespace Gateway
             Proxy(session, url, "/internal/history", "GET", owner);
             return;
         }
+        if (url.target == "/api/read" || url.target.rfind("/api/read?", 0) == 0)
+        {
+            Proxy(session, url, "/internal/read", "POST", owner);
+            return;
+        }
         if (url.target.rfind("/api/state", 0) == 0)
         {
             Proxy(session, url, "/internal/state", "GET", owner);

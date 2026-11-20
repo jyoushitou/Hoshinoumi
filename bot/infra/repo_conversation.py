@@ -84,6 +84,22 @@ def recent(target_id, limit=100, before_id=None, user_id=None, cursor=None):
 
 
 
+def count_after(target_id, after_id=0, user_id=None, cursor=None):
+    """统计 id > after_id 的消息数，用于未读。"""
+    from . import tenant
+    if user_id is None:
+        user_id = tenant.current_user_id()
+    c = _cursor(cursor)
+    c.execute(
+        "SELECT COUNT(*) AS n FROM conversation_messages "
+        "WHERE target_id=%s AND id>%s AND user_id=%s",
+        (str(target_id), int(after_id or 0), str(user_id)),
+    )
+    row = c.fetchone()
+    return int((row or {}).get("n", 0) or 0) if isinstance(row, dict) else 0
+
+
+
 def after(target_id, after_id=0, limit=100, user_id=None, cursor=None):
     """增量拉取：id > after_id，时间正序，供 Web 轮询。"""
     from . import tenant

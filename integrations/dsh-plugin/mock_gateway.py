@@ -27,6 +27,7 @@ from urllib.parse import parse_qs, urlparse
 VERSION = "35.2.25.0"
 SCHEMA = 35
 OWNER_QQ = "10001"
+READS = {}  # target_id -> last_read_id
 
 MEMORY = {
     OWNER_QQ: [
@@ -183,8 +184,15 @@ class Handler(BaseHTTPRequestHandler):
                     "count": len(items),
                     "last_message": items[-1][0][:40] if items else "",
                     "updated_at": "2026-11-19 21:04:00",
+                    "last_read_id": int(READS.get(tid, 0)),
+                    "unread": len([x for x in HISTORY if int(x.get("id") or 0) > int(READS.get(tid, 0))]),
                 })
             self._json(200, {"ok": True, "data": rows, "mock": True})
+            return
+        if path == "/api/read-state":
+            target = (q.get("target_id") or [OWNER_QQ])[0]
+            last = int(READS.get(target, 0))
+            self._json(200, {"ok": True, "target_id": target, "last_read_id": last, "unread": len([x for x in HISTORY if int(x.get("id") or 0) > last]), "mock": True})
             return
         if path == "/api/history":
             target = (q.get("target_id") or [OWNER_QQ])[0]
@@ -307,6 +315,12 @@ class Handler(BaseHTTPRequestHandler):
             self._json(401, {"error": "unauthorized", "message": "bad token"})
             return
 
+        if path == "/api/read":
+            target = str(body.get("target_id") or OWNER_QQ)
+            last = int(body.get("last_read_id") or 0)
+            READS[target] = max(int(READS.get(target, 0)), last)
+            self._json(200, {"ok": True, "target_id": target, "last_read_id": READS[target], "unread": len([x for x in HISTORY if int(x.get("id") or 0) > READS[target]]), "mock": True})
+            return
         if path == "/api/persona/import":
             data = body.get("data") if isinstance(body.get("data"), dict) else body
             name = str(data.get("name") or "").strip()

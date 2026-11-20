@@ -113,12 +113,15 @@ async def handle_command(request):
         return json_response({"error": "command_failed", "message": str(e)}, 500)
 
 async def handle_conversations(request):
-    """GET /api/conversations：owner 的 QQ 会话列表。"""
-    from ..infra import repo_conversation, tenant
+    """GET /api/conversations：owner 的 QQ 会话列表（含未读）。"""
+    from ..infra import read_state, repo_conversation, tenant
     uid = tenant.owner_id()
     rows = repo_conversation.threads(uid, limit=50)
     if not rows and uid != tenant.OWNER_ID:
         rows = repo_conversation.threads(tenant.OWNER_ID, limit=50)
+    for row in rows:
+        row["last_read_id"] = read_state.last_read(uid, row["target_id"])
+        row["unread"] = read_state.unread_count(uid, row["target_id"])
     return json_response({"ok": True, "data": rows})
 
 
@@ -153,6 +156,36 @@ async def handle_history(request):
     seqs = [int(x["id"]) for x in data if str(x.get("id", "")).isdigit()]
     next_seq = max(seqs) if seqs else (after_seq or 0)
     return json_response({"ok": True, "data": data, "next_seq": next_seq, "has_more": len(data) >= limit})
+
+async def handle_read_state(request):
+    """GET /api/read-state?target_id=：最后已读位点。"""
+    from ..infra import read_state, tenant
+    target = (request.query.get("target_id") or "").strip()
+    if not target:
+        return json_response({"ok": False, "error": "target_id required"}, status=400)
+    uid = tenant.owner_id()
+    last = read_state.last_read(uid, target)
+    return json_response({"ok": True, "target_id": target, "last_read_id": last, "unread": read_state.unread_count(uid, target)})
+
+
+async def handle_read(request):
+    """POST /api/read：上报已读位点。"""
+    from ..infra import read_state, tenant
+    try:
+        body = await request.json()
+    except Exception:
+        return json_response({"ok": False, "error": "invalid_json"}, status=400)
+    target = str((body or {}).get("target_id") or "").strip()
+    if not target:
+        return json_response({"ok": False, "error": "target_id required"}, status=400)
+    try:
+        last = int((body or {}).get("last_read_id") or 0)
+    except (TypeError, ValueError):
+        return json_response({"ok": False, "error": "bad_last_read_id"}, status=400)
+    uid = tenant.owner_id()
+    value = read_state.mark_read(uid, target, last)
+    return json_response({"ok": True, "target_id": target, "last_read_id": value, "unread": read_state.unread_count(uid, target)})
+
 
 # v35.7.23：命令目录从注册表动态生成，客户端不硬编码
 _OWNER_COMMANDS = {
