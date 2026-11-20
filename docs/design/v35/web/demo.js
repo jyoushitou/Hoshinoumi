@@ -126,7 +126,7 @@
     .home-card h3{font-size:11px;margin:0 0 3px;color:#1e3a5f}
     .home-card p{font-size:9.5px;line-height:1.5;color:#6b7c95;margin:0}
     .home-card .st{font-size:9px;color:#1f9d6b;margin-top:7px}
-    .panel-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}.panel-head h3{margin:0}.mini-add{border:1px solid #dbe8ff;background:#f8fbff;color:#2563eb;border-radius:6px;padding:3px 7px;font:9px inherit;cursor:pointer}.mini-add:hover{background:#eef4ff}.savings-modal{position:fixed;inset:0;background:rgba(15,32,55,.28);backdrop-filter:blur(3px);z-index:60;display:grid;place-items:center}.savings-modal .box{width:320px;background:#fff;border:1px solid #e3ebf7;border-radius:12px;box-shadow:0 20px 50px rgba(30,60,100,.2);padding:15px}.savings-modal h3{margin:0 0 10px;font-size:13px;color:#17263b}.savings-modal label{display:block;font-size:9px;color:#8a9bb0;margin-bottom:7px}.savings-modal input,.savings-modal select{display:block;width:100%;border:1px solid #dbe8ff;border-radius:7px;background:#f8fbff;color:#243b55;font:10.5px inherit;padding:6px 7px;margin-top:3px;outline:0}.savings-modal .check{display:flex;align-items:center;gap:6px;font-size:9px;color:#6b7c95}.savings-modal .check input{width:auto;margin:0;display:inline}.savings-modal .row{display:grid;grid-template-columns:1fr 1fr;gap:7px}.savings-modal .acts{display:flex;gap:6px;margin-top:10px}.savings-modal .acts button{flex:1;border:1px solid #dbe8ff;border-radius:7px;background:#fff;color:#2563eb;padding:6px;font:10px inherit;cursor:pointer}.savings-modal .acts button.primary{background:#2563eb;color:#fff;border-color:#2563eb}.fixed-card{border:1px solid #e3ebf7;border-radius:10px;background:#fff;padding:10px 12px;display:flex;align-items:center;gap:12px}.fixed-card .main{flex:1}.fixed-card .name{font-size:11px;color:#1e3a5f;font-weight:600}.fixed-card .meta{font-size:8.5px;color:#8a9bb0;margin-top:3px}.fixed-card .val{text-align:right}.fixed-card .val b{font-size:13px;color:#2563eb}.fixed-card .val small{display:block;font-size:8px;color:#8a9bb0;margin-top:2px}.fund-row{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f1f5fb;padding:8px 0;font-size:10px}.fund-row:last-child{border-bottom:0}.fund-name{color:#1e3a5f;font-weight:600}.fund-tag{font-size:7.5px;color:#2563eb;background:#eef4ff;border:1px solid #dbe8ff;border-radius:4px;padding:1px 4px;font-weight:400;margin-left:3px}.fund-meta{font-size:8.5px;color:#8a9bb0;margin-top:2px}.fund-value{text-align:right;color:#2563eb;font-family:ui-monospace,monospace;font-size:12px}.fund-value small{display:block;color:#8a9bb0;font-size:8px;margin-top:2px}.fixed-acts{display:flex;gap:4px;margin-top:5px;justify-content:flex-end}.fixed-acts button{border:1px solid #dbe8ff;background:#f8fbff;color:#2563eb;border-radius:5px;padding:2px 5px;font:8px inherit;cursor:pointer}.fixed-acts button.cancel{border-color:#f0d7dd;color:#b23b52;background:#fff}.fixed-acts button:hover{background:#eef4ff}.fixed-lock{font-size:8px;color:#b7791f;background:#fff8e6;border:1px solid #f2d491;border-radius:4px;padding:1px 4px;margin-left:4px}.savings-goals{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:10px}.goal-card{border:1px solid #e3ebf7;border-radius:11px;background:#fff;padding:11px 12px}.goal-top{display:flex;align-items:center;justify-content:space-between;gap:6px}.goal-top b{font-size:11px;color:#1e3a5f}.goal-top span{font-size:8.5px;color:#8a9bb0}.goal-amt{font-size:15px;font-weight:700;color:#2563eb;margin:6px 0 2px}.goal-amt small{font-size:9px;color:#8a9bb0;font-weight:400}.gbar{height:5px;border-radius:5px;background:#e8effa;overflow:hidden;margin:6px 0 4px}.gbar i{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,#6ea4ff,#2563eb)}.goal-foot{display:flex;justify-content:space-between;font-size:8.5px;color:#8a9bb0}.savings-two{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:10px}.money-row{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f1f5fb;padding:7px 0;font-size:10px;color:#405872}.money-row:last-child{border-bottom:0}.money-row .where{color:#8a9bb0;font-size:8.5px;margin-top:1px}.money-row .amt{font-family:ui-monospace,monospace;color:#1e3a5f}.frozen-row{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f1f5fb;padding:7px 0;font-size:10px}.frozen-row:last-child{border-bottom:0}.frozen-row .why{color:#8a9bb0;font-size:8.5px;margin-top:1px}.frozen-row .amt{color:#b7791f;font-family:ui-monospace,monospace}.frozen-right{display:flex;align-items:center;gap:8px}.frozen-acts{display:flex;gap:4px}.frozen-acts button{border:1px solid #dbe8ff;background:#f8fbff;color:#2563eb;border-radius:5px;padding:2px 5px;font:8.5px inherit;cursor:pointer}.frozen-acts button.del{border-color:#f0d7dd;color:#b23b52;background:#fff}.frozen-acts button:hover{background:#eef4ff}.frozen-tip{font-size:8.5px;color:#8a9bb0;background:#f8fbff;border:1px dashed #dbe8ff;border-radius:6px;padding:6px 7px;margin-top:8px;line-height:1.6}.stat-amber .v{color:#b7791f}.savings-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:9px;margin-bottom:11px}
+    .panel-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}.panel-head h3{margin:0}.mini-add{border:1px solid #dbe8ff;background:#f8fbff;color:#2563eb;border-radius:6px;padding:3px 7px;font:9px inherit;cursor:pointer}.mini-add:hover{background:#eef4ff}.savings-modal{position:fixed;inset:0;background:rgba(15,32,55,.28);backdrop-filter:blur(3px);z-index:60;display:grid;place-items:center}.savings-modal .box{width:320px;background:#fff;border:1px solid #e3ebf7;border-radius:12px;box-shadow:0 20px 50px rgba(30,60,100,.2);padding:15px}.savings-modal h3{margin:0 0 10px;font-size:13px;color:#17263b}.savings-modal label{display:block;font-size:9px;color:#8a9bb0;margin-bottom:7px}.savings-modal input,.savings-modal select{display:block;width:100%;border:1px solid #dbe8ff;border-radius:7px;background:#f8fbff;color:#243b55;font:10.5px inherit;padding:6px 7px;margin-top:3px;outline:0}.savings-modal .check{display:flex;align-items:center;gap:6px;font-size:9px;color:#6b7c95}.savings-modal .check input{width:auto;margin:0;display:inline}.savings-modal .row{display:grid;grid-template-columns:1fr 1fr;gap:7px}.form-error{color:#b23b52;font-size:9px;min-height:12px;margin-top:6px;line-height:1.4}.savings-modal .acts{display:flex;gap:6px;margin-top:10px}.savings-modal .acts button{flex:1;border:1px solid #dbe8ff;border-radius:7px;background:#fff;color:#2563eb;padding:6px;font:10px inherit;cursor:pointer}.savings-modal .acts button.primary{background:#2563eb;color:#fff;border-color:#2563eb}.fixed-card{border:1px solid #e3ebf7;border-radius:10px;background:#fff;padding:10px 12px;display:flex;align-items:center;gap:12px}.fixed-card .main{flex:1}.fixed-card .name{font-size:11px;color:#1e3a5f;font-weight:600}.fixed-card .meta{font-size:8.5px;color:#8a9bb0;margin-top:3px}.fixed-card .val{text-align:right}.fixed-card .val b{font-size:13px;color:#2563eb}.fixed-card .val small{display:block;font-size:8px;color:#8a9bb0;margin-top:2px}.fund-row{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f1f5fb;padding:8px 0;font-size:10px}.fund-row:last-child{border-bottom:0}.fund-name{color:#1e3a5f;font-weight:600}.fund-tag{font-size:7.5px;color:#2563eb;background:#eef4ff;border:1px solid #dbe8ff;border-radius:4px;padding:1px 4px;font-weight:400;margin-left:3px}.fund-meta{font-size:8.5px;color:#8a9bb0;margin-top:2px}.fund-value{text-align:right;color:#2563eb;font-family:ui-monospace,monospace;font-size:12px}.fund-value small{display:block;color:#8a9bb0;font-size:8px;margin-top:2px}.fixed-acts{display:flex;gap:4px;margin-top:5px;justify-content:flex-end}.fixed-acts button{border:1px solid #dbe8ff;background:#f8fbff;color:#2563eb;border-radius:5px;padding:2px 5px;font:8px inherit;cursor:pointer}.fixed-acts button.cancel{border-color:#f0d7dd;color:#b23b52;background:#fff}.fixed-acts button:hover{background:#eef4ff}.fixed-lock{font-size:8px;color:#b7791f;background:#fff8e6;border:1px solid #f2d491;border-radius:4px;padding:1px 4px;margin-left:4px}.savings-goals{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:10px}.goal-card{border:1px solid #e3ebf7;border-radius:11px;background:#fff;padding:11px 12px}.goal-top{display:flex;align-items:center;justify-content:space-between;gap:6px}.goal-top b{font-size:11px;color:#1e3a5f}.goal-top span{font-size:8.5px;color:#8a9bb0}.goal-amt{font-size:15px;font-weight:700;color:#2563eb;margin:6px 0 2px}.goal-amt small{font-size:9px;color:#8a9bb0;font-weight:400}.gbar{height:5px;border-radius:5px;background:#e8effa;overflow:hidden;margin:6px 0 4px}.gbar i{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,#6ea4ff,#2563eb)}.goal-foot{display:flex;justify-content:space-between;font-size:8.5px;color:#8a9bb0}.savings-two{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:10px}.money-row{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f1f5fb;padding:7px 0;font-size:10px;color:#405872}.money-row:last-child{border-bottom:0}.money-row .where{color:#8a9bb0;font-size:8.5px;margin-top:1px}.money-row .amt{font-family:ui-monospace,monospace;color:#1e3a5f}.frozen-row{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f1f5fb;padding:7px 0;font-size:10px}.frozen-row:last-child{border-bottom:0}.frozen-row .why{color:#8a9bb0;font-size:8.5px;margin-top:1px}.frozen-row .amt{color:#b7791f;font-family:ui-monospace,monospace}.frozen-right{display:flex;align-items:center;gap:8px}.frozen-acts{display:flex;gap:4px}.frozen-acts button{border:1px solid #dbe8ff;background:#f8fbff;color:#2563eb;border-radius:5px;padding:2px 5px;font:8.5px inherit;cursor:pointer}.frozen-acts button.del{border-color:#f0d7dd;color:#b23b52;background:#fff}.frozen-acts button:hover{background:#eef4ff}.frozen-tip{font-size:8.5px;color:#8a9bb0;background:#f8fbff;border:1px dashed #dbe8ff;border-radius:6px;padding:6px 7px;margin-top:8px;line-height:1.6}.stat-amber .v{color:#b7791f}.savings-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:9px;margin-bottom:11px}
     .savings-stat{border:1px solid #e3ebf7;border-radius:11px;background:#fff;padding:11px 12px}
     .savings-stat .k{font-size:9px;color:#8a9bb0;margin-bottom:3px}.savings-stat .v{font-size:17px;font-weight:700;color:#17263b;letter-spacing:-.03em}
     .savings-stat .v.blue{color:#2563eb}
@@ -476,6 +476,11 @@
     toast(t + '：v35.5 演示占位');
   }));
 
+  function validMoney(v) {
+    const str = String(v ?? '').trim();
+    if (!/^\d+(\.\d{1,2})?$/.test(str)) return null;
+    const n = Number(str); return n > 0 ? n : null;
+  }
   function showPage(name) {
     if (name === 'settings') {
       let saved = {}; try { saved = JSON.parse(localStorage.getItem('hsh_web_login') || '{}'); } catch {}
@@ -508,15 +513,21 @@
             '<label>' + (isGoal ? '目标名称' : '缴费用途') + '<input id="smName" placeholder="' + (isGoal ? '旅行基金' : '房租') + '"></label>' +
             '<div class="row"><label>' + (isGoal ? '目标金额' : '冻结金额') + '<input id="smAmount" type="number" step="0.01" placeholder="1000"></label><label>' + (isGoal ? '已存金额' : '预计日期') + '<input id="smSecond" ' + (isGoal ? 'type="number" step="0.01" placeholder="0"' : 'placeholder="2027-03-01"') + '></label></div>' +
             '<label>' + (isGoal ? '截止日期' : '备注（可选）') + '<input id="smDue" placeholder="' + (isGoal ? '2027-06' : '每月固定 / 学费') + '"></label>' +
-            '<div class="acts"><button id="smCancel">取消</button><button class="primary" id="smSave">保存</button></div></div>';
+            '<div class="form-error" id="smErr"></div><div class="acts"><button id="smCancel">取消</button><button class="primary" id="smSave">保存</button></div></div>';
           pageView.appendChild(box);
           const close = () => box.remove();
           box.addEventListener('click', e => { if (e.target === box) close(); });
           box.querySelector('#smCancel').onclick = close;
           box.querySelector('#smSave').onclick = () => {
             const name = box.querySelector('#smName').value.trim();
-            const amount = Number(box.querySelector('#smAmount').value);
-            if (!name || !amount || amount <= 0) { box.querySelector('#smName').focus(); return; }
+            const amount = validMoney(box.querySelector('#smAmount').value);
+            const err = box.querySelector('#smErr');
+            if (!name) { err.textContent = '名称 / 用途不能为空'; box.querySelector('#smName').focus(); return; }
+            if (!amount) { err.textContent = '金额必须大于 0，最多两位小数'; box.querySelector('#smAmount').focus(); return; }
+            if (isGoal) {
+              const saved = Number(box.querySelector('#smSecond').value || 0);
+              if (saved < 0 || saved > amount) { err.textContent = '已存金额不能小于 0 或大于目标金额'; box.querySelector('#smSecond').focus(); return; }
+            }
             if (isGoal) {
               const saved = Number(box.querySelector('#smSecond').value) || 0;
               S.goals.push({ name, saved, target: amount, due: box.querySelector('#smDue').value.trim() || '长期' });
@@ -854,15 +865,21 @@
             '<label>' + (isGoal ? '目标名称' : '缴费用途') + '<input id="smName" placeholder="' + (isGoal ? '旅行基金' : '房租') + '"></label>' +
             '<div class="row"><label>' + (isGoal ? '目标金额' : '冻结金额') + '<input id="smAmount" type="number" step="0.01" placeholder="1000"></label><label>' + (isGoal ? '已存金额' : '预计日期') + '<input id="smSecond" ' + (isGoal ? 'type="number" step="0.01" placeholder="0"' : 'placeholder="2027-03-01"') + '></label></div>' +
             '<label>' + (isGoal ? '截止日期' : '备注（可选）') + '<input id="smDue" placeholder="' + (isGoal ? '2027-06' : '每月固定 / 学费') + '"></label>' +
-            '<div class="acts"><button id="smCancel">取消</button><button class="primary" id="smSave">保存</button></div></div>';
+            '<div class="form-error" id="smErr"></div><div class="acts"><button id="smCancel">取消</button><button class="primary" id="smSave">保存</button></div></div>';
           pageView.appendChild(box);
           const close = () => box.remove();
           box.addEventListener('click', e => { if (e.target === box) close(); });
           box.querySelector('#smCancel').onclick = close;
           box.querySelector('#smSave').onclick = () => {
             const name = box.querySelector('#smName').value.trim();
-            const amount = Number(box.querySelector('#smAmount').value);
-            if (!name || !amount || amount <= 0) { box.querySelector('#smName').focus(); return; }
+            const amount = validMoney(box.querySelector('#smAmount').value);
+            const err = box.querySelector('#smErr');
+            if (!name) { err.textContent = '名称 / 用途不能为空'; box.querySelector('#smName').focus(); return; }
+            if (!amount) { err.textContent = '金额必须大于 0，最多两位小数'; box.querySelector('#smAmount').focus(); return; }
+            if (isGoal) {
+              const saved = Number(box.querySelector('#smSecond').value || 0);
+              if (saved < 0 || saved > amount) { err.textContent = '已存金额不能小于 0 或大于目标金额'; box.querySelector('#smSecond').focus(); return; }
+            }
             if (isGoal) {
               const saved = Number(box.querySelector('#smSecond').value) || 0;
               S.goals.push({ name, saved, target: amount, due: box.querySelector('#smDue').value.trim() || '长期' });
@@ -880,25 +897,26 @@
             '<div class="row"><label>期限<select id="fxMonths"><option value="3">3 个月</option><option value="6">6 个月</option><option value="12" selected>12 个月</option><option value="24">24 个月</option><option value="36">36 个月</option></select></label><label>年利率 %<input id="fxRate" type="number" step="0.01" placeholder="1.65"></label></div>' +
             '<div class="row"><label>到期日<input id="fxDue" placeholder="2027-06-01"></label><label>来源账户<select id="fxAccount">' + S.accounts.map(a => '<option>' + esc(a[0]) + '</option>').join('') + '</select></label></div>' +
             '<label class="check"><input type="checkbox" id="fxExisting"> 之前已存入，仅补录（不扣来源账户）</label>' +
-            '<div class="acts"><button id="fxCancel">取消</button><button class="primary" id="fxSave">确认存入</button></div></div>';
+            '<div class="form-error" id="fxErr"></div><div class="acts"><button id="fxCancel">取消</button><button class="primary" id="fxSave">确认存入</button></div></div>';
           pageView.appendChild(box);
           const close = () => box.remove();
           box.addEventListener('click', e => { if (e.target === box) close(); });
           box.querySelector('#fxCancel').onclick = close;
           box.querySelector('#fxSave').onclick = () => {
-            const amount = Number(box.querySelector('#fxAmount').value);
+            const amount = validMoney(box.querySelector('#fxAmount').value);
             const rate = Number(box.querySelector('#fxRate').value);
+            const err = box.querySelector('#fxErr');
             const months = Number(box.querySelector('#fxMonths').value);
             const due = box.querySelector('#fxDue').value.trim();
             const account = box.querySelector('#fxAccount').value;
             const existing = box.querySelector('#fxExisting').checked;
-            if (!amount || amount <= 0) { box.querySelector('#fxAmount').focus(); return; }
+            if (!amount) { err.textContent = '本金必须大于 0，最多两位小数'; box.querySelector('#fxAmount').focus(); return; }
             if (!existing) {
               const acc = S.accounts.find(a => a[0] === account);
-              if (!acc || Number(acc[1] || 0) < amount) { box.querySelector('#fxAmount').focus(); toast('来源账户余额不足'); return; }
+              if (!acc || Number(acc[1] || 0) < amount) { err.textContent = '来源账户余额不足'; box.querySelector('#fxAmount').focus(); return; }
               acc[1] = Number(acc[1] || 0) - amount;
             }
-            if (!rate || rate <= 0) { box.querySelector('#fxRate').focus(); return; }
+            if (!rate || rate <= 0 || rate > 20) { err.textContent = '年利率必须在 0–20% 之间'; box.querySelector('#fxRate').focus(); return; }
             S.fixed.push({ name: months + ' 个月定期', amount, rate, months, due: due || '待定', account, deducted: !existing });
             close(); renderSavings(); toast('已存入定期（MOCK）');
           };
@@ -926,15 +944,19 @@
             '<label>产品名称<input id="fdName" placeholder="余额宝 / 沪深300指数"></label>' +
             '<div class="row"><label>类型<select id="fdType"><option>货币基金</option><option>基金</option></select></label><label>买入金额<input id="fdAmount" type="number" step="0.01" placeholder="500"></label></div>' +
             '<div class="row"><label>来源账户<select id="fdAccount">' + S.accounts.map(a => '<option>' + esc(a[0]) + '</option>').join('') + '</select></label><label>赎回规则<input id="fdRedeem" placeholder="快速赎回 / T+1"></label></div>' +
-            '<div class="acts"><button id="fdCancel">取消</button><button class="primary" id="fdSave">确认买入</button></div></div>';
+            '<div class="form-error" id="fdErr"></div><div class="acts"><button id="fdCancel">取消</button><button class="primary" id="fdSave">确认买入</button></div></div>';
           pageView.appendChild(box);
           const close = () => box.remove(); box.addEventListener('click', e => { if (e.target === box) close(); });
           box.querySelector('#fdCancel').onclick = close;
           box.querySelector('#fdSave').onclick = () => {
-            const name = box.querySelector('#fdName').value.trim(); const amount = Number(box.querySelector('#fdAmount').value);
-            if (!name || !amount || amount <= 0) { box.querySelector('#fdName').focus(); return; }
+            const name = box.querySelector('#fdName').value.trim(); const amount = validMoney(box.querySelector('#fdAmount').value);
+            const err = box.querySelector('#fdErr');
+            if (!name) { err.textContent = '产品名称不能为空'; box.querySelector('#fdName').focus(); return; }
+            if (!amount) { err.textContent = '买入金额必须大于 0，最多两位小数'; box.querySelector('#fdAmount').focus(); return; }
             const account = box.querySelector('#fdAccount').value;
-            const acc = S.accounts.find(a => a[0] === account); if (acc) acc[1] = Number(acc[1] || 0) - amount;
+            const acc = S.accounts.find(a => a[0] === account);
+            if (!acc || Number(acc[1] || 0) < amount) { err.textContent = '来源账户余额不足'; box.querySelector('#fdAmount').focus(); return; }
+            acc[1] = Number(acc[1] || 0) - amount;
             S.funds.push({ name, type: box.querySelector('#fdType').value, value: amount, rate: 0, profit: 0, account, redeem: box.querySelector('#fdRedeem').value.trim() || 'T+1' });
             close(); renderSavings(); toast('已买入理财 / 基金（MOCK）');
           };
@@ -943,8 +965,8 @@
         document.getElementById('addFund').onclick = () => openFundModal();
         document.getElementById('addFrozen').onclick = () => openSavingModal('frozen');
         document.getElementById('svSave').addEventListener('click', () => {
-          const amount = Number(document.getElementById('svAmount').value);
-          if (!amount || amount <= 0) { document.getElementById('svMsg').textContent = '先填正确金额'; return; }
+          const amount = validMoney(document.getElementById('svAmount').value);
+          if (!amount) { document.getElementById('svMsg').textContent = '金额必须大于 0，最多两位小数'; return; }
           const kind = document.getElementById('svKind').value;
           const account = document.getElementById('svAccount').value;
           const note = document.getElementById('svNote').value || (kind === 'expense' ? '支出' : kind === 'income' ? '收入' : '存钱');
