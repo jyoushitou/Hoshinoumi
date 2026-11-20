@@ -67,6 +67,7 @@ export const useSessionStore = defineStore('session', () => {
   const syncState = ref<'idle' | 'syncing' | 'online' | 'offline'>('idle')
   const syncError = ref('')
   const lastSyncAt = ref('')
+  const syncGap = ref(false)
   let syncTimer: ReturnType<typeof setInterval> | null = null
   let retryTimer: ReturnType<typeof setTimeout> | null = null
   let syncInFlight = false
@@ -135,14 +136,17 @@ export const useSessionStore = defineStore('session', () => {
     syncState.value = 'syncing'; syncError.value = ''
     try {
       let after = lastSeq.value
+      let more = false
       for (let page = 0; page < 5; page++) {
         const r = await http.get<HistoryResponse>('/api/history?target_id=' + encodeURIComponent(activeTarget.value) + '&after_seq=' + after + '&limit=100')
         const rows = Array.isArray(r.data) ? r.data : []
         appendUnique(rows)
         if (typeof r.next_seq === 'number') after = Math.max(after, r.next_seq)
-        if (!r.has_more || rows.length === 0) break
+        more = Boolean(r.has_more)
+        if (!more || rows.length === 0) break
       }
       lastSeq.value = after
+      syncGap.value = more
       syncState.value = 'online'
       lastSyncAt.value = new Date().toLocaleTimeString()
       await refreshRecalls()
@@ -275,5 +279,5 @@ export const useSessionStore = defineStore('session', () => {
       error.value = e instanceof Error ? e.message : String(e)
     } finally { loading.value = false }
   }
-  return { loading, connected, error, status, conversations, activeTarget, conversationsError, messages, historyError, unread, persona, relation, savings, weekly, memoryTargets, lifeState, presence, week, sending, sendError, lastSeq, syncState, syncError, lastSyncAt, refresh, selectConversation, loadHistory, sendMessage, syncNow, startSync, stopSync, markRead, recallMessage, refreshRecalls }
+  return { loading, connected, error, status, conversations, activeTarget, conversationsError, messages, historyError, unread, persona, relation, savings, weekly, memoryTargets, lifeState, presence, week, sending, sendError, lastSeq, syncState, syncError, lastSyncAt, syncGap, refresh, selectConversation, loadHistory, sendMessage, syncNow, startSync, stopSync, markRead, recallMessage, refreshRecalls }
 })
