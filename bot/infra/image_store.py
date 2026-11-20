@@ -79,6 +79,23 @@ def attach_media(item: dict) -> dict:
     return item
 
 
+def apply_recall(item: dict) -> dict:
+    """meta.recalled → 空内容 + recalled 标记，不再返回附件。"""
+    meta = item.get("meta")
+    if isinstance(meta, str):
+        try:
+            meta = json.loads(meta)
+        except Exception:
+            meta = None
+    if isinstance(meta, dict) and meta.get("recalled"):
+        item["recalled"] = True
+        item["content"] = ""
+        item.pop("image_url", None)
+        item.pop("audio_url", None)
+        item.pop("kind", None)
+    return item
+
+
 def attach_image(item: dict) -> dict:
     """兼容旧调用：等价于 attach_media。"""
     return attach_media(item)

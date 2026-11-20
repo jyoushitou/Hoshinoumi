@@ -316,6 +316,22 @@ class Handler(BaseHTTPRequestHandler):
             self._json(401, {"error": "unauthorized", "message": "bad token"})
             return
 
+        if path.startswith("/api/messages/") and path.endswith("/recall"):
+            try:
+                mid = int(path.split("/")[-2])
+            except (TypeError, ValueError):
+                self._json(400, {"error": "bad_message_id"})
+                return
+            item = next((x for x in HISTORY if int(x.get("id") or 0) == mid), None)
+            if not item:
+                self._json(404, {"error": "message_not_found"})
+                return
+            item["recalled"] = True
+            item["content"] = ""
+            item.pop("image_url", None)
+            item.pop("audio_url", None)
+            self._json(200, {"ok": True, "message_id": mid, "recalled": True, "mock": True})
+            return
         if path == "/api/read":
             target = str(body.get("target_id") or OWNER_QQ)
             last = int(body.get("last_read_id") or 0)

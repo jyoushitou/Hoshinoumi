@@ -147,6 +147,50 @@ async def handle_conversations(request):
 
 
 
+async def handle_recall(request):
+    """POST /api/messages/{id}/recall：2 分钟内撤回自己的消息。"""
+    import json
+    from datetime import datetime
+    from ..infra import repo_conversation, tenant
+
+    message_id = (request.match_info.get("id") if getattr(request, "match_info", None) else None)
+    body = {}
+    try:
+        body = await request.json()
+    except Exception:
+        pass
+    if not message_id:
+        message_id = (body or {}).get("message_id")
+    try:
+        message_id = int(message_id)
+    except (TypeError, ValueError):
+        return json_response({"ok": False, "error": "bad_message_id"}, status=400)
+    uid = tenant.owner_id()
+    row = repo_conversation.get_by_id(message_id, user_id=uid)
+    if not row and uid != tenant.OWNER_ID:
+        row = repo_conversation.get_by_id(message_id, user_id=tenant.OWNER_ID)
+    if not row:
+        return json_response({"ok": False, "error": "message_not_found"}, status=404)
+    if str(row.get("role") or "") != "user":
+        return json_response({"ok": False, "error": "not_own_message"}, status=403)
+    try:
+        created = datetime.strptime(str(row.get("created_at"))[:19], "%Y-%m-%d %H:%M:%S")
+        if (datetime.now() - created).total_seconds() > 120:
+            return json_response({"ok": False, "error": "recall_window_expired"}, status=403)
+    except ValueError:
+        pass
+    try:
+        meta = json.loads(row.get("meta") or "{}") if isinstance(row.get("meta"), str) else (row.get("meta") or {})
+    except Exception:
+        meta = {}
+    if not isinstance(meta, dict):
+        meta = {}
+    meta["recalled"] = True
+    meta["recalled_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    repo_conversation.set_meta(message_id, row.get("user_id") or uid, meta)
+    return json_response({"ok": True, "message_id": message_id, "target_id": row.get("target_id"), "recalled": True})
+
+
 async def handle_read_state(request):
     """GET /api/read-state?target_id=：最后已读位点。"""
     from ..infra import read_state, tenant

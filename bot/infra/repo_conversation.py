@@ -84,6 +84,32 @@ def recent(target_id, limit=100, before_id=None, user_id=None, cursor=None):
 
 
 
+def get_by_id(message_id, user_id=None, cursor=None):
+    from . import tenant
+    if user_id is None:
+        user_id = tenant.current_user_id()
+    c = _cursor(cursor)
+    c.execute(
+        "SELECT id,user_id,target_id,role,content,meta,created_at "
+        "FROM conversation_messages WHERE id=%s AND user_id=%s",
+        (int(message_id), str(user_id)),
+    )
+    row = c.fetchone()
+    return dict(row) if row else None
+
+
+def set_meta(message_id, user_id, meta, cursor=None):
+    c = _cursor(cursor)
+    raw = json.dumps(meta, ensure_ascii=False) if not isinstance(meta, str) else meta
+    c.execute(
+        "UPDATE conversation_messages SET meta=%s WHERE id=%s AND user_id=%s",
+        (raw, int(message_id), str(user_id)),
+    )
+    c.connection.commit()
+    return int(getattr(c, "rowcount", 0) or 0) > 0
+
+
+
 def count_after(target_id, after_id=0, user_id=None, cursor=None):
     """统计 id > after_id 的消息数，用于未读。"""
     from . import tenant
