@@ -126,7 +126,7 @@
     .home-card h3{font-size:11px;margin:0 0 3px;color:#1e3a5f}
     .home-card p{font-size:9.5px;line-height:1.5;color:#6b7c95;margin:0}
     .home-card .st{font-size:9px;color:#1f9d6b;margin-top:7px}
-    .savings-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:11px}
+    .savings-goals{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:10px}.goal-card{border:1px solid #e3ebf7;border-radius:11px;background:#fff;padding:11px 12px}.goal-top{display:flex;align-items:center;justify-content:space-between;gap:6px}.goal-top b{font-size:11px;color:#1e3a5f}.goal-top span{font-size:8.5px;color:#8a9bb0}.goal-amt{font-size:15px;font-weight:700;color:#2563eb;margin:6px 0 2px}.goal-amt small{font-size:9px;color:#8a9bb0;font-weight:400}.gbar{height:5px;border-radius:5px;background:#e8effa;overflow:hidden;margin:6px 0 4px}.gbar i{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,#6ea4ff,#2563eb)}.goal-foot{display:flex;justify-content:space-between;font-size:8.5px;color:#8a9bb0}.savings-two{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:10px}.money-row{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f1f5fb;padding:7px 0;font-size:10px;color:#405872}.money-row:last-child{border-bottom:0}.money-row .where{color:#8a9bb0;font-size:8.5px;margin-top:1px}.money-row .amt{font-family:ui-monospace,monospace;color:#1e3a5f}.frozen-row{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f1f5fb;padding:7px 0;font-size:10px}.frozen-row:last-child{border-bottom:0}.frozen-row .why{color:#8a9bb0;font-size:8.5px;margin-top:1px}.frozen-row .amt{color:#b7791f;font-family:ui-monospace,monospace}.frozen-tip{font-size:8.5px;color:#8a9bb0;background:#f8fbff;border:1px dashed #dbe8ff;border-radius:6px;padding:6px 7px;margin-top:8px;line-height:1.6}.stat-amber .v{color:#b7791f}.savings-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:11px}
     .savings-stat{border:1px solid #e3ebf7;border-radius:11px;background:#fff;padding:11px 12px}
     .savings-stat .k{font-size:9px;color:#8a9bb0;margin-bottom:3px}.savings-stat .v{font-size:17px;font-weight:700;color:#17263b;letter-spacing:-.03em}
     .savings-stat .v.blue{color:#2563eb}
@@ -756,9 +756,21 @@
       return;
     }
     if (name === 'savings') {
+      /* v35.9.1 design: goals/accounts/frozen */
       const S = window.__savings || (window.__savings = {
-        income: 8000, expense: 3200, saved: 3300, target: 5500,
-        accounts: [['银行卡', 3300.00], ['支付宝', 0], ['微信', 0], ['现金', 0]],
+        income: 8000, expense: 3200,
+        goals: [
+          { name: '旅行基金', saved: 1800, target: 5000, due: '2027-03' },
+          { name: '新电脑', saved: 900, target: 6000, due: '2027-06' },
+          { name: '应急金', saved: 1200, target: 10000, due: '长期' }
+        ],
+        frozen: [
+          { name: '房租', amount: 1800, due: '每月 5 日' },
+          { name: '学费', amount: 2000, due: '2027-02-20' },
+          { name: '水电费', amount: 300, due: '每月 20 日' }
+        ],
+        saved: 3300, target: 5500,
+        accounts: [['银行卡', 5300.00], ['支付宝', 1200], ['微信', 300], ['现金', 0]],
         entries: [
           ['11-19', 'expense', '银行卡', '午饭', -35.5],
           ['11-18', 'saving', '银行卡', '旅行目标', 500],
@@ -769,11 +781,19 @@
       function renderSavings() {
         const rows = S.entries.map(e => '<div class="entry"><span class="tag">' + esc(e[1]) + '</span><span>' + esc(e[2]) + ' · ' + esc(e[3]) + '</span><span class="amt ' + (e[4] < 0 ? 'neg' : 'pos') + '">' + (e[4] > 0 ? '+' : '') + money(e[4]) + '</span><span style="color:#9aabbe">' + esc(e[0]) + '</span></div>').join('');
         const total = S.accounts.reduce((n, a) => n + Number(a[1] || 0), 0);
-        pageView.innerHTML = '<div class="page-head"><div><h2>存钱</h2><p>v35.5 Web 演示 · MOCK 数据 · 仅主人私聊</p></div><button class="back" id="backChat">← 返回聊天</button></div>' +
-          '<div class="savings-grid"><div class="savings-stat"><div class="k">总余额</div><div class="v blue">' + money(total) + '</div></div><div class="savings-stat"><div class="k">本月收入</div><div class="v">' + money(S.income) + '</div></div><div class="savings-stat"><div class="k">本月支出</div><div class="v">' + money(S.expense) + '</div></div><div class="savings-stat"><div class="k">旅行目标</div><div class="v">' + Math.round(S.target ? (S.saved / S.target * 100) : 0) + '%</div></div></div>' +
-          '<div class="savings-panel"><h3>记一笔</h3><div class="savings-form"><div><label>金额</label><input id="svAmount" type="number" step="0.01" placeholder="35.50"></div><div><label>账户</label><select id="svAccount">' + S.accounts.map(a => '<option>' + esc(a[0]) + '</option>').join('') + '</select></div><div><label>类型</label><select id="svKind"><option value="expense">支出</option><option value="income">收入</option><option value="saving">存钱</option></select></div><div class="full"><label>备注</label><input id="svNote" placeholder="午饭 / 旅行目标 / 兼职"></div><div class="actions"><button id="svSave">保存</button><label class="ai"><input type="checkbox" id="svAI" checked> AI 可见</label><span class="import-status" id="svMsg"></span></div></div></div>' +
-          '<div class="savings-panel"><h3>导入 CSV</h3><div class="import-row"><input id="csvFile" type="file" accept=".csv,text/csv"><button id="csvPreview">预览并导入</button></div><div class="import-status" id="csvMsg">CSV 表头：account,kind,amount,date,note</div></div>' +
-          '<div class="savings-panel"><h3>最近流水</h3><div class="entry-list">' + rows + '</div></div>';
+        const frozen = (S.frozen || []).reduce((n, f) => n + Number(f.amount || 0), 0);
+        const available = total - frozen;
+        const goalCards = (S.goals || []).map(g => {
+          const pct = g.target ? Math.min(100, Math.round(g.saved / g.target * 100)) : 0;
+          return '<div class="goal-card"><div class="goal-top"><b>' + esc(g.name) + '</b><span>截止 ' + esc(g.due) + '</span></div><div class="goal-amt">' + money(g.saved) + ' <small>/ ' + money(g.target) + '</small></div><div class="gbar"><i style="width:' + pct + '%"></i></div><div class="goal-foot"><span>' + pct + '%</span><span>还差 ' + money(Math.max(0, g.target - g.saved)) + '</span></div></div>';
+        }).join('');
+        const accountRows = S.accounts.map(a => '<div class="money-row"><div><div>' + esc(a[0]) + '</div><div class="where">' + (a[1] ? '资金位置' : '暂无余额') + '</div></div><span class="amt">' + money(a[1]) + '</span></div>').join('');
+        const frozenRows = (S.frozen || []).map(f => '<div class="frozen-row"><div><div>' + esc(f.name) + '</div><div class="why">预计 ' + esc(f.due) + ' · 不可动用</div></div><span class="amt">' + money(f.amount) + '</span></div>').join('');
+        pageView.innerHTML = '<div class="page-head"><div><h2>存钱</h2><p>v35.5 Web 演示 · 多目标 / 资金位置 / 冻结预留</p></div><button class="back" id="backChat">← 返回聊天</button></div>' +
+          '<div class="savings-grid"><div class="savings-stat"><div class="k">可用余额</div><div class="v blue">' + money(available) + '</div></div><div class="savings-stat stat-amber"><div class="k">冻结 / 预留</div><div class="v">' + money(frozen) + '</div></div><div class="savings-stat"><div class="k">总余额</div><div class="v">' + money(total) + '</div></div><div class="savings-stat"><div class="k">本月结余</div><div class="v">' + money(S.income - S.expense) + '</div></div></div>' +
+          '<div class="savings-panel"><h3>存钱目标</h3><div class="savings-goals">' + goalCards + '</div></div>' +
+          '<div class="savings-two"><div class="savings-panel"><h3>钱存在哪</h3>' + accountRows + '<div class="frozen-tip">总余额 ' + money(total) + ' = 各账户余额合计</div></div><div class="savings-panel"><h3>冻结 / 待缴费</h3>' + frozenRows + '<div class="frozen-tip">可用余额 = 总余额 ' + money(total) + ' - 冻结 ' + money(frozen) + ' = <b>' + money(available) + '</b></div></div></div>' +
+          '<div class="savings-two"><div class="savings-panel"><h3>记一笔</h3><div class="savings-form"><div><label>金额</label><input id="svAmount" type="number" step="0.01" placeholder="35.50"></div><div><label>账户</label><select id="svAccount">' + S.accounts.map(a => '<option>' + esc(a[0]) + '</option>').join('') + '</select></div><div><label>类型</label><select id="svKind"><option value="expense">支出</option><option value="income">收入</option><option value="saving">存钱</option></select></div><div class="full"><label>备注</label><input id="svNote" placeholder="午饭 / 旅行目标 / 兼职"></div><div class="actions"><button id="svSave">保存</button><span class="import-status" id="svMsg"></span></div></div></div><div class="savings-panel"><h3>最近流水</h3><div class="entry-list">' + rows + '</div></div></div>';
         document.getElementById('backChat').addEventListener('click', () => showChat());
         document.getElementById('svSave').addEventListener('click', () => {
           const amount = Number(document.getElementById('svAmount').value);
@@ -787,7 +807,7 @@
           const acc = S.accounts.find(a => a[0] === account); if (acc) acc[1] = Number(acc[1] || 0) + delta;
           renderSavings(); toast('已记一笔 · MOCK');
         });
-        document.getElementById('csvPreview').addEventListener('click', () => {
+        const csvBtn = document.getElementById('csvPreview'); if (csvBtn) csvBtn.addEventListener('click', () => {
           const f = document.getElementById('csvFile').files[0];
           const msg = document.getElementById('csvMsg');
           if (!f) { msg.textContent = '先选择 CSV 文件'; return; }
