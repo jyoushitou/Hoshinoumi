@@ -548,6 +548,40 @@ v35.18.5.0 同步/预设
 v35.18.6.0 验收
 ```
 
+## 3.25 消息撤回
+
+```text
+API 先行：v35.5.18.0
+UI：v35.5.19.0
+```
+
+规则：
+
+```text
+只撤回自己消息
+窗口 2 分钟
+软删除，不物理删
+多端靠 conversation_events 同步
+已撤回不返回原文/附件
+```
+
+接口：
+
+```text
+POST /api/messages/{id}/recall
+GET  /api/conversations/{target}/events?after_event=
+```
+
+UI：
+
+```text
+悬浮/右键/长按撤回
+二次确认
+乐观替换
+失败恢复
+多端 5 秒内同步
+```
+
 ## 4. 次次版本
 
 | 版本 | 交付 | 验收 |
