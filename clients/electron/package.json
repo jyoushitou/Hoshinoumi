@@ -1,0 +1,13 @@
+{
+  "name": "hoshinoumi-desktop",
+  "version": "35.6.0",
+  "private": true,
+  "description": "Hoshinoumi Electron desktop shell",
+  "main": "main.js",
+  "scripts": {
+    "start": "node start.js"
+  },
+  "devDependencies": {
+    "electron": "^38.0.0"
+  }
+}
