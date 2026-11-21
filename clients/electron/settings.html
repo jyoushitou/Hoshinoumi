@@ -13,6 +13,7 @@ footer{display:flex;justify-content:flex-end;margin-top:10px}button{border:0;bac
 <body><main><h1>桌面设置</h1><p>只影响 Electron 壳，不影响 Web 端。</p>
 <div class="field"><b>后端入口</b><small>例如 http://127.0.0.1:27005，留空使用相对地址</small><input id="apiBase" type="text" placeholder="http://127.0.0.1:27005"></div>
 <div class="field"><b>API 前缀</b><small>可选，例如 /hoshinoumi；没有就留空</small><input id="apiPrefix" type="text" placeholder=""></div>
+<div class="field"><b>更新源 URL</b><small>返回 JSON：{ "version": "...", "url": "...", "sha256": "...", "notes": "..." }</small><input id="updateUrl" type="text" placeholder="https://example.com/hoshinoumi-update.json"></div>
 <div class="field"><b>启动页</b><small>登录后默认进入的路由，例如 /chat</small><input id="startRoute" type="text" placeholder="/chat"></div>
 <div class="row"><div><b>启用迷你窗口</b><small>默认关闭。开启后可托盘打开 360×130 迷你条。</small></div><label class="switch"><input id="mini" type="checkbox"><span class="slider"></span></label></div>
 <footer><button id="save">保存并重载</button></footer></main>
@@ -21,6 +22,7 @@ function fill(s) {
   document.getElementById('apiBase').value = s.apiBase || ''
   document.getElementById('apiPrefix').value = s.apiPrefix || ''
   document.getElementById('startRoute').value = s.startRoute || '/chat'
+  document.getElementById('updateUrl').value = s.updateUrl || ''
   document.getElementById('mini').checked = !!s.miniWindow
 }
 window.desktopShell.getSettings().then(fill)
@@ -29,6 +31,7 @@ document.getElementById('save').onclick = async () => {
     apiBase: document.getElementById('apiBase').value.trim(),
     apiPrefix: document.getElementById('apiPrefix').value.trim(),
     startRoute: document.getElementById('startRoute').value.trim() || '/chat',
+    updateUrl: document.getElementById('updateUrl').value.trim(),
     miniWindow: document.getElementById('mini').checked,
   }
   await window.desktopShell.saveSettings(next)

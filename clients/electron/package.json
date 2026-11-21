@@ -5,9 +5,34 @@
   "description": "Hoshinoumi Electron desktop shell",
   "main": "main.js",
   "scripts": {
-    "start": "node start.js"
+    "start": "node start.js",
+    "dist": "electron-builder"
   },
   "devDependencies": {
     "electron": "38.8.6"
+  },
+  "build": {
+    "appId": "com.hoshinoumi.desktop",
+    "productName": "Hoshinoumi",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "settings.html",
+      "mini.html",
+      "fallback.html",
+      "assets/**"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/hoshinoumi.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true
+    }
   }
 }

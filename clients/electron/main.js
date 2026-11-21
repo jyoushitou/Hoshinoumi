@@ -1,4 +1,4 @@
-const { app, BrowserWindow, shell, ipcMain, Tray, Menu, nativeImage } = require('electron')
+const { app, BrowserWindow, shell, ipcMain, Tray, Menu, nativeImage, dialog } = require('electron')
 const fs = require('fs')
 const path = require('path')
 
@@ -13,8 +13,8 @@ let tray = null
 let mini = null
 let settingsWin = null
 const SETTINGS_FILE = path.join(app.getPath('userData'), 'shell-settings.json')
-let shellSettings = { miniWindow: false, apiBase: 'http://127.0.0.1:27005', apiPrefix: '', startRoute: '/chat' }
-function loadSettings() { try { shellSettings = { miniWindow: false, apiBase: 'http://127.0.0.1:27005', apiPrefix: '', startRoute: '/chat', ...JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8')) } } catch {} }
+let shellSettings = { miniWindow: false, apiBase: 'http://127.0.0.1:27005', apiPrefix: '', startRoute: '/chat', updateUrl: '' }
+function loadSettings() { try { shellSettings = { miniWindow: false, apiBase: 'http://127.0.0.1:27005', apiPrefix: '', startRoute: '/chat', updateUrl: '', ...JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8')) } } catch {} }
 function saveSettings() { try { fs.mkdirSync(path.dirname(SETTINGS_FILE), { recursive: true }); fs.writeFileSync(SETTINGS_FILE, JSON.stringify(shellSettings, null, 2)) } catch {} }
 function logTray(msg) { try { fs.appendFileSync(path.join(__dirname, '.electron-data', 'shell.log'), msg + '\n') } catch {} }
 
@@ -91,6 +91,7 @@ function refreshTrayMenu() {
     { label: '打开主窗口', click: () => { if (win) { win.show(); win.focus() } } },
     { label: '迷你窗口', enabled: !!shellSettings.miniWindow, click: toggleMini },
     { label: '设置', click: openSettings },
+    { label: '检查更新', click: checkUpdate },
     { type: 'separator' },
     { label: '退出', click: () => app.quit() },
   ]))
@@ -108,6 +109,29 @@ function openSettings() {
   settingsWin.loadFile(path.join(__dirname, 'settings.html'))
   settingsWin.on('closed', () => { settingsWin = null })
 }
+async function checkUpdate() {
+  const url = String(shellSettings.updateUrl || '').trim()
+  if (!url) {
+    await dialog.showMessageBox({ type: 'info', title: '检查更新', message: '未配置更新源', detail: '在设置中填写 updateUrl 后再检查更新。' })
+    return
+  }
+  try {
+    const res = await fetch(url, { headers: { accept: 'application/json' } })
+    if (!res.ok) throw new Error('HTTP ' + res.status)
+    const manifest = await res.json()
+    const current = app.getVersion()
+    if (!manifest.version) throw new Error('manifest.version 缺失')
+    const available = manifest.version !== current
+    await dialog.showMessageBox({
+      type: 'info', title: '检查更新',
+      message: available ? '发现新版本 ' + manifest.version : '已是最新版本',
+      detail: available ? ('当前 ' + current + ' → ' + manifest.version + '\n' + (manifest.notes || '')) : ('当前 ' + current),
+    })
+  } catch (e) {
+    await dialog.showMessageBox({ type: 'error', title: '检查更新失败', message: String(e) })
+  }
+}
+
 function createTray() {
   try {
     logTray('tray:create start')
