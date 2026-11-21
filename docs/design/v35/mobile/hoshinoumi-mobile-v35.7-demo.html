@@ -111,6 +111,7 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 20% 0%,
 <script>
 const app = document.getElementById('view')
 let toastTimer = 0
+const readConversations = new Set()
 function toast(text){ const el=document.getElementById('toast'); el.textContent=text; el.classList.add('on'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('on'),1600) }
 
 const screens = {}
@@ -139,8 +140,8 @@ screens.chats = `
   </div>
   <div class="list">
     <div class="sec-title"><span>最近</span><span>已同步</span></div>
-    <div class="conv on" onclick="go('chat')"><div class="avatar bot">奈</div><div class="copy"><b>奈绪</b><span>你回来啦。今天外面有点冷，先喝点热的吧。</span></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="when">刚刚</span><span class="badge blue">2</span></div></div>
-    <div class="conv" onclick="go('group')"><div class="avatar">学</div><div class="copy"><b>星之海学生会</b><span>友利：下午的会议改到三点。</span></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="when">12:40</span><span class="badge">5</span></div></div>
+    <div class="conv on" data-conv="nao" onclick="openConversation(this,'chat','nao')"><div class="avatar bot">奈</div><div class="copy"><b>奈绪</b><span>你回来啦。今天外面有点冷，先喝点热的吧。</span></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="when">刚刚</span><span class="badge blue unread-badge">2</span></div></div>
+    <div class="conv" data-conv="student" onclick="openConversation(this,'group','student')"><div class="avatar">学</div><div class="copy"><b>星之海学生会</b><span>友利：下午的会议改到三点。</span></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="when">12:40</span><span class="badge unread-badge">5</span></div></div>
     <div class="conv" onclick="toast('提醒会话演示')"><div class="avatar">猫</div><div class="copy"><b>猫咪投喂提醒</b><span>今天还没喂猫。</span></div><span class="when" style="align-self:center">昨天</span></div>
     <div class="conv" onclick="toast('记忆本演示')"><div class="avatar">记</div><div class="copy"><b>记忆本 · 新增 1 条</b><span>“她记得你不喜欢香菜。”</span></div><span class="when" style="align-self:center">昨天</span></div>
   </div>
@@ -341,7 +342,7 @@ ${nav('chats')}`
 
 function nav(active){ return `<nav class="bottom-nav"><div class="tab ${active==='chats'?'on':''}" onclick="go('chats')"><span class="ic">◉</span>聊天</div><div class="tab ${active==='memory'?'on':''}" onclick="go('memory')"><span class="ic">◇</span>记忆</div><div class="tab ${active==='relation'?'on':''}" onclick="go('relation')"><span class="ic">♡</span>关系</div><div class="tab ${active==='settings'?'on':''}" onclick="go('settings')"><span class="ic">⚙</span>设置</div></nav>` }
 
-function go(name){ document.querySelector('.demo-overlay')?.remove(); app.innerHTML = screens[name]; if(name==='chat'){ const input=document.getElementById('input'); if(input) input.style.cssText='flex:1;height:35px;border-radius:10px;background:#f5f8fe;border:1px solid #e6eefb;padding:6px 10px;color:#4a6079;font-size:10px;overflow:auto'; setTimeout(()=>document.getElementById('msgs')?.scrollTo(0,9999),30) } }
+function go(name){ document.querySelector('.demo-overlay')?.remove(); app.innerHTML = screens[name]; if(name==='chats'){ document.querySelectorAll('.conv[data-conv]').forEach(c=>{ if(readConversations.has(c.dataset.conv)) c.querySelectorAll('.badge').forEach(b=>b.remove()) }) } if(name==='chat'){ const input=document.getElementById('input'); if(input) input.style.cssText='flex:1;height:35px;border-radius:10px;background:#f5f8fe;border:1px solid #e6eefb;padding:6px 10px;color:#4a6079;font-size:10px;overflow:auto'; setTimeout(()=>document.getElementById('msgs')?.scrollTo(0,9999),30) } }
 
 function toggleSwitch(el){ el.classList.toggle('on'); toast(el.classList.contains('on')?'已开启演示':'已关闭演示') }
 
@@ -363,6 +364,7 @@ function overlay(html){
   document.querySelector('.screen').appendChild(el)
 }
 function closeOverlay(){ document.querySelector('.demo-overlay')?.remove() }
+function openConversation(el, target, name){ el.querySelectorAll('.badge').forEach(b=>b.remove()); readConversations.add(name); go(target) }
 function openSearch(){
   overlay(`<div class="search-panel"><div class="row"><input id="q" placeholder="搜索会话 / 记忆 / 命令" autocomplete="off"><button class="cancel" onclick="closeOverlay()">取消</button></div><div id="results"><div class="search-result" onclick="go('chat')">奈绪<small>会话 · 最近消息</small></div><div class="search-result" onclick="go('memory')">不喜欢香菜<small>记忆 · 偏好</small></div><div class="search-result" onclick="go('commands')">!memory<small>命令 · 搜索记忆</small></div></div></div>`)
   const q=document.getElementById('q'); q.focus(); q.oninput=()=>{ const v=q.value.trim(); toast(v?('搜索：'+v+'（演示）'):'输入关键词搜索') }
