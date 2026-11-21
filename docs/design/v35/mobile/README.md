@@ -5,7 +5,7 @@
 ```text
 hoshinoumi-mobile-v35.7.html        六屏手机画板
 hoshinoumi-mobile-v35.7-demo.html   可交互 HTML 演示
-hoshinoumi-mobile-v35.7-demo.png    交互演示截图
+hoshinoumi-mobile-v35.7-demo.png    交互演示截图（全部入口）
 mobile.css                          设计稿样式
 hoshinoumi-mobile-v35.7.png         六屏渲染图
 ```
@@ -45,6 +45,27 @@ hoshinoumi-mobile-v35.7.png         六屏渲染图
 < 430px   手机单栏
 430–767px 大屏手机 / 小折叠
 ≥ 768px   平板两栏，进入 v35.14 平板设计
+```
+
+## 全部功能演示
+
+侧栏 / 演示画板包含 15 个入口：
+
+```text
+登录 / 会话列表 / 聊天 / 群聊
+主页模块 / 记忆 / 关系 / 存钱 / 周计划
+信息 / 人设 / 命令 / 定时任务 / 运行日志 / 设置
+```
+
+交互：
+
+```text
+会话搜索 / 群聊切换 / 聊天发送 / 图片消息 / 语音消息 / 撤回
+主页模块跳转 / 记忆卡片 / 关系事件
+存钱记一笔表单 / 账户分类切换
+周计划节次切换 / 信息页跳转
+人设切换 / 命令详情与执行
+定时任务开关 / 日志筛选 / 设置开关
 ```
 
 ## 交互演示

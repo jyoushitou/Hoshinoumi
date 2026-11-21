@@ -31,6 +31,40 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 20% 0%,
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 .hide{display:none!important}
 @media(max-width:860px){.demo-page{grid-template-columns:1fr;justify-items:center}.demo-side{text-align:center}.demo-side p,.demo-note{margin-left:auto;margin-right:auto}.demo-screen-list{justify-content:center}.demo-stage{max-width:390px}}
+
+/* all-feature demo additions */
+.d-scroll{flex:1;min-height:0;overflow:auto;padding:0 16px 18px;scrollbar-width:none}.d-scroll::-webkit-scrollbar{display:none}
+.d-head{flex:none;padding:5px 18px 11px;display:flex;align-items:flex-end;justify-content:space-between;gap:8px}
+.d-head h2{margin:0;font-size:22px;line-height:1.2;letter-spacing:-.03em}.d-head h2 small{display:block;font-size:8px;letter-spacing:.16em;color:#97a8bc;font-weight:650;margin-top:3px}
+.d-head .act{width:32px;height:32px;border-radius:10px;background:#fff;border:1px solid var(--line);display:grid;place-items:center;color:#5e748f;cursor:pointer}
+.home-hello{margin:0 2px 13px;padding:16px;border-radius:17px;background:linear-gradient(135deg,#2563eb,#3b82f6 60%,#38bdf8);color:#fff;box-shadow:0 13px 26px rgba(37,99,235,.2);position:relative;overflow:hidden}
+.home-hello:after{content:"";position:absolute;width:120px;height:120px;border-radius:50%;right:-30px;top:-50px;background:rgba(255,255,255,.16)}
+.home-hello small{font-size:8px;letter-spacing:.14em;opacity:.8;font-weight:700}.home-hello h3{margin:5px 0 3px;font-size:16px}.home-hello p{margin:0;font-size:9px;opacity:.82;line-height:1.6}
+.module-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.module{background:#fff;border:1px solid var(--line);border-radius:13px;padding:11px;display:flex;align-items:center;gap:9px;cursor:pointer;box-shadow:0 2px 8px rgba(37,99,235,.03)}
+.module .ic{width:28px;height:28px;border-radius:9px;background:#eef4ff;color:#2563eb;display:grid;place-items:center;font-size:13px;flex:none}
+.module b{display:block;font-size:10px;color:#314a65;line-height:1.3}.module small{display:block;font-size:7.5px;color:#9aabc0;margin-top:1px}
+.d-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:8px;box-shadow:0 2px 8px rgba(37,99,235,.025)}
+.savings-hero{border-radius:17px;padding:15px;background:linear-gradient(135deg,#0f172a,#1e3a8a);color:#fff;margin-bottom:11px;position:relative;overflow:hidden}
+.savings-hero:after{content:"";position:absolute;width:120px;height:120px;border-radius:50%;right:-35px;top:-55px;background:rgba(56,189,248,.18)}
+.savings-hero small{font-size:8px;letter-spacing:.12em;color:#bfdbfe}.savings-hero .amount{font-size:23px;font-weight:850;margin:5px 0 2px;letter-spacing:.06em}.savings-hero .mask{font-size:9px;color:#93c5fd}
+.savings-stats{display:flex;gap:14px;margin-top:10px;position:relative;z-index:1}.savings-stats b{display:block;font-size:12px}.savings-stats span{font-size:7px;color:#a9c6ec}
+.seg{display:flex;gap:5px;margin:9px 0 11px}.seg button{flex:1;height:28px;border:1px solid var(--line);background:#fff;border-radius:8px;color:#7d90a8;font:9px inherit;cursor:pointer}.seg button.on{background:#eef4ff;border-color:#bcd4ff;color:#2563eb;font-weight:700}
+.money-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f0f5fd}.money-row:last-child{border-bottom:0}.money-row .ic{width:28px;height:28px;border-radius:9px;background:#eef4ff;display:grid;place-items:center;color:#2563eb;font-size:11px}.money-row .t{flex:1}.money-row b{font-size:9.5px;display:block;color:#334b65}.money-row small{font-size:7.5px;color:#9aabd0}.money-row em{font-style:normal;font-size:9px;color:#2563eb;font-weight:700}.add-btn{border:0;background:#2563eb;color:#fff;border-radius:9px;padding:7px 12px;font:10px inherit;cursor:pointer;box-shadow:0 7px 14px rgba(37,99,235,.18)}
+.week-scroll{display:flex;gap:7px;overflow:auto;padding-bottom:4px;margin-bottom:10px}.week-day{flex:none;width:56px;background:#fff;border:1px solid var(--line);border-radius:11px;padding:7px 5px;text-align:center;cursor:pointer}.week-day.on{background:#2563eb;border-color:#2563eb;color:#fff}.week-day b{display:block;font-size:9px}.week-day small{font-size:7px;opacity:.7}
+.period{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:11px;padding:8px 10px;margin-bottom:6px;cursor:pointer}.period.on{border-color:#bcd4ff;background:#f6f9ff}.period .idx{font:8px ui-monospace,monospace;color:#9aabc0;width:22px}.period .name{flex:1;font-size:9px;color:#405873}.period .time{font-size:8px;color:#9aabc0}.period .dot{width:7px;height:7px;border-radius:50%;background:#cbd5e1}.period.on .dot{background:#2563eb}
+.info-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}.info-stat{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px}.info-stat small{font-size:7.5px;color:#9aabc0}.info-stat b{display:block;font-size:12px;color:#2d4864;margin-top:3px}
+.info-row{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:11px;padding:9px 10px;margin-bottom:7px;cursor:pointer}.info-row .ic{width:25px;height:25px;border-radius:8px;background:#eef4ff;display:grid;place-items:center;color:#2563eb}.info-row .t{flex:1;font-size:9.5px;color:#3c5570}.info-row em{font-style:normal;font-size:7.5px;color:#1f9d6b}
+.persona-card{display:flex;gap:10px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:13px;padding:11px;margin-bottom:8px;cursor:pointer}.persona-card.on{border-color:#93c5fd;background:#f6f9ff;box-shadow:0 5px 14px rgba(37,99,235,.06)}.persona-avatar{width:38px;height:38px;border-radius:12px;background:linear-gradient(145deg,#dbeafe,#eef4ff);display:grid;place-items:center;color:#1d4ed8;font-weight:850;font-size:13px;flex:none}.persona-card .t{flex:1}.persona-card b{display:block;font-size:10px;color:#314a65}.persona-card small{font-size:7.5px;color:#9aabc0;display:block;margin-top:2px}.persona-card em{font-style:normal;font-size:7px;color:#1f9d6b;border:1px solid #cdeee0;background:#eefbf5;border-radius:4px;padding:2px 5px}
+.cmd-search{height:33px;border:1px solid var(--line);background:#fff;border-radius:9px;display:flex;align-items:center;gap:7px;padding:0 10px;font-size:9px;color:#a3b2c5;margin-bottom:8px}.cmd-chips{display:flex;gap:6px;overflow:auto;padding-bottom:6px;margin-bottom:8px}.cmd-chips button{flex:none;border:1px solid var(--line);background:#fff;border-radius:7px;padding:5px 9px;font:8.5px inherit;color:#71859d;cursor:pointer}.cmd-chips button.on{background:#eef4ff;color:#2563eb;border-color:#bcd4ff}.cmd-row{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-bottom:6px;cursor:pointer}.cmd-row code{font:8px ui-monospace,monospace;color:#2563eb;background:#eef4ff;border-radius:5px;padding:3px 5px;min-width:66px}.cmd-row .t{flex:1;font-size:9px;color:#405873}.cmd-row .chev{color:#adbacb;font-size:12px}
+.cron-row{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:11px;padding:9px 10px;margin-bottom:7px}.cron-row .t{flex:1}.cron-row b{font-size:9.5px;display:block;color:#334b65}.cron-row small{font-size:7.5px;color:#9aabc0;display:block;margin-top:2px}.cron-row .switch{width:32px;height:18px;border-radius:10px;background:#cbd5e1;position:relative;cursor:pointer}.cron-row .switch.on{background:#2563eb}.cron-row .switch:after{content:"";position:absolute;width:14px;height:14px;border-radius:50%;background:#fff;top:2px;left:2px}.cron-row .switch.on:after{left:16px}
+.log-row{display:flex;gap:8px;background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 9px;margin-bottom:5px;font:7.5px ui-monospace,monospace;color:#5a7089}.log-row .lv{flex:none;border-radius:4px;padding:1px 4px;height:15px;line-height:13px;font-size:7px;font-weight:700}.log-row .lv.ok{background:#eefbf5;color:#1f9d6b}.log-row .lv.warn{background:#fff8e8;color:#b7791f}.log-row .lv.err{background:#fff0f0;color:#d33}.log-row .txt{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.demo-overlay{position:absolute;inset:0;z-index:30;display:none}.demo-overlay.on{display:block}.overlay-mask{position:absolute;inset:0;background:rgba(9,22,40,.32);backdrop-filter:blur(2px)}.sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:18px 18px 0 0;padding:13px 14px calc(13px + env(safe-area-inset-bottom));box-shadow:0 -12px 30px rgba(17,38,70,.15)}.sheet h4{font-size:10px;margin:0 0 9px;color:#39536f}.sheet-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.sheet-grid button{border:1px solid var(--line);background:#f8fbff;border-radius:10px;padding:9px 4px;font:8px inherit;color:#56708d;cursor:pointer}.sheet-grid button b{display:block;font-size:15px;margin-bottom:3px}.sheet-close{width:100%;margin-top:9px;border:0;background:#eef4ff;color:#2563eb;border-radius:9px;padding:9px;font:10px inherit;cursor:pointer}
+.search-panel{position:absolute;inset:0;background:#f7faff;z-index:2;padding:14px;display:flex;flex-direction:column}.search-panel .row{display:flex;gap:7px;align-items:center}.search-panel input{flex:1;height:34px;border:1px solid #dce8fb;background:#fff;border-radius:9px;padding:0 10px;font:10px inherit;outline:0}.search-panel .cancel{border:0;background:none;color:#2563eb;font:10px inherit;cursor:pointer}.search-result{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-top:7px;font-size:9px;color:#405873;cursor:pointer}.search-result small{display:block;color:#9aabc0;font-size:7.5px;margin-top:2px}
+.modal-form{display:flex;flex-direction:column;gap:7px}.modal-form input,.modal-form select{height:32px;border:1px solid #dce8fb;border-radius:8px;padding:0 9px;font:9.5px inherit;outline:0}.modal-form button{border:0;background:#2563eb;color:#fff;border-radius:8px;padding:8px;font:10px inherit;cursor:pointer}
+.composer .input:empty:before{content:attr(data-ph);color:#aab7c8;font-size:10px}.bubble-image{width:150px;height:82px;border-radius:10px;background:linear-gradient(145deg,#dbeafe,#bfdbfe);display:grid;place-items:center;color:#2563eb;font-size:20px;margin-bottom:4px}
+.bubble-voice{display:flex;align-items:center;gap:5px;font-size:8px}.wave{display:flex;align-items:center;gap:2px;height:13px}.wave i{width:2px;background:#2563eb;border-radius:1px;display:block}.wave i:nth-child(1){height:5px}.wave i:nth-child(2){height:9px}.wave i:nth-child(3){height:13px}.wave i:nth-child(4){height:7px}.wave i:nth-child(5){height:4px}
+.system-note{align-self:center;font-size:7.5px;color:#9aabc0;background:#eef4ff;border-radius:6px;padding:3px 7px;margin:5px 0}
 </style>
 </head>
 <body>
@@ -53,9 +87,18 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 20% 0%,
       <button onclick="go('login')"><span>01</span>登录</button>
       <button onclick="go('chats')"><span>02</span>会话列表</button>
       <button onclick="go('chat')"><span>03</span>聊天</button>
-      <button onclick="go('memory')"><span>04</span>记忆</button>
-      <button onclick="go('relation')"><span>05</span>关系</button>
-      <button onclick="go('settings')"><span>06</span>设置</button>
+      <button onclick="go('group')"><span>04</span>群聊</button>
+      <button onclick="go('home')"><span>05</span>主页模块</button>
+      <button onclick="go('memory')"><span>06</span>记忆</button>
+      <button onclick="go('relation')"><span>07</span>关系</button>
+      <button onclick="go('savings')"><span>08</span>存钱</button>
+      <button onclick="go('weekly')"><span>09</span>周计划</button>
+      <button onclick="go('info')"><span>10</span>信息</button>
+      <button onclick="go('persona')"><span>11</span>人设</button>
+      <button onclick="go('commands')"><span>12</span>命令</button>
+      <button onclick="go('cron')"><span>13</span>定时任务</button>
+      <button onclick="go('logs')"><span>14</span>运行日志</button>
+      <button onclick="go('settings')"><span>15</span>设置</button>
     </div>
     <button class="reset" onclick="go('login')">重置演示</button>
     <div class="demo-note"><b>演示内容：</b>登录 → 会话 → 聊天；聊天可发送一条演示消息并收到演示回复；底部导航切换记忆 / 关系 / 设置；设置开关可点击。</div>
@@ -88,13 +131,13 @@ screens.chats = `
 <div class="screen-body" style="flex:1;min-height:0;display:flex;flex-direction:column">
   <div class="mobile-head">
     <div class="row1"><div class="avatar bot">奈</div><div class="brand">HOSHINOUMI<small>REC · ONLINE</small></div><div class="spacer"></div><div class="icon-btn" onclick="toast('搜索演示')">⌕</div><div class="icon-btn" onclick="toast('新建会话演示')">＋</div></div>
-    <div class="search" onclick="toast('搜索会话 / 记忆 / 命令')">⌕ 搜索会话 / 记忆 / 命令<span class="k">⌘K</span></div>
+    <div class="search" onclick="openSearch()">⌕ 搜索会话 / 记忆 / 命令<span class="k">⌘K</span></div>
     <div class="chips"><div class="chip on">全部</div><div class="chip">私聊</div><div class="chip">群聊</div></div>
   </div>
   <div class="list">
     <div class="sec-title"><span>最近</span><span>已同步</span></div>
     <div class="conv on" onclick="go('chat')"><div class="avatar bot">奈</div><div class="copy"><b>奈绪</b><span>你回来啦。今天外面有点冷，先喝点热的吧。</span></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="when">刚刚</span><span class="badge blue">2</span></div></div>
-    <div class="conv" onclick="toast('群会话演示')"><div class="avatar">学</div><div class="copy"><b>星之海学生会</b><span>友利：下午的会议改到三点。</span></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="when">12:40</span><span class="badge">5</span></div></div>
+    <div class="conv" onclick="go('group')"><div class="avatar">学</div><div class="copy"><b>星之海学生会</b><span>友利：下午的会议改到三点。</span></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="when">12:40</span><span class="badge">5</span></div></div>
     <div class="conv" onclick="toast('提醒会话演示')"><div class="avatar">猫</div><div class="copy"><b>猫咪投喂提醒</b><span>今天还没喂猫。</span></div><span class="when" style="align-self:center">昨天</span></div>
     <div class="conv" onclick="toast('记忆本演示')"><div class="avatar">记</div><div class="copy"><b>记忆本 · 新增 1 条</b><span>“她记得你不喜欢香菜。”</span></div><span class="when" style="align-self:center">昨天</span></div>
   </div>
@@ -104,7 +147,7 @@ ${nav('chats')}`
 screens.chat = `
 <div class="screen-body" style="flex:1;min-height:0;display:flex;flex-direction:column">
   <header class="chat-head">
-    <div class="row"><span class="back" onclick="go('chats')">‹</span><div class="avatar bot sm">奈</div><div class="who"><b>奈绪</b><span>在线 · 正在输入…</span></div><div class="acts"><span onclick="toast('搜索演示')">⌕</span><span onclick="toast('菜单演示')">☰</span></div></div>
+    <div class="row"><span class="back" onclick="go('chats')">‹</span><div class="avatar bot sm">奈</div><div class="who"><b>奈绪</b><span>在线 · 正在输入…</span></div><div class="acts"><span onclick="openSearch()">⌕</span><span onclick="openChatMenu()">☰</span></div></div>
     <div class="subline"><em>关系 · 熟悉</em><span>记忆已开启</span><span style="margin-left:auto">今日第 3 次</span></div>
   </header>
   <div class="msgs" id="msgs">
@@ -115,7 +158,7 @@ screens.chat = `
     <div class="msg"><div class="avatar bot sm">奈</div><div><div class="bubble">学生会室吧。窗外那棵树下，猫应该又会来。</div><div class="memchip">✦ 来自记忆 · 喜欢安静的下午</div><div class="stamp">09:42</div></div></div>
   </div>
   <div class="composer">
-    <div class="bar"><div class="plus" onclick="toast('图片 / 语音 / 表情演示')">＋</div><div class="input" id="input" contenteditable="true" data-ph="和奈绪说点什么…"></div><div class="mic" onclick="toast('长按说话演示')">◉</div><button class="send" onclick="sendMsg()">↑</button></div>
+    <div class="bar"><div class="plus" onclick="openComposerSheet()">＋</div><div class="input" id="input" contenteditable="true" data-ph="和奈绪说点什么…"></div><div class="mic" onclick="toast('长按说话演示')">◉</div><button class="send" onclick="sendMsg()">↑</button></div>
     <div class="hint"><span>长按说话 · 支持图片 / 语音</span><span>记忆已开启</span></div>
   </div>
   <div class="safe"></div>
@@ -159,9 +202,143 @@ screens.settings = `
 </div>
 ${nav('settings')}`
 
+
+screens.group = `
+<div class="screen-body" style="flex:1;min-height:0;display:flex;flex-direction:column">
+  <header class="chat-head">
+    <div class="row"><span class="back" onclick="go('chats')">‹</span><div class="avatar sm" style="background:#e0e7ff;color:#4338ca">学</div><div class="who"><b>星之海学生会</b><span>群聊 · 3 人 · 已同步</span></div><div class="acts"><span onclick="openSearch()">⌕</span><span onclick="openChatMenu()">☰</span></div></div>
+    <div class="subline"><em>群聊</em><span>友利 / 奈绪 / 你</span><span style="margin-left:auto">未读 5</span></div>
+  </header>
+  <div class="msgs" id="msgs">
+    <div class="day">今天 12:38</div>
+    <div class="msg"><div class="avatar sm" style="background:#e0e7ff;color:#4338ca">友</div><div><div class="bubble">下午的会议改到三点，别迟到。</div><div class="stamp">12:38</div></div></div>
+    <div class="msg"><div class="avatar bot sm">奈</div><div><div class="bubble">收到。我把资料整理好带过去。</div><div class="stamp">12:40</div></div></div>
+    <div class="msg me"><div><div class="bubble">我也去。需要我带投影仪吗？</div><div class="stamp">12:41 · 已读</div></div><div class="avatar sm">你</div></div>
+    <div class="msg"><div class="avatar sm" style="background:#e0e7ff;color:#4338ca">友</div><div><div class="bubble">不用，学生会室有。你人来就行。</div><div class="stamp">12:42</div></div></div>
+  </div>
+  <div class="composer"><div class="bar"><div class="plus" onclick="openComposerSheet()">＋</div><div class="input" id="input" contenteditable="true" data-ph="和学生会群说点什么…" style="padding:6px 10px;color:#4a6079;font-size:10px"></div><div class="mic" onclick="toast('群聊语音演示')">◉</div><button class="send" onclick="sendMsg()">↑</button></div><div class="hint"><span>群聊 · 所有人可见</span><span>已同步</span></div></div>
+  <div class="safe"></div>
+</div>`
+
+screens.home = `
+<div class="screen-body" style="flex:1;min-height:0;display:flex;flex-direction:column">
+  <div class="d-head"><h2>主页<small>HOME</small></h2><div class="act" onclick="go('settings')">⚙</div></div>
+  <div class="d-scroll">
+    <div class="home-hello"><small>下午好 · 学生会长</small><h3>今天也慢慢来。</h3><p>10 个功能模块入口，真实数据在 Vue 页面加载。</p></div>
+    <div class="module-grid">
+      <div class="module" onclick="go('chat')"><div class="ic">◉</div><div><b>聊天</b><small>会话 / 消息</small></div></div>
+      <div class="module" onclick="go('memory')"><div class="ic">◇</div><div><b>记忆</b><small>记忆本 / 事件</small></div></div>
+      <div class="module" onclick="go('relation')"><div class="ic">♡</div><div><b>关系</b><small>档位 / 变化</small></div></div>
+      <div class="module" onclick="go('savings')"><div class="ic">¥</div><div><b>存钱</b><small>账户 / 目标</small></div></div>
+      <div class="module" onclick="go('weekly')"><div class="ic">▦</div><div><b>周计划</b><small>节次 / 时间</small></div></div>
+      <div class="module" onclick="go('info')"><div class="ic">i</div><div><b>信息</b><small>运行 / 数据库</small></div></div>
+      <div class="module" onclick="go('persona')"><div class="ic">◈</div><div><b>人设</b><small>导入 / 激活</small></div></div>
+      <div class="module" onclick="go('commands')"><div class="ic">⌘</div><div><b>命令</b><small>51 个命令</small></div></div>
+      <div class="module" onclick="go('cron')"><div class="ic">◷</div><div><b>定时任务</b><small>启停 / 执行</small></div></div>
+      <div class="module" onclick="go('logs')"><div class="ic">≡</div><div><b>运行日志</b><small>筛选 / 搜索</small></div></div>
+    </div>
+  </div>
+</div>
+${nav('chats')}`
+
+screens.savings = `
+<div class="screen-body" style="flex:1;min-height:0;display:flex;flex-direction:column">
+  <div class="d-head"><h2>存钱<small>SAVINGS</small></h2><button class="act" onclick="openSavingsForm()">＋</button></div>
+  <div class="d-scroll">
+    <div class="savings-hero"><small>总余额 · 仅主人可见</small><div class="amount">••••••</div><div class="mask">已隐藏金额，避免旁人看到</div><div class="savings-stats"><div><b>4</b><span>账户</span></div><div><b>2</b><span>目标</span></div><div><b>1</b><span>定期</span></div></div></div>
+    <div class="seg"><button class="on" onclick="selectSeg(this)">账户</button><button onclick="selectSeg(this)">目标</button><button onclick="selectSeg(this)">定期</button><button onclick="selectSeg(this)">基金</button></div>
+    <div class="d-card"><div class="money-row"><div class="ic">银</div><div class="t"><b>银行卡</b><small>日常账户</small></div><em>••••</em></div><div class="money-row"><div class="ic">现</div><div class="t"><b>现金</b><small>钱包</small></div><em>••••</em></div><div class="money-row"><div class="ic">目</div><div class="t"><b>旅行目标</b><small>进度 60%</small></div><em>进行中</em></div><div class="money-row"><div class="ic">冻</div><div class="t"><b>冻结记录</b><small>不计入余额</small></div><em>查看</em></div></div>
+    <button class="add-btn" onclick="openSavingsForm()">记一笔</button>
+  </div>
+</div>
+${nav('chats')}`
+
+screens.weekly = `
+<div class="screen-body" style="flex:1;min-height:0;display:flex;flex-direction:column">
+  <div class="d-head"><h2>周计划<small>WEEKLY PLAN</small></h2><div class="act" onclick="toast('新增节次演示')">＋</div></div>
+  <div class="d-scroll">
+    <div class="week-scroll"><div class="week-day"><b>一</b><small>16</small></div><div class="week-day on"><b>二</b><small>17</small></div><div class="week-day"><b>三</b><small>18</small></div><div class="week-day"><b>四</b><small>19</small></div><div class="week-day"><b>五</b><small>20</small></div><div class="week-day"><b>六</b><small>21</small></div><div class="week-day"><b>日</b><small>22</small></div></div>
+    <div class="period on" onclick="togglePeriod(this)"><span class="idx">01</span><div class="name">学生会例会</div><span class="time">08:30–09:15</span><span class="dot"></span></div>
+    <div class="period on" onclick="togglePeriod(this)"><span class="idx">02</span><div class="name">英语</div><span class="time">10:00–11:35</span><span class="dot"></span></div>
+    <div class="period" onclick="togglePeriod(this)"><span class="idx">03</span><div class="name">午休</div><span class="time">12:00–13:00</span><span class="dot"></span></div>
+    <div class="period" onclick="togglePeriod(this)"><span class="idx">04</span><div class="name">自习</div><span class="time">15:00–17:00</span><span class="dot"></span></div>
+    <div class="d-card" style="margin-top:9px;font-size:8.5px;color:#8598ad">点击节次切换完成状态。真实数据通过 /api/weekly-plan?week= 拉取。</div>
+  </div>
+</div>
+${nav('chats')}`
+
+screens.info = `
+<div class="screen-body" style="flex:1;min-height:0;display:flex;flex-direction:column">
+  <div class="d-head"><h2>信息<small>INFO</small></h2><div class="act" onclick="toast('刷新演示')">↻</div></div>
+  <div class="d-scroll">
+    <div class="info-stats"><div class="info-stat"><small>版本</small><b>v35.7</b></div><div class="info-stat"><small>连接</small><b style="color:#1f9d6b">已连接</b></div><div class="info-stat"><small>数据库</small><b>SQLite</b></div><div class="info-stat"><small>最近延迟</small><b>—</b></div></div>
+    <div class="info-row" onclick="toast('运行状态演示')"><span class="ic">◉</span><div class="t">运行状态</div><em>正常</em></div>
+    <div class="info-row" onclick="go('cron')"><span class="ic">◷</span><div class="t">定时任务</div><em>3 个</em></div>
+    <div class="info-row" onclick="go('logs')"><span class="ic">≡</span><div class="t">运行日志</div><em>查看</em></div>
+    <div class="info-row" onclick="toast('数据库详情演示')"><span class="ic">▤</span><div class="t">数据库 / schema</div><em>schema 35</em></div>
+    <div class="info-row" onclick="toast('阅读状态演示')"><span class="ic">◫</span><div class="t">阅读 / 小说</div><em>查看</em></div>
+  </div>
+</div>
+${nav('chats')}`
+
+screens.persona = `
+<div class="screen-body" style="flex:1;min-height:0;display:flex;flex-direction:column">
+  <div class="d-head"><h2>人设<small>PERSONA</small></h2><div class="act" onclick="toast('导入人设卡演示')">⇧</div></div>
+  <div class="d-scroll">
+    <div class="persona-card on" onclick="activatePersona(this,'奈绪')"><div class="persona-avatar">奈</div><div class="t"><b>奈绪 · 默认</b><small>星之海学生会 · 友利奈绪</small></div><em>使用中</em></div>
+    <div class="persona-card" onclick="activatePersona(this,'暑假')"><div class="persona-avatar" style="background:#fef3c7;color:#b45309">夏</div><div class="t"><b>暑假奈绪</b><small>更放松 / 日常</small></div><em>切换</em></div>
+    <div class="persona-card" onclick="activatePersona(this,'学生会')"><div class="persona-avatar" style="background:#e0e7ff;color:#4338ca">会</div><div class="t"><b>学生会长</b><small>正式 / 工作模式</small></div><em>切换</em></div>
+    <div style="display:flex;gap:7px;margin-top:10px"><button class="add-btn" style="flex:1" onclick="toast('导出人设卡演示')">导出</button><button class="add-btn" style="flex:1;background:#fff;color:#2563eb;border:1px solid #dbe8ff" onclick="toast('导入人设卡演示')">导入</button></div>
+    <div class="d-card" style="margin-top:9px;font-size:8.5px;color:#8598ad">人设卡切换会更新当前角色；记忆/关系仍复用后端。</div>
+  </div>
+</div>
+${nav('chats')}`
+
+screens.commands = `
+<div class="screen-body" style="flex:1;min-height:0;display:flex;flex-direction:column">
+  <div class="d-head"><h2>命令<small>COMMANDS</small></h2><div class="act" onclick="toast('命令帮助演示')">?</div></div>
+  <div class="d-scroll">
+    <div class="cmd-search" onclick="openSearch()">⌕ 搜索命令 / 参数</div>
+    <div class="cmd-chips"><button class="on" onclick="selectSeg(this)">全部</button><button onclick="selectSeg(this)">聊天</button><button onclick="selectSeg(this)">记忆</button><button onclick="selectSeg(this)">存钱</button><button onclick="selectSeg(this)">系统</button></div>
+    <div class="cmd-row" onclick="openCommand('/help','查看全部命令')"><code>!help</code><div class="t">查看全部命令</div><span class="chev">›</span></div>
+    <div class="cmd-row" onclick="openCommand('/memory','按关键词搜索记忆')"><code>!memory</code><div class="t">搜索记忆</div><span class="chev">›</span></div>
+    <div class="cmd-row" onclick="openCommand('/savings','记录一笔收支')"><code>!savings</code><div class="t">记录收支</div><span class="chev">›</span></div>
+    <div class="cmd-row" onclick="openCommand('/run','执行一个工具')"><code>!run</code><div class="t">执行工具 / 参数</div><span class="chev">›</span></div>
+    <div class="cmd-row" onclick="openCommand('/status','查看运行状态')"><code>!status</code><div class="t">运行状态</div><span class="chev">›</span></div>
+  </div>
+</div>
+${nav('chats')}`
+
+screens.cron = `
+<div class="screen-body" style="flex:1;min-height:0;display:flex;flex-direction:column">
+  <div class="d-head"><h2>定时任务<small>CRON</small></h2><div class="act" onclick="toast('新增定时任务演示')">＋</div></div>
+  <div class="d-scroll">
+    <div class="cron-row"><div class="t"><b>早安问候</b><small>每天 07:30 · 下次 明天</small></div><div class="switch on" onclick="toggleSwitch(this)"></div></div>
+    <div class="cron-row"><div class="t"><b>每周计划提醒</b><small>周日 20:00 · 已启用</small></div><div class="switch on" onclick="toggleSwitch(this)"></div></div>
+    <div class="cron-row"><div class="t"><b>猫粮提醒</b><small>每天 18:00 · 已暂停</small></div><div class="switch" onclick="toggleSwitch(this)"></div></div>
+    <button class="add-btn" style="margin-top:5px" onclick="toast('立即执行演示')">立即执行一次</button>
+  </div>
+</div>
+${nav('chats')}`
+
+screens.logs = `
+<div class="screen-body" style="flex:1;min-height:0;display:flex;flex-direction:column">
+  <div class="d-head"><h2>运行日志<small>LOGS</small></h2><div class="act" onclick="toast('日志搜索演示')">⌕</div></div>
+  <div class="d-scroll">
+    <div class="cmd-chips"><button class="on" onclick="selectSeg(this)">全部</button><button onclick="selectSeg(this)">INFO</button><button onclick="selectSeg(this)">WARN</button><button onclick="selectSeg(this)">ERROR</button></div>
+    <div class="log-row"><span class="lv ok">INFO</span><span class="txt">gateway started · 127.0.0.1:27005</span></div>
+    <div class="log-row"><span class="lv ok">INFO</span><span class="txt">/api/history 200 · 82ms</span></div>
+    <div class="log-row"><span class="lv warn">WARN</span><span class="txt">memory recall empty fallback</span></div>
+    <div class="log-row"><span class="lv ok">INFO</span><span class="txt">/api/chat 200 · 1.2s</span></div>
+    <div class="log-row"><span class="lv err">ERR</span><span class="txt">weather provider timeout (fallback)</span></div>
+    <div class="log-row"><span class="lv ok">INFO</span><span class="txt">weekly plan refreshed</span></div>
+  </div>
+</div>
+${nav('chats')}`
+
 function nav(active){ return `<nav class="bottom-nav"><div class="tab ${active==='chats'?'on':''}" onclick="go('chats')"><span class="ic">◉</span>聊天</div><div class="tab ${active==='memory'?'on':''}" onclick="go('memory')"><span class="ic">◇</span>记忆</div><div class="tab ${active==='relation'?'on':''}" onclick="go('relation')"><span class="ic">♡</span>关系</div><div class="tab ${active==='settings'?'on':''}" onclick="go('settings')"><span class="ic">⚙</span>设置</div></nav>` }
 
-function go(name){ app.innerHTML = screens[name]; if(name==='chat'){ const input=document.getElementById('input'); if(input) input.style.cssText='flex:1;height:35px;border-radius:10px;background:#f5f8fe;border:1px solid #e6eefb;padding:6px 10px;color:#4a6079;font-size:10px;overflow:auto'; setTimeout(()=>document.getElementById('msgs')?.scrollTo(0,9999),30) } }
+function go(name){ document.querySelector('.demo-overlay')?.remove(); app.innerHTML = screens[name]; if(name==='chat'){ const input=document.getElementById('input'); if(input) input.style.cssText='flex:1;height:35px;border-radius:10px;background:#f5f8fe;border:1px solid #e6eefb;padding:6px 10px;color:#4a6079;font-size:10px;overflow:auto'; setTimeout(()=>document.getElementById('msgs')?.scrollTo(0,9999),30) } }
 
 function toggleSwitch(el){ el.classList.toggle('on'); toast(el.classList.contains('on')?'已开启演示':'已关闭演示') }
 
@@ -175,7 +352,48 @@ function sendMsg(){
   setTimeout(()=>{ typing.remove(); const bot=document.createElement('div'); bot.className='msg'; bot.innerHTML='<div class="avatar bot sm">奈</div><div><div class="bubble">我在听。慢慢说就好。</div><div class="stamp">刚刚</div></div>'; msgs.appendChild(bot); msgs.scrollTop=msgs.scrollHeight }, 900)
 }
 
-go('login')
+
+function overlay(html){
+  document.querySelector('.demo-overlay')?.remove()
+  const el=document.createElement('div'); el.className='demo-overlay on'
+  el.innerHTML=`<div class="overlay-mask" onclick="closeOverlay()"></div>`+html
+  document.querySelector('.screen').appendChild(el)
+}
+function closeOverlay(){ document.querySelector('.demo-overlay')?.remove() }
+function openSearch(){
+  overlay(`<div class="search-panel"><div class="row"><input id="q" placeholder="搜索会话 / 记忆 / 命令" autocomplete="off"><button class="cancel" onclick="closeOverlay()">取消</button></div><div id="results"><div class="search-result" onclick="go('chat')">奈绪<small>会话 · 最近消息</small></div><div class="search-result" onclick="go('memory')">不喜欢香菜<small>记忆 · 偏好</small></div><div class="search-result" onclick="go('commands')">!memory<small>命令 · 搜索记忆</small></div></div></div>`)
+  const q=document.getElementById('q'); q.focus(); q.oninput=()=>{ const v=q.value.trim(); toast(v?('搜索：'+v+'（演示）'):'输入关键词搜索') }
+}
+function openChatMenu(){
+  overlay(`<div class="sheet"><h4>会话操作</h4><div class="sheet-grid"><button onclick="openSearch()"><b>⌕</b>搜索</button><button onclick="recallLast()"><b>↺</b>撤回</button><button onclick="toast('会话置顶演示')"><b>⇧</b>置顶</button><button onclick="toast('免打扰演示')"><b>◔</b>免打扰</button></div><button class="sheet-close" onclick="closeOverlay()">取消</button></div>`)
+}
+function openComposerSheet(){
+  overlay(`<div class="sheet"><h4>发送内容</h4><div class="sheet-grid"><button onclick="sendImage()"><b>▧</b>图片</button><button onclick="sendVoice()"><b>◉</b>语音</button><button onclick="toast('表情包演示')"><b>☺</b>表情</button><button onclick="toast('文件演示')"><b>⌁</b>文件</button></div><button class="sheet-close" onclick="closeOverlay()">取消</button></div>`)
+}
+function appendBubble(html){
+  const msgs=document.getElementById('msgs'); if(!msgs){ toast('请先进入聊天'); return }
+  const me=document.createElement('div'); me.className='msg me'; me.innerHTML=html+`<div class="avatar sm">你</div>`; msgs.appendChild(me); msgs.scrollTop=msgs.scrollHeight; closeOverlay()
+}
+function sendImage(){ appendBubble(`<div><div class="bubble-image">▧ 图片预览</div><div class="stamp">刚刚 · 已读</div></div>`); toast('图片消息演示') }
+function sendVoice(){ appendBubble(`<div><div class="bubble"><div class="bubble-voice"><span class="wave"><i></i><i></i><i></i><i></i><i></i></span> 0:03</div><div class="stamp">刚刚 · 已读</div></div>`); toast('语音消息演示') }
+function recallLast(){
+  const msgs=document.getElementById('msgs'); if(!msgs){ toast('请先进入聊天'); closeOverlay(); return }
+  const own=[...msgs.querySelectorAll('.msg.me')].pop(); if(!own){ toast('没有可撤回的消息'); closeOverlay(); return }
+  own.remove(); const note=document.createElement('div'); note.className='system-note'; note.textContent='你撤回了一条消息'; msgs.appendChild(note); closeOverlay(); toast('已撤回（演示）')
+}
+function openCommand(code,title){
+  overlay(`<div class="sheet"><h4>${title}</h4><div class="modal-form"><input value="${code}" readonly><input placeholder="参数（可选）"><button onclick="closeOverlay();toast('命令执行演示')">执行命令</button></div><button class="sheet-close" onclick="closeOverlay()">取消</button></div>`)
+}
+function openSavingsForm(){
+  overlay(`<div class="sheet"><h4>记一笔（演示）</h4><div class="modal-form"><select><option>支出</option><option>收入</option></select><input placeholder="金额（仅主人可见）" inputmode="decimal"><input placeholder="备注"><button onclick="saveSavings()">保存</button></div><button class="sheet-close" onclick="closeOverlay()">取消</button></div>`)
+}
+function saveSavings(){ closeOverlay(); toast('已记录（演示数据，不提交后端）') }
+function selectSeg(el){ [...el.parentElement.children].forEach(x=>x.classList.remove('on')); el.classList.add('on') }
+function togglePeriod(el){ el.classList.toggle('on'); toast(el.classList.contains('on')?'节次已启用（演示）':'节次已关闭（演示）') }
+function activatePersona(el,name){ [...document.querySelectorAll('.persona-card')].forEach(x=>{x.classList.remove('on'); const e=x.querySelector('em'); if(e) e.textContent='切换'}); el.classList.add('on'); const e=el.querySelector('em'); if(e) e.textContent='使用中'; toast('已切换人设：'+name) }
+
+const initial = new URLSearchParams(location.search).get('screen') || 'login'
+go(screens[initial] ? initial : 'login')
 </script>
 </body>
 </html>
