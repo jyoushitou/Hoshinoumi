@@ -137,6 +137,19 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 20% 0%,
 .mem-side-card{background:#fff;border:1px solid #e3ebf7;border-radius:11px;padding:9px 10px;margin-top:7px}
 .mem-side-card h4{margin:0 0 6px;font-size:9px;color:#536b86}.mem-side-card .ev{display:flex;gap:5px;padding:4px 0;border-bottom:1px solid #f0f5fd;font-size:8px;color:#4a6079}.mem-side-card .ev:last-child{border-bottom:0}.mem-side-card .ev i{width:5px;height:5px;border-radius:50%;background:#60a5fa;margin-top:4px;flex:none}.mem-side-card .ev small{display:block;color:#9aabc0;font-size:6.5px;margin-top:1px}.kw{display:flex;flex-wrap:wrap;gap:4px}.kw span{font-size:7px;color:#5f7da2;border:1px solid #dbe8ff;background:#f4f9ff;border-radius:10px;padding:2px 6px}
 .mem-tags:empty{display:none}
+
+/* savings full page */
+.sav-hero{border-radius:22px;padding:16px;background:linear-gradient(135deg,#0b1b35,#1d4ed8 72%,#3b82f6);color:#fff;box-shadow:0 18px 36px rgba(11,30,63,.24);margin-bottom:10px;position:relative;overflow:hidden}
+.sav-hero:after{content:"";position:absolute;width:150px;height:150px;border-radius:50%;right:-45px;top:-55px;background:rgba(56,189,248,.18)}
+.sav-hero .lab{font-size:8px;color:#bfdbfe}.sav-hero .total{font-size:25px;font-weight:850;letter-spacing:.02em;margin:3px 0 10px}
+.sav-sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;position:relative;z-index:1}.sav-sum div{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.13);border-radius:10px;padding:7px 8px}.sav-sum small{display:block;font-size:6.5px;color:#bfdbfe}.sav-sum b{display:block;font-size:10px;margin-top:2px;color:#fff}
+.sav-tabs{display:flex;gap:5px;overflow:auto;padding-bottom:3px;margin-bottom:9px;scrollbar-width:none}.sav-tabs::-webkit-scrollbar{display:none}.sav-tab{flex:none;height:27px;padding:0 10px;border:1px solid #e3ebf7;background:#fff;border-radius:8px;font-size:8px;color:#71859d;display:flex;align-items:center}.sav-tab.on{background:#eef4ff;border-color:#bcd4ff;color:#2563eb;font-weight:700}
+.sav-sec{background:#fff;border:1px solid #e3ebf7;border-radius:14px;padding:11px;margin-bottom:8px}
+.sav-sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}.sav-sec-head b{font-size:10px;color:#314a65}.sav-sec-head button{border:1px solid #dbe8ff;background:#fff;color:#2563eb;border-radius:6px;font:8px inherit;padding:4px 7px}
+.goal{border:1px solid #eef3fb;border-radius:10px;padding:8px;margin-bottom:6px}.goal:last-child{margin-bottom:0}.goal .gtop{display:flex;justify-content:space-between;font-size:8px;color:#536b86}.goal b{font-size:9px;color:#314a65}.goal .gamt{font-size:9px;color:#2563eb;margin-top:3px}.goal .gamt small{color:#9aabc0;font-weight:400}.goal .bar{height:5px;background:#edf2fa;border-radius:5px;margin-top:4px;overflow:hidden}.goal .bar i{display:block;height:100%;background:linear-gradient(90deg,#60a5fa,#38bdf8)}.goal .gmeta{display:flex;justify-content:space-between;font-size:6.5px;color:#9aabc0;margin-top:3px}
+.fixrow{display:flex;gap:7px;align-items:center;padding:7px 0;border-bottom:1px solid #f0f5fd}.fixrow:last-child{border-bottom:0}.fixrow .t{flex:1;min-width:0}.fixrow .t b{display:block;font-size:8.5px;color:#314a65}.fixrow .t small{display:block;font-size:6.5px;color:#9aabc0;margin-top:1px}.fixrow .amt{text-align:right;font-size:9px;color:#2563eb}.fixrow .amt small{display:block;font-size:6.5px;color:#9aabc0}.fixrow .lnk{font-size:7px;color:#dc2626;border:1px solid #fecaca;border-radius:4px;padding:2px 4px;background:#fff5f5}
+.acct{display:flex;align-items:center;gap:7px;padding:7px 0;border-bottom:1px solid #f0f5fd}.acct:last-child{border-bottom:0}.acct .ic{width:25px;height:25px;border-radius:8px;background:#eef4ff;color:#2563eb;display:grid;place-items:center;font-size:9px;font-weight:700}.acct .t{flex:1}.acct .t b{display:block;font-size:8.5px;color:#314a65}.acct .t small{display:block;font-size:6.5px;color:#9aabc0}.acct .val{font-size:8.5px;color:#405873}
+.note-line{border:1px dashed #d7e6ff;background:#f4f9ff;color:#7890aa;border-radius:9px;padding:8px;font-size:7.5px;line-height:1.6;margin-bottom:8px}
 </style>
 <link rel="stylesheet" href="mobile-native.css">
 </head>
@@ -338,15 +351,40 @@ ${nav('chats')}`
 
 screens.savings = `
 <div class="screen-body" style="flex:1;min-height:0;display:flex;flex-direction:column">
-  <div class="d-head"><h2>存钱<small>SAVINGS</small></h2><button class="act" onclick="openSavingsForm()">＋</button></div>
-  <div class="d-scroll">
-    <div class="savings-hero"><small>总余额 · 仅主人可见</small><div class="amount">••••••</div><div class="mask">已隐藏金额，避免旁人看到</div><div class="savings-stats"><div><b>4</b><span>账户</span></div><div><b>2</b><span>目标</span></div><div><b>1</b><span>定期</span></div></div></div>
-    <div class="seg"><button class="on" onclick="selectSeg(this)">账户</button><button onclick="selectSeg(this)">目标</button><button onclick="selectSeg(this)">定期</button><button onclick="selectSeg(this)">基金</button></div>
-    <div class="d-card"><div class="money-row"><div class="ic">银</div><div class="t"><b>银行卡</b><small>日常账户</small></div><em>••••</em></div><div class="money-row"><div class="ic">现</div><div class="t"><b>现金</b><small>钱包</small></div><em>••••</em></div><div class="money-row"><div class="ic">目</div><div class="t"><b>旅行目标</b><small>进度 60%</small></div><em>进行中</em></div><div class="money-row"><div class="ic">冻</div><div class="t"><b>冻结记录</b><small>不计入余额</small></div><em>查看</em></div></div>
-    <button class="add-btn" onclick="openSavingsForm()">记一笔</button>
+  <div class="page-head"><h2>存钱<small>SAVINGS · v35.5 数据</small></h2><div class="act" onclick="openSavingsForm()">＋</div></div>
+  <div class="d-scroll" style="flex:1;min-height:0;overflow-y:auto;padding:0 16px 190px">
+    <div class="sav-hero"><div class="lab">总资产 · 仅主人可见</div><div class="total">¥12,100.00</div><div class="sav-sum"><div><small>可用余额</small><b>¥2,700</b></div><div><small>冻结 / 预留</small><b>¥4,100</b></div><div><small>定期存款</small><b>¥3,000</b></div></div></div>
+    <div class="sav-tabs"><span class="sav-tab on" onclick="selectSeg(this)">总览</span><span class="sav-tab" onclick="selectSeg(this)">目标</span><span class="sav-tab" onclick="selectSeg(this)">定期</span><span class="sav-tab" onclick="selectSeg(this)">基金</span><span class="sav-tab" onclick="selectSeg(this)">账户</span><span class="sav-tab" onclick="selectSeg(this)">冻结</span></div>
+    <div class="sav-sec"><div class="sav-sec-head"><b>存钱目标</b><button onclick="openSavGoal()">＋ 新目标</button></div>
+      <div class="goal"><div class="gtop"><b>旅行基金</b><span>截止 2027-03</span></div><div class="gamt">¥1,800.00 <small>/ ¥5,000.00</small></div><div class="bar"><i style="width:36%"></i></div><div class="gmeta"><span>36%</span><span>还差 ¥3,200</span></div></div>
+      <div class="goal"><div class="gtop"><b>新电脑</b><span>截止 2027-06</span></div><div class="gamt">¥900.00 <small>/ ¥6,000.00</small></div><div class="bar"><i style="width:15%"></i></div><div class="gmeta"><span>15%</span><span>还差 ¥5,100</span></div></div>
+      <div class="goal"><div class="gtop"><b>应急金</b><span>截止 长期</span></div><div class="gamt">¥1,200.00 <small>/ ¥10,000.00</small></div><div class="bar"><i style="width:12%"></i></div><div class="gmeta"><span>12%</span><span>还差 ¥8,800</span></div></div>
+    </div>
+    <div class="sav-sec"><div class="sav-sec-head"><b>定期存款</b><button onclick="toast('存定期表单演示')">＋ 存定期</button></div>
+      <div class="fixrow"><div class="t"><b>12 个月定期</b><small>年利率 1.65% · 2027-06-01 到期 · 预计利息 ¥33.00</small></div><div class="amt">¥2,000.00<small>本金</small></div><span class="lnk">取消</span></div>
+      <div class="fixrow"><div class="t"><b>3 个月定期</b><small>年利率 1.15% · 2027-02-01 到期 · 预计利息 ¥2.88</small></div><div class="amt">¥1,000.00<small>本金</small></div><span class="lnk">取消</span></div>
+      <div class="note-line">到期自动按来源账户转回本金 + 利息，无需手动操作。</div>
+    </div>
+    <div class="sav-sec"><div class="sav-sec-head"><b>理财 / 基金</b><button onclick="toast('买入基金演示')">＋ 买入</button></div>
+      <div class="fixrow"><div class="t"><b>余额宝</b><small>货币基金 · 7 日年化 1.35% · 快速赎回</small></div><div class="amt">¥1,500.00<small>持有金额</small></div></div>
+      <div class="fixrow"><div class="t"><b>沪深300指数</b><small>基金 · 收益 ¥50.00 · 银行卡 T+1</small></div><div class="amt">¥800.00<small>持有金额</small></div></div>
+    </div>
+    <div class="sav-sec"><div class="sav-sec-head"><b>钱存在哪</b><button onclick="toast('新增账户演示')">＋ 新增</button></div>
+      <div class="acct"><span class="ic">银</span><span class="t"><b>银行卡</b><small>资金位置</small></span><span class="val">¥5,300.00</span></div>
+      <div class="acct"><span class="ic">支</span><span class="t"><b>支付宝</b><small>资金位置</small></span><span class="val">¥1,200.00</span></div>
+      <div class="acct"><span class="ic">微</span><span class="t"><b>微信</b><small>资金位置</small></span><span class="val">¥300.00</span></div>
+      <div class="acct"><span class="ic">现</span><span class="t"><b>现金</b><small>资金位置</small></span><span class="val">¥0.00</span></div>
+    </div>
+    <div class="sav-sec"><div class="sav-sec-head"><b>冻结 / 待缴费</b><button onclick="toast('新增冻结演示')">＋ 新增</button></div>
+      <div class="fixrow"><div class="t"><b>房租</b><small>预计每月 5 日 · 不可动用</small></div><div class="amt">¥1,800.00<small>已缴费</small></div><span class="lnk">删除</span></div>
+      <div class="fixrow"><div class="t"><b>学费</b><small>预计 2027-02-20 · 不可动用</small></div><div class="amt">¥2,000.00<small>已缴费</small></div><span class="lnk">删除</span></div>
+      <div class="fixrow"><div class="t"><b>水电费</b><small>预计每月 20 日 · 不可动用</small></div><div class="amt">¥300.00<small>已缴费</small></div><span class="lnk">删除</span></div>
+    </div>
+    <div class="note-line">可用余额 = 总资产 ¥12,100 - 冻结 ¥4,100 - 定期 ¥3,000 - 理财 ¥2,300 = ¥2,700。金额仅主人可见。</div>
+    <button class="add-btn" style="width:100%;height:36px" onclick="openSavingsForm()">记一笔</button>
   </div>
 </div>
-${nav('chats')}`
+${nav('savings')}`
 
 screens.weekly = `
 <div class="screen-body" style="flex:1;min-height:0;display:flex;flex-direction:column">
@@ -514,6 +552,9 @@ function recallLast(){
 }
 function openCommand(code,title){
   overlay(`<div class="sheet"><h4>${title}</h4><div class="modal-form"><input value="${code}" readonly><input placeholder="参数（可选）"><button onclick="closeOverlay();toast('命令执行演示')">执行命令</button></div><button class="sheet-close" onclick="closeOverlay()">取消</button></div>`)
+}
+function openSavGoal(){
+  overlay(`<div class="sheet"><h4>新目标（演示）</h4><div class="modal-form"><input placeholder="目标名称"><input placeholder="目标金额" inputmode="decimal"><input placeholder="截止日期"><button onclick="closeOverlay();toast('新目标已创建（演示）')">创建</button></div><button class="sheet-close" onclick="closeOverlay()">取消</button></div>`)
 }
 function openSavingsForm(){
   overlay(`<div class="sheet"><h4>记一笔（演示）</h4><div class="modal-form"><select><option>支出</option><option>收入</option></select><input placeholder="金额（仅主人可见）" inputmode="decimal"><input placeholder="备注"><button onclick="saveSavings()">保存</button></div><button class="sheet-close" onclick="closeOverlay()">取消</button></div>`)
