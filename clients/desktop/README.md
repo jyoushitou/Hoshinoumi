@@ -1,4 +1,4 @@
-﻿# Hoshinoumi Desktop
+# Hoshinoumi Desktop
 
 v35.6 Tauri 2 桌面套壳。
 
@@ -48,4 +48,12 @@ v35.6.0.0 壳骨架 / 窗口 / 标题栏 / 窗口控制
 cargo check 需要能访问 crates.io
 本轮网络更新 crates.io index 卡住，Rust 依赖编译尚未完成
 工程文件与窗口配置已落盘
+```
+## Windows 工具链
+
+```text
+必须使用 stable-x86_64-pc-windows-msvc
+工程内已有 rust-toolchain.toml 固定
+需要 Visual Studio Build Tools（C++ 桌面开发）
+不要用 windows-gnu，Tauri/WebView2 链接会失败
 ```

@@ -1,0 +1,4 @@
+[toolchain]
+channel = "stable-x86_64-pc-windows-msvc"
+# 桌面壳使用 MSVC 工具链
+# Windows 必须安装 Visual Studio Build Tools（C++ 桌面开发）
