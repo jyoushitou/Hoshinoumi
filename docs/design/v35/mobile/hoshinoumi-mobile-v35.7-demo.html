@@ -69,10 +69,9 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 20% 0%,
 .nav-all{display:none;width:100%;padding:4px 6px 2px}
 .bottom-nav.expanded .nav-all{display:block}
 .bottom-nav.expanded .nav-row{display:none}
-.nav-all-title{font-size:8px;letter-spacing:.12em;color:#9aabc0;font-weight:700;padding:2px 4px 5px;border-top:1px solid #eef3fb;margin-top:2px}
-.nav-all-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
-.nav-all-grid button{height:34px;border:1px solid #e1ebf9;background:#f8fbff;border-radius:7px;color:#5a718d;font:8px inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;cursor:pointer}
-.nav-all-grid button b{font-size:12px;line-height:1;font-weight:400;color:#7e93ad}
+.nav-all-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding-top:3px}
+.nav-all-grid button{height:40px;border:1px solid #e1ebf9;background:#f8fbff;border-radius:9px;color:#5a718d;display:grid;place-items:center;cursor:pointer}
+.nav-all-grid button b{font-size:16px;line-height:1;font-weight:400;color:#687f9b}
 .nav-all-grid button.on{border-color:#bcd4ff;background:#eef4ff;color:#2563eb}
 .bottom-nav .tab{width:auto;height:45px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-radius:13px;color:#8a9bb0;font-size:8px}
 .bottom-nav .tab .ic{font-size:15px;line-height:1}
@@ -97,9 +96,9 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 20% 0%,
   .d-view .list,.d-view .msgs,.d-view .mem-body,.d-view .rel-wrap,.d-view .set-body,.d-view .d-scroll{overflow-y:auto!important;-webkit-overflow-scrolling:touch}
   .toast{bottom:96px}
   #view{height:100dvh;padding-bottom:76px}
-  body.nav-expanded #view{padding-bottom:215px}
+  body.nav-expanded #view{padding-bottom:182px}
   #view .bottom-nav{position:fixed;left:0;right:0;bottom:0;z-index:40;width:100vw!important;max-width:100vw!important;box-sizing:border-box;align-items:stretch!important;height:76px;padding-bottom:max(8px,env(safe-area-inset-bottom));overflow:visible}
-  #view .bottom-nav.expanded{height:auto;min-height:215px}
+  #view .bottom-nav.expanded{height:auto;min-height:182px}
   #view .bottom-nav .nav-row{height:46px}
   #view .bottom-nav .tab{width:auto!important;max-width:none!important;height:45px!important}
 }
@@ -393,8 +392,8 @@ ${nav('chats')}`
 function nav(active){
   const quick = [['chats','◉','聊天'],['memory','◇','记忆'],['relation','♡','关系'],['settings','⚙','设置']]
   const tab = ([key,ic,label]) => `<div class="tab ${active===key?'on':''}" onclick="go('${key}')"><span class="ic">${ic}</span>${label}</div>`
-  const all = allEntries.map(([key,ic,label]) => `<button class="${active===key?'on':''}" onclick="go('${key}')"><b>${ic}</b>${label}</button>`).join('')
-  return `<nav class="bottom-nav ${navExpanded?'expanded':''}"><button class="nav-grip" onclick="toggleNav(event)"><span class="grip-ic">⌃</span><span>${navExpanded?'收起':'快捷'}</span></button><div class="nav-row">${quick.map(tab).join('')}</div><div class="nav-all"><div class="nav-all-title">全部入口</div><div class="nav-all-grid">${all}</div></div></nav>`
+  const all = allEntries.map(([key,ic,label]) => `<button class="${active===key?'on':''}" title="${label}" aria-label="${label}" onclick="go('${key}')"><b>${ic}</b></button>`).join('')
+  return `<nav class="bottom-nav ${navExpanded?'expanded':''}"><button class="nav-grip" onclick="toggleNav(event)"><span class="grip-ic">⌃</span><span>${navExpanded?'':'快捷'}</span></button><div class="nav-row">${quick.map(tab).join('')}</div><div class="nav-all"><div class="nav-all-grid">${all}</div></div></nav>`
 }
 function toggleNav(e){
   e.stopPropagation()
@@ -402,12 +401,14 @@ function toggleNav(e){
   navExpanded = !navExpanded
   nav.classList.toggle('expanded', navExpanded)
   const gripLabel = nav.querySelector('.nav-grip span:last-child')
-  if (gripLabel) gripLabel.textContent = navExpanded ? '收起' : '快捷'
+  if (gripLabel) gripLabel.textContent = navExpanded ? '' : '快捷'
   document.body.classList.toggle('nav-expanded', navExpanded)
 }
 
 
-function go(name){ document.querySelector('.demo-overlay')?.remove(); app.innerHTML = screens[name]; if(name==='chats'){ document.querySelectorAll('.conv[data-conv]').forEach(c=>{ if(readConversations.has(c.dataset.conv)) c.querySelectorAll('.badge').forEach(b=>b.remove()) }) } if(name==='chat'){ const input=document.getElementById('input'); if(input) input.style.cssText='flex:1;height:35px;border-radius:10px;background:#f5f8fe;border:1px solid #e6eefb;padding:6px 10px;color:#4a6079;font-size:10px;overflow:auto'; setTimeout(()=>document.getElementById('msgs')?.scrollTo(0,9999),30) } }
+function go(name){
+  if (navExpanded) { navExpanded = false; document.body.classList.remove('nav-expanded') }
+  document.querySelector('.demo-overlay')?.remove(); app.innerHTML = screens[name]; if(name==='chats'){ document.querySelectorAll('.conv[data-conv]').forEach(c=>{ if(readConversations.has(c.dataset.conv)) c.querySelectorAll('.badge').forEach(b=>b.remove()) }) } if(name==='chat'){ const input=document.getElementById('input'); if(input) input.style.cssText='flex:1;height:35px;border-radius:10px;background:#f5f8fe;border:1px solid #e6eefb;padding:6px 10px;color:#4a6079;font-size:10px;overflow:auto'; setTimeout(()=>document.getElementById('msgs')?.scrollTo(0,9999),30) } }
 
 function toggleSwitch(el){ el.classList.toggle('on'); toast(el.classList.contains('on')?'已开启演示':'已关闭演示') }
 
