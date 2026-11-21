@@ -1,10 +1,10 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHashHistory, createWebHistory } from 'vue-router'
 import ChatView from '@/views/ChatView.vue'
 import PageView from '@/views/PageView.vue'
 import RelationView from '@/views/RelationView.vue'
 const meta = (title: string, desc: string) => ({ title, desc })
 const router = createRouter({
-  history: createWebHistory(),
+  history: typeof window !== 'undefined' && window.location.protocol === 'file:' ? createWebHashHistory() : createWebHistory(),
   routes: [
     { path: '/', redirect: '/chat' },
     { path: '/chat', name: 'chat', component: ChatView },

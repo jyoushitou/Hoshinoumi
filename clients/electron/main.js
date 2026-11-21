@@ -13,8 +13,8 @@ let tray = null
 let mini = null
 let settingsWin = null
 const SETTINGS_FILE = path.join(app.getPath('userData'), 'shell-settings.json')
-let shellSettings = { miniWindow: false }
-function loadSettings() { try { shellSettings = { miniWindow: false, ...JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8')) } } catch {} }
+let shellSettings = { miniWindow: false, apiBase: 'http://127.0.0.1:27005', apiPrefix: '', startRoute: '/chat' }
+function loadSettings() { try { shellSettings = { miniWindow: false, apiBase: 'http://127.0.0.1:27005', apiPrefix: '', startRoute: '/chat', ...JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8')) } } catch {} }
 function saveSettings() { try { fs.mkdirSync(path.dirname(SETTINGS_FILE), { recursive: true }); fs.writeFileSync(SETTINGS_FILE, JSON.stringify(shellSettings, null, 2)) } catch {} }
 function logTray(msg) { try { fs.appendFileSync(path.join(__dirname, '.electron-data', 'shell.log'), msg + '\n') } catch {} }
 
@@ -34,9 +34,10 @@ function createWindow() {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
+      additionalArguments: ['--hoshinoumi-config=' + encodeURIComponent(JSON.stringify({ apiBase: shellSettings.apiBase, apiPrefix: shellSettings.apiPrefix, startRoute: shellSettings.startRoute }))],
     },
   })
-  win.loadFile(FRONTEND)
+  win.loadFile(FRONTEND, { hash: shellSettings.startRoute || '/chat' })
   win.once('ready-to-show', () => win.show())
   win.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https?:/i.test(url)) shell.openExternal(url)
@@ -98,7 +99,7 @@ function applyMiniState() {
 }
 function openSettings() {
   if (settingsWin) { settingsWin.show(); settingsWin.focus(); return }
-  settingsWin = new BrowserWindow({ width: 380, height: 230, resizable: false, autoHideMenuBar: true, title: 'Hoshinoumi 设置', webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true } })
+  settingsWin = new BrowserWindow({ width: 440, height: 390, resizable: false, autoHideMenuBar: true, title: 'Hoshinoumi 设置', webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true } })
   settingsWin.loadFile(path.join(__dirname, 'settings.html'))
   settingsWin.on('closed', () => { settingsWin = null })
 }
@@ -130,6 +131,7 @@ if (!app.requestSingleInstanceLock()) {
     ipcMain.on('window:toggle-mini', toggleMini)
     ipcMain.handle('settings:get', () => shellSettings)
     ipcMain.handle('settings:set-mini', (_e, enabled) => { shellSettings.miniWindow = Boolean(enabled); saveSettings(); applyMiniState(); return shellSettings })
+    ipcMain.handle('settings:save', (_e, next) => { shellSettings = { ...shellSettings, ...next, miniWindow: !!next?.miniWindow }; saveSettings(); applyMiniState(); if (win) { win.loadFile(FRONTEND, { hash: shellSettings.startRoute || '/chat' }); win.show(); win.focus() } return shellSettings })
     loadSettings()
     createWindow()
     createTray()

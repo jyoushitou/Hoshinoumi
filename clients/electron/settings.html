@@ -1,23 +1,38 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="zh-CN">
 <head><meta charset="utf-8"><style>
 html,body{margin:0;background:#f8fbff;font:13px -apple-system,"Microsoft YaHei",sans-serif;color:#17263b}
 main{padding:16px 18px}h1{font-size:14px;margin:0 0 4px}p{color:#8292a8;font-size:11px;margin:0 0 14px}
-.row{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #e3ebf7;border-radius:8px;padding:10px 12px}
-.row div{flex:1}.row b{display:block;font-size:12px}.row small{color:#8292a8;font-size:10px}
-.switch{position:relative;width:36px;height:20px;flex:none}.switch input{opacity:0;width:0;height:0}
-.slider{position:absolute;inset:0;background:#cbd5e1;border-radius:20px;transition:.2s;cursor:pointer}.slider:before{content:"";position:absolute;width:16px;height:16px;left:2px;top:2px;background:#fff;border-radius:50%;transition:.2s}
-input:checked + .slider{background:#2563eb}input:checked + .slider:before{transform:translateX(16px)}
-footer{display:flex;justify-content:flex-end;margin-top:14px}button{border:0;background:#2563eb;color:#fff;border-radius:6px;padding:6px 14px;font:12px inherit;cursor:pointer}
+.field{background:#fff;border:1px solid #e3ebf7;border-radius:8px;padding:9px 11px;margin-bottom:8px}
+.field b{display:block;font-size:12px;margin-bottom:3px}.field small{color:#8292a8;font-size:10px}
+.field input[type=text]{width:100%;box-sizing:border-box;border:1px solid #dbe8ff;border-radius:6px;padding:6px 7px;font:11px inherit;outline:0;margin-top:5px}
+.row{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #e3ebf7;border-radius:8px;padding:9px 11px;margin-bottom:8px}.row div{flex:1}.row b{display:block;font-size:12px}.row small{color:#8292a8;font-size:10px}
+.switch{position:relative;width:36px;height:20px;flex:none}.switch input{opacity:0;width:0;height:0}.slider{position:absolute;inset:0;background:#cbd5e1;border-radius:20px;transition:.2s;cursor:pointer}.slider:before{content:"";position:absolute;width:16px;height:16px;left:2px;top:2px;background:#fff;border-radius:50%;transition:.2s}input:checked + .slider{background:#2563eb}input:checked + .slider:before{transform:translateX(16px)}
+footer{display:flex;justify-content:flex-end;margin-top:10px}button{border:0;background:#2563eb;color:#fff;border-radius:6px;padding:7px 16px;font:12px inherit;cursor:pointer}
 </style></head>
-<body><main><h1>桌面设置</h1><p>这些设置只影响 Electron 壳，不影响 Web 端。</p>
-<div class="row"><div><b>启用迷你窗口</b><small>默认关闭。开启后可从托盘打开 360×130 迷你条。</small></div><label class="switch"><input id="mini" type="checkbox"><span class="slider"></span></label></div>
-<footer><button id="save">保存</button></footer></main>
+<body><main><h1>桌面设置</h1><p>只影响 Electron 壳，不影响 Web 端。</p>
+<div class="field"><b>后端入口</b><small>例如 http://127.0.0.1:27005，留空使用相对地址</small><input id="apiBase" type="text" placeholder="http://127.0.0.1:27005"></div>
+<div class="field"><b>API 前缀</b><small>可选，例如 /hoshinoumi；没有就留空</small><input id="apiPrefix" type="text" placeholder=""></div>
+<div class="field"><b>启动页</b><small>登录后默认进入的路由，例如 /chat</small><input id="startRoute" type="text" placeholder="/chat"></div>
+<div class="row"><div><b>启用迷你窗口</b><small>默认关闭。开启后可托盘打开 360×130 迷你条。</small></div><label class="switch"><input id="mini" type="checkbox"><span class="slider"></span></label></div>
+<footer><button id="save">保存并重载</button></footer></main>
 <script>
-window.desktopShell.getSettings().then(s => { document.getElementById('mini').checked = !!s.miniWindow })
+function fill(s) {
+  document.getElementById('apiBase').value = s.apiBase || ''
+  document.getElementById('apiPrefix').value = s.apiPrefix || ''
+  document.getElementById('startRoute').value = s.startRoute || '/chat'
+  document.getElementById('mini').checked = !!s.miniWindow
+}
+window.desktopShell.getSettings().then(fill)
 document.getElementById('save').onclick = async () => {
-  await window.desktopShell.setMiniEnabled(document.getElementById('mini').checked)
+  const next = {
+    apiBase: document.getElementById('apiBase').value.trim(),
+    apiPrefix: document.getElementById('apiPrefix').value.trim(),
+    startRoute: document.getElementById('startRoute').value.trim() || '/chat',
+    miniWindow: document.getElementById('mini').checked,
+  }
+  await window.desktopShell.saveSettings(next)
   document.getElementById('save').textContent = '已保存'
-  setTimeout(() => { document.getElementById('save').textContent = '保存' }, 1200)
+  setTimeout(() => { document.getElementById('save').textContent = '保存并重载' }, 1200)
 }
 </script></body></html>
