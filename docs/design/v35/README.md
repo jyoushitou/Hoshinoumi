@@ -10,6 +10,8 @@
 docs/design/v35/
 ├─ common.css
 ├─ render.ps1
+├─ mobile/
+│  └─ hoshinoumi-mobile-v35.7.html / .png  v35.7 手机 Vue 设计稿（六屏）
 ├─ web/
 │  ├─ hoshinoumi-web-v35.5.html / .png    v35.5 聊天室演示
 │  ├─ DEVELOPMENT.md                     v35.5 开发拆分
@@ -38,6 +40,16 @@ docs/design/v35/
    ├─ demo.html / demo.png            可交互动画演示
    └─ demo-overview.png               全部功能总览演示预览
 ```
+
+## Mobile v35.7 演示
+
+```text
+docs/design/v35/mobile/
+```
+
+- 六屏：登录 / 会话 / 聊天 / 记忆 / 关系 / 设置
+- 390 × 844 基准，安全区、底部导航、输入法避让
+- 页面映射见 `mobile/README.md`
 
 ## Web v35.5 演示
 

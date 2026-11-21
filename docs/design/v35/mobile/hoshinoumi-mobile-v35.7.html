@@ -1,0 +1,197 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hoshinoumi Mobile · v35.7 设计稿</title>
+<link rel="stylesheet" href="mobile.css">
+</head>
+<body>
+<div class="page">
+  <header class="hero">
+    <div>
+      <div class="kicker">HOSHINOUMI · MOBILE WEB</div>
+      <h1>手机 Vue 设计稿 <small style="font-size:12px;color:#8da0b8;font-weight:500;letter-spacing:0">v35.7</small></h1>
+      <p>按 390 × 844 画板设计，覆盖登录、会话、聊天、记忆、关系、设置。真实数据与业务只在 Vue 页面实现，本稿只确认移动端结构、触控尺寸与安全区。</p>
+    </div>
+    <div class="meta">
+      <span class="pill">390 × 844</span><span class="pill">iPhone 14 基准</span><span class="pill">安全区 + 输入法</span><span class="pill">设计稿 · 非业务代码</span>
+    </div>
+  </header>
+
+  <main class="board">
+    <!-- 01 LOGIN -->
+    <section class="phone-wrap">
+      <div class="phone-label"><b>登录</b><span>01 / LOGIN</span></div>
+      <div class="phone"><div class="island"></div><div class="screen">
+        <div class="statusbar"><span>9:41</span><div class="right"><span class="sig"><i></i><i></i><i></i><i></i></span><span>5G</span><div class="battery"></div></div></div>
+        <div class="login">
+          <div class="logo"><img src="../../logo/hoshinoumi.svg" alt="Hoshinoumi"></div>
+          <div class="brandline">HOSHINOUMI<small>REC · MOBILE</small></div>
+          <div class="hello">欢迎回来，<br><em>今天想聊点什么？</em></div>
+          <div class="sub">登录后同步会话、记忆与关系。</div>
+          <div class="form">
+            <div class="field"><label>QQ 号</label><input placeholder="输入你的 QQ 号" inputmode="numeric"></div>
+            <div class="field pass"><div style="flex:1"><label>访问 Token</label><input placeholder="输入 owner token" type="password"></div><span class="eye">◉</span></div>
+            <div class="server"><i></i>已连接 127.0.0.1:27005 · 本机网关</div>
+            <button class="primary">登录</button>
+          </div>
+          <div class="tip">仅主人账号可登录 · 不保存密码</div>
+          <div class="safe"></div>
+        </div>
+      </div></div>
+    </section>
+
+    <!-- 02 CONVERSATIONS -->
+    <section class="phone-wrap">
+      <div class="phone-label"><b>会话列表</b><span>02 / CHATS</span></div>
+      <div class="phone"><div class="island"></div><div class="screen">
+        <div class="statusbar"><span>9:41</span><div class="right"><span class="sig"><i></i><i></i><i></i><i></i></span><span>5G</span><div class="battery"></div></div></div>
+        <div class="screen-body">
+          <div class="mobile-head">
+            <div class="row1">
+              <div class="avatar bot">奈</div>
+              <div class="brand">HOSHINOUMI<small>REC · ONLINE</small></div>
+              <div class="spacer"></div>
+              <div class="icon-btn">⌕</div>
+              <div class="icon-btn">＋</div>
+            </div>
+            <div class="search">⌕ 搜索会话 / 记忆 / 命令<span class="k">⌘K</span></div>
+            <div class="chips"><div class="chip on">全部</div><div class="chip">私聊</div><div class="chip">群聊</div></div>
+          </div>
+          <div class="list">
+            <div class="sec-title"><span>最近</span><span>未同步</span></div>
+            <div class="conv on">
+              <div class="avatar bot">奈</div>
+              <div class="copy"><b>奈绪</b><span>你回来啦。今天外面有点冷，先喝点热的吧。</span></div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="when">刚刚</span><span class="badge blue">2</span></div>
+            </div>
+            <div class="conv">
+              <div class="avatar">学</div>
+              <div class="copy"><b>星之海学生会</b><span>友利：下午的会议改到三点。</span></div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="when">12:40</span><span class="badge">5</span></div>
+            </div>
+            <div class="conv">
+              <div class="avatar">猫</div>
+              <div class="copy"><b>猫咪投喂提醒</b><span>今天还没喂猫。</span></div>
+              <span class="when" style="align-self:center">昨天</span>
+            </div>
+            <div class="conv">
+              <div class="avatar">记</div>
+              <div class="copy"><b>记忆本 · 新增 1 条</b><span>“她记得你不喜欢香菜。”</span></div>
+              <span class="when" style="align-self:center">昨天</span>
+            </div>
+          </div>
+          <nav class="bottom-nav"><div class="tab on"><span class="ic">◉</span>聊天</div><div class="tab"><span class="ic">◇</span>记忆</div><div class="tab"><span class="ic">♡</span>关系</div><div class="tab"><span class="ic">⚙</span>设置</div></nav>
+        </div>
+      </div></div>
+    </section>
+
+    <!-- 03 CHAT -->
+    <section class="phone-wrap">
+      <div class="phone-label"><b>聊天</b><span>03 / CHAT</span></div>
+      <div class="phone"><div class="island"></div><div class="screen">
+        <div class="statusbar"><span>9:41</span><div class="right"><span class="sig"><i></i><i></i><i></i><i></i></span><span>5G</span><div class="battery"></div></div></div>
+        <div class="screen-body">
+          <header class="chat-head">
+            <div class="row"><span class="back">‹</span><div class="avatar bot sm">奈</div><div class="who"><b>奈绪</b><span>在线 · 正在输入…</span></div><div class="acts">⌕ ☰</div></div>
+            <div class="subline"><em>关系 · 熟悉</em><span>记忆已开启</span><span style="margin-left:auto">今日第 3 次</span></div>
+          </header>
+          <div class="msgs">
+            <div class="day">今天 09:38</div>
+            <div class="msg"><div class="avatar bot sm">奈</div><div><div class="bubble">早呀。昨天你睡得很晚，今天要不要把节奏放慢一点？</div><div class="stamp">09:38</div></div></div>
+            <div class="msg me"><div><div class="bubble">嗯，今天没什么安排。</div><div class="stamp">09:40 · 已读</div></div><div class="avatar sm">你</div></div>
+            <div class="msg"><div class="avatar bot sm">奈</div><div><div class="bubble">那我把下午留给你。想去图书馆，还是就在学生会室待着？</div><div class="stamp">09:41</div></div></div>
+            <div class="msg"><div class="avatar bot sm">奈</div><div><div class="bubble">学生会室吧。窗外那棵树下，猫应该又会来。</div><div class="memchip">✦ 来自记忆 · 喜欢安静的下午</div><div class="stamp">09:42</div></div></div>
+            <div class="msg"><div class="avatar bot sm">奈</div><div class="typing"><i></i><i></i><i></i></div></div>
+          </div>
+          <div class="composer">
+            <div class="bar"><div class="plus">＋</div><div class="input">和奈绪说点什么…</div><div class="mic">◉</div><button class="send">↑</button></div>
+            <div class="hint"><span>长按说话 · 支持图片 / 语音</span><span>记忆已开启</span></div>
+          </div>
+          <div class="safe"></div>
+        </div>
+      </div></div>
+    </section>
+
+    <!-- 04 MEMORY -->
+    <section class="phone-wrap">
+      <div class="phone-label"><b>记忆</b><span>04 / MEMORY</span></div>
+      <div class="phone"><div class="island"></div><div class="screen">
+        <div class="statusbar"><span>9:41</span><div class="right"><span class="sig"><i></i><i></i><i></i><i></i></span><span>5G</span><div class="battery"></div></div></div>
+        <div class="screen-body">
+          <div class="page-head"><h2>记忆<small>MEMORY BOOK</small></h2><div class="act">⌕</div></div>
+          <div class="mem-body">
+            <div class="hero-card"><small>最近一条 · 今天</small><h3>“她记得你不喜欢香菜。”</h3><p>从会话里记下的生活偏好，已归入画像。</p><div class="stat"><div><b>28</b><span>记忆本</span></div><div><b>6</b><span>本周新增</span></div><div><b>4</b><span>待确认</span></div></div></div>
+            <div class="two">
+              <div class="mini-card"><div class="ic">▤</div><b>记忆本</b><small>按主题浏览</small></div>
+              <div class="mini-card"><div class="ic">◷</div><b>最近事件</b><small>上周 · 学生会</small></div>
+              <div class="mini-card"><div class="ic">◉</div><b>她的画像</b><small>偏好 / 习惯</small></div>
+              <div class="mini-card"><div class="ic">♡</div><b>关系记忆</b><small>一起经历过</small></div>
+            </div>
+            <div class="mem-title"><span>最近的记忆</span><span>全部 ›</span></div>
+            <div class="mem-item"><div class="avatar sm">记</div><div class="t"><b>不喜欢香菜</b><span>饮食习惯 · 今天</span></div><em>偏好</em></div>
+            <div class="mem-item"><div class="avatar sm">记</div><div class="t"><b>喜欢安静的下午</b><span>生活 · 昨天</span></div><em>生活</em></div>
+            <div class="mem-item"><div class="avatar sm">记</div><div class="t"><b>那棵树下有猫</b><span>学生会室 · 上周</span></div><em>场景</em></div>
+          </div>
+          <nav class="bottom-nav"><div class="tab"><span class="ic">◉</span>聊天</div><div class="tab on"><span class="ic">◇</span>记忆</div><div class="tab"><span class="ic">♡</span>关系</div><div class="tab"><span class="ic">⚙</span>设置</div></nav>
+        </div>
+      </div></div>
+    </section>
+
+    <!-- 05 RELATION -->
+    <section class="phone-wrap">
+      <div class="phone-label"><b>关系</b><span>05 / RELATION</span></div>
+      <div class="phone"><div class="island"></div><div class="screen">
+        <div class="statusbar"><span>9:41</span><div class="right"><span class="sig"><i></i><i></i><i></i><i></i></span><span>5G</span><div class="battery"></div></div></div>
+        <div class="screen-body">
+          <div class="page-head"><h2>关系<small>RELATION</small></h2><div class="act">…</div></div>
+          <div class="rel-wrap">
+            <div class="rel-card"><div class="rel-avatar">奈</div><div class="rel-main"><b>奈绪</b><small>认识 286 天 · 最近联系 5 分钟前</small><div class="rel-tier"><em>熟悉</em><span>还没到下一档</span></div><div class="rel-progress"><i></i></div><div class="rel-note">亲近程度由相处与共同经历决定，不展示具体数值。</div></div></div>
+            <div class="rel-sec"><h4>最近的变化</h4>
+              <div class="rel-event"><span class="dot"></span><p>一起准备了学生会周会</p><small>2 天前</small></div>
+              <div class="rel-event"><span class="dot" style="background:#a78bfa"></span><p>你记住了她喜欢安静的地方</p><small>昨天</small></div>
+              <div class="rel-event"><span class="dot" style="background:#34d399"></span><p>她主动问你今天累不累</p><small>5 分钟前</small></div>
+            </div>
+            <div class="privacy">🔒 关系与记忆只对主人账号可见；非主人访问返回 403，不展示金额或私密内容。</div>
+          </div>
+          <nav class="bottom-nav"><div class="tab"><span class="ic">◉</span>聊天</div><div class="tab"><span class="ic">◇</span>记忆</div><div class="tab on"><span class="ic">♡</span>关系</div><div class="tab"><span class="ic">⚙</span>设置</div></nav>
+        </div>
+      </div></div>
+    </section>
+
+    <!-- 06 SETTINGS -->
+    <section class="phone-wrap">
+      <div class="phone-label"><b>设置</b><span>06 / SETTINGS</span></div>
+      <div class="phone"><div class="island"></div><div class="screen">
+        <div class="statusbar"><span>9:41</span><div class="right"><span class="sig"><i></i><i></i><i></i><i></i></span><span>5G</span><div class="battery"></div></div></div>
+        <div class="screen-body">
+          <div class="page-head"><h2>设置<small>SETTINGS</small></h2></div>
+          <div class="set-body">
+            <div class="profile"><div class="avatar">徐</div><div class="t"><b>徐梓腾</b><small>主人账号 · 已连接</small></div><span class="chev">›</span></div>
+            <div class="set-group">
+              <div class="set-row"><span class="ic">⌁</span><div class="t">连接 / 后端入口</div><span class="val">127.0.0.1:27005</span></div>
+              <div class="set-row"><span class="ic">◐</span><div class="t">外观</div><span class="val">跟随系统</span></div>
+              <div class="set-row"><span class="ic">◉</span><div class="t">消息通知</div><div class="switch on"></div></div>
+            </div>
+            <div class="set-group">
+              <div class="set-row"><span class="ic">◇</span><div class="t">记忆</div><div class="switch on"></div></div>
+              <div class="set-row"><span class="ic">♡</span><div class="t">关系显示范围</div><span class="val">仅自己</span></div>
+              <div class="set-row"><span class="ic">⬡</span><div class="t">桌面端</div><span class="val">已安装</span></div>
+            </div>
+            <div class="set-group">
+              <div class="set-row"><span class="ic">?</span><div class="t">帮助与反馈</div><span class="chev">›</span></div>
+              <div class="set-row"><span class="ic">◌</span><div class="t">关于</div><span class="val">v35.7</span></div>
+            </div>
+            <div class="version">Hoshinoumi Mobile · 设计稿</div>
+          </div>
+          <nav class="bottom-nav"><div class="tab"><span class="ic">◉</span>聊天</div><div class="tab"><span class="ic">◇</span>记忆</div><div class="tab"><span class="ic">♡</span>关系</div><div class="tab on"><span class="ic">⚙</span>设置</div></nav>
+        </div>
+      </div></div>
+    </section>
+  </main>
+
+  <div class="note"><b>设计边界</b>：本页只确认移动端布局、尺寸、安全区与交互层级；所有内容来自 Vue 页面，不在设计稿里另写业务。会话、记忆、关系均为设计示例，最终以 `/api/*` 返回为准；非主人不展示私密数据和金额。</div>
+</div>
+</body>
+</html>
