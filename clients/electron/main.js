@@ -2,13 +2,16 @@ const { app, BrowserWindow, shell, ipcMain } = require('electron')
 const path = require('path')
 
 const FRONTEND = path.join(__dirname, '../../integrations/web/dist/index.html')
+const ICON = path.join(__dirname, 'assets/hoshinoumi.png')
 
+app.setAppUserModelId('com.hoshinoumi.desktop')
 app.commandLine.appendSwitch('no-sandbox')
 app.disableHardwareAcceleration()
 let win = null
 
 function createWindow() {
   win = new BrowserWindow({
+    icon: ICON,
     width: 1440,
     height: 900,
     minWidth: 1180,
