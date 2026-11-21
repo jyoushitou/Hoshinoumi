@@ -1,3 +1,6 @@
 ﻿target/
 gen/
 cargo-check.log
+
+webview-data*/
+*-debug.log
