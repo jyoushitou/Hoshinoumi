@@ -48,6 +48,10 @@ function createWindow() {
   win.on('close', (e) => {
     if (!quitting) { e.preventDefault(); win.hide() }
   })
+  win.on('minimize', (e) => {
+    e.preventDefault()
+    win.hide()
+  })
   win.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https?:/i.test(url)) shell.openExternal(url)
     return { action: 'deny' }
