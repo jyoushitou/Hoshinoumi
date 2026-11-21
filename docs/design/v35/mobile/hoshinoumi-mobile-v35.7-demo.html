@@ -64,10 +64,15 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 20% 0%,
 .modal-form{display:flex;flex-direction:column;gap:7px}.modal-form input,.modal-form select{height:32px;border:1px solid #dce8fb;border-radius:8px;padding:0 9px;font:9.5px inherit;outline:0}.modal-form button{border:0;background:#2563eb;color:#fff;border-radius:8px;padding:8px;font:10px inherit;cursor:pointer}
 .composer .input:empty:before{content:attr(data-ph);color:#aab7c8;font-size:10px}
 .bottom-nav{position:relative;height:76px;flex:none;display:flex;flex-direction:column;justify-content:flex-end;background:rgba(255,255,255,.96);border-top:1px solid #e5edf9;padding:0 8px 8px;backdrop-filter:blur(10px)}
-.bottom-nav.expanded{height:122px}
+.bottom-nav.expanded{height:auto}
 .bottom-nav .nav-row{display:grid;grid-template-columns:repeat(4,1fr);height:46px}
-.bottom-nav .nav-row.secondary{display:none}
-.bottom-nav.expanded .nav-row.secondary{display:grid}
+.nav-all{display:none;padding:4px 6px 2px}
+.bottom-nav.expanded .nav-all{display:block}
+.nav-all-title{font-size:8px;letter-spacing:.12em;color:#9aabc0;font-weight:700;padding:2px 4px 5px;border-top:1px solid #eef3fb;margin-top:2px}
+.nav-all-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.nav-all-grid button{height:34px;border:1px solid #e1ebf9;background:#f8fbff;border-radius:7px;color:#5a718d;font:8px inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;cursor:pointer}
+.nav-all-grid button b{font-size:12px;line-height:1;font-weight:400;color:#7e93ad}
+.nav-all-grid button.on{border-color:#bcd4ff;background:#eef4ff;color:#2563eb}
 .bottom-nav .tab{width:auto;height:45px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-radius:13px;color:#8a9bb0;font-size:8px}
 .bottom-nav .tab .ic{font-size:15px;line-height:1}
 .bottom-nav .tab.on{color:#2563eb;background:#eef4ff;font-weight:700}
@@ -91,9 +96,9 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 20% 0%,
   .d-view .list,.d-view .msgs,.d-view .mem-body,.d-view .rel-wrap,.d-view .set-body,.d-view .d-scroll{overflow-y:auto!important;-webkit-overflow-scrolling:touch}
   .toast{bottom:96px}
   #view{height:100dvh;padding-bottom:76px}
-  body.nav-expanded #view{padding-bottom:122px}
+  body.nav-expanded #view{padding-bottom:250px}
   #view .bottom-nav{position:fixed;left:0;right:0;bottom:0;z-index:40;width:100vw!important;max-width:100vw!important;box-sizing:border-box;height:76px;padding-bottom:max(8px,env(safe-area-inset-bottom));overflow:visible}
-  #view .bottom-nav.expanded{height:122px}
+  #view .bottom-nav.expanded{height:auto;min-height:250px}
   #view .bottom-nav .nav-row{height:46px}
   #view .bottom-nav .tab{width:auto!important;max-width:none!important;height:45px!important}
 }
@@ -150,6 +155,12 @@ const app = document.getElementById('view')
 let toastTimer = 0
 const readConversations = new Set()
 let navExpanded = false
+const allEntries = [
+  ['login','↪','登录'],['chats','◉','会话'],['chat','◌','聊天'],['group','▣','群聊'],['home','⌂','主页'],
+  ['memory','◇','记忆'],['relation','♡','关系'],['savings','¥','存钱'],['weekly','▦','周计划'],['info','i','信息'],
+  ['persona','◈','人设'],['commands','⌘','命令'],['cron','◷','定时'],['logs','≡','日志'],['settings','⚙','设置']
+]
+
 function toast(text){ const el=document.getElementById('toast'); el.textContent=text; el.classList.add('on'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('on'),1600) }
 
 const screens = {}
@@ -379,19 +390,22 @@ screens.logs = `
 ${nav('chats')}`
 
 function nav(active){
-  const row1 = [['chats','◉','聊天'],['memory','◇','记忆'],['relation','♡','关系'],['settings','⚙','设置']]
-  const row2 = [['home','⌂','主页'],['savings','¥','存钱'],['weekly','▦','周计划'],['info','i','信息']]
+  const quick = [['chats','◉','聊天'],['memory','◇','记忆'],['relation','♡','关系'],['settings','⚙','设置']]
   const tab = ([key,ic,label]) => `<div class="tab ${active===key?'on':''}" onclick="go('${key}')"><span class="ic">${ic}</span>${label}</div>`
-  return `<nav class="bottom-nav ${navExpanded?'expanded':''}"><button class="nav-grip" onclick="toggleNav(event)"><span class="grip-ic">⌃</span><span>快捷</span></button><div class="nav-row primary">${row1.map(tab).join('')}</div><div class="nav-row secondary">${row2.map(tab).join('')}</div></nav>`
+  const all = allEntries.map(([key,ic,label]) => `<button class="${active===key?'on':''}" onclick="go('${key}')"><b>${ic}</b>${label}</button>`).join('')
+  return `<nav class="bottom-nav ${navExpanded?'expanded':''}"><button class="nav-grip" onclick="toggleNav(event)"><span class="grip-ic">⌃</span><span>${navExpanded?'收起':'快捷'}</span></button><div class="nav-row">${quick.map(tab).join('')}</div><div class="nav-all"><div class="nav-all-title">全部入口</div><div class="nav-all-grid">${all}</div></div></nav>`
 }
 function toggleNav(e){
   e.stopPropagation()
   const nav = e.currentTarget.closest('.bottom-nav')
   navExpanded = !navExpanded
   nav.classList.toggle('expanded', navExpanded)
+  const gripLabel = nav.querySelector('.nav-grip span:last-child')
+  if (gripLabel) gripLabel.textContent = navExpanded ? '收起' : '快捷'
   document.body.classList.toggle('nav-expanded', navExpanded)
-  toast(navExpanded ? '已展开快捷入口' : '已收起')
+  toast(navExpanded ? '已展开全部入口' : '已收起')
 }
+
 
 function go(name){ document.querySelector('.demo-overlay')?.remove(); app.innerHTML = screens[name]; if(name==='chats'){ document.querySelectorAll('.conv[data-conv]').forEach(c=>{ if(readConversations.has(c.dataset.conv)) c.querySelectorAll('.badge').forEach(b=>b.remove()) }) } if(name==='chat'){ const input=document.getElementById('input'); if(input) input.style.cssText='flex:1;height:35px;border-radius:10px;background:#f5f8fe;border:1px solid #e6eefb;padding:6px 10px;color:#4a6079;font-size:10px;overflow:auto'; setTimeout(()=>document.getElementById('msgs')?.scrollTo(0,9999),30) } }
 
