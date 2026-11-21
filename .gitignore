@@ -1,4 +1,4 @@
-﻿# 测试文件
+# 测试文件
 __pycache__/
 
 .cph
@@ -61,4 +61,3 @@ data/avatars/
 clients/desktop/src-tauri/*.log
 run2.log
 clients/desktop/src-tauri/limited-integrity.txt
-clients/desktop/
