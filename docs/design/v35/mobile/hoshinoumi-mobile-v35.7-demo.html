@@ -107,6 +107,11 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 20% 0%,
 .bottom-nav .nav-row .tab{color:#8a9bb0!important;background:transparent!important}
 .bottom-nav .nav-row .tab.on{color:#2563eb!important;background:#eef4ff!important;font-weight:700}
 .bottom-nav .nav-row .tab .ic{color:inherit!important}
+.quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;max-height:260px;overflow:auto}
+.quick-choice{position:relative;height:46px;border:1px solid #e1ebf9;background:#f8fbff;border-radius:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;color:#607896;font:8px inherit;cursor:pointer}
+.quick-choice b{font-size:14px;font-weight:400;line-height:1}.quick-choice em{position:absolute;right:4px;top:2px;font-style:normal;color:#2563eb;font-size:8px}
+.quick-choice.on{border-color:#93c5fd;background:#eef4ff;color:#2563eb;font-weight:700}
+.quick-sheet h4 small{font-size:8px;color:#8fa2b8;font-weight:400;margin-left:4px}
 </style>
 </head>
 <body>
@@ -155,11 +160,15 @@ const app = document.getElementById('view')
 let toastTimer = 0
 const readConversations = new Set()
 let navExpanded = false
+let currentScreen = 'chats'
 const allEntries = [
   ['chats','◉','聊天'],['memory','◇','记忆'],['relation','♡','关系'],['settings','⚙','设置'],
   ['home','⌂','主页'],['savings','¥','存钱'],['weekly','▦','周计划'],['info','i','信息'],
   ['persona','◈','人设'],['commands','⌘','命令'],['cron','◷','定时'],['logs','≡','日志']
 ]
+const QUICK_DEFAULT = ['chats','memory','relation','settings']
+let quickKeys = [...QUICK_DEFAULT]
+try { const saved = JSON.parse(localStorage.getItem('hoshinoumi.quick') || 'null'); if (Array.isArray(saved) && saved.length >= 1 && saved.length <= 4) quickKeys = saved.filter(k => allEntries.some(e => e[0] === k)).slice(0,4) } catch {}
 
 function toast(text){ const el=document.getElementById('toast'); el.textContent=text; el.classList.add('on'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('on'),1600) }
 
@@ -247,6 +256,7 @@ screens.settings = `
   <div class="page-head"><h2>设置<small>SETTINGS</small></h2></div>
   <div class="set-body">
     <div class="profile" onclick="toast('账号信息演示')"><div class="avatar">徐</div><div class="t"><b>徐梓腾</b><small>主人账号 · 已连接</small></div><span class="chev">›</span></div>
+    <div class="set-group"><div class="set-row" onclick="openQuickSettings()"><span class="ic">★</span><div class="t">底部快捷栏</div><span class="val">${quickKeys.map(k=>allEntries.find(e=>e[0]===k)?.[2]).join(' / ')}</span></div></div>
     <div class="set-group"><div class="set-row" onclick="toast('连接设置演示')"><span class="ic">⌁</span><div class="t">连接 / 后端入口</div><span class="val">127.0.0.1:27005</span></div><div class="set-row" onclick="toast('外观设置演示')"><span class="ic">◐</span><div class="t">外观</div><span class="val">跟随系统</span></div><div class="set-row"><span class="ic">◉</span><div class="t">消息通知</div><div class="switch on" onclick="toggleSwitch(this)"></div></div></div>
     <div class="set-group"><div class="set-row"><span class="ic">◇</span><div class="t">记忆</div><div class="switch on" onclick="toggleSwitch(this)"></div></div><div class="set-row" onclick="toast('关系显示范围演示')"><span class="ic">♡</span><div class="t">关系显示范围</div><span class="val">仅自己</span></div><div class="set-row" onclick="toast('桌面端状态演示')"><span class="ic">⬡</span><div class="t">桌面端</div><span class="val">已安装</span></div></div>
     <div class="set-group"><div class="set-row" onclick="toast('帮助与反馈演示')"><span class="ic">?</span><div class="t">帮助与反馈</div><span class="chev">›</span></div><div class="set-row" onclick="toast('关于 Hoshinoumi Mobile')"><span class="ic">◌</span><div class="t">关于</div><span class="val">v35.7</span></div></div>
@@ -390,10 +400,10 @@ screens.logs = `
 ${nav('chats')}`
 
 function nav(active){
-  const quick = [['chats','◉','聊天'],['memory','◇','记忆'],['relation','♡','关系'],['settings','⚙','设置']]
+  const quick = quickKeys.map(k => allEntries.find(e => e[0] === k)).filter(Boolean)
   const tab = ([key,ic,label]) => `<div class="tab ${active===key?'on':''}" onclick="go('${key}')"><span class="ic">${ic}</span>${label}</div>`
   const all = allEntries.map(([key,ic,label]) => `<button class="${active===key?'on':''}" title="${label}" aria-label="${label}" onclick="go('${key}')"><b>${ic}</b></button>`).join('')
-  return `<nav class="bottom-nav ${navExpanded?'expanded':''}"><button class="nav-grip" onclick="toggleNav(event)"><span class="grip-ic">⌃</span><span>${navExpanded?'':'快捷'}</span></button><div class="nav-row">${quick.map(tab).join('')}</div><div class="nav-all"><div class="nav-all-grid">${all}</div></div></nav>`
+  return `<nav class="bottom-nav ${navExpanded?'expanded':''}"><button class="nav-grip" onclick="toggleNav(event)"><span class="grip-ic">⌃</span><span>${navExpanded?'':'快捷'}</span></button><div class="nav-row" style="grid-template-columns:repeat(${quick.length},1fr)">${quick.map(tab).join('')}</div><div class="nav-all"><div class="nav-all-grid">${all}</div></div></nav>`
 }
 function toggleNav(e){
   e.stopPropagation()
@@ -407,6 +417,7 @@ function toggleNav(e){
 
 
 function go(name){
+  currentScreen = name
   if (navExpanded) { navExpanded = false; document.body.classList.remove('nav-expanded') }
   document.querySelector('.demo-overlay')?.remove(); app.innerHTML = screens[name]; if(name==='chats'){ document.querySelectorAll('.conv[data-conv]').forEach(c=>{ if(readConversations.has(c.dataset.conv)) c.querySelectorAll('.badge').forEach(b=>b.remove()) }) } if(name==='chat'){ const input=document.getElementById('input'); if(input) input.style.cssText='flex:1;height:35px;border-radius:10px;background:#f5f8fe;border:1px solid #e6eefb;padding:6px 10px;color:#4a6079;font-size:10px;overflow:auto'; setTimeout(()=>document.getElementById('msgs')?.scrollTo(0,9999),30) } }
 
@@ -462,6 +473,21 @@ function saveSavings(){ closeOverlay(); toast('已记录（演示数据，不提
 function selectSeg(el){ [...el.parentElement.children].forEach(x=>x.classList.remove('on')); el.classList.add('on') }
 function togglePeriod(el){ el.classList.toggle('on'); toast(el.classList.contains('on')?'节次已启用（演示）':'节次已关闭（演示）') }
 function activatePersona(el,name){ [...document.querySelectorAll('.persona-card')].forEach(x=>{x.classList.remove('on'); const e=x.querySelector('em'); if(e) e.textContent='切换'}); el.classList.add('on'); const e=el.querySelector('em'); if(e) e.textContent='使用中'; toast('已切换人设：'+name) }
+
+
+function saveQuick(){ try { localStorage.setItem('hoshinoumi.quick', JSON.stringify(quickKeys)) } catch {} }
+function openQuickSettings(){
+  const rows = allEntries.map(([key,ic,label]) => `<button class="quick-choice ${quickKeys.includes(key)?'on':''}" onclick="toggleQuick('${key}')"><b>${ic}</b><span>${label}</span><em>${quickKeys.includes(key)?'✓':''}</em></button>`).join('')
+  overlay(`<div class="sheet quick-sheet"><h4>底部快捷栏 <small>${quickKeys.length}/5</small></h4><div class="quick-grid">${rows}</div><button class="sheet-close" onclick="closeQuickSettings()">完成</button><button class="sheet-close" style="margin-top:6px;background:#fff;border:1px solid #dbe8ff" onclick="resetQuick()">恢复默认</button></div>`)
+}
+function toggleQuick(key){
+  const i = quickKeys.indexOf(key)
+  if (i >= 0) { if (quickKeys.length <= 1) { toast('至少保留一个快捷入口'); return } quickKeys.splice(i,1) }
+  else { if (quickKeys.length >= 5) { toast('最多选择 5 个'); return } quickKeys.push(key) }
+  saveQuick(); openQuickSettings()
+}
+function resetQuick(){ quickKeys = [...QUICK_DEFAULT]; saveQuick(); openQuickSettings() }
+function closeQuickSettings(){ closeOverlay(); go(currentScreen) }
 
 const initial = new URLSearchParams(location.search).get('screen')
 const fallback = window.innerWidth <= 860 ? 'chats' : 'login'
