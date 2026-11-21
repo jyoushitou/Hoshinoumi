@@ -41,3 +41,11 @@ Tauri 通过 `build.frontendDist` 直接加载，不复制第二套页面。
 v35.6.0.0 壳骨架 / 窗口 / 标题栏 / 窗口控制
 后续：托盘、路由设置、WebView2 固定运行时、兜底页
 ```
+
+## 构建前置检查
+
+```text
+cargo check 需要能访问 crates.io
+本轮网络更新 crates.io index 卡住，Rust 依赖编译尚未完成
+工程文件与窗口配置已落盘
+```
