@@ -12,6 +12,7 @@ docs/design/v35/
 ├─ render.ps1
 ├─ mobile/
 │  └─ hoshinoumi-mobile-v35.7.html / .png  v35.7 手机 Vue 设计稿（六屏）
+│      hoshinoumi-mobile-v35.7-demo.html   可交互演示
 ├─ web/
 │  ├─ hoshinoumi-web-v35.5.html / .png    v35.5 聊天室演示
 │  ├─ DEVELOPMENT.md                     v35.5 开发拆分

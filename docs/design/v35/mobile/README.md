@@ -3,9 +3,11 @@
 ## 文件
 
 ```text
-hoshinoumi-mobile-v35.7.html   六屏手机画板
-mobile.css                     设计稿样式
-hoshinoumi-mobile-v35.7.png    渲染截图
+hoshinoumi-mobile-v35.7.html        六屏手机画板
+hoshinoumi-mobile-v35.7-demo.html   可交互 HTML 演示
+hoshinoumi-mobile-v35.7-demo.png    交互演示截图
+mobile.css                          设计稿样式
+hoshinoumi-mobile-v35.7.png         六屏渲染图
 ```
 
 ## 画板
@@ -44,6 +46,24 @@ hoshinoumi-mobile-v35.7.png    渲染截图
 430–767px 大屏手机 / 小折叠
 ≥ 768px   平板两栏，进入 v35.14 平板设计
 ```
+
+## 交互演示
+
+```text
+hoshinoumi-mobile-v35.7-demo.html
+```
+
+浏览器直接打开：
+
+- 登录 → 会话列表
+- 点奈绪 → 聊天
+- 返回 → 会话列表
+- 底部导航 → 记忆 / 关系 / 设置
+- 聊天输入 → 发送演示消息 → 演示回复
+- 设置开关可点击
+- 右侧画板可跳任意屏 / 重置
+
+演示数据仅用于确认布局，不代表真实业务。
 
 ## 这个 HTML 是什么
 

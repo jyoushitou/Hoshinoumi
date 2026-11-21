@@ -1,0 +1,181 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hoshinoumi Mobile · v35.7 交互演示</title>
+<link rel="stylesheet" href="mobile.css">
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 20% 0%,rgba(56,189,248,.16),transparent 60%),radial-gradient(800px 600px at 90% 20%,rgba(139,92,246,.12),transparent 60%),linear-gradient(180deg,#edf4ff,#e8f0fd);font:14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif;color:#17263b}
+.demo-page{max-width:1040px;margin:0 auto;padding:34px 24px 48px;display:grid;grid-template-columns:390px 1fr;gap:46px;align-items:center;min-height:100vh}
+.demo-stage{display:flex;flex-direction:column;align-items:center}
+.demo-title{font-size:12px;letter-spacing:.18em;color:#5e7ca6;font-weight:800;margin-bottom:10px}
+.demo-title span{color:#94a8c2;font-weight:500;letter-spacing:.02em}
+.demo-stage .phone{width:390px;height:844px}
+.demo-side{align-self:center}
+.demo-side .kicker{font-size:10px;letter-spacing:.2em;color:#2563eb;font-weight:800;margin-bottom:10px}
+.demo-side h1{font-size:28px;line-height:1.25;letter-spacing:-.02em;margin:0 0 10px}
+.demo-side p{color:#7287a1;font-size:12px;line-height:1.8;margin:0 0 20px;max-width:360px}
+.demo-screen-list{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:360px}
+.demo-screen-list button{border:1px solid #dce8fb;background:#fff;border-radius:10px;padding:9px 10px;text-align:left;font:11px inherit;color:#45617f;cursor:pointer;transition:.18s;box-shadow:0 2px 8px rgba(37,99,235,.03)}
+.demo-screen-list button:hover{border-color:#a9c8ff;color:#2563eb;transform:translateY(-1px)}
+.demo-screen-list button span{display:block;font-size:8px;color:#9aabc0;letter-spacing:.1em;margin-bottom:2px}
+.demo-note{margin-top:18px;border:1px dashed #cfdfff;background:rgba(255,255,255,.58);border-radius:10px;padding:10px 12px;color:#7a8da5;font-size:9.5px;line-height:1.75;max-width:360px}
+.demo-note b{color:#4e6a8b}
+.reset{margin-top:12px;border:0;background:#2563eb;color:#fff;border-radius:9px;padding:8px 14px;font:11px inherit;cursor:pointer;box-shadow:0 8px 18px rgba(37,99,235,.2)}
+.demo-caption{font-size:9px;color:#9aabc0;margin-top:10px;letter-spacing:.02em}
+.screen-body.d-view{display:flex;flex-direction:column;height:100%;min-height:0}
+.d-view>.login{flex:1}
+.toast{position:absolute;left:50%;bottom:90px;transform:translateX(-50%) translateY(8px);background:rgba(15,30,52,.9);color:#fff;border-radius:9px;padding:8px 12px;font-size:9px;opacity:0;transition:.2s;pointer-events:none;z-index:20;white-space:nowrap}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.hide{display:none!important}
+@media(max-width:860px){.demo-page{grid-template-columns:1fr;justify-items:center}.demo-side{text-align:center}.demo-side p,.demo-note{margin-left:auto;margin-right:auto}.demo-screen-list{justify-content:center}.demo-stage{max-width:390px}}
+</style>
+</head>
+<body>
+<div class="demo-page">
+  <div class="demo-stage">
+    <div class="demo-title">HOSHINOUMI MOBILE <span>· v35.7 交互演示</span></div>
+    <div class="phone"><div class="island"></div><div class="screen" id="app">
+      <div class="statusbar"><span>9:41</span><div class="right"><span class="sig"><i></i><i></i><i></i><i></i></span><span>5G</span><div class="battery"></div></div></div>
+      <div class="screen-body d-view" id="view"></div>
+      <div class="toast" id="toast"></div>
+    </div></div>
+    <div class="demo-caption">390 × 844 · 设计演示，非真实数据</div>
+  </div>
+
+  <aside class="demo-side">
+    <div class="kicker">MOBILE WEB · DESIGN DEMO</div>
+    <h1>手机 Vue<br>交互设计稿</h1>
+    <p>点击右侧画板或手机里的会话、底部导航、返回、发送按钮。这里只演示移动端结构与触控，不代表真实业务数据。</p>
+    <div class="demo-screen-list">
+      <button onclick="go('login')"><span>01</span>登录</button>
+      <button onclick="go('chats')"><span>02</span>会话列表</button>
+      <button onclick="go('chat')"><span>03</span>聊天</button>
+      <button onclick="go('memory')"><span>04</span>记忆</button>
+      <button onclick="go('relation')"><span>05</span>关系</button>
+      <button onclick="go('settings')"><span>06</span>设置</button>
+    </div>
+    <button class="reset" onclick="go('login')">重置演示</button>
+    <div class="demo-note"><b>演示内容：</b>登录 → 会话 → 聊天；聊天可发送一条演示消息并收到演示回复；底部导航切换记忆 / 关系 / 设置；设置开关可点击。</div>
+  </aside>
+</div>
+
+<script>
+const app = document.getElementById('view')
+let toastTimer = 0
+function toast(text){ const el=document.getElementById('toast'); el.textContent=text; el.classList.add('on'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('on'),1600) }
+
+const screens = {}
+screens.login = `
+<div class="login">
+  <div class="logo"><img src="../../logo/hoshinoumi.svg" alt="Hoshinoumi"></div>
+  <div class="brandline">HOSHINOUMI<small>REC · MOBILE</small></div>
+  <div class="hello">欢迎回来，<br><em>今天想聊点什么？</em></div>
+  <div class="sub">登录后同步会话、记忆与关系。</div>
+  <div class="form">
+    <div class="field"><label>QQ 号</label><input placeholder="输入你的 QQ 号" inputmode="numeric" value="10001"></div>
+    <div class="field pass"><div style="flex:1"><label>访问 Token</label><input placeholder="输入 owner token" type="password" value="demo-token"></div><span class="eye">◉</span></div>
+    <div class="server"><i></i>已连接 127.0.0.1:27005 · 本机网关</div>
+    <button class="primary" onclick="go('chats')">登录</button>
+  </div>
+  <div class="tip">仅主人账号可登录 · 不保存密码</div>
+  <div class="safe"></div>
+</div>`
+
+screens.chats = `
+<div class="screen-body" style="flex:1;min-height:0;display:flex;flex-direction:column">
+  <div class="mobile-head">
+    <div class="row1"><div class="avatar bot">奈</div><div class="brand">HOSHINOUMI<small>REC · ONLINE</small></div><div class="spacer"></div><div class="icon-btn" onclick="toast('搜索演示')">⌕</div><div class="icon-btn" onclick="toast('新建会话演示')">＋</div></div>
+    <div class="search" onclick="toast('搜索会话 / 记忆 / 命令')">⌕ 搜索会话 / 记忆 / 命令<span class="k">⌘K</span></div>
+    <div class="chips"><div class="chip on">全部</div><div class="chip">私聊</div><div class="chip">群聊</div></div>
+  </div>
+  <div class="list">
+    <div class="sec-title"><span>最近</span><span>已同步</span></div>
+    <div class="conv on" onclick="go('chat')"><div class="avatar bot">奈</div><div class="copy"><b>奈绪</b><span>你回来啦。今天外面有点冷，先喝点热的吧。</span></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="when">刚刚</span><span class="badge blue">2</span></div></div>
+    <div class="conv" onclick="toast('群会话演示')"><div class="avatar">学</div><div class="copy"><b>星之海学生会</b><span>友利：下午的会议改到三点。</span></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="when">12:40</span><span class="badge">5</span></div></div>
+    <div class="conv" onclick="toast('提醒会话演示')"><div class="avatar">猫</div><div class="copy"><b>猫咪投喂提醒</b><span>今天还没喂猫。</span></div><span class="when" style="align-self:center">昨天</span></div>
+    <div class="conv" onclick="toast('记忆本演示')"><div class="avatar">记</div><div class="copy"><b>记忆本 · 新增 1 条</b><span>“她记得你不喜欢香菜。”</span></div><span class="when" style="align-self:center">昨天</span></div>
+  </div>
+</div>
+${nav('chats')}`
+
+screens.chat = `
+<div class="screen-body" style="flex:1;min-height:0;display:flex;flex-direction:column">
+  <header class="chat-head">
+    <div class="row"><span class="back" onclick="go('chats')">‹</span><div class="avatar bot sm">奈</div><div class="who"><b>奈绪</b><span>在线 · 正在输入…</span></div><div class="acts"><span onclick="toast('搜索演示')">⌕</span><span onclick="toast('菜单演示')">☰</span></div></div>
+    <div class="subline"><em>关系 · 熟悉</em><span>记忆已开启</span><span style="margin-left:auto">今日第 3 次</span></div>
+  </header>
+  <div class="msgs" id="msgs">
+    <div class="day">今天 09:38</div>
+    <div class="msg"><div class="avatar bot sm">奈</div><div><div class="bubble">早呀。昨天你睡得很晚，今天要不要把节奏放慢一点？</div><div class="stamp">09:38</div></div></div>
+    <div class="msg me"><div><div class="bubble">嗯，今天没什么安排。</div><div class="stamp">09:40 · 已读</div></div><div class="avatar sm">你</div></div>
+    <div class="msg"><div class="avatar bot sm">奈</div><div><div class="bubble">那我把下午留给你。想去图书馆，还是就在学生会室待着？</div><div class="stamp">09:41</div></div></div>
+    <div class="msg"><div class="avatar bot sm">奈</div><div><div class="bubble">学生会室吧。窗外那棵树下，猫应该又会来。</div><div class="memchip">✦ 来自记忆 · 喜欢安静的下午</div><div class="stamp">09:42</div></div></div>
+  </div>
+  <div class="composer">
+    <div class="bar"><div class="plus" onclick="toast('图片 / 语音 / 表情演示')">＋</div><div class="input" id="input" contenteditable="true" data-ph="和奈绪说点什么…"></div><div class="mic" onclick="toast('长按说话演示')">◉</div><button class="send" onclick="sendMsg()">↑</button></div>
+    <div class="hint"><span>长按说话 · 支持图片 / 语音</span><span>记忆已开启</span></div>
+  </div>
+  <div class="safe"></div>
+</div>`
+
+screens.memory = `
+<div class="screen-body" style="flex:1;min-height:0;display:flex;flex-direction:column">
+  <div class="page-head"><h2>记忆<small>MEMORY BOOK</small></h2><div class="act" onclick="toast('搜索记忆演示')">⌕</div></div>
+  <div class="mem-body">
+    <div class="hero-card"><small>最近一条 · 今天</small><h3>“她记得你不喜欢香菜。”</h3><p>从会话里记下的生活偏好，已归入画像。</p><div class="stat"><div><b>28</b><span>记忆本</span></div><div><b>6</b><span>本周新增</span></div><div><b>4</b><span>待确认</span></div></div></div>
+    <div class="two"><div class="mini-card" onclick="toast('记忆本演示')"><div class="ic">▤</div><b>记忆本</b><small>按主题浏览</small></div><div class="mini-card" onclick="toast('最近事件演示')"><div class="ic">◷</div><b>最近事件</b><small>上周 · 学生会</small></div><div class="mini-card" onclick="toast('画像演示')"><div class="ic">◉</div><b>她的画像</b><small>偏好 / 习惯</small></div><div class="mini-card" onclick="toast('关系记忆演示')"><div class="ic">♡</div><b>关系记忆</b><small>一起经历过</small></div></div>
+    <div class="mem-title"><span>最近的记忆</span><span onclick="toast('全部记忆演示')">全部 ›</span></div>
+    <div class="mem-item"><div class="avatar sm">记</div><div class="t"><b>不喜欢香菜</b><span>饮食习惯 · 今天</span></div><em>偏好</em></div>
+    <div class="mem-item"><div class="avatar sm">记</div><div class="t"><b>喜欢安静的下午</b><span>生活 · 昨天</span></div><em>生活</em></div>
+    <div class="mem-item"><div class="avatar sm">记</div><div class="t"><b>那棵树下有猫</b><span>学生会室 · 上周</span></div><em>场景</em></div>
+  </div>
+</div>
+${nav('memory')}`
+
+screens.relation = `
+<div class="screen-body" style="flex:1;min-height:0;display:flex;flex-direction:column">
+  <div class="page-head"><h2>关系<small>RELATION</small></h2><div class="act" onclick="toast('关系更多操作演示')">…</div></div>
+  <div class="rel-wrap">
+    <div class="rel-card"><div class="rel-avatar">奈</div><div class="rel-main"><b>奈绪</b><small>认识 286 天 · 最近联系 5 分钟前</small><div class="rel-tier"><em>熟悉</em><span>还没到下一档</span></div><div class="rel-progress"><i></i></div><div class="rel-note">亲近程度由相处与共同经历决定，不展示具体数值。</div></div></div>
+    <div class="rel-sec"><h4>最近的变化</h4><div class="rel-event"><span class="dot"></span><p>一起准备了学生会周会</p><small>2 天前</small></div><div class="rel-event"><span class="dot" style="background:#a78bfa"></span><p>你记住了她喜欢安静的地方</p><small>昨天</small></div><div class="rel-event"><span class="dot" style="background:#34d399"></span><p>她主动问你今天累不累</p><small>5 分钟前</small></div></div>
+    <div class="privacy">🔒 关系与记忆只对主人账号可见；非主人访问返回 403，不展示金额或私密内容。</div>
+  </div>
+</div>
+${nav('relation')}`
+
+screens.settings = `
+<div class="screen-body" style="flex:1;min-height:0;display:flex;flex-direction:column">
+  <div class="page-head"><h2>设置<small>SETTINGS</small></h2></div>
+  <div class="set-body">
+    <div class="profile" onclick="toast('账号信息演示')"><div class="avatar">徐</div><div class="t"><b>徐梓腾</b><small>主人账号 · 已连接</small></div><span class="chev">›</span></div>
+    <div class="set-group"><div class="set-row" onclick="toast('连接设置演示')"><span class="ic">⌁</span><div class="t">连接 / 后端入口</div><span class="val">127.0.0.1:27005</span></div><div class="set-row" onclick="toast('外观设置演示')"><span class="ic">◐</span><div class="t">外观</div><span class="val">跟随系统</span></div><div class="set-row"><span class="ic">◉</span><div class="t">消息通知</div><div class="switch on" onclick="toggleSwitch(this)"></div></div></div>
+    <div class="set-group"><div class="set-row"><span class="ic">◇</span><div class="t">记忆</div><div class="switch on" onclick="toggleSwitch(this)"></div></div><div class="set-row" onclick="toast('关系显示范围演示')"><span class="ic">♡</span><div class="t">关系显示范围</div><span class="val">仅自己</span></div><div class="set-row" onclick="toast('桌面端状态演示')"><span class="ic">⬡</span><div class="t">桌面端</div><span class="val">已安装</span></div></div>
+    <div class="set-group"><div class="set-row" onclick="toast('帮助与反馈演示')"><span class="ic">?</span><div class="t">帮助与反馈</div><span class="chev">›</span></div><div class="set-row" onclick="toast('关于 Hoshinoumi Mobile')"><span class="ic">◌</span><div class="t">关于</div><span class="val">v35.7</span></div></div>
+    <div class="version">Hoshinoumi Mobile · 设计演示</div>
+  </div>
+</div>
+${nav('settings')}`
+
+function nav(active){ return `<nav class="bottom-nav"><div class="tab ${active==='chats'?'on':''}" onclick="go('chats')"><span class="ic">◉</span>聊天</div><div class="tab ${active==='memory'?'on':''}" onclick="go('memory')"><span class="ic">◇</span>记忆</div><div class="tab ${active==='relation'?'on':''}" onclick="go('relation')"><span class="ic">♡</span>关系</div><div class="tab ${active==='settings'?'on':''}" onclick="go('settings')"><span class="ic">⚙</span>设置</div></nav>` }
+
+function go(name){ app.innerHTML = screens[name]; if(name==='chat'){ const input=document.getElementById('input'); if(input) input.style.cssText='flex:1;height:35px;border-radius:10px;background:#f5f8fe;border:1px solid #e6eefb;padding:6px 10px;color:#4a6079;font-size:10px;overflow:auto'; setTimeout(()=>document.getElementById('msgs')?.scrollTo(0,9999),30) } }
+
+function toggleSwitch(el){ el.classList.toggle('on'); toast(el.classList.contains('on')?'已开启演示':'已关闭演示') }
+
+function sendMsg(){
+  const input=document.getElementById('input'); if(!input) return
+  const text=input.textContent.trim(); if(!text) return
+  const msgs=document.getElementById('msgs'); if(!msgs) return
+  const me=document.createElement('div'); me.className='msg me'; me.innerHTML=`<div><div class="bubble"></div><div class="stamp">刚刚 · 已读</div></div><div class="avatar sm">你</div>`; me.querySelector('.bubble').textContent=text; msgs.appendChild(me)
+  input.textContent=''; msgs.scrollTop=msgs.scrollHeight
+  const typing=document.createElement('div'); typing.className='msg'; typing.innerHTML='<div class="avatar bot sm">奈</div><div class="typing"><i></i><i></i><i></i></div>'; msgs.appendChild(typing); msgs.scrollTop=msgs.scrollHeight
+  setTimeout(()=>{ typing.remove(); const bot=document.createElement('div'); bot.className='msg'; bot.innerHTML='<div class="avatar bot sm">奈</div><div><div class="bubble">我在听。慢慢说就好。</div><div class="stamp">刚刚</div></div>'; msgs.appendChild(bot); msgs.scrollTop=msgs.scrollHeight }, 900)
+}
+
+go('login')
+</script>
+</body>
+</html>
