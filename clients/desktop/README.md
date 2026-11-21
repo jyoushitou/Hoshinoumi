@@ -78,3 +78,22 @@ cargo run 在 setup 阶段报 os error 5（拒绝访问）
 ```
 
 不要在管理员终端里直接 `cargo run`。
+
+
+## 当前运行状态
+
+```text
+cargo build 通过
+窗口可以创建
+当前机器 WebView2 页面仍白屏/偶发 setup 失败
+下一步 v35.6.1.0：固定 WebView2 Runtime
+```
+
+排查记录：
+
+```text
+MinGW → 已切 MSVC
+UAC 关闭 → 已开启，当前 Medium Integrity
+默认 WebView 数据目录创建失败 → 改为 LOCALAPPDATA/Hoshinoumi/webview
+GPU 合成崩溃 → 启动参数 --disable-gpu 后可创建窗口
+```

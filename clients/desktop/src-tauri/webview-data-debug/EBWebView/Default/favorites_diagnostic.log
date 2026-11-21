@@ -1,0 +1,19 @@
+2026-11-21 01:45:25.943: [INFO] CurrentProfilePath: D:\Desktop\Desktop\develop\NapCat+Pyhon\clients\desktop\src-tauri\webview-data-debug\EBWebView\Default
+2026-11-21 01:45:25.943: [INFO] Profiles total count: 1
+2026-11-21 01:45:25.943: [INFO] Profile: name=用户配置 1 path=D:\Desktop\Desktop\develop\NapCat+Pyhon\clients\desktop\src-tauri\webview-data-debug\EBWebView\Default lastActive=null
+2026-11-21 01:45:25.943: [INFO] LastUsedProfileDir: D:\Desktop\Desktop\develop\NapCat+Pyhon\clients\desktop\src-tauri\webview-data-debug\EBWebView\Default
+2026-11-21 01:45:25.943: [INFO] OnDoneLoading sync enabled: 0
+2026-11-21 01:45:25.943: [INFO] BookmarkModelLoaded, ids_reassigned: 0
+2026-11-21 01:45:25.943: [INFO] BookmarksLoadDropped droppedNodes=0
+2026-11-21 01:45:25.943: [INFO] BookmarksSnapshot Startup total=0 bar=0 other=0 mobile=0 showBar=0 showBarNTP=1
+2026-11-21 01:45:47.079: [INFO] BookmarksSnapshot Shutdown total=0 bar=0 other=0 mobile=0 showBar=0 showBarNTP=1
+2026-11-21 01:45:51.047: [INFO] CurrentProfilePath: D:\Desktop\Desktop\develop\NapCat+Pyhon\clients\desktop\src-tauri\webview-data-debug\EBWebView\Default
+2026-11-21 01:45:51.047: [INFO] Profiles total count: 1
+2026-11-21 01:45:51.047: [INFO] Profile: name=用户配置 1 path=D:\Desktop\Desktop\develop\NapCat+Pyhon\clients\desktop\src-tauri\webview-data-debug\EBWebView\Default lastActive=2026-11-21T01:45:26.297Z
+2026-11-21 01:45:51.047: [INFO] LastUsedProfileDir: D:\Desktop\Desktop\develop\NapCat+Pyhon\clients\desktop\src-tauri\webview-data-debug\EBWebView\Default
+2026-11-21 01:45:51.047: [INFO] MostRecentlyActiveProfile: name=用户配置 1 path=D:\Desktop\Desktop\develop\NapCat+Pyhon\clients\desktop\src-tauri\webview-data-debug\EBWebView\Default lastActive=2026-11-21T01:45:26.297Z
+2026-11-21 01:45:51.047: [INFO] OnDoneLoading sync enabled: 0
+2026-11-21 01:45:51.047: [INFO] BookmarkModelLoaded, ids_reassigned: 0
+2026-11-21 01:45:51.047: [INFO] BookmarksLoadDropped droppedNodes=0
+2026-11-21 01:45:51.047: [INFO] BookmarksSnapshot Startup total=0 bar=0 other=0 mobile=0 showBar=0 showBarNTP=1
+2026-11-21 01:46:09.425: [INFO] BookmarksSnapshot Shutdown total=0 bar=0 other=0 mobile=0 showBar=0 showBarNTP=1

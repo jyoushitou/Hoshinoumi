@@ -7,20 +7,7 @@
     "frontendDist": "../../../integrations/web/dist"
   },
   "app": {
-    "windows": [
-      {
-        "label": "main",
-        "title": "Hoshinoumi",
-        "width": 1440,
-        "height": 900,
-        "minWidth": 1180,
-        "minHeight": 760,
-        "center": true,
-        "resizable": true,
-        "decorations": false,
-        "transparent": false
-      }
-    ],
+    "windows": [],
     "security": {
       "csp": null
     }
