@@ -1,7 +1,5 @@
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    // 当前 Windows/WebView2 环境在 GPU 合成初始化时崩溃，先禁用 GPU。
-    std::env::set_var("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", "--disable-gpu");
     std::panic::set_hook(Box::new(|info| {
         if let Some(path) = std::env::current_exe().ok().and_then(|p| p.parent().map(|d| d.join("desktop-crash.log"))) {
             let _ = std::fs::write(path, format!("{info}\n"));

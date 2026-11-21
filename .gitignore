@@ -58,3 +58,6 @@ deploy/家里开机应急卡.png
 deploy/家里开机应急卡.pdf
 
 data/avatars/
+clients/desktop/src-tauri/*.log
+run2.log
+clients/desktop/src-tauri/limited-integrity.txt
