@@ -9,7 +9,8 @@
     "dist": "electron-builder"
   },
   "devDependencies": {
-    "electron": "38.8.6"
+    "electron": "38.8.6",
+    "electron-builder": "^26.18.0"
   },
   "build": {
     "appId": "com.hoshinoumi.desktop",
@@ -33,6 +34,18 @@
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true
-    }
+    },
+    "extraResources": [
+      {
+        "from": "../../integrations/web/dist",
+        "to": "web-dist"
+      }
+    ],
+    "extraFiles": [
+      {
+        "from": "launcher.cmd",
+        "to": "启动 Hoshinoumi.cmd"
+      }
+    ]
   }
 }

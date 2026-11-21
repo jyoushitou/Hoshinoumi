@@ -3,7 +3,9 @@ const fs = require('fs')
 const path = require('path')
 const crypto = require('crypto')
 
-const FRONTEND = path.join(__dirname, '../../integrations/web/dist/index.html')
+const FRONTEND = app.isPackaged
+  ? path.join(process.resourcesPath, 'web-dist', 'index.html')
+  : path.join(__dirname, '../../integrations/web/dist/index.html')
 const ICON = path.join(__dirname, 'assets/hoshinoumi.png')
 
 app.setAppUserModelId('com.hoshinoumi.desktop')
