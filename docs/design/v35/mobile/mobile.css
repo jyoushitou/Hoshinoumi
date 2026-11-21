@@ -165,12 +165,14 @@ h1{font-size:30px;line-height:1.2;margin:0 0 9px;letter-spacing:-.02em}
 .note{max-width:1320px;margin:30px auto 0;padding:14px 18px;border:1px dashed #cfdfff;background:rgba(255,255,255,.55);border-radius:12px;color:#7188a3;font-size:10px;line-height:1.8}
 @media (max-width:1300px){body{min-width:0}.board{grid-template-columns:repeat(2,390px)}}
 
-/* browser viewport chrome */
-.browser-top{height:38px;flex:none;display:flex;align-items:center;gap:6px;padding:0 12px;background:#f0f5fc;border-bottom:1px solid #e1eafa}
-.browser-top .b-back{width:18px;text-align:center;color:#7086a1;font-size:15px;line-height:1}
-.browser-top .b-url{flex:1;height:23px;border-radius:7px;background:#fff;border:1px solid #dfe9f7;display:flex;align-items:center;justify-content:center;gap:4px;color:#6d829c;font-size:8px;letter-spacing:.01em}
-.browser-top .b-url:before{content:"⌂";font-size:8px;color:#8da3bc}
-.browser-top .b-icon{width:18px;text-align:center;color:#7086a1;font-size:12px;line-height:1}
-.browser-bottom{height:42px;flex:none;display:flex;align-items:center;justify-content:space-around;background:#f0f5fc;border-top:1px solid #e1eafa;color:#7086a1;font-size:14px;padding:0 14px 3px}
-.browser-bottom .b-tab{display:flex;align-items:center;justify-content:center;width:30px;height:26px;border:1px solid #cad9ee;border-radius:6px;font-size:8px;color:#6d829c;background:#fff}
-.browser-bottom .b-share{font-size:12px}
+/* browser viewport chrome: phone-like single-tab browser */
+.browser-top{height:50px;flex:none;display:flex;align-items:center;gap:8px;padding:0 12px;background:#fff;border-bottom:1px solid #edf1f6}
+.browser-top .b-site{width:22px;height:22px;border-radius:7px;background:#eef4ff;display:grid;place-items:center;color:#2563eb;font-size:11px;flex:none}
+.browser-top .b-address{flex:1;height:34px;border:1px solid #e4e9f0;border-radius:11px;background:#f7f8fa;display:flex;align-items:center;justify-content:center;color:#68778a;font-size:8.5px;letter-spacing:.01em}
+.browser-top .b-close{width:20px;text-align:center;color:#6f7d8e;font-size:17px;line-height:1}
+.browser-progress{height:2px;flex:none;background:#eef3f8}.browser-progress i{display:block;height:100%;width:34%;background:linear-gradient(90deg,#2563eb,#38bdf8);border-radius:0 2px 2px 0}
+.browser-bottom{height:50px;flex:none;display:flex;align-items:center;justify-content:space-between;background:#fff;border-top:1px solid #edf1f6;padding:0 22px 3px;color:#4f5d70}
+.browser-bottom .b-nav{font-size:20px;line-height:1;color:#4f5d70}
+.browser-bottom .b-tab{min-width:25px;height:21px;padding:0 5px;border:1.5px solid #7b8796;border-radius:7px;display:grid;place-items:center;font-size:9px;color:#4f5d70;background:#fff}
+.browser-bottom .b-ai{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:13px;font-weight:850;background:conic-gradient(from 210deg,#f97316,#ec4899,#8b5cf6,#38bdf8,#f97316);box-shadow:0 5px 14px rgba(139,92,246,.3);border:2px solid #fff}
+.browser-bottom .b-home{width:17px;height:16px;border:1.7px solid #4f5d70;border-top:0;border-radius:0 0 4px 4px;position:relative}.browser-bottom .b-home:before{content:"";position:absolute;left:-3px;top:-6px;width:10px;height:10px;border-left:1.7px solid #4f5d70;border-top:1.7px solid #4f5d70;transform:rotate(45deg);border-radius:2px 0 0 0}

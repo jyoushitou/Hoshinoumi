@@ -199,11 +199,15 @@ document.querySelectorAll('.phone .screen').forEach(screen => {
   if (!status) return
   const top = document.createElement('div')
   top.className = 'browser-top'
-  top.innerHTML = '<span class="b-back">‹</span><span class="b-url">hoshinoumi.app/mobile</span><span class="b-icon">↻</span><span class="b-icon">⋯</span>'
+  top.innerHTML = '<span class="b-site">🐾</span><span class="b-address">hoshinoumi.app/mobile</span><span class="b-close">×</span>'
   status.insertAdjacentElement('afterend', top)
+  const progress = document.createElement('div')
+  progress.className = 'browser-progress'
+  progress.innerHTML = '<i></i>'
+  top.insertAdjacentElement('afterend', progress)
   const bottom = document.createElement('div')
   bottom.className = 'browser-bottom'
-  bottom.innerHTML = '<span>‹</span><span>›</span><span class="b-share">⇧</span><span class="b-tab">2</span><span>⋯</span>'
+  bottom.innerHTML = '<span class="b-nav">‹</span><span class="b-tab">16</span><span class="b-ai">Ai</span><span class="b-nav">≡</span><span class="b-home"></span>'
   screen.appendChild(bottom)
 })
 </script>
