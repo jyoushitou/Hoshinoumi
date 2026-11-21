@@ -1,6 +1,7 @@
 const { app, BrowserWindow, shell, ipcMain, Tray, Menu, nativeImage, dialog } = require('electron')
 const fs = require('fs')
 const path = require('path')
+const crypto = require('crypto')
 
 const FRONTEND = path.join(__dirname, '../../integrations/web/dist/index.html')
 const ICON = path.join(__dirname, 'assets/hoshinoumi.png')
@@ -13,6 +14,8 @@ let tray = null
 let mini = null
 let settingsWin = null
 const SETTINGS_FILE = path.join(app.getPath('userData'), 'shell-settings.json')
+const UPDATES_DIR = path.join(app.getPath('userData'), 'updates')
+const UPDATE_STATE = path.join(UPDATES_DIR, 'last-installer.json')
 let shellSettings = { miniWindow: false, apiBase: 'http://127.0.0.1:27005', apiPrefix: '', startRoute: '/chat', updateUrl: '' }
 function loadSettings() { try { shellSettings = { miniWindow: false, apiBase: 'http://127.0.0.1:27005', apiPrefix: '', startRoute: '/chat', updateUrl: '', ...JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8')) } } catch {} }
 function saveSettings() { try { fs.mkdirSync(path.dirname(SETTINGS_FILE), { recursive: true }); fs.writeFileSync(SETTINGS_FILE, JSON.stringify(shellSettings, null, 2)) } catch {} }
@@ -92,6 +95,7 @@ function refreshTrayMenu() {
     { label: '迷你窗口', enabled: !!shellSettings.miniWindow, click: toggleMini },
     { label: '设置', click: openSettings },
     { label: '检查更新', click: checkUpdate },
+    { label: '回退上一版本', click: rollbackUpdate },
     { type: 'separator' },
     { label: '退出', click: () => app.quit() },
   ]))
@@ -109,10 +113,39 @@ function openSettings() {
   settingsWin.loadFile(path.join(__dirname, 'settings.html'))
   settingsWin.on('closed', () => { settingsWin = null })
 }
+function readUpdateState() { try { return JSON.parse(fs.readFileSync(UPDATE_STATE, 'utf8')) } catch { return null } }
+function writeUpdateState(next) { try { fs.mkdirSync(UPDATES_DIR, { recursive: true }); fs.writeFileSync(UPDATE_STATE, JSON.stringify(next, null, 2)) } catch {} }
+function sha256(buffer) { return crypto.createHash('sha256').update(Buffer.from(buffer)).digest('hex') }
+async function downloadUpdate(manifest) {
+  const res = await fetch(manifest.url, { redirect: 'follow' })
+  if (!res.ok) throw new Error('下载失败 HTTP ' + res.status)
+  const buf = await res.arrayBuffer()
+  const hash = sha256(buf)
+  if (manifest.sha256 && hash.toLowerCase() !== String(manifest.sha256).toLowerCase()) throw new Error('SHA256 校验失败')
+  fs.mkdirSync(UPDATES_DIR, { recursive: true })
+  const file = path.join(UPDATES_DIR, 'Hoshinoumi-' + manifest.version + '.exe')
+  fs.writeFileSync(file, Buffer.from(buf))
+  const previous = readUpdateState()
+  writeUpdateState({ current: { version: manifest.version, file }, previous: previous?.current || null })
+  return file
+}
+async function installUpdate(file) {
+  const err = await shell.openPath(file)
+  if (err) await dialog.showMessageBox({ type: 'error', title: '启动安装包失败', message: err })
+}
+async function rollbackUpdate() {
+  const state = readUpdateState()
+  const file = state?.previous?.file
+  if (!file || !fs.existsSync(file)) {
+    await dialog.showMessageBox({ type: 'info', title: '回退', message: '没有可用的上一版本安装包' })
+    return
+  }
+  await installUpdate(file)
+}
 async function checkUpdate() {
   const url = String(shellSettings.updateUrl || '').trim()
   if (!url) {
-    await dialog.showMessageBox({ type: 'info', title: '检查更新', message: '未配置更新源', detail: '在设置中填写 updateUrl 后再检查更新。' })
+    await dialog.showMessageBox({ type: 'info', title: '检查更新', message: '未配置更新源', detail: '在设置中填写更新源 URL 后再检查更新。' })
     return
   }
   try {
@@ -121,12 +154,17 @@ async function checkUpdate() {
     const manifest = await res.json()
     const current = app.getVersion()
     if (!manifest.version) throw new Error('manifest.version 缺失')
-    const available = manifest.version !== current
-    await dialog.showMessageBox({
-      type: 'info', title: '检查更新',
-      message: available ? '发现新版本 ' + manifest.version : '已是最新版本',
-      detail: available ? ('当前 ' + current + ' → ' + manifest.version + '\n' + (manifest.notes || '')) : ('当前 ' + current),
+    if (manifest.version === current) {
+      await dialog.showMessageBox({ type: 'info', title: '检查更新', message: '已是最新版本', detail: '当前 ' + current })
+      return
+    }
+    const answer = await dialog.showMessageBox({
+      type: 'info', title: '发现新版本', buttons: ['下载并安装', '取消'], defaultId: 0, cancelId: 1,
+      message: '当前 ' + current + ' → ' + manifest.version, detail: manifest.notes || '',
     })
+    if (answer.response !== 0) return
+    const file = await downloadUpdate(manifest)
+    await installUpdate(file)
   } catch (e) {
     await dialog.showMessageBox({ type: 'error', title: '检查更新失败', message: String(e) })
   }
