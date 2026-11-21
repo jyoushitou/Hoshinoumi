@@ -57,3 +57,24 @@ cargo check 需要能访问 crates.io
 需要 Visual Studio Build Tools（C++ 桌面开发）
 不要用 windows-gnu，Tauri/WebView2 链接会失败
 ```
+## 运行权限要求（重要）
+
+Tauri/WebView2 必须在**普通权限（Medium Integrity）**下运行。
+
+本机当前：
+
+```text
+EnableLUA=0（UAC 关闭）
+所有管理员进程 High Integrity
+cargo run 在 setup 阶段报 os error 5（拒绝访问）
+```
+
+处理：
+
+```text
+启用 UAC 并重启
+→ 从普通权限终端 / VS Code 运行
+→ 或在标准用户账户下运行
+```
+
+不要在管理员终端里直接 `cargo run`。
