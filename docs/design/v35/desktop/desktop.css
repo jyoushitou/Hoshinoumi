@@ -71,3 +71,5 @@ body:before{content:"";position:fixed;inset:0;background:linear-gradient(115deg,
 .entry-form{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;padding:0;margin-bottom:0}.entry-form label{font-size:8px;color:#8a9bb0}.entry-form label.full{grid-column:1/-1}.entry-form input,.entry-form select{display:block;width:100%;margin-top:3px;border:1px solid #dbe8ff;border-radius:6px;background:#f8fbff;color:#243b55;font:10px var(--font);padding:5px 7px;outline:0}.entry-form button{justify-self:start;border:0;background:var(--blue);color:#fff;border-radius:6px;padding:6px 12px;font:9px var(--font);cursor:pointer}
 
 .sav-top{display:flex;justify-content:flex-end;margin:-34px 0 8px}.sav-top button{border:1px solid #dbe8ff;background:#fff;color:var(--blue);border-radius:7px;padding:4px 9px;font:9px var(--font);cursor:pointer}.sav-top button:hover{background:#eef4ff}
+
+.rbadge[hidden]{display:none}

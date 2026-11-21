@@ -24,6 +24,9 @@ function renderConvs(){
   $('#convList').innerHTML = list.map(c=>`<button class="conv ${c.id===current.id?'on':''}" data-id="${c.id}">
     <span class="avatar">${esc(c.avatar)}</span><span class="body"><b>${esc(c.name)}</b><small>${esc(c.last)}</small></span><span class="tm">${esc(c.time)}</span>${c.unread?`<span class="un">${c.unread}</span>`:''}
   </button>`).join('')
+  const totalUnread = chats.reduce((n, c) => n + Number(c.unread || 0), 0)
+  const rail = document.getElementById('railUnread')
+  if (rail) { rail.textContent = String(totalUnread); rail.hidden = totalUnread <= 0 }
   document.querySelectorAll('.conv').forEach(el=>el.onclick=()=>{
     current=chats.find(c=>c.id===el.dataset.id); current.unread=0; hidePage(); renderConvs(); renderChat()
   })
