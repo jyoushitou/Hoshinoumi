@@ -4,6 +4,7 @@ import { defineConfig } from 'vitest/config'
 import vue from '@vitejs/plugin-vue'
 const apiProxy = process.env.VITE_API_PROXY_TARGET || 'http://127.0.0.1:27005'
 export default defineConfig({
+  base: './',
   define: { __APP_VERSION__: JSON.stringify(packageJson.version) },
   plugins: [vue()],
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },

@@ -51,7 +51,7 @@ hoshinoumi-desktop-v35.6.png
 ```text
 Vue 页面实现
 → 打包 integrations/web/dist
-→ Tauri 壳加载同一套构建
+→ Electron 壳加载同一套构建
 → 客户端自动获得全部内容
 ```
 
@@ -61,16 +61,16 @@ Vue 页面实现
 ## 运行环境
 
 ```text
-Windows：Tauri + WebView2 Fixed Version Runtime
-macOS：WKWebView 系统组件 + 最低版本检测
-Linux：WebKitGTK / AppImage 固定依赖
+Windows / macOS / Linux：Electron 内置 Chromium
+不再依赖系统 WebView
+Chromium 随 Electron 打包
 ```
 
-不是内置完整 Chromium；是固定 WebView2 运行时。
+内置 Chromium，页面渲染与系统浏览器无关。
 
 ## 设计范围
 
-v35.6.0 只做 Tauri/WebView 套壳：
+v35.6.0 只做 Electron/Chromium 套壳：
 
 ```text
 自定义标题栏
@@ -97,7 +97,7 @@ API 路由：/api
 测试连接 / 保存路由
 ```
 
-保存后由 Tauri 系统安全存储保存；WebView 内只拿运行时配置，不写死。
+保存后由 Electron 安全存储保存；WebView 内只拿运行时配置，不写死。
 
 设计截图：
 
