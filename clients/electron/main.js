@@ -44,7 +44,12 @@ function createWindow() {
     return { action: 'deny' }
   })
   win.webContents.on('did-fail-load', (_e, code, desc, url) => {
-    console.error('load failed', code, desc, url)
+    logTray('load:fail ' + code + ' ' + desc + ' ' + url)
+    if (!String(url).includes('fallback.html')) win.loadFile(path.join(__dirname, 'fallback.html'))
+  })
+  win.webContents.on('render-process-gone', (_e, details) => {
+    logTray('renderer:gone ' + JSON.stringify(details))
+    win.loadFile(path.join(__dirname, 'fallback.html'))
   })
 }
 
@@ -129,6 +134,7 @@ if (!app.requestSingleInstanceLock()) {
     ipcMain.on('window:open-main', () => { if (win) { win.show(); win.focus() }; mini?.hide() })
     ipcMain.on('window:close-mini', () => mini?.hide())
     ipcMain.on('window:toggle-mini', toggleMini)
+    ipcMain.on('fallback:retry', () => { if (win) win.loadFile(FRONTEND, { hash: shellSettings.startRoute || '/chat' }) })
     ipcMain.handle('settings:get', () => shellSettings)
     ipcMain.handle('settings:set-mini', (_e, enabled) => { shellSettings.miniWindow = Boolean(enabled); saveSettings(); applyMiniState(); return shellSettings })
     ipcMain.handle('settings:save', (_e, next) => { shellSettings = { ...shellSettings, ...next, miniWindow: !!next?.miniWindow }; saveSettings(); applyMiniState(); if (win) { win.loadFile(FRONTEND, { hash: shellSettings.startRoute || '/chat' }); win.show(); win.focus() } return shellSettings })
