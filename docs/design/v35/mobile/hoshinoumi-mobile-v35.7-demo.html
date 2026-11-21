@@ -415,8 +415,9 @@ function selectSeg(el){ [...el.parentElement.children].forEach(x=>x.classList.re
 function togglePeriod(el){ el.classList.toggle('on'); toast(el.classList.contains('on')?'节次已启用（演示）':'节次已关闭（演示）') }
 function activatePersona(el,name){ [...document.querySelectorAll('.persona-card')].forEach(x=>{x.classList.remove('on'); const e=x.querySelector('em'); if(e) e.textContent='切换'}); el.classList.add('on'); const e=el.querySelector('em'); if(e) e.textContent='使用中'; toast('已切换人设：'+name) }
 
-const initial = new URLSearchParams(location.search).get('screen') || 'login'
-go(screens[initial] ? initial : 'login')
+const initial = new URLSearchParams(location.search).get('screen')
+const fallback = window.innerWidth <= 860 ? 'chats' : 'login'
+go(screens[initial] ? initial : fallback)
 </script>
 </body>
 </html>
