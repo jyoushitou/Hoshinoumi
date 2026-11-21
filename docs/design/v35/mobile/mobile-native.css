@@ -1,0 +1,104 @@
+﻿/* Hoshinoumi Mobile Native — v35.7 返工视觉层
+   目标：保留功能内容，重做卡片/位置/层级，让手机端不像桌面面板缩小版。 */
+:root{
+  --mn-bg:#f3f6fc;--mn-card:#fff;--mn-ink:#102033;--mn-sub:#73839b;--mn-line:rgba(29,78,216,.08);
+  --mn-blue:#2563eb;--mn-blue2:#3b82f6;--mn-cyan:#38bdf8;--mn-radius:19px;
+  --mn-shadow:0 10px 28px rgba(15,38,78,.07);--mn-soft:0 4px 14px rgba(15,38,78,.045);
+}
+.screen,.view{background:linear-gradient(180deg,#f9fbff 0%,#f1f6fd 100%)!important;color:var(--mn-ink)}
+.screen .ph,.frame .ph{align-items:flex-start;margin:8px 0 15px}
+.screen .ph h2,.frame .ph h2{font-size:26px;letter-spacing:-.045em;line-height:1.08}
+.screen .ph h2 small,.frame .ph h2 small{font-size:7.5px;letter-spacing:.22em;margin-top:5px;color:#8fa3bb}
+.page-head{padding:10px 20px 14px;align-items:flex-start}
+.page-head h2{font-size:26px;letter-spacing:-.045em}
+.page-head h2 small{font-size:7.5px;letter-spacing:.2em;margin-top:5px}
+.mobile-head{padding:10px 18px 14px}
+.mobile-head .brand{font-size:13px;letter-spacing:.17em}
+.mobile-head .brand small{font-size:7px;letter-spacing:.3em;margin-top:3px}
+.mobile-head .row1 .icon-btn{width:38px;height:38px;border:0;border-radius:13px;background:#fff;box-shadow:var(--mn-soft)}
+.search{height:42px;border:0!important;border-radius:14px!important;background:#fff!important;box-shadow:var(--mn-soft);font-size:10px!important;padding:0 13px!important;margin-top:13px!important}
+.chips{gap:7px;margin-top:11px;padding-bottom:5px}
+.chip{height:31px;padding:0 14px;border:0!important;border-radius:11px;background:#fff;box-shadow:var(--mn-soft);font-size:9px;color:#71859d}
+.chip.on{background:linear-gradient(135deg,#e9f1ff,#f4f9ff)!important;color:var(--mn-blue);box-shadow:0 5px 14px rgba(37,99,235,.10);font-weight:750}
+.card,.d-card,.mem-card,.mem-side-card,.mini-card,.persona-card,.module,.info-row,.cmd-row,.cron-row,.week-day,.period,.log-row,.set-group,.profile,.rel-card,.savings-hero{
+  border:0!important;border-radius:var(--mn-radius)!important;background:rgba(255,255,255,.94)!important;box-shadow:var(--mn-soft)!important;
+}
+.card,.d-card{padding:14px!important;margin-bottom:10px}
+.section-title,.mem-title{margin:15px 4px 8px!important;font-size:9px!important;letter-spacing:.04em}
+.rowline{padding:10px 0!important;font-size:10px!important}
+.rowline b{font-size:10.5px!important}
+.avatar{width:42px!important;height:42px!important;border-radius:14px!important;font-size:12px!important}
+.avatar.sm{width:27px!important;height:27px!important;border-radius:9px!important;font-size:9px!important}
+/* chat list */
+.conv{padding:12px 10px!important;border-radius:17px!important;margin-bottom:4px;gap:11px}
+.conv.on{background:linear-gradient(135deg,#f0f6ff,#ffffff)!important;border:0!important;box-shadow:0 9px 24px rgba(37,99,235,.08)!important}
+.conv .copy b{font-size:11.5px!important}
+.conv .copy span{font-size:9px!important;margin-top:3px!important}
+.conv .avatar{border-radius:15px!important}
+.badge{min-width:18px!important;height:18px!important;border-radius:9px!important;font-size:8px!important}
+/* messages */
+.chat-head{padding:10px 4px 12px!important;border:0!important;background:transparent!important}
+.msg .bubble,.msg .b{border:0!important;border-radius:18px 18px 18px 6px!important;padding:10px 13px!important;font-size:11.5px!important;box-shadow:var(--mn-soft);background:#fff!important}
+.msg.me .bubble,.msg.me .b{background:linear-gradient(135deg,#2563eb,#3b82f6)!important;color:#fff!important;border-radius:18px 18px 6px 18px!important}
+.composer{border:0!important;background:transparent!important;padding:8px 0 0!important}
+.composer .input,.composer .inp{height:39px!important;border:0!important;border-radius:20px!important;background:#fff!important;box-shadow:var(--mn-soft);font-size:10px!important;padding:0 14px!important}
+.composer .plus,.composer .mic,.composer .ic{width:36px!important;height:36px!important;border:0!important;border-radius:12px!important;background:#fff!important;box-shadow:var(--mn-soft)}
+.composer .send{width:38px!important;height:36px!important;border-radius:12px!important;box-shadow:0 6px 14px rgba(37,99,235,.22)}
+/* memory */
+.mem-stats{display:flex!important;gap:8px!important;overflow-x:auto;padding-bottom:2px;margin-bottom:11px!important}
+.mem-stat-card{flex:0 0 calc(25% - 6px)!important;min-width:0;padding:10px!important;border:0!important;border-radius:16px!important;background:#fff!important;box-shadow:var(--mn-soft)!important}
+.mem-stat-card small{font-size:8px!important}.mem-stat-card b{font-size:17px!important;letter-spacing:-.02em}
+.mem-hero{border-radius:22px!important;padding:17px!important;box-shadow:0 16px 32px rgba(37,99,235,.22)!important;margin-bottom:10px}
+.mem-hero h3{font-size:16px!important}
+.mem-card p,.mem-side-card .ev{font-size:8.5px}
+.mem-tag{font-size:8px!important;padding:2px 7px!important;border:0!important;background:#eef4ff!important;border-radius:7px!important}
+.mem-tag.long{background:#e9f9f1!important;color:#15835a!important}
+.mem-tag.owner{background:#fff4d8!important;color:#95610b!important}
+.mem-side-card{padding:13px!important;margin-top:9px!important;background:linear-gradient(135deg,#fff,#f7faff)!important}
+.mem-side-card h4{font-size:9.5px!important;margin-bottom:8px!important}
+.tiles{display:flex!important;gap:8px!important;overflow-x:auto;padding-bottom:3px;margin-bottom:4px}
+.tile{flex:0 0 45%;border:0!important;border-radius:16px!important;padding:12px!important;background:#fff!important;box-shadow:var(--mn-soft)!important}
+.tile i{width:28px!important;height:28px!important;border-radius:9px!important;font-size:12px!important;margin-bottom:8px!important}
+.tile b{font-size:10px!important}.tile span{font-size:8px!important}
+/* savings */
+.savings-hero,.money-hero{border-radius:24px!important;padding:18px!important;box-shadow:0 18px 36px rgba(11,30,63,.22)!important;border:0!important;margin-bottom:12px!important}
+.money-hero .amt{font-size:24px!important;margin:7px 0 4px!important}
+.money-hero small,.money-hero .hint{font-size:8px!important}
+.money-row{padding:10px 0!important}.money-row b{font-size:10px!important}.money-row em{font-size:8.5px!important}
+/* weekly */
+.week{gap:7px!important;margin-bottom:11px!important}.week-day,.day{width:48px!important;border:0!important;border-radius:14px!important;padding:8px 4px!important;box-shadow:var(--mn-soft)!important}.week-day.on,.day.on{background:linear-gradient(135deg,#2563eb,#3b82f6)!important;box-shadow:0 9px 20px rgba(37,99,235,.22)!important}
+.period{padding:10px 11px!important;border-radius:14px!important;margin-bottom:7px!important;box-shadow:var(--mn-soft)!important}.period .idx{font-size:8px!important}.period b,.period .name{font-size:9.5px!important}
+/* info / commands / cron / logs */
+.stat-grid,.info-stats{tap-highlight-color:transparent}
+.stat,.info-stat{border:0!important;border-radius:15px!important;box-shadow:var(--mn-soft)!important;padding:11px!important}
+.info-row,.cmd-row,.cron-row,.log-row{border:0!important;border-radius:13px!important;box-shadow:var(--mn-soft)!important;margin-bottom:7px!important}
+.cmd-row code{border-radius:6px!important;padding:3px 6px!important}
+.log-row{background:rgba(255,255,255,.9)!important}
+/* settings */
+.profile{padding:14px!important}.set-group{overflow:hidden;margin-top:10px!important}
+.set-row{height:50px!important;border-bottom:1px solid #f2f6fc!important;font-size:11px!important;padding:0 14px!important}
+.set-row .ic{width:28px!important;height:28px!important;border-radius:9px!important}
+/* floating dock */
+#view .bottom-nav,.phone .bottom-nav{background:rgba(255,255,255,.86)!important;backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.9)!important;box-shadow:0 14px 34px rgba(15,38,78,.16)!important;border-radius:22px!important}
+.screen .screen-body .bottom-nav,.phone .screen .bottom-nav{margin:0 9px 9px!important}
+#view .bottom-nav{left:9px!important;right:9px!important;bottom:8px!important;width:auto!important;max-width:none!important;border-radius:22px!important}
+#view .bottom-nav .nav-row{height:52px!important}
+#view .bottom-nav .tab{height:48px!important;border-radius:14px!important}
+#view .bottom-nav .tab.on{background:#eef4ff!important}
+#view .bottom-nav .nav-grip{top:-12px!important;height:22px!important;border:0!important;box-shadow:0 6px 16px rgba(15,38,78,.13)!important}
+body.nav-expanded #view{padding-bottom:196px!important}
+#view{padding-bottom:84px!important}
+/* home modules */
+.modules,.module-grid{display:grid!important;grid-template-columns:1fr 1fr!important;gap:9px!important}
+.module{border-radius:17px!important;padding:12px!important;box-shadow:var(--mn-soft)!important}
+.module i{width:30px!important;height:30px!important;border-radius:10px!important;background:linear-gradient(145deg,#eef4ff,#e0ebff)!important}
+.module b{font-size:10px!important}.module small{font-size:7.5px!important}
+/* toast etc */
+.demo-note{background:rgba(255,255,255,.72)!important}
+
+/* savings balance must stay dark, not be treated as a white card */
+.savings-hero{background:linear-gradient(135deg,#0b1b35,#1d4ed8)!important;color:#fff!important}
+.savings-hero small,.savings-hero .mask{color:#bfdbfe!important}
+.savings-hero .amount{color:#fff!important}
+.savings-hero .savings-stats span{color:#a9c6ec!important}
+.savings-hero .savings-stats b{color:#fff!important}
