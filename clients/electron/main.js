@@ -12,6 +12,7 @@ app.setAppUserModelId('com.hoshinoumi.desktop')
 app.commandLine.appendSwitch('no-sandbox')
 app.disableHardwareAcceleration()
 let win = null
+let quitting = false
 let tray = null
 let mini = null
 let settingsWin = null
@@ -44,6 +45,9 @@ function createWindow() {
   })
   win.loadFile(FRONTEND, { hash: shellSettings.startRoute || '/chat' })
   win.once('ready-to-show', () => win.show())
+  win.on('close', (e) => {
+    if (!quitting) { e.preventDefault(); win.hide() }
+  })
   win.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https?:/i.test(url)) shell.openExternal(url)
     return { action: 'deny' }
@@ -99,7 +103,7 @@ function refreshTrayMenu() {
     { label: '检查更新', click: checkUpdate },
     { label: '回退上一版本', click: rollbackUpdate },
     { type: 'separator' },
-    { label: '退出', click: () => app.quit() },
+    { label: '退出', click: () => { quitting = true; app.quit() } },
   ]))
 }
 function applyMiniState() {
@@ -209,6 +213,7 @@ if (!app.requestSingleInstanceLock()) {
     if (process.argv.includes('--mini')) toggleMini()
     if (process.argv.includes('--settings')) openSettings()
   })
-  app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit() })
+  app.on('before-quit', () => { quitting = true })
+  app.on('window-all-closed', () => { if (quitting && process.platform !== 'darwin') app.quit() })
   app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow() })
 }
