@@ -193,5 +193,19 @@
 
   <div class="note"><b>设计边界</b>：本页只确认移动端布局、尺寸、安全区与交互层级；所有内容来自 Vue 页面，不在设计稿里另写业务。会话、记忆、关系均为设计示例，最终以 `/api/*` 返回为准；非主人不展示私密数据和金额。</div>
 </div>
+<script id="inject-browser-chrome">
+document.querySelectorAll('.phone .screen').forEach(screen => {
+  const status = screen.querySelector('.statusbar')
+  if (!status) return
+  const top = document.createElement('div')
+  top.className = 'browser-top'
+  top.innerHTML = '<span class="b-back">‹</span><span class="b-url">hoshinoumi.app/mobile</span><span class="b-icon">↻</span><span class="b-icon">⋯</span>'
+  status.insertAdjacentElement('afterend', top)
+  const bottom = document.createElement('div')
+  bottom.className = 'browser-bottom'
+  bottom.innerHTML = '<span>‹</span><span>›</span><span class="b-share">⇧</span><span class="b-tab">2</span><span>⋯</span>'
+  screen.appendChild(bottom)
+})
+</script>
 </body>
 </html>

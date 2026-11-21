@@ -27,7 +27,7 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 20% 0%,
 .demo-caption{font-size:9px;color:#9aabc0;margin-top:10px;letter-spacing:.02em}
 .screen-body.d-view{display:flex;flex-direction:column;height:100%;min-height:0}
 .d-view>.login{flex:1}
-.toast{position:absolute;left:50%;bottom:90px;transform:translateX(-50%) translateY(8px);background:rgba(15,30,52,.9);color:#fff;border-radius:9px;padding:8px 12px;font-size:9px;opacity:0;transition:.2s;pointer-events:none;z-index:20;white-space:nowrap}
+.toast{position:absolute;left:50%;bottom:108px;transform:translateX(-50%) translateY(8px);background:rgba(15,30,52,.9);color:#fff;border-radius:9px;padding:8px 12px;font-size:9px;opacity:0;transition:.2s;pointer-events:none;z-index:20;white-space:nowrap}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 .hide{display:none!important}
 @media(max-width:860px){.demo-page{grid-template-columns:1fr;justify-items:center}.demo-side{text-align:center}.demo-side p,.demo-note{margin-left:auto;margin-right:auto}.demo-screen-list{justify-content:center}.demo-stage{max-width:390px}}
@@ -73,7 +73,9 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 20% 0%,
     <div class="demo-title">HOSHINOUMI MOBILE <span>· v35.7 交互演示</span></div>
     <div class="phone"><div class="island"></div><div class="screen" id="app">
       <div class="statusbar"><span>9:41</span><div class="right"><span class="sig"><i></i><i></i><i></i><i></i></span><span>5G</span><div class="battery"></div></div></div>
+      <div class="browser-top"><span class="b-back" onclick="toast('浏览器返回演示')">‹</span><span class="b-url">hoshinoumi.app/mobile</span><span class="b-icon" onclick="toast('刷新演示')">↻</span><span class="b-icon" onclick="toast('浏览器菜单演示')">⋯</span></div>
       <div class="screen-body d-view" id="view"></div>
+      <div class="browser-bottom"><span onclick="toast('浏览器后退演示')">‹</span><span onclick="toast('浏览器前进演示')">›</span><span class="b-share" onclick="toast('分享页面演示')">⇧</span><span class="b-tab" onclick="toast('标签页演示')">2</span><span onclick="toast('浏览器菜单演示')">⋯</span></div>
       <div class="toast" id="toast"></div>
     </div></div>
     <div class="demo-caption">390 × 844 · 设计演示，非真实数据</div>
@@ -81,8 +83,8 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 20% 0%,
 
   <aside class="demo-side">
     <div class="kicker">MOBILE WEB · DESIGN DEMO</div>
-    <h1>手机 Vue<br>交互设计稿</h1>
-    <p>点击右侧画板或手机里的会话、底部导航、返回、发送按钮。这里只演示移动端结构与触控，不代表真实业务数据。</p>
+    <h1>手机浏览器<br>交互设计稿</h1>
+    <p>这是手机浏览器内的 Web 页面，不是独占全屏的独立客户端。点击会话、底部导航、返回、发送按钮，地址栏和浏览器工具栏只作视口示意。</p>
     <div class="demo-screen-list">
       <button onclick="go('login')"><span>01</span>登录</button>
       <button onclick="go('chats')"><span>02</span>会话列表</button>

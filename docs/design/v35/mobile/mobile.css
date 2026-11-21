@@ -164,3 +164,13 @@ h1{font-size:30px;line-height:1.2;margin:0 0 9px;letter-spacing:-.02em}
 .version{text-align:center;color:#a5b3c4;font-size:8px;margin-top:14px}
 .note{max-width:1320px;margin:30px auto 0;padding:14px 18px;border:1px dashed #cfdfff;background:rgba(255,255,255,.55);border-radius:12px;color:#7188a3;font-size:10px;line-height:1.8}
 @media (max-width:1300px){body{min-width:0}.board{grid-template-columns:repeat(2,390px)}}
+
+/* browser viewport chrome */
+.browser-top{height:38px;flex:none;display:flex;align-items:center;gap:6px;padding:0 12px;background:#f0f5fc;border-bottom:1px solid #e1eafa}
+.browser-top .b-back{width:18px;text-align:center;color:#7086a1;font-size:15px;line-height:1}
+.browser-top .b-url{flex:1;height:23px;border-radius:7px;background:#fff;border:1px solid #dfe9f7;display:flex;align-items:center;justify-content:center;gap:4px;color:#6d829c;font-size:8px;letter-spacing:.01em}
+.browser-top .b-url:before{content:"⌂";font-size:8px;color:#8da3bc}
+.browser-top .b-icon{width:18px;text-align:center;color:#7086a1;font-size:12px;line-height:1}
+.browser-bottom{height:42px;flex:none;display:flex;align-items:center;justify-content:space-around;background:#f0f5fc;border-top:1px solid #e1eafa;color:#7086a1;font-size:14px;padding:0 14px 3px}
+.browser-bottom .b-tab{display:flex;align-items:center;justify-content:center;width:30px;height:26px;border:1px solid #cad9ee;border-radius:6px;font-size:8px;color:#6d829c;background:#fff}
+.browser-bottom .b-share{font-size:12px}
