@@ -133,6 +133,7 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 20% 0%,
 .mem-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}.mem-tag{font-size:8px;line-height:1.25;white-space:nowrap;border:1px solid #dbe8ff;background:#f4f9ff;color:#5f7da2;border-radius:5px;padding:2px 6px;display:inline-flex;align-items:center}.mem-tag.owner{border-color:#fde68a;background:#fffbeb;color:#a16207;font-weight:650}.mem-tag.long{border-color:#cdeee0;background:#eefbf5;color:#1f9d6b;font-weight:650}
 .mem-side-card{background:#fff;border:1px solid #e3ebf7;border-radius:11px;padding:9px 10px;margin-top:7px}
 .mem-side-card h4{margin:0 0 6px;font-size:9px;color:#536b86}.mem-side-card .ev{display:flex;gap:5px;padding:4px 0;border-bottom:1px solid #f0f5fd;font-size:8px;color:#4a6079}.mem-side-card .ev:last-child{border-bottom:0}.mem-side-card .ev i{width:5px;height:5px;border-radius:50%;background:#60a5fa;margin-top:4px;flex:none}.mem-side-card .ev small{display:block;color:#9aabc0;font-size:6.5px;margin-top:1px}.kw{display:flex;flex-wrap:wrap;gap:4px}.kw span{font-size:7px;color:#5f7da2;border:1px solid #dbe8ff;background:#f4f9ff;border-radius:10px;padding:2px 6px}
+.mem-tags:empty{display:none}
 </style>
 </head>
 <body>
@@ -252,12 +253,13 @@ screens.memory = `
   <div class="page-head"><h2>记忆<small>MEMORY BOOK · 最近 7 天</small></h2><div class="act" onclick="openSearch()">⌕</div></div>
   <div class="d-scroll" style="flex:1;min-height:0;overflow-y:auto;padding:0 16px 190px">
     <div class="mem-stats"><div class="mem-stat-card"><small>记忆总数</small><b>18</b></div><div class="mem-stat-card"><small>长期记忆</small><b>4</b></div><div class="mem-stat-card"><small>事件</small><b>7</b></div><div class="mem-stat-card"><small>会话</small><b>2</b></div></div>
-    <div class="chips"><div class="chip on" onclick="selectSeg(this)">全部</div><div class="chip" onclick="selectSeg(this)">长期</div><div class="chip" onclick="selectSeg(this)">事件</div><div class="chip" onclick="selectSeg(this)">会话</div><div class="chip" onclick="selectSeg(this)">财务</div></div>
+    <div class="chips"><div class="chip on" onclick="filterMemory(this,'全部')">全部</div><div class="chip" onclick="filterMemory(this,'长期')">长期</div><div class="chip" onclick="filterMemory(this,'事件')">事件</div><div class="chip" onclick="filterMemory(this,'会话')">会话</div><div class="chip" onclick="filterMemory(this,'财务')">财务</div></div>
     <div class="mem-title"><span>10001 · 记忆</span><span>18 条</span></div>
-    <div class="mem-card" onclick="toast('记忆详情演示')"><div class="top"><b>今天方案终于过了，客户没有继续改。</b><span class="date">11-19</span></div><p>来源：对话摘要</p><div class="mem-tags"><span class="mem-tag">工作</span><span class="mem-tag">情绪</span><span class="mem-tag long">长期</span></div></div>
-    <div class="mem-card" onclick="toast('记忆详情演示')"><div class="top"><b>她不喜欢太吵的地方，偏好安静。</b><span class="date">11-19</span></div><p>来源：对话提取</p><div class="mem-tags"><span class="mem-tag">偏好</span><span class="mem-tag long">长期</span></div></div>
-    <div class="mem-card" onclick="toast('记忆详情演示')"><div class="top"><b>正在读《十日终焉》，喜欢在窗边看书。</b><span class="date">11-19</span></div><p>来源：对话</p><div class="mem-tags"><span class="mem-tag">阅读</span><span class="mem-tag">偏好</span></div></div>
-    <div class="mem-card" onclick="toast('账务记忆仅 owner 可见')"><div class="top"><b>本月结余与旅行目标进度</b><span class="date">11-18</span></div><p>来源：财务摘要</p><div class="mem-tags"><span class="mem-tag">财务</span><span class="mem-tag owner">owner</span><span class="mem-tag">仅主人可见 · 金额隐藏</span></div></div>
+    <div class="mem-card" data-tags="工作 情绪 长期 事件" onclick="toast('记忆详情演示')"><div class="top"><b>今天方案终于过了，客户没有继续改。</b><span class="date">11-19</span></div><p>来源：对话摘要</p><div class="mem-tags"><span class="mem-tag">工作</span><span class="mem-tag">情绪</span><span class="mem-tag long">长期</span></div></div>
+    <div class="mem-card" data-tags="偏好 长期" onclick="toast('记忆详情演示')"><div class="top"><b>她不喜欢太吵的地方，偏好安静。</b><span class="date">11-19</span></div><p>来源：对话提取</p><div class="mem-tags"><span class="mem-tag">偏好</span><span class="mem-tag long">长期</span></div></div>
+    <div class="mem-card" data-tags="阅读 偏好 会话" onclick="toast('记忆详情演示')"><div class="top"><b>正在读《十日终焉》，喜欢在窗边看书。</b><span class="date">11-19</span></div><p>来源：对话</p><div class="mem-tags"><span class="mem-tag">阅读</span><span class="mem-tag">偏好</span></div></div>
+    <div class="mem-card" data-tags="财务 owner 会话" onclick="toast('账务记忆仅 owner 可见')"><div class="top"><b>本月结余与旅行目标进度</b><span class="date">11-18</span></div><p>来源：财务摘要</p><div class="mem-tags"><span class="mem-tag">财务</span><span class="mem-tag owner">owner</span><span class="mem-tag">仅主人可见 · 金额隐藏</span></div></div>
+    <div class="notice" id="mem-empty" style="display:none">没有对应的记忆</div>
     <div class="mem-side-card"><h4>最近事件</h4><div class="ev"><i></i><span>方案通过<small>11-19 · 来自聊天</small></span></div><div class="ev"><i style="background:#a78bfa"></i><span>旅行目标完成 60%<small>11-18 · 财务</small></span></div><div class="ev"><i style="background:#34d399"></i><span>读完《十日终焉》第 3 章<small>11-17 · 阅读</small></span></div></div>
     <div class="mem-side-card"><h4>画像摘要</h4><p style="margin:0;font-size:8px;line-height:1.7;color:#536b86">偏好安静、窗边、热饮<br>在意工作反馈、旅行目标<br>作息：晚间聊天较多</p></div>
     <div class="mem-side-card"><h4>关键词</h4><div class="kw"><span>方案</span><span>旅行</span><span>安静</span><span>十日终焉</span><span>存钱</span><span>猫</span></div></div>
@@ -470,6 +472,20 @@ function overlay(html){
   document.querySelector('.screen').appendChild(el)
 }
 function closeOverlay(){ document.querySelector('.demo-overlay')?.remove() }
+function filterMemory(el, tag){
+  [...el.parentElement.children].forEach(x => x.classList.remove('on'))
+  el.classList.add('on')
+  const cards = [...document.querySelectorAll('.mem-card[data-tags]')]
+  let visible = 0
+  cards.forEach(card => {
+    const tags = card.dataset.tags || ''
+    const show = tag === '全部' || tags.split(' ').includes(tag)
+    card.style.display = show ? '' : 'none'
+    if (show) visible++
+  })
+  const empty = document.getElementById('mem-empty')
+  if (empty) empty.style.display = visible ? 'none' : ''
+}
 function openConversation(el, target, name){ el.querySelectorAll('.badge').forEach(b=>b.remove()); readConversations.add(name); go(target) }
 function openSearch(){
   overlay(`<div class="search-panel"><div class="row"><input id="q" placeholder="搜索会话 / 记忆 / 命令" autocomplete="off"><button class="cancel" onclick="closeOverlay()">取消</button></div><div id="results"><div class="search-result" onclick="go('chat')">奈绪<small>会话 · 最近消息</small></div><div class="search-result" onclick="go('memory')">不喜欢香菜<small>记忆 · 偏好</small></div><div class="search-result" onclick="go('commands')">!memory<small>命令 · 搜索记忆</small></div></div></div>`)
