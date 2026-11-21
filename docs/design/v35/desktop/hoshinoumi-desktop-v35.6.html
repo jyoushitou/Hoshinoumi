@@ -108,6 +108,18 @@
       </div>
     </div>
   </div>
+  <div class="modal" id="updateModal">
+    <div class="update-box">
+      <header class="update-head"><div><b>检查更新</b><small>独立客户端 · 自动更新</small></div><button id="updateClose">×</button></header>
+      <div class="update-body">
+        <div class="update-state"><span class="spin" id="updateSpin"></span><b id="updateTitle">正在检查更新…</b></div>
+        <div class="update-version" id="updateVersion">当前 v35.6.0</div>
+        <div class="update-notes" id="updateNotes">连接更新服务器，比较版本…</div>
+        <div class="update-progress" id="updateProgress"><i></i></div>
+        <div class="update-actions"><button class="soft" id="updateLater">稍后</button><button class="primary" id="updateNow" disabled>下载并安装</button></div>
+      </div>
+    </div>
+  </div>
   <div class="toast" id="toast"></div>
 </div>
 <script src="desktop.js"></script>

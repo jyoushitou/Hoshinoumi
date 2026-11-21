@@ -169,7 +169,33 @@ function renderMini(){
   $('#miniBody').innerHTML=current.msgs.slice(-4).map(m=>`<div class="b ${m[0]==='me'?'me':''}">${esc(m[1])}</div>`).join('')
   $('#miniBody').scrollTop=$('#miniBody').scrollHeight
 }
-$('#updateCard').onclick=()=>toast('检查更新：v35.6.0（设计稿）')
+let updateTimer = null
+function openUpdate(){
+  const modal = $('#updateModal'); if (!modal) return
+  modal.classList.add('open')
+  $('#updateSpin').style.display = 'inline-block'; $('#updateNow').disabled = true
+  $('#updateTitle').textContent = '正在检查更新…'
+  $('#updateVersion').textContent = '当前 v35.6.0'
+  $('#updateNotes').textContent = '连接更新服务器，比较版本…'
+  $('#updateProgress').style.display = 'none'; $('#updateProgress i').style.width = '0%'
+  setTimeout(() => {
+    $('#updateSpin').style.display = 'none'
+    $('#updateTitle').textContent = '发现新版本 v35.6.1'
+    $('#updateVersion').textContent = '当前 v35.6.0 → 最新 v35.6.1'
+    $('#updateNotes').textContent = '更新内容：\n· WebView2 固定运行时\n· 显示能力检测 / 兜底页\n· 托盘小窗与路由配置修复\n· 下载完成后重启安装'
+    $('#updateNow').disabled = false
+    $('#updateNow').textContent = '下载并安装'
+  }, 700)
+}
+function closeUpdate(){ $('#updateModal')?.classList.remove('open'); if(updateTimer){clearInterval(updateTimer);updateTimer=null} }
+$('#updateClose').onclick=closeUpdate
+$('#updateLater').onclick=closeUpdate
+$('#updateModal').addEventListener('click',e=>{if(e.target===$('#updateModal'))closeUpdate()})
+$('#updateNow').onclick=()=>{
+  const bar=$('#updateProgress'); bar.style.display='block'; $('#updateNow').disabled=true; $('#updateNow').textContent='下载中…'
+  let p=0; updateTimer=setInterval(()=>{p=Math.min(100,p+12);bar.querySelector('i').style.width=p+'%';if(p>=100){clearInterval(updateTimer);updateTimer=null;$('#updateTitle').textContent='下载完成，可重启安装';$('#updateNow').textContent='立即重启';$('#updateNow').disabled=false}},160)
+}
+$('#updateCard').onclick=openUpdate
 document.querySelectorAll('.quick button').forEach(b=>b.onclick=()=>toast(`快捷入口：${b.textContent.split('\\n')[0]}`))
 setTimeout(()=>{const typing=document.createElement('div');typing.className='msg typing';typing.innerHTML=`<span class="avatar">${esc(current.avatar)}</span><div><div class="bubble"><i class="dot"></i><i class="dot"></i><i class="dot"></i></div></div>`;/* no auto on load */},0)
 renderConvs(); renderChat(); renderMini()
