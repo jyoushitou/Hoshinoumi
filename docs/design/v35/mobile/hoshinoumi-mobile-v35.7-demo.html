@@ -119,6 +119,10 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 20% 0%,
 .d-view .list,.d-view .msgs,.d-view .mem-body,.d-view .rel-wrap,.d-view .set-body,.d-view .d-scroll{overflow-y:auto!important;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 .d-view .mem-body{padding-bottom:180px}
 .d-view .list,.d-view .msgs,.d-view .rel-wrap,.d-view .set-body{padding-bottom:180px!important}
+
+/* hide scrollbars inside the phone viewport */
+.d-view,.d-view *{scrollbar-width:none;-ms-overflow-style:none}
+.d-view::-webkit-scrollbar,.d-view *::-webkit-scrollbar{width:0;height:0;display:none}
 </style>
 </head>
 <body>
