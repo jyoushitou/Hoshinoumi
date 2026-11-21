@@ -72,7 +72,8 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 20% 0%,
 .bottom-nav.expanded .nav-all{display:block}
 .bottom-nav.expanded .nav-row{display:none}
 .nav-all-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding-top:3px}
-.nav-all-grid button{height:40px;border:1px solid #e1ebf9;background:#f8fbff;border-radius:9px;color:#5a718d;display:grid;place-items:center;cursor:pointer}
+.nav-all-grid button{position:relative;height:40px;border:1px solid #e1ebf9;background:#f8fbff;border-radius:9px;color:#5a718d;display:grid;place-items:center;cursor:pointer}
+.all-unread{position:absolute;top:4px;right:6px;min-width:12px;height:12px;border-radius:6px;background:#ef4444;color:#fff;font-size:6px;font-weight:800;display:grid;place-items:center;padding:0 2px}
 .nav-all-grid button b{font-size:16px;line-height:1;font-weight:400;color:#687f9b}
 .nav-all-grid button.on{border-color:#bcd4ff;background:#eef4ff;color:#2563eb}
 .bottom-nav .tab{width:auto;height:45px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-radius:13px;color:#8a9bb0;font-size:8px}
@@ -109,6 +110,8 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 20% 0%,
 .bottom-nav .nav-row .tab{color:#8a9bb0!important;background:transparent!important}
 .bottom-nav .nav-row .tab.on{color:#2563eb!important;background:#eef4ff!important;font-weight:700}
 .bottom-nav .nav-row .tab .ic{color:inherit!important}
+.bottom-nav .nav-row .tab{position:relative}
+.tab-unread{position:absolute;top:2px;right:calc(50% - 24px);min-width:14px;height:14px;padding:0 3px;border-radius:7px;background:#ef4444;color:#fff;font-size:7px;font-weight:800;display:grid;place-items:center;line-height:1}
 .quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;max-height:260px;overflow:auto}
 .quick-choice{position:relative;height:46px;border:1px solid #e1ebf9;background:#f8fbff;border-radius:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;color:#607896;font:8px inherit;cursor:pointer}
 .quick-choice b{font-size:14px;font-weight:400;line-height:1}.quick-choice em{position:absolute;right:4px;top:2px;font-style:normal;color:#2563eb;font-size:8px}
@@ -429,8 +432,8 @@ ${nav('chats')}`
 
 function nav(active){
   const quick = quickKeys.map(k => allEntries.find(e => e[0] === k)).filter(Boolean)
-  const tab = ([key,ic,label]) => `<div class="tab ${active===key?'on':''}" onclick="go('${key}')"><span class="ic">${ic}</span>${label}</div>`
-  const all = allEntries.map(([key,ic,label]) => `<button class="${active===key?'on':''}" title="${label}" aria-label="${label}" onclick="go('${key}')"><b>${ic}</b></button>`).join('')
+  const tab = ([key,ic,label]) => `<div class="tab ${active===key?'on':''}" onclick="go('${key}')"><span class="ic">${ic}</span>${label}${key==='chats'?'<span class="tab-unread">7</span>':''}</div>`
+  const all = allEntries.map(([key,ic,label]) => `<button class="${active===key?'on':''}" title="${label}" aria-label="${label}" onclick="go('${key}')"><b>${ic}</b>${key==='chats'?'<span class="all-unread">7</span>':''}</button>`).join('')
   return `<nav class="bottom-nav ${navExpanded?'expanded':''}"><button class="nav-grip" title="展开 / 收起全部入口" aria-label="展开 / 收起全部入口" onclick="toggleNav(event)"><span class="grip-ic">⌃</span></button><div class="nav-row" style="grid-template-columns:repeat(${quick.length},1fr)">${quick.map(tab).join('')}</div><div class="nav-all"><div class="nav-all-grid">${all}</div></div></nav>`
 }
 function toggleNav(e){

@@ -2,10 +2,12 @@
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useMobileNav } from '@/composables/useMobileNav'
+import { useSessionStore } from '@/stores/session'
 
 const route = useRoute()
 const router = useRouter()
 const { entries, quickEntries } = useMobileNav()
+const session = useSessionStore()
 const expanded = ref(false)
 const activePath = computed(() => route.path)
 
@@ -40,6 +42,7 @@ function go(path: string) {
       >
         <span class="tab-icon">{{ entry.icon }}</span>
         <span class="tab-label">{{ entry.label }}</span>
+        <span v-if="entry.key === 'chats' && session.unread > 0" class="tab-unread">{{ session.unread > 99 ? '99+' : session.unread }}</span>
       </button>
     </div>
 
@@ -55,6 +58,7 @@ function go(path: string) {
         @click="go(entry.path)"
       >
         {{ entry.icon }}
+        <span v-if="entry.key === 'chats' && session.unread > 0" class="all-unread">{{ session.unread > 99 ? '99+' : session.unread }}</span>
       </button>
     </div>
   </nav>
@@ -80,7 +84,9 @@ function go(path: string) {
   border:0;background:transparent;color:#8a9bb0;display:flex;flex-direction:column;
   align-items:center;justify-content:center;gap:2px;min-width:0;border-radius:10px;cursor:pointer;
 }
+.tab-item{position:relative}
 .tab-item.on{color:#2563eb;background:#eef4ff;font-weight:700}
+.tab-unread{position:absolute;top:3px;right:calc(50% - 22px);min-width:14px;height:14px;padding:0 3px;border-radius:7px;background:#ef4444;color:#fff;font-size:7px;font-weight:800;display:grid;place-items:center}
 .tab-icon{font-size:15px;line-height:1}
 .tab-label{font-size:8px;line-height:1.2;white-space:nowrap}
 .all-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:4px 4px 2px;border-top:1px solid #eef3fb}
@@ -88,5 +94,7 @@ function go(path: string) {
   height:40px;border:1px solid #e1ebf9;background:#f8fbff;border-radius:9px;
   color:#687f9b;font-size:16px;display:grid;place-items:center;cursor:pointer;
 }
+.all-item{position:relative}
 .all-item.on{color:#2563eb;background:#eef4ff;border-color:#bcd4ff}
+.all-unread{position:absolute;top:4px;right:6px;min-width:12px;height:12px;border-radius:6px;background:#ef4444;color:#fff;font-size:6px;font-weight:800;display:grid;place-items:center;padding:0 2px}
 </style>
