@@ -42,7 +42,7 @@ docs/design/v35/
    └─ demo-overview.png               全部功能总览演示预览
 ```
 
-## Mobile v35.7 演示
+## Mobile v35.7 演示（已定稿）
 
 ```text
 docs/design/v35/mobile/
