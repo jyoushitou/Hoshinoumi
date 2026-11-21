@@ -63,9 +63,17 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 20% 0%,
 .search-panel{position:absolute;inset:0;background:#f7faff;z-index:2;padding:14px;display:flex;flex-direction:column}.search-panel .row{display:flex;gap:7px;align-items:center}.search-panel input{flex:1;height:34px;border:1px solid #dce8fb;background:#fff;border-radius:9px;padding:0 10px;font:10px inherit;outline:0}.search-panel .cancel{border:0;background:none;color:#2563eb;font:10px inherit;cursor:pointer}.search-result{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-top:7px;font-size:9px;color:#405873;cursor:pointer}.search-result small{display:block;color:#9aabc0;font-size:7.5px;margin-top:2px}
 .modal-form{display:flex;flex-direction:column;gap:7px}.modal-form input,.modal-form select{height:32px;border:1px solid #dce8fb;border-radius:8px;padding:0 9px;font:9.5px inherit;outline:0}.modal-form button{border:0;background:#2563eb;color:#fff;border-radius:8px;padding:8px;font:10px inherit;cursor:pointer}
 .composer .input:empty:before{content:attr(data-ph);color:#aab7c8;font-size:10px}
-.bottom-nav.two-row{height:104px;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:1fr 1fr;gap:1px 0;align-content:center;padding:5px 8px 8px}
-.bottom-nav.two-row .tab{width:auto;height:45px;padding:2px 0;gap:2px}
-.bottom-nav.two-row .tab .ic{font-size:15px}.bubble-image{width:150px;height:82px;border-radius:10px;background:linear-gradient(145deg,#dbeafe,#bfdbfe);display:grid;place-items:center;color:#2563eb;font-size:20px;margin-bottom:4px}
+.bottom-nav{position:relative;height:76px;flex:none;display:flex;flex-direction:column;justify-content:flex-end;background:rgba(255,255,255,.96);border-top:1px solid #e5edf9;padding:0 8px 8px;backdrop-filter:blur(10px)}
+.bottom-nav.expanded{height:122px}
+.bottom-nav .nav-row{display:grid;grid-template-columns:repeat(4,1fr);height:46px}
+.bottom-nav .nav-row.secondary{display:none}
+.bottom-nav.expanded .nav-row.secondary{display:grid}
+.bottom-nav .tab{width:auto;height:45px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-radius:13px;color:#8a9bb0;font-size:8px}
+.bottom-nav .tab .ic{font-size:15px;line-height:1}
+.bottom-nav .tab.on{color:#2563eb;background:#eef4ff;font-weight:700}
+.nav-grip{position:absolute;left:50%;top:-17px;transform:translateX(-50%);height:23px;padding:0 13px;border:1px solid #dbe8ff;border-radius:12px;background:#fff;color:#2563eb;font:8px inherit;display:flex;align-items:center;gap:4px;box-shadow:0 4px 10px rgba(37,99,235,.08);cursor:pointer;z-index:2}
+.nav-grip .grip-ic{font-size:9px;line-height:1;transition:transform .2s}
+.bottom-nav.expanded .nav-grip .grip-ic{transform:rotate(180deg)}.bubble-image{width:150px;height:82px;border-radius:10px;background:linear-gradient(145deg,#dbeafe,#bfdbfe);display:grid;place-items:center;color:#2563eb;font-size:20px;margin-bottom:4px}
 .bubble-voice{display:flex;align-items:center;gap:5px;font-size:8px}.wave{display:flex;align-items:center;gap:2px;height:13px}.wave i{width:2px;background:#2563eb;border-radius:1px;display:block}.wave i:nth-child(1){height:5px}.wave i:nth-child(2){height:9px}.wave i:nth-child(3){height:13px}.wave i:nth-child(4){height:7px}.wave i:nth-child(5){height:4px}
 .system-note{align-self:center;font-size:7.5px;color:#9aabc0;background:#eef4ff;border-radius:6px;padding:3px 7px;margin:5px 0}
 
@@ -82,10 +90,18 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 20% 0%,
   /* in-page scroll for real phones */
   .d-view .list,.d-view .msgs,.d-view .mem-body,.d-view .rel-wrap,.d-view .set-body,.d-view .d-scroll{overflow-y:auto!important;-webkit-overflow-scrolling:touch}
   .toast{bottom:96px}
-  #view{height:100dvh;padding-bottom:104px}
-  #view .bottom-nav{position:fixed;left:0;right:0;bottom:0;z-index:40;width:100vw!important;max-width:100vw!important;box-sizing:border-box;display:grid!important;grid-template-columns:repeat(4,1fr)!important;grid-template-rows:1fr 1fr!important;min-height:104px;padding-bottom:max(8px,env(safe-area-inset-bottom));overflow:hidden}
+  #view{height:100dvh;padding-bottom:76px}
+  body.nav-expanded #view{padding-bottom:122px}
+  #view .bottom-nav{position:fixed;left:0;right:0;bottom:0;z-index:40;width:100vw!important;max-width:100vw!important;box-sizing:border-box;height:76px;padding-bottom:max(8px,env(safe-area-inset-bottom));overflow:visible}
+  #view .bottom-nav.expanded{height:122px}
+  #view .bottom-nav .nav-row{height:46px}
   #view .bottom-nav .tab{width:auto!important;max-width:none!important;height:45px!important}
 }
+
+.bottom-nav .nav-row{background:transparent!important}
+.bottom-nav .nav-row .tab{color:#8a9bb0!important;background:transparent!important}
+.bottom-nav .nav-row .tab.on{color:#2563eb!important;background:#eef4ff!important;font-weight:700}
+.bottom-nav .nav-row .tab .ic{color:inherit!important}
 </style>
 </head>
 <body>
@@ -133,6 +149,7 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 20% 0%,
 const app = document.getElementById('view')
 let toastTimer = 0
 const readConversations = new Set()
+let navExpanded = false
 function toast(text){ const el=document.getElementById('toast'); el.textContent=text; el.classList.add('on'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('on'),1600) }
 
 const screens = {}
@@ -365,7 +382,15 @@ function nav(active){
   const row1 = [['chats','◉','聊天'],['memory','◇','记忆'],['relation','♡','关系'],['settings','⚙','设置']]
   const row2 = [['home','⌂','主页'],['savings','¥','存钱'],['weekly','▦','周计划'],['info','i','信息']]
   const tab = ([key,ic,label]) => `<div class="tab ${active===key?'on':''}" onclick="go('${key}')"><span class="ic">${ic}</span>${label}</div>`
-  return `<nav class="bottom-nav two-row">${row1.map(tab).join('')}${row2.map(tab).join('')}</nav>`
+  return `<nav class="bottom-nav ${navExpanded?'expanded':''}"><button class="nav-grip" onclick="toggleNav(event)"><span class="grip-ic">⌃</span><span>快捷</span></button><div class="nav-row primary">${row1.map(tab).join('')}</div><div class="nav-row secondary">${row2.map(tab).join('')}</div></nav>`
+}
+function toggleNav(e){
+  e.stopPropagation()
+  const nav = e.currentTarget.closest('.bottom-nav')
+  navExpanded = !navExpanded
+  nav.classList.toggle('expanded', navExpanded)
+  document.body.classList.toggle('nav-expanded', navExpanded)
+  toast(navExpanded ? '已展开快捷入口' : '已收起')
 }
 
 function go(name){ document.querySelector('.demo-overlay')?.remove(); app.innerHTML = screens[name]; if(name==='chats'){ document.querySelectorAll('.conv[data-conv]').forEach(c=>{ if(readConversations.has(c.dataset.conv)) c.querySelectorAll('.badge').forEach(b=>b.remove()) }) } if(name==='chat'){ const input=document.getElementById('input'); if(input) input.style.cssText='flex:1;height:35px;border-radius:10px;background:#f5f8fe;border:1px solid #e6eefb;padding:6px 10px;color:#4a6079;font-size:10px;overflow:auto'; setTimeout(()=>document.getElementById('msgs')?.scrollTo(0,9999),30) } }
