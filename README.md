@@ -4,7 +4,7 @@
 
 # Hoshinoumi（REC） v35.2.25.1
 
-> 后端 **v35.2.25.1** · 网关 **v26.4.0**（8+4+body TCP / protobuf / 模糊指令）
+> 后端 **v35.2.25.1** · 网关 **v26.4.0** · 桌面客户端 **v35.6 Electron**（8+4+body TCP / protobuf / 模糊指令）
 > v35.2.25.1 是当前仓库版本；v26 已封板。**v25 之后普通版本只切 worker，热更前提是 worker 归 supervisor 管**；策略见 [HOT-UPDATE-POLICY.md](docs/HOT-UPDATE-POLICY.md)，部署见 [DEPLOY-v26.md](docs/DEPLOY-v26.md)。
 >
 > 状态规则：**下一个大版本进入试运行，则上一个大版本视为完成。**
@@ -23,6 +23,7 @@
 ![Backend](https://img.shields.io/badge/Backend-v35.2.25.1-yellow)
 ![Gateway](https://img.shields.io/badge/Gateway-v26.4.0-blue)
 ![Version](https://img.shields.io/badge/Version-v35.2.25.1-orange)
+![Desktop](https://img.shields.io/badge/Desktop-v35.6%20Electron-4C6FFF)
 ![Tests](https://img.shields.io/badge/Tests-13%2C140%2B%20passing-brightgreen)
 
 > **Hoshinoumi（REC，记录）** · 友利奈绪 · 星之海学园学生会室
@@ -110,7 +111,78 @@ NapCat/WS 3001
 | 存储 | MySQL 8（默认）/ SQLite 自动回退；schema 35 |
 | 模型 | DeepSeek 主模型，豆包兜底；失败降级不伪造回复 |
 
-当前后端版本是 **v35.2.25.1**，schema **35**。v35.4 的 VS Code 客户端已经在做；Web / Qt / Android 等客户端还在后续计划里。
+当前后端版本是 **v35.2.25.1**，schema **35**。桌面客户端已切到 **Electron v35.6**（内置 Chromium）；VS Code 插件已交付；Web 继续走 v35.5，Qt / Android 等仍在后续计划。
+
+### 桌面客户端（Electron v35.6）
+
+桌面端已经从 Tauri/WebView2 切到 **Electron + 内置 Chromium**，不再依赖系统 WebView。
+
+```text
+clients/electron/                 当前桌面客户端
+clients/archive/tauri-desktop/    原 Tauri 工程（已停用归档）
+clients/electron/dist/            发布包输出
+docs/versions/v35.md              v35.6 计划与状态
+```
+
+#### 直接运行发布包
+
+```text
+clients/electron/dist/Hoshinoumi-35.6.0-win.zip
+```
+
+1. 解压 zip
+2. 双击 `启动 Hoshinoumi.cmd`
+3. 不要直接双击 `Hoshinoumi.exe`
+
+当前机器需要启动参数和本地 user-data 目录，启动脚本已处理：
+
+```text
+--no-sandbox
+--disable-gpu
+--disable-crash-reporter
+--disable-breakpad
+--user-data-dir=.\user-data
+```
+
+#### 开发运行
+
+```powershell
+cd integrations\web
+pnpm build
+
+cd ..\..\clients\electron
+pnpm install
+pnpm start
+```
+
+#### 构建 zip
+
+```powershell
+cd clients\electron
+
+$env:NODE_TLS_REJECT_UNAUTHORIZED='0'
+$env:ELECTRON_BUILDER_BINARIES_MIRROR='https://npmmirror.com/mirrors/electron-builder-binaries/'
+pnpm exec electron-builder --win zip
+```
+
+输出：
+
+```text
+clients/electron/dist/Hoshinoumi-35.6.0-win.zip
+```
+
+完整安装、启动、Electron 安装失败修复见：
+
+- [clients/electron/README.md](clients/electron/README.md)
+- [clients/electron/ACCEPTANCE.md](clients/electron/ACCEPTANCE.md)
+
+当前限制：
+
+```text
+NSIS Setup.exe 在本机受临时目录策略限制，不发布
+portable 依赖 NSIS 解包，不推荐
+更新下载/安装/回退需要真实更新源联调
+```
 
 ### 它不是什么
 
