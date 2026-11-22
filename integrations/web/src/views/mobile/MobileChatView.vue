@@ -2,7 +2,7 @@
   <div class="mc">
     <template v-if="pane === 'list'">
       <div class="head"><div><h1>聊天</h1><p>QQ 会话 · {{ session.conversations.length }} 个</p></div><i class="dot" :class="{ off: !session.connected }" /></div>
-      <button type="button" class="search" @click="openSearch">🔍 搜索会话 / 消息</button>
+      <button type="button" class="search" @click="openSearch">🔍 搜索会话 / 记忆 / 命令</button>
       <div v-if="!auth.loggedIn" class="notice">游客模式：登录后可同步 QQ 会话。</div>
       <div v-else-if="listError" class="notice error">{{ listError }}</div>
       <div v-else-if="!session.conversations.length" class="notice">{{ session.loading ? '正在同步会话…' : '暂无会话。后端有 QQ 消息后会出现在这里。' }}</div>
@@ -52,14 +52,14 @@
 
     <div v-if="searchOpen" class="search-overlay">
       <div class="search-head">
-        <input ref="searchInput" v-model="searchQuery" type="search" placeholder="搜索会话 / 当前消息" @keydown.esc="closeSearch">
+        <input ref="searchInput" v-model="searchQuery" type="search" placeholder="搜索会话 / 记忆 / 命令" @keydown.esc="closeSearch">
         <button type="button" @click="closeSearch">取消</button>
       </div>
       <div class="search-body">
         <div v-if="!searchQuery.trim()" class="search-empty">输入关键词搜索会话和当前聊天记录</div>
         <div v-else-if="!searchResults.length" class="search-empty">没有匹配结果</div>
         <button v-for="hit in searchResults" :key="hit.key" type="button" class="search-hit" @click="openSearchResult(hit)">
-          <span class="hit-kind">{{ hit.kind === 'conv' ? '会话' : '消息' }}</span>
+          <span class="hit-kind">{{ hit.kind === 'conv' ? '会话' : hit.kind === 'msg' ? '消息' : hit.kind === 'memory' ? '记忆' : '命令' }}</span>
           <span class="hit-copy"><b>{{ hit.title }}</b><small>{{ hit.text }}</small></span>
         </button>
         <div class="search-note">只搜索已加载的会话和消息，不伪造未同步内容。</div>
@@ -70,11 +70,14 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { useSessionStore } from '@/stores/session'
 import { useAuthStore } from '@/stores/auth'
+import { http } from '@/api/client'
 
 const session = useSessionStore()
 const auth = useAuthStore()
+const router = useRouter()
 const pane = ref<'list' | 'chat'>('list')
 const draft = ref('')
 const messageList = ref<HTMLElement | null>(null)
@@ -92,7 +95,8 @@ const stickers = ['😊','😂','🥺','😳','😭','😡','🤔','😴','❤�
 const searchOpen = ref(false)
 const searchQuery = ref('')
 const searchInput = ref<HTMLInputElement | null>(null)
-interface SearchHit { key: string; kind: 'conv' | 'msg'; title: string; text: string; target: string; index?: number }
+interface SearchHit { key: string; kind: 'conv' | 'msg' | 'memory' | 'command'; title: string; text: string; target?: string; index?: number }
+const commands = ref<Array<{ name?: string; help?: string; group?: string }>>([])
 const listError = computed(() => auth.loggedIn ? (session.conversationsError || session.error) : '')
 const active = computed(() => session.conversations.find(row => row.target_id === session.activeTarget) || null)
 const activeName = computed(() => active.value?.name || String(session.persona?.name || '会话'))
@@ -111,6 +115,14 @@ const searchResults = computed<SearchHit[]>(() => {
   session.messages.forEach((message, index) => {
     const content = String(message.content || '')
     if (content.toLowerCase().includes(query)) hits.push({ key: 'msg-' + index, kind: 'msg', title: activeName.value, text: content.slice(0, 80), target: session.activeTarget, index })
+  })
+  session.memoryTargets.forEach((memory, index) => {
+    const raw = typeof memory === 'object' && memory ? JSON.stringify(memory) : String(memory)
+    if (raw.toLowerCase().includes(query)) hits.push({ key: 'memory-' + index, kind: 'memory', title: String((memory as Record<string, unknown>)?.target_id || '记忆'), text: raw.slice(0, 80) })
+  })
+  commands.value.forEach((command, index) => {
+    const raw = `${command.name || ''} ${command.help || ''} ${command.group || ''}`.toLowerCase()
+    if (raw.includes(query)) hits.push({ key: 'command-' + index, kind: 'command', title: command.name || '命令', text: command.help || command.group || '' })
   })
   return hits.slice(0, 40)
 })
@@ -131,17 +143,27 @@ watch(() => session.activeTarget, scrollBottom)
 
 function timeOf(value?: string) { const d = value ? new Date(value) : null; return d && !Number.isNaN(d.getTime()) ? `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}` : '' }
 async function scrollBottom() { await nextTick(); const el = messageList.value; if (el) el.scrollTop = el.scrollHeight }
+async function loadCommands() {
+  if (commands.value.length) return
+  try {
+    const r = await http.get<{ data?: Array<{ name?: string; help?: string; group?: string }> }>('/api/commands')
+    commands.value = Array.isArray(r.data) ? r.data : []
+  } catch { commands.value = [] }
+}
 async function openSearch() {
   searchOpen.value = true
   searchQuery.value = ''
   await nextTick()
   searchInput.value?.focus()
+  void loadCommands()
 }
 function closeSearch() { searchOpen.value = false; searchQuery.value = '' }
 async function openSearchResult(hit: SearchHit) {
   searchOpen.value = false
-  if (hit.kind === 'conv') { await open(hit.target); return }
-  if (session.activeTarget !== hit.target) await open(hit.target)
+  if (hit.kind === 'memory') { void router.push('/memory'); return }
+  if (hit.kind === 'command') { void router.push('/commands'); return }
+  if (hit.kind === 'conv') { await open(hit.target || ''); return }
+  if (session.activeTarget !== hit.target) await open(hit.target || '')
   await nextTick()
   const el = document.querySelector(`[data-message-index="${hit.index ?? 0}"]`)
   el?.scrollIntoView({ block: 'center', behavior: 'smooth' })
