@@ -20,6 +20,7 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 15% 0%,
 .log{margin-top:10px;border-top:1px solid #e7effa;padding-top:8px;font:8px ui-monospace,monospace;color:#8a9bb0;min-height:16px;line-height:1.6}
 .flow{display:flex;gap:5px;flex-wrap:wrap;margin-top:9px}.flow span{font-size:7.5px;color:#71859d;border:1px solid #e3ebf7;background:#fff;border-radius:10px;padding:3px 7px}
 /* scenes */
+.webview{flex:1;width:100%;border:0;min-height:0;background:#f7faff;display:block}
 .scene{position:absolute;inset:0;display:none;flex-direction:column;background:#f7faff}.scene.on{display:flex;animation:scene-in .28s cubic-bezier(.2,.8,.2,1) both}
 @keyframes scene-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
 .statusbar{height:28px;flex:none;display:flex;align-items:flex-end;justify-content:space-between;padding:0 16px 2px;font-size:8px;font-weight:750;color:#4c6582;position:relative;z-index:5}.statusbar.dark{color:#eaf4ff}.statusbar .right{display:flex;align-items:center;gap:5px}.sig{display:flex;align-items:flex-end;gap:1px}.sig i{display:block;width:2px;background:currentColor;border-radius:1px}.sig i:nth-child(1){height:3px}.sig i:nth-child(2){height:5px}.sig i:nth-child(3){height:7px}.sig i:nth-child(4){height:9px}.battery{width:16px;height:8px;border:1px solid currentColor;border-radius:2px;position:relative;opacity:.85}.battery:after{content:"";position:absolute;right:-3px;top:2px;width:2px;height:4px;background:currentColor;border-radius:0 1px 1px 0}
@@ -82,17 +83,10 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 15% 0%,
         <div class="load-note">正在打开 Hoshinoumi…</div>
       </section>
 
-      <!-- WEB -->
+      <!-- WEB / 完整手机应用原型 -->
       <section class="scene" id="scene-web">
         <div class="statusbar"><span>9:41</span><div class="right"><span class="sig"><i></i><i></i><i></i><i></i></span><span>5G</span><div class="battery"></div></div></div>
-        <div class="app-head"><div class="app-mark">✦</div><div class="app-name">HOSHINOUMI<small>REC · ONLINE</small></div><span class="pill ok" id="net-pill">在线</span></div>
-        <div class="web-head"><h2>聊天</h2><p>QQ 会话 · 2 个</p><div class="web-search">⌕ 搜索会话 / 记忆 / 命令</div><div class="chips"><span class="chip on">全部</span><span class="chip">私聊</span><span class="chip">群聊</span></div></div>
-        <div class="conv-list"><div class="sec"><span>最近</span><span>已同步</span></div>
-          <div class="conv" onclick="openChat()"><div class="av bot">奈</div><div class="copy"><b>奈绪</b><small>你回来啦。今天外面有点冷，先喝点热的吧。</small></div><div class="end"><span class="tm">刚刚</span><span class="badge">2</span></div></div>
-          <div class="conv" onclick="openGroupChat()"><div class="av">学</div><div class="copy"><b>星之海学生会</b><small>友利：下午的会议改到三点。</small></div><div class="end"><span class="tm">12:40</span><span class="badge">5</span></div></div>
-        </div>
-        <div class="web-tools"><button onclick="openModal('mic')">🎙 语音</button><button onclick="openModal('photo')">▧ 图片</button><button onclick="openModal('update')">↻ 更新</button></div>
-        <div class="tabbar"><div class="tab on" onclick="toast('当前已在聊天')"><span class="ic">◉</span>聊天</div><div class="tab" onclick="toast('记忆页由同一套 Web 页面提供')"><span class="ic">◈</span>记忆</div><div class="tab" onclick="toast('关系页由同一套 Web 页面提供')"><span class="ic">♡</span>关系</div><div class="tab" onclick="toast('设置页由同一套 Web 页面提供')"><span class="ic">⚙</span>设置</div></div>
+        <iframe class="webview" id="appFrame" src="hoshinoumi-mobile-v35.7-demo.html?embed=1&screen=chats" title="Hoshinoumi 手机 Web"></iframe>
       </section>
 
       <!-- OFFLINE -->
@@ -166,7 +160,7 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 15% 0%,
   <aside class="side">
     <div class="kicker">MOBILE SHELL · DESIGN DEMO</div>
     <h1>手机套壳<br>交互设计稿</h1>
-    <p>这是 Capacitor / WebView 壳的交互演示。业务页面仍由同一套手机 Vue 提供；这里只模拟启动、加载、错误、权限和更新。</p>
+    <p>这是 Capacitor / WebView 壳的完整交互演示。WebView 内嵌的是 v35.7 全功能手机原型：聊天、记忆、关系、存钱、周计划、信息、人设、命令、定时、日志、设置都能点。</p>
     <div class="panel"><h3>壳事件模拟</h3><div class="controls">
       <button class="primary" onclick="boot()">▶ 重新启动</button>
       <button onclick="go('offline')">☁ 模拟断网</button>

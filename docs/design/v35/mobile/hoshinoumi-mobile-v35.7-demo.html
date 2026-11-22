@@ -183,10 +183,21 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 20% 0%,
 .week-chips{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px}.week-chips button{width:28px;height:25px;border:1px solid #e3ebf7;background:#fbfdff;border-radius:7px;font:8px inherit;color:#71859d}.week-chips button.on{background:#2563eb;border-color:#2563eb;color:#fff}
 .cron-preview{border-radius:9px;background:#f4f9ff;border:1px dashed #cfe0f7;padding:8px 9px;font-size:8px;color:#5f7da2;margin-bottom:11px}
 .cron-actions{display:flex;align-items:stretch;gap:7px}.cron-actions button{flex:1 1 0;height:40px;min-height:40px;margin:0;padding:0 10px;border:1px solid #dbe8ff;border-radius:9px;background:#fff;color:#2563eb;font:9px/1 inherit;display:flex;align-items:center;justify-content:center;box-sizing:border-box;box-shadow:none;vertical-align:middle}.cron-actions button.primary{background:#2563eb;border-color:#2563eb;color:#fff;font-weight:700}
+
+/* embed: 只作为 WebView 内容被套壳 demo 使用 */
+body.embed{background:#f7faff;overflow:hidden;min-height:100vh}
+body.embed .demo-page{display:block;padding:0;max-width:none;min-height:100dvh}
+body.embed .demo-stage{display:block;max-width:none}
+body.embed .demo-title,body.embed .demo-side,body.embed .demo-caption{display:none!important}
+body.embed .phone{width:100vw;height:100dvh;border:0;border-radius:0;box-shadow:none;background:transparent;padding:0}
+body.embed .screen{border-radius:0;height:100%;background:#f7faff}
+body.embed .island,body.embed .statusbar,body.embed .browser-top,body.embed .browser-progress{display:none!important}
+body.embed #view{height:100dvh!important}
 </style>
 <link rel="stylesheet" href="mobile-native.css">
 </head>
 <body>
+<script>if(new URLSearchParams(location.search).has('embed'))document.body.classList.add('embed')</script>
 <div class="demo-page">
   <div class="demo-stage">
     <div class="demo-title">HOSHINOUMI MOBILE <span>· v35.7 交互演示</span></div>
@@ -803,6 +814,7 @@ const fallback = window.innerWidth <= 860 ? 'chats' : 'login'
 go(screens[initial] ? initial : fallback)
 // 有提醒就直接弹出；登录页不弹
 setTimeout(() => {
+  if (document.body.classList.contains('embed')) return
   if (reminderHandled) return
   if (currentScreen === 'login') return
   if (document.querySelector('.notice-popup')) return
