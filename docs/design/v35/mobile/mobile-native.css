@@ -114,7 +114,7 @@ body.nav-expanded #view{padding-bottom:196px!important}
 .mem-side-card{background:#fff;border:0;border-radius:15px;padding:11px;margin-top:8px;box-shadow:var(--mn-soft)}.mem-side-card h4{margin:0 0 7px;font-size:9px;color:#536b86}.mem-side-card .ev{display:flex;gap:5px;padding:4px 0;border-bottom:1px solid #f0f5fd;font-size:8px;color:#4a6079}.mem-side-card .ev:last-child{border-bottom:0}.mem-side-card .ev i{width:5px;height:5px;border-radius:50%;background:#60a5fa;margin-top:4px;flex:none}.mem-side-card .ev small{display:block;color:#9aabc0;font-size:6.5px;margin-top:1px}.kw{display:flex;flex-wrap:wrap;gap:4px}.kw span{font-size:7px;color:#5f7da2;background:#f4f9ff;border-radius:9px;padding:2px 6px}
 
 /* dock is part of the app flex column, never fixed to the page viewport */
-#view{height:100dvh!important;padding-bottom:0!important}
+#view{flex:1!important;min-height:0!important;padding-bottom:0!important}
 #view .bottom-nav{position:relative!important;left:auto!important;right:auto!important;bottom:auto!important;width:100%!important;max-width:100%!important;flex:none!important;margin:0 8px 0!important;border-radius:20px 20px 0 0!important;box-sizing:border-box}
 body.nav-expanded #view{padding-bottom:0!important}
 .phone .screen-body.d-view{height:100%!important;min-height:0!important}
