@@ -61,7 +61,7 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 20% 0%,
 .cmd-search{height:33px;border:1px solid var(--line);background:#fff;border-radius:9px;display:flex;align-items:center;gap:7px;padding:0 10px;font-size:9px;color:#a3b2c5;margin-bottom:8px}.cmd-chips{display:flex;gap:6px;overflow:auto;padding-bottom:6px;margin-bottom:8px}.cmd-chips button{flex:none;border:1px solid var(--line);background:#fff;border-radius:7px;padding:5px 9px;font:8.5px inherit;color:#71859d;cursor:pointer}.cmd-chips button.on{background:#eef4ff;color:#2563eb;border-color:#bcd4ff}.cmd-row{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-bottom:6px;cursor:pointer}.cmd-row code{font:8px ui-monospace,monospace;color:#2563eb;background:#eef4ff;border-radius:5px;padding:3px 5px;min-width:66px}.cmd-row .t{flex:1;font-size:9px;color:#405873}.cmd-row .chev{color:#adbacb;font-size:12px}
 .cron-row{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:11px;padding:9px 10px;margin-bottom:7px}.cron-row .t{flex:1}.cron-row b{font-size:9.5px;display:block;color:#334b65}.cron-row small{font-size:7.5px;color:#9aabc0;display:block;margin-top:2px}.cron-row .switch{width:32px;height:18px;border-radius:10px;background:#cbd5e1;position:relative;cursor:pointer}.cron-row .switch.on{background:#2563eb}.cron-row .switch:after{content:"";position:absolute;width:14px;height:14px;border-radius:50%;background:#fff;top:2px;left:2px}.cron-row .switch.on:after{left:16px}
 .log-row{display:flex;gap:8px;background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 9px;margin-bottom:5px;font:7.5px ui-monospace,monospace;color:#5a7089}.log-row .lv{flex:none;border-radius:4px;padding:1px 4px;height:15px;line-height:13px;font-size:7px;font-weight:700}.log-row .lv.ok{background:#eefbf5;color:#1f9d6b}.log-row .lv.warn{background:#fff8e8;color:#b7791f}.log-row .lv.err{background:#fff0f0;color:#d33}.log-row .txt{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.demo-overlay{position:absolute;inset:0;z-index:30;display:none}.demo-overlay.on{display:block}.overlay-mask{position:absolute;inset:0;background:rgba(9,22,40,.32);backdrop-filter:blur(2px)}.sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:18px 18px 0 0;padding:13px 14px calc(13px + env(safe-area-inset-bottom));box-shadow:0 -12px 30px rgba(17,38,70,.15)}.sheet h4{font-size:10px;margin:0 0 9px;color:#39536f}.sheet-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.sheet-grid button{border:1px solid var(--line);background:#f8fbff;border-radius:10px;padding:9px 4px;font:8px inherit;color:#56708d;cursor:pointer}.sheet-grid button b{display:block;font-size:15px;margin-bottom:3px}.sheet-close{width:100%;margin-top:9px;border:0;background:#eef4ff;color:#2563eb;border-radius:9px;padding:9px;font:10px inherit;cursor:pointer}
+.demo-overlay{position:absolute;inset:0;z-index:80;display:none}.demo-overlay.on{display:block}.overlay-mask{position:absolute;inset:0;background:rgba(9,22,40,.32);backdrop-filter:blur(2px)}.sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:18px 18px 0 0;padding:13px 14px calc(13px + env(safe-area-inset-bottom));box-shadow:0 -12px 30px rgba(17,38,70,.15)}.sheet h4{font-size:10px;margin:0 0 9px;color:#39536f}.sheet-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.sheet-grid button{border:1px solid var(--line);background:#f8fbff;border-radius:10px;padding:9px 4px;font:8px inherit;color:#56708d;cursor:pointer}.sheet-grid button b{display:block;font-size:15px;margin-bottom:3px}.sheet-close{width:100%;margin-top:9px;border:0;background:#eef4ff;color:#2563eb;border-radius:9px;padding:9px;font:10px inherit;cursor:pointer}
 .search-panel{position:absolute;inset:0;background:#f7faff;z-index:2;padding:14px;display:flex;flex-direction:column}.search-panel .row{display:flex;gap:7px;align-items:center}.search-panel input{flex:1;height:34px;border:1px solid #dce8fb;background:#fff;border-radius:9px;padding:0 10px;font:10px inherit;outline:0}.search-panel .cancel{border:0;background:none;color:#2563eb;font:10px inherit;cursor:pointer}.search-result{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-top:7px;font-size:9px;color:#405873;cursor:pointer}.search-result small{display:block;color:#9aabc0;font-size:7.5px;margin-top:2px}
 .modal-form{display:flex;flex-direction:column;gap:7px}.modal-form input,.modal-form select{height:32px;border:1px solid #dce8fb;border-radius:8px;padding:0 9px;font:9.5px inherit;outline:0}.modal-form button{border:0;background:#2563eb;color:#fff;border-radius:8px;padding:8px;font:10px inherit;cursor:pointer}
 .composer .input:empty:before{content:attr(data-ph);color:#aab7c8;font-size:10px}
@@ -204,6 +204,8 @@ body.embed #view{height:100dvh!important}
 .login .hello{margin-top:20px}
 .login .form{margin-top:16px}
 .login .tip{margin-top:10px;padding-bottom:2px}
+
+.account-hero{display:flex;align-items:center;gap:11px;padding:2px 0 12px;border-bottom:1px solid #f0f5fd;margin-bottom:7px}.account-hero .avatar{width:46px;height:46px;border-radius:14px;font-size:16px}.account-hero .t{flex:1;min-width:0}.account-hero b{display:block;font-size:13px;color:#1f3550}.account-hero small{display:block;font-size:8.5px;color:#8a9bb0;margin-top:2px}.account-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #f4f8fe;font-size:9px;color:#71859d}.account-row:last-of-type{border-bottom:0}.account-row b{font-size:9px;color:#314a65;font-weight:650;text-align:right;word-break:break-all}.account-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}.account-actions button{height:34px;border:1px solid #dbe8ff;border-radius:9px;background:#fff;color:#2563eb;font:9px inherit}.account-actions button.danger{color:#b91c1c;border-color:#fecaca;background:#fff5f5}
 </style>
 <link rel="stylesheet" href="mobile-native.css">
 </head>
@@ -358,7 +360,7 @@ screens.settings = `
 <div class="screen-body" style="flex:1;min-height:0;display:flex;flex-direction:column">
   <div class="page-head"><h2>设置<small>SETTINGS</small></h2></div>
   <div class="set-body">
-    <div class="profile" onclick="toast('账号信息演示')"><div class="avatar">J</div><div class="t"><b>jyoushitou</b><small>主人账号 · 已连接</small></div><span class="chev">›</span></div>
+    <div class="profile" onclick="openAccount()"><div class="avatar">J</div><div class="t"><b>jyoushitou</b><small>主人账号 · 已连接</small></div><span class="chev">›</span></div>
     <div class="set-group"><div class="set-row" data-quick onclick="openQuickSettings()"><span class="ic">★</span><div class="t">底部快捷栏</div><span class="val">${quickKeys.map(k=>allEntries.find(e=>e[0]===k)?.[2]).join(' / ')}</span></div></div>
     <div class="set-group"><div class="set-row" onclick="toast('连接设置演示')"><span class="ic">⌁</span><div class="t">连接 / 后端入口</div><span class="val">127.0.0.1:27005</span></div><div class="set-row" onclick="toast('外观设置演示')"><span class="ic">◐</span><div class="t">外观</div><span class="val">跟随系统</span></div><div class="set-row"><span class="ic">◉</span><div class="t">消息通知</div><div class="switch on" onclick="toggleSwitch(this)"></div></div></div>
     <div class="set-group"><div class="set-row"><span class="ic">◇</span><div class="t">记忆</div><div class="switch on" onclick="toggleSwitch(this)"></div></div><div class="set-row" onclick="toast('关系显示范围演示')"><span class="ic">♡</span><div class="t">关系显示范围</div><span class="val">仅自己</span></div><div class="set-row" onclick="toast('桌面端状态演示')"><span class="ic">⬡</span><div class="t">桌面端</div><span class="val">已安装</span></div></div>
@@ -658,6 +660,18 @@ function openFirstLogin(){
     <div class="cron-field"><label>新密码</label><input type="password" placeholder="至少 8 位"></div>
     <div class="cron-field"><label>确认密码</label><input type="password" placeholder="再输入一次"></div>
     <div class="cron-actions"><button onclick="closeOverlay()">取消</button><button class="primary" onclick="closeOverlay();toast('密码已设置（演示）');go('chats')">设置密码并登录</button></div>
+  </div>`)
+}
+function openAccount(){
+  overlay(`<div class="sheet">
+    <div class="account-hero"><div class="avatar">J</div><div class="t"><b>jyoushitou</b><small>主人账号 · 已连接</small></div></div>
+    <div class="account-row"><span>QQ</span><b>10001</b></div>
+    <div class="account-row"><span>角色</span><b>主人 · owner</b></div>
+    <div class="account-row"><span>后端</span><b>https://hoshinoumi.app</b></div>
+    <div class="account-row"><span>连接</span><b style="color:#1f9d6b">已连接</b></div>
+    <div class="account-row"><span>访问 Token</span><b>已保存 · 掩码</b></div>
+    <div class="account-actions"><button onclick="closeOverlay();toast('打开连接设置（演示）')">修改连接</button><button class="danger" onclick="closeOverlay();toast('已退出登录（演示）');go('login')">退出登录</button></div>
+    <button class="sheet-close" onclick="closeOverlay()">关闭</button>
   </div>`)
 }
 function openCronForm(title){
