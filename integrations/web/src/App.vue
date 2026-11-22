@@ -27,7 +27,7 @@ onMounted(() => {
 onBeforeUnmount(() => { media?.removeEventListener('change', sync) })
 </script>
 <template>
-  <LoginModal v-if="!auth.loggedIn && !auth.guest" />
+  <LoginModal v-if="!auth.loggedIn" />
   <MobileShell v-if="isMobile" />
   <AppShell v-else />
 </template>

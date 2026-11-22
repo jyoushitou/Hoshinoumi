@@ -6,7 +6,6 @@ const QQ_KEY = 'hsh_web_qq'
 export const useAuthStore = defineStore('auth', () => {
   const token = ref(localStorage.getItem(TOKEN_KEY) || '')
   const qq = ref(localStorage.getItem(QQ_KEY) || '')
-  const guest = ref(false)
   const validated = ref(false)
   const authError = ref('')
   const loggedIn = computed(() => Boolean(token.value && qq.value))
@@ -14,8 +13,7 @@ export const useAuthStore = defineStore('auth', () => {
     token.value = nextToken.trim(); qq.value = nextQQ.trim()
     localStorage.setItem(TOKEN_KEY, token.value); localStorage.setItem(QQ_KEY, qq.value)
   }
-  function logout() { token.value = ''; qq.value = ''; guest.value = false; validated.value = true; authError.value = ''; localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(QQ_KEY) }
-  function enterGuest() { guest.value = true }
+  function logout() { token.value = ''; qq.value = ''; validated.value = true; authError.value = ''; localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(QQ_KEY) }
   async function validate() {
     if (!token.value || !qq.value) { validated.value = true; return }
     try {
@@ -34,5 +32,5 @@ export const useAuthStore = defineStore('auth', () => {
       validated.value = true
     }
   }
-  return { token, qq, guest, validated, authError, loggedIn, setCredentials, logout, enterGuest, validate }
+  return { token, qq, validated, authError, loggedIn, setCredentials, logout, validate }
 })

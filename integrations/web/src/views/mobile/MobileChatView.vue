@@ -3,8 +3,7 @@
     <template v-if="pane === 'list'">
       <div class="head"><div><h1>聊天</h1><p>QQ 会话 · {{ session.conversations.length }} 个</p></div><i class="dot" :class="{ off: !session.connected }" /></div>
       <button type="button" class="search" @click="openSearch"><span class="search-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m16.5 16.5 4 4"></path></svg></span>搜索会话 / 记忆 / 命令</button>
-      <div v-if="!auth.loggedIn" class="notice">游客模式：登录后可同步 QQ 会话。</div>
-      <div v-else-if="listError" class="notice error">{{ listError }}</div>
+      <div v-if="listError" class="notice error">{{ listError }}</div>
       <div v-else-if="!session.conversations.length" class="notice">{{ session.loading ? '正在同步会话…' : '暂无会话。后端有 QQ 消息后会出现在这里。' }}</div>
       <button v-for="row in session.conversations" :key="row.target_id" class="conv" type="button" @click="open(row.target_id)">
         <span class="avatar">{{ (row.name || '?').slice(0, 1) }}</span>
