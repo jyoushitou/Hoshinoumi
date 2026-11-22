@@ -1,0 +1,21 @@
+﻿{
+  "name": "hoshinoumi-android-shell",
+  "private": true,
+  "version": "35.8.0",
+  "description": "Hoshinoumi Android Capacitor/WebView shell",
+  "scripts": {
+    "cap:sync": "cap sync android",
+    "cap:open": "cap open android",
+    "android:build": "cap sync android && cd android && gradlew.bat assembleDebug",
+    "android:install": "adb install -r android/app/build/outputs/apk/debug/app-debug.apk",
+    "android:logcat": "adb logcat"
+  },
+  "dependencies": {
+    "@capacitor/android": "7.6.10",
+    "@capacitor/core": "7.6.10"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "7.6.10",
+    "typescript": "^5.7.3"
+  }
+}

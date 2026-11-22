@@ -154,7 +154,7 @@
 
 | 版本 | 内容 | 状态 |
 |---|---|---|
-| v35.8.0.0 | Capacitor/Android 壳工程 | ⬜ |
+| v35.8.0.0 | Capacitor/Android 壳工程 | 🟡 可编译 |
 | v35.8.0.1 | WebView 加载 / 登录 / 存储 | ⬜ |
 | v35.8.0.2 | 失败页 / 离线 / host allowlist | ⬜ |
 | v35.8.0.3 | 启动图 / 状态栏 / WebView 安全 | ⬜ |
