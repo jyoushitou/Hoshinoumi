@@ -74,7 +74,7 @@ function go(path: string) {
 <style scoped>
 .mobile-tabbar{
   position:relative;flex:none;display:flex;flex-direction:column;align-items:stretch;
-  background:#fff;border-top:1px solid #e3ebf7;padding:0 6px max(6px, env(safe-area-inset-bottom));
+  background:#fff;border-top:1px solid #e3ebf7;padding:0 6px max(6px, env(safe-area-inset-bottom));min-height:70px;
   transition:height .18s ease;height:70px;overflow:visible;z-index:30;
 }
 .mobile-tabbar.expanded{height:auto}
@@ -98,7 +98,7 @@ function go(path: string) {
 .tab-label{font-size:8px;line-height:1.2;white-space:nowrap}
 .all-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:4px 4px 2px;border-top:1px solid #eef3fb}
 .all-item{
-  height:40px;border:1px solid #e1ebf9;background:#f8fbff;border-radius:9px;
+  height:44px;border:1px solid #e1ebf9;background:#f8fbff;border-radius:9px;
   color:#687f9b;font-size:16px;display:grid;place-items:center;cursor:pointer;
 }
 .all-item{position:relative}

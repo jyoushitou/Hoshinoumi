@@ -44,7 +44,7 @@
         <button type="button" class="tool" aria-label="图片" @click="pickImage">＋</button>
         <button type="button" class="tool" :class="{ rec: recording }" aria-label="语音" @click="toggleVoice">{{ recording ? '■' : '🎙' }}</button>
         <button type="button" class="tool" aria-label="表情" @click="stickerOpen = !stickerOpen">☺</button>
-        <textarea ref="textarea" v-model="draft" rows="1" placeholder="和奈绪说点什么…" enterkeyhint="send" @keydown="onKeydown" @input="autosize" />
+        <textarea ref="textarea" v-model="draft" rows="1" placeholder="和奈绪说点什么…" enterkeyhint="send" @keydown="onKeydown" @input="autosize" @focus="scrollBottom" />
         <button type="button" class="send" :disabled="!canSend" @click="send">{{ session.sending ? '…' : '↑' }}</button>
       </div>
       <div v-if="session.sendError" class="media-error">{{ session.sendError }}</div>
@@ -81,8 +81,17 @@ const activeCount = computed(() => Number(active.value?.member_count || 0))
 const syncLabel = computed(() => session.syncState === 'syncing' ? '同步中' : session.syncState === 'offline' ? '同步中断' : session.syncState === 'online' ? '已同步' : '等待同步')
 const canSend = computed(() => Boolean(draft.value.trim() || imagePreview.value) && !session.sending && Boolean(session.activeTarget))
 
-onMounted(() => { if (auth.loggedIn && !session.conversations.length) void session.refresh() })
-onBeforeUnmount(() => { if (recorder && recording.value) recorder.stop(); stream?.getTracks().forEach(t => t.stop()) })
+let viewportHandler: (() => void) | null = null
+onMounted(() => {
+  if (auth.loggedIn && !session.conversations.length) void session.refresh()
+  viewportHandler = () => { if (pane.value === 'chat') setTimeout(scrollBottom, 80) }
+  window.visualViewport?.addEventListener('resize', viewportHandler)
+})
+onBeforeUnmount(() => {
+  if (recorder && recording.value) recorder.stop()
+  stream?.getTracks().forEach(t => t.stop())
+  if (viewportHandler) window.visualViewport?.removeEventListener('resize', viewportHandler)
+})
 watch(() => session.messages.length, scrollBottom)
 watch(() => session.activeTarget, scrollBottom)
 
