@@ -231,5 +231,14 @@ header p{margin:0;color:#7c8da6;font-size:11px;max-width:620px}
 </div>
 <div style="max-width:1320px;margin:20px auto 0;padding:12px 16px;border:1px dashed #cfdfff;background:rgba(255,255,255,.55);border-radius:10px;color:#7188a3;font-size:9.5px;line-height:1.7">细稿说明：本页只画浏览器视口内页面内容；顶部地址栏、底部浏览器工具栏由真实手机浏览器提供。所有金额默认隐藏，仅主人可见；非主人不展示私密记忆、关系和财务数据。</div>
 </div>
+<script id="credit-script">
+document.querySelectorAll('.label').forEach(label => {
+  if (label.querySelector('.credit')) return
+  const credit = document.createElement('em')
+  credit.className = 'credit'
+  credit.textContent = 'POWERED BY JYOUSUITOU'
+  label.appendChild(credit)
+})
+</script>
 </body>
 </html>

@@ -212,5 +212,14 @@ document.querySelectorAll('.phone .screen').forEach(screen => {
   screen.appendChild(bottom)
 })
 </script>
+<script id="credit-script">
+document.querySelectorAll('.phone-label').forEach(label => {
+  if (label.querySelector('.credit')) return
+  const credit = document.createElement('em')
+  credit.className = 'credit'
+  credit.textContent = 'POWERED BY JYOUSUITOU'
+  label.appendChild(credit)
+})
+</script>
 </body>
 </html>
