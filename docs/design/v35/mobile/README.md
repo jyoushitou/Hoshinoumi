@@ -56,7 +56,7 @@ header p{margin:0;color:#7c8da6;font-size:11px;max-width:620px}
 </head>
 <body>
 <div class="board">
-<header><div><div class="kicker">HOSHINOUMI · MOBILE PAGE DETAIL</div><h1>手机页面细稿 <span style="font-size:12px;color:#8da0b8;font-weight:500">v35.7 返工中</span></h1><p>逐页画到可实现的区块级别：页头、筛选、列表、表单、操作、空状态。先确认页面细稿，再恢复 Vue 实现。</p></div><div class="meta"><span class="pill">设计返工中</span><span class="pill">浏览器视口内</span><span class="pill">非最终数据</span></div></header>
+<header><div><div class="kicker">HOSHINOUMI · MOBILE PAGE DETAIL</div><h1>手机页面细稿 <span style="font-size:12px;color:#8da0b8;font-weight:500">v35.7 设计封版</span></h1><p>逐页画到可实现的区块级别：页头、筛选、列表、表单、操作、空状态。设计已封版，按本稿实现 Vue 页面。</p></div><div class="meta"><span class="pill">设计封版</span><span class="pill">浏览器视口内</span><span class="pill">非最终数据</span></div></header>
 <div class="grid">
 
 <!-- 01 CHATS -->
