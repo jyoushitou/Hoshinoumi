@@ -199,6 +199,7 @@ const app = document.getElementById('view')
 let toastTimer = 0
 const readConversations = new Set()
 let navExpanded = false
+let demoUnread = 7
 let currentScreen = 'chats'
 const allEntries = [
   ['chats','◉','聊天'],['memory','◇','记忆'],['relation','♡','关系'],['settings','⚙','设置'],
@@ -471,8 +472,8 @@ ${nav('chats')}`
 
 function nav(active){
   const quick = quickKeys.map(k => allEntries.find(e => e[0] === k)).filter(Boolean)
-  const tab = ([key,ic,label]) => `<div class="tab ${active===key?'on':''}" onclick="go('${key}')"><span class="ic">${ic}</span>${label}${key==='chats'?'<span class="tab-unread">7</span>':''}</div>`
-  const all = allEntries.map(([key,ic,label]) => `<button class="${active===key?'on':''}" title="${label}" aria-label="${label}" onclick="go('${key}')"><b>${ic}</b>${key==='chats'?'<span class="all-unread">7</span>':''}</button>`).join('')
+  const tab = ([key,ic,label]) => `<div class="tab ${active===key?'on':''}" onclick="go('${key}')"><span class="ic">${ic}</span>${label}${key==='chats'&&demoUnread>0?'<span class="tab-unread">'+(demoUnread>99?'99+':demoUnread)+'</span>':''}</div>`
+  const all = allEntries.map(([key,ic,label]) => `<button class="${active===key?'on':''}" title="${label}" aria-label="${label}" onclick="go('${key}')"><b>${ic}</b>${key==='chats'&&demoUnread>0?'<span class="all-unread">'+(demoUnread>99?'99+':demoUnread)+'</span>':''}</button>`).join('')
   return `<nav class="bottom-nav ${navExpanded?'expanded':''}"><button class="nav-grip" title="展开 / 收起全部入口" aria-label="展开 / 收起全部入口" onclick="toggleNav(event)"><span class="grip-ic">⌃</span></button><div class="nav-row" style="grid-template-columns:repeat(${quick.length},1fr)">${quick.map(tab).join('')}</div><div class="nav-all"><div class="nav-all-grid">${all}</div></div></nav>`
 }
 function toggleNav(e){
@@ -528,7 +529,16 @@ function filterMemory(el, tag){
   const empty = document.getElementById('mem-empty')
   if (empty) empty.style.display = visible ? 'none' : ''
 }
-function openConversation(el, target, name){ el.querySelectorAll('.badge').forEach(b=>b.remove()); readConversations.add(name); go(target) }
+function openConversation(el, target, name){
+  const badge = el.querySelector('.badge')
+  const count = Number(badge?.textContent || 0)
+  el.querySelectorAll('.badge').forEach(b => b.remove())
+  readConversations.add(name)
+  demoUnread = Math.max(0, demoUnread - (Number.isFinite(count) ? count : 0))
+  go(target)
+  const navEl = document.querySelector('.bottom-nav')
+  if (navEl) navEl.outerHTML = nav(currentScreen)
+}
 function openSearch(){
   overlay(`<div class="search-panel"><div class="row"><input id="q" placeholder="搜索会话 / 记忆 / 命令" autocomplete="off"><button class="cancel" onclick="closeOverlay()">取消</button></div><div id="results"><div class="search-result" onclick="go('chat')">奈绪<small>会话 · 最近消息</small></div><div class="search-result" onclick="go('memory')">不喜欢香菜<small>记忆 · 偏好</small></div><div class="search-result" onclick="go('commands')">!memory<small>命令 · 搜索记忆</small></div></div></div>`)
   const q=document.getElementById('q'); q.focus(); q.oninput=()=>{ const v=q.value.trim(); toast(v?('搜索：'+v+'（演示）'):'输入关键词搜索') }
