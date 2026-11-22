@@ -47,6 +47,17 @@ adb install -r app\build\outputs\apk\debug\app-debug.apk
 adb shell am start -n com.hoshinoumi.mobile/.MainActivity
 ```
 
+## 启动流程
+
+```text
+本地离线初始化页（www/index.html）
+→ 用户填写后端 URL
+→ localStorage 保存
+→ location.href 加载远程手机 Web
+```
+
+不再把 `10.0.2.2:27006` 写死在 `capacitor.config.ts`。
+
 ## 开发地址
 
 `capacitor.config.ts` 当前：

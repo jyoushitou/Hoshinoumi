@@ -3,11 +3,71 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Hoshinoumi</title>
+<title>Hoshinoumi · 初始化</title>
 <style>
-body{margin:0;background:#f7faff;color:#17263b;font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif;display:grid;place-items:center;height:100vh}
-.box{text-align:center;padding:24px}.box b{display:block;font-size:18px;letter-spacing:.08em}.box p{color:#8a9bb0;font-size:12px}
+:root{--blue:#2563eb;--ink:#17263b;--sub:#71859d;--line:#e3ebf7}
+*{box-sizing:border-box}html,body{height:100%}body{margin:0;background:radial-gradient(700px 500px at 15% 0%,rgba(56,189,248,.18),transparent 60%),radial-gradient(600px 500px at 90% 20%,rgba(139,92,246,.12),transparent 60%),linear-gradient(180deg,#eef5ff,#f8fbff);color:var(--ink);font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif;display:flex;align-items:center;justify-content:center;padding:24px 18px calc(24px + env(safe-area-inset-bottom))}
+.wrap{width:100%;max-width:390px}
+.brand{display:flex;align-items:center;gap:11px;margin-bottom:22px}.brand img{width:46px;height:46px;padding:9px;background:#fff;border:1px solid var(--line);border-radius:15px;box-shadow:0 10px 24px rgba(37,99,235,.10)}.brand b{display:block;font-size:19px;letter-spacing:.04em}.brand small{display:block;font-size:8px;letter-spacing:.2em;color:#9aabc0;margin-top:2px}
+h1{margin:0 0 7px;font-size:24px;letter-spacing:-.03em;line-height:1.3}h1 em{font-style:normal;color:var(--blue)}
+p.lead{margin:0 0 18px;color:var(--sub);font-size:11px;line-height:1.8}
+.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 18px 40px rgba(37,99,235,.08)}
+label{display:block;font-size:9px;font-weight:650;color:#536b86;margin-bottom:5px}
+input{display:block;width:100%;height:44px;border:1px solid var(--line);border-radius:11px;background:#fbfdff;color:var(--ink);font:13px inherit;padding:0 11px;outline:0}
+input:focus{border-color:#93c5fd;box-shadow:0 0 0 3px rgba(37,99,235,.07)}
+.hint{font-size:8px;color:#9aabc0;line-height:1.7;margin:6px 0 13px}.hint code{font-family:ui-monospace,monospace;color:#6b7c95}
+button{width:100%;height:43px;border:0;border-radius:11px;font:11px inherit;font-weight:700;cursor:pointer}
+.primary{background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;box-shadow:0 8px 18px rgba(37,99,235,.22)}.primary:active{transform:translateY(1px)}
+.secondary{margin-top:8px;background:#f7faff;border:1px solid var(--line);color:#6b7c95;font-weight:500;height:36px}
+.status{font-size:9px;color:#8a9bb0;min-height:14px;margin-top:9px;line-height:1.6}.status.err{color:#b91c1c}.status.ok{color:#1f9d6b}
+.foot{text-align:center;font-size:8px;color:#9aabc0;line-height:1.8;margin-top:16px}.foot b{color:#7c8da6;font-weight:600}
+@media (prefers-reduced-motion:no-preference){.wrap{animation:in .35s ease both}@keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}}
 </style>
 </head>
-<body><div class="box"><b>HOSHINOUMI</b><p>正在连接手机 Web…</p></div></body>
+<body>
+<div class="wrap">
+  <div class="brand"><img src="hoshinoumi.svg" alt="Hoshinoumi"><div><b>HOSHINOUMI</b><small>REC · MOBILE</small></div></div>
+  <h1>连接你的<br><em>Hoshinoumi 后端</em></h1>
+  <p class="lead">这是离线初始化页。填写后端地址后，App 才会加载对应的网页套壳。</p>
+  <div class="card">
+    <label for="url">后端 URL</label>
+    <input id="url" type="url" inputmode="url" autocomplete="url" placeholder="https://hoshinoumi.app" spellcheck="false">
+    <div class="hint">支持 https；本地开发可填 <code>http://10.0.2.2:27006</code><br>配置只保存在本机，不会上传。</div>
+    <button class="primary" id="connect">保存并进入</button>
+    <button class="secondary" id="clear">清除地址</button>
+    <div class="status" id="status"></div>
+  </div>
+  <div class="foot"><b>Hoshinoumi Mobile Shell</b><br>POWERED BY JYOUSHITOU</div>
+</div>
+<script>
+(function(){
+  var KEY='hsh_backend_url';
+  var input=document.getElementById('url');
+  var status=document.getElementById('status');
+  var saved='';
+  try{saved=localStorage.getItem(KEY)||''}catch(e){}
+  input.value=saved;
+  function normalize(v){
+    v=String(v||'').trim();
+    if(!v) return '';
+    if(!/^https?:\/\//i.test(v)) v='https://'+v;
+    return v.replace(/\/+$/,'');
+  }
+  function show(msg,type){status.textContent=msg;status.className='status'+(type?' '+type:'')}
+  document.getElementById('connect').addEventListener('click',function(){
+    var url=normalize(input.value);
+    if(!/^https?:\/\/[^\s]+$/i.test(url)){show('请输入完整的 http(s) 后端地址','err');return}
+    try{localStorage.setItem(KEY,url)}catch(e){}
+    input.value=url;
+    show('正在连接 '+url+' …','ok');
+    setTimeout(function(){location.href=url},180);
+  });
+  document.getElementById('clear').addEventListener('click',function(){
+    try{localStorage.removeItem(KEY)}catch(e){}
+    input.value='';show('已清除本机地址');input.focus();
+  });
+  if(saved) show('上次使用的地址已填入，可直接进入或修改。');
+})();
+</script>
+</body>
 </html>
