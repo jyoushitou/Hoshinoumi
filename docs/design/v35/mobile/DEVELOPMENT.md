@@ -1,6 +1,6 @@
 ﻿# v35.7 手机 Vue 框架
 
-状态：v35.7.1.0 / v35.7.1.1 已实现，继续 v35.7.2.0 验收。
+状态：v35.7.1.0 / v35.7.1.1 / v35.7.2.0 已实现，等待用户验收。
 
 ## 入口
 
@@ -36,7 +36,9 @@ composables/useMobileNav.ts          快捷项状态 / localStorage / 1–5 限�
 views/mobile/MobileChatView.vue      会话列表 + 聊天骨架
 views/mobile/MobilePageView.vue      其余页面框架
 views/mobile/MobileSettingsView.vue  设置 + 快捷栏自定义
+views/mobile/MobileChatView.vue      会话 / 聊天 / 媒体 / 搜索 / 下载
 views/mobile/MobileWeeklyView.vue    手机周计划（真实 /api/weekly-plan 读写）
+components/mobile/MobileReminderPopup.vue 全局提醒弹窗（/api/reminders pending/ack）
 ```
 
 ## 路由

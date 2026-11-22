@@ -120,6 +120,16 @@ pnpm build
 | 下载 | 图片 / 语音有下载入口 |
 | 动画 | 消息入场；减少动态时关闭 |
 
+## v35.7.1.1 写操作
+
+```text
+周计划：新增/删除 → POST /api/weekly-plan → GET 刷新仍正确
+提醒：cron 触发入队 → GET /api/reminders → 弹窗
+稍后 → ack later，10 分钟后重新出现
+知道了 → ack done，不再出现
+失败显示错误，不伪造成功
+```
+
 手动验收：
 
 ```text
