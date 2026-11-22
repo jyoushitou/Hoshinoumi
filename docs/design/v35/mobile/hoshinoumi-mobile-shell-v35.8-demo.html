@@ -77,7 +77,7 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 15% 0%,
       <!-- LOADING -->
       <section class="scene" id="scene-loading">
         <div class="statusbar"><span>9:41</span><div class="right"><span class="sig"><i></i><i></i><i></i><i></i></span><span>5G</span><div class="battery"></div></div></div>
-        <div class="app-head"><div class="app-mark">奈</div><div class="app-name">HOSHINOUMI<small>CONNECTING</small></div><span class="pill">加载中</span></div>
+        <div class="app-head"><div class="app-mark">✦</div><div class="app-name">HOSHINOUMI<small>CONNECTING</small></div><span class="pill">加载中</span></div>
         <div class="skeleton"><div class="sk sk-head"></div><div class="sk sk-search"></div><div class="sk-row"><div class="sk sk-av"></div><div class="sk-lines"><div class="sk sk-l1"></div><div class="sk sk-l2"></div></div></div><div class="sk-row"><div class="sk sk-av"></div><div class="sk-lines"><div class="sk sk-l1" style="width:36%"></div><div class="sk sk-l2" style="width:64%"></div></div></div><div class="sk-row"><div class="sk sk-av"></div><div class="sk-lines"><div class="sk sk-l1" style="width:52%"></div><div class="sk sk-l2" style="width:48%"></div></div></div></div>
         <div class="load-note">正在打开 Hoshinoumi…</div>
       </section>
@@ -85,11 +85,11 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 15% 0%,
       <!-- WEB -->
       <section class="scene" id="scene-web">
         <div class="statusbar"><span>9:41</span><div class="right"><span class="sig"><i></i><i></i><i></i><i></i></span><span>5G</span><div class="battery"></div></div></div>
-        <div class="app-head"><div class="app-mark">奈</div><div class="app-name">HOSHINOUMI<small>REC · ONLINE</small></div><span class="pill ok" id="net-pill">在线</span></div>
+        <div class="app-head"><div class="app-mark">✦</div><div class="app-name">HOSHINOUMI<small>REC · ONLINE</small></div><span class="pill ok" id="net-pill">在线</span></div>
         <div class="web-head"><h2>聊天</h2><p>QQ 会话 · 2 个</p><div class="web-search">⌕ 搜索会话 / 记忆 / 命令</div><div class="chips"><span class="chip on">全部</span><span class="chip">私聊</span><span class="chip">群聊</span></div></div>
         <div class="conv-list"><div class="sec"><span>最近</span><span>已同步</span></div>
           <div class="conv" onclick="openChat()"><div class="av bot">奈</div><div class="copy"><b>奈绪</b><small>你回来啦。今天外面有点冷，先喝点热的吧。</small></div><div class="end"><span class="tm">刚刚</span><span class="badge">2</span></div></div>
-          <div class="conv" onclick="toast('群聊演示：进入星之海学生会')"><div class="av">学</div><div class="copy"><b>星之海学生会</b><small>友利：下午的会议改到三点。</small></div><div class="end"><span class="tm">12:40</span><span class="badge">5</span></div></div>
+          <div class="conv" onclick="openGroupChat()"><div class="av">学</div><div class="copy"><b>星之海学生会</b><small>友利：下午的会议改到三点。</small></div><div class="end"><span class="tm">12:40</span><span class="badge">5</span></div></div>
         </div>
         <div class="web-tools"><button onclick="openModal('mic')">🎙 语音</button><button onclick="openModal('photo')">▧ 图片</button><button onclick="openModal('update')">↻ 更新</button></div>
         <div class="tabbar"><div class="tab on" onclick="toast('当前已在聊天')"><span class="ic">◉</span>聊天</div><div class="tab" onclick="toast('记忆页由同一套 Web 页面提供')"><span class="ic">◈</span>记忆</div><div class="tab" onclick="toast('关系页由同一套 Web 页面提供')"><span class="ic">♡</span>关系</div><div class="tab" onclick="toast('设置页由同一套 Web 页面提供')"><span class="ic">⚙</span>设置</div></div>
@@ -98,7 +98,7 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 15% 0%,
       <!-- OFFLINE -->
       <section class="scene" id="scene-offline">
         <div class="statusbar"><span>9:41</span><div class="right"><span class="sig"><i></i><i></i><i></i><i></i></span><span>5G</span><div class="battery"></div></div></div>
-        <div class="app-head"><div class="app-mark">奈</div><div class="app-name">HOSHINOUMI<small>OFFLINE</small></div><span class="pill">离线</span></div>
+        <div class="app-head"><div class="app-mark">✦</div><div class="app-name">HOSHINOUMI<small>OFFLINE</small></div><span class="pill">离线</span></div>
         <div class="error-page"><div class="error-center"><div class="orb">☁</div><h3>连不上 Hoshinoumi</h3><p>检查网络或后端地址。<br>已经有本地缓存的页面不会丢失。</p></div>
           <div class="detail"><div class="row"><span>目标地址</span><b>hoshinoumi.app</b></div><div class="row"><span>WebView</span><b>Chrome 130</b></div><div class="row"><span>错误</span><b class="err">ERR_CONNECTION_TIMED_OUT</b></div></div>
           <div class="actions"><button class="new-btn" onclick="toast('已打开系统网络设置（演示）')">打开设置</button><button class="new-btn primary" onclick="retry()">重试</button></div><div class="note">断网不伪造内容；重试只重新加载 WebView。</div>
@@ -108,7 +108,7 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 15% 0%,
       <!-- HOST BLOCK -->
       <section class="scene" id="scene-host">
         <div class="statusbar"><span>9:41</span><div class="right"><span class="sig"><i></i><i></i><i></i><i></i></span><span>5G</span><div class="battery"></div></div></div>
-        <div class="app-head"><div class="app-mark">奈</div><div class="app-name">HOSHINOUMI<small>SECURITY</small></div><span class="pill">已阻止</span></div>
+        <div class="app-head"><div class="app-mark">✦</div><div class="app-name">HOSHINOUMI<small>SECURITY</small></div><span class="pill">已阻止</span></div>
         <div class="error-page"><div class="error-center"><div class="orb shield">⛨</div><h3>当前地址不受信任</h3><p>套壳只允许加载配置过的 Hoshinoumi 地址，防止被导向其他站点。</p></div>
           <div class="code">allowed host:<br>hoshinoumi.app<br>localhost:27006</div>
           <button class="new-btn" style="margin-top:12px" onclick="boot()">返回安全页</button><div class="note">不显示“继续访问”；避免钓鱼/混合内容。</div>
@@ -118,11 +118,25 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 15% 0%,
       <!-- WEBVIEW OLD -->
       <section class="scene" id="scene-webview">
         <div class="statusbar"><span>9:41</span><div class="right"><span class="sig"><i></i><i></i><i></i><i></i></span><span>5G</span><div class="battery"></div></div></div>
-        <div class="app-head"><div class="app-mark">奈</div><div class="app-name">HOSHINOUMI<small>SELF CHECK</small></div><span class="pill">无法启动</span></div>
+        <div class="app-head"><div class="app-mark">✦</div><div class="app-name">HOSHINOUMI<small>SELF CHECK</small></div><span class="pill">无法启动</span></div>
         <div class="error-page"><div class="error-center"><div class="orb dark">!</div><h3>系统 WebView 版本过低</h3><p>当前 WebView 无法运行 Hoshinoumi 手机页面。请更新 Android System WebView，或安装原生 Android 客户端。</p></div>
           <div class="detail"><div class="row"><span>WebView</span><b class="err">108</b></div><div class="row"><span>需要</span><b>120+</b></div><div class="row"><span>设备</span><b>Android 12</b></div></div>
           <button class="new-btn primary" style="margin-top:10px" onclick="toast('跳转系统 WebView 更新页（演示）')">去更新 WebView</button><div class="note">自检失败不进入白屏；不伪造页面。</div>
         </div>
+      </section>
+
+      <!-- GROUP -->
+      <section class="scene" id="scene-group">
+        <div class="statusbar"><span>9:41</span><div class="right"><span class="sig"><i></i><i></i><i></i><i></i></span><span>5G</span><div class="battery"></div></div></div>
+        <div class="chat-head"><button class="back" onclick="go('web')">‹</button><div class="av sm" style="background:#e0e7ff;color:#4338ca">学</div><div class="chat-who"><b>星之海学生会</b><small>群聊 · 3 人 · 已同步</small></div><button class="chat-action" onclick="toast('群设置（演示）')">☰</button></div>
+        <div class="chat-messages" id="groupMessages">
+          <div class="chat-day">今天 12:38</div>
+          <div class="msg"><span class="av sm" style="background:#e0e7ff;color:#4338ca">友</span><div><div class="msg-bubble">下午的会议改到三点，别迟到。</div><small class="msg-time">12:38</small></div></div>
+          <div class="msg"><span class="av bot sm">奈</span><div><div class="msg-bubble">收到。我把资料整理好带过去。</div><small class="msg-time">12:40</small></div></div>
+          <div class="msg me"><div><div class="msg-bubble">我也去。需要我带投影仪吗？</div><small class="msg-time">12:41 · 已读</small></div><span class="av sm mea">你</span></div>
+          <div class="msg"><span class="av sm" style="background:#e0e7ff;color:#4338ca">友</span><div><div class="msg-bubble">不用，学生会室有。你人来就行。</div><small class="msg-time">12:42</small></div></div>
+        </div>
+        <div class="chat-composer"><button class="composer-tool" onclick="openModal('photo')">＋</button><input id="groupInput" placeholder="在群里说点什么…" onkeydown="if(event.key==='Enter'&&!event.isComposing){event.preventDefault();sendGroupChat()}"><button class="composer-send" onclick="sendGroupChat()">↑</button></div>
       </section>
 
       <!-- CHAT -->
@@ -166,7 +180,7 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 15% 0%,
 </div>
 
 <script>
-const scenes = ['splash','loading','web','offline','host','webview','chat']
+const scenes = ['splash','loading','web','offline','host','webview','chat','group']
 const logEl = document.getElementById('log')
 let bootTimers = []
 let updateTimer = null
@@ -181,6 +195,27 @@ function boot(){
   closeModal(); clearBoot(); show('splash'); log('启动中：Splash → Loading → WebView')
   bootTimers.push(setTimeout(()=>{ show('loading'); log('WebView 加载中…') }, 1500))
   bootTimers.push(setTimeout(()=>{ show('web'); log('已进入手机 Web') }, 2900))
+}
+function openGroupChat(){
+  closeModal(); show('group'); log('进入群聊：星之海学生会')
+  setTimeout(()=>document.getElementById('groupInput')?.focus(), 120)
+}
+function sendGroupChat(){
+  const input = document.getElementById('groupInput')
+  const text = (input?.value || '').trim()
+  if(!text) return
+  const box = document.getElementById('groupMessages')
+  const me = document.createElement('div'); me.className = 'msg me'
+  me.innerHTML = `<div><div class="msg-bubble"></div><small class="msg-time">刚刚 · 发送中</small></div><span class="av sm mea">你</span>`
+  me.querySelector('.msg-bubble').textContent = text
+  box?.appendChild(me); if(input) input.value = ''
+  box.scrollTop = box.scrollHeight
+  setTimeout(()=>{
+    const bot = document.createElement('div'); bot.className = 'msg'
+    bot.innerHTML = `<span class="av sm" style="background:#e0e7ff;color:#4338ca">友</span><div><div class="msg-bubble">好，收到。</div><small class="msg-time">刚刚</small></div>`
+    box?.appendChild(bot); box.scrollTop = box.scrollHeight
+  }, 700)
+  toast('已发送到群聊（演示）')
 }
 function openChat(){
   closeModal(); show('chat'); log('进入会话：奈绪')
