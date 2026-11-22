@@ -65,3 +65,8 @@ clients/desktop/src-tauri/limited-integrity.txt
 clients/electron/.electron-data2
 clients/electron/dist/
 clients/electron/user-data/
+
+# Android 签名：绝不提交
+*.jks
+*.keystore
+keystore.properties
