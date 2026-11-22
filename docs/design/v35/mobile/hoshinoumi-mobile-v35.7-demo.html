@@ -362,28 +362,28 @@ screens.savings = `
   <div class="page-head"><h2>存钱<small>SAVINGS · v35.5 数据</small></h2><div class="act" onclick="openSavingsForm()">＋</div></div>
   <div class="d-scroll" style="flex:1;min-height:0;overflow-y:auto;padding:0 16px 190px">
     <div class="sav-hero"><div class="lab">总资产 · 仅主人可见</div><div class="total">¥12,100.00</div><div class="sav-sum"><div><small>可用余额</small><b>¥2,700</b></div><div><small>冻结 / 预留</small><b>¥4,100</b></div><div><small>定期存款</small><b>¥3,000</b></div></div></div>
-    <div class="sav-tabs"><span class="sav-tab on" onclick="selectSeg(this)">总览</span><span class="sav-tab" onclick="selectSeg(this)">目标</span><span class="sav-tab" onclick="selectSeg(this)">定期</span><span class="sav-tab" onclick="selectSeg(this)">基金</span><span class="sav-tab" onclick="selectSeg(this)">账户</span><span class="sav-tab" onclick="selectSeg(this)">冻结</span></div>
-    <div class="sav-sec"><div class="sav-sec-head"><b>存钱目标</b><button onclick="openSavGoal()">＋ 新目标</button></div>
+    <div class="sav-tabs"><span class="sav-tab on" onclick="savingsTab(this,'top')">总览</span><span class="sav-tab" onclick="savingsTab(this,'goal')">目标</span><span class="sav-tab" onclick="savingsTab(this,'fixed')">定期</span><span class="sav-tab" onclick="savingsTab(this,'fund')">基金</span><span class="sav-tab" onclick="savingsTab(this,'account')">账户</span><span class="sav-tab" onclick="savingsTab(this,'frozen')">冻结</span></div>
+    <div class="sav-sec" id="sav-goal"><div class="sav-sec-head"><b>存钱目标</b><button onclick="openSavGoal()">＋ 新目标</button></div>
       <div class="goal"><div class="gtop"><b>旅行基金</b><span>截止 2027-03</span></div><div class="gamt">¥1,800.00 <small>/ ¥5,000.00</small></div><div class="bar"><i style="width:36%"></i></div><div class="gmeta"><span>36%</span><span>还差 ¥3,200</span></div></div>
       <div class="goal"><div class="gtop"><b>新电脑</b><span>截止 2027-06</span></div><div class="gamt">¥900.00 <small>/ ¥6,000.00</small></div><div class="bar"><i style="width:15%"></i></div><div class="gmeta"><span>15%</span><span>还差 ¥5,100</span></div></div>
       <div class="goal"><div class="gtop"><b>应急金</b><span>截止 长期</span></div><div class="gamt">¥1,200.00 <small>/ ¥10,000.00</small></div><div class="bar"><i style="width:12%"></i></div><div class="gmeta"><span>12%</span><span>还差 ¥8,800</span></div></div>
     </div>
-    <div class="sav-sec"><div class="sav-sec-head"><b>定期存款</b><button onclick="toast('存定期表单演示')">＋ 存定期</button></div>
+    <div class="sav-sec" id="sav-fixed"><div class="sav-sec-head"><b>定期存款</b><button onclick="toast('存定期表单演示')">＋ 存定期</button></div>
       <div class="fixrow"><div class="t"><b>12 个月定期</b><small>年利率 1.65% · 2027-06-01 到期 · 预计利息 ¥33.00</small></div><div class="amt">¥2,000.00<small>本金</small></div><span class="lnk">取消</span></div>
       <div class="fixrow"><div class="t"><b>3 个月定期</b><small>年利率 1.15% · 2027-02-01 到期 · 预计利息 ¥2.88</small></div><div class="amt">¥1,000.00<small>本金</small></div><span class="lnk">取消</span></div>
       <div class="note-line">到期自动按来源账户转回本金 + 利息，无需手动操作。</div>
     </div>
-    <div class="sav-sec"><div class="sav-sec-head"><b>理财 / 基金</b><button onclick="toast('买入基金演示')">＋ 买入</button></div>
+    <div class="sav-sec" id="sav-fund"><div class="sav-sec-head"><b>理财 / 基金</b><button onclick="toast('买入基金演示')">＋ 买入</button></div>
       <div class="fixrow"><div class="t"><b>余额宝</b><small>货币基金 · 7 日年化 1.35% · 快速赎回</small></div><div class="amt">¥1,500.00<small>持有金额</small></div></div>
       <div class="fixrow"><div class="t"><b>沪深300指数</b><small>基金 · 收益 ¥50.00 · 银行卡 T+1</small></div><div class="amt">¥800.00<small>持有金额</small></div></div>
     </div>
-    <div class="sav-sec"><div class="sav-sec-head"><b>钱存在哪</b><button onclick="toast('新增账户演示')">＋ 新增</button></div>
+    <div class="sav-sec" id="sav-account"><div class="sav-sec-head"><b>钱存在哪</b><button onclick="toast('新增账户演示')">＋ 新增</button></div>
       <div class="acct"><span class="ic">银</span><span class="t"><b>银行卡</b><small>资金位置</small></span><span class="val">¥5,300.00</span></div>
       <div class="acct"><span class="ic">支</span><span class="t"><b>支付宝</b><small>资金位置</small></span><span class="val">¥1,200.00</span></div>
       <div class="acct"><span class="ic">微</span><span class="t"><b>微信</b><small>资金位置</small></span><span class="val">¥300.00</span></div>
       <div class="acct"><span class="ic">现</span><span class="t"><b>现金</b><small>资金位置</small></span><span class="val">¥0.00</span></div>
     </div>
-    <div class="sav-sec"><div class="sav-sec-head"><b>冻结 / 待缴费</b><button onclick="toast('新增冻结演示')">＋ 新增</button></div>
+    <div class="sav-sec" id="sav-frozen"><div class="sav-sec-head"><b>冻结 / 待缴费</b><button onclick="toast('新增冻结演示')">＋ 新增</button></div>
       <div class="fixrow"><div class="t"><b>房租</b><small>预计每月 5 日 · 不可动用</small></div><div class="amt">¥1,800.00<small>已缴费</small></div><span class="lnk">删除</span></div>
       <div class="fixrow"><div class="t"><b>学费</b><small>预计 2027-02-20 · 不可动用</small></div><div class="amt">¥2,000.00<small>已缴费</small></div><span class="lnk">删除</span></div>
       <div class="fixrow"><div class="t"><b>水电费</b><small>预计每月 20 日 · 不可动用</small></div><div class="amt">¥300.00<small>已缴费</small></div><span class="lnk">删除</span></div>
@@ -572,6 +572,16 @@ function recallLast(){
 }
 function openCommand(code,title){
   overlay(`<div class="sheet"><h4>${title}</h4><div class="modal-form"><input value="${code}" readonly><input placeholder="参数（可选）"><button onclick="closeOverlay();toast('命令执行演示')">执行命令</button></div><button class="sheet-close" onclick="closeOverlay()">取消</button></div>`)
+}
+function savingsTab(el, target){
+  [...el.parentElement.children].forEach(x => x.classList.remove('on'))
+  el.classList.add('on')
+  const scroller = el.closest('.d-scroll') || document.querySelector('.d-scroll')
+  const node = target === 'top' ? null : document.getElementById('sav-' + target)
+  if (!scroller) return
+  if (!node) { scroller.scrollTo({ top: 0, behavior: 'smooth' }); return }
+  const top = node.offsetTop - scroller.offsetTop - 8
+  scroller.scrollTo({ top, behavior: 'smooth' })
 }
 function openSavGoal(){
   overlay(`<div class="sheet"><h4>新目标（演示）</h4><div class="modal-form"><input placeholder="目标名称"><input placeholder="目标金额" inputmode="decimal"><input placeholder="截止日期"><button onclick="closeOverlay();toast('新目标已创建（演示）')">创建</button></div><button class="sheet-close" onclick="closeOverlay()">取消</button></div>`)
