@@ -115,6 +115,10 @@ cd android
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
+## 0.1 Windows 安装 Android SDK
+
+腾讯镜像 + 无 Android Studio 的完整步骤见 [ANDROID-SETUP-WINDOWS.md](ANDROID-SETUP-WINDOWS.md)。
+
 ## 1. 先启动
 
 前端：
