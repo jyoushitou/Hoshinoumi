@@ -659,7 +659,7 @@ async function showModule(key) {
         [['后端', [cfg.base_url || '—', 'token · ' + (cfg.hasToken ? '已保存' : '未保存'), 'target_id · ' + (cfg.target_id || '—')]],
          ['操作', ['重新配置 · 点右上角 ⚙', '测试连接 · 配置框内']]]);
       const mb = document.getElementById('moduleBody');
-      if (mb) { const cr = document.createElement('div'); cr.style.cssText = 'margin-top:18px;padding-top:10px;border-top:1px solid #1e2d42;text-align:center;font:8px ui-monospace,monospace;letter-spacing:.12em;color:#7f93b3'; cr.textContent = 'POWERED BY JYOUSUITOU'; mb.appendChild(cr) }
+      if (mb) { const cr = document.createElement('div'); cr.style.cssText = 'margin-top:18px;padding-top:10px;border-top:1px solid #1e2d42;text-align:center;font:8px ui-monospace,monospace;letter-spacing:.12em;color:#7f93b3'; cr.textContent = 'POWERED BY JYOUSHITOU'; mb.appendChild(cr) }
       return;
     }
     moduleEmpty(title, '后端暂未提供该模块接口，不能编造数据。');

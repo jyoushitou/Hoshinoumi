@@ -19,7 +19,7 @@ const desc = computed(() => (route.meta.desc as string) || 'v35.5 Web 页面框�
         ◈
       </div><b>{{ title }}</b><p>页面框架已就绪，具体功能在对应次次版本实现。</p>
     </div>
-    <p v-if="route.name === 'settings'" class="page-credit">POWERED BY JYOUSUITOU</p>
+    <p v-if="route.name === 'settings'" class="page-credit">POWERED BY JYOUSHITOU</p>
   </div>
 </template>
 <style scoped>

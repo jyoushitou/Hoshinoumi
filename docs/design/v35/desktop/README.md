@@ -126,4 +126,4 @@ hoshinoumi-desktop-v35.6-fallback.html
 
 ---
 
-POWERED BY JYOUSUITOU
+POWERED BY JYOUSHITOU

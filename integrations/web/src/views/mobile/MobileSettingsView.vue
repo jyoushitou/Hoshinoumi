@@ -44,7 +44,7 @@ function logout() { auth.logout() }
     </div>
 
     <button class="logout" type="button" @click="logout">退出登录</button>
-    <div class="about-card"><b>关于 Hoshinoumi</b><span>v35.7 · Mobile Web</span><em>POWERED BY JYOUSUITOU</em></div>
+    <div class="about-card"><b>关于 Hoshinoumi</b><span>v35.7 · Mobile Web</span><em>POWERED BY JYOUSHITOU</em></div>
   </section>
 </template>
 
