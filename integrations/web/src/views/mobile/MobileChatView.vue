@@ -2,7 +2,7 @@
   <div class="mc">
     <template v-if="pane === 'list'">
       <div class="head"><div><h1>聊天</h1><p>QQ 会话 · {{ session.conversations.length }} 个</p></div><i class="dot" :class="{ off: !session.connected }" /></div>
-      <button type="button" class="search" @click="openSearch">🔍 搜索会话 / 记忆 / 命令</button>
+      <button type="button" class="search" @click="openSearch"><span class="search-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m16.5 16.5 4 4"></path></svg></span>搜索会话 / 记忆 / 命令</button>
       <div v-if="!auth.loggedIn" class="notice">游客模式：登录后可同步 QQ 会话。</div>
       <div v-else-if="listError" class="notice error">{{ listError }}</div>
       <div v-else-if="!session.conversations.length" class="notice">{{ session.loading ? '正在同步会话…' : '暂无会话。后端有 QQ 消息后会出现在这里。' }}</div>
@@ -233,7 +233,7 @@ async function sendSticker(e: string) {
 .composer{display:flex;gap:5px;align-items:flex-end;border-top:1px solid #e5edf9;padding:7px 0 0;background:#f7faff;flex:none}.tool{width:32px;height:34px;flex:none;border:1px solid #e5edf9;border-radius:9px;background:#fff;color:#607795;font-size:15px}.tool.rec{color:#c0264a;background:#ffecef;border-color:#fecaca}.composer textarea{flex:1;min-width:0;resize:none;max-height:96px;border:1px solid #e1ebf9;border-radius:11px;background:#fff;padding:8px 10px;font:16px/1.4 inherit;color:#344b64;outline:0}.composer textarea:focus{border-color:#93c5fd;box-shadow:0 0 0 3px rgba(37,99,235,.07)}.send{width:36px;height:36px;flex:none;border:0;border-radius:11px;background:#2563eb;color:#fff;font-size:17px}.send:disabled{background:#cbd5e1}
 @media(max-height:560px){.messages{min-height:100px}.head{padding-top:8px}}
 
-.search{width:100%;height:36px;border:1px solid #e3ebf7;border-radius:11px;background:#fff;color:#9aabc0;display:flex;align-items:center;padding:0 11px;font-size:10px;margin-bottom:10px;text-align:left}
+.search-svg{display:inline-flex;align-items:center;margin-right:2px}.search-svg svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round}.search{width:100%;height:36px;border:1px solid #e3ebf7;border-radius:11px;background:#fff;color:#9aabc0;display:flex;align-items:center;padding:0 11px;font-size:10px;margin-bottom:10px;text-align:left}
 .media-wrap{display:flex;flex-direction:column;align-items:flex-start;gap:2px}.download{font-size:8px;color:#2563eb;text-decoration:none;border:1px solid #dbe8ff;background:#f4f9ff;border-radius:6px;padding:2px 6px}
 .search-overlay{position:fixed;inset:0;z-index:80;background:#f7faff;display:flex;flex-direction:column;padding:calc(10px + env(safe-area-inset-top)) 12px calc(10px + env(safe-area-inset-bottom))}
 .search-head{display:flex;gap:7px;align-items:center;flex:none}.search-head input{flex:1;min-width:0;height:40px;border:1px solid #dbe8ff;border-radius:11px;background:#fff;padding:0 12px;font-size:16px;outline:0}.search-head input:focus{border-color:#93c5fd;box-shadow:0 0 0 3px rgba(37,99,235,.08)}.search-head button{flex:none;height:40px;border:1px solid #dbe8ff;border-radius:10px;background:#fff;color:#2563eb;font-size:11px;padding:0 11px}
