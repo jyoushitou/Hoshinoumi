@@ -148,7 +148,7 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 15% 0%,
         <div class="app-head"><div class="app-mark">✦</div><div class="app-name">HOSHINOUMI<small>SELF CHECK</small></div><span class="pill">无法启动</span></div>
         <div class="error-page"><div class="error-center"><div class="orb dark">!</div><h3>系统 WebView 版本过低</h3><p>当前 WebView 无法运行 Hoshinoumi 手机页面。请更新 Android System WebView，或安装原生 Android 客户端。</p></div>
           <div class="detail"><div class="row"><span>WebView</span><b class="err">108</b></div><div class="row"><span>需要</span><b>120+</b></div><div class="row"><span>设备</span><b>Android 12</b></div></div>
-          <button class="new-btn primary" style="margin-top:10px" onclick="toast('跳转系统 WebView 更新页（演示）')">去更新 WebView</button><div class="note">自检失败不进入白屏；不伪造页面。</div>
+          <button class="new-btn primary" style="margin-top:10px" onclick="openWebViewUpdate()">去更新 WebView</button><div class="note">自检失败不进入白屏；不伪造页面。</div>
         </div>
       </section>
 
@@ -208,6 +208,18 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 15% 0%,
           <div class="field"><label>确认密码</label><input id="regPassword2" type="password" placeholder="再输入一次"></div>
           <div class="login-error" id="registerError" style="display:none"></div>
           <div class="actions"><button class="new-btn" onclick="backToLogin()">返回登录</button><button class="new-btn primary" onclick="submitSetupPassword()">设置密码并登录</button></div>
+        </div>
+      </div>
+
+      <div class="modal-layer" id="modal-webview" onclick="if(event.target===this)closeModal()">
+        <div class="modal">
+          <button class="x" onclick="closeModal()">×</button>
+          <h3>更新 Android System WebView</h3>
+          <div class="desc">Hoshinoumi 不能在应用内直接更新系统 WebView，需要打开应用商店。</div>
+          <div class="update-notes"><p>当前 WebView：108</p><p>需要：120+</p><p>设备：Android 12</p></div>
+          <div class="progress"><i id="wv-bar"></i></div>
+          <div class="prog-label"><span id="wv-state">等待更新</span><span id="wv-percent">0%</span></div>
+          <div class="modal-actions"><button class="new-btn" onclick="closeModal()">稍后</button><button class="new-btn primary" id="wv-action" onclick="startWebViewUpdate()">打开应用商店</button></div>
         </div>
       </div>
 
@@ -319,6 +331,30 @@ function submitSetupPassword(){
   if(!code || password.length < 8){ if(error){error.style.display='block';error.textContent='setup code 和至少 8 位密码都要填'} return }
   if(password !== password2){ if(error){error.style.display='block';error.textContent='两次密码不一致'} return }
   closeModal(); toast('密码已设置（演示）'); enterWeb('首次登录完成')
+}
+let wvTimer=null
+function openWebViewUpdate(){
+  closeModal()
+  const m=document.getElementById('modal-webview'); if(!m) return
+  m.classList.add('on')
+  const bar=document.getElementById('wv-bar'), state=document.getElementById('wv-state'), pct=document.getElementById('wv-percent'), action=document.getElementById('wv-action')
+  if(bar) bar.style.width='0%'; if(state) state.textContent='等待更新'; if(pct) pct.textContent='0%'; if(action){action.textContent='打开应用商店';action.onclick=startWebViewUpdate}
+  log('WebView 过旧：打开更新说明')
+}
+function startWebViewUpdate(){
+  clearInterval(wvTimer)
+  const bar=document.getElementById('wv-bar'), state=document.getElementById('wv-state'), pct=document.getElementById('wv-percent'), action=document.getElementById('wv-action')
+  if(!bar||!state||!pct||!action) return
+  action.disabled=true; state.textContent='正在打开应用商店…'; log('跳转应用商店：Android System WebView')
+  let n=0
+  setTimeout(()=>{ state.textContent='正在更新 WebView…'; wvTimer=setInterval(()=>{
+    n=Math.min(100,n+8); bar.style.width=n+'%'; pct.textContent=n+'%'
+    if(n>=100){ clearInterval(wvTimer); state.textContent='更新完成'; action.disabled=false; action.textContent='重新检查'; action.onclick=finishWebViewUpdate; log('WebView 更新完成：108 → 120') }
+  },120) },700)
+}
+function finishWebViewUpdate(){
+  closeModal(); show('loading'); log('重新检查 WebView…')
+  setTimeout(()=>{ show('web'); log('WebView 120：进入手机 Web') },1100)
 }
 function openSettings(){
   closeModal(); document.getElementById('modal-settings')?.classList.add('on'); log('打开连接设置')
