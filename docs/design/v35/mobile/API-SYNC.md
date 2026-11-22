@@ -17,6 +17,7 @@
 | 周计划读取 | `GET /api/weekly-plan?week=` | 按 ISO 周 |
 | 周计划保存 | `POST /api/weekly-plan` | **整周保存**；新增/删除/切换完成后整周 POST |
 | 定时任务列表 | `GET /api/cron` | 只读 |
+| 定时任务新增/编辑/启停/删除/运行 | `/api/cron*` | 需要 CRUD，禁止只改本地 |
 | 存钱读取 | 现有 `/api/savings*` | 总览/流水 |
 
 ## 需要补 API

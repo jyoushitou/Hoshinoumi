@@ -166,6 +166,11 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 20% 0%,
 .cmd-item code{font:7.5px ui-monospace,monospace;color:#2563eb;background:#eef4ff;border-radius:4px;padding:2px 4px}
 .cmd-item span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:95px}.cmd-item em{font:6px ui-monospace,monospace;color:#b45309;background:#fffbeb;border-radius:4px;padding:1px 3px;font-style:normal}
 .cmd-item:active{background:#eef4ff}.cmd-empty{padding:24px;text-align:center;color:#8fa3bb;font-size:9px}
+
+.cron-item{background:#fff;border:0;border-radius:14px;padding:11px;margin-bottom:8px;box-shadow:var(--mn-soft)}
+.cron-top{display:flex;align-items:center;gap:8px}.cron-top .t{flex:1;min-width:0}.cron-top .t b{display:block;font-size:10px;color:#314a65}.cron-top .t small{display:block;font-size:7.5px;color:#9aabc0;margin-top:2px}
+.cron-actions{display:flex;gap:5px;margin-top:8px}.cron-actions button{flex:1;height:25px;border:1px solid #e3ebf7;border-radius:6px;background:#fbfdff;color:#405873;font:7px inherit}.cron-actions button:first-child{background:#eef4ff;color:#2563eb;border-color:#dbe8ff}.cron-actions button.danger{color:#dc2626;border-color:#fecaca;background:#fff7f7}
+.cron-item .switch{width:32px;height:18px;border-radius:10px;background:#cbd5e1;position:relative;cursor:pointer;flex:none}.cron-item .switch.on{background:#2563eb}.cron-item .switch:after{content:"";position:absolute;width:14px;height:14px;border-radius:50%;background:#fff;top:2px;left:2px}.cron-item .switch.on:after{left:16px}
 </style>
 <link rel="stylesheet" href="mobile-native.css">
 </head>
@@ -528,12 +533,12 @@ ${nav('chats')}`
 
 screens.cron = `
 <div class="screen-body" style="flex:1;min-height:0;display:flex;flex-direction:column">
-  <div class="d-head"><h2>定时任务<small>CRON</small></h2><div class="act" onclick="toast('新增定时任务演示')">＋</div></div>
+  <div class="d-head"><h2>定时任务<small>CRON</small></h2><div class="act" onclick="openCronForm('新增定时任务')">＋</div></div>
   <div class="d-scroll">
-    <div class="cron-row"><div class="t"><b>早安问候</b><small>每天 07:30 · 下次 明天</small></div><div class="switch on" onclick="toggleSwitch(this)"></div></div>
-    <div class="cron-row"><div class="t"><b>每周计划提醒</b><small>周日 20:00 · 已启用</small></div><div class="switch on" onclick="toggleSwitch(this)"></div></div>
-    <div class="cron-row"><div class="t"><b>猫粮提醒</b><small>每天 18:00 · 已暂停</small></div><div class="switch" onclick="toggleSwitch(this)"></div></div>
-    <button class="add-btn" style="margin-top:5px" onclick="toast('立即执行演示')">立即执行一次</button>
+    <div class="cron-item"><div class="cron-top"><div class="t"><b>早安问候</b><small>每天 07:30 · 下次 明天</small></div><div class="switch on" onclick="toggleSwitch(this)"></div></div><div class="cron-actions"><button onclick="runCron('早安问候')">立即运行</button><button onclick="openCronForm('编辑 · 早安问候')">编辑</button><button onclick="toast('已停用（演示）')">停用</button><button class="danger" onclick="deleteCron(this)">删除</button></div></div>
+    <div class="cron-item"><div class="cron-top"><div class="t"><b>每周计划提醒</b><small>周日 20:00 · 已启用</small></div><div class="switch on" onclick="toggleSwitch(this)"></div></div><div class="cron-actions"><button onclick="runCron('每周计划提醒')">立即运行</button><button onclick="openCronForm('编辑 · 每周计划提醒')">编辑</button><button onclick="toast('已停用（演示）')">停用</button><button class="danger" onclick="deleteCron(this)">删除</button></div></div>
+    <div class="cron-item"><div class="cron-top"><div class="t"><b>猫粮提醒</b><small>每天 18:00 · 已暂停</small></div><div class="switch" onclick="toggleSwitch(this)"></div></div><div class="cron-actions"><button onclick="runCron('猫粮提醒')">立即运行</button><button onclick="openCronForm('编辑 · 猫粮提醒')">编辑</button><button onclick="toast('已启用（演示）')">启用</button><button class="danger" onclick="deleteCron(this)">删除</button></div></div>
+    <div class="d-card" style="margin-top:9px;font-size:8px;color:#8598ad;line-height:1.7">真实操作走 <code>/api/cron</code> CRUD；失败显示后端错误，刷新后以后端任务列表为准。</div>
   </div>
 </div>
 ${nav('chats')}`
@@ -578,6 +583,17 @@ function go(name){
   if (quickVal) quickVal.textContent = quickKeys.map(k => allEntries.find(e => e[0] === k)?.[2]).join(' / ')
   if(name==='chats'){ document.querySelectorAll('.conv[data-conv]').forEach(c=>{ if(readConversations.has(c.dataset.conv)) c.querySelectorAll('.badge').forEach(b=>b.remove()) }) } if(name==='chat'){ const input=document.getElementById('input'); if(input) input.style.cssText='flex:1;height:35px;border-radius:10px;background:#f5f8fe;border:1px solid #e6eefb;padding:6px 10px;color:#4a6079;font-size:10px;overflow:auto'; setTimeout(()=>document.getElementById('msgs')?.scrollTo(0,9999),30) } }
 
+function openCronForm(title){
+  overlay(`<div class="sheet"><h4>${title}</h4><div class="modal-form"><input placeholder="任务名称"><input placeholder="cron 表达式，例如 0 8 * * *"><input placeholder="执行内容 / 提示词"><button onclick="closeOverlay();toast('任务已保存（演示）')">保存</button></div><button class="sheet-close" onclick="closeOverlay()">取消</button></div>`)
+}
+function runCron(name){ toast('已立即运行：' + name + '（演示）') }
+function deleteCron(btn){
+  const row = btn.closest('.cron-item')
+  if (!row) return
+  if (typeof confirm === 'function' && !confirm('删除这个定时任务？')) return
+  row.remove()
+  toast('已删除定时任务（演示）')
+}
 function toggleSwitch(el){ el.classList.toggle('on'); toast(el.classList.contains('on')?'已开启演示':'已关闭演示') }
 
 function sendMsg(){
