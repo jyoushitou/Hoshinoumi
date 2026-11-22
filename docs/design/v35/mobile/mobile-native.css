@@ -140,3 +140,11 @@ body.nav-expanded #view{padding-bottom:0!important}
 .about-card{background:#fff;border:0;border-radius:16px;padding:13px;margin-top:9px;box-shadow:var(--mn-soft);text-align:center}
 .about-card b{display:block;font-size:10px;color:#314a65}.about-card span{display:block;font-size:8px;color:#9aabc0;margin-top:3px}
 .about-card em{display:block;font:7px ui-monospace,monospace;letter-spacing:.12em;color:#a8b5c7;font-style:normal;margin-top:7px}
+
+/* reminder popup (never a conversation row) */
+.bell-dot{position:absolute;top:5px;right:6px;width:6px;height:6px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 2px #fff}
+.notice-popup{background:#fff;border-radius:20px;padding:16px;box-shadow:0 24px 60px rgba(15,38,78,.24);width:calc(100% - 36px);max-width:330px;margin:auto}
+.notice-popup h4{margin:0 0 4px;font-size:13px;color:#223b56}.notice-popup .sub{font-size:8px;color:#9aabc0;margin-bottom:10px}
+.notice-item{background:#f7faff;border-radius:12px;padding:10px;margin-bottom:8px}.notice-item b{display:block;font-size:10px;color:#314a65}.notice-item p{margin:3px 0 0;font-size:8px;color:#8fa3bb;line-height:1.6}
+.notice-actions{display:flex;gap:6px;margin-top:8px}.notice-actions button{flex:1;height:27px;border:1px solid #dbe8ff;border-radius:7px;background:#fff;color:#2563eb;font:8px inherit}.notice-actions button.primary{background:#2563eb;color:#fff;border-color:#2563eb}
+.popup-shell{position:absolute;inset:0;background:rgba(9,22,40,.28);backdrop-filter:blur(2px);display:flex;align-items:center;justify-content:center;z-index:35}
