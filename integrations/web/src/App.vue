@@ -7,7 +7,7 @@ import { useAuthStore } from '@/stores/auth'
 const auth = useAuthStore()
 const isMobile = ref(false)
 let media: MediaQueryList | null = null
-const MOBILE_QUERY = '(max-width: 820px), (pointer: coarse), (orientation: portrait) and (max-width: 1100px)'
+const MOBILE_QUERY = '(max-width: 820px), (pointer: coarse)'
 function forcedLayout() {
   if (typeof window === 'undefined') return ''
   return new URLSearchParams(window.location.search).get('layout') || ''
