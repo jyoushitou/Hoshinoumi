@@ -17,3 +17,9 @@
 - 有“关于”页面的端：放关于页。
 - 没有关于页面的端：放设置页面最底部。
 - 不再放全局 footer / 顶部水印 / 登录页水印。
+
+## 设计演示
+
+```text
+Web v35.5 / VS Code / Qoder 设置页最底部：POWERED BY JYOUSUITOU
+```
