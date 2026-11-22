@@ -16,7 +16,7 @@ integrations/web/src/App.vue
 ≤ 820px：MobileShell + 手机页面组件
 > 820px：AppShell + 桌面页面组件
 窗口 resize 时实时切换
-≤ 820px 或 pointer:coarse 手机/平板铺满视口；1009px 普通桌面仍为 AppShell
+≤ 820px 手机壳全宽；> 820px 桌面 AppShell（DevTools 触摸模拟不影响断点）
 ```
 
 例：
