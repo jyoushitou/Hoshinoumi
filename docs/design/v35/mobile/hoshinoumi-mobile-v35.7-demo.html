@@ -209,6 +209,8 @@ body.embed #view{height:100dvh!important}
 /* savings cashflow */
 
 .cf-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:5px}.cf-kpis div{background:#f8fbff;border-radius:7px;padding:5px 6px}.cf-kpis small{display:block;font-size:6px;color:#8a9bb0}.cf-kpis b{display:block;font-size:9px;margin-top:1px}.cf-svg{width:100%;height:132px;display:block;overflow:visible}.cf-svg text{font:6px -apple-system,BlinkMacSystemFont,"Microsoft YaHei",sans-serif;fill:#9aabc0}.cf-svg .axis{stroke:#f0f5fd}.cf-svg .bar{transform-box:fill-box;transform-origin:bottom;animation:cf-in .5s cubic-bezier(.2,.8,.2,1) both}.cf-svg .netline{fill:none;stroke:#0f766e;stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round}.cf-legend{display:flex;align-items:center;gap:8px;font-size:6.5px;color:#8a9bb0;margin-top:2px}.cf-legend i{display:inline-block;width:5px;height:5px;border-radius:2px;margin-right:2px}.cf-legend em{font-style:normal;margin-left:auto}.cf-empty{height:110px;display:flex;align-items:center;justify-content:center;color:#9aabc0;font-size:8px;background:#f8fbff;border-radius:8px}@keyframes cf-in{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+
+.new-chat-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}.new-chat-actions button{height:52px;border:1px solid #dbe8ff;border-radius:11px;background:#f8fbff;color:#2563eb;font:9px inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}.new-chat-actions button b{font-size:16px;font-weight:400}.new-contact{display:flex;align-items:center;gap:9px;padding:9px 2px;border-bottom:1px solid #f1f5fb}.new-contact:last-of-type{border-bottom:0}.new-contact .avatar{width:32px;height:32px;border-radius:10px;font-size:10px}.new-contact .copy{flex:1}.new-contact .copy b{display:block;font-size:9.5px;color:#314a65}.new-contact .copy small{display:block;font-size:7px;color:#9aabc0}.new-contact button{height:26px;border:1px solid #dbe8ff;border-radius:7px;background:#eef4ff;color:#2563eb;font:8px inherit;padding:0 9px}
 </style>
 <link rel="stylesheet" href="mobile-native.css">
 </head>
@@ -296,12 +298,13 @@ screens.login = `
 screens.chats = `
 <div class="screen-body" style="flex:1;min-height:0;display:flex;flex-direction:column">
   <div class="mobile-head">
-    <div class="row1"><div class="avatar bot">奈</div><div class="brand">HOSHINOUMI<small>REC · ONLINE</small></div><div class="spacer"></div><div class="icon-btn" style="position:relative" onclick="openNotifications()">🔔<span class="bell-dot"></span></div><div class="icon-btn" onclick="openSearch()" title="搜索"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m16.5 16.5 4 4"></path></svg></div><div class="icon-btn" onclick="toast('新建会话演示')">＋</div></div>
+    <div class="row1"><div class="avatar bot">奈</div><div class="brand">HOSHINOUMI<small>REC · ONLINE</small></div><div class="spacer"></div><div class="icon-btn" style="position:relative" onclick="openNotifications()">🔔<span class="bell-dot"></span></div><div class="icon-btn" onclick="openSearch()" title="搜索"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m16.5 16.5 4 4"></path></svg></div><div class="icon-btn" onclick="openNewChat()">＋</div></div>
     <div class="search" onclick="openSearch()"><span class="search-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m16.5 16.5 4 4"></path></svg></span>搜索会话 / 记忆 / 命令<span class="k">⌘K</span></div>
     <div class="chips"><div class="chip on">全部</div><div class="chip">私聊</div><div class="chip">群聊</div></div>
   </div>
   <div class="list">
     <div class="sec-title"><span>最近</span><span>已同步</span></div>
+    <div id="extraConvs"></div>
     <div class="conv on" data-conv="nao" onclick="openConversation(this,'chat','nao')"><div class="avatar bot">奈</div><div class="copy"><b>奈绪</b><span>你回来啦。今天外面有点冷，先喝点热的吧。</span></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="when">刚刚</span><span class="badge blue unread-badge">2</span></div></div>
     <div class="conv" data-conv="student" onclick="openConversation(this,'group','student')"><div class="avatar">学</div><div class="copy"><b>星之海学生会</b><span>友利：下午的会议改到三点。</span></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="when">12:40</span><span class="badge unread-badge">5</span></div></div>
   </div>
@@ -658,7 +661,7 @@ function go(name){
   if (staleNav) staleNav.outerHTML = nav(name)
   const quickVal = app.querySelector('[data-quick] .val')
   if (quickVal) quickVal.textContent = quickKeys.map(k => allEntries.find(e => e[0] === k)?.[2]).join(' / ')
-  if(name==='chats'){ document.querySelectorAll('.conv[data-conv]').forEach(c=>{ if(readConversations.has(c.dataset.conv)) c.querySelectorAll('.badge').forEach(b=>b.remove()) }) } if(name==='chat'){ const input=document.getElementById('input'); if(input) input.style.cssText='flex:1;height:35px;border-radius:10px;background:#f5f8fe;border:1px solid #e6eefb;padding:6px 10px;color:#4a6079;font-size:10px;overflow:auto'; setTimeout(()=>document.getElementById('msgs')?.scrollTo(0,9999),30) } }
+  if(name==='chats'){ renderExtraConversations(); document.querySelectorAll('.conv[data-conv]').forEach(c=>{ if(readConversations.has(c.dataset.conv)) c.querySelectorAll('.badge').forEach(b=>b.remove()) }) } if(name==='chat'){ const input=document.getElementById('input'); if(input) input.style.cssText='flex:1;height:35px;border-radius:10px;background:#f5f8fe;border:1px solid #e6eefb;padding:6px 10px;color:#4a6079;font-size:10px;overflow:auto'; setTimeout(()=>document.getElementById('msgs')?.scrollTo(0,9999),30) } }
 
 function openFirstLogin(){
   overlay(`<div class="cron-sheet" style="max-width:340px">
@@ -791,6 +794,56 @@ function dismissReminder(mode){
 }
 function openNotifications(){
   overlay(`<div class="popup-shell" onclick="if(event.target===this)closeOverlay()"><div class="notice-popup"><h4>提醒</h4><div class="sub">来自定时任务</div><div class="notice-item"><b>猫咪投喂提醒</b><p>今天还没喂猫。<br>每天 18:00 · 来自定时任务</p><div class="notice-actions"><button onclick="dismissReminder('later')">稍后</button><button class="primary" onclick="dismissReminder('done')">知道了</button></div></div></div></div>`)
+}
+let extraConversations=[]
+function openNewChat(){
+  overlay(`<div class="sheet"><h4>新建会话</h4><div class="new-chat-actions"><button onclick="openNewPrivate()"><b>人</b>发起私聊</button><button onclick="openNewGroup()"><b>群</b>创建群聊</button></div><button class="sheet-close" onclick="closeOverlay()">取消</button></div>`)
+}
+function openNewPrivate(){
+  const contacts=[['友利','友'],['摄影部','摄'],['新朋友','新']]
+  overlay(`<div class="sheet"><h4>选择联系人</h4>${contacts.map(([n,a])=>`<div class="new-contact"><div class="avatar">${a}</div><div class="copy"><b>${n}</b><small>发起私聊</small></div><button onclick="createConversation('${n}','${a}','私聊')">选择</button></div>`).join('')}<button class="sheet-close" onclick="closeOverlay()">取消</button></div>`)
+}
+function openNewGroup(){
+  overlay(`<div class="sheet"><h4>创建群聊</h4><div class="modal-form"><input id="newGroupName" placeholder="群聊名称，例如：周末计划"><input value="奈绪、友利" readonly></div><div class="new-chat-actions"><button onclick="closeOverlay()">取消</button><button onclick="createGroupConversation()">创建</button></div></div>`)
+}
+function createGroupConversation(){
+  const input=document.getElementById('newGroupName')
+  const name=(input?.value||'').trim()
+  if(!name){ toast('请先填写群聊名称'); return }
+  createConversation(name,'群','群聊')
+}
+function createConversation(name,avatar,type){
+  const conv={id:'new-'+Date.now(),name,avatar,type}
+  extraConversations.push(conv)
+  closeOverlay()
+  if(currentScreen==='chats') renderExtraConversations()
+  toast('已创建'+(type==='群聊'?'群聊':'会话')+'：'+name)
+  setTimeout(()=>openGenericChat(conv),40)
+}
+function renderExtraConversations(){
+  const box=document.getElementById('extraConvs')
+  if(!box) return
+  box.innerHTML=extraConversations.map(c=>`<div class="conv" data-conv="${c.id}" onclick="openGenericChatById('${c.id}')"><div class="avatar">${c.avatar}</div><div class="copy"><b>${c.name}</b><span>${c.type} · 刚刚创建</span></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="when">刚刚</span></div></div>`).join('')
+}
+function openGenericChatById(id){ const c=extraConversations.find(x=>x.id===id); if(c) openGenericChat(c) }
+function openGenericChat(c){
+  currentScreen='newchat'
+  if(navExpanded){navExpanded=false;document.body.classList.remove('nav-expanded')}
+  app.innerHTML=`<div class="screen-body" style="flex:1;min-height:0;display:flex;flex-direction:column">
+    <header class="chat-head"><div class="row"><span class="back" onclick="go('chats')">‹</span><div class="avatar sm">${c.avatar}</div><div class="who"><b>${c.name}</b><span>${c.type} · 已创建</span></div><div class="acts"><span onclick="openSearch()">⌕</span><span onclick="openChatMenu()">☰</span></div></div></header>
+    <div class="msgs" id="msgs"><div class="day">今天</div><div class="msg"><div class="avatar sm">${c.avatar}</div><div><div class="bubble">${c.type==='群聊'?'群聊已创建，可以开始讨论了。':'你好，我是'+c.name+'。新会话已创建。'}</div><div class="stamp">刚刚</div></div></div></div>
+    <div class="composer"><div class="bar"><div class="plus" onclick="openComposerSheet()">＋</div><div class="input" id="input" contenteditable="true" data-ph="说点什么…"></div><div class="mic" onclick="toast('长按说话演示')">◉</div><button class="send" onclick="sendNewMsg()">↑</button></div><div class="hint"><span>新会话 · 本地演示</span><span>已同步</span></div></div><div class="safe"></div></div>`
+  setTimeout(()=>{ const m=document.getElementById('msgs'); if(m)m.scrollTop=m.scrollHeight },30)
+}
+function sendNewMsg(){
+  const input=document.getElementById('input')
+  const text=(input?.textContent||'').trim()
+  if(!text){ toast('先输入内容'); return }
+  const msgs=document.getElementById('msgs')
+  if(!msgs) return
+  const me=document.createElement('div'); me.className='msg me'; me.innerHTML=`<div><div class="bubble"></div><div class="stamp">刚刚 · 已读</div></div><div class="avatar sm">你</div>`
+  me.querySelector('.bubble').textContent=text
+  msgs.appendChild(me); input.textContent=''; msgs.scrollTop=msgs.scrollHeight
 }
 function openSearch(){
   overlay(`<div class="search-panel"><div class="row"><input id="q" placeholder="搜索会话 / 记忆 / 命令" autocomplete="off"><button class="cancel" onclick="closeOverlay()">取消</button></div><div id="results"><div class="search-result" onclick="go('chat')">奈绪<small>会话 · 最近消息</small></div><div class="search-result" onclick="go('memory')">不喜欢香菜<small>记忆 · 偏好</small></div><div class="search-result" onclick="go('commands')">!memory<small>命令 · 搜索记忆</small></div></div></div>`)
