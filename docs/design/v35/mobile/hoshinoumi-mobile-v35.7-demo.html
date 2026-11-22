@@ -174,6 +174,15 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 20% 0%,
 
 .icon-btn svg,.search .search-ic svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;display:block}
 .search .search-ic{display:flex;align-items:center;color:#9aabc0;margin-right:2px}
+
+.cron-sheet{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2;background:#fff;border-radius:22px;padding:16px;width:calc(100% - 30px);max-width:360px;max-height:88vh;overflow-y:auto;box-shadow:0 24px 60px rgba(15,38,78,.24)}
+.cron-sheet-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}.cron-sheet-head h4{margin:0;font-size:15px;color:#223b56}.cron-x{border:0;background:#f4f8ff;color:#71859d;width:26px;height:26px;border-radius:50%;font-size:15px}
+.cron-field{margin-bottom:11px}.cron-field label{display:block;font-size:8.5px;color:#536b86;margin-bottom:5px;font-weight:650}.cron-field input,.cron-field select,.cron-field textarea{width:100%;border:1px solid #e3ebf7;border-radius:10px;background:#fbfdff;padding:9px 10px;font:9px inherit;color:#314a65;outline:none}.cron-field input:focus,.cron-field textarea:focus{border-color:#93c5fd;background:#fff}.cron-field textarea{height:58px;resize:none;line-height:1.5}.cron-field small{display:block;font-size:7.5px;color:#9aabc0;margin-top:4px;line-height:1.5}
+.freq-row{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}.freq-row button{border:1px solid #e3ebf7;background:#fbfdff;border-radius:8px;height:28px;font:8px inherit;color:#71859d}.freq-row button.on{background:#eef4ff;border-color:#bcd4ff;color:#2563eb;font-weight:700}
+.time-line{display:flex;align-items:center;gap:8px}.time-line span{font-size:8px;color:#9aabc0;flex:none}.time-line input,.time-line select{flex:1}
+.week-chips{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px}.week-chips button{width:28px;height:25px;border:1px solid #e3ebf7;background:#fbfdff;border-radius:7px;font:8px inherit;color:#71859d}.week-chips button.on{background:#2563eb;border-color:#2563eb;color:#fff}
+.cron-preview{border-radius:9px;background:#f4f9ff;border:1px dashed #cfe0f7;padding:8px 9px;font-size:8px;color:#5f7da2;margin-bottom:11px}
+.cron-actions{display:grid;grid-template-columns:1fr 1.4fr;gap:7px}.cron-actions button{height:34px;border:1px solid #dbe8ff;border-radius:9px;background:#fff;color:#2563eb;font:9px inherit}.cron-actions button.primary{background:#2563eb;border-color:#2563eb;color:#fff;font-weight:700}
 </style>
 <link rel="stylesheet" href="mobile-native.css">
 </head>
@@ -589,7 +598,49 @@ function go(name){
   if(name==='chats'){ document.querySelectorAll('.conv[data-conv]').forEach(c=>{ if(readConversations.has(c.dataset.conv)) c.querySelectorAll('.badge').forEach(b=>b.remove()) }) } if(name==='chat'){ const input=document.getElementById('input'); if(input) input.style.cssText='flex:1;height:35px;border-radius:10px;background:#f5f8fe;border:1px solid #e6eefb;padding:6px 10px;color:#4a6079;font-size:10px;overflow:auto'; setTimeout(()=>document.getElementById('msgs')?.scrollTo(0,9999),30) } }
 
 function openCronForm(title){
-  overlay(`<div class="sheet"><h4>${title}</h4><div class="modal-form"><input placeholder="任务名称"><input placeholder="cron 表达式，例如 0 8 * * *"><input placeholder="执行内容 / 提示词"><button onclick="closeOverlay();toast('任务已保存（演示）')">保存</button></div><button class="sheet-close" onclick="closeOverlay()">取消</button></div>`)
+  const editing = title.includes('编辑')
+  const name = editing ? title.split('·').pop().trim() : ''
+  overlay(`<div class="cron-sheet">
+    <div class="cron-sheet-head"><h4>${editing ? '编辑定时任务' : '新增定时任务'}</h4><button class="cron-x" onclick="closeOverlay()">×</button></div>
+    <div class="cron-field"><label>任务名称</label><input id="cronName" value="${name}" placeholder="例如：早安问候"></div>
+    <div class="cron-field"><label>什么时候</label><div class="freq-row" id="freqRow"><button class="on" onclick="setCronFreq(this,'daily')">每天</button><button onclick="setCronFreq(this,'weekly')">每周</button><button onclick="setCronFreq(this,'monthly')">每月</button><button onclick="setCronFreq(this,'custom')">自定义</button></div></div>
+    <div class="cron-field" id="dailyRow"><label>时间</label><div class="time-line"><input type="time" value="08:00" oninput="updateCronPreview()"><span>每天</span></div></div>
+    <div class="cron-field" id="weeklyRow" style="display:none"><label>星期</label><div class="week-chips"><button class="on" onclick="pickWeek(this)">一</button><button onclick="pickWeek(this)">二</button><button onclick="pickWeek(this)">三</button><button onclick="pickWeek(this)">四</button><button onclick="pickWeek(this)">五</button><button onclick="pickWeek(this)">六</button><button onclick="pickWeek(this)">日</button></div><label>时间</label><div class="time-line"><input type="time" value="20:00" oninput="updateCronPreview()"><span>每周</span></div></div>
+    <div class="cron-field" id="monthlyRow" style="display:none"><label>每月几号</label><div class="time-line"><select onchange="updateCronPreview()"><option>1 日</option><option>5 日</option><option>10 日</option><option>15 日</option><option>20 日</option><option>25 日</option></select><span>·</span><input type="time" value="09:00" oninput="updateCronPreview()"></div></div>
+    <div class="cron-field" id="customRow" style="display:none"><label>cron 表达式</label><input id="cronExpr" placeholder="例如：0 8 * * *" oninput="updateCronPreview()"><small>不熟悉 cron 就选每天 / 每周 / 每月，更简单。</small></div>
+    <div class="cron-field"><label>执行内容</label><textarea id="cronBody" placeholder="例如：看看今天的日程，发一条早安消息" oninput="updateCronPreview()"></textarea></div>
+    <div class="cron-preview" id="cronPreview">每天 08:00 · 发一条提醒</div>
+    <div class="cron-actions"><button onclick="closeOverlay()">取消</button><button class="primary" onclick="saveCronForm()">保存任务</button></div>
+  </div>`)
+  updateCronPreview()
+}
+function setCronFreq(btn, freq){
+  [...btn.parentElement.children].forEach(x => x.classList.remove('on'))
+  btn.classList.add('on')
+  document.getElementById('dailyRow').style.display = freq === 'daily' ? '' : 'none'
+  document.getElementById('weeklyRow').style.display = freq === 'weekly' ? '' : 'none'
+  document.getElementById('monthlyRow').style.display = freq === 'monthly' ? '' : 'none'
+  document.getElementById('customRow').style.display = freq === 'custom' ? '' : 'none'
+  updateCronPreview()
+}
+function pickWeek(btn){
+  btn.classList.toggle('on')
+  if (!btn.parentElement.querySelector('.on')) btn.classList.add('on')
+  updateCronPreview()
+}
+function updateCronPreview(){
+  const freq = document.querySelector('#freqRow .on')?.textContent || '每天'
+  const time = document.querySelector('#dailyRow input[type=time]')?.value || '08:00'
+  const body = document.getElementById('cronBody')?.value?.trim()
+  const preview = document.getElementById('cronPreview')
+  if (!preview) return
+  preview.textContent = freq + ' ' + time + ' · ' + (body || '发一条提醒')
+}
+function saveCronForm(){
+  const name = document.getElementById('cronName')?.value?.trim()
+  if (!name) { toast('先给任务起个名字'); return }
+  closeOverlay()
+  toast('任务已保存，等待后端同步（演示）')
 }
 function runCron(name){ toast('已立即运行：' + name + '（演示）') }
 function toggleCronSwitch(el){
@@ -755,6 +806,7 @@ setTimeout(() => {
   if (reminderHandled) return
   if (currentScreen === 'login') return
   if (document.querySelector('.notice-popup')) return
+  if (document.querySelector('.demo-overlay')) return
   openNotifications()
 }, 650)
 </script>
