@@ -1,0 +1,179 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hoshinoumi · 存钱月流水可视化 · v35.9 设计稿</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(900px 600px at 10% 0%,rgba(56,189,248,.16),transparent 60%),radial-gradient(800px 600px at 90% 15%,rgba(139,92,246,.10),transparent 60%),linear-gradient(180deg,#edf4ff,#e8f0fd);color:#17263b;font:13px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif}
+.board{max-width:1400px;margin:0 auto;padding:30px 26px 48px}
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:20px}
+.kicker{font-size:9px;letter-spacing:.2em;font-weight:800;color:#2563eb;margin-bottom:6px}
+h1{margin:0 0 6px;font-size:27px;letter-spacing:-.03em}
+header p{margin:0;color:#7c8da6;font-size:10px;max-width:650px}
+.meta{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.pill{border:1px solid #d7e5ff;background:#fff;border-radius:20px;padding:4px 9px;font-size:8px;color:#58739a}
+.tools{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}.tools button{height:32px;border:1px solid #d7e5ff;background:#fff;border-radius:9px;padding:0 11px;color:#4d6786;font:9px inherit;cursor:pointer}.tools button.on{background:#2563eb;border-color:#2563eb;color:#fff;font-weight:700}.tools .note{font-size:8px;color:#9aabc0;align-self:center;margin-left:4px}
+.arts{display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:28px;align-items:start}
+.desk{background:#f7faff;border:1px solid #e3ebf7;border-radius:20px;box-shadow:0 18px 44px rgba(20,45,80,.10);padding:20px;min-width:0}
+.desk-head{display:flex;align-items:flex-end;justify-content:space-between;padding:4px 2px 14px}.desk-head h2{margin:0;font-size:28px;letter-spacing:-.04em}.desk-head p{margin:4px 0 0;font-size:10px;color:#8a9bb0}.desk-head .back{height:30px;border:1px solid #dbe8ff;background:#fff;border-radius:8px;padding:0 10px;color:#2563eb;font:9px inherit}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:12px}.kpi{background:#fff;border:1px solid #eef3fb;border-radius:13px;padding:11px}.kpi small{display:block;font-size:7px;letter-spacing:.06em;color:#8a9bb0}.kpi b{display:block;margin-top:4px;font-size:19px;letter-spacing:-.02em}.kpi .inc{color:#1f9d6b}.kpi .exp{color:#dc2626}.kpi .net{color:#2563eb}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:11px}
+.card{background:#fff;border:1px solid #eef3fb;border-radius:15px;padding:13px;min-width:0;box-shadow:0 3px 12px rgba(37,99,235,.03)}
+.card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}.card-head b{font-size:10px;color:#314a65}.card-head .legend{display:flex;gap:9px;font-size:7px;color:#8a9bb0}.legend i{display:inline-block;width:6px;height:6px;border-radius:2px;margin-right:3px}.legend .inc i{background:#60a5fa}.legend .exp i{background:#fca5a5}.legend .net i{background:#0f766e}
+.chart-wrap{position:relative}.chart{width:100%;height:250px;display:block;overflow:visible}.chart text{font:7px -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif;fill:#9aabc0}.chart .axis{stroke:#eef3fb;stroke-width:1}.chart .bar{transform-box:fill-box;transform-origin:bottom;animation:bar-in .5s cubic-bezier(.2,.8,.2,1) both}.chart .bar.exp{animation-delay:.03s}@keyframes bar-in{from{transform:scaleY(0)}to{transform:scaleY(1)}}.chart .netline{fill:none;stroke:#0f766e;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:600;animation:line-in .8s ease both}@keyframes line-in{from{stroke-dashoffset:600}to{stroke-dashoffset:0}}.chart .dot{fill:#fff;stroke:#0f766e;stroke-width:1.5}.chart .hit{fill:transparent;cursor:pointer}.chart .hit:hover{fill:rgba(37,99,235,.06)}
+.tip{position:absolute;pointer-events:none;background:rgba(15,30,52,.94);color:#fff;border-radius:8px;padding:7px 9px;font-size:8px;line-height:1.6;opacity:0;transition:.15s;white-space:nowrap;z-index:5}.tip.on{opacity:1}.tip b{display:block;font-size:9px;margin-bottom:2px}
+.empty{height:250px;display:none;align-items:center;justify-content:center;flex-direction:column;color:#9aabc0;font-size:9px;gap:7px}.empty .orb{width:42px;height:42px;border-radius:13px;background:#f4f8ff;display:grid;place-items:center;font-size:17px;color:#8fa3bb}
+.cats{display:flex;flex-direction:column;gap:9px}.cat-row{display:flex;flex-direction:column;gap:4px}.cat-top{display:flex;justify-content:space-between;font-size:8px;color:#536b86}.cat-top b{color:#314a65}.cat-bar{height:6px;background:#eef3fb;border-radius:5px;overflow:hidden}.cat-bar i{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,#60a5fa,#2563eb);animation:cat-in .5s ease both}@keyframes cat-in{from{width:0}}.cat-note{font-size:7px;color:#9aabc0;line-height:1.7;margin-top:4px}
+/* phone */
+.phone{width:390px;height:844px;border-radius:38px;background:#0b1628;border:8px solid #0b1628;box-shadow:0 24px 60px rgba(20,45,80,.2);overflow:hidden}
+.screen{height:100%;border-radius:29px;overflow:hidden;background:#f7faff;position:relative;display:flex;flex-direction:column}
+.statusbar{height:28px;flex:none;display:flex;align-items:flex-end;justify-content:space-between;padding:0 16px 2px;font-size:8px;font-weight:700;color:#4c6582}.statusbar .right{display:flex;gap:4px;align-items:center}.sig{display:flex;gap:1px;align-items:flex-end}.sig i{width:2px;background:currentColor;border-radius:1px}.sig i:nth-child(1){height:3px}.sig i:nth-child(2){height:5px}.sig i:nth-child(3){height:7px}.sig i:nth-child(4){height:9px}.battery{width:15px;height:7px;border:1px solid currentColor;border-radius:2px;position:relative}.battery:after{content:"";position:absolute;right:-3px;top:2px;width:2px;height:3px;background:currentColor}
+.m-head{padding:12px 16px 8px;display:flex;align-items:flex-end;justify-content:space-between}.m-head h2{margin:0;font-size:24px;letter-spacing:-.04em}.m-head p{margin:2px 0 0;font-size:8px;color:#8a9bb0}.m-head .act{width:30px;height:30px;border:1px solid #e3ebf7;border-radius:9px;background:#fff;display:grid;place-items:center;color:#607795}
+.m-scroll{flex:1;min-height:0;overflow-y:auto;padding:0 14px 18px;scrollbar-width:none}.m-scroll::-webkit-scrollbar{display:none}
+.balance{background:linear-gradient(135deg,#0b1b35,#1d4ed8 72%,#3b82f6);border-radius:18px;padding:13px;color:#fff;box-shadow:0 14px 28px rgba(11,30,63,.22);position:relative;overflow:hidden}.balance:after{content:"";position:absolute;width:110px;height:110px;border-radius:50%;right:-35px;top:-40px;background:rgba(56,189,248,.18)}.balance small{font-size:7px;color:#bfdbfe}.balance b{display:block;font-size:22px;letter-spacing:.01em;margin:2px 0 8px}.balance .sum{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;position:relative;z-index:1}.balance .sum div{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.13);border-radius:8px;padding:5px 6px}.balance .sum small{font-size:6px}.balance .sum em{display:block;font-size:8px;font-style:normal;margin-top:1px}
+.m-tabs{display:flex;gap:5px;overflow:auto;padding:10px 0 8px;scrollbar-width:none}.m-tabs::-webkit-scrollbar{display:none}.m-tab{flex:none;height:26px;padding:0 10px;border:1px solid #e3ebf7;background:#fff;border-radius:8px;font-size:8px;color:#71859d;display:flex;align-items:center}.m-tab.on{background:#eef4ff;border-color:#bcd4ff;color:#2563eb;font-weight:700}
+.m-card{background:#fff;border:1px solid #eef3fb;border-radius:14px;padding:11px;margin-bottom:9px}.m-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}.m-card-head b{font-size:9.5px;color:#314a65}.m-card-head span{font-size:7px;color:#8a9bb0}.m-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:7px}.m-kpi{background:#f8fbff;border-radius:8px;padding:6px}.m-kpi small{display:block;font-size:6px;color:#8a9bb0}.m-kpi b{display:block;font-size:10px;margin-top:1px}.m-kpi .inc{color:#1f9d6b}.m-kpi .exp{color:#dc2626}.m-kpi .net{color:#2563eb}
+.m-chart{height:150px;display:block;width:100%;overflow:visible}.m-chart text{font:6px -apple-system,BlinkMacSystemFont,"Microsoft YaHei",sans-serif;fill:#9aabc0}.m-chart .axis{stroke:#f0f5fd}.m-chart .bar{transform-box:fill-box;transform-origin:bottom;animation:bar-in .5s cubic-bezier(.2,.8,.2,1) both}.m-chart .netline{fill:none;stroke:#0f766e;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}.m-chart .hit{fill:transparent;cursor:pointer}
+.m-legend{display:flex;gap:8px;font-size:6.5px;color:#8a9bb0;margin-top:2px}.m-legend i{display:inline-block;width:5px;height:5px;border-radius:2px;margin-right:2px}.m-legend .inc i{background:#60a5fa}.m-legend .exp i{background:#fca5a5}.m-legend .net i{background:#0f766e}
+.m-cat{display:flex;flex-direction:column;gap:7px}.m-cat-row{display:flex;flex-direction:column;gap:3px}.m-cat-top{display:flex;justify-content:space-between;font-size:7.5px;color:#536b86}.m-cat-bar{height:5px;background:#eef3fb;border-radius:4px;overflow:hidden}.m-cat-bar i{display:block;height:100%;background:linear-gradient(90deg,#60a5fa,#2563eb);border-radius:4px}
+.owner-note{font-size:7px;color:#9aabc0;text-align:center;line-height:1.6;padding:4px 0 8px}
+.m-nav{flex:none;height:62px;border-top:1px solid #e5edf9;background:#fff;display:grid;grid-template-columns:repeat(4,1fr);padding:0 8px 5px}.m-tab-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:#8a9bb0;font-size:7px;border-radius:9px}.m-tab-item.on{color:#2563eb;background:#eef4ff;font-weight:700}.m-tab-item .ic{font-size:14px}
+.foot{display:flex;justify-content:space-between;align-items:center;margin-top:24px;padding-top:13px;border-top:1px solid #dbe8ff;color:#9aabc0;font-size:8px}.credit{font:7px ui-monospace,monospace;letter-spacing:.12em;color:#a8b5c7}
+@media(max-width:1150px){.arts{grid-template-columns:1fr;justify-items:center}.desk{width:100%}.grid{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="board">
+<header>
+  <div><div class="kicker">HOSHINOUMI · SAVINGS CASHFLOW</div><h1>存钱 · 每月流水可视化 <span style="font-size:11px;color:#8da0b8;font-weight:500">v35.9 设计稿</span></h1><p>近 12 个月收入 / 支出 / 净结余。桌面和手机同一套数据契约；图表用 SVG 自绘，金额仅主人可见。</p></div>
+  <div class="meta"><span class="pill">桌面 + 手机</span><span class="pill">CNY</span><span class="pill">owner-only</span><span class="pill">SVG 自绘</span></div>
+</header>
+
+<div class="tools">
+  <button class="on" id="range12" onclick="setRange(12)">近 12 个月</button>
+  <button id="range6" onclick="setRange(6)">近 6 个月</button>
+  <button onclick="shiftMonth(-1)">上个月</button>
+  <button onclick="shiftMonth(1)">下个月</button>
+  <button onclick="toggleEmpty()" id="emptyBtn">切空态</button>
+  <span class="note">点击柱子查看月份；悬停显示明细</span>
+</div>
+
+<div class="arts">
+  <section class="desk">
+    <div class="desk-head"><div><h2>存钱</h2><p>总资产 / 每月流水 / 目标</p></div><button class="back">← 返回聊天</button></div>
+    <div class="kpis">
+      <div class="kpi"><small>本月收入</small><b class="inc" id="dIncome">¥8,200</b></div>
+      <div class="kpi"><small>本月支出</small><b class="exp" id="dExpense">¥5,430</b></div>
+      <div class="kpi"><small>本月结余</small><b class="net" id="dNet">+¥2,770</b></div>
+      <div class="kpi"><small>日均支出</small><b id="dAvg">¥181</b></div>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <div class="card-head"><b>每月流水</b><div class="legend"><span class="inc"><i></i>收入</span><span class="exp"><i></i>支出</span><span class="net"><i></i>净结余</span></div></div>
+        <div class="chart-wrap"><svg class="chart" id="deskChart" viewBox="0 0 700 250" role="img" aria-label="每月收入支出图"></svg><div class="tip" id="deskTip"></div><div class="empty" id="deskEmpty"><div class="orb">◌</div>这个月还没有流水</div></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><b>本月分类</b><span style="font-size:7px;color:#9aabc0" id="catMonth">2026-11</span></div>
+        <div class="cats" id="deskCats"></div>
+        <div class="cat-note">分类来自流水标签；互转不计入。<br>只展示支出分类。</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="phone"><div class="screen">
+    <div class="statusbar"><span>9:41</span><div class="right"><span class="sig"><i></i><i></i><i></i><i></i></span><span>5G</span><div class="battery"></div></div></div>
+    <div class="m-head"><div><h2>存钱</h2><p>SAVINGS · 每月流水</p></div><div class="act">＋</div></div>
+    <div class="m-scroll">
+      <div class="balance"><small>总资产 · 仅主人可见</small><b>¥12,100.00</b><div class="sum"><div><small>可用</small><em>¥2,700</em></div><div><small>冻结</small><em>¥4,100</em></div><div><small>定期</small><em>¥3,000</em></div></div></div>
+      <div class="m-tabs"><span class="m-tab on">流水</span><span class="m-tab">目标</span><span class="m-tab">定期</span><span class="m-tab">基金</span><span class="m-tab">账户</span><span class="m-tab">冻结</span></div>
+      <div class="m-card"><div class="m-card-head"><b>每月流水</b><span id="mRange">近 12 个月</span></div><div class="m-kpis"><div class="m-kpi"><small>收入</small><b class="inc" id="mIncome">¥8,200</b></div><div class="m-kpi"><small>支出</small><b class="exp" id="mExpense">¥5,430</b></div><div class="m-kpi"><small>结余</small><b class="net" id="mNet">+¥2,770</b></div></div><svg class="m-chart" id="mChart" viewBox="0 0 340 150" role="img" aria-label="手机每月收入支出图"></svg><div class="m-legend"><span class="inc"><i></i>收入</span><span class="exp"><i></i>支出</span><span class="net"><i></i>净结余</span></div></div>
+      <div class="m-card"><div class="m-card-head"><b>本月分类</b><span id="mCatMonth">2026-11</span></div><div class="m-cat" id="mCats"></div><div class="cat-note">仅主人可见 · 互转不计入</div></div>
+      <div class="owner-note">图表数据来自 /api/savings/cashflow<br>设计演示 · 金额非真实</div>
+    </div>
+    <div class="m-nav"><div class="m-tab-item on"><span class="ic">◉</span>聊天</div><div class="m-tab-item"><span class="ic">◈</span>记忆</div><div class="m-tab-item"><span class="ic">♡</span>关系</div><div class="m-tab-item"><span class="ic">⚙</span>设置</div></div>
+  </div></section>
+</div>
+
+<div class="foot"><span>v35.9.1.19 API · v35.9.1.20 桌面 · v35.9.30.16 手机 · 数据仅主人可见</span><span class="credit">POWERED BY JYOUSHITOU</span></div>
+</div>
+
+<script>
+const DATA = [
+  {m:'2025-12',income:6200,expense:4100},
+  {m:'2026-01',income:9800,expense:5600},
+  {m:'2026-02',income:7400,expense:4800},
+  {m:'2026-03',income:8100,expense:6200},
+  {m:'2026-04',income:6900,expense:5300},
+  {m:'2026-05',income:8800,expense:4900},
+  {m:'2026-06',income:7600,expense:5700},
+  {m:'2026-07',income:9100,expense:6100},
+  {m:'2026-08',income:8300,expense:5200},
+  {m:'2026-09',income:7800,expense:5900},
+  {m:'2026-10',income:8600,expense:5000},
+  {m:'2026-11',income:8200,expense:5430}
+]
+const CATS = {
+  '2026-11':[['餐饮',1830],['房租',1800],['交通',620],['学习',480],['其他',700]],
+  '2026-10':[['餐饮',1650],['房租',1800],['交通',520],['学习',430],['其他',600]],
+  '2026-09':[['餐饮',1900],['房租',1800],['交通',700],['学习',500],['其他',1000]]
+}
+let range = 12, offset = 0, empty = false, selected = DATA.length - 1
+const money = n => (n < 0 ? '-' : '') + '¥' + Math.abs(n).toLocaleString('zh-CN')
+const netOf = d => d.income - d.expense
+const visible = () => DATA.slice(Math.max(0, DATA.length - range + offset), Math.max(0, DATA.length + offset))
+const current = () => DATA[Math.max(0, Math.min(DATA.length - 1, selected))]
+function setRange(n){range=n;offset=0;document.getElementById('range12').classList.toggle('on',n===12);document.getElementById('range6').classList.toggle('on',n===6);document.getElementById('mRange').textContent='近 '+n+' 个月';render()}
+function shiftMonth(dir){offset=Math.max(-(DATA.length-range),Math.min(0,offset+dir));render()}
+function toggleEmpty(){empty=!empty;document.getElementById('emptyBtn').textContent=empty?'恢复数据':'切空态';render()}
+function renderKpi(){
+  const d=current();document.getElementById('dIncome').textContent=money(d.income);document.getElementById('dExpense').textContent=money(d.expense);document.getElementById('dNet').textContent=(netOf(d)>=0?'+':'')+money(netOf(d));document.getElementById('dAvg').textContent=money(Math.round(d.expense/30));
+  document.getElementById('mIncome').textContent=money(d.income);document.getElementById('mExpense').textContent=money(d.expense);document.getElementById('mNet').textContent=(netOf(d)>=0?'+':'')+money(netOf(d));document.getElementById('catMonth').textContent=d.m;document.getElementById('mCatMonth').textContent=d.m;
+}
+function renderCats(){
+  const list=CATS[current().m] || [['餐饮',1200],['交通',400],['其他',300]]
+  const total=list.reduce((n,x)=>n+x[1],0)
+  const html=list.map(([name,v])=>`<div class="cat-row"><div class="cat-top"><span>${name}</span><b>${money(v)} · ${Math.round(v/total*100)}%</b></div><div class="cat-bar"><i style="width:${Math.round(v/total*100)}%"></i></div></div>`).join('')
+  document.getElementById('deskCats').innerHTML=html
+  document.getElementById('mCats').innerHTML=html
+}
+function chartSVG(svg, w, h, mobile){
+  const rows=visible()
+  const pad={l:mobile?25:35,r:8,t:10,b:22}
+  const iw=w-pad.l-pad.r, ih=h-pad.t-pad.b
+  const max=Math.max(...rows.map(d=>Math.max(d.income,d.expense)),1)
+  const step=iw/rows.length
+  const bw=Math.max(3,Math.min(mobile?8:15,step*.28))
+  let out=''
+  for(let g=0;g<=3;g++){const y=pad.t+ih*g/3;const val=Math.round(max*(3-g)/3);out+=`<line class="axis" x1="${pad.l}" y1="${y}" x2="${w-pad.r}" y2="${y}"/><text x="${pad.l-5}" y="${y+2}" text-anchor="end">${mobile?'':(val>=1000?(val/1000).toFixed(0)+'k':val)}</text>`}
+  rows.forEach((d,i)=>{
+    const x=pad.l+i*step
+    const ihh=d.income/max*ih, ehh=d.expense/max*ih
+    out+=`<rect class="bar" x="${x+step/2-bw-1}" y="${pad.t+ih-ihh}" width="${bw}" height="${ihh}" rx="2" fill="#60a5fa"/>`
+    out+=`<rect class="bar exp" x="${x+step/2+1}" y="${pad.t+ih-ehh}" width="${bw}" height="${ehh}" rx="2" fill="#fca5a5"/>`
+    out+=`<text x="${x+step/2}" y="${h-7}" text-anchor="middle">${mobile?d.m.slice(5):d.m}</text>`
+    out+=`<rect class="hit" fill="transparent" data-i="${DATA.indexOf(d)}" x="${x}" y="${pad.t}" width="${step}" height="${ih}"/>`
+  })
+  const pts=rows.map((d,i)=>`${pad.l+i*step+step/2},${pad.t+ih-netOf(d)/max*ih}`).join(' ')
+  out+=`<polyline class="netline" points="${pts}"/>`
+  rows.forEach((d,i)=>{const x=pad.l+i*step+step/2,y=pad.t+ih-netOf(d)/max*ih;out+=`<circle class="dot" cx="${x}" cy="${y}" r="${mobile?2.2:2.8}"/>`})
+  svg.innerHTML=out
+  svg.querySelectorAll('.hit').forEach(el=>{
+    el.addEventListener('mouseenter',e=>{if(mobile)return;const d=DATA[+el.dataset.i];showTip(`<b>${d.m}</b>收入 ${money(d.income)}<br>支出 ${money(d.expense)}<br>结余 ${money(netOf(d))}`,e.clientX,e.clientY)})
+    el.addEventListener('mouseleave',()=>{if(!mobile)hideTip()})
+    el.addEventListener('click',()=>{selected=+el.dataset.i;render()})
+  })
+}
+function showTip(html,x,y){const tip=document.getElementById('deskTip');tip.innerHTML=html;tip.classList.add('on');const wrap=tip.parentElement.getBoundingClientRect();tip.style.left=Math.min(x-wrap.left+10,wrap.width-150)+'px';tip.style.top=Math.max(4,y-wrap.top-50)+'px'}
+function hideTip(){document.getElementById('deskTip').classList.remove('on')}
+function render(){
+  renderKpi();renderCats()
+  document.getElementById('deskEmpty').style.display=empty?'flex':'none';document.getElementById('deskChart').style.display=empty?'none':'block'
+  document.getElementById('mChart').style.display=empty?'none':'block'
+  if(!empty){chartSVG(document.getElementById('deskChart'),700,250,false);chartSVG(document.getElementById('mChart'),340,150,true)}
+}
+render()
+</script>
+</body>
+</html>
