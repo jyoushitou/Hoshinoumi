@@ -535,9 +535,9 @@ screens.cron = `
 <div class="screen-body" style="flex:1;min-height:0;display:flex;flex-direction:column">
   <div class="d-head"><h2>定时任务<small>CRON</small></h2><div class="act" onclick="openCronForm('新增定时任务')">＋</div></div>
   <div class="d-scroll">
-    <div class="cron-item"><div class="cron-top"><div class="t"><b>早安问候</b><small>每天 07:30 · 下次 明天</small></div><div class="switch on" onclick="toggleSwitch(this)"></div></div><div class="cron-actions"><button onclick="runCron('早安问候')">立即运行</button><button onclick="openCronForm('编辑 · 早安问候')">编辑</button><button onclick="toast('已停用（演示）')">停用</button><button class="danger" onclick="deleteCron(this)">删除</button></div></div>
-    <div class="cron-item"><div class="cron-top"><div class="t"><b>每周计划提醒</b><small>周日 20:00 · 已启用</small></div><div class="switch on" onclick="toggleSwitch(this)"></div></div><div class="cron-actions"><button onclick="runCron('每周计划提醒')">立即运行</button><button onclick="openCronForm('编辑 · 每周计划提醒')">编辑</button><button onclick="toast('已停用（演示）')">停用</button><button class="danger" onclick="deleteCron(this)">删除</button></div></div>
-    <div class="cron-item"><div class="cron-top"><div class="t"><b>猫粮提醒</b><small>每天 18:00 · 已暂停</small></div><div class="switch" onclick="toggleSwitch(this)"></div></div><div class="cron-actions"><button onclick="runCron('猫粮提醒')">立即运行</button><button onclick="openCronForm('编辑 · 猫粮提醒')">编辑</button><button onclick="toast('已启用（演示）')">启用</button><button class="danger" onclick="deleteCron(this)">删除</button></div></div>
+    <div class="cron-item"><div class="cron-top"><div class="t"><b>早安问候</b><small>每天 07:30 · 下次 明天</small></div><div class="switch on" onclick="toggleCronSwitch(this)" title="启用 / 停用"></div></div><div class="cron-actions"><button onclick="runCron('早安问候')">立即运行</button><button onclick="openCronForm('编辑 · 早安问候')">编辑</button><button class="danger" onclick="deleteCron(this)">删除</button></div></div>
+    <div class="cron-item"><div class="cron-top"><div class="t"><b>每周计划提醒</b><small>周日 20:00 · 已启用</small></div><div class="switch on" onclick="toggleCronSwitch(this)" title="启用 / 停用"></div></div><div class="cron-actions"><button onclick="runCron('每周计划提醒')">立即运行</button><button onclick="openCronForm('编辑 · 每周计划提醒')">编辑</button><button class="danger" onclick="deleteCron(this)">删除</button></div></div>
+    <div class="cron-item"><div class="cron-top"><div class="t"><b>猫粮提醒</b><small>每天 18:00 · 已暂停</small></div><div class="switch" onclick="toggleCronSwitch(this)" title="启用 / 停用"></div></div><div class="cron-actions"><button onclick="runCron('猫粮提醒')">立即运行</button><button onclick="openCronForm('编辑 · 猫粮提醒')">编辑</button><button class="danger" onclick="deleteCron(this)">删除</button></div></div>
     <div class="d-card" style="margin-top:9px;font-size:8px;color:#8598ad;line-height:1.7">真实操作走 <code>/api/cron</code> CRUD；失败显示后端错误，刷新后以后端任务列表为准。</div>
   </div>
 </div>
@@ -587,6 +587,11 @@ function openCronForm(title){
   overlay(`<div class="sheet"><h4>${title}</h4><div class="modal-form"><input placeholder="任务名称"><input placeholder="cron 表达式，例如 0 8 * * *"><input placeholder="执行内容 / 提示词"><button onclick="closeOverlay();toast('任务已保存（演示）')">保存</button></div><button class="sheet-close" onclick="closeOverlay()">取消</button></div>`)
 }
 function runCron(name){ toast('已立即运行：' + name + '（演示）') }
+function toggleCronSwitch(el){
+  el.classList.toggle('on')
+  const name = el.closest('.cron-item')?.querySelector('.t b')?.textContent || '任务'
+  toast((el.classList.contains('on') ? '已启用：' : '已停用：') + name + '（演示）')
+}
 function deleteCron(btn){
   const row = btn.closest('.cron-item')
   if (!row) return
