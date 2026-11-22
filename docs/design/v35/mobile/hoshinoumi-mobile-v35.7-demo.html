@@ -158,6 +158,14 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 20% 0%,
 .notice-item{background:#f7faff;border-radius:12px;padding:10px;margin-bottom:8px}.notice-item b{display:block;font-size:10px;color:#314a65}.notice-item p{margin:3px 0 0;font-size:8px;color:#8fa3bb;line-height:1.6}.notice-actions{display:flex;gap:6px;margin-top:8px}.notice-actions button{flex:1;height:27px;border:1px solid #dbe8ff;border-radius:7px;background:#fff;color:#2563eb;font:8px inherit}.notice-actions button.primary{background:#2563eb;color:#fff;border-color:#2563eb}
 .popup-shell{position:absolute;inset:0;background:rgba(9,22,40,.28);backdrop-filter:blur(2px);display:flex;align-items:center;justify-content:center;z-index:35}
 
+
+.cmd-group{background:#fff;border:0;border-radius:14px;padding:10px;margin-bottom:7px;box-shadow:var(--mn-soft)}
+.cmd-group-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}.cmd-group-head b{font-size:9px;color:#314a65}.cmd-group-head small{font-size:7px;color:#9aabc0}
+.cmd-list{display:flex;flex-wrap:wrap;gap:5px}
+.cmd-item{display:flex;align-items:center;gap:5px;border:1px solid #eef3fb;background:#fbfdff;border-radius:8px;padding:5px 7px;font:8px inherit;color:#405873;cursor:pointer;max-width:100%}
+.cmd-item code{font:7.5px ui-monospace,monospace;color:#2563eb;background:#eef4ff;border-radius:4px;padding:2px 4px}
+.cmd-item span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:95px}.cmd-item em{font:6px ui-monospace,monospace;color:#b45309;background:#fffbeb;border-radius:4px;padding:1px 3px;font-style:normal}
+.cmd-item:active{background:#eef4ff}.cmd-empty{padding:24px;text-align:center;color:#8fa3bb;font-size:9px}
 </style>
 <link rel="stylesheet" href="mobile-native.css">
 </head>
@@ -437,15 +445,83 @@ ${nav('chats')}`
 
 screens.commands = `
 <div class="screen-body" style="flex:1;min-height:0;display:flex;flex-direction:column">
-  <div class="d-head"><h2>命令<small>COMMANDS</small></h2><div class="act" onclick="toast('命令帮助演示')">?</div></div>
-  <div class="d-scroll">
-    <div class="cmd-search" onclick="openSearch()">⌕ 搜索命令 / 参数</div>
-    <div class="cmd-chips"><button class="on" onclick="selectSeg(this)">全部</button><button onclick="selectSeg(this)">聊天</button><button onclick="selectSeg(this)">记忆</button><button onclick="selectSeg(this)">存钱</button><button onclick="selectSeg(this)">系统</button></div>
-    <div class="cmd-row" onclick="openCommand('/help','查看全部命令')"><code>!help</code><div class="t">查看全部命令</div><span class="chev">›</span></div>
-    <div class="cmd-row" onclick="openCommand('/memory','按关键词搜索记忆')"><code>!memory</code><div class="t">搜索记忆</div><span class="chev">›</span></div>
-    <div class="cmd-row" onclick="openCommand('/savings','记录一笔收支')"><code>!savings</code><div class="t">记录收支</div><span class="chev">›</span></div>
-    <div class="cmd-row" onclick="openCommand('/run','执行一个工具')"><code>!run</code><div class="t">执行工具 / 参数</div><span class="chev">›</span></div>
-    <div class="cmd-row" onclick="openCommand('/status','查看运行状态')"><code>!status</code><div class="t">运行状态</div><span class="chev">›</span></div>
+  <div class="d-head"><h2>命令<small>COMMANDS · 51</small></h2><div class="act" onclick="toast('命令帮助 / 参数说明演示')">?</div></div>
+  <div class="d-scroll" style="flex:1;min-height:0;overflow-y:auto;padding:0 16px 180px">
+    <input class="cmd-search" id="cmdSearch" placeholder="⌕ 搜索命令 / 参数" oninput="filterCommands(this.value)">
+    <div class="cmd-chips" id="cmdCats"><button class="on" data-cat="all" onclick="cmdCat(this)">全部</button><button data-cat="基础" onclick="cmdCat(this)">基础</button><button data-cat="记忆" onclick="cmdCat(this)">记忆</button><button data-cat="媒体" onclick="cmdCat(this)">媒体</button><button data-cat="日常" onclick="cmdCat(this)">日常</button><button data-cat="阅读" onclick="cmdCat(this)">阅读</button><button data-cat="计划" onclick="cmdCat(this)">计划</button><button data-cat="插件" onclick="cmdCat(this)">插件</button><button data-cat="账号" onclick="cmdCat(this)">账号</button><button data-cat="多端" onclick="cmdCat(this)">多端</button></div>
+    <div id="cmdGroups">
+      <div class="cmd-group" data-cat="基础"><div class="cmd-group-head"><b>基础</b><small>15</small></div><div class="cmd-list">
+        <button class="cmd-item" data-cmd="!help" data-desc="查看全部命令" onclick="openCommand('!help','查看全部命令')"><code>!help</code><span>查看全部命令</span></button>
+        <button class="cmd-item" data-cmd="!ping" data-desc="在线测试" onclick="openCommand('!ping','在线测试')"><code>!ping</code><span>在线测试</span></button>
+        <button class="cmd-item" data-cmd="!status" data-desc="运行状态" onclick="openCommand('!status','运行状态')"><code>!status</code><span>运行状态</span></button>
+        <button class="cmd-item" data-cmd="!version" data-desc="版本信息" onclick="openCommand('!version','版本信息')"><code>!version</code><span>版本信息</span></button>
+        <button class="cmd-item" data-cmd="!uptime" data-desc="运行时长" onclick="openCommand('!uptime','运行时长')"><code>!uptime</code><span>运行时长</span></button>
+        <button class="cmd-item" data-cmd="!meta" data-desc="元数据" onclick="openCommand('!meta','元数据')"><code>!meta</code><span>元数据</span></button>
+        <button class="cmd-item" data-cmd="!usage" data-desc="Token 用量" onclick="openCommand('!usage','Token 用量')"><code>!usage</code><span>Token 用量</span></button>
+        <button class="cmd-item" data-cmd="!log" data-desc="最近日志" onclick="openCommand('!log','最近日志')"><code>!log</code><span>最近日志</span></button>
+        <button class="cmd-item" data-cmd="!db" data-desc="数据库统计" onclick="openCommand('!db','数据库统计')"><code>!db</code><span>数据库统计</span></button>
+        <button class="cmd-item" data-cmd="!stats" data-desc="今日统计" onclick="openCommand('!stats','今日统计')"><code>!stats</code><span>今日统计</span></button>
+        <button class="cmd-item" data-cmd="!history" data-desc="最近对话" onclick="openCommand('!history','最近对话')"><code>!history</code><span>最近对话</span></button>
+        <button class="cmd-item" data-cmd="!reload" data-desc="重载密钥/记忆" onclick="openCommand('!reload','重载密钥/记忆')"><code>!reload</code><span>重载密钥/记忆</span><em>owner</em></button>
+        <button class="cmd-item" data-cmd="!set" data-desc="修改设置" onclick="openCommand('!set','修改设置')"><code>!set</code><span>修改设置</span><em>owner</em></button>
+        <button class="cmd-item" data-cmd="!exit" data-desc="安全退出" onclick="openCommand('!exit','安全退出')"><code>!exit</code><span>安全退出</span><em>owner</em></button>
+        <button class="cmd-item" data-cmd="!quit" data-desc="安全退出" onclick="openCommand('!quit','安全退出')"><code>!quit</code><span>安全退出</span><em>owner</em></button>
+      </div></div>
+      <div class="cmd-group" data-cat="记忆"><div class="cmd-group-head"><b>记忆</b><small>8</small></div><div class="cmd-list">
+        <button class="cmd-item" data-cmd="!memory" data-desc="搜索记忆" onclick="openCommand('!memory','搜索记忆')"><code>!memory</code><span>搜索记忆</span></button>
+        <button class="cmd-item" data-cmd="!memorybook" data-desc="记忆本" onclick="openCommand('!memorybook','记忆本')"><code>!memorybook</code><span>记忆本</span></button>
+        <button class="cmd-item" data-cmd="!event" data-desc="事件" onclick="openCommand('!event','事件')"><code>!event</code><span>事件</span></button>
+        <button class="cmd-item" data-cmd="!keywords" data-desc="关键词" onclick="openCommand('!keywords','关键词')"><code>!keywords</code><span>关键词</span></button>
+        <button class="cmd-item" data-cmd="!clear" data-desc="清空记忆" onclick="openCommand('!clear','清空记忆')"><code>!clear</code><span>清空记忆</span><em>owner</em></button>
+        <button class="cmd-item" data-cmd="!profile" data-desc="画像" onclick="openCommand('!profile','画像')"><code>!profile</code><span>画像</span></button>
+        <button class="cmd-item" data-cmd="!growth" data-desc="成长" onclick="openCommand('!growth','成长')"><code>!growth</code><span>成长</span></button>
+        <button class="cmd-item" data-cmd="!relation" data-desc="关系" onclick="openCommand('!relation','关系')"><code>!relation</code><span>关系</span></button>
+      </div></div>
+      <div class="cmd-group" data-cat="媒体"><div class="cmd-group-head"><b>媒体</b><small>8</small></div><div class="cmd-list">
+        <button class="cmd-item" data-cmd="!img" data-desc="图片" onclick="openCommand('!img','图片')"><code>!img</code><span>图片</span></button>
+        <button class="cmd-item" data-cmd="!acg" data-desc="二次元图" onclick="openCommand('!acg','二次元图')"><code>!acg</code><span>二次元图</span></button>
+        <button class="cmd-item" data-cmd="!sticker" data-desc="表情包" onclick="openCommand('!sticker','表情包')"><code>!sticker</code><span>表情包</span></button>
+        <button class="cmd-item" data-cmd="!clip" data-desc="视频片段" onclick="openCommand('!clip','视频片段')"><code>!clip</code><span>视频片段</span></button>
+        <button class="cmd-item" data-cmd="!voice" data-desc="语音" onclick="openCommand('!voice','语音')"><code>!voice</code><span>语音</span></button>
+        <button class="cmd-item" data-cmd="!vision" data-desc="看图" onclick="openCommand('!vision','看图')"><code>!vision</code><span>看图</span></button>
+        <button class="cmd-item" data-cmd="!say" data-desc="说话" onclick="openCommand('!say','说话')"><code>!say</code><span>说话</span><em>owner</em></button>
+        <button class="cmd-item" data-cmd="!sayg" data-desc="群说话" onclick="openCommand('!sayg','群说话')"><code>!sayg</code><span>群说话</span><em>owner</em></button>
+      </div></div>
+      <div class="cmd-group" data-cat="日常"><div class="cmd-group-head"><b>日常</b><small>7</small></div><div class="cmd-list">
+        <button class="cmd-item" data-cmd="!diary" data-desc="日记" onclick="openCommand('!diary','日记')"><code>!diary</code><span>日记</span></button>
+        <button class="cmd-item" data-cmd="!todo" data-desc="待办" onclick="openCommand('!todo','待办')"><code>!todo</code><span>待办</span></button>
+        <button class="cmd-item" data-cmd="!cron" data-desc="定时任务" onclick="openCommand('!cron','定时任务')"><code>!cron</code><span>定时任务</span></button>
+        <button class="cmd-item" data-cmd="!hooks" data-desc="钩子" onclick="openCommand('!hooks','钩子')"><code>!hooks</code><span>钩子</span></button>
+        <button class="cmd-item" data-cmd="!backup" data-desc="备份" onclick="openCommand('!backup','备份')"><code>!backup</code><span>备份</span><em>owner</em></button>
+        <button class="cmd-item" data-cmd="!update" data-desc="更新" onclick="openCommand('!update','更新')"><code>!update</code><span>更新</span></button>
+        <button class="cmd-item" data-cmd="!task" data-desc="任务" onclick="openCommand('!task','任务')"><code>!task</code><span>任务</span></button>
+      </div></div>
+      <div class="cmd-group" data-cat="阅读"><div class="cmd-group-head"><b>阅读</b><small>2</small></div><div class="cmd-list">
+        <button class="cmd-item" data-cmd="!books" data-desc="本地书列表" onclick="openCommand('!books','本地书列表')"><code>!books</code><span>本地书列表</span></button>
+        <button class="cmd-item" data-cmd="!book" data-desc="读书" onclick="openCommand('!book','读书')"><code>!book</code><span>读书</span></button>
+      </div></div>
+      <div class="cmd-group" data-cat="计划"><div class="cmd-group-head"><b>计划</b><small>1</small></div><div class="cmd-list">
+        <button class="cmd-item" data-cmd="!plan" data-desc="计划" onclick="openCommand('!plan','计划')"><code>!plan</code><span>计划</span></button>
+      </div></div>
+      <div class="cmd-group" data-cat="插件"><div class="cmd-group-head"><b>插件</b><small>1</small></div><div class="cmd-list">
+        <button class="cmd-item" data-cmd="!plugin" data-desc="插件管理" onclick="openCommand('!plugin','插件管理')"><code>!plugin</code><span>插件管理</span><em>owner</em></button>
+      </div></div>
+      <div class="cmd-group" data-cat="账号"><div class="cmd-group-head"><b>账号</b><small>2</small></div><div class="cmd-list">
+        <button class="cmd-item" data-cmd="!adduser" data-desc="添加用户" onclick="openCommand('!adduser','添加用户')"><code>!adduser</code><span>添加用户</span><em>owner</em></button>
+        <button class="cmd-item" data-cmd="!persona" data-desc="人设" onclick="openCommand('!persona','人设')"><code>!persona</code><span>人设</span></button>
+      </div></div>
+      <div class="cmd-group" data-cat="多端"><div class="cmd-group-head"><b>多端</b><small>7</small></div><div class="cmd-list">
+        <button class="cmd-item" data-cmd="!dio" data-desc="多端入口" onclick="openCommand('!dio','多端入口')"><code>!dio</code><span>多端入口</span></button>
+        <button class="cmd-item" data-cmd="!presence" data-desc="状态" onclick="openCommand('!presence','状态')"><code>!presence</code><span>状态</span></button>
+        <button class="cmd-item" data-cmd="!route" data-desc="路由" onclick="openCommand('!route','路由')"><code>!route</code><span>路由</span></button>
+        <button class="cmd-item" data-cmd="!aw" data-desc="自动唤醒" onclick="openCommand('!aw','自动唤醒')"><code>!aw</code><span>自动唤醒</span><em>owner</em></button>
+        <button class="cmd-item" data-cmd="!config" data-desc="配置" onclick="openCommand('!config','配置')"><code>!config</code><span>配置</span><em>owner</em></button>
+        <button class="cmd-item" data-cmd="!code" data-desc="验证码" onclick="openCommand('!code','验证码')"><code>!code</code><span>验证码</span><em>owner</em></button>
+        <button class="cmd-item" data-cmd="!apikeys" data-desc="API 密钥" onclick="openCommand('!apikeys','API 密钥')"><code>!apikeys</code><span>API 密钥</span><em>owner</em></button>
+      </div></div>
+    </div>
+    <div class="cmd-empty" id="cmdEmpty" style="display:none">没有匹配的命令</div>
+    <div class="d-card" style="margin-top:9px;font-size:8px;color:#8598ad;line-height:1.7">命令目录来自 <code>GET /api/commands</code>；执行通过 <code>POST /api/command</code>。带 owner 的命令仅主人可执行。</div>
   </div>
 </div>
 ${nav('chats')}`
@@ -569,6 +645,29 @@ function recallLast(){
   const msgs=document.getElementById('msgs'); if(!msgs){ toast('请先进入聊天'); closeOverlay(); return }
   const own=[...msgs.querySelectorAll('.msg.me')].pop(); if(!own){ toast('没有可撤回的消息'); closeOverlay(); return }
   own.remove(); const note=document.createElement('div'); note.className='system-note'; note.textContent='你撤回了一条消息'; msgs.appendChild(note); closeOverlay(); toast('已撤回（演示）')
+}
+function filterCommands(q){
+  const needle = String(q || '').trim().toLowerCase()
+  const active = document.querySelector('#cmdCats .on')?.dataset.cat || 'all'
+  let visible = 0
+  document.querySelectorAll('.cmd-group').forEach(group => {
+    const inCat = active === 'all' || group.dataset.cat === active
+    let groupVisible = 0
+    group.querySelectorAll('.cmd-item').forEach(item => {
+      const hit = !needle || (item.dataset.cmd + ' ' + item.dataset.desc).toLowerCase().includes(needle)
+      item.style.display = hit && inCat ? '' : 'none'
+      if (hit && inCat) groupVisible++
+    })
+    group.style.display = groupVisible ? '' : 'none'
+    visible += groupVisible
+  })
+  const empty = document.getElementById('cmdEmpty'); if (empty) empty.style.display = visible ? 'none' : ''
+}
+function cmdCat(el){
+  [...el.parentElement.children].forEach(x => x.classList.remove('on'))
+  el.classList.add('on')
+  const search = document.getElementById('cmdSearch')
+  filterCommands(search ? search.value : '')
 }
 function openCommand(code,title){
   overlay(`<div class="sheet"><h4>${title}</h4><div class="modal-form"><input value="${code}" readonly><input placeholder="参数（可选）"><button onclick="closeOverlay();toast('命令执行演示')">执行命令</button></div><button class="sheet-close" onclick="closeOverlay()">取消</button></div>`)

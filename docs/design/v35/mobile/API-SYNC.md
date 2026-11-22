@@ -11,6 +11,8 @@
 | 已读 | `POST /api/read` | 清列表/底栏未读 |
 | 发送 | `POST /api/chat` | 成功后再回显 |
 | 记忆列表 | `GET /api/memory` | 记忆筛选为前端展示 |
+| 命令目录 | `GET /api/commands` | 51 条命令、分类、权限 |
+| 命令执行 | `POST /api/command` | 参数校验，失败显示真实错误 |
 | 关系 | `GET /api/relation` | 非 owner 隐藏页面 |
 | 周计划读取 | `GET /api/weekly-plan?week=` | 按 ISO 周 |
 | 周计划保存 | `POST /api/weekly-plan` | **整周保存**；新增/删除/切换完成后整周 POST |
