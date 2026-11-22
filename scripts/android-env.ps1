@@ -12,7 +12,8 @@ $env:Path = (Join-Path $Jdk "bin") + ";" + $env:Path
 $sdkCandidates = @(
     "$env:LOCALAPPDATA\Android\Sdk",
     "C:\Android\Sdk",
-    "D:\Android\Sdk"
+    "D:\Android\Sdk",
+    "E:\app\AndroidSDK"
 )
 foreach ($sdk in $sdkCandidates) {
     if (Test-Path (Join-Path $sdk "platform-tools\adb.exe")) {
