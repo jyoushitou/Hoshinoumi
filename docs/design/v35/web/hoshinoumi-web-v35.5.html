@@ -208,6 +208,8 @@ button{color:inherit}
 /* cashflow */
 .cashflow-panel .cf-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:7px}.cashflow-panel .cf-kpis div{background:#f8fbff;border:1px solid #eef3fb;border-radius:8px;padding:7px 9px}.cashflow-panel .cf-kpis small{display:block;font-size:8px;color:#8a9bb0}.cashflow-panel .cf-kpis b{display:block;font-size:12px;margin-top:2px}
 .cf-web-svg{width:100%;height:220px;display:block;overflow:visible}.cf-web-svg text{font:8px -apple-system,BlinkMacSystemFont,"Microsoft YaHei",sans-serif;fill:#9aabc0}.cf-web-svg .axis{stroke:#f0f5fd}.cf-web-svg .bar{transform-box:fill-box;transform-origin:bottom;animation:cf-web-in .5s cubic-bezier(.2,.8,.2,1) both}.cf-web-svg .netline{fill:none;stroke:#0f766e;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}.cf-legend{display:flex;gap:12px;align-items:center;font-size:8px;color:#8a9bb0;margin-top:2px}.cf-legend i{display:inline-block;width:7px;height:7px;border-radius:2px;margin-right:3px}.cf-legend em{font-style:normal;margin-left:auto}@keyframes cf-web-in{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+
+.chat-more{position:fixed;right:22px;top:52px;width:150px;background:#fff;border:1px solid #e3ebf7;border-radius:10px;box-shadow:0 12px 30px rgba(37,99,235,.14);padding:5px;z-index:45;display:none}.chat-more.on{display:block}.chat-more button{display:flex;width:100%;align-items:center;gap:7px;border:0;background:#fff;border-radius:7px;padding:7px 8px;text-align:left;font:9.5px inherit;color:#405a78;cursor:pointer}.chat-more button:hover{background:#f2f7ff;color:#2563eb}.chat-more .sep{height:1px;background:#eef3fb;margin:3px 4px}
 </style>
 </head>
 <body>
@@ -301,7 +303,7 @@ button{color:inherit}
       </div>
       <div class="right">
         <button class="tbtn">⌕ 聊天内搜索</button>
-        <button class="tbtn">⋯</button>
+        <button class="tbtn" id="chatMore">⋯</button>
       </div>
     </div>
 

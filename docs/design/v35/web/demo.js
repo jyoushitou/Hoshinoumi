@@ -440,6 +440,27 @@
 
   // 聊天内搜索
   const searchBtn = top.querySelector('.tbtn');
+  const chatMoreBtn = document.getElementById('chatMore');
+  let chatMoreMenu = null;
+  function toggleChatMore() {
+    if (!chatMoreMenu) {
+      chatMoreMenu = document.createElement('div');
+      chatMoreMenu.className = 'chat-more';
+      chatMoreMenu.innerHTML = '<button data-act="info">会话信息</button><button data-act="pin">置顶会话</button><button data-act="mute">免打扰</button><div class="sep"></div><button data-act="search">聊天内搜索</button><button data-act="recall">撤回最近消息</button>';
+      document.body.appendChild(chatMoreMenu);
+      chatMoreMenu.addEventListener('click', e => {
+        const act = e.target.closest('button')?.dataset.act;
+        if (!act) return;
+        chatMoreMenu.classList.remove('on');
+        if (act === 'search') { openSearch(true); return; }
+        if (act === 'recall') { const own = [...msgs.querySelectorAll('.msg')].reverse().find(m => m.querySelector('.avatar')?.textContent === '你'); if (own) { own.remove(); toast('已撤回（MOCK）'); } else toast('没有可撤回的消息'); return; }
+        toast(act === 'info' ? '会话信息（MOCK）' : act === 'pin' ? '已置顶（MOCK）' : '免打扰已开启（MOCK）');
+      });
+      document.addEventListener('click', e => { if (!chatMoreMenu.contains(e.target) && e.target !== chatMoreBtn) chatMoreMenu.classList.remove('on'); });
+    }
+    chatMoreMenu.classList.toggle('on');
+  }
+  chatMoreBtn?.addEventListener('click', e => { e.stopPropagation(); toggleChatMore(); });
   const searchBar = document.createElement('div');
   searchBar.className = 'chat-search';
   searchBar.innerHTML = '<span>⌕</span><input id="chatSearchInput" placeholder="搜索当前聊天"><span class="count" id="chatSearchCount"></span><button id="searchPrev" title="上一条">↑</button><button id="searchNext" title="下一条">↓</button><button id="searchClose" title="关闭">×</button>';
