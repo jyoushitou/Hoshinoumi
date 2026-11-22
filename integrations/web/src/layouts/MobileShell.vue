@@ -45,7 +45,6 @@ onBeforeUnmount(() => session.stopSync())
     <header class="mobile-header">
       <span class="logo">✦</span>
       <span class="brand">HOSHINOUMI<small>{{ title }}</small></span>
-      <span class="credit">BY JYOUSUITOU</span>
       <span class="conn" :class="{ off: !session.connected }">{{ session.connected ? '在线' : '离线' }}</span>
     </header>
     <main class="mobile-main">
@@ -61,8 +60,7 @@ onBeforeUnmount(() => session.stopSync())
 .logo{width:28px;height:28px;border-radius:9px;background:#eef4ff;color:#2563eb;display:grid;place-items:center;font-size:13px}
 .brand{font-size:11px;font-weight:800;letter-spacing:.12em;line-height:1.1}
 .brand small{display:block;font-size:7px;letter-spacing:.22em;color:#8a9bb0;font-weight:600;margin-top:2px}
-.credit{margin-left:auto;font:6px ui-monospace,monospace;letter-spacing:.1em;color:#a8b5c7;white-space:nowrap}
-.conn{margin-left:0;font-size:8px;color:#1f9d6b;border:1px solid #cdeee0;background:#eefbf5;border-radius:10px;padding:3px 7px}
+.conn{margin-left:auto;font-size:8px;color:#1f9d6b;border:1px solid #cdeee0;background:#eefbf5;border-radius:10px;padding:3px 7px}
 .conn.off{color:#8a9bb0;border-color:#e1e8f1;background:#f8fafc}
 .mobile-main{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
 </style>

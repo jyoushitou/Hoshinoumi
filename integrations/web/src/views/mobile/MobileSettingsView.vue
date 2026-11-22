@@ -44,6 +44,7 @@ function logout() { auth.logout() }
     </div>
 
     <button class="logout" type="button" @click="logout">退出登录</button>
+    <div class="about-card"><b>关于 Hoshinoumi</b><span>v35.7 · Mobile Web</span><em>POWERED BY JYOUSUITOU</em></div>
   </section>
 </template>
 
@@ -59,5 +60,6 @@ function logout() { auth.logout() }
 .quick-item.on{border-color:#93c5fd;background:#eef4ff;color:#2563eb;font-weight:700}
 .reset{width:100%;margin-top:8px;height:30px;border:1px solid #dbe8ff;background:#fff;color:#2563eb;border-radius:8px;font:10px inherit;cursor:pointer}
 .row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #f0f5fd;font-size:10px;color:#3d5470}.row:last-child{border-bottom:0}.row small{font-size:9px;color:#9aabc0}
+.about-card{margin-top:12px;padding:13px;border:1px solid #e3ebf7;border-radius:13px;background:#fff;text-align:center}.about-card b{display:block;font-size:10px;color:#314a65}.about-card span{display:block;font-size:8px;color:#9aabc0;margin-top:3px}.about-card em{display:block;font:7px ui-monospace,monospace;letter-spacing:.12em;color:#a8b5c7;font-style:normal;margin-top:7px}
 .logout{width:100%;height:36px;border:1px solid #fecaca;background:#fff5f5;color:#b91c1c;border-radius:9px;font:10px inherit;cursor:pointer}
 </style>

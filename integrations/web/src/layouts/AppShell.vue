@@ -28,12 +28,10 @@ onBeforeUnmount(() => {
       <RouterView />
     </main>
     <ContextPanel />
-    <div class="powered">POWERED BY JYOUSUITOU</div>
   </div>
 </template>
 <style scoped>
 .shell{display:grid;grid-template-columns:64px 292px minmax(0,1fr) 304px;height:100vh;height:100dvh;overflow:hidden;min-height:0}
-.powered{position:fixed;right:12px;bottom:8px;z-index:60;font:7px ui-monospace,monospace;letter-spacing:.12em;color:#a8b5c7;pointer-events:none}
 .main{min-width:0;min-height:0;height:100%;display:flex;flex-direction:column;background:#fff;overflow:hidden}
 @media(max-width:1180px){.shell{grid-template-columns:64px 270px minmax(0,1fr)}:deep(.context){display:none}}
 @media(max-width:820px){.shell{grid-template-columns:54px minmax(0,1fr)}:deep(.side){display:none}}
