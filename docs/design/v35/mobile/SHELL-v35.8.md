@@ -4,7 +4,8 @@
 
 ## 设计稿
 
-- [hoshinoumi-mobile-shell-v35.8.html](hoshinoumi-mobile-shell-v35.8.html)
+- [交互演示 HTML](hoshinoumi-mobile-shell-v35.8-demo.html)
+- [静态设计稿 HTML](hoshinoumi-mobile-shell-v35.8.html)
 - [hoshinoumi-mobile-shell-v35.8.png](hoshinoumi-mobile-shell-v35.8.png)
 
 ## 1. 架构

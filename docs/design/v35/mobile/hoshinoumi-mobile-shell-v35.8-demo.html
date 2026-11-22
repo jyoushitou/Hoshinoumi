@@ -1,0 +1,216 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Hoshinoumi Mobile Shell · v35.8 交互演示</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 15% 0%,rgba(56,189,248,.16),transparent 60%),radial-gradient(800px 600px at 90% 20%,rgba(139,92,246,.12),transparent 60%),linear-gradient(180deg,#edf4ff,#e8f0fd);color:#17263b;font:14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif}
+.demo{max-width:1050px;margin:0 auto;padding:30px 24px 44px;display:grid;grid-template-columns:390px 1fr;gap:50px;align-items:center;min-height:100vh}
+.stage{display:flex;flex-direction:column;align-items:center}
+.title{font-size:11px;letter-spacing:.18em;color:#5e7ca6;font-weight:800;margin-bottom:9px}.title span{color:#94a8c2;font-weight:500;letter-spacing:.02em}
+.phone{width:390px;height:844px;border-radius:40px;background:#0b1628;border:8px solid #0b1628;box-shadow:0 24px 60px rgba(20,45,80,.22);overflow:hidden;position:relative}
+.screen{height:100%;border-radius:32px;overflow:hidden;background:#f7faff;position:relative}
+.caption{font-size:8px;color:#8a9bb0;margin-top:9px;letter-spacing:.04em}.caption .credit{font:7px ui-monospace,monospace;letter-spacing:.12em;color:#a8b5c7;margin-left:5px}
+.side h1{font-size:28px;line-height:1.25;letter-spacing:-.02em;margin:0 0 9px}.side .kicker{font-size:9px;letter-spacing:.2em;color:#2563eb;font-weight:800;margin-bottom:9px}.side p{font-size:11px;color:#6b7c95;line-height:1.75;margin:0 0 14px;max-width:430px}
+.panel{border:1px solid #d7e5ff;background:rgba(255,255,255,.78);border-radius:14px;padding:12px;max-width:440px;box-shadow:0 10px 26px rgba(37,99,235,.05)}
+.panel h3{font-size:9px;letter-spacing:.12em;color:#8a9bb0;margin:0 0 8px;text-transform:uppercase}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:7px}.controls button{height:34px;border:1px solid #dbe8ff;border-radius:9px;background:#fff;color:#405873;font:9.5px inherit;text-align:left;padding:0 10px;cursor:pointer;transition:background .15s,transform .15s}.controls button:hover{background:#eef4ff;color:#2563eb}.controls button:active{transform:scale(.98)}.controls button.primary{background:#2563eb;border-color:#2563eb;color:#fff}.controls button.primary:hover{background:#1d4ed8}
+.log{margin-top:10px;border-top:1px solid #e7effa;padding-top:8px;font:8px ui-monospace,monospace;color:#8a9bb0;min-height:16px;line-height:1.6}
+.flow{display:flex;gap:5px;flex-wrap:wrap;margin-top:9px}.flow span{font-size:7.5px;color:#71859d;border:1px solid #e3ebf7;background:#fff;border-radius:10px;padding:3px 7px}
+/* scenes */
+.scene{position:absolute;inset:0;display:none;flex-direction:column;background:#f7faff}.scene.on{display:flex;animation:scene-in .28s cubic-bezier(.2,.8,.2,1) both}
+@keyframes scene-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.statusbar{height:28px;flex:none;display:flex;align-items:flex-end;justify-content:space-between;padding:0 16px 2px;font-size:8px;font-weight:750;color:#4c6582;position:relative;z-index:5}.statusbar.dark{color:#eaf4ff}.statusbar .right{display:flex;align-items:center;gap:5px}.sig{display:flex;align-items:flex-end;gap:1px}.sig i{display:block;width:2px;background:currentColor;border-radius:1px}.sig i:nth-child(1){height:3px}.sig i:nth-child(2){height:5px}.sig i:nth-child(3){height:7px}.sig i:nth-child(4){height:9px}.battery{width:16px;height:8px;border:1px solid currentColor;border-radius:2px;position:relative;opacity:.85}.battery:after{content:"";position:absolute;right:-3px;top:2px;width:2px;height:4px;background:currentColor;border-radius:0 1px 1px 0}
+/* splash */
+.splash{background:radial-gradient(500px 380px at 70% 15%,#1d4ed8 0%,transparent 65%),linear-gradient(160deg,#0b1d3a 0%,#081326 55%,#07101f 100%);color:#fff;overflow:hidden}.splash:before{content:"";position:absolute;width:280px;height:280px;border-radius:50%;right:-95px;top:-110px;border:1px solid rgba(147,197,253,.18);box-shadow:0 0 0 40px rgba(147,197,253,.04),0 0 0 80px rgba(147,197,253,.025)}.stars{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.65) 1px,transparent 1px);background-size:43px 43px;opacity:.18;mask-image:linear-gradient(180deg,#000,transparent 78%)}
+.splash-main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;z-index:2}.logo-star{width:66px;height:66px;border-radius:21px;display:grid;place-items:center;background:linear-gradient(145deg,rgba(96,165,250,.25),rgba(37,99,235,.12));border:1px solid rgba(147,197,253,.32);color:#bfdbfe;font-size:30px;margin-bottom:17px;box-shadow:0 0 40px rgba(59,130,246,.28);animation:float 2.8s ease-in-out infinite}@keyframes float{50%{transform:translateY(-4px)}}
+.splash h2{font-size:25px;letter-spacing:.18em;margin:0 0 5px;font-weight:850}.splash .tag{font-size:7px;letter-spacing:.3em;color:#93c5fd;margin-bottom:26px}.splash .sub{font-size:9px;color:#c7dcff;letter-spacing:.06em}.loading-line{width:150px;height:2px;background:rgba(255,255,255,.12);border-radius:2px;margin-top:25px;overflow:hidden}.loading-line i{display:block;width:48%;height:100%;background:linear-gradient(90deg,#60a5fa,#bfdbfe);border-radius:2px;animation:load 1.25s ease-in-out infinite}@keyframes load{0%{transform:translateX(-100%)}100%{transform:translateX(260%)}}
+.splash-foot{position:relative;z-index:2;text-align:center;padding:0 0 20px;font-size:7px;letter-spacing:.16em;color:#6f8cae}
+/* app shell head */
+.app-head{display:flex;align-items:center;gap:9px;padding:12px 16px 0;flex:none}.app-mark{width:28px;height:28px;border-radius:9px;background:linear-gradient(145deg,#60a5fa,#2563eb);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:850}.app-name{font-size:10px;font-weight:850;letter-spacing:.12em;line-height:1.1}.app-name small{display:block;font-size:6px;letter-spacing:.22em;color:#9aabc0;margin-top:2px}.pill{margin-left:auto;font-size:7px;border:1px solid #e1e8f1;background:#f8fafc;color:#8a9bb0;border-radius:10px;padding:3px 7px}.pill.ok{color:#1f9d6b;border-color:#cdeee0;background:#eefbf5}
+/* skeleton */
+.skeleton{padding:15px 16px}.sk{background:linear-gradient(90deg,#eef4ff,#f8fbff,#eef4ff);background-size:200% 100%;animation:shimmer 1.4s ease infinite;border-radius:10px}@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}.sk-head{height:28px;width:58%;margin-bottom:9px}.sk-search{height:36px;margin-bottom:15px}.sk-row{display:flex;gap:10px;align-items:center;margin-bottom:12px}.sk-av{width:37px;height:37px;flex:none}.sk-lines{flex:1}.sk-l1{height:9px;width:44%;margin-bottom:6px}.sk-l2{height:8px;width:76%}.load-note{margin-top:auto;padding:0 16px 18px;font-size:8px;color:#9aabc0;text-align:center}
+/* web mock */
+.web-head{padding:12px 16px 8px;flex:none}.web-head h2{margin:0;font-size:24px;letter-spacing:-.04em}.web-head p{margin:2px 0 8px;color:#8a9bb0;font-size:9px}.web-search{height:36px;border:1px solid #e3ebf7;border-radius:11px;background:#fff;color:#9aabc0;display:flex;align-items:center;padding:0 11px;font-size:10px;margin-bottom:8px}.chips{display:flex;gap:5px;margin-bottom:10px}.chip{height:26px;padding:0 11px;border:1px solid #e3ebf7;background:#fff;border-radius:8px;color:#71859d;font-size:8px;display:flex;align-items:center}.chip.on{background:#eef4ff;border-color:#bcd4ff;color:#2563eb;font-weight:700}
+.conv-list{padding:0 10px;overflow:auto;flex:1}.sec{display:flex;justify-content:space-between;padding:4px 7px 7px;font-size:8px;color:#8a9bb0}.conv{display:flex;gap:10px;align-items:center;padding:9px 7px;border-bottom:1px solid #eef3fb}.av{width:38px;height:38px;border-radius:13px;background:#eef4ff;color:#2563eb;display:grid;place-items:center;font-size:13px;font-weight:800;flex:none}.av.bot{background:linear-gradient(145deg,#60a5fa,#2563eb);color:#fff}.conv .copy{flex:1;min-width:0}.conv b{display:block;font-size:11px;color:#253b56}.conv small{display:block;font-size:9px;color:#8b9bb0;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.conv .end{display:flex;flex-direction:column;align-items:flex-end;gap:4px}.conv .tm{font-size:7px;color:#a2b2c6}.badge{min-width:16px;height:16px;border-radius:8px;background:#2563eb;color:#fff;font-size:7px;display:grid;place-items:center;padding:0 4px}
+.web-tools{flex:none;display:flex;gap:6px;padding:8px 12px;border-top:1px solid #e7effa;background:#fff}.web-tools button{flex:1;height:34px;border:1px solid #e3ebf7;border-radius:9px;background:#fbfdff;color:#607795;font-size:9px}.web-tools button:active{background:#eef4ff}
+.tabbar{flex:none;height:58px;border-top:1px solid #e5edf9;background:#fff;display:grid;grid-template-columns:repeat(4,1fr);padding:0 8px 5px}.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:#8a9bb0;font-size:8px;border-radius:10px}.tab.on{color:#2563eb;background:#eef4ff;font-weight:700}.tab .ic{font-size:15px;line-height:1}
+/* error scenes */
+.error-page{flex:1;padding:16px;display:flex;flex-direction:column;min-height:0}.error-center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding-top:14px}.orb{width:72px;height:72px;border-radius:24px;display:grid;place-items:center;background:linear-gradient(145deg,#fef3c7,#fffbeb);color:#b45309;font-size:30px;margin-bottom:16px;box-shadow:0 16px 34px rgba(180,83,9,.12)}.orb.shield{background:linear-gradient(145deg,#e0f2fe,#f0f9ff);color:#0284c7;box-shadow:0 16px 34px rgba(2,132,199,.1)}.orb.dark{background:linear-gradient(145deg,#1e3a8a,#0f172a);color:#93c5fd;box-shadow:0 16px 34px rgba(15,23,42,.26)}
+.error-center h3{margin:0 0 6px;font-size:18px;letter-spacing:-.02em}.error-center p{margin:0;color:#8a9bb0;font-size:10px;line-height:1.75;max-width:270px}
+.detail{border:1px solid #e3ebf7;background:#fff;border-radius:13px;padding:10px;margin-top:12px}.detail .row{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:9px;color:#6b7c95;padding:6px 0;border-bottom:1px solid #f1f5fb}.detail .row:last-child{border-bottom:0}.detail .row b{font-size:9px;color:#314a65}.detail .row b.err{color:#b91c1c}
+.actions{display:flex;gap:7px;margin-top:10px}.new-btn{height:38px;border:1px solid #dbe8ff;border-radius:10px;background:#fff;color:#2563eb;font:10px inherit;display:flex;align-items:center;justify-content:center;gap:5px}.new-btn.primary{background:#2563eb;border-color:#2563eb;color:#fff;font-weight:700}.new-btn.soft{background:#eef4ff;border-color:#dbe8ff}.new-btn:active{transform:scale(.99)}
+.code{border:1px dashed #d7e6ff;background:#f4f9ff;border-radius:9px;padding:9px;font:8px ui-monospace,monospace;color:#7890aa;line-height:1.7;margin-top:1px}
+.note{font-size:8px;color:#9aabc0;text-align:center;line-height:1.6;padding:9px 0 0}
+/* modal */
+.modal-layer{position:absolute;inset:0;z-index:20;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(9,22,40,.36);backdrop-filter:blur(2px)}.modal-layer.on{display:flex;animation:fade-in .18s ease both}@keyframes fade-in{from{opacity:0}to{opacity:1}}.modal{width:100%;background:#fff;border-radius:19px;padding:16px;box-shadow:0 24px 60px rgba(15,38,78,.28);animation:modal-in .22s cubic-bezier(.2,.8,.2,1) both;position:relative}@keyframes modal-in{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+.modal h3{margin:0 34px 4px 0;font-size:15px}.modal .desc{margin:0 0 11px;color:#8a9bb0;font-size:9px;line-height:1.7}.modal .x{position:absolute;right:12px;top:12px;width:24px;height:24px;border:0;border-radius:50%;background:#f4f8ff;color:#71859d;font-size:13px}.modal-actions{display:flex;gap:7px;margin-top:11px}.modal-actions .new-btn{flex:1}
+.perm{border:1px solid #eef3fb;border-radius:10px;padding:9px;display:flex;gap:8px;align-items:flex-start;background:#fbfdff}.perm .pi{width:28px;height:28px;border-radius:8px;background:#eef4ff;color:#2563eb;display:grid;place-items:center;font-size:12px;flex:none}.perm b{display:block;font-size:9.5px;color:#314a65}.perm small{display:block;font-size:8px;color:#9aabc0;line-height:1.65;margin-top:2px}
+.os-sheet{width:100%;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 24px 60px rgba(15,38,78,.28);animation:modal-in .22s cubic-bezier(.2,.8,.2,1) both}.os-head{font-size:14px;font-weight:700;text-align:center;padding:17px 14px 4px}.os-body{font-size:9px;color:#6b7c95;text-align:center;line-height:1.7;padding:0 18px 13px}.os-actions{border-top:1px solid #eef3fb;display:grid;grid-template-columns:1fr 1fr}.os-actions button{border:0;background:#fff;color:#2563eb;padding:12px 7px;font:10px inherit}.os-actions button+button{border-left:1px solid #eef3fb}.os-actions button.strong{font-weight:700}.os-actions.one{grid-template-columns:1fr}.os-actions.one button{color:#8a9bb0}
+.update-notes{border:1px solid #eef3fb;background:#f8fbff;border-radius:10px;padding:9px;margin-bottom:9px}.update-notes p{margin:0 0 4px;font-size:8.5px;color:#6b7c95;line-height:1.6}.update-notes p:last-child{margin:0}.progress{height:6px;background:#e8effa;border-radius:5px;overflow:hidden;margin-top:8px}.progress i{display:block;width:0;height:100%;background:linear-gradient(90deg,#60a5fa,#2563eb);border-radius:5px;transition:width .2s linear}.prog-label{display:flex;justify-content:space-between;font-size:8px;color:#9aabc0;margin-top:4px}
+.toast{position:absolute;left:50%;bottom:84px;transform:translateX(-50%) translateY(6px);background:rgba(15,30,52,.92);color:#fff;border-radius:9px;padding:8px 12px;font-size:9px;opacity:0;transition:.2s;pointer-events:none;z-index:30;white-space:nowrap}.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+/* responsive */
+@media(max-width:860px){.demo{grid-template-columns:1fr;gap:20px;padding:14px 10px 28px;justify-items:center}.phone{width:100%;max-width:390px;height:min(844px,calc(100dvh - 36px));min-height:620px;border-radius:0;border:0}.screen{border-radius:0}.side{text-align:center}.side p{margin-left:auto;margin-right:auto}.controls{text-align:left}.caption{margin-bottom:8px}.side h1{font-size:24px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="demo">
+  <div class="stage">
+    <div class="title">HOSHINOUMI MOBILE SHELL <span>· v35.8 交互演示</span></div>
+    <div class="phone"><div class="screen">
+      <!-- SPLASH -->
+      <section class="scene splash on" id="scene-splash">
+        <div class="stars"></div>
+        <div class="statusbar dark"><span>9:41</span><div class="right"><span class="sig"><i></i><i></i><i></i><i></i></span><span>5G</span><div class="battery"></div></div></div>
+        <div class="splash-main"><div class="logo-star">✦</div><h2>HOSHINOUMI</h2><div class="tag">REC · MOBILE</div><div class="sub">星之海，和奈绪一起</div><div class="loading-line"><i></i></div></div>
+        <div class="splash-foot">POWERED BY JYOUSHITOU · v35.8</div>
+      </section>
+
+      <!-- LOADING -->
+      <section class="scene" id="scene-loading">
+        <div class="statusbar"><span>9:41</span><div class="right"><span class="sig"><i></i><i></i><i></i><i></i></span><span>5G</span><div class="battery"></div></div></div>
+        <div class="app-head"><div class="app-mark">奈</div><div class="app-name">HOSHINOUMI<small>CONNECTING</small></div><span class="pill">加载中</span></div>
+        <div class="skeleton"><div class="sk sk-head"></div><div class="sk sk-search"></div><div class="sk-row"><div class="sk sk-av"></div><div class="sk-lines"><div class="sk sk-l1"></div><div class="sk sk-l2"></div></div></div><div class="sk-row"><div class="sk sk-av"></div><div class="sk-lines"><div class="sk sk-l1" style="width:36%"></div><div class="sk sk-l2" style="width:64%"></div></div></div><div class="sk-row"><div class="sk sk-av"></div><div class="sk-lines"><div class="sk sk-l1" style="width:52%"></div><div class="sk sk-l2" style="width:48%"></div></div></div></div>
+        <div class="load-note">正在打开 Hoshinoumi…</div>
+      </section>
+
+      <!-- WEB -->
+      <section class="scene" id="scene-web">
+        <div class="statusbar"><span>9:41</span><div class="right"><span class="sig"><i></i><i></i><i></i><i></i></span><span>5G</span><div class="battery"></div></div></div>
+        <div class="app-head"><div class="app-mark">奈</div><div class="app-name">HOSHINOUMI<small>REC · ONLINE</small></div><span class="pill ok" id="net-pill">在线</span></div>
+        <div class="web-head"><h2>聊天</h2><p>QQ 会话 · 2 个</p><div class="web-search">⌕ 搜索会话 / 记忆 / 命令</div><div class="chips"><span class="chip on">全部</span><span class="chip">私聊</span><span class="chip">群聊</span></div></div>
+        <div class="conv-list"><div class="sec"><span>最近</span><span>已同步</span></div>
+          <div class="conv"><div class="av bot">奈</div><div class="copy"><b>奈绪</b><small>你回来啦。今天外面有点冷，先喝点热的吧。</small></div><div class="end"><span class="tm">刚刚</span><span class="badge">2</span></div></div>
+          <div class="conv"><div class="av">学</div><div class="copy"><b>星之海学生会</b><small>友利：下午的会议改到三点。</small></div><div class="end"><span class="tm">12:40</span><span class="badge">5</span></div></div>
+        </div>
+        <div class="web-tools"><button onclick="openModal('mic')">🎙 语音</button><button onclick="openModal('photo')">▧ 图片</button><button onclick="openModal('update')">↻ 更新</button></div>
+        <div class="tabbar"><div class="tab on"><span class="ic">◉</span>聊天</div><div class="tab"><span class="ic">◈</span>记忆</div><div class="tab"><span class="ic">♡</span>关系</div><div class="tab"><span class="ic">⚙</span>设置</div></div>
+      </section>
+
+      <!-- OFFLINE -->
+      <section class="scene" id="scene-offline">
+        <div class="statusbar"><span>9:41</span><div class="right"><span class="sig"><i></i><i></i><i></i><i></i></span><span>5G</span><div class="battery"></div></div></div>
+        <div class="app-head"><div class="app-mark">奈</div><div class="app-name">HOSHINOUMI<small>OFFLINE</small></div><span class="pill">离线</span></div>
+        <div class="error-page"><div class="error-center"><div class="orb">☁</div><h3>连不上 Hoshinoumi</h3><p>检查网络或后端地址。<br>已经有本地缓存的页面不会丢失。</p></div>
+          <div class="detail"><div class="row"><span>目标地址</span><b>hoshinoumi.app</b></div><div class="row"><span>WebView</span><b>Chrome 130</b></div><div class="row"><span>错误</span><b class="err">ERR_CONNECTION_TIMED_OUT</b></div></div>
+          <div class="actions"><button class="new-btn" onclick="toast('已打开系统网络设置（演示）')">打开设置</button><button class="new-btn primary" onclick="retry()">重试</button></div><div class="note">断网不伪造内容；重试只重新加载 WebView。</div>
+        </div>
+      </section>
+
+      <!-- HOST BLOCK -->
+      <section class="scene" id="scene-host">
+        <div class="statusbar"><span>9:41</span><div class="right"><span class="sig"><i></i><i></i><i></i><i></i></span><span>5G</span><div class="battery"></div></div></div>
+        <div class="app-head"><div class="app-mark">奈</div><div class="app-name">HOSHINOUMI<small>SECURITY</small></div><span class="pill">已阻止</span></div>
+        <div class="error-page"><div class="error-center"><div class="orb shield">⛨</div><h3>当前地址不受信任</h3><p>套壳只允许加载配置过的 Hoshinoumi 地址，防止被导向其他站点。</p></div>
+          <div class="code">allowed host:<br>hoshinoumi.app<br>localhost:27006</div>
+          <button class="new-btn" style="margin-top:12px" onclick="boot()">返回安全页</button><div class="note">不显示“继续访问”；避免钓鱼/混合内容。</div>
+        </div>
+      </section>
+
+      <!-- WEBVIEW OLD -->
+      <section class="scene" id="scene-webview">
+        <div class="statusbar"><span>9:41</span><div class="right"><span class="sig"><i></i><i></i><i></i><i></i></span><span>5G</span><div class="battery"></div></div></div>
+        <div class="app-head"><div class="app-mark">奈</div><div class="app-name">HOSHINOUMI<small>SELF CHECK</small></div><span class="pill">无法启动</span></div>
+        <div class="error-page"><div class="error-center"><div class="orb dark">!</div><h3>系统 WebView 版本过低</h3><p>当前 WebView 无法运行 Hoshinoumi 手机页面。请更新 Android System WebView，或安装原生 Android 客户端。</p></div>
+          <div class="detail"><div class="row"><span>WebView</span><b class="err">108</b></div><div class="row"><span>需要</span><b>120+</b></div><div class="row"><span>设备</span><b>Android 12</b></div></div>
+          <button class="new-btn primary" style="margin-top:10px" onclick="toast('跳转系统 WebView 更新页（演示）')">去更新 WebView</button><div class="note">自检失败不进入白屏；不伪造页面。</div>
+        </div>
+      </section>
+
+      <!-- MODALS -->
+      <div class="modal-layer" id="modal-mic" onclick="if(event.target===this)closeModal()"><div class="modal"><button class="x" onclick="closeModal()">×</button><h3>允许 Hoshinoumi 使用麦克风？</h3><div class="desc">用于给奈绪发送语音消息。录音只在你按下录音按钮时进行。</div><div class="perm"><span class="pi">🎙</span><div><b>语音消息</b><small>按住录音，松开发送；可随时在系统设置关闭。</small></div></div><div class="modal-actions"><button class="new-btn" onclick="permission('mic','deny')">不允许</button><button class="new-btn primary" onclick="permission('mic','allow')">允许</button></div></div></div>
+      <div class="modal-layer" id="modal-photo" onclick="if(event.target===this)closeModal()"><div class="os-sheet"><div class="os-head">Hoshinoumi 想访问你的照片</div><div class="os-body">用于从相册选择图片发送给奈绪。<br>不会自动读取整个相册。</div><div class="os-actions"><button onclick="permission('photo','select')">仅选择照片</button><button class="strong" onclick="permission('photo','allow')">允许</button></div><div class="os-actions one"><button onclick="permission('photo','deny')">不允许</button></div></div></div>
+      <div class="modal-layer" id="modal-update" onclick="if(event.target===this)closeModal()"><div class="modal"><button class="x" onclick="closeModal()">×</button><h3>发现新版本 v35.8.1</h3><div class="desc">手机套壳稳定性更新，建议安装。</div><div class="update-notes"><p>· 修复键盘弹起时输入框被遮挡</p><p>· 优化 WebView 返回键</p><p>· 提醒弹窗确认同步后端</p></div><div class="progress"><i id="update-bar"></i></div><div class="prog-label"><span id="update-state">正在下载</span><span id="update-percent">0%</span></div><div class="modal-actions"><button class="new-btn" onclick="closeModal();toast('已稍后提醒')">稍后</button><button class="new-btn primary" id="update-action" onclick="installUpdate()">下载并安装</button></div></div></div>
+
+      <div class="toast" id="toast"></div>
+    </div></div>
+    <div class="caption">390 × 844 · 交互演示 · 非真实数据<span class="credit">· POWERED BY JYOUSHITOU</span></div>
+  </div>
+
+  <aside class="side">
+    <div class="kicker">MOBILE SHELL · DESIGN DEMO</div>
+    <h1>手机套壳<br>交互设计稿</h1>
+    <p>这是 Capacitor / WebView 壳的交互演示。业务页面仍由同一套手机 Vue 提供；这里只模拟启动、加载、错误、权限和更新。</p>
+    <div class="panel"><h3>壳事件模拟</h3><div class="controls">
+      <button class="primary" onclick="boot()">▶ 重新启动</button>
+      <button onclick="go('offline')">☁ 模拟断网</button>
+      <button onclick="go('host')">⛨ 安全拦截</button>
+      <button onclick="go('webview')">! WebView 过旧</button>
+      <button onclick="go('web');toast('已恢复在线')">✓ 恢复在线</button>
+      <button onclick="openModal('update')">↻ 检查更新</button>
+    </div><div class="log" id="log">准备启动…</div></div>
+    <div class="flow"><span>启动动画</span><span>骨架屏</span><span>进入聊天</span><span>权限弹窗</span><span>更新进度</span></div>
+  </aside>
+</div>
+
+<script>
+const scenes = ['splash','loading','web','offline','host','webview']
+const logEl = document.getElementById('log')
+let bootTimers = []
+let updateTimer = null
+
+function log(text){ if(logEl) logEl.textContent = text }
+function clearBoot(){ bootTimers.forEach(clearTimeout); bootTimers = [] }
+function show(id){
+  scenes.forEach(name => document.getElementById('scene-'+name)?.classList.toggle('on', name === id))
+}
+function go(id){ closeModal(); show(id); log('壳事件：' + id) }
+function boot(){
+  closeModal(); clearBoot(); show('splash'); log('启动中：Splash → Loading → WebView')
+  bootTimers.push(setTimeout(()=>{ show('loading'); log('WebView 加载中…') }, 1500))
+  bootTimers.push(setTimeout(()=>{ show('web'); log('已进入手机 Web') }, 2900))
+}
+function retry(){ clearBoot(); show('loading'); log('重试中…'); bootTimers.push(setTimeout(()=>{ show('web'); log('恢复在线') }, 1100)) }
+function openModal(name){
+  closeModal()
+  document.getElementById('modal-'+name)?.classList.add('on')
+  if(name === 'update') startUpdateProgress()
+  log('弹窗：' + name)
+}
+function closeModal(){
+  document.querySelectorAll('.modal-layer').forEach(el=>el.classList.remove('on'))
+  if(updateTimer){ clearInterval(updateTimer); updateTimer = null }
+}
+function permission(kind, action){
+  closeModal()
+  const messages = {
+    'mic:allow':'麦克风已允许（演示）', 'mic:deny':'已拒绝麦克风权限',
+    'photo:allow':'照片访问已允许（演示）', 'photo:select':'打开系统照片选择器（演示）', 'photo:deny':'已拒绝照片访问'
+  }
+  toast(messages[kind+':'+action] || '已处理')
+  log('权限：' + kind + ' / ' + action)
+}
+function startUpdateProgress(){
+  const bar = document.getElementById('update-bar'), label = document.getElementById('update-percent')
+  const state = document.getElementById('update-state'), action = document.getElementById('update-action')
+  if(!bar) return
+  let p = 0
+  bar.style.width = '0%'; label.textContent = '0%'; state.textContent = '正在下载'; action.textContent = '下载中…'; action.disabled = true
+  updateTimer = setInterval(()=>{
+    p = Math.min(100, p + Math.ceil(Math.random()*9))
+    bar.style.width = p + '%'; label.textContent = p + '%'
+    if(p >= 100){
+      clearInterval(updateTimer); updateTimer = null
+      state.textContent = '下载完成'; action.textContent = '安装更新'; action.disabled = false
+      log('更新下载完成')
+    }
+  }, 220)
+}
+function installUpdate(){
+  const action = document.getElementById('update-action')
+  if(action?.disabled) return
+  closeModal(); toast('安装包已准备好（演示）'); log('触发系统安装器')
+}
+let toastTimer = null
+function toast(text){
+  const el = document.getElementById('toast'); if(!el) return
+  el.textContent = text; el.classList.add('on'); clearTimeout(toastTimer)
+  toastTimer = setTimeout(()=>el.classList.remove('on'), 1700)
+}
+window.addEventListener('load', boot)
+</script>
+</body>
+</html>
