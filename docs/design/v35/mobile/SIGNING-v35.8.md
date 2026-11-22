@@ -18,11 +18,17 @@ INSTALL_FAILED_UPDATE_INCOMPATIBLE
 
 ## 密钥
 
-release keystore 只生成一次，之后所有版本都用它：
+仓库内固定位置：
+
+```text
+key/Android/hoshinoumi-release.jks
+```
+
+该目录已加入 `.gitignore`，不会提交。release keystore 只生成一次，之后所有版本都用它：
 
 ```powershell
 keytool -genkeypair -v `
-  -keystore hoshinoumi-release.jks `
+  -keystore key/Android/hoshinoumi-release.jks `
   -alias hoshinoumi `
   -keyalg RSA -keysize 4096 -validity 10000
 ```
@@ -40,7 +46,7 @@ keystore.properties gitignore
 `keystore.properties`：
 
 ```properties
-storeFile=../keystore/hoshinoumi-release.jks
+storeFile=D:\\Desktop\\Desktop\\develop\\NapCat+Pyhon\\key\\Android\\hoshinoumi-release.jks
 storePassword=...
 keyAlias=hoshinoumi
 keyPassword=...

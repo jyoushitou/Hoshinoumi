@@ -70,3 +70,6 @@ clients/electron/user-data/
 *.jks
 *.keystore
 keystore.properties
+
+# 本地签名密钥目录
+/key/
