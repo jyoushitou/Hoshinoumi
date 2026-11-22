@@ -193,6 +193,10 @@ body.embed .phone{width:100vw;height:100dvh;border:0;border-radius:0;box-shadow:
 body.embed .screen{border-radius:0;height:100%;background:#f7faff}
 body.embed .island,body.embed .statusbar,body.embed .browser-top,body.embed .browser-progress{display:none!important}
 body.embed #view{height:100dvh!important}
+
+.bottom-nav{position:relative;touch-action:pan-x}
+.bottom-nav:before{content:"";position:absolute;top:5px;left:50%;transform:translateX(-50%);width:30px;height:4px;border-radius:3px;background:#d8e5f5;z-index:2}
+.bottom-nav.expanded:before{background:#c7dcff}
 </style>
 <link rel="stylesheet" href="mobile-native.css">
 </head>
@@ -587,15 +591,44 @@ function nav(active){
   const quick = allEntries.filter(e => quickKeys.includes(e[0]))
   const tab = ([key,ic,label]) => `<div class="tab ${active===key?'on':''}" onclick="go('${key}')"><span class="ic">${ic}</span>${label}${key==='chats'&&demoUnread>0?'<span class="tab-unread">'+(demoUnread>99?'99+':demoUnread)+'</span>':''}</div>`
   const all = allEntries.map(([key,ic,label]) => `<button class="${active===key?'on':''}" title="${label}" aria-label="${label}" onclick="go('${key}')"><b>${ic}</b>${key==='chats'&&demoUnread>0?'<span class="all-unread">'+(demoUnread>99?'99+':demoUnread)+'</span>':''}</button>`).join('')
-  return `<nav class="bottom-nav ${navExpanded?'expanded':''}"><button class="nav-grip" title="展开 / 收起全部入口" aria-label="展开 / 收起全部入口" onclick="toggleNav(event)"><span class="grip-ic">⌃</span></button><div class="nav-row" style="grid-template-columns:repeat(${quick.length},1fr)">${quick.map(tab).join('')}</div><div class="nav-all"><div class="nav-all-grid">${all}</div></div></nav>`
+  return `<nav class="bottom-nav ${navExpanded?'expanded':''}"><div class="nav-row" style="grid-template-columns:repeat(${quick.length},1fr)">${quick.map(tab).join('')}</div><div class="nav-all"><div class="nav-all-grid">${all}</div></div></nav>`
 }
-function toggleNav(e){
-  e.stopPropagation()
-  const nav = e.currentTarget.closest('.bottom-nav')
-  navExpanded = !navExpanded
-  nav.classList.toggle('expanded', navExpanded)
+function setNavExpanded(value){
+  navExpanded = value
   document.body.classList.toggle('nav-expanded', navExpanded)
+  const nav = document.querySelector('.bottom-nav')
+  if (nav) nav.classList.toggle('expanded', navExpanded)
 }
+function toggleNav(){ setNavExpanded(!navExpanded) }
+let navTouchY = null
+let navPointerY = null
+document.addEventListener('touchstart', e => {
+  const nav = e.target.closest && e.target.closest('.bottom-nav')
+  navTouchY = nav ? e.touches[0].clientY : null
+}, { passive: true })
+document.addEventListener('touchend', e => {
+  if (navTouchY === null) return
+  const nav = document.querySelector('.bottom-nav')
+  if (!nav) { navTouchY = null; return }
+  const dy = e.changedTouches[0].clientY - navTouchY
+  navTouchY = null
+  if (dy < -28 && !navExpanded) setNavExpanded(true)
+  else if (dy > 28 && navExpanded) setNavExpanded(false)
+}, { passive: true })
+document.addEventListener('pointerdown', e => {
+  if (e.pointerType !== 'mouse') return
+  const nav = e.target.closest && e.target.closest('.bottom-nav')
+  navPointerY = nav ? e.clientY : null
+})
+document.addEventListener('pointerup', e => {
+  if (navPointerY === null) return
+  const nav = document.querySelector('.bottom-nav')
+  const dy = e.clientY - navPointerY
+  navPointerY = null
+  if (!nav) return
+  if (dy < -28 && !navExpanded) setNavExpanded(true)
+  else if (dy > 28 && navExpanded) setNavExpanded(false)
+})
 
 
 function go(name){

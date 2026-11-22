@@ -17,27 +17,42 @@ const visibleQuick = computed(() => {
 })
 const expanded = ref(false)
 const activePath = computed(() => route.path)
+let touchStartY: number | null = null
+let pointerStartY: number | null = null
+let lastSwipeAt = 0
 
 watch(() => route.path, () => { expanded.value = false })
 
+function setExpanded(value: boolean) {
+  expanded.value = value
+  lastSwipeAt = Date.now()
+}
+function onTouchStart(event: TouchEvent) { touchStartY = event.touches[0]?.clientY ?? null }
+function onTouchEnd(event: TouchEvent) {
+  if (touchStartY === null) return
+  const dy = (event.changedTouches[0]?.clientY ?? touchStartY) - touchStartY
+  touchStartY = null
+  if (dy < -28 && !expanded.value) setExpanded(true)
+  else if (dy > 28 && expanded.value) setExpanded(false)
+}
+function onPointerDown(event: PointerEvent) { if (event.pointerType === 'mouse') pointerStartY = event.clientY }
+function onPointerUp(event: PointerEvent) {
+  if (pointerStartY === null) return
+  const dy = event.clientY - pointerStartY
+  pointerStartY = null
+  if (dy < -28 && !expanded.value) setExpanded(true)
+  else if (dy > 28 && expanded.value) setExpanded(false)
+}
+
 function go(path: string) {
+  if (Date.now() - lastSwipeAt < 320) return
   expanded.value = false
   if (route.path !== path) void router.push(path)
 }
 </script>
 
 <template>
-  <nav class="mobile-tabbar" :class="{ expanded }">
-    <button
-      class="tab-grip"
-      type="button"
-      :aria-expanded="expanded"
-      aria-label="展开或收起全部入口"
-      @click="expanded = !expanded"
-    >
-      <span class="grip-icon">⌃</span>
-    </button>
-
+  <nav class="mobile-tabbar" :class="{ expanded }" @touchstart="onTouchStart" @touchend="onTouchEnd" @pointerdown="onPointerDown" @pointerup="onPointerUp">
     <div class="quick-row" :style="{ gridTemplateColumns: `repeat(${visibleQuick.length}, 1fr)` }">
       <button
         v-for="entry in visibleQuick"
@@ -75,17 +90,11 @@ function go(path: string) {
 .mobile-tabbar{
   position:relative;flex:none;display:flex;flex-direction:column;align-items:stretch;
   background:#fff;border-top:1px solid #e3ebf7;padding:0 6px max(6px, env(safe-area-inset-bottom));min-height:70px;
-  transition:height .18s ease;height:70px;overflow:visible;z-index:30;
+  transition:height .18s ease;height:70px;overflow:visible;z-index:30;touch-action:pan-x;
 }
 .mobile-tabbar.expanded{height:auto}
-.tab-grip{
-  position:absolute;left:50%;top:-14px;transform:translateX(-50%);
-  width:38px;height:22px;border:1px solid #dbe8ff;border-radius:12px;background:#fff;
-  color:#2563eb;display:grid;place-items:center;cursor:pointer;z-index:2;
-  box-shadow:0 4px 10px rgba(37,99,235,.10);
-}
-.grip-icon{font-size:9px;line-height:1;transition:transform .18s}
-.mobile-tabbar.expanded .grip-icon{transform:rotate(180deg)}
+.mobile-tabbar:before{content:"";position:absolute;top:5px;left:50%;transform:translateX(-50%);width:30px;height:4px;border-radius:3px;background:#d8e5f5;z-index:2;pointer-events:none}
+.mobile-tabbar.expanded:before{background:#c7dcff}
 .quick-row{display:grid;height:54px;align-items:stretch}
 .tab-item{
   border:0;background:transparent;color:#8a9bb0;display:flex;flex-direction:column;
