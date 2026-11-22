@@ -365,6 +365,57 @@
     }
     setupMask.classList.add('on');
   }
+  function openNewWebChat() {
+    let mask = document.querySelector('.new-conv-mask');
+    if (!mask) {
+      mask = document.createElement('div');
+      mask.className = 'login-mask new-conv-mask on';
+      mask.innerHTML = '<div class="login-card"><h2>新建会话</h2><div class="sub">选择私聊联系人或创建自有客户端群聊。</div>' +
+        '<div class="login-actions" style="margin-bottom:10px"><button id="newWebPrivate">发起私聊</button><button id="newWebGroup">创建群聊</button></div>' +
+        '<div id="newWebBody"></div><button class="login-skip" id="newWebCancel">取消</button></div>';
+      document.body.appendChild(mask);
+      const body = mask.querySelector('#newWebBody');
+      mask.querySelector('#newWebCancel').addEventListener('click', () => mask.classList.remove('on'));
+      mask.querySelector('#newWebPrivate').addEventListener('click', () => {
+        body.innerHTML = '<div class="login-field"><label>选择联系人</label></div>' +
+          [['友利','友'],['摄影部','摄']].map(([n,a]) => '<button class="new-contact-web" data-name="'+n+'" data-avatar="'+a+'" style="display:flex;width:100%;align-items:center;gap:8px;border:0;border-bottom:1px solid #eef3fb;background:#fff;padding:8px 2px;cursor:pointer"><span style="width:26px;height:26px;border-radius:8px;background:#eef4ff;display:grid;place-items:center;color:#2563eb;font-size:10px">'+a+'</span><b style="font-size:10px;color:#314a65">'+n+'</b><span style="margin-left:auto;color:#2563eb;font-size:9px">选择</span></button>').join('');
+        body.querySelectorAll('.new-contact-web').forEach(b => b.addEventListener('click', () => createWebConversation(b.dataset.name, b.dataset.avatar, '私聊')));
+      });
+      mask.querySelector('#newWebGroup').addEventListener('click', () => {
+        body.innerHTML = '<div class="login-field"><label>群聊名称</label><input id="newWebGroupName" placeholder="例如：周末计划"></div><div class="login-field"><label>成员</label><input value="奈绪、友利" readonly></div><div class="login-actions"><button id="newWebGroupCreate" class="primary">创建群聊</button></div>';
+        body.querySelector('#newWebGroupCreate').addEventListener('click', () => {
+          const name = (body.querySelector('#newWebGroupName').value || '').trim();
+          if (!name) { body.querySelector('#newWebGroupName').focus(); return; }
+          createWebConversation(name, '群', '群聊');
+        });
+      });
+    }
+    mask.classList.add('on');
+  }
+  function createWebConversation(name, avatar, type) {
+    const id = 'h_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const row = document.createElement('div');
+    row.className = 'conv';
+    row.dataset.convId = id;
+    row.innerHTML = '<div class="avatar">' + esc(avatar) + '</div><div style="min-width:0"><div class="nm">' + esc(name) + '</div><div class="last">' + esc(type) + ' · 刚刚创建</div></div><div class="tm">刚刚</div>';
+    row.addEventListener('click', () => selectNewWebConversation(name, type, avatar));
+    document.querySelector('.convs').prepend(row);
+    document.querySelector('.new-conv-mask')?.classList.remove('on');
+    selectNewWebConversation(name, type, avatar);
+    toast('已创建' + (type === '群聊' ? '群聊' : '会话') + '：' + name);
+  }
+  function selectNewWebConversation(name, type, avatar) {
+    showChat();
+    document.querySelectorAll('.conv').forEach(c => c.classList.remove('on'));
+    const row = [...document.querySelectorAll('.conv')].find(c => c.dataset.convId && c.querySelector('.nm')?.textContent === name);
+    row?.classList.add('on');
+    const nm = top.querySelector('.who .nm'); if (nm) nm.textContent = name;
+    const sub = top.querySelector('.who .sub'); if (sub) sub.innerHTML = type + ' · 自有客户端 · <span class="pill">在线</span>';
+    const whoAvatar = top.querySelector('.who .avatar'); if (whoAvatar) whoAvatar.textContent = avatar;
+    msgs.innerHTML = '<div class="day"><b>今天</b> · 刚刚</div><div class="msg"><div class="avatar">' + esc(avatar) + '</div><div><div class="bubble">' + (type === '群聊' ? '群聊已创建，可以开始讨论了。' : '新会话已创建，开始聊天吧。') + '</div><div class="meta">刚刚</div></div></div>';
+    const ta = composer.querySelector('textarea'); if (ta) ta.placeholder = '和' + name + '说点什么……';
+  }
+  document.getElementById('newWebConv')?.addEventListener('click', openNewWebChat);
   function updateConn(url, qq) {
     const v = document.querySelector('.conn .v');
     const meta = document.querySelector('.conn .meta');
