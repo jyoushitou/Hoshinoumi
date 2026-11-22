@@ -2,6 +2,11 @@
 
 > 定位：Android 优先的 Capacitor/WebView 套壳，加载**同一套**手机 Vue 页面；不是第二套业务 UI。
 
+## 设计稿
+
+- [hoshinoumi-mobile-shell-v35.8.html](hoshinoumi-mobile-shell-v35.8.html)
+- [hoshinoumi-mobile-shell-v35.8.png](hoshinoumi-mobile-shell-v35.8.png)
+
 ## 1. 架构
 
 ```text

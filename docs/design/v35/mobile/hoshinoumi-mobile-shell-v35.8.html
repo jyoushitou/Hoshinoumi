@@ -1,0 +1,148 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hoshinoumi Mobile Shell · v35.8 设计稿</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(800px 500px at 8% 0%,rgba(56,189,248,.15),transparent 60%),radial-gradient(700px 500px at 92% 10%,rgba(139,92,246,.10),transparent 60%),linear-gradient(180deg,#edf4ff,#e8f0fd);color:#17263b;font:13px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif}
+.board{max-width:1560px;margin:0 auto;padding:32px 26px 52px}
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:22px}
+.kicker{font-size:9px;letter-spacing:.2em;font-weight:800;color:#2563eb;margin-bottom:6px}
+h1{margin:0 0 6px;font-size:27px;letter-spacing:-.03em}
+header p{margin:0;color:#7c8da6;font-size:10px;max-width:620px}
+.meta{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.pill{border:1px solid #d7e5ff;background:#fff;border-radius:20px;padding:4px 9px;font-size:8px;color:#58739a}
+.grid{display:grid;grid-template-columns:repeat(4,340px);gap:28px 22px;justify-content:center}
+.item{width:340px}.label{display:flex;align-items:center;gap:6px;margin:0 0 7px 5px;font-size:9px;font-weight:700;color:#526a88}.label span{margin-left:auto;font:7px ui-monospace,monospace;color:#93a5bb;border:1px solid #d7e5ff;background:#fff;border-radius:4px;padding:1px 5px}
+.phone{width:340px;height:736px;border-radius:33px;background:#0b1628;border:7px solid #0b1628;box-shadow:0 18px 44px rgba(20,45,80,.18);overflow:hidden;position:relative}
+.screen{height:100%;border-radius:26px;overflow:hidden;background:#f7faff;display:flex;flex-direction:column;position:relative}
+.statusbar{height:28px;flex:none;display:flex;align-items:flex-end;justify-content:space-between;padding:0 14px 2px;font-size:7px;font-weight:750;color:#4c6582;background:transparent;position:relative;z-index:4}
+.statusbar.on-dark{color:#eaf4ff}.statusbar .right{display:flex;align-items:center;gap:4px}.sig{display:flex;align-items:flex-end;gap:1px}.sig i{display:block;width:2px;background:currentColor;border-radius:1px}.sig i:nth-child(1){height:3px}.sig i:nth-child(2){height:5px}.sig i:nth-child(3){height:7px}.sig i:nth-child(4){height:9px}.battery{width:15px;height:7px;border:1px solid currentColor;border-radius:2px;position:relative;opacity:.8}.battery:after{content:"";position:absolute;right:-3px;top:2px;width:2px;height:3px;background:currentColor;border-radius:0 1px 1px 0}
+.content{flex:1;min-height:0;display:flex;flex-direction:column}
+.app-head{display:flex;align-items:center;gap:8px;padding:12px 16px 0}.app-mark{width:26px;height:26px;border-radius:9px;background:linear-gradient(145deg,#60a5fa,#2563eb);color:#fff;display:grid;place-items:center;font-size:11px;font-weight:850}.app-name{font-size:10px;font-weight:850;letter-spacing:.12em;line-height:1.1}.app-name small{display:block;font-size:6px;letter-spacing:.22em;color:#9aabc0;margin-top:2px}.offline-pill{margin-left:auto;font-size:7px;color:#8a9bb0;border:1px solid #e1e8f1;background:#f8fafc;border-radius:10px;padding:3px 6px}
+h2{margin:0;font-size:22px;letter-spacing:-.035em}h2 small{display:block;font-size:7px;letter-spacing:.18em;color:#9aabc0;margin-top:4px}
+.page{padding:14px 16px 16px;display:flex;flex-direction:column;min-height:0}
+.badge{display:inline-flex;align-items:center;gap:5px;border:1px solid #dbe8ff;background:#f4f9ff;color:#5f7da2;border-radius:6px;padding:3px 6px;font-size:7px;width:fit-content}
+.dot{width:5px;height:5px;border-radius:50%;background:#94a3b8}.dot.ok{background:#1f9d6b}.dot.warn{background:#f59e0b}.dot.err{background:#ef4444}
+.btn{height:34px;border:1px solid #dbe8ff;border-radius:9px;background:#fff;color:#2563eb;font:9px inherit;display:flex;align-items:center;justify-content:center;gap:5px}.btn.primary{background:#2563eb;border-color:#2563eb;color:#fff;font-weight:700}.btn.soft{background:#eef4ff;border-color:#dbe8ff}.btn.danger{color:#b91c1c;border-color:#fecaca;background:#fff5f5}
+.center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px}
+.orb{width:70px;height:70px;border-radius:24px;display:grid;place-items:center;background:linear-gradient(145deg,#dbeafe,#eff6ff);color:#2563eb;font-size:29px;margin-bottom:16px;box-shadow:0 16px 34px rgba(37,99,235,.14)}
+.orb.warn{background:linear-gradient(145deg,#fef3c7,#fffbeb);color:#b45309;box-shadow:0 16px 34px rgba(180,83,9,.12)}
+.orb.dark{background:linear-gradient(145deg,#1e3a8a,#0f172a);color:#93c5fd;box-shadow:0 16px 34px rgba(15,23,42,.26)}
+.orb.shield{background:linear-gradient(145deg,#e0f2fe,#f0f9ff);color:#0284c7}
+.center h3{margin:0 0 6px;font-size:16px;letter-spacing:-.02em}.center p{margin:0;color:#8a9bb0;font-size:9px;line-height:1.7;max-width:250px}
+.splash{background:radial-gradient(500px 380px at 70% 15%,#1d4ed8 0%,transparent 65%),linear-gradient(160deg,#0b1d3a 0%,#081326 55%,#07101f 100%);color:#fff;position:relative}
+.splash:before{content:"";position:absolute;width:260px;height:260px;border-radius:50%;right:-90px;top:-100px;border:1px solid rgba(147,197,253,.18);box-shadow:0 0 0 40px rgba(147,197,253,.04),0 0 0 80px rgba(147,197,253,.025)}
+.splash .stars{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.65) 1px,transparent 1px);background-size:43px 43px;opacity:.18;mask-image:linear-gradient(180deg,#000,transparent 75%)}
+.splash-main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;z-index:2}
+.logo-star{width:62px;height:62px;border-radius:20px;display:grid;place-items:center;background:linear-gradient(145deg,rgba(96,165,250,.25),rgba(37,99,235,.12));border:1px solid rgba(147,197,253,.32);color:#bfdbfe;font-size:29px;margin-bottom:16px;box-shadow:0 0 40px rgba(59,130,246,.28)}
+.splash h1{font-size:24px;letter-spacing:.18em;margin:0 0 4px;font-weight:850}.splash .tag{font-size:7px;letter-spacing:.3em;color:#93c5fd;margin-bottom:26px}.splash .sub{font-size:9px;color:#c7dcff;letter-spacing:.06em}
+.loading-line{width:150px;height:2px;background:rgba(255,255,255,.12);border-radius:2px;margin-top:24px;overflow:hidden}.loading-line i{display:block;width:48%;height:100%;background:linear-gradient(90deg,#60a5fa,#bfdbfe);border-radius:2px;animation:load 1.4s ease-in-out infinite}@keyframes load{0%{transform:translateX(-100%)}100%{transform:translateX(260%)}}
+.splash-foot{position:relative;z-index:2;text-align:center;padding:0 0 22px;font-size:6.5px;letter-spacing:.16em;color:#6f8cae}
+.skeleton-page{padding:14px 16px}.sk{background:linear-gradient(90deg,#eef4ff,#f8fbff,#eef4ff);background-size:200% 100%;animation:shimmer 1.4s ease infinite;border-radius:10px}@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.sk-head{height:28px;width:58%;margin-bottom:8px}.sk-search{height:34px;margin-bottom:14px}.sk-row{display:flex;gap:9px;align-items:center;margin-bottom:11px}.sk-av{width:34px;height:34px;flex:none}.sk-lines{flex:1}.sk-l1{height:9px;width:44%;margin-bottom:5px}.sk-l2{height:7px;width:76%}
+.loading-note{padding:10px 16px 16px;color:#9aabc0;font-size:7.5px;text-align:center}
+.detail-card{border:1px solid #e3ebf7;background:#fff;border-radius:13px;padding:10px;margin-top:10px}.detail-row{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:8px;color:#6b7c95;padding:5px 0;border-bottom:1px solid #f1f5fb}.detail-row:last-child{border-bottom:0}.detail-row b{font-size:8px;color:#314a65;font-weight:700}
+.error-code{border:1px dashed #d7e6ff;background:#f4f9ff;border-radius:7px;padding:6px 8px;font:7px ui-monospace,monospace;color:#7890aa;margin-top:9px;line-height:1.6}
+.modal-mask{position:absolute;inset:0;background:rgba(9,22,40,.36);backdrop-filter:blur(2px);display:flex;align-items:center;justify-content:center;padding:18px;z-index:8}
+.modal{width:100%;background:#fff;border-radius:18px;padding:15px;box-shadow:0 24px 60px rgba(15,38,78,.26)}.modal h3{margin:0 0 4px;font-size:13px}.modal .desc{font-size:8px;color:#8a9bb0;line-height:1.7;margin-bottom:10px}.modal .actions{display:flex;gap:6px;margin-top:10px}.modal .actions .btn{flex:1}.modal .x{float:right;border:0;background:#f4f8ff;color:#71859d;width:22px;height:22px;border-radius:50%;font-size:12px}
+.perm-item{display:flex;gap:8px;align-items:flex-start;border:1px solid #eef3fb;border-radius:9px;padding:8px;margin-bottom:7px}.perm-item .pi{width:25px;height:25px;border-radius:8px;background:#eef4ff;color:#2563eb;display:grid;place-items:center;font-size:11px;flex:none}.perm-item b{display:block;font-size:8.5px;color:#314a65}.perm-item small{display:block;font-size:7px;color:#9aabc0;line-height:1.6;margin-top:2px}
+.os-dialog{width:100%;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 24px 60px rgba(15,38,78,.28)}.os-head{padding:15px 15px 5px;font-size:13px;font-weight:700;text-align:center}.os-body{padding:0 15px 12px;font-size:8.5px;color:#6b7c95;line-height:1.7;text-align:center}.os-actions{border-top:1px solid #eef3fb;display:grid;grid-template-columns:1fr 1fr}.os-actions button{border:0;background:#fff;padding:11px 8px;font:9px inherit;color:#2563eb}.os-actions button+button{border-left:1px solid #eef3fb}.os-actions button.strong{font-weight:700}
+.update-notes{border:1px solid #eef3fb;border-radius:9px;padding:8px;background:#f8fbff;margin:7px 0}.update-notes p{margin:0 0 4px;font-size:7.5px;color:#6b7c95;line-height:1.65}.update-notes p:last-child{margin:0}.progress{height:5px;background:#e8effa;border-radius:5px;overflow:hidden;margin-top:7px}.progress i{display:block;width:62%;height:100%;background:linear-gradient(90deg,#60a5fa,#2563eb);border-radius:5px}.progress-label{display:flex;justify-content:space-between;font-size:7px;color:#9aabc0;margin-top:4px}
+.foot-note{font-size:7px;color:#9aabc0;text-align:center;line-height:1.7;padding:9px 0 0}
+.board-foot{display:flex;align-items:center;justify-content:space-between;margin-top:30px;padding-top:14px;border-top:1px solid #dbe8ff;color:#9aabc0;font-size:8px}.credit{font:7px ui-monospace,monospace;letter-spacing:.12em;color:#a8b5c7}
+</style>
+</head>
+<body>
+<div class="board">
+<header>
+  <div>
+    <div class="kicker">HOSHINOUMI · MOBILE SHELL</div>
+    <h1>手机套壳设计稿 <span style="font-size:11px;color:#8da0b8;font-weight:500">v35.8 · 设计稿 v1 · 待确认</span></h1>
+    <p>Capacitor / Android WebView 壳。业务页面仍由同一套手机 Vue 提供；这里只画壳自己的启动、错误、权限、更新与自检界面。</p>
+  </div>
+  <div class="meta"><span class="pill">Android 优先</span><span class="pill">同一 URL</span><span class="pill">WebView</span><span class="pill">无第二套业务 UI</span></div>
+</header>
+
+<div class="grid">
+
+  <!-- 01 SPLASH -->
+  <div class="item"><div class="label">01 启动页<span>SPLASH</span></div><div class="phone"><div class="screen splash">
+    <div class="stars"></div>
+    <div class="statusbar on-dark"><span>9:41</span><div class="right"><span class="sig"><i></i><i></i><i></i><i></i></span><span>5G</span><div class="battery"></div></div></div>
+    <div class="splash-main"><div class="logo-star">✦</div><h1>HOSHINOUMI</h1><div class="tag">REC · MOBILE</div><div class="sub">星之海，和奈绪一起</div><div class="loading-line"><i></i></div></div>
+    <div class="splash-foot">POWERED BY JYOUSHITOU · v35.8</div>
+  </div></div></div>
+
+  <!-- 02 LOADING -->
+  <div class="item"><div class="label">02 WebView 加载<span>LOADING</span></div><div class="phone"><div class="screen">
+    <div class="statusbar"><span>9:41</span><div class="right"><span class="sig"><i></i><i></i><i></i><i></i></span><span>5G</span><div class="battery"></div></div></div>
+    <div class="app-head"><div class="app-mark">奈</div><div class="app-name">HOSHINOUMI<small>CONNECTING</small></div><span class="offline-pill">加载中</span></div>
+    <div class="page" style="flex:1"><div class="sk sk-head"></div><div class="sk sk-search"></div><div class="sk-row"><div class="sk sk-av"></div><div class="sk-lines"><div class="sk sk-l1"></div><div class="sk sk-l2"></div></div></div><div class="sk-row"><div class="sk sk-av"></div><div class="sk-lines"><div class="sk sk-l1" style="width:34%"></div><div class="sk sk-l2" style="width:62%"></div></div></div><div class="sk-row"><div class="sk sk-av"></div><div class="sk-lines"><div class="sk sk-l1" style="width:52%"></div><div class="sk sk-l2" style="width:48%"></div></div></div></div>
+    <div class="loading-note">正在打开 Hoshinoumi…</div>
+    <div class="splash-foot" style="color:#9aabc0;padding-bottom:14px">WEBVIEW · SAME URL</div>
+  </div></div></div>
+
+  <!-- 03 OFFLINE -->
+  <div class="item"><div class="label">03 加载失败 / 离线<span>OFFLINE</span></div><div class="phone"><div class="screen">
+    <div class="statusbar"><span>9:41</span><div class="right"><span class="sig"><i></i><i></i><i></i><i></i></span><span>5G</span><div class="battery"></div></div></div>
+    <div class="app-head"><div class="app-mark">奈</div><div class="app-name">HOSHINOUMI<small>OFFLINE</small></div><span class="offline-pill">离线</span></div>
+    <div class="page" style="flex:1"><div class="center" style="padding-top:20px"><div class="orb warn">☁</div><h3>连不上 Hoshinoumi</h3><p>检查网络或后端地址。<br>已经有本地缓存的页面不会丢失。</p></div>
+      <div class="detail-card"><div class="detail-row"><span>目标地址</span><b>hoshinoumi.app</b></div><div class="detail-row"><span>WebView</span><b>Chrome 130</b></div><div class="detail-row"><span>错误</span><b style="color:#b91c1c">ERR_CONNECTION_TIMED_OUT</b></div></div>
+      <div style="display:flex;gap:7px;margin-top:10px"><button class="btn" style="flex:1">打开设置</button><button class="btn primary" style="flex:1.3">重试</button></div>
+      <div class="foot-note">断网不伪造内容；重试只重新加载 WebView。</div>
+    </div>
+  </div></div></div>
+
+  <!-- 04 HOST BLOCK -->
+  <div class="item"><div class="label">04 安全拦截<span>HOST ALLOWLIST</span></div><div class="phone"><div class="screen">
+    <div class="statusbar"><span>9:41</span><div class="right"><span class="sig"><i></i><i></i><i></i><i></i></span><span>5G</span><div class="battery"></div></div></div>
+    <div class="app-head"><div class="app-mark">奈</div><div class="app-name">HOSHINOUMI<small>SECURITY</small></div><span class="offline-pill">已阻止</span></div>
+    <div class="page" style="flex:1"><div class="center" style="padding-top:26px"><div class="orb shield">⛨</div><h3>当前地址不受信任</h3><p>套壳只允许加载配置过的 Hoshinoumi 地址，防止被导向其他站点。</p></div>
+      <div class="error-code">allowed host:<br>hoshinoumi.app<br>localhost:27006</div>
+      <button class="btn" style="margin-top:10px">返回安全页</button>
+      <div class="foot-note">不显示“继续访问”；避免钓鱼/混合内容。</div>
+    </div>
+  </div></div></div>
+
+  <!-- 05 MIC PERMISSION -->
+  <div class="item"><div class="label">05 麦克风权限<span>MIC PERMISSION</span></div><div class="phone"><div class="screen">
+    <div class="statusbar"><span>9:41</span><div class="right"><span class="sig"><i></i><i></i><i></i><i></i></span><span>5G</span><div class="battery"></div></div></div>
+    <div class="app-head"><div class="app-mark">奈</div><div class="app-name">HOSHINOUMI<small>VOICE</small></div><span class="offline-pill">在线</span></div>
+    <div class="page" style="flex:1;opacity:.55"><div class="sk sk-head"></div><div class="sk sk-search"></div><div class="sk-row"><div class="sk sk-av"></div><div class="sk-lines"><div class="sk sk-l1"></div><div class="sk sk-l2"></div></div></div></div>
+    <div class="modal-mask"><div class="modal"><h3>允许 Hoshinoumi 使用麦克风？</h3><div class="desc">用于给奈绪发送语音消息。录音只在你按下录音按钮时进行，发送后由后端处理。</div><div class="perm-item"><span class="pi">🎙</span><div><b>语音消息</b><small>按住录音，松开发送；可随时在系统设置关闭。</small></div></div><div class="actions"><button class="btn">不允许</button><button class="btn primary">允许</button></div></div></div>
+  </div></div></div>
+
+  <!-- 06 CAMERA/FILE -->
+  <div class="item"><div class="label">06 图片 / 文件权限<span>MEDIA PERMISSION</span></div><div class="phone"><div class="screen">
+    <div class="statusbar"><span>9:41</span><div class="right"><span class="sig"><i></i><i></i><i></i><i></i></span><span>5G</span><div class="battery"></div></div></div>
+    <div class="app-head"><div class="app-mark">奈</div><div class="app-name">HOSHINOUMI<small>MEDIA</small></div><span class="offline-pill">在线</span></div>
+    <div class="page" style="flex:1;opacity:.55"><div class="sk sk-head"></div><div class="sk sk-search"></div><div class="sk-row"><div class="sk sk-av"></div><div class="sk-lines"><div class="sk sk-l1"></div><div class="sk sk-l2"></div></div></div></div>
+    <div class="modal-mask"><div class="os-dialog"><div class="os-head">Hoshinoumi 想访问你的照片</div><div class="os-body">用于从相册选择图片发送给奈绪。<br>不会自动读取整个相册。</div><div class="os-actions"><button>仅选择照片</button><button class="strong">允许</button></div><div class="os-actions" style="grid-template-columns:1fr"><button style="color:#8a9bb0">不允许</button></div></div></div>
+  </div></div></div>
+
+  <!-- 07 UPDATE -->
+  <div class="item"><div class="label">07 版本更新<span>UPDATE</span></div><div class="phone"><div class="screen">
+    <div class="statusbar"><span>9:41</span><div class="right"><span class="sig"><i></i><i></i><i></i><i></i></span><span>5G</span><div class="battery"></div></div></div>
+    <div class="app-head"><div class="app-mark">奈</div><div class="app-name">HOSHINOUMI<small>UPDATE</small></div><span class="offline-pill">发现新版本</span></div>
+    <div class="page" style="flex:1;opacity:.35"><div class="sk sk-head"></div><div class="sk sk-search"></div><div class="sk-row"><div class="sk sk-av"></div><div class="sk-lines"><div class="sk sk-l1"></div><div class="sk sk-l2"></div></div></div></div>
+    <div class="modal-mask"><div class="modal"><button class="x">×</button><h3>发现新版本 v35.8.1</h3><div class="desc">手机套壳稳定性更新，建议安装。</div><div class="update-notes"><p>· 修复键盘弹起时输入框被遮挡</p><p>· 优化 WebView 返回键</p><p>· 提醒弹窗确认同步后端</p></div><div class="progress"><i></i></div><div class="progress-label"><span>正在下载</span><span>62%</span></div><div class="actions"><button class="btn">稍后</button><button class="btn primary">下载并安装</button></div></div></div>
+  </div></div></div>
+
+  <!-- 08 SELF CHECK -->
+  <div class="item"><div class="label">08 启动自检失败<span>WEBVIEW CHECK</span></div><div class="phone"><div class="screen">
+    <div class="statusbar"><span>9:41</span><div class="right"><span class="sig"><i></i><i></i><i></i><i></i></span><span>5G</span><div class="battery"></div></div></div>
+    <div class="app-head"><div class="app-mark">奈</div><div class="app-name">HOSHINOUMI<small>SELF CHECK</small></div><span class="offline-pill">无法启动</span></div>
+    <div class="page" style="flex:1"><div class="center" style="padding-top:32px"><div class="orb dark">!</div><h3>系统 WebView 版本过低</h3><p>当前 WebView 无法运行 Hoshinoumi 手机页面。请更新 Android System WebView，或安装原生 Android 客户端。</p></div>
+      <div class="detail-card"><div class="detail-row"><span>WebView</span><b style="color:#b91c1c">108</b></div><div class="detail-row"><span>需要</span><b>120+</b></div><div class="detail-row"><span>设备</span><b>Android 12</b></div></div><button class="btn primary" style="margin-top:10px">去更新 WebView</button>
+      <div class="foot-note">自检失败不进入白屏；不伪造页面。</div>
+    </div>
+  </div></div></div>
+
+</div>
+
+<div class="board-foot"><span>v35.8 手机套壳 · 8 个壳级界面 · 业务页面复用 v35.7/v35.9.30</span><span class="credit">POWERED BY JYOUSHITOU</span></div>
+</div>
+</body>
+</html>
