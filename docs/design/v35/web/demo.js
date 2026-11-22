@@ -539,6 +539,8 @@
           };
         }
         document.getElementById('backChat').addEventListener('click', () => showChat());
+        const cfToggle = document.getElementById('cfToggle');
+        if (cfToggle) cfToggle.addEventListener('click', () => { const next = cfToggle.textContent.includes('12') ? 6 : 12; cfToggle.textContent = '近 ' + next + ' 个月'; const el = document.getElementById('webCfChart'); if (el) el.innerHTML = cashflowWebSvg(next); });
         document.getElementById('psImport').addEventListener('click', () => document.getElementById('psFile').click());
         document.getElementById('psFile').addEventListener('change', e => {
           const f = e.target.files[0]; if (!f) return;
@@ -824,6 +826,22 @@
         ]
       });
       function money(n){ return '¥' + Number(n || 0).toLocaleString('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
+      const CF_ALL = [
+        {m:'2025-12',i:6200,e:4100},{m:'2026-01',i:9800,e:5600},{m:'2026-02',i:7400,e:4800},
+        {m:'2026-03',i:8100,e:6200},{m:'2026-04',i:6900,e:5300},{m:'2026-05',i:8800,e:4900},
+        {m:'2026-06',i:7600,e:5700},{m:'2026-07',i:9100,e:6100},{m:'2026-08',i:8300,e:5200},
+        {m:'2026-09',i:7800,e:5900},{m:'2026-10',i:8600,e:5000},{m:'2026-11',i:8200,e:5430}
+      ];
+      function cashflowWebSvg(count){
+        const data = count === 6 ? CF_ALL.slice(-6) : CF_ALL;
+        const w=900,h=220,pad={l:38,r:10,t:12,b:24},iw=w-pad.l-pad.r,ih=h-pad.t-pad.b;
+        const max=Math.max(...data.map(d=>Math.max(d.i,d.e)),1),step=iw/data.length,bw=Math.max(6,Math.min(20,step*.27));
+        let out='';
+        for(let g=0;g<=3;g++){const y=pad.t+ih*g/3;const val=Math.round(max*(3-g)/3);out+=`<line class="axis" x1="${pad.l}" y1="${y}" x2="${w-pad.r}" y2="${y}"/><text x="${pad.l-6}" y="${y+3}" text-anchor="end">${val>=1000?(val/1000).toFixed(0)+'k':val}</text>`}
+        data.forEach((d,idx)=>{const x=pad.l+idx*step,ihh=d.i/max*ih,ehh=d.e/max*ih;out+=`<rect class="bar" x="${x+step/2-bw-1}" y="${pad.t+ih-ihh}" width="${bw}" height="${ihh}" rx="3" fill="#60a5fa"/><rect class="bar" x="${x+step/2+1}" y="${pad.t+ih-ehh}" width="${bw}" height="${ehh}" rx="3" fill="#fca5a5"/><text x="${x+step/2}" y="${h-7}" text-anchor="middle">${d.m.slice(5)}</text>`});
+        const pts=data.map((d,idx)=>`${pad.l+idx*step+step/2},${pad.t+ih-(d.i-d.e)/max*ih}`).join(' ');out+=`<polyline class="netline" points="${pts}"/>`;
+        return `<svg class="cf-web-svg" viewBox="0 0 ${w} ${h}" role="img" aria-label="每月流水">${out}</svg>`;
+      }
       function renderSavings() {
         const today = new Date(); today.setHours(23, 59, 59, 999);
         S.fixed = (S.fixed || []).filter(f => {
@@ -852,6 +870,7 @@
         const frozenRows = (S.frozen || []).map((f, i) => '<div class="frozen-row"><div><div>' + esc(f.name) + '</div><div class="why">预计 ' + esc(f.due) + ' · 不可动用</div></div><div class="frozen-right"><span class="amt">' + money(f.amount) + '</span><span class="frozen-acts"><button data-pay="' + i + '">已缴费</button><button class="del" data-del="' + i + '">删除</button></span></div></div>').join('');
         pageView.innerHTML = '<div class="page-head"><div><h2>存钱</h2><p>v35.5 Web 演示 · 多目标 / 资金位置 / 冻结预留</p></div><button class="back" id="backChat">← 返回聊天</button></div>' +
           '<div class="savings-grid"><div class="savings-stat"><div class="k">可用余额</div><div class="v blue">' + money(available) + '</div></div><div class="savings-stat stat-amber"><div class="k">冻结 / 预留</div><div class="v">' + money(frozen) + '</div></div><div class="savings-stat"><div class="k">定期存款</div><div class="v">' + money(fixedTotal) + '</div></div><div class="savings-stat"><div class="k">总资产</div><div class="v">' + money(assetTotal) + '</div></div></div>' +
+          '<div class="savings-panel cashflow-panel"><div class="panel-head"><h3>每月流水</h3><button class="mini-add" id="cfToggle">近 12 个月</button></div><div class="cf-kpis"><div><small>本月收入</small><b style="color:#1f9d6b">¥8,200</b></div><div><small>本月支出</small><b style="color:#dc2626">¥5,430</b></div><div><small>本月结余</small><b style="color:#2563eb">+¥2,770</b></div></div><div id="webCfChart">' + cashflowWebSvg(12) + '</div><div class="cf-legend"><span><i style="background:#60a5fa"></i>收入</span><span><i style="background:#fca5a5"></i>支出</span><span><i style="background:#0f766e"></i>净结余</span><em>仅主人可见 · 互转不计入</em></div></div>' +
           '<div class="savings-panel"><div class="panel-head"><h3>存钱目标</h3><button class="mini-add" id="addGoal">＋ 新目标</button></div><div class="savings-goals">' + goalCards + '</div></div>' +
           '<div class="savings-panel"><div class="panel-head"><h3>定期存款</h3><button class="mini-add" id="addFixed">＋ 存定期</button></div>' + fixedCards + '<div class="frozen-tip">到期自动按来源账户转回本金+利息，无需手动操作。</div></div>' +
           '<div class="savings-panel"><div class="panel-head"><h3>理财 / 基金</h3><button class="mini-add" id="addFund">＋ 买入</button></div>' + fundCards + '</div>' +

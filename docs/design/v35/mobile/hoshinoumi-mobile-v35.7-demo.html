@@ -206,6 +206,9 @@ body.embed #view{height:100dvh!important}
 .login .tip{margin-top:10px;padding-bottom:2px}
 
 .account-hero{display:flex;align-items:center;gap:11px;padding:2px 0 12px;border-bottom:1px solid #f0f5fd;margin-bottom:7px}.account-hero .avatar{width:46px;height:46px;border-radius:14px;font-size:16px}.account-hero .t{flex:1;min-width:0}.account-hero b{display:block;font-size:13px;color:#1f3550}.account-hero small{display:block;font-size:8.5px;color:#8a9bb0;margin-top:2px}.account-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #f4f8fe;font-size:9px;color:#71859d}.account-row:last-of-type{border-bottom:0}.account-row b{font-size:9px;color:#314a65;font-weight:650;text-align:right;word-break:break-all}.account-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}.account-actions button{height:34px;border:1px solid #dbe8ff;border-radius:9px;background:#fff;color:#2563eb;font:9px inherit}.account-actions button.danger{color:#b91c1c;border-color:#fecaca;background:#fff5f5}
+/* savings cashflow */
+
+.cf-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:5px}.cf-kpis div{background:#f8fbff;border-radius:7px;padding:5px 6px}.cf-kpis small{display:block;font-size:6px;color:#8a9bb0}.cf-kpis b{display:block;font-size:9px;margin-top:1px}.cf-svg{width:100%;height:132px;display:block;overflow:visible}.cf-svg text{font:6px -apple-system,BlinkMacSystemFont,"Microsoft YaHei",sans-serif;fill:#9aabc0}.cf-svg .axis{stroke:#f0f5fd}.cf-svg .bar{transform-box:fill-box;transform-origin:bottom;animation:cf-in .5s cubic-bezier(.2,.8,.2,1) both}.cf-svg .netline{fill:none;stroke:#0f766e;stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round}.cf-legend{display:flex;align-items:center;gap:8px;font-size:6.5px;color:#8a9bb0;margin-top:2px}.cf-legend i{display:inline-block;width:5px;height:5px;border-radius:2px;margin-right:2px}.cf-legend em{font-style:normal;margin-left:auto}.cf-empty{height:110px;display:flex;align-items:center;justify-content:center;color:#9aabc0;font-size:8px;background:#f8fbff;border-radius:8px}@keyframes cf-in{from{transform:scaleY(0)}to{transform:scaleY(1)}}
 </style>
 <link rel="stylesheet" href="mobile-native.css">
 </head>
@@ -415,6 +418,11 @@ screens.savings = `
   <div class="d-scroll" style="flex:1;min-height:0;overflow-y:auto;padding:0 16px 190px">
     <div class="sav-hero"><div class="lab">总资产 · 仅主人可见</div><div class="total">¥12,100.00</div><div class="sav-sum"><div><small>可用余额</small><b>¥2,700</b></div><div><small>冻结 / 预留</small><b>¥4,100</b></div><div><small>定期存款</small><b>¥3,000</b></div></div></div>
     <div class="sav-tabs"><span class="sav-tab on" onclick="savingsTab(this,'top')">总览</span><span class="sav-tab" onclick="savingsTab(this,'goal')">目标</span><span class="sav-tab" onclick="savingsTab(this,'fixed')">定期</span><span class="sav-tab" onclick="savingsTab(this,'fund')">基金</span><span class="sav-tab" onclick="savingsTab(this,'account')">账户</span><span class="sav-tab" onclick="savingsTab(this,'frozen')">冻结</span></div>
+    <div class="sav-sec" id="sav-cashflow"><div class="sav-sec-head"><b>每月流水</b><button id="cfToggle" onclick="toggleSavingsCashflow(this)">近 12 个月</button></div>
+      <div class="cf-kpis"><div><small>本月收入</small><b style="color:#1f9d6b">¥8,200</b></div><div><small>本月支出</small><b style="color:#dc2626">¥5,430</b></div><div><small>本月结余</small><b style="color:#2563eb">+¥2,770</b></div></div>
+      <div id="cfChart">${cashflowSvg(12)}</div>
+      <div class="cf-legend"><span><i style="background:#60a5fa"></i>收入</span><span><i style="background:#fca5a5"></i>支出</span><span><i style="background:#0f766e"></i>净结余</span><em>仅主人可见</em></div>
+    </div>
     <div class="sav-sec" id="sav-goal"><div class="sav-sec-head"><b>存钱目标</b><button onclick="openSavGoal()">＋ 新目标</button></div>
       <div class="goal"><div class="gtop"><b>旅行基金</b><span>截止 2027-03</span></div><div class="gamt">¥1,800.00 <small>/ ¥5,000.00</small></div><div class="bar"><i style="width:36%"></i></div><div class="gmeta"><span>36%</span><span>还差 ¥3,200</span></div></div>
       <div class="goal"><div class="gtop"><b>新电脑</b><span>截止 2027-06</span></div><div class="gamt">¥900.00 <small>/ ¥6,000.00</small></div><div class="bar"><i style="width:15%"></i></div><div class="gmeta"><span>15%</span><span>还差 ¥5,100</span></div></div>
@@ -831,6 +839,17 @@ function cmdCat(el){
 function openCommand(code,title){
   overlay(`<div class="sheet"><h4>${title}</h4><div class="modal-form"><input value="${code}" readonly><input placeholder="参数（可选）"><button onclick="closeOverlay();toast('命令执行演示')">执行命令</button></div><button class="sheet-close" onclick="closeOverlay()">取消</button></div>`)
 }
+function cashflowData(){return [{m:'2025-12',i:6200,e:4100},{m:'2026-01',i:9800,e:5600},{m:'2026-02',i:7400,e:4800},{m:'2026-03',i:8100,e:6200},{m:'2026-04',i:6900,e:5300},{m:'2026-05',i:8800,e:4900},{m:'2026-06',i:7600,e:5700},{m:'2026-07',i:9100,e:6100},{m:'2026-08',i:8300,e:5200},{m:'2026-09',i:7800,e:5900},{m:'2026-10',i:8600,e:5000},{m:'2026-11',i:8200,e:5430}]}
+function cashflowSvg(count){
+  const all=cashflowData(), data=count===6?all.slice(-6):all, w=330,h=132,pad={l:25,r:6,t:7,b:18}, iw=w-pad.l-pad.r, ih=h-pad.t-pad.b
+  const max=Math.max(...data.map(d=>Math.max(d.i,d.e)),1), step=iw/data.length, bw=Math.max(4,Math.min(9,step*.26))
+  let out=''
+  for(let g=0;g<=2;g++){const y=pad.t+ih*g/2;out+=`<line class="axis" x1="${pad.l}" y1="${y}" x2="${w-pad.r}" y2="${y}"/>`}
+  data.forEach((d,idx)=>{const x=pad.l+idx*step;const ihh=d.i/max*ih, ehh=d.e/max*ih;out+=`<rect class="bar" x="${x+step/2-bw-1}" y="${pad.t+ih-ihh}" width="${bw}" height="${ihh}" rx="1.5" fill="#60a5fa"/><rect class="bar" x="${x+step/2+1}" y="${pad.t+ih-ehh}" width="${bw}" height="${ehh}" rx="1.5" fill="#fca5a5"/><text x="${x+step/2}" y="${h-5}" text-anchor="middle">${d.m.slice(5)}</text>`})
+  const pts=data.map((d,idx)=>`${pad.l+idx*step+step/2},${pad.t+ih-(d.i-d.e)/max*ih}`).join(' ');out+=`<polyline class="netline" points="${pts}"/>`
+  return `<svg class="cf-svg" viewBox="0 0 ${w} ${h}" role="img" aria-label="每月流水">${out}</svg>`
+}
+function toggleSavingsCashflow(btn){ const count=btn.dataset.months==='6'?12:6; btn.dataset.months=count; btn.textContent='近 '+count+' 个月'; const el=document.getElementById('cfChart'); if(el) el.innerHTML=cashflowSvg(count) }
 function savingsTab(el, target){
   [...el.parentElement.children].forEach(x => x.classList.remove('on'))
   el.classList.add('on')
