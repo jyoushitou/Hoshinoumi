@@ -2,7 +2,7 @@
   <div class="mc">
     <template v-if="pane === 'list'">
       <div class="head"><div><h1>聊天</h1><p>QQ 会话 · {{ session.conversations.length }} 个</p></div><i class="dot" :class="{ off: !session.connected }" /></div>
-      <div class="search">搜索会话</div>
+      <button type="button" class="search" @click="openSearch">🔍 搜索会话 / 消息</button>
       <div v-if="!auth.loggedIn" class="notice">游客模式：登录后可同步 QQ 会话。</div>
       <div v-else-if="listError" class="notice error">{{ listError }}</div>
       <div v-else-if="!session.conversations.length" class="notice">{{ session.loading ? '正在同步会话…' : '暂无会话。后端有 QQ 消息后会出现在这里。' }}</div>
@@ -22,13 +22,13 @@
       <div ref="messageList" class="messages">
         <div v-if="session.historyError" class="notice error">{{ session.historyError }}</div>
         <div v-else-if="!session.messages.length" class="notice">{{ session.loading ? '正在加载…' : '暂无历史消息' }}</div>
-        <div v-for="(m, i) in session.messages" :key="m.id ?? i" class="row" :class="{ me: m.role === 'user' || m.role === 'me' }">
+        <div v-for="(m, i) in session.messages" :key="m.id ?? i" class="row" :class="{ me: m.role === 'user' || m.role === 'me' }" :data-message-index="i">
           <span v-if="m.role !== 'user' && m.role !== 'me'" class="mini">{{ activeName.slice(0, 1) }}</span>
           <div class="box">
             <div v-if="m.recalled" class="recalled">消息已撤回</div>
             <template v-else>
-              <img v-if="m.image_url" :src="m.image_url" class="msg-img" :class="{ sticker: m.kind === 'sticker' }" alt="图片">
-              <audio v-if="m.audio_url" :src="m.audio_url" controls class="msg-audio" />
+              <div v-if="m.image_url" class="media-wrap"><img :src="m.image_url" class="msg-img" :class="{ sticker: m.kind === 'sticker' }" alt="图片"><a :href="m.image_url" :download="`hoshinoumi-image-${i}`" class="download">下载</a></div>
+              <div v-if="m.audio_url" class="media-wrap"><audio :src="m.audio_url" controls class="msg-audio" /><a :href="m.audio_url" :download="`hoshinoumi-voice-${i}`" class="download">下载</a></div>
               <div v-if="m.content" class="bubble">{{ m.content }}</div>
             </template>
             <small class="stamp">{{ m.pending ? '发送中…' : String(m.created_at || '').slice(11, 16) }}</small>
@@ -49,6 +49,22 @@
       </div>
       <div v-if="session.sendError" class="media-error">{{ session.sendError }}</div>
     </template>
+
+    <div v-if="searchOpen" class="search-overlay">
+      <div class="search-head">
+        <input ref="searchInput" v-model="searchQuery" type="search" placeholder="搜索会话 / 当前消息" @keydown.esc="closeSearch">
+        <button type="button" @click="closeSearch">取消</button>
+      </div>
+      <div class="search-body">
+        <div v-if="!searchQuery.trim()" class="search-empty">输入关键词搜索会话和当前聊天记录</div>
+        <div v-else-if="!searchResults.length" class="search-empty">没有匹配结果</div>
+        <button v-for="hit in searchResults" :key="hit.key" type="button" class="search-hit" @click="openSearchResult(hit)">
+          <span class="hit-kind">{{ hit.kind === 'conv' ? '会话' : '消息' }}</span>
+          <span class="hit-copy"><b>{{ hit.title }}</b><small>{{ hit.text }}</small></span>
+        </button>
+        <div class="search-note">只搜索已加载的会话和消息，不伪造未同步内容。</div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -73,6 +89,10 @@ let recorder: MediaRecorder | null = null
 let chunks: BlobPart[] = []
 let stream: MediaStream | null = null
 const stickers = ['😊','😂','🥺','😳','😭','😡','🤔','😴','❤️','✨','👍','🎉']
+const searchOpen = ref(false)
+const searchQuery = ref('')
+const searchInput = ref<HTMLInputElement | null>(null)
+interface SearchHit { key: string; kind: 'conv' | 'msg'; title: string; text: string; target: string; index?: number }
 const listError = computed(() => auth.loggedIn ? (session.conversationsError || session.error) : '')
 const active = computed(() => session.conversations.find(row => row.target_id === session.activeTarget) || null)
 const activeName = computed(() => active.value?.name || String(session.persona?.name || '会话'))
@@ -80,6 +100,20 @@ const activeGroup = computed(() => active.value?.type === 'group')
 const activeCount = computed(() => Number(active.value?.member_count || 0))
 const syncLabel = computed(() => session.syncState === 'syncing' ? '同步中' : session.syncState === 'offline' ? '同步中断' : session.syncState === 'online' ? '已同步' : '等待同步')
 const canSend = computed(() => Boolean(draft.value.trim() || imagePreview.value) && !session.sending && Boolean(session.activeTarget))
+const searchResults = computed<SearchHit[]>(() => {
+  const query = searchQuery.value.trim().toLowerCase()
+  if (!query) return []
+  const hits: SearchHit[] = []
+  for (const conv of session.conversations) {
+    const text = `${conv.name || ''} ${conv.last_message || ''}`.toLowerCase()
+    if (text.includes(query)) hits.push({ key: 'conv-' + conv.target_id, kind: 'conv', title: conv.name || conv.target_id, text: conv.last_message || '暂无消息', target: conv.target_id })
+  }
+  session.messages.forEach((message, index) => {
+    const content = String(message.content || '')
+    if (content.toLowerCase().includes(query)) hits.push({ key: 'msg-' + index, kind: 'msg', title: activeName.value, text: content.slice(0, 80), target: session.activeTarget, index })
+  })
+  return hits.slice(0, 40)
+})
 
 let viewportHandler: (() => void) | null = null
 onMounted(() => {
@@ -97,6 +131,23 @@ watch(() => session.activeTarget, scrollBottom)
 
 function timeOf(value?: string) { const d = value ? new Date(value) : null; return d && !Number.isNaN(d.getTime()) ? `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}` : '' }
 async function scrollBottom() { await nextTick(); const el = messageList.value; if (el) el.scrollTop = el.scrollHeight }
+async function openSearch() {
+  searchOpen.value = true
+  searchQuery.value = ''
+  await nextTick()
+  searchInput.value?.focus()
+}
+function closeSearch() { searchOpen.value = false; searchQuery.value = '' }
+async function openSearchResult(hit: SearchHit) {
+  searchOpen.value = false
+  if (hit.kind === 'conv') { await open(hit.target); return }
+  if (session.activeTarget !== hit.target) await open(hit.target)
+  await nextTick()
+  const el = document.querySelector(`[data-message-index="${hit.index ?? 0}"]`)
+  el?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+  el?.classList.add('search-flash')
+  setTimeout(() => el?.classList.remove('search-flash'), 1200)
+}
 async function open(target: string) { await session.selectConversation(target); pane.value = 'chat'; imagePreview.value = ''; imageName.value = ''; mediaError.value = ''; await scrollBottom() }
 function autosize() { const el = textarea.value; if (!el) return; el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 96) + 'px' }
 function onKeydown(e: KeyboardEvent) { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); void send() } }
@@ -159,4 +210,12 @@ async function sendSticker(e: string) {
 .stickers{display:flex;flex-wrap:wrap;gap:4px;flex:none;padding:6px;margin-bottom:6px;border:1px solid #dbe8ff;border-radius:10px;background:#fff}.stickers button{width:36px;height:36px;border:0;border-radius:7px;background:#f8fbff;font-size:19px}
 .composer{display:flex;gap:5px;align-items:flex-end;border-top:1px solid #e5edf9;padding:7px 0 0;background:#f7faff;flex:none}.tool{width:32px;height:34px;flex:none;border:1px solid #e5edf9;border-radius:9px;background:#fff;color:#607795;font-size:15px}.tool.rec{color:#c0264a;background:#ffecef;border-color:#fecaca}.composer textarea{flex:1;min-width:0;resize:none;max-height:96px;border:1px solid #e1ebf9;border-radius:11px;background:#fff;padding:8px 10px;font:16px/1.4 inherit;color:#344b64;outline:0}.composer textarea:focus{border-color:#93c5fd;box-shadow:0 0 0 3px rgba(37,99,235,.07)}.send{width:36px;height:36px;flex:none;border:0;border-radius:11px;background:#2563eb;color:#fff;font-size:17px}.send:disabled{background:#cbd5e1}
 @media(max-height:560px){.messages{min-height:100px}.head{padding-top:8px}}
+
+.search{width:100%;height:36px;border:1px solid #e3ebf7;border-radius:11px;background:#fff;color:#9aabc0;display:flex;align-items:center;padding:0 11px;font-size:10px;margin-bottom:10px;text-align:left}
+.media-wrap{display:flex;flex-direction:column;align-items:flex-start;gap:2px}.download{font-size:8px;color:#2563eb;text-decoration:none;border:1px solid #dbe8ff;background:#f4f9ff;border-radius:6px;padding:2px 6px}
+.search-overlay{position:fixed;inset:0;z-index:80;background:#f7faff;display:flex;flex-direction:column;padding:calc(10px + env(safe-area-inset-top)) 12px calc(10px + env(safe-area-inset-bottom))}
+.search-head{display:flex;gap:7px;align-items:center;flex:none}.search-head input{flex:1;min-width:0;height:40px;border:1px solid #dbe8ff;border-radius:11px;background:#fff;padding:0 12px;font-size:16px;outline:0}.search-head input:focus{border-color:#93c5fd;box-shadow:0 0 0 3px rgba(37,99,235,.08)}.search-head button{flex:none;height:40px;border:1px solid #dbe8ff;border-radius:10px;background:#fff;color:#2563eb;font-size:11px;padding:0 11px}
+.search-body{flex:1;min-height:0;overflow-y:auto;margin-top:10px;overscroll-behavior:contain}.search-empty{padding:26px 10px;text-align:center;color:#8fa3bb;font-size:10px;line-height:1.7}.search-hit{display:flex;width:100%;text-align:left;gap:8px;border:1px solid #eef3fb;border-radius:11px;background:#fff;padding:10px;margin-bottom:7px;align-items:flex-start}.hit-kind{flex:none;font-size:7px;color:#2563eb;background:#eef4ff;border-radius:5px;padding:3px 5px}.hit-copy{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.hit-copy b{font-size:10px;color:#314a65;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hit-copy small{font-size:8px;color:#8fa3bb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.search-note{font-size:8px;color:#a2b2c6;text-align:center;padding:10px 0}
+.search-flash .bubble{outline:2px solid #fbbf24;outline-offset:2px;transition:outline .2s}
+@media (prefers-reduced-motion: no-preference){.row{animation:msg-in .16s ease-out both}.search-hit{animation:hit-in .14s ease-out both}}@keyframes msg-in{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}@keyframes hit-in{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:none}}
 </style>
