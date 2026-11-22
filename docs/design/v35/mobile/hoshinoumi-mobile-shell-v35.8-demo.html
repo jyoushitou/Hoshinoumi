@@ -34,9 +34,14 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 15% 0%,
 .skeleton{padding:15px 16px}.sk{background:linear-gradient(90deg,#eef4ff,#f8fbff,#eef4ff);background-size:200% 100%;animation:shimmer 1.4s ease infinite;border-radius:10px}@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}.sk-head{height:28px;width:58%;margin-bottom:9px}.sk-search{height:36px;margin-bottom:15px}.sk-row{display:flex;gap:10px;align-items:center;margin-bottom:12px}.sk-av{width:37px;height:37px;flex:none}.sk-lines{flex:1}.sk-l1{height:9px;width:44%;margin-bottom:6px}.sk-l2{height:8px;width:76%}.load-note{margin-top:auto;padding:0 16px 18px;font-size:8px;color:#9aabc0;text-align:center}
 /* web mock */
 .web-head{padding:12px 16px 8px;flex:none}.web-head h2{margin:0;font-size:24px;letter-spacing:-.04em}.web-head p{margin:2px 0 8px;color:#8a9bb0;font-size:9px}.web-search{height:36px;border:1px solid #e3ebf7;border-radius:11px;background:#fff;color:#9aabc0;display:flex;align-items:center;padding:0 11px;font-size:10px;margin-bottom:8px}.chips{display:flex;gap:5px;margin-bottom:10px}.chip{height:26px;padding:0 11px;border:1px solid #e3ebf7;background:#fff;border-radius:8px;color:#71859d;font-size:8px;display:flex;align-items:center}.chip.on{background:#eef4ff;border-color:#bcd4ff;color:#2563eb;font-weight:700}
-.conv-list{padding:0 10px;overflow:auto;flex:1}.sec{display:flex;justify-content:space-between;padding:4px 7px 7px;font-size:8px;color:#8a9bb0}.conv{display:flex;gap:10px;align-items:center;padding:9px 7px;border-bottom:1px solid #eef3fb}.av{width:38px;height:38px;border-radius:13px;background:#eef4ff;color:#2563eb;display:grid;place-items:center;font-size:13px;font-weight:800;flex:none}.av.bot{background:linear-gradient(145deg,#60a5fa,#2563eb);color:#fff}.conv .copy{flex:1;min-width:0}.conv b{display:block;font-size:11px;color:#253b56}.conv small{display:block;font-size:9px;color:#8b9bb0;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.conv .end{display:flex;flex-direction:column;align-items:flex-end;gap:4px}.conv .tm{font-size:7px;color:#a2b2c6}.badge{min-width:16px;height:16px;border-radius:8px;background:#2563eb;color:#fff;font-size:7px;display:grid;place-items:center;padding:0 4px}
+.conv-list{padding:0 10px;overflow:auto;flex:1}.sec{display:flex;justify-content:space-between;padding:4px 7px 7px;font-size:8px;color:#8a9bb0}.conv{display:flex;gap:10px;align-items:center;padding:9px 7px;border-bottom:1px solid #eef3fb;cursor:pointer}.conv:active{background:#f4f9ff}.av{width:38px;height:38px;border-radius:13px;background:#eef4ff;color:#2563eb;display:grid;place-items:center;font-size:13px;font-weight:800;flex:none}.av.bot{background:linear-gradient(145deg,#60a5fa,#2563eb);color:#fff}.conv .copy{flex:1;min-width:0}.conv b{display:block;font-size:11px;color:#253b56}.conv small{display:block;font-size:9px;color:#8b9bb0;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.conv .end{display:flex;flex-direction:column;align-items:flex-end;gap:4px}.conv .tm{font-size:7px;color:#a2b2c6}.badge{min-width:16px;height:16px;border-radius:8px;background:#2563eb;color:#fff;font-size:7px;display:grid;place-items:center;padding:0 4px}
 .web-tools{flex:none;display:flex;gap:6px;padding:8px 12px;border-top:1px solid #e7effa;background:#fff}.web-tools button{flex:1;height:34px;border:1px solid #e3ebf7;border-radius:9px;background:#fbfdff;color:#607795;font-size:9px}.web-tools button:active{background:#eef4ff}
 .tabbar{flex:none;height:58px;border-top:1px solid #e5edf9;background:#fff;display:grid;grid-template-columns:repeat(4,1fr);padding:0 8px 5px}.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:#8a9bb0;font-size:8px;border-radius:10px}.tab.on{color:#2563eb;background:#eef4ff;font-weight:700}.tab .ic{font-size:15px;line-height:1}
+
+.chat-head{display:flex;align-items:center;gap:9px;padding:10px 14px 9px;border-bottom:1px solid #e7effa;flex:none}.chat-head .back{width:28px;height:30px;border:0;background:none;color:#52708f;font-size:20px}.chat-head .chat-who{flex:1;min-width:0}.chat-head .chat-who b{display:block;font-size:13px;color:#213954}.chat-head .chat-who small{display:block;color:#1f9d6b;font-size:8px;margin-top:1px}.chat-action{border:0;background:none;color:#8093ab;font-size:16px}
+.av.sm{width:24px;height:24px;border-radius:8px;font-size:9px}.av.mea{background:#2563eb;color:#fff}
+.chat-messages{flex:1;min-height:0;overflow-y:auto;padding:12px 14px;scrollbar-width:none}.chat-messages::-webkit-scrollbar{display:none}.chat-day{text-align:center;font-size:7px;color:#a2b2c6;margin:0 0 13px}.msg{display:flex;align-items:flex-end;gap:5px;margin-bottom:11px}.msg.me{justify-content:flex-end}.msg>div{max-width:82%;display:flex;flex-direction:column;align-items:flex-start}.msg.me>div{align-items:flex-end}.msg-bubble{padding:8px 10px;border-radius:12px 12px 12px 4px;background:#fff;border:1px solid #e3ebf7;color:#344b64;font-size:11.5px;line-height:1.65;white-space:pre-wrap;word-break:break-word}.msg.me .msg-bubble{background:#2563eb;border-color:#2563eb;color:#fff;border-radius:12px 12px 4px 12px}.msg-time{font-size:7px;color:#a2b2c6;margin-top:3px}.memchip{display:inline-block;margin-top:5px;padding:4px 7px;border-radius:7px;border:1px solid #e4dcff;background:#f3efff;font-size:8px;color:#6d4fd6}
+.chat-composer{flex:none;display:flex;align-items:center;gap:6px;border-top:1px solid #e5edf9;background:#f7faff;padding:8px 12px calc(8px + env(safe-area-inset-bottom))}.composer-tool{width:32px;height:32px;flex:none;border:1px solid #e5edf9;border-radius:9px;background:#fff;color:#607795;font-size:16px}.chat-composer input{flex:1;min-width:0;height:34px;border:1px solid #e1ebf9;border-radius:11px;background:#fff;padding:0 10px;font-size:16px;outline:0}.chat-composer input:focus{border-color:#93c5fd}.composer-send{width:34px;height:34px;flex:none;border:0;border-radius:11px;background:#2563eb;color:#fff;font-size:16px}
 /* error scenes */
 .error-page{flex:1;padding:16px;display:flex;flex-direction:column;min-height:0}.error-center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding-top:14px}.orb{width:72px;height:72px;border-radius:24px;display:grid;place-items:center;background:linear-gradient(145deg,#fef3c7,#fffbeb);color:#b45309;font-size:30px;margin-bottom:16px;box-shadow:0 16px 34px rgba(180,83,9,.12)}.orb.shield{background:linear-gradient(145deg,#e0f2fe,#f0f9ff);color:#0284c7;box-shadow:0 16px 34px rgba(2,132,199,.1)}.orb.dark{background:linear-gradient(145deg,#1e3a8a,#0f172a);color:#93c5fd;box-shadow:0 16px 34px rgba(15,23,42,.26)}
 .error-center h3{margin:0 0 6px;font-size:18px;letter-spacing:-.02em}.error-center p{margin:0;color:#8a9bb0;font-size:10px;line-height:1.75;max-width:270px}
@@ -52,7 +57,7 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 15% 0%,
 .update-notes{border:1px solid #eef3fb;background:#f8fbff;border-radius:10px;padding:9px;margin-bottom:9px}.update-notes p{margin:0 0 4px;font-size:8.5px;color:#6b7c95;line-height:1.6}.update-notes p:last-child{margin:0}.progress{height:6px;background:#e8effa;border-radius:5px;overflow:hidden;margin-top:8px}.progress i{display:block;width:0;height:100%;background:linear-gradient(90deg,#60a5fa,#2563eb);border-radius:5px;transition:width .2s linear}.prog-label{display:flex;justify-content:space-between;font-size:8px;color:#9aabc0;margin-top:4px}
 .toast{position:absolute;left:50%;bottom:84px;transform:translateX(-50%) translateY(6px);background:rgba(15,30,52,.92);color:#fff;border-radius:9px;padding:8px 12px;font-size:9px;opacity:0;transition:.2s;pointer-events:none;z-index:30;white-space:nowrap}.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 /* responsive */
-@media(max-width:860px){.demo{grid-template-columns:1fr;gap:20px;padding:14px 10px 28px;justify-items:center}.phone{width:100%;max-width:390px;height:min(844px,calc(100dvh - 36px));min-height:620px;border-radius:0;border:0}.screen{border-radius:0}.side{text-align:center}.side p{margin-left:auto;margin-right:auto}.controls{text-align:left}.caption{margin-bottom:8px}.side h1{font-size:24px}}
+@media(max-width:1000px){.demo{grid-template-columns:1fr;gap:20px;padding:14px 10px 28px;justify-items:center}.phone{width:100%;max-width:390px;height:min(844px,calc(100dvh - 36px));min-height:620px;border-radius:0;border:0}.screen{border-radius:0}.side{text-align:center}.side p{margin-left:auto;margin-right:auto}.controls{text-align:left}.caption{margin-bottom:8px}.side h1{font-size:24px}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -83,11 +88,11 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 15% 0%,
         <div class="app-head"><div class="app-mark">奈</div><div class="app-name">HOSHINOUMI<small>REC · ONLINE</small></div><span class="pill ok" id="net-pill">在线</span></div>
         <div class="web-head"><h2>聊天</h2><p>QQ 会话 · 2 个</p><div class="web-search">⌕ 搜索会话 / 记忆 / 命令</div><div class="chips"><span class="chip on">全部</span><span class="chip">私聊</span><span class="chip">群聊</span></div></div>
         <div class="conv-list"><div class="sec"><span>最近</span><span>已同步</span></div>
-          <div class="conv"><div class="av bot">奈</div><div class="copy"><b>奈绪</b><small>你回来啦。今天外面有点冷，先喝点热的吧。</small></div><div class="end"><span class="tm">刚刚</span><span class="badge">2</span></div></div>
-          <div class="conv"><div class="av">学</div><div class="copy"><b>星之海学生会</b><small>友利：下午的会议改到三点。</small></div><div class="end"><span class="tm">12:40</span><span class="badge">5</span></div></div>
+          <div class="conv" onclick="openChat()"><div class="av bot">奈</div><div class="copy"><b>奈绪</b><small>你回来啦。今天外面有点冷，先喝点热的吧。</small></div><div class="end"><span class="tm">刚刚</span><span class="badge">2</span></div></div>
+          <div class="conv" onclick="toast('群聊演示：进入星之海学生会')"><div class="av">学</div><div class="copy"><b>星之海学生会</b><small>友利：下午的会议改到三点。</small></div><div class="end"><span class="tm">12:40</span><span class="badge">5</span></div></div>
         </div>
         <div class="web-tools"><button onclick="openModal('mic')">🎙 语音</button><button onclick="openModal('photo')">▧ 图片</button><button onclick="openModal('update')">↻ 更新</button></div>
-        <div class="tabbar"><div class="tab on"><span class="ic">◉</span>聊天</div><div class="tab"><span class="ic">◈</span>记忆</div><div class="tab"><span class="ic">♡</span>关系</div><div class="tab"><span class="ic">⚙</span>设置</div></div>
+        <div class="tabbar"><div class="tab on" onclick="toast('当前已在聊天')"><span class="ic">◉</span>聊天</div><div class="tab" onclick="toast('记忆页由同一套 Web 页面提供')"><span class="ic">◈</span>记忆</div><div class="tab" onclick="toast('关系页由同一套 Web 页面提供')"><span class="ic">♡</span>关系</div><div class="tab" onclick="toast('设置页由同一套 Web 页面提供')"><span class="ic">⚙</span>设置</div></div>
       </section>
 
       <!-- OFFLINE -->
@@ -120,6 +125,20 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 15% 0%,
         </div>
       </section>
 
+      <!-- CHAT -->
+      <section class="scene" id="scene-chat">
+        <div class="statusbar"><span>9:41</span><div class="right"><span class="sig"><i></i><i></i><i></i><i></i></span><span>5G</span><div class="battery"></div></div></div>
+        <div class="chat-head"><button class="back" onclick="go('web')">‹</button><div class="av bot sm">奈</div><div class="chat-who"><b>奈绪</b><small>在线 · 正在输入…</small></div><button class="chat-action" onclick="toast('会话菜单')">☰</button></div>
+        <div class="chat-messages" id="chatMessages">
+          <div class="chat-day">今天 09:38</div>
+          <div class="msg"><span class="av bot sm">奈</span><div><div class="msg-bubble">早呀。昨天你睡得很晚，今天要不要把节奏放慢一点？</div><small class="msg-time">09:38</small></div></div>
+          <div class="msg me"><div><div class="msg-bubble">嗯，今天没什么安排。</div><small class="msg-time">09:40 · 已读</small></div><span class="av sm mea">你</span></div>
+          <div class="msg"><span class="av bot sm">奈</span><div><div class="msg-bubble">那我把下午留给你。想去图书馆，还是就在学生会室待着？</div><small class="msg-time">09:41</small></div></div>
+          <div class="msg"><span class="av bot sm">奈</span><div><div class="msg-bubble">学生会室吧。窗外那棵树下，猫应该又会来。</div><div class="memchip">✦ 来自记忆 · 喜欢安静的下午</div><small class="msg-time">09:42</small></div></div>
+        </div>
+        <div class="chat-composer"><button class="composer-tool" onclick="openModal('photo')">＋</button><input id="chatInput" placeholder="和奈绪说点什么…" onkeydown="if(event.key==='Enter'&&!event.isComposing){event.preventDefault();sendChat()}"><button class="composer-send" onclick="sendChat()">↑</button></div>
+      </section>
+
       <!-- MODALS -->
       <div class="modal-layer" id="modal-mic" onclick="if(event.target===this)closeModal()"><div class="modal"><button class="x" onclick="closeModal()">×</button><h3>允许 Hoshinoumi 使用麦克风？</h3><div class="desc">用于给奈绪发送语音消息。录音只在你按下录音按钮时进行。</div><div class="perm"><span class="pi">🎙</span><div><b>语音消息</b><small>按住录音，松开发送；可随时在系统设置关闭。</small></div></div><div class="modal-actions"><button class="new-btn" onclick="permission('mic','deny')">不允许</button><button class="new-btn primary" onclick="permission('mic','allow')">允许</button></div></div></div>
       <div class="modal-layer" id="modal-photo" onclick="if(event.target===this)closeModal()"><div class="os-sheet"><div class="os-head">Hoshinoumi 想访问你的照片</div><div class="os-body">用于从相册选择图片发送给奈绪。<br>不会自动读取整个相册。</div><div class="os-actions"><button onclick="permission('photo','select')">仅选择照片</button><button class="strong" onclick="permission('photo','allow')">允许</button></div><div class="os-actions one"><button onclick="permission('photo','deny')">不允许</button></div></div></div>
@@ -147,7 +166,7 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 15% 0%,
 </div>
 
 <script>
-const scenes = ['splash','loading','web','offline','host','webview']
+const scenes = ['splash','loading','web','offline','host','webview','chat']
 const logEl = document.getElementById('log')
 let bootTimers = []
 let updateTimer = null
@@ -162,6 +181,27 @@ function boot(){
   closeModal(); clearBoot(); show('splash'); log('启动中：Splash → Loading → WebView')
   bootTimers.push(setTimeout(()=>{ show('loading'); log('WebView 加载中…') }, 1500))
   bootTimers.push(setTimeout(()=>{ show('web'); log('已进入手机 Web') }, 2900))
+}
+function openChat(){
+  closeModal(); show('chat'); log('进入会话：奈绪')
+  setTimeout(()=>document.getElementById('chatInput')?.focus(), 120)
+}
+function sendChat(){
+  const input = document.getElementById('chatInput')
+  const text = (input?.value || '').trim()
+  if(!text) return
+  const box = document.getElementById('chatMessages')
+  const me = document.createElement('div'); me.className = 'msg me'
+  me.innerHTML = `<div><div class="msg-bubble"></div><small class="msg-time">刚刚 · 发送中</small></div><span class="av sm mea">你</span>`
+  me.querySelector('.msg-bubble').textContent = text
+  box?.appendChild(me); if(input) input.value = ''
+  box.scrollTop = box.scrollHeight
+  setTimeout(()=>{
+    const bot = document.createElement('div'); bot.className = 'msg'
+    bot.innerHTML = `<span class="av bot sm">奈</span><div><div class="msg-bubble">我在听。慢慢说就好。</div><small class="msg-time">刚刚</small></div>`
+    box?.appendChild(bot); box.scrollTop = box.scrollHeight
+  }, 700)
+  toast('已发送（演示）')
 }
 function retry(){ clearBoot(); show('loading'); log('重试中…'); bootTimers.push(setTimeout(()=>{ show('web'); log('恢复在线') }, 1100)) }
 function openModal(name){
