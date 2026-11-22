@@ -8,18 +8,18 @@ export interface MobileEntry {
 }
 
 export const mobileEntries: MobileEntry[] = [
-  { key: 'chats', path: '/chat', icon: '◉', label: '聊天' },
-  { key: 'memory', path: '/memory', icon: '◇', label: '记忆' },
-  { key: 'relation', path: '/relation', icon: '♡', label: '关系' },
-  { key: 'settings', path: '/settings', icon: '⚙', label: '设置' },
   { key: 'home', path: '/home', icon: '⌂', label: '主页' },
+  { key: 'chats', path: '/chat', icon: '◉', label: '聊天' },
+  { key: 'memory', path: '/memory', icon: '◈', label: '记忆' },
+  { key: 'relation', path: '/relation', icon: '♡', label: '关系' },
   { key: 'savings', path: '/savings', icon: '¥', label: '存钱' },
   { key: 'weekly', path: '/weekly', icon: '▦', label: '周计划' },
-  { key: 'info', path: '/info', icon: 'i', label: '信息' },
-  { key: 'persona', path: '/persona', icon: '◈', label: '人设' },
+  { key: 'info', path: '/info', icon: '≡', label: '信息' },
+  { key: 'persona', path: '/persona', icon: '◇', label: '人设' },
   { key: 'commands', path: '/commands', icon: '⌘', label: '命令' },
   { key: 'cron', path: '/cron', icon: '◷', label: '定时' },
-  { key: 'logs', path: '/logs', icon: '≡', label: '日志' },
+  { key: 'logs', path: '/logs', icon: '≣', label: '日志' },
+  { key: 'settings', path: '/settings', icon: '⚙', label: '设置' },
 ]
 
 const STORAGE_KEY = 'hoshinoumi.mobile.quick'
@@ -46,7 +46,7 @@ function persist() {
 }
 
 export function useMobileNav() {
-  const quickEntries = computed(() => quickKeys.value.map(key => mobileEntries.find(entry => entry.key === key)).filter((entry): entry is MobileEntry => Boolean(entry)))
+  const quickEntries = computed(() => mobileEntries.filter(entry => quickKeys.value.includes(entry.key)))
 
   function toggleQuick(key: string) {
     const index = quickKeys.value.indexOf(key)

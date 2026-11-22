@@ -237,9 +237,9 @@ let demoUnread = 7
 let reminderHandled = false
 let currentScreen = 'chats'
 const allEntries = [
-  ['chats','◉','聊天'],['memory','◇','记忆'],['relation','♡','关系'],['settings','⚙','设置'],
-  ['home','⌂','主页'],['savings','¥','存钱'],['weekly','▦','周计划'],['info','i','信息'],
-  ['persona','◈','人设'],['commands','⌘','命令'],['cron','◷','定时'],['logs','≡','日志']
+  ['home','⌂','主页'],['chats','◉','聊天'],['memory','◈','记忆'],['relation','♡','关系'],
+  ['savings','¥','存钱'],['weekly','▦','周计划'],['info','≡','信息'],['persona','◇','人设'],
+  ['commands','⌘','命令'],['cron','◷','定时'],['logs','≣','日志'],['settings','⚙','设置']
 ]
 const QUICK_DEFAULT = ['chats','memory','relation','settings']
 let quickKeys = [...QUICK_DEFAULT]
@@ -573,7 +573,7 @@ screens.logs = `
 ${nav('chats')}`
 
 function nav(active){
-  const quick = quickKeys.map(k => allEntries.find(e => e[0] === k)).filter(Boolean)
+  const quick = allEntries.filter(e => quickKeys.includes(e[0]))
   const tab = ([key,ic,label]) => `<div class="tab ${active===key?'on':''}" onclick="go('${key}')"><span class="ic">${ic}</span>${label}${key==='chats'&&demoUnread>0?'<span class="tab-unread">'+(demoUnread>99?'99+':demoUnread)+'</span>':''}</div>`
   const all = allEntries.map(([key,ic,label]) => `<button class="${active===key?'on':''}" title="${label}" aria-label="${label}" onclick="go('${key}')"><b>${ic}</b>${key==='chats'&&demoUnread>0?'<span class="all-unread">'+(demoUnread>99?'99+':demoUnread)+'</span>':''}</button>`).join('')
   return `<nav class="bottom-nav ${navExpanded?'expanded':''}"><button class="nav-grip" title="展开 / 收起全部入口" aria-label="展开 / 收起全部入口" onclick="toggleNav(event)"><span class="grip-ic">⌃</span></button><div class="nav-row" style="grid-template-columns:repeat(${quick.length},1fr)">${quick.map(tab).join('')}</div><div class="nav-all"><div class="nav-all-grid">${all}</div></div></nav>`
