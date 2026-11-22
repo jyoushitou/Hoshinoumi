@@ -24,8 +24,16 @@ JDK17  D:\path\jdk-17_windows-x64_bin\jdk-17.0.8（17.0.8）
 项目本地环境脚本：
 
 ```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\android-env.ps1
+```
+
+当前终端要持久生效时用：
+
+```powershell
 . .\scripts\android-env.ps1
 ```
+
+如被执行策略拦截，用上面的 `-ExecutionPolicy Bypass -File`。
 
 只设置当前终端的 JAVA_HOME / ANDROID_HOME，不改系统环境。Android SDK 未安装时脚本会提示。
 

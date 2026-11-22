@@ -29,4 +29,3 @@ if ($env:ANDROID_HOME) {
 } else {
     Write-Host "ANDROID_HOME=<未安装 Android SDK>"
 }
-Write-Host "java=$((& java -version 2>&1 | Select-Object -First 1))"
