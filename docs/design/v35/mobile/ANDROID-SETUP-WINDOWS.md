@@ -15,7 +15,7 @@ $tmp  = "$env:TEMP\commandlinetools-extract"
 
 New-Item -ItemType Directory -Force -Path $root, $tmp | Out-Null
 Invoke-WebRequest `
-  'https://mirrors.cloud.tencent.com/AndroidSDK/commandlinetools-win-16111833_latest.zip' `
+  'https://mirrors.cloud.tencent.com/AndroidSDK/commandlinetools-win-13114758_latest.zip' `
   -OutFile $zip -UseBasicParsing
 Expand-Archive $zip -DestinationPath $tmp -Force
 
@@ -28,6 +28,8 @@ Copy-Item "$tmp\cmdline-tools\*" "$root\cmdline-tools\latest" -Recurse -Force
 ```text
 E:\app\AndroidSDK\cmdline-tools\latest\bin\sdkmanager.bat
 ```
+
+> 注意：不要用 `16111833` 新版 cmdline-tools。它的 `android.exe` 会去 dl.google.com 下载 Android CLI，国内会超时。使用 `13114758` 这一版。
 
 ## 2. 当前 PowerShell 设置环境
 
