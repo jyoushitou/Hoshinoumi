@@ -73,7 +73,8 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-.mobile-shell{height:100vh;height:100dvh;height:var(--app-height,100dvh);display:flex;flex-direction:column;background:#f7faff;color:#17263b;overflow:hidden}
+.mobile-shell{width:100%;max-width:430px;margin:0 auto;height:100vh;height:100dvh;height:var(--app-height,100dvh);display:flex;flex-direction:column;background:#f7faff;color:#17263b;overflow:hidden;box-shadow:0 0 0 1px rgba(227,235,247,.8),0 18px 60px rgba(23,38,59,.06)}
+@media(max-width:430px){.mobile-shell{max-width:none;box-shadow:none}}
 .mobile-header{flex:none;height:calc(50px + env(safe-area-inset-top));display:flex;align-items:center;gap:9px;padding:env(safe-area-inset-top) 14px 0;background:rgba(255,255,255,.92);border-bottom:1px solid #e5edf9}
 .logo{width:28px;height:28px;border-radius:9px;background:#eef4ff;color:#2563eb;display:grid;place-items:center;font-size:13px}
 .brand{font-size:11px;font-weight:800;letter-spacing:.12em;line-height:1.1}

@@ -16,6 +16,7 @@ integrations/web/src/App.vue
 ≤ 820px：MobileShell + 手机页面组件
 > 820px：AppShell + 桌面页面组件
 窗口 resize 时实时切换
+431–820px 居中显示 430px 手机列，避免宽屏把手机拉扁
 ```
 
 例：
