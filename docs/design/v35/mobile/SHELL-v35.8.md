@@ -41,6 +41,22 @@ QQ 号（必填）
 不再让用户填邀请码、QQ、昵称重新注册；设置密码时需要输入 QQ。
 不提供游客模式；未登录不能进入业务页面。
 
+## WebView 过旧与 APK 更新
+
+```text
+系统 WebView 108 < 120：自检拦截
+主路径：下载最新 Hoshinoumi APK，安装后进入兼容模式
+备路径：打开应用商店更新 Android System WebView
+```
+
+边界：
+
+```text
+APK 更新的是 Hoshinoumi，不会升级系统 WebView
+兼容模式需要单独实现；没有兼容层时安装新 APK 仍会自检失败
+不能假装安装 APK 就修好了 WebView
+```
+
 ## 1. 架构
 
 ```text
