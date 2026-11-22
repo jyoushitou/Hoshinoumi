@@ -43,3 +43,7 @@ commands/nao.md
 ```
 
 或直接让 Qoder「用 Hoshinoumi 查一下关系」。
+
+---
+
+Powered by jyoushitou

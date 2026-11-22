@@ -15,7 +15,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .top{height:35px;flex:none;display:flex;align-items:center;gap:7px;padding:0 12px;border-bottom:1px solid var(--vscode-sideBar-border,var(--vscode-panel-border));background:var(--vscode-sideBarSectionHeader-background,transparent)}
 .logo{width:15px;height:15px;color:var(--vscode-textLink-foreground);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600}
 .title{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--vscode-sideBarTitle-foreground,var(--vscode-foreground));white-space:nowrap}
-.dot{margin-left:auto;width:7px;height:7px;border-radius:50%;background:var(--vscode-descriptionForeground,#8a8b82);opacity:.5}
+.credit{font:8px ui-monospace,monospace;letter-spacing:.06em;color:var(--vscode-descriptionForeground);opacity:.7;white-space:nowrap}.dot{margin-left:auto;width:7px;height:7px;border-radius:50%;background:var(--vscode-descriptionForeground,#8a8b82);opacity:.5}
 .dot.on{background:var(--vscode-charts-green,#2fa56b);opacity:1}.dot.err{background:var(--vscode-charts-red,#c25b5b);opacity:1}
 .nav{flex:none;display:flex;flex-wrap:wrap;gap:1px;padding:5px 7px;border-bottom:1px solid var(--vscode-sideBar-border,var(--vscode-panel-border))}
 .nav button{height:23px;padding:0 7px;border-radius:3px;color:var(--vscode-sideBar-foreground);font-size:11px;opacity:.85}
@@ -47,7 +47,7 @@ h1{font-size:13px;font-weight:600;margin:0 0 2px;color:var(--vscode-foreground)}
 .cmdout{margin-top:7px;padding:7px;border:1px solid var(--vscode-sideBar-border,#333);border-radius:2px;background:var(--vscode-editor-background,#161616);color:var(--vscode-foreground,#b8c4d0);font:10px/1.55 "Cascadia Code","Consolas",monospace;white-space:pre-wrap;min-height:42px}.setup-mask{position:fixed;inset:0;z-index:10;background:rgba(0,0,0,.45);display:none;align-items:flex-start;justify-content:center;padding:38px 12px;overflow:auto}.setup-mask.open{display:flex}.setup-card{width:100%;max-width:420px;background:var(--vscode-editor-background,#252526);border:1px solid var(--vscode-panel-border,#454545);border-radius:4px;padding:16px 16px 12px;box-shadow:0 12px 32px rgba(0,0,0,.45);color:var(--vscode-foreground,#ccc)}.setup-title{font-size:15px;font-weight:600;margin-bottom:4px}.setup-sub{font-size:11px;line-height:1.55;color:var(--vscode-descriptionForeground,#999);margin-bottom:12px}.setup-actions{display:flex;gap:6px;margin-top:6px}.setup-actions .btn{flex:1;margin:0}.setup-status{font-size:10px;line-height:1.5;color:var(--vscode-descriptionForeground,#999);margin-top:8px;min-height:15px}.setup-skip{display:block;margin:10px auto 0;font-size:10px;color:var(--vscode-textLink-foreground,#4daafc)}</style>
 </head>
 <body>
-<div class="top"><div class="logo">◈</div><div class="title">Hoshinoumi</div><span class="dot" id="dot"></span></div>
+<div class="top"><div class="logo">◈</div><div class="title">Hoshinoumi</div><span class="credit">by jyoushitou</span><span class="dot" id="dot"></span></div>
 <div class="nav" id="nav">
  <button data-page="home">主页</button><button data-page="chat">聊天</button><button data-page="memory">记忆</button><button data-page="savings">存钱</button><button data-page="weekly">周计划</button><button data-page="persona">人设</button><button data-page="relation">关系</button><button data-page="settings">设置</button>
 </div>

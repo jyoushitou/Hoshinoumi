@@ -123,3 +123,7 @@ D 本地 fallback.html
 ```text
 hoshinoumi-desktop-v35.6-fallback.html
 ```
+
+---
+
+POWERED BY JYOUSUITOU
