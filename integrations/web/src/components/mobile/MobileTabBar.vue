@@ -90,9 +90,9 @@ function go(path: string) {
 .mobile-tabbar{
   position:relative;flex:none;display:flex;flex-direction:column;align-items:stretch;
   background:#fff;border-top:1px solid #e3ebf7;padding:0 6px max(6px, env(safe-area-inset-bottom));min-height:70px;
-  transition:height .18s ease;height:70px;overflow:visible;z-index:30;touch-action:pan-x;
+  transition:max-height .28s cubic-bezier(.2,.8,.2,1);height:auto;max-height:70px;overflow:hidden;z-index:30;touch-action:pan-x;
 }
-.mobile-tabbar.expanded{height:auto}
+.mobile-tabbar.expanded{height:auto;max-height:300px;overflow:visible}.mobile-tabbar.expanded .quick-row{display:none}.mobile-tabbar.expanded .all-grid{animation:tab-sheet-in .28s cubic-bezier(.2,.8,.2,1) both}@keyframes tab-sheet-in{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 .mobile-tabbar:before{content:"";position:absolute;top:5px;left:50%;transform:translateX(-50%);width:30px;height:4px;border-radius:3px;background:#d8e5f5;z-index:2;pointer-events:none}
 .mobile-tabbar.expanded:before{background:#c7dcff}
 .quick-row{display:grid;height:54px;align-items:stretch}
