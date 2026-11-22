@@ -112,7 +112,7 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 15% 0%,
             <button class="login-submit" onclick="submitLogin()">保存并进入</button>
             <div class="login-links"><button class="login-link" onclick="openRegister()">首次登录？设置密码</button></div>
           </div>
-          <div class="login-note">主人用 QQ + token；普通账号用 QQ + 密码。<br>账号由主人创建，首次登录只需设置密码。</div>
+          <div class="login-note">主人用 QQ + token；普通账号用 QQ + 密码。<br>账号由邀请人创建，首次登录只需设置密码。</div>
         </div>
       </section>
 
@@ -201,9 +201,9 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 15% 0%,
       <div class="modal-layer" id="modal-register" onclick="if(event.target===this)closeModal()">
         <div class="set-card">
           <h3>首次登录 · 设置密码</h3>
-          <p class="sub">账号已由主人创建，不需要重新注册；请输入要设置密码的 QQ。</p>
+          <p class="sub">账号已由邀请人创建，不需要重新注册；请输入要设置密码的 QQ。</p>
           <div class="field"><label>QQ 号</label><input id="regQQ" value="10001" inputmode="numeric" placeholder="输入账号 QQ"></div>
-          <div class="field"><label>一次性 setup code</label><input id="regCode" value="SETUP-2026" placeholder="主人给你的 setup code"></div>
+          <div class="field"><label>一次性 setup code</label><input id="regCode" value="SETUP-2026" placeholder="邀请你的朋友给你的 setup code"></div>
           <div class="field"><label>新密码（至少 8 位）</label><input id="regPassword" type="password" placeholder="设置登录密码"></div>
           <div class="field"><label>确认密码</label><input id="regPassword2" type="password" placeholder="再输入一次"></div>
           <div class="login-error" id="registerError" style="display:none"></div>

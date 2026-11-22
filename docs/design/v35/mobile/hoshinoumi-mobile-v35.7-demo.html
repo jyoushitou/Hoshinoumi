@@ -289,7 +289,7 @@ screens.login = `
     <button class="primary" onclick="go('chats')">登录</button>
     <button class="first-login" onclick="openFirstLogin()">首次登录？设置密码</button>
   </div>
-  <div class="tip">账号由主人创建 · 首次登录设置密码 · 不保存密码</div>
+  <div class="tip">账号由邀请人创建 · 首次登录设置密码 · 不保存密码</div>
   <div class="safe"></div>
 </div>`
 
@@ -664,7 +664,7 @@ function openFirstLogin(){
   overlay(`<div class="cron-sheet" style="max-width:340px">
     <div class="cron-sheet-head"><h4>首次登录 · 设置密码</h4><button class="cron-x" onclick="closeOverlay()">×</button></div>
     <div class="cron-field"><label>已绑定 QQ</label><input value="10002" readonly></div>
-    <div class="cron-field"><label>一次性 setup code</label><input placeholder="主人给你的 setup code"></div>
+    <div class="cron-field"><label>一次性 setup code</label><input placeholder="邀请你的朋友给你的 setup code"></div>
     <div class="cron-field"><label>新密码</label><input type="password" placeholder="至少 8 位"></div>
     <div class="cron-field"><label>确认密码</label><input type="password" placeholder="再输入一次"></div>
     <div class="cron-actions"><button onclick="closeOverlay()">取消</button><button class="primary" onclick="closeOverlay();toast('密码已设置（演示）');go('chats')">设置密码并登录</button></div>

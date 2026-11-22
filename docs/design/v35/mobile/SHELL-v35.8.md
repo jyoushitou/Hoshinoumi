@@ -20,10 +20,10 @@ WebView 内 v35.7 全功能页面
 
 ## 账号与首次登录
 
-账号不是前端公开注册，QQ 身份由 NapCat 绑定，主人先创建账号：
+账号不是前端公开注册，QQ 身份由 NapCat 绑定，邀请人先创建账号：
 
 ```text
-主人：!adduser <QQ> → 生成一次性 setup code
+邀请人（朋友 / 主人）：!adduser <QQ> → 生成一次性 setup code
 普通账号首次登录：QQ + setup code + 新密码
 之后登录：QQ + 密码
 主人 Web：QQ + owner token
@@ -33,7 +33,7 @@ WebView 内 v35.7 全功能页面
 
 ```text
 QQ 号（必填）
-setup code
+邀请人提供的 setup code
 新密码 / 确认密码
 [设置密码并登录]
 ```
