@@ -358,7 +358,7 @@ screens.settings = `
 <div class="screen-body" style="flex:1;min-height:0;display:flex;flex-direction:column">
   <div class="page-head"><h2>设置<small>SETTINGS</small></h2></div>
   <div class="set-body">
-    <div class="profile" onclick="toast('账号信息演示')"><div class="avatar">徐</div><div class="t"><b>徐梓腾</b><small>主人账号 · 已连接</small></div><span class="chev">›</span></div>
+    <div class="profile" onclick="toast('账号信息演示')"><div class="avatar">J</div><div class="t"><b>jyoushitou</b><small>主人账号 · 已连接</small></div><span class="chev">›</span></div>
     <div class="set-group"><div class="set-row" data-quick onclick="openQuickSettings()"><span class="ic">★</span><div class="t">底部快捷栏</div><span class="val">${quickKeys.map(k=>allEntries.find(e=>e[0]===k)?.[2]).join(' / ')}</span></div></div>
     <div class="set-group"><div class="set-row" onclick="toast('连接设置演示')"><span class="ic">⌁</span><div class="t">连接 / 后端入口</div><span class="val">127.0.0.1:27005</span></div><div class="set-row" onclick="toast('外观设置演示')"><span class="ic">◐</span><div class="t">外观</div><span class="val">跟随系统</span></div><div class="set-row"><span class="ic">◉</span><div class="t">消息通知</div><div class="switch on" onclick="toggleSwitch(this)"></div></div></div>
     <div class="set-group"><div class="set-row"><span class="ic">◇</span><div class="t">记忆</div><div class="switch on" onclick="toggleSwitch(this)"></div></div><div class="set-row" onclick="toast('关系显示范围演示')"><span class="ic">♡</span><div class="t">关系显示范围</div><span class="val">仅自己</span></div><div class="set-row" onclick="toast('桌面端状态演示')"><span class="ic">⬡</span><div class="t">桌面端</div><span class="val">已安装</span></div></div>

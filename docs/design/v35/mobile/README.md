@@ -205,7 +205,7 @@ header p{margin:0;color:#7c8da6;font-size:11px;max-width:620px}
 <!-- 13 SETTINGS -->
 <div class="item"><div class="label"><b>设置</b><span>13 SETTINGS</span></div><div class="frame"><div class="view"><div class="status"><span>9:41</span><span>5G ▮</span></div><div class="pg">
 <div class="ph"><h2>设置<small>SETTINGS</small></h2></div>
-<div class="card"><div class="rowline"><span class="avatar">徐</span><span class="grow"><b>徐梓腾</b><small>主人账号 · 已连接</small></span><span class="chev">›</span></div></div>
+<div class="card"><div class="rowline"><span class="avatar">J</span><span class="grow"><b>jyoushitou</b><small>主人账号 · 已连接</small></span><span class="chev">›</span></div></div>
 <div class="section-title">连接与界面</div>
 <div class="card"><div class="rowline"><span class="grow">底部快捷栏</span><span class="val">聊天 / 记忆 / 关系 / 设置</span><span class="chev">›</span></div><div class="rowline"><span class="grow">后端连接</span><span class="val">已连接</span></div><div class="rowline"><span class="grow">外观</span><span class="val">跟随系统</span></div><div class="rowline"><span class="grow">消息通知</span><span class="val">开启</span></div></div>
 <div class="section-title">隐私与数据</div>
