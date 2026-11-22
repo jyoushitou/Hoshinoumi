@@ -1,16 +1,19 @@
 ﻿<script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { computed, onBeforeUnmount, onMounted, watchEffect } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import MobileChatView from '@/views/mobile/MobileChatView.vue'
 import MobilePageView from '@/views/mobile/MobilePageView.vue'
 import MobileSettingsView from '@/views/mobile/MobileSettingsView.vue'
 import MobileTabBar from '@/components/mobile/MobileTabBar.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useSessionStore } from '@/stores/session'
+import { useIsOwner } from '@/composables/useIsOwner'
 
 const route = useRoute()
+const router = useRouter()
 const auth = useAuthStore()
 const session = useSessionStore()
+const isOwner = useIsOwner()
 
 const titles: Record<string, string> = {
   chat: '聊天', home: '主页', memory: '记忆', relation: '关系', savings: '存钱',
@@ -18,11 +21,18 @@ const titles: Record<string, string> = {
   logs: '运行日志', settings: '设置',
 }
 const pageView = computed(() => {
+  if (route.name === 'relation' && !isOwner.value) return MobileChatView
   if (route.name === 'chat') return MobileChatView
   if (route.name === 'settings') return MobileSettingsView
   return MobilePageView
 })
 const title = computed(() => titles[String(route.name)] ?? 'Hoshinoumi')
+
+watchEffect(() => {
+  if (route.name !== 'relation') return
+  if (!auth.loggedIn) { void router.replace('/chat'); return }
+  if (session.status && !isOwner.value) void router.replace('/chat')
+})
 
 onMounted(() => {
   if (auth.loggedIn) { void session.refresh(); session.startSync() }

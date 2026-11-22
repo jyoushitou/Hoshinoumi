@@ -2,9 +2,12 @@
 import { computed } from 'vue'
 import { useMobileNav } from '@/composables/useMobileNav'
 import { useAuthStore } from '@/stores/auth'
+import { useIsOwner } from '@/composables/useIsOwner'
 
 const auth = useAuthStore()
+const isOwner = useIsOwner()
 const { entries, quickKeys, toggleQuick, resetQuick } = useMobileNav()
+const visibleEntries = computed(() => isOwner.value ? entries : entries.filter(entry => entry.key !== 'relation'))
 const message = computed(() => `${quickKeys.value.length} / 5`)
 const quickLabel = computed(() => quickKeys.value.map(key => entries.find(entry => entry.key === key)?.label).filter(Boolean).join(' / '))
 
@@ -21,7 +24,7 @@ function logout() { auth.logout() }
       <p class="block-desc">1–5 个图标入口，收起时显示在底部。当前：{{ quickLabel }}</p>
       <div class="quick-grid">
         <button
-          v-for="entry in entries"
+          v-for="entry in visibleEntries"
           :key="entry.key"
           type="button"
           class="quick-item"

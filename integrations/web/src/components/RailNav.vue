@@ -1,7 +1,10 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useSessionStore } from '@/stores/session'
+import { useIsOwner } from '@/composables/useIsOwner'
 const session = useSessionStore()
-const nav = [
+const isOwner = useIsOwner()
+const baseNav = [
   { page: 'home', icon: '⌂', title: '主页' },
   { page: 'chat', icon: '◉', title: 'nao（聊天）' },
   { page: 'memory', icon: '◈', title: '记忆' },
@@ -14,6 +17,7 @@ const nav = [
   { page: 'cron', icon: '◷', title: '定时任务' },
   { page: 'logs', icon: '≣', title: '运行日志' },
 ]
+const nav = computed(() => isOwner.value ? baseNav : baseNav.filter(n => n.page !== 'relation'))
 </script>
 <template>
   <aside class="rail">

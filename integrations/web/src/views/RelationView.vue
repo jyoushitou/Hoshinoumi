@@ -1,7 +1,17 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useSessionStore } from '@/stores/session'
+import { useAuthStore } from '@/stores/auth'
+import { useIsOwner } from '@/composables/useIsOwner'
 const session = useSessionStore()
+const auth = useAuthStore()
+const router = useRouter()
+const isOwner = useIsOwner()
+onMounted(() => {
+  if (!auth.loggedIn) void router.replace('/chat')
+  else if (session.status && !isOwner.value) void router.replace('/chat')
+})
 const tier = computed(() => String(session.relation?.tier || '未获取'))
 const description = computed(() => String(session.relation?.description || '暂未获取到关系描述'))
 const recent = computed(() => {
@@ -14,7 +24,7 @@ const progress = computed(() => {
 })
 </script>
 <template>
-  <div class="page">
+  <div v-if="isOwner" class="page">
     <div class="head"><div><h1>关系</h1><p>仅 owner 可见 · 不显示具体数值</p></div><RouterLink to="/chat" class="back">← 返回聊天</RouterLink></div>
     <div v-if="session.relation" class="grid">
       <section class="card wide"><div class="k">关系档位</div><div class="tier">{{ tier }}</div><div class="bar"><i :style="{ width: progress + '%' }" /></div><div class="note">{{ description }}</div></section>

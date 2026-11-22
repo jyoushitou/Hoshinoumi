@@ -3,11 +3,18 @@ import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useMobileNav } from '@/composables/useMobileNav'
 import { useSessionStore } from '@/stores/session'
+import { useIsOwner } from '@/composables/useIsOwner'
 
 const route = useRoute()
 const router = useRouter()
 const { entries, quickEntries } = useMobileNav()
 const session = useSessionStore()
+const isOwner = useIsOwner()
+const visibleEntries = computed(() => isOwner.value ? entries : entries.filter(entry => entry.key !== 'relation'))
+const visibleQuick = computed(() => {
+  const list = quickEntries.value.filter(entry => isOwner.value || entry.key !== 'relation')
+  return list.length ? list : visibleEntries.value.slice(0, 1)
+})
 const expanded = ref(false)
 const activePath = computed(() => route.path)
 
@@ -31,9 +38,9 @@ function go(path: string) {
       <span class="grip-icon">⌃</span>
     </button>
 
-    <div class="quick-row" :style="{ gridTemplateColumns: `repeat(${quickEntries.length}, 1fr)` }">
+    <div class="quick-row" :style="{ gridTemplateColumns: `repeat(${visibleQuick.length}, 1fr)` }">
       <button
-        v-for="entry in quickEntries"
+        v-for="entry in visibleQuick"
         :key="entry.key"
         class="tab-item"
         :class="{ on: activePath === entry.path }"
@@ -48,7 +55,7 @@ function go(path: string) {
 
     <div v-if="expanded" class="all-grid">
       <button
-        v-for="entry in entries"
+        v-for="entry in visibleEntries"
         :key="entry.key"
         class="all-item"
         :class="{ on: activePath === entry.path }"

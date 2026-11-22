@@ -47,6 +47,22 @@ MobileShell 按路由名选择手机页面；不复制一套业务路由。
 存储：localStorage: hoshinoumi.mobile.quick
 ```
 
+## owner 判定
+
+```text
+composables/useIsOwner.ts
+auth.qq === session.status.master_qq
+```
+
+非 owner：
+
+```text
+MobileTabBar / MobileSettingsView 隐藏 relation
+RailNav 隐藏关系入口
+MobileShell 访问 /relation 跳 /chat
+RelationView 非 owner 不渲染并重定向
+```
+
 ## 校验
 
 ```powershell
