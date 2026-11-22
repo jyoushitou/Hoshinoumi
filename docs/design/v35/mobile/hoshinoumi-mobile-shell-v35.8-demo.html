@@ -106,9 +106,9 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 15% 0%,
             <div class="field"><label>主人 QQ</label><input id="loginQQ" value="10001" inputmode="numeric" placeholder="输入主人 QQ"></div>
             <div class="field"><label>访问 Token</label><input id="loginToken" type="password" value="demo-token" placeholder="Bearer token"></div>
             <button class="login-submit" onclick="submitLogin()">保存并进入</button>
-            <div class="login-links"><button class="login-link" onclick="openRegister()">首次使用？注册</button><button class="login-link muted" onclick="enterWeb('游客')">游客模式</button></div>
+            <div class="login-links"><button class="login-link" onclick="openRegister()">首次登录？设置密码</button><button class="login-link muted" onclick="enterWeb('游客')">游客模式</button></div>
           </div>
-          <div class="login-note">后端地址、QQ、token 都保存在本机。<br>首次使用需要邀请码注册。</div>
+          <div class="login-note">主人用 QQ + token；普通账号用 QQ + 密码。<br>账号由主人创建，首次登录只需设置密码。</div>
         </div>
       </section>
 
@@ -190,20 +190,20 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 15% 0%,
           <div class="field"><label>主人 QQ</label><input id="settingsQQ" value="10001" inputmode="numeric"></div>
           <div class="field"><label>访问 Token</label><input id="settingsToken" type="password" value="demo-token"></div>
           <div class="actions"><button class="new-btn" onclick="testConnection()">测试连接</button><button class="new-btn primary" onclick="saveSettings()">保存</button></div>
-          <div class="login-links"><button class="login-link" onclick="openRegister()">注册新账号</button><button class="login-link muted" onclick="closeModal()">关闭</button></div>
+          <div class="login-links"><button class="login-link" onclick="openRegister()">首次登录设置密码</button><button class="login-link muted" onclick="closeModal()">关闭</button></div>
         </div>
       </div>
 
       <div class="modal-layer" id="modal-register" onclick="if(event.target===this)closeModal()">
         <div class="set-card">
-          <h3>首次使用 · 注册</h3>
-          <p class="sub">需要邀请码。注册成功后用 QQ + 密码登录。</p>
+          <h3>首次登录 · 设置密码</h3>
+          <p class="sub">账号已由主人创建，QQ 身份已绑定，不需要重新注册。</p>
+          <div class="set-status" style="color:#5f7da2;background:#f4f9ff;border-color:#dbe8ff">已绑定 QQ · 10002</div>
+          <div class="field"><label>一次性 setup code</label><input id="regCode" value="SETUP-2026" placeholder="主人给你的 setup code"></div>
+          <div class="field"><label>新密码（至少 8 位）</label><input id="regPassword" type="password" placeholder="设置登录密码"></div>
+          <div class="field"><label>确认密码</label><input id="regPassword2" type="password" placeholder="再输入一次"></div>
           <div class="login-error" id="registerError" style="display:none"></div>
-          <div class="field"><label>邀请码</label><input id="regInvite" value="HOSHI-2026"></div>
-          <div class="field"><label>QQ 号</label><input id="regQQ" value="10002" inputmode="numeric"></div>
-          <div class="field"><label>昵称</label><input id="regName" value="新用户"></div>
-          <div class="field"><label>密码（至少 8 位）</label><input id="regPassword" type="password" value="demo12345"></div>
-          <div class="actions"><button class="new-btn" onclick="backToLogin()">返回登录</button><button class="new-btn primary" onclick="submitRegister()">注册并连接</button></div>
+          <div class="actions"><button class="new-btn" onclick="backToLogin()">返回登录</button><button class="new-btn primary" onclick="submitSetupPassword()">设置密码并登录</button></div>
         </div>
       </div>
 
@@ -215,7 +215,7 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 15% 0%,
   <aside class="side">
     <div class="kicker">MOBILE SHELL · DESIGN DEMO</div>
     <h1>手机套壳<br>交互设计稿</h1>
-    <p>这是 Capacitor / WebView 壳的完整交互演示。WebView 内嵌的是 v35.7 全功能手机原型：聊天、记忆、关系、存钱、周计划、信息、人设、命令、定时、日志、设置都能点。点底栏上方箭头展开 12 个入口。</p>
+    <p>这是 Capacitor / WebView 壳的完整交互演示。WebView 内嵌的是 v35.7 全功能手机原型：聊天、记忆、关系、存钱、周计划、信息、人设、命令、定时、日志、设置都能点。首次登录先设置密码；点底栏上方箭头展开 12 个入口。</p>
     <div class="panel"><h3>壳事件模拟</h3><div class="controls">
       <button class="primary" onclick="boot()">▶ 重新启动</button>
       <button onclick="go('offline')">☁ 模拟断网</button>
@@ -305,13 +305,14 @@ function openRegister(){
   closeModal(); document.getElementById('modal-register')?.classList.add('on'); log('首次使用：注册')
 }
 function backToLogin(){ closeModal(); show('login'); log('返回登录') }
-function submitRegister(){
-  const invite = document.getElementById('regInvite')?.value.trim() || ''
-  const qq = document.getElementById('regQQ')?.value.trim() || ''
+function submitSetupPassword(){
+  const code = document.getElementById('regCode')?.value.trim() || ''
   const password = document.getElementById('regPassword')?.value || ''
+  const password2 = document.getElementById('regPassword2')?.value || ''
   const error = document.getElementById('registerError')
-  if(!invite || !qq || password.length < 8){ if(error){error.style.display='block';error.textContent='邀请码、QQ、至少 8 位密码都要填'} return }
-  closeModal(); toast('注册成功（演示）'); enterWeb('注册成功')
+  if(!code || password.length < 8){ if(error){error.style.display='block';error.textContent='setup code 和至少 8 位密码都要填'} return }
+  if(password !== password2){ if(error){error.style.display='block';error.textContent='两次密码不一致'} return }
+  closeModal(); toast('密码已设置（演示）'); enterWeb('首次登录完成')
 }
 function openSettings(){
   closeModal(); document.getElementById('modal-settings')?.classList.add('on'); log('打开连接设置')
