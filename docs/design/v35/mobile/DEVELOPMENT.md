@@ -1,6 +1,6 @@
 ﻿# v35.7 手机 Vue 框架
 
-状态：框架已接入（v35.7.0.0），页面按补丁继续补。
+状态：v35.7.1.0 / v35.7.1.1 已实现，继续 v35.7.2.0 验收。
 
 ## 入口
 
@@ -11,8 +11,19 @@ integrations/web/src/App.vue
 规则：
 
 ```text
-≤ 820px：MobileShell
-> 820px：原 AppShell，桌面不变
+同一个 URL，同一套 Vue Router
+不支持 /mobile、/m、手机专用子域名
+≤ 820px：MobileShell + 手机页面组件
+> 820px：AppShell + 桌面页面组件
+窗口 resize 时实时切换
+```
+
+例：
+
+```text
+电脑打开 http://host:27006/chat   → AppShell + ChatView
+手机打开 http://host:27006/chat   → MobileShell + MobileChatView
+同一路径，仅视口尺寸不同
 ```
 
 ## 文件
@@ -24,6 +35,7 @@ composables/useMobileNav.ts          快捷项状态 / localStorage / 1–5 限�
 views/mobile/MobileChatView.vue      会话列表 + 聊天骨架
 views/mobile/MobilePageView.vue      其余页面框架
 views/mobile/MobileSettingsView.vue  设置 + 快捷栏自定义
+views/mobile/MobileWeeklyView.vue    手机周计划（真实 /api/weekly-plan 读写）
 ```
 
 ## 路由
