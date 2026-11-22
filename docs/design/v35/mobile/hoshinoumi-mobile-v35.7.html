@@ -33,12 +33,14 @@
           <div class="hello">欢迎回来，<br><em>今天想聊点什么？</em></div>
           <div class="sub">登录后同步会话、记忆与关系。</div>
           <div class="form">
+            <div class="field"><label>后端 URL</label><input placeholder="https://hoshinoumi.app" value="https://hoshinoumi.app" inputmode="url"></div>
             <div class="field"><label>QQ 号</label><input placeholder="输入你的 QQ 号" inputmode="numeric"></div>
-            <div class="field pass"><div style="flex:1"><label>访问 Token</label><input placeholder="输入 owner token" type="password"></div><span class="eye">◉</span></div>
-            <div class="server"><i></i>已连接 127.0.0.1:27005 · 本机网关</div>
+            <div class="field pass"><div style="flex:1"><label>访问 Token / 密码</label><input placeholder="主人 token 或账号密码" type="password"></div><span class="eye">◉</span></div>
+            <div class="server"><i></i>已连接 hoshinoumi.app · 同源</div>
             <button class="primary">登录</button>
+            <button style="width:100%;border:0;background:none;color:#2563eb;font:9px inherit;padding:9px 0 0">首次登录？设置密码</button>
           </div>
-          <div class="tip">仅主人账号可登录 · 不保存密码</div>
+          <div class="tip">账号由主人创建 · 首次登录设置密码 · 不保存密码</div>
           <div class="safe"></div>
         </div>
       </div></div>
