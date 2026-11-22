@@ -106,13 +106,47 @@ apksigner verify --print-certs app-release.apk
 不删除旧版
 ```
 
-## AAB
+## 发布方式：GitHub Releases
+
+不上架应用市场，只发布签名 APK：
 
 ```text
-应用商店上传 AAB
-自托管直接安装用 APK
-AAB 不能直接双击安装
-需要 bundletool 生成 universal APK 或 split APK
+GitHub Release: v35.8.1
+Assets:
+  hoshinoumi-35.8.1.apk
+  latest.json
+  SHA256SUMS
+```
+
+`latest.json`：
+
+```json
+{
+  "versionCode": 35801,
+  "versionName": "35.8.1",
+  "apkUrl": "https://github.com/<owner>/<repo>/releases/download/v35.8.1/hoshinoumi-35.8.1.apk",
+  "sha256": "...",
+  "certSha256": "..."
+}
+```
+
+更新流程：
+
+```text
+GET latest.json（release 固定链接或 raw）
+→ 比较 versionCode
+→ 下载 APK
+→ 校验 SHA-256 / applicationId / 证书指纹 / versionCode
+→ FileProvider + ACTION_VIEW 安装
+```
+
+GitHub 注意事项：
+
+```text
+Release asset 会 302 到 objects.githubusercontent.com，DownloadManager 需跟随跳转
+不要依赖 GitHub API 限流；优先用 latest.json 固定链接
+国内网络可能无法访问 GitHub，失败要有手动打开 Release 页的兜底
+APK 不通过 AAB / bundletool 发布
 ```
 
 ## 密钥丢失

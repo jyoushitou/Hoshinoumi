@@ -46,7 +46,8 @@ QQ 号（必填）
 ```text
 系统 WebView 108 < 120：自检拦截
 主路径：下载最新 Hoshinoumi APK，安装后进入兼容模式
-备路径：打开应用商店更新 Android System WebView
+APK 来源：GitHub Releases（不上架应用市场）
+备路径：系统设置更新 Android System WebView
 ```
 
 边界：
@@ -111,7 +112,7 @@ Android App (Capacitor)
 
 | 版本 | 内容 | 验收 |
 |---|---|---|
-| v35.8.2.0 | Android 签名配置、release APK/AAB、渠道信息 | 可安装 |
+| v35.8.2.0 | Android 签名配置、release APK、GitHub Releases 资产 | 可安装 |
 | v35.8.2.1 | 启动自检：WebView 版本 / 网络 / host / 存储 / 崩溃日志 | 出错有可读提示 |
 | v35.8.2.2 | 版本检查、下载、安装、失败回退 | 更新失败回旧版 |
 | v35.8.2.3 | 真机矩阵：Android 10–15、刘海/挖孔、手势导航、平板 | 验收表通过 |
