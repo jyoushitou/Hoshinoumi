@@ -313,9 +313,9 @@
         '<div class="login-field"><label>访问 token</label><input id="loginToken" type="password" value="' + esc(saved.token || '') + '" placeholder="Bearer token"></div>' +
         '<div class="login-field"><label>主人 QQ</label><input id="loginQQ" value="' + esc(saved.qq || '') + '" placeholder="请输入主人 QQ"></div>' +
         '<div class="login-actions"><button id="loginTest">测试连接</button><button class="primary" id="loginSave">保存并进入</button></div>' +
-        '<div class="login-status" id="loginStatus"></div><button class="login-skip" id="loginSkip">稍后配置</button></div>';
+        '<div class="login-status" id="loginStatus"></div><button class="login-skip" id="loginSetup">首次登录？设置密码</button></div>';
       document.body.appendChild(loginMask);
-      document.getElementById('loginSkip').addEventListener('click', () => loginMask.classList.remove('on'));
+      document.getElementById('loginSetup').addEventListener('click', openSetup);
       document.getElementById('loginTest').addEventListener('click', () => {
         const token = document.getElementById('loginToken').value.trim();
         const qq = document.getElementById('loginQQ').value.trim();
@@ -334,6 +334,36 @@
       });
     }
     loginMask.classList.add('on');
+  }
+  function openSetup() {
+    let setupMask = document.querySelector('.setup-mask');
+    if (!setupMask) {
+      setupMask = document.createElement('div');
+      setupMask.className = 'login-mask setup-mask on';
+      setupMask.innerHTML = '<div class="login-card"><h2>首次登录 · 设置密码</h2><div class="sub">账号已由邀请人创建，不需要重新注册。<br>填写 QQ、setup code 和新密码。</div>' +
+        '<div class="login-field"><label>QQ 号</label><input id="setupQQ" inputmode="numeric" placeholder="输入账号 QQ"></div>' +
+        '<div class="login-field"><label>一次性 setup code</label><input id="setupCode" placeholder="邀请你的朋友给你的 setup code"></div>' +
+        '<div class="login-field"><label>新密码（至少 8 位）</label><input id="setupPassword" type="password" placeholder="设置登录密码"></div>' +
+        '<div class="login-field"><label>确认密码</label><input id="setupPassword2" type="password" placeholder="再输入一次"></div>' +
+        '<div class="login-actions"><button id="setupCancel">返回登录</button><button class="primary" id="setupSave">设置密码并登录</button></div>' +
+        '<div class="login-status" id="setupStatus"></div></div>';
+      document.body.appendChild(setupMask);
+      const close = () => setupMask.remove();
+      setupMask.querySelector('#setupCancel').addEventListener('click', close);
+      setupMask.querySelector('#setupSave').addEventListener('click', () => {
+        const qq = setupMask.querySelector('#setupQQ').value.trim();
+        const code = setupMask.querySelector('#setupCode').value.trim();
+        const password = setupMask.querySelector('#setupPassword').value;
+        const password2 = setupMask.querySelector('#setupPassword2').value;
+        const st = setupMask.querySelector('#setupStatus');
+        if (!qq) { st.textContent = '请输入账号 QQ'; return; }
+        if (!code || password.length < 8) { st.textContent = 'setup code 和至少 8 位密码都要填'; return; }
+        if (password !== password2) { st.textContent = '两次密码不一致'; return; }
+        localStorage.setItem('hsh_web_login', JSON.stringify({ token: 'setup-token', qq }));
+        close(); loginMask?.classList.remove('on'); toast('密码已设置，已登录（MOCK）'); updateConn('当前 Web 站点', qq);
+      });
+    }
+    setupMask.classList.add('on');
   }
   function updateConn(url, qq) {
     const v = document.querySelector('.conn .v');
