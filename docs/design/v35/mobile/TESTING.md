@@ -1,5 +1,103 @@
 ﻿# v35.7 / v35.8 手机环境开发与测试
 
+
+## 0. VS Code 开发（不装 Android Studio）
+
+当前 Web 手机端开发只需要：
+
+```text
+VS Code
+Node 24
+pnpm
+Chrome / Edge
+```
+
+本机已确认：
+
+```text
+code   1.143.1
+node   v24.16.0
+pnpm   12.6.0
+```
+
+VS Code 推荐扩展：
+
+```text
+Vue - Official
+ESLint
+Prettier
+TypeScript
+YAML（配置文件高亮）
+```
+
+项目自带任务：
+
+```text
+Ctrl+Shift+P → Tasks: Run Task
+  web: dev
+  android: devices
+  android: reverse 27006
+  android: logcat
+```
+
+`.vscode/tasks.json` 已提供。
+
+### 只连真机（最轻量）
+
+不需要 Android Studio，也不需要 JDK：
+
+```text
+1. 下载 Android platform-tools（约 10MB）
+   https://developer.android.com/tools/releases/platform-tools
+2. 解压，把 platform-tools 加入 PATH
+3. 手机打开开发者选项 → USB 调试
+4. 数据线连接电脑
+5. adb devices
+6. adb reverse tcp:27006 tcp:27006
+7. 手机 Chrome 打开 http://127.0.0.1:27006/chat
+```
+
+### 需要 Android 模拟器时才装 SDK
+
+不装 Studio 也可以，用命令行 SDK：
+
+```text
+JDK 17
+Android command-line tools
+platform-tools
+emulator
+system image
+```
+
+大致流程：
+
+```powershell
+sdkmanager "platform-tools" "platforms;android-35" "emulator" "system-images;android-35;google_apis;x86_64"
+avdmanager create avd -n Hoshinoumi_Pixel -k "system-images;android-35;google_apis;x86_64" -d pixel_7
+emulator -avd Hoshinoumi_Pixel
+adb reverse tcp:27006 tcp:27006
+```
+
+注意：
+
+```text
+首次下载 SDK/系统镜像较慢（几 GB）
+只用真机测试的话，可以完全不装 Android SDK 模拟器
+v35.8 Capacitor 打包时才需要 JDK 17 + Android SDK + Gradle
+```
+
+### v35.8 壳打包（后续）
+
+VS Code 编辑 + 命令行构建，不需要 Android Studio：
+
+```text
+npx cap add android
+npx cap sync android
+cd android
+./gradlew assembleDebug
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+```
+
 ## 1. 先启动
 
 前端：
