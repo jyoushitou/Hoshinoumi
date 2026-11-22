@@ -645,7 +645,7 @@ function openConversation(el, target, name){
   if (navEl) navEl.outerHTML = nav(currentScreen)
 }
 function openNotifications(){
-  overlay(`<div class="popup-shell"><div class="notice-popup"><h4>提醒</h4><div class="sub">提醒与记忆更新不进入聊天会话</div><div class="notice-item"><b>猫咪投喂提醒</b><p>今天还没喂猫。<br>每天 18:00 · 来自定时任务</p><div class="notice-actions"><button onclick="closeOverlay();toast('已稍后提醒')">稍后</button><button class="primary" onclick="closeOverlay();toast('已标记完成（演示）')">知道了</button></div></div><div class="notice-actions"><button onclick="closeOverlay()">关闭</button></div></div></div>`)
+  overlay(`<div class="popup-shell" onclick="if(event.target===this)closeOverlay()"><div class="notice-popup"><h4>提醒</h4><div class="sub">提醒与记忆更新不进入聊天会话</div><div class="notice-item"><b>猫咪投喂提醒</b><p>今天还没喂猫。<br>每天 18:00 · 来自定时任务</p><div class="notice-actions"><button onclick="closeOverlay();toast('已稍后提醒')">稍后</button><button class="primary" onclick="closeOverlay();toast('已标记完成（演示）')">知道了</button></div></div></div></div>`)
 }
 function openSearch(){
   overlay(`<div class="search-panel"><div class="row"><input id="q" placeholder="搜索会话 / 记忆 / 命令" autocomplete="off"><button class="cancel" onclick="closeOverlay()">取消</button></div><div id="results"><div class="search-result" onclick="go('chat')">奈绪<small>会话 · 最近消息</small></div><div class="search-result" onclick="go('memory')">不喜欢香菜<small>记忆 · 偏好</small></div><div class="search-result" onclick="go('commands')">!memory<small>命令 · 搜索记忆</small></div></div></div>`)
