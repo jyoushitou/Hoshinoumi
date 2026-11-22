@@ -155,7 +155,7 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 20% 0%,
 .bell-dot{position:absolute;top:5px;right:6px;width:6px;height:6px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 2px #fff}
 .notice-popup{background:#fff;border-radius:20px;padding:16px;box-shadow:0 24px 60px rgba(15,38,78,.24);width:calc(100% - 36px);max-width:330px;margin:auto}
 .notice-popup h4{margin:0 0 4px;font-size:13px;color:#223b56}.notice-popup .sub{font-size:8px;color:#9aabc0;margin-bottom:10px}
-.notice-item{background:#f7faff;border-radius:12px;padding:10px;margin-bottom:8px}.notice-item b{display:block;font-size:10px;color:#314a65}.notice-item p{margin:3px 0 0;font-size:8px;color:#8fa3bb;line-height:1.6}.notice-actions{display:flex;gap:6px;margin-top:8px}.notice-actions button{flex:1;height:27px;border:1px solid #dbe8ff;border-radius:7px;background:#fff;color:#2563eb;font:8px inherit}.notice-actions button.primary{background:#2563eb;color:#fff;border-color:#2563eb}
+.notice-item{background:#f7faff;border-radius:12px;padding:10px;margin-bottom:8px}.notice-item b{display:block;font-size:10px;color:#314a65}.notice-item p{margin:3px 0 0;font-size:8px;color:#8fa3bb;line-height:1.6}.notice-actions{display:flex;flex-wrap:nowrap;gap:6px;margin-top:8px}.notice-actions button{min-width:0;white-space:nowrap}.notice-actions button{flex:1;height:27px;border:1px solid #dbe8ff;border-radius:7px;background:#fff;color:#2563eb;font:8px inherit}.notice-actions button.primary{background:#2563eb;color:#fff;border-color:#2563eb}
 .popup-shell{position:absolute;inset:0;background:rgba(9,22,40,.28);backdrop-filter:blur(2px);display:flex;align-items:center;justify-content:center;z-index:35}
 
 
@@ -225,6 +225,7 @@ let toastTimer = 0
 const readConversations = new Set()
 let navExpanded = false
 let demoUnread = 7
+let reminderHandled = false
 let currentScreen = 'chats'
 const allEntries = [
   ['chats','◉','聊天'],['memory','◇','记忆'],['relation','♡','关系'],['settings','⚙','设置'],
@@ -647,8 +648,13 @@ function openConversation(el, target, name){
   const navEl = document.querySelector('.bottom-nav')
   if (navEl) navEl.outerHTML = nav(currentScreen)
 }
+function dismissReminder(mode){
+  reminderHandled = true
+  closeOverlay()
+  toast(mode === 'later' ? '已稍后提醒' : '已标记完成（演示）')
+}
 function openNotifications(){
-  overlay(`<div class="popup-shell" onclick="if(event.target===this)closeOverlay()"><div class="notice-popup"><h4>提醒</h4><div class="sub">来自定时任务</div><div class="notice-item"><b>猫咪投喂提醒</b><p>今天还没喂猫。<br>每天 18:00 · 来自定时任务</p><div class="notice-actions"><button onclick="closeOverlay();toast('已稍后提醒')">稍后</button><button class="primary" onclick="closeOverlay();toast('已标记完成（演示）')">知道了</button></div></div></div></div>`)
+  overlay(`<div class="popup-shell" onclick="if(event.target===this)closeOverlay()"><div class="notice-popup"><h4>提醒</h4><div class="sub">来自定时任务</div><div class="notice-item"><b>猫咪投喂提醒</b><p>今天还没喂猫。<br>每天 18:00 · 来自定时任务</p><div class="notice-actions"><button onclick="dismissReminder('later')">稍后</button><button class="primary" onclick="dismissReminder('done')">知道了</button></div></div></div></div>`)
 }
 function openSearch(){
   overlay(`<div class="search-panel"><div class="row"><input id="q" placeholder="搜索会话 / 记忆 / 命令" autocomplete="off"><button class="cancel" onclick="closeOverlay()">取消</button></div><div id="results"><div class="search-result" onclick="go('chat')">奈绪<small>会话 · 最近消息</small></div><div class="search-result" onclick="go('memory')">不喜欢香菜<small>记忆 · 偏好</small></div><div class="search-result" onclick="go('commands')">!memory<small>命令 · 搜索记忆</small></div></div></div>`)
@@ -744,6 +750,13 @@ function closeQuickSettings(){ closeOverlay(); go(currentScreen) }
 const initial = new URLSearchParams(location.search).get('screen')
 const fallback = window.innerWidth <= 860 ? 'chats' : 'login'
 go(screens[initial] ? initial : fallback)
+// 有提醒就直接弹出；登录页不弹
+setTimeout(() => {
+  if (reminderHandled) return
+  if (currentScreen === 'login') return
+  if (document.querySelector('.notice-popup')) return
+  openNotifications()
+}, 650)
 </script>
 </body>
 </html>
