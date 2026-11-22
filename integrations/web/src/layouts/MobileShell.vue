@@ -6,6 +6,7 @@ import MobilePageView from '@/views/mobile/MobilePageView.vue'
 import MobileSettingsView from '@/views/mobile/MobileSettingsView.vue'
 import MobileWeeklyView from '@/views/mobile/MobileWeeklyView.vue'
 import MobileTabBar from '@/components/mobile/MobileTabBar.vue'
+import MobileReminderPopup from '@/components/mobile/MobileReminderPopup.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useSessionStore } from '@/stores/session'
 import { useIsOwner } from '@/composables/useIsOwner'
@@ -66,6 +67,7 @@ onBeforeUnmount(() => {
     <main class="mobile-main">
       <component :is="pageView" />
     </main>
+    <MobileReminderPopup />
     <MobileTabBar />
   </div>
 </template>

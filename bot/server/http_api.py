@@ -19,6 +19,7 @@ from .routes_chat import handle_chat, handle_command, handle_conversations, hand
 from .routes_persona import handle_persona, handle_export as handle_persona_export, handle_import as handle_persona_import, handle_activate as handle_persona_activate
 from .routes_savings import handle_savings, handle_savings_import, handle_savings_add, handle_savings_events
 from .routes_weekly_plan import handle_weekly_get, handle_weekly_put, handle_weekly_import
+from .routes_reminders import handle_pending as handle_reminders_pending, handle_ack as handle_reminder_ack
 from .routes_balance import handle_balance
 from .routes_relation import handle_relation
 from .routes_plan import handle_get as handle_plan_get, handle_put as handle_plan_put, handle_import as handle_plan_import, handle_export as handle_plan_export
@@ -455,6 +456,8 @@ async def start_api_server():
     app.router.add_post("/internal/auth/register", handle_internal_auth_register)
     app.router.add_get("/api/state", handle_internal_state)
     app.router.add_get("/internal/state", handle_internal_state)
+    app.router.add_get("/api/reminders", handle_reminders_pending)
+    app.router.add_post("/api/reminders/{id}/ack", handle_reminder_ack)
     app.router.add_get("/api/cron", handle_internal_cron)
     app.router.add_get("/internal/cron", handle_internal_cron)
     app.router.add_get("/internal/diary", handle_internal_diary)

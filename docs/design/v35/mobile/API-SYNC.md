@@ -21,6 +21,14 @@
 | 定时任务新增/编辑/启停/删除/运行 | `/api/cron*` | 开关是唯一启停入口；不再放“启用/停用”按钮 |
 | 存钱读取 | 现有 `/api/savings*` | 总览/流水 |
 
+## 提醒 API（v35.7.1.1 已实现）
+
+```text
+GET  /api/reminders?limit=20
+POST /api/reminders/{id}/ack
+  { "action": "done" | "later" }
+```
+
 ## 需要补 API
 
 | 交互 | 目标 API | 版本 |

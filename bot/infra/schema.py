@@ -591,6 +591,22 @@ PURE = {
             ai_visible TINYINT(1) NOT NULL DEFAULT 1
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """,
+    "reminders": """
+        CREATE TABLE IF NOT EXISTS reminders (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            user_id VARCHAR(64) NOT NULL DEFAULT '__owner__',
+            target_id VARCHAR(64) NOT NULL,
+            source_id BIGINT NULL,
+            kind VARCHAR(16) NOT NULL DEFAULT 'cron',
+            content TEXT NOT NULL,
+            status VARCHAR(16) NOT NULL DEFAULT 'pending',
+            snooze_until DATETIME NULL,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            acked_at DATETIME NULL,
+            KEY idx_reminder_pending (user_id, status, snooze_until),
+            KEY idx_reminder_created (created_at)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
     "finance_imports": """
         CREATE TABLE IF NOT EXISTS finance_imports (
             id BIGINT AUTO_INCREMENT PRIMARY KEY,

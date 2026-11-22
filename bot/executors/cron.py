@@ -137,6 +137,11 @@ async def handle_cron_task(ev):
             return {"ok": False, "reason": "空回复"}
 
         await send_short_reply(target, rep, cfg.active_ws_qq, target)
+        try:
+            from ..infra import repo_reminders
+            repo_reminders.create(target, content, source_id=task_id)
+        except Exception as e:
+            log_err(f"[定时] 提醒入队失败({task_id}): {e}")
         log_system(f"[定时] 已提醒：{content[:20]}（任务 {task_id}）")
         _mark(task_id, ok=True)
         return {"ok": True, "task_id": task_id}
