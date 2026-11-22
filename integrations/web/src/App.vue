@@ -7,9 +7,19 @@ import { useAuthStore } from '@/stores/auth'
 const auth = useAuthStore()
 const isMobile = ref(false)
 let media: MediaQueryList | null = null
-function sync(event?: MediaQueryListEvent) { isMobile.value = event ? event.matches : (media?.matches ?? false) }
+const MOBILE_QUERY = '(max-width: 820px), (pointer: coarse), (orientation: portrait) and (max-width: 1100px)'
+function forcedLayout() {
+  if (typeof window === 'undefined') return ''
+  return new URLSearchParams(window.location.search).get('layout') || ''
+}
+function sync(event?: MediaQueryListEvent) {
+  const forced = forcedLayout()
+  if (forced === 'mobile') { isMobile.value = true; return }
+  if (forced === 'desktop') { isMobile.value = false; return }
+  isMobile.value = event ? event.matches : (media?.matches ?? false)
+}
 onMounted(() => {
-  media = window.matchMedia('(max-width: 820px)')
+  media = window.matchMedia(MOBILE_QUERY)
   sync()
   media.addEventListener('change', sync)
   void auth.validate()
