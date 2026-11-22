@@ -813,7 +813,7 @@ function createGroupConversation(){
   createConversation(name,'群','群聊')
 }
 function createConversation(name,avatar,type){
-  const conv={id:'new-'+Date.now(),name,avatar,type}
+  const conv={id:'h_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),name,avatar,type}
   extraConversations.push(conv)
   closeOverlay()
   if(currentScreen==='chats') renderExtraConversations()
