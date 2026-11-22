@@ -53,6 +53,15 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 15% 0%,
 .code{border:1px dashed #d7e6ff;background:#f4f9ff;border-radius:9px;padding:9px;font:8px ui-monospace,monospace;color:#7890aa;line-height:1.7;margin-top:1px}
 .note{font-size:8px;color:#9aabc0;text-align:center;line-height:1.6;padding:9px 0 0}
 .settings-row{display:flex;align-items:center;gap:9px;padding:10px 0;border-bottom:1px solid #f1f5fb}.settings-row:last-child{border-bottom:0}.settings-row .si{width:28px;height:28px;border-radius:8px;background:#eef4ff;color:#2563eb;display:grid;place-items:center;font-size:12px;flex:none}.settings-row .st{flex:1}.settings-row b{display:block;font-size:9.5px;color:#314a65}.settings-row small{display:block;font-size:8px;color:#9aabc0;margin-top:2px}.settings-row em{font-size:8px;color:#8a9bb0;font-style:normal}
+
+.login-scene{background:linear-gradient(180deg,#f8fbff,#f1f6fd);overflow-y:auto}
+.login-wrap{flex:1;display:flex;flex-direction:column;justify-content:center;padding:22px 24px;min-height:0}
+.login-brand{display:flex;align-items:center;gap:10px;margin-bottom:16px}.login-brand .app-mark{width:34px;height:34px;border-radius:11px;font-size:15px}.login-brand h2{margin:0;font-size:22px;letter-spacing:-.03em}.login-brand p{margin:2px 0 0;font-size:8px;color:#9aabc0;letter-spacing:.14em}
+.login-card{background:#fff;border:1px solid #e3ebf7;border-radius:17px;padding:15px;box-shadow:0 14px 34px rgba(37,99,235,.07)}
+.field{display:block;margin-bottom:10px}.field label{display:block;font-size:8px;font-weight:650;color:#536b86;margin-bottom:4px}.field input{width:100%;height:38px;border:1px solid #e3ebf7;border-radius:10px;background:#fbfdff;padding:0 10px;font-size:16px;color:#314a65;outline:0}.field input:focus{border-color:#93c5fd;box-shadow:0 0 0 3px rgba(37,99,235,.07)}
+.login-submit{width:100%;height:40px;border:0;border-radius:10px;background:#2563eb;color:#fff;font:10px inherit;font-weight:700;margin-top:2px}.login-links{display:flex;justify-content:space-between;gap:8px;margin-top:10px}.login-link{border:0;background:none;color:#2563eb;font:8.5px inherit;padding:4px 0}.login-link.muted{color:#9aabc0}
+.login-error{color:#b91c1c;background:#fff5f5;border:1px solid #fecaca;border-radius:8px;padding:6px 8px;font-size:8px;line-height:1.6;margin-bottom:8px}.login-note{font-size:8px;color:#9aabc0;line-height:1.7;text-align:center;margin-top:11px}
+.set-card{background:#fff;border-radius:18px;padding:16px;box-shadow:0 24px 60px rgba(15,38,78,.28);width:100%;animation:modal-in .22s cubic-bezier(.2,.8,.2,1) both}.set-card h3{margin:0 0 3px;font-size:14px}.set-card .sub{font-size:8px;color:#9aabc0;margin:0 0 11px}.set-status{display:flex;align-items:center;gap:5px;font-size:8px;color:#1f9d6b;background:#eefbf5;border:1px solid #cdeee0;border-radius:7px;padding:5px 7px;margin-bottom:10px}.set-card .actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}
 /* modal */
 .modal-layer{position:absolute;inset:0;z-index:20;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(9,22,40,.36);backdrop-filter:blur(2px)}.modal-layer.on{display:flex;animation:fade-in .18s ease both}@keyframes fade-in{from{opacity:0}to{opacity:1}}.modal{width:100%;background:#fff;border-radius:19px;padding:16px;box-shadow:0 24px 60px rgba(15,38,78,.28);animation:modal-in .22s cubic-bezier(.2,.8,.2,1) both;position:relative}@keyframes modal-in{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
 .modal h3{margin:0 34px 4px 0;font-size:15px}.modal .desc{margin:0 0 11px;color:#8a9bb0;font-size:9px;line-height:1.7}.modal .x{position:absolute;right:12px;top:12px;width:24px;height:24px;border:0;border-radius:50%;background:#f4f8ff;color:#71859d;font-size:13px}.modal-actions{display:flex;gap:7px;margin-top:11px}.modal-actions .new-btn{flex:1}
@@ -86,6 +95,23 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 15% 0%,
         <div class="load-note">正在打开 Hoshinoumi…</div>
       </section>
 
+      <!-- LOGIN -->
+      <section class="scene login-scene" id="scene-login">
+        <div class="statusbar"><span>9:41</span><div class="right"><span class="sig"><i></i><i></i><i></i><i></i></span><span>5G</span><div class="battery"></div></div></div>
+        <div class="login-wrap">
+          <div class="login-brand"><div class="app-mark">✦</div><div><h2>连接 Hoshinoumi</h2><p>REC · MOBILE</p></div></div>
+          <div class="login-card">
+            <div class="login-error" id="loginError" style="display:none"></div>
+            <div class="field"><label>后端 URL</label><input id="loginBase" value="https://hoshinoumi.app" inputmode="url" autocomplete="url"></div>
+            <div class="field"><label>主人 QQ</label><input id="loginQQ" value="10001" inputmode="numeric" placeholder="输入主人 QQ"></div>
+            <div class="field"><label>访问 Token</label><input id="loginToken" type="password" value="demo-token" placeholder="Bearer token"></div>
+            <button class="login-submit" onclick="submitLogin()">保存并进入</button>
+            <div class="login-links"><button class="login-link" onclick="openRegister()">首次使用？注册</button><button class="login-link muted" onclick="enterWeb('游客')">游客模式</button></div>
+          </div>
+          <div class="login-note">后端地址、QQ、token 都保存在本机。<br>首次使用需要邀请码注册。</div>
+        </div>
+      </section>
+
       <!-- WEB / 完整手机应用原型 -->
       <section class="scene" id="scene-web">
         <div class="statusbar"><span>9:41</span><div class="right"><span class="sig"><i></i><i></i><i></i><i></i></span><span>5G</span><div class="battery"></div></div></div>
@@ -98,7 +124,7 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 15% 0%,
         <div class="app-head"><div class="app-mark">✦</div><div class="app-name">HOSHINOUMI<small>OFFLINE</small></div><span class="pill">离线</span></div>
         <div class="error-page"><div class="error-center"><div class="orb">☁</div><h3>连不上 Hoshinoumi</h3><p>检查网络或后端地址。<br>已经有本地缓存的页面不会丢失。</p></div>
           <div class="detail"><div class="row"><span>目标地址</span><b>hoshinoumi.app</b></div><div class="row"><span>WebView</span><b>Chrome 130</b></div><div class="row"><span>错误</span><b class="err">ERR_CONNECTION_TIMED_OUT</b></div></div>
-          <div class="actions"><button class="new-btn" onclick="openSystemSettings()">打开设置</button><button class="new-btn primary" onclick="retry()">重试</button></div><div class="note">断网不伪造内容；重试只重新加载 WebView。</div>
+          <div class="actions"><button class="new-btn" onclick="openSettings()">打开设置</button><button class="new-btn primary" onclick="retry()">重试</button></div><div class="note">断网不伪造内容；重试只重新加载 WebView。</div>
         </div>
       </section>
 
@@ -156,15 +182,28 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 15% 0%,
       <div class="modal-layer" id="modal-update" onclick="if(event.target===this)closeModal()"><div class="modal"><button class="x" onclick="closeModal()">×</button><h3>发现新版本 v35.8.1</h3><div class="desc">手机套壳稳定性更新，建议安装。</div><div class="update-notes"><p>· 修复键盘弹起时输入框被遮挡</p><p>· 优化 WebView 返回键</p><p>· 提醒弹窗确认同步后端</p></div><div class="progress"><i id="update-bar"></i></div><div class="prog-label"><span id="update-state">正在下载</span><span id="update-percent">0%</span></div><div class="modal-actions"><button class="new-btn" onclick="closeModal();toast('已稍后提醒')">稍后</button><button class="new-btn primary" id="update-action" onclick="installUpdate()">下载并安装</button></div></div></div>
 
       <div class="modal-layer" id="modal-settings" onclick="if(event.target===this)closeModal()">
-        <div class="os-sheet">
-          <div class="os-head">系统设置（演示）</div>
-          <div class="os-body" style="text-align:left;padding:0 15px 6px">
-            <div class="settings-row"><span class="si">⌁</span><span class="st"><b>Wi-Fi</b><small>Hoshinoumi-Home</small></span><em>已连接</em></div>
-            <div class="settings-row"><span class="si">◫</span><span class="st"><b>移动网络</b><small>5G · 中国移动</small></span><em>开启</em></div>
-            <div class="settings-row"><span class="si">◉</span><span class="st"><b>应用权限</b><small>相机 / 麦克风 / 照片</small></span><em>管理</em></div>
-            <div class="settings-row"><span class="si">▣</span><span class="st"><b>WebView</b><small>Android System WebView</small></span><em>已更新</em></div>
-          </div>
-          <div class="os-actions one"><button onclick="closeModal()">完成</button></div>
+        <div class="set-card">
+          <h3>设置 · 连接</h3>
+          <p class="sub">配置后端地址、主人 QQ 和访问 token。</p>
+          <div class="set-status"><span class="dot ok" style="display:inline-block"></span>当前已连接 · hoshinoumi.app</div>
+          <div class="field"><label>后端 URL</label><input id="settingsBase" value="https://hoshinoumi.app" inputmode="url"></div>
+          <div class="field"><label>主人 QQ</label><input id="settingsQQ" value="10001" inputmode="numeric"></div>
+          <div class="field"><label>访问 Token</label><input id="settingsToken" type="password" value="demo-token"></div>
+          <div class="actions"><button class="new-btn" onclick="testConnection()">测试连接</button><button class="new-btn primary" onclick="saveSettings()">保存</button></div>
+          <div class="login-links"><button class="login-link" onclick="openRegister()">注册新账号</button><button class="login-link muted" onclick="closeModal()">关闭</button></div>
+        </div>
+      </div>
+
+      <div class="modal-layer" id="modal-register" onclick="if(event.target===this)closeModal()">
+        <div class="set-card">
+          <h3>首次使用 · 注册</h3>
+          <p class="sub">需要邀请码。注册成功后用 QQ + 密码登录。</p>
+          <div class="login-error" id="registerError" style="display:none"></div>
+          <div class="field"><label>邀请码</label><input id="regInvite" value="HOSHI-2026"></div>
+          <div class="field"><label>QQ 号</label><input id="regQQ" value="10002" inputmode="numeric"></div>
+          <div class="field"><label>昵称</label><input id="regName" value="新用户"></div>
+          <div class="field"><label>密码（至少 8 位）</label><input id="regPassword" type="password" value="demo12345"></div>
+          <div class="actions"><button class="new-btn" onclick="backToLogin()">返回登录</button><button class="new-btn primary" onclick="submitRegister()">注册并连接</button></div>
         </div>
       </div>
 
@@ -182,6 +221,7 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 15% 0%,
       <button onclick="go('offline')">☁ 模拟断网</button>
       <button onclick="go('host')">⛨ 安全拦截</button>
       <button onclick="go('webview')">! WebView 过旧</button>
+      <button onclick="openSettings()">⚙ 连接设置</button>
       <button onclick="go('web');toast('已恢复在线')">✓ 恢复在线</button>
       <button onclick="openModal('update')">↻ 检查更新</button>
     </div><div class="log" id="log">准备启动…</div></div>
@@ -190,7 +230,7 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 15% 0%,
 </div>
 
 <script>
-const scenes = ['splash','loading','web','offline','host','webview','chat','group']
+const scenes = ['splash','loading','login','web','offline','host','webview','chat','group']
 const logEl = document.getElementById('log')
 let bootTimers = []
 let updateTimer = null
@@ -204,7 +244,7 @@ function go(id){ closeModal(); show(id); log('壳事件：' + id) }
 function boot(){
   closeModal(); clearBoot(); show('splash'); log('启动中：Splash → Loading → WebView')
   bootTimers.push(setTimeout(()=>{ show('loading'); log('WebView 加载中…') }, 1500))
-  bootTimers.push(setTimeout(()=>{ show('web'); log('已进入手机 Web') }, 2900))
+  bootTimers.push(setTimeout(()=>{ show('login'); log('等待登录 / 注册') }, 2900))
 }
 function openGroupChat(){
   closeModal(); show('group'); log('进入群聊：星之海学生会')
@@ -249,10 +289,38 @@ function sendChat(){
   toast('已发送（演示）')
 }
 function retry(){ clearBoot(); show('loading'); log('重试中…'); bootTimers.push(setTimeout(()=>{ show('web'); log('恢复在线') }, 1100)) }
-function openSystemSettings(){
-  closeModal()
-  document.getElementById('modal-settings')?.classList.add('on')
-  log('模拟系统设置：网络 / 权限 / WebView')
+function enterWeb(mode = '已登录'){ closeModal(); show('web'); log(mode + '：进入手机 Web') }
+function submitLogin(){
+  const base = document.getElementById('loginBase')?.value.trim() || ''
+  const qq = document.getElementById('loginQQ')?.value.trim() || ''
+  const token = document.getElementById('loginToken')?.value.trim() || ''
+  const error = document.getElementById('loginError')
+  if(!/^https?:\/\//.test(base)){ if(error){error.style.display='block';error.textContent='后端 URL 需要以 http:// 或 https:// 开头'} return }
+  if(!qq || !token){ if(error){error.style.display='block';error.textContent='QQ 和访问 token 都要填写'} return }
+  if(error) error.style.display = 'none'
+  toast('已保存连接配置（演示）')
+  enterWeb('已登录')
+}
+function openRegister(){
+  closeModal(); document.getElementById('modal-register')?.classList.add('on'); log('首次使用：注册')
+}
+function backToLogin(){ closeModal(); show('login'); log('返回登录') }
+function submitRegister(){
+  const invite = document.getElementById('regInvite')?.value.trim() || ''
+  const qq = document.getElementById('regQQ')?.value.trim() || ''
+  const password = document.getElementById('regPassword')?.value || ''
+  const error = document.getElementById('registerError')
+  if(!invite || !qq || password.length < 8){ if(error){error.style.display='block';error.textContent='邀请码、QQ、至少 8 位密码都要填'} return }
+  closeModal(); toast('注册成功（演示）'); enterWeb('注册成功')
+}
+function openSettings(){
+  closeModal(); document.getElementById('modal-settings')?.classList.add('on'); log('打开连接设置')
+}
+function testConnection(){ toast('连接测试成功（演示）'); log('测试连接：200 OK') }
+function saveSettings(){
+  const base = document.getElementById('settingsBase')?.value.trim() || ''
+  if(!/^https?:\/\//.test(base)){ toast('后端 URL 格式不对'); return }
+  closeModal(); toast('连接设置已保存（演示）'); log('保存后端 URL / QQ / token')
 }
 function openModal(name){
   closeModal()

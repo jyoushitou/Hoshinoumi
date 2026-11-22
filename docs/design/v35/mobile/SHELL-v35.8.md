@@ -8,6 +8,16 @@
 - [静态设计稿 HTML](hoshinoumi-mobile-shell-v35.8.html)
 - [hoshinoumi-mobile-shell-v35.8.png](hoshinoumi-mobile-shell-v35.8.png)
 
+## 交互演示范围
+
+```text
+启动动画 / 加载 / 登录
+首次使用邀请码注册
+后端 URL / QQ / token 连接设置
+WebView 内 v35.7 全功能页面
+断网 / 安全拦截 / 权限 / 更新 / 自检
+```
+
 ## 1. 架构
 
 ```text
