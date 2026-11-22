@@ -201,11 +201,8 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 15% 0%,
       <div class="modal-layer" id="modal-register" onclick="if(event.target===this)closeModal()">
         <div class="set-card">
           <h3>首次登录 · 设置密码</h3>
-          <p class="sub">账号已由主人创建，QQ 身份已绑定，不需要重新注册。</p>
-          <div class="bound-account">
-            <div class="bound-icon">✦</div>
-            <div class="bound-main"><small>当前账号</small><b>QQ 10001</b><em>已由主人绑定，设置密码时不需要再输入 QQ</em></div>
-          </div>
+          <p class="sub">账号已由主人创建，不需要重新注册；请输入要设置密码的 QQ。</p>
+          <div class="field"><label>QQ 号</label><input id="regQQ" value="10001" inputmode="numeric" placeholder="输入账号 QQ"></div>
           <div class="field"><label>一次性 setup code</label><input id="regCode" value="SETUP-2026" placeholder="主人给你的 setup code"></div>
           <div class="field"><label>新密码（至少 8 位）</label><input id="regPassword" type="password" placeholder="设置登录密码"></div>
           <div class="field"><label>确认密码</label><input id="regPassword2" type="password" placeholder="再输入一次"></div>
@@ -313,10 +310,12 @@ function openRegister(){
 }
 function backToLogin(){ closeModal(); show('login'); log('返回登录') }
 function submitSetupPassword(){
+  const qq = document.getElementById('regQQ')?.value.trim() || ''
   const code = document.getElementById('regCode')?.value.trim() || ''
   const password = document.getElementById('regPassword')?.value || ''
   const password2 = document.getElementById('regPassword2')?.value || ''
   const error = document.getElementById('registerError')
+  if(!qq){ if(error){error.style.display='block';error.textContent='请输入账号 QQ'} return }
   if(!code || password.length < 8){ if(error){error.style.display='block';error.textContent='setup code 和至少 8 位密码都要填'} return }
   if(password !== password2){ if(error){error.style.display='block';error.textContent='两次密码不一致'} return }
   closeModal(); toast('密码已设置（演示）'); enterWeb('首次登录完成')
