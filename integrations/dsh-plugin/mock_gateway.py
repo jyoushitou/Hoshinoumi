@@ -41,7 +41,7 @@ PUSH_DEVICES = {}  # id -> device
 PUSH_PREFS = {"messages": True, "reminders": True, "dnd": False}
 PUSH_OUTBOX = {}  # id -> notification job
 PUSH_TIMERS = {}  # device_id -> timer
-AUTH_USERS = {OWNER_QQ: {"password": "mock1234", "token": "mock-token"}}
+AUTH_USERS = {OWNER_QQ: {"password": "mock1234", "token": "mock-token", "role": "owner"}}
 AUTH_TOKENS = {"mock-token"}
 SETUP_CODES = {"HSHM-2026": False}
 
@@ -341,6 +341,19 @@ class Handler(BaseHTTPRequestHandler):
             return False
         return auth[len("Bearer "):] in AUTH_TOKENS
 
+    def _current_user(self):
+        auth = self.headers.get("Authorization", "")
+        if not auth.startswith("Bearer "):
+            return None
+        token = auth[len("Bearer "):]
+        for qq, user in AUTH_USERS.items():
+            if user.get("token") == token:
+                return qq
+        return None
+
+    def _is_owner(self) -> bool:
+        return self._current_user() == OWNER_QQ
+
     def _body(self):
         try:
             n = int(self.headers.get("Content-Length", "0") or 0)
@@ -392,6 +405,9 @@ class Handler(BaseHTTPRequestHandler):
             return
         if not self._authorized():
             self._json(401, {"error": "unauthorized", "message": "bad token"})
+            return
+        if (path.startswith("/api/savings") or path.startswith("/api/finance")) and not self._is_owner():
+            self._json(403, {"error": "forbidden", "message": "财务数据仅主人可见"})
             return
 
         if path == "/api/stickers":
@@ -696,12 +712,15 @@ class Handler(BaseHTTPRequestHandler):
                 return
             SETUP_CODES[code] = True
             token = "h_" + uuid.uuid4().hex
-            AUTH_USERS[qq] = {"password": password, "token": token}
+            AUTH_USERS[qq] = {"password": password, "token": token, "role": "member"}
             AUTH_TOKENS.add(token)
             self._json(200, {"ok": True, "qq": qq, "token": token, "mock": True})
             return
         if not self._authorized():
             self._json(401, {"error": "unauthorized", "message": "bad token"})
+            return
+        if (path.startswith("/api/savings") or path.startswith("/api/finance")) and not self._is_owner():
+            self._json(403, {"error": "forbidden", "message": "财务数据仅主人可见"})
             return
         if path == "/api/push/devices":
             platform = str(body.get("platform") or "android").strip()
@@ -925,7 +944,7 @@ class Handler(BaseHTTPRequestHandler):
                 "存钱": "本月结余 ¥3,300，旅行目标 60%。",
                 "书": "我在看《十日终焉》，窗边光线刚好。",
             }.get(message, f"收到：{message}（mock 网关）")
-            if any(word in message for word in ("钱", "存钱", "余额", "花", "收入", "支出", "工资", "预算")):
+            if self._is_owner() and any(word in message for word in ("钱", "存钱", "余额", "花", "收入", "支出", "工资", "预算")):
                 reply = f"{reply}\n财务上下文：{_finance_context()['summary']}"
             _history(target).append({"id": len(_history(target)) + 1, "role": "user", "content": message, "created_at": _now()})
             _history(target).append({"id": len(_history(target)) + 1, "role": "assistant", "content": reply, "created_at": _now()})
