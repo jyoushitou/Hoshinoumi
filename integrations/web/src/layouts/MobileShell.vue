@@ -19,7 +19,17 @@ const isOwner = useIsOwner()
 const viewportHeight = ref(0)
 let visualViewport: VisualViewport | null = null
 const shellStyle = computed(() => viewportHeight.value > 0 ? { height: viewportHeight.value + 'px' } : {})
-function syncViewport() { const height = visualViewport?.height ?? window.innerHeight; viewportHeight.value = Math.round(height) }
+function syncViewport() {
+  const height = visualViewport?.height ?? window.innerHeight
+  const safe = Math.max(320, Math.round(Number(height) || 0))
+  viewportHeight.value = safe
+  if (typeof document !== 'undefined') document.documentElement.style.setProperty('--app-height', safe + 'px')
+  if (visualViewport && visualViewport.offsetTop > 0) window.scrollTo(0, 0)
+}
+function syncViewportSoon() {
+  window.setTimeout(syncViewport, 50)
+  window.setTimeout(syncViewport, 320)
+}
 
 const titles: Record<string, string> = {
   chat: '聊天', home: '主页', memory: '记忆', relation: '关系', savings: '存钱',
@@ -47,12 +57,16 @@ onMounted(() => {
   visualViewport?.addEventListener('resize', syncViewport)
   visualViewport?.addEventListener('scroll', syncViewport)
   window.addEventListener('resize', syncViewport)
+  window.addEventListener('focusin', syncViewportSoon)
+  window.addEventListener('focusout', syncViewportSoon)
   if (auth.loggedIn) { void session.refresh(); session.startSync() }
 })
 onBeforeUnmount(() => {
   visualViewport?.removeEventListener('resize', syncViewport)
   visualViewport?.removeEventListener('scroll', syncViewport)
   window.removeEventListener('resize', syncViewport)
+  window.removeEventListener('focusin', syncViewportSoon)
+  window.removeEventListener('focusout', syncViewportSoon)
   session.stopSync()
 })
 </script>
@@ -73,7 +87,7 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-.mobile-shell{width:100%;height:100vh;height:100dvh;height:var(--app-height,100dvh);display:flex;flex-direction:column;background:#f7faff;color:#17263b;overflow:hidden}
+.mobile-shell{position:fixed;top:0;left:0;right:0;width:100%;height:100vh;height:100dvh;height:var(--app-height,100dvh);display:flex;flex-direction:column;background:#f7faff;color:#17263b;overflow:hidden}
 .mobile-header{flex:none;height:calc(50px + env(safe-area-inset-top));display:flex;align-items:center;gap:9px;padding:env(safe-area-inset-top) 14px 0;background:rgba(255,255,255,.92);border-bottom:1px solid #e5edf9}
 .logo{width:28px;height:28px;border-radius:9px;background:#eef4ff;color:#2563eb;display:grid;place-items:center;font-size:13px}
 .brand{font-size:11px;font-weight:800;letter-spacing:.12em;line-height:1.1}

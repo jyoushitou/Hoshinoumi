@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "hoshinoumi-android-shell",
   "private": true,
   "version": "35.8.0",
@@ -12,7 +12,8 @@
   },
   "dependencies": {
     "@capacitor/android": "7.6.10",
-    "@capacitor/core": "7.6.10"
+    "@capacitor/core": "7.6.10",
+    "@capacitor/keyboard": "7.0.6"
   },
   "devDependencies": {
     "@capacitor/cli": "7.6.10",

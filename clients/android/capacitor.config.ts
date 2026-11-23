@@ -8,6 +8,12 @@ const config: CapacitorConfig = {
     // 用户可配置任意后端 URL；允许 WebView 内导航，不跳到 Chrome
     allowNavigation: ['*'],
   },
+  plugins: {
+    Keyboard: {
+      resize: 'body',
+      resizeOnFullScreen: true,
+    },
+  },
 }
 
 export default config

@@ -14,6 +14,9 @@ importers:
       '@capacitor/core':
         specifier: 7.6.10
         version: 7.6.10
+      '@capacitor/keyboard':
+        specifier: 7.0.6
+        version: 7.0.6(@capacitor/core@7.6.10)
     devDependencies:
       '@capacitor/cli':
         specifier: 7.6.10
@@ -36,6 +39,11 @@ packages:
 
   '@capacitor/core@7.6.10':
     resolution: {integrity: sha512-foYHd//t6E3RTELVG8wdkp5jVnmLcHKUurAa9BA8EUSNd2eY0SijCHpfO0bFwYBP5DrCeXwgSFYi3NJw413gtQ==}
+
+  '@capacitor/keyboard@7.0.6':
+    resolution: {integrity: sha512-mH9EHo4EnBA9zJAi6domGVB/PdEkcm0h27nJDHG4Y3fd2oKsheCxDRXlYrbgj8hcyQPe0cGWqAfzfwKzkWQoFQ==}
+    peerDependencies:
+      '@capacitor/core': '>=7.0.0'
 
   '@ionic/cli-framework-output@2.2.8':
     resolution: {integrity: sha512-TshtaFQsovB4NWRBydbNFawql6yul7d5bMiW1WYYf17hd99V6xdDdk3vtF51bw6sLkxON3bDQpWsnUc9/hVo3g==}
@@ -421,6 +429,10 @@ snapshots:
   '@capacitor/core@7.6.10':
     dependencies:
       tslib: 2.9.1
+
+  '@capacitor/keyboard@7.0.6(@capacitor/core@7.6.10)':
+    dependencies:
+      '@capacitor/core': 7.6.10
 
   '@ionic/cli-framework-output@2.2.8':
     dependencies:
