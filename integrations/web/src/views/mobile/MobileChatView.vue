@@ -1,7 +1,7 @@
 ﻿<template>
   <div class="mc">
     <template v-if="pane === 'list'">
-      <div class="head"><div><h1>聊天</h1><p>QQ 会话 · {{ session.conversations.length }} 个</p></div><i class="dot" :class="{ off: !session.connected }" /></div>
+      <div class="head"><div><h1>聊天</h1><p>QQ 会话 · {{ session.conversations.length }} 个</p></div><button class="new-group" type="button" @click="newGroupOpen = true">＋</button><i class="dot" :class="{ off: !session.connected }" /></div>
       <button type="button" class="search" @click="openSearch"><span class="search-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m16.5 16.5 4 4"></path></svg></span>搜索会话 / 记忆 / 命令</button>
       <div v-if="listError" class="notice error">{{ listError }}</div>
       <div v-else-if="!session.conversations.length" class="notice">{{ session.loading ? '正在同步会话…' : '暂无会话。后端有 QQ 消息后会出现在这里。' }}</div>
@@ -75,6 +75,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useSessionStore } from '@/stores/session'
 import { useAuthStore } from '@/stores/auth'
 import { http } from '@/api/client'
+import NewGroupModal from '@/components/NewGroupModal.vue'
 import { cleanupStickerCache, getStickerDataUrl, type StickerMeta } from '@/lib/stickerCache'
 
 const session = useSessionStore()
@@ -92,6 +93,7 @@ const imagePreview = ref('')
 const imageName = ref('')
 const mediaError = ref('')
 const stickerOpen = ref(false)
+const newGroupOpen = ref(false)
 const stickerCatalog = ref<StickerMeta[]>([])
 const stickerLoading = ref(false)
 const stickerError = ref('')
@@ -211,6 +213,11 @@ async function openSearchResult(hit: SearchHit) {
   el?.scrollIntoView({ block: 'center', behavior: 'smooth' })
   el?.classList.add('search-flash')
   setTimeout(() => el?.classList.remove('search-flash'), 1200)
+}
+async function onGroupCreated(id: string) {
+  newGroupOpen.value = false
+  await session.refresh()
+  await open(id)
 }
 async function open(target: string) { await session.selectConversation(target); pane.value = 'chat'; imagePreview.value = ''; imageName.value = ''; mediaError.value = ''; await scrollBottom() }
 function autosize() { const el = textarea.value; if (!el) return; el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 96) + 'px' }

@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { http } from '@/api/client'
 import EmptyState from '@/components/EmptyState.vue'
+import NewGroupModal from '@/components/NewGroupModal.vue'
 import QqAvatar from '@/components/QqAvatar.vue'
 import { useRouter } from 'vue-router'
 import { useSessionStore } from '@/stores/session'
@@ -14,6 +15,7 @@ const router = useRouter()
 const tab = ref<'all' | 'private' | 'group'>('all')
 const searchQuery = ref('')
 const searchOpen = ref(false)
+const newGroupOpen = ref(false)
 const searchInput = ref<HTMLInputElement | null>(null)
 const commands = ref<Array<{ name?: string; help?: string; group?: string }>>([])
 const filteredConversations = computed(() => {
@@ -25,6 +27,13 @@ const conversationResults = computed(() => !q.value ? [] : session.conversations
 const memoryResults = computed(() => !q.value ? [] : session.memoryTargets.filter((m: unknown) => JSON.stringify(m).toLowerCase().includes(q.value)))
 const commandResults = computed(() => !q.value ? [] : commands.value.filter(c => String(c.name || '').toLowerCase().includes(q.value) || String(c.help || '').toLowerCase().includes(q.value) || String(c.group || '').toLowerCase().includes(q.value)))
 function closeSearch() { searchOpen.value = false; searchQuery.value = '' }
+async function onGroupCreated(id: string) {
+  newGroupOpen.value = false
+  await session.refresh()
+  await session.selectConversation(id)
+  closeSearch()
+  router.push('/chat')
+}
 async function choose(target: string) { await session.selectConversation(target); closeSearch(); router.push('/chat') }
 function gotoMemory() { closeSearch(); router.push('/memory') }
 function gotoCommand() { closeSearch(); router.push('/commands') }
@@ -58,6 +67,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onShortcut))
     </div>
     <div class="slabel">
       QQ 会话 <em>{{ session.connected ? '同步中' : '未同步' }}</em>
+      <button class="add-group" type="button" @click="newGroupOpen = true">＋ 群聊</button>
     </div>
     <div class="tabs">
       <button type="button" :class="{ on: tab === 'all' }" @click="tab = 'all'">全部</button>
@@ -79,12 +89,13 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onShortcut))
     </div>
     <div class="side-foot"><span class="dot" :class="{ off: !session.connected }"></span><span>{{ auth.qq || 'owner' }} · schema {{ session.status?.schema || '—' }}</span><span class="lat">{{ session.statusLatencyMs != null ? session.statusLatencyMs + 'ms' : (session.connected ? '在线' : '离线') }}</span><button type="button" class="logout" @click="logout">退出</button></div>
   </aside>
+  <NewGroupModal :open="newGroupOpen" @close="newGroupOpen = false" @created="onGroupCreated" />
 </template>
 <style scoped>
 .side{background:#f8fbff;border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
 .brand{padding:18px 18px 12px;display:flex;align-items:center;gap:9px;font-size:12px;letter-spacing:.18em;color:#1e3a5f}.brand span{margin-left:auto;font-size:9px;color:#8a9bb0;border:1px solid #dbe8ff;background:#fff;border-radius:20px;padding:2px 7px;letter-spacing:0}
 .searchbox{position:relative;margin:0 14px 12px}.search{height:34px;border:1px solid #e3ebf7;border-radius:10px;background:#fff;display:flex;align-items:center;gap:7px;padding:0 10px;color:#8a9bb0;font-size:11px}.search input{flex:1;min-width:0;border:0;outline:0;background:none;color:#243b55;font:11px inherit}.search kbd{margin-left:auto;font:9px ui-monospace,monospace;border:1px solid #dbe8ff;border-radius:4px;padding:1px 4px}.search-panel{position:absolute;left:0;right:0;top:40px;z-index:12;background:#fff;border:1px solid #dbe8ff;border-radius:10px;box-shadow:0 12px 30px rgba(29,78,216,.14);padding:6px;max-height:320px;overflow:auto}.search-hint{padding:10px 8px;font-size:9.5px;color:#8a9bb0}.sr-sec{padding:6px 8px 3px;font-size:8px;letter-spacing:.12em;color:#9aabbe}.sr{display:block;width:100%;text-align:left;border:0;background:none;color:#243b55;font:10px inherit;padding:6px 8px;border-radius:6px;cursor:pointer}.sr:hover{background:#eef4ff}.sr small{display:block;color:#8a9bb0;font-size:8.5px;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.slabel{font-size:9px;letter-spacing:.14em;color:#8a9bb0;text-transform:uppercase;padding:6px 18px;display:flex}.slabel em{margin-left:auto;font-style:normal;color:#1f9d6b;letter-spacing:0}
+.slabel{font-size:9px;letter-spacing:.14em;color:#8a9bb0;text-transform:uppercase;padding:6px 18px;display:flex}.slabel em{margin-left:auto;font-style:normal;color:#1f9d6b;letter-spacing:0}.add-group{border:1px solid #dbe8ff;background:#fff;color:#2563eb;border-radius:6px;font:8.5px inherit;padding:2px 5px;margin-left:6px;cursor:pointer}
 .tabs{display:flex;gap:4px;padding:0 14px 8px}.tabs button{flex:1;border:1px solid #e3ebf7;background:#fff;color:#8a9bb0;font:9.5px inherit;border-radius:7px;padding:4px 0;cursor:pointer}.tabs button.on{background:#eef4ff;border-color:#c7dcff;color:#1d4ed8}.convs{flex:1;overflow:auto;padding:0 8px;min-height:0}.conv{display:flex;gap:9px;padding:9px;border-radius:11px;position:relative;text-decoration:none;color:inherit;border:1px solid transparent;transition:background .18s,border-color .18s,transform .18s}.conv:hover{background:#eef4ff;border-color:#dbe8ff;transform:translateX(2px)}.conv.on{background:#e7f0ff;border-color:#c7dcff}
 .avatar{width:33px;height:33px;border-radius:10px;display:grid;place-items:center;font-size:11px;font-weight:700;color:#1d4ed8;flex:none}
 .body{min-width:0}.nm{font-size:12px;font-weight:600;color:#1e3a5f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.last{font-size:10.5px;color:#8a9bb0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}.tm{font-size:9px;color:#8a9bb0;margin-left:auto;flex:none}.unread{position:absolute;right:8px;bottom:8px;min-width:15px;height:15px;border-radius:8px;background:#2563eb;color:#fff;font-size:9px;font-weight:700;display:grid;place-items:center}
