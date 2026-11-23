@@ -224,6 +224,7 @@ async function sendSticker(e: string) {
 
 <style scoped>
 .mc{height:100%;min-height:0;display:flex;flex-direction:column;padding:0 12px calc(8px + env(safe-area-inset-bottom));background:#f7faff;color:#17263b}
+.mc:has(textarea:focus){padding-bottom:0}
 .head{display:flex;align-items:flex-end;justify-content:space-between;padding:14px 2px 9px}h1{margin:0;font-size:24px;letter-spacing:-.03em}p{margin:3px 0 0;color:#8a9bb0;font-size:10px}.dot{width:8px;height:8px;border-radius:50%;background:#1f9d6b;box-shadow:0 0 0 3px rgba(31,157,107,.1)}.dot.off{background:#cbd5e1;box-shadow:none}
 .search{height:36px;border:1px solid #e3ebf7;border-radius:11px;background:#fff;color:#9aabc0;display:flex;align-items:center;padding:0 11px;font-size:10px;margin-bottom:10px}
 .notice{border:1px dashed #d7e6ff;background:#f4f9ff;color:#7a8fa8;border-radius:11px;padding:12px;font-size:10px;line-height:1.6;margin:6px 0}.notice.error{border-color:#fecaca;background:#fff5f5;color:#b91c1c}

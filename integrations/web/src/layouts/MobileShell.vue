@@ -78,7 +78,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="mobile-shell" :style="shellStyle">
+  <div class="mobile-shell" :class="{ 'keyboard-open': keyboardOpen }" :style="shellStyle">
     <header class="mobile-header">
       <span class="logo">✦</span>
       <span class="brand">HOSHINOUMI<small>{{ title }}</small></span>
@@ -101,4 +101,6 @@ onBeforeUnmount(() => {
 .conn{margin-left:auto;font-size:8px;color:#1f9d6b;border:1px solid #cdeee0;background:#eefbf5;border-radius:10px;padding:3px 7px}
 .conn.off{color:#8a9bb0;border-color:#e1e8f1;background:#f8fafc}
 .mobile-main{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y}
+.mobile-shell.keyboard-open :deep(.mc){padding-bottom:0}
+.mobile-shell.keyboard-open :deep(.composer){padding-bottom:0}
 </style>
