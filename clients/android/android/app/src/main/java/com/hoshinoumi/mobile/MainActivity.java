@@ -108,6 +108,29 @@ public class MainActivity extends BridgeActivity {
             }
 
             @JavascriptInterface
+            public String getEnvironment() {
+                JSONObject o = new JSONObject();
+                try {
+                    android.content.pm.PackageInfo info = getPackageManager().getPackageInfo("com.google.android.webview", 0);
+                    o.put("webview", info.versionName);
+                } catch (Exception e) {
+                    try {
+                        android.content.pm.PackageInfo info = getPackageManager().getPackageInfo("com.android.webview", 0);
+                        o.put("webview", info.versionName);
+                    } catch (Exception ignored) {
+                        try { o.put("webview", ""); } catch (Exception ignored2) { }
+                    }
+                }
+                try {
+                    o.put("sdk", Build.VERSION.SDK_INT);
+                    o.put("android", Build.VERSION.RELEASE);
+                    o.put("model", Build.MODEL);
+                } catch (Exception ignored) {
+                }
+                return o.toString();
+            }
+
+            @JavascriptInterface
             public String getPermissionStatus() {
                 JSONObject o = new JSONObject();
                 try {
