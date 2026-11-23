@@ -20,6 +20,7 @@ import json
 import sys
 import threading
 import time
+import uuid
 from datetime import datetime, timedelta
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
@@ -28,6 +29,8 @@ VERSION = "35.2.25.0"
 SCHEMA = 35
 OWNER_QQ = "10001"
 READS = {}  # target_id -> last_read_id
+PUSH_DEVICES = {}  # id -> device
+PUSH_PREFS = {"messages": True, "reminders": True, "dnd": False}
 
 MEMORY = {
     OWNER_QQ: [
@@ -194,6 +197,9 @@ class Handler(BaseHTTPRequestHandler):
             self._json(401, {"error": "unauthorized", "message": "bad token"})
             return
 
+        if path == "/api/push/devices":
+            self._json(200, {"ok": True, "data": list(PUSH_DEVICES.values()), "preferences": PUSH_PREFS, "mock": True})
+            return
         if path == "/api/status":
             self._json(200, {
                 "status": "running",
@@ -330,6 +336,35 @@ class Handler(BaseHTTPRequestHandler):
             return
         self._json(404, {"error": "not_found", "path": path})
 
+    def do_DELETE(self):
+        path = urlparse(self.path).path
+        if not self._authorized():
+            self._json(401, {"error": "unauthorized", "message": "bad token"})
+            return
+        if path.startswith("/api/push/devices/"):
+            did = path.rsplit("/", 1)[-1]
+            device = PUSH_DEVICES.pop(did, None)
+            if not device:
+                self._json(404, {"error": "device_not_found"})
+                return
+            self._json(200, {"ok": True, "deleted": did, "mock": True})
+            return
+        self._json(404, {"error": "not_found", "path": path})
+
+    def do_PATCH(self):
+        path = urlparse(self.path).path
+        if path != "/api/push/preferences":
+            self._json(404, {"error": "not_found", "path": path})
+            return
+        if not self._authorized():
+            self._json(401, {"error": "unauthorized", "message": "bad token"})
+            return
+        body = self._body()
+        if "messages" in body: PUSH_PREFS["messages"] = bool(body["messages"])
+        if "reminders" in body: PUSH_PREFS["reminders"] = bool(body["reminders"])
+        if "dnd" in body: PUSH_PREFS["dnd"] = bool(body["dnd"])
+        self._json(200, {"ok": True, "preferences": PUSH_PREFS, "mock": True})
+
     def _internal_get(self, path, q):
         if path == "/internal/history":
             target = (q.get("target_id") or [OWNER_QQ])[0]
@@ -347,6 +382,37 @@ class Handler(BaseHTTPRequestHandler):
         body = self._body()
         if path.startswith("/internal/"):
             self._json(404, {"error": "not_found", "path": path})
+            return
+        if not self._authorized():
+            self._json(401, {"error": "unauthorized", "message": "bad token"})
+            return
+        if path == "/api/push/devices":
+            platform = str(body.get("platform") or "android").strip()
+            topic = str(body.get("topic") or "").strip()
+            endpoint = str(body.get("endpoint") or "").strip()
+            if not topic:
+                self._json(400, {"error": "missing_topic"})
+                return
+            existing = next((d for d in PUSH_DEVICES.values() if d.get("topic") == topic), None)
+            if existing:
+                existing["last_seen_at"] = _now()
+                existing["platform"] = platform
+                existing["endpoint"] = endpoint
+                self._json(200, {"ok": True, "data": existing, "created": False, "mock": True})
+                return
+            did = uuid.uuid4().hex[:12]
+            device = {
+                "id": did,
+                "user_id": OWNER_QQ,
+                "platform": platform,
+                "topic": topic,
+                "endpoint": endpoint,
+                "created_at": _now(),
+                "last_seen_at": _now(),
+                "revoked_at": None,
+            }
+            PUSH_DEVICES[did] = device
+            self._json(201, {"ok": True, "data": device, "created": True, "mock": True})
             return
         if path == "/api/app/update":
             self._json(200, {
