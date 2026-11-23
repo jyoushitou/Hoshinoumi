@@ -181,6 +181,15 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header("Cache-Control", "public, max-age=86400")
             self.end_headers()
             return
+        if path == "/api/app/update":
+            self._json(200, {
+                "versionCode": 35820,
+                "versionName": "35.8.2",
+                "apkUrl": "",
+                "notes": "mock 更新通道：当前已是最新开发版",
+                "mock": True,
+            })
+            return
         if not self._authorized():
             self._json(401, {"error": "unauthorized", "message": "bad token"})
             return
@@ -338,6 +347,15 @@ class Handler(BaseHTTPRequestHandler):
         body = self._body()
         if path.startswith("/internal/"):
             self._json(404, {"error": "not_found", "path": path})
+            return
+        if path == "/api/app/update":
+            self._json(200, {
+                "versionCode": 35820,
+                "versionName": "35.8.2",
+                "apkUrl": "",
+                "notes": "mock 更新通道：当前已是最新开发版",
+                "mock": True,
+            })
             return
         if not self._authorized():
             self._json(401, {"error": "unauthorized", "message": "bad token"})

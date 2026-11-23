@@ -23,6 +23,7 @@ button{width:100%;height:43px;border:0;border-radius:11px;font:11px inherit;font
 .foot{text-align:center;font-size:8px;color:#9aabc0;line-height:1.8;margin-top:16px}.foot b{color:#7c8da6;font-weight:600}
 @media (prefers-reduced-motion:no-preference){.wrap{animation:in .35s ease both}@keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}}
 .env{font:7.5px ui-monospace,monospace;color:#8a9bb0;line-height:1.7;margin-top:8px;text-align:center}.env b{color:#5f7894;font-weight:600}.env .warn{color:#b7791f}
+.update{margin-top:9px}.update .secondary{margin-top:0}
 </style>
 </head>
 <body>
@@ -39,6 +40,7 @@ button{width:100%;height:43px;border:0;border-radius:11px;font:11px inherit;font
     <button class="secondary" id="back" style="display:none">取消，返回应用</button>
     <div class="status" id="status"></div>
     <div class="env" id="env"></div>
+    <div class="update"><button class="secondary" id="check-update" type="button">检查更新</button><div class="env" id="update-status"></div></div>
   </div>
   <div class="foot"><b>Hoshinoumi Mobile Shell</b><br>POWERED BY JYOUSHITOU</div>
 </div>
@@ -102,10 +104,28 @@ button{width:100%;height:43px;border:0;border-radius:11px;font:11px inherit;font
     if(native&&native.getEnvironment){
       var e=JSON.parse(native.getEnvironment())
       var env=document.getElementById('env')
+      currentVersion=e.appVersion||''; currentCode=Number(e.versionCode||0);
       var ver=e.webview?parseInt(String(e.webview).split('.')[0],10):0
       env.innerHTML='<b>Android '+(e.android||'—')+'</b> · API '+(e.sdk||'—')+' · WebView '+(e.webview||'未知')+(ver&&ver<108?' <span class="warn">低于 108，使用兼容模式</span>':'')
     }
   }catch(e){}
+  var currentVersion='';
+  var currentCode=0;
+  document.getElementById('check-update').addEventListener('click',function(){
+    var status=document.getElementById('update-status');
+    var base=(input.value||saved||'').replace(/\/+$/,'');
+    if(!base){status.textContent='先填写后端地址';return}
+    status.textContent='正在检查更新…';
+    fetch(base+'/api/app/update',{cache:'no-store'}).then(function(r){return r.json()}).then(function(u){
+      if(!u||!u.versionCode){status.textContent='更新通道没有返回版本';return}
+      if(u.versionCode>currentCode){
+        status.textContent='发现 '+u.versionName+'，准备下载…';
+        var native=window.HoshinoumiConfig||null;
+        if(native&&native.downloadApk&&u.apkUrl) native.downloadApk(u.apkUrl);
+        else status.textContent='发现 '+u.versionName+'，但未配置 APK 下载地址';
+      }else status.textContent='已是最新版本 '+(u.versionName||currentVersion);
+    }).catch(function(){status.textContent='检查更新失败，请确认后端可用'});
+  });
   var back=document.getElementById('back');
   if(saved && back) back.style.display='block';
   if(saved && back) back.addEventListener('click',function(){location.replace(saved)});
