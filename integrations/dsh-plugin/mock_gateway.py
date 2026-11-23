@@ -22,6 +22,7 @@ import threading
 import time
 import uuid
 import os
+import re
 import base64
 import struct
 import zlib
@@ -278,6 +279,18 @@ STICKER_SPECS = [
     ("cheer", "加油", (167, 243, 208), (40, 150, 110)),
 ]
 STICKERS = [{"id": sid, "name": name, "url": _make_sticker_png(bg, accent), "mime": "image/png"} for sid, name, bg, accent in STICKER_SPECS]
+
+
+def _auto_savings(message: str) -> None:
+    match = re.search(r"(花了|支出|消费|收入|工资|存了)\s*([0-9]+(?:\.[0-9]+)?)", message or "")
+    if not match:
+        return
+    value = int(round(float(match.group(2)) * 100))
+    income = match.group(1) in ("收入", "工资", "存了")
+    signed = value if income else -value
+    SAVINGS["entries"].insert(0, {"id": len(SAVINGS["entries"]) + 1, "account": "银行卡", "kind": "income" if income else "expense", "amount_cents": signed, "category": "聊天自动记账", "note": message[:40], "occurred_at": _now(), "source": "chat_auto", "ai_visible": True})
+    SAVINGS["total_cents"] = sum(int(x.get("amount_cents") or 0) for x in SAVINGS["entries"])
+    SAVINGS["accounts"][0]["balance_cents"] = sum(int(x.get("amount_cents") or 0) for x in SAVINGS["entries"] if x.get("account") == "银行卡")
 
 def _now() -> str:
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -872,6 +885,7 @@ class Handler(BaseHTTPRequestHandler):
             }.get(message, f"收到：{message}（mock 网关）")
             _history(target).append({"id": len(_history(target)) + 1, "role": "user", "content": message, "created_at": _now()})
             _history(target).append({"id": len(_history(target)) + 1, "role": "assistant", "content": reply, "created_at": _now()})
+            _auto_savings(message)
             _publish_chat(target, reply)
             self._json(200, {"reply": reply, "target_id": target, "mock": True, "time": _now()})
             return
