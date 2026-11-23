@@ -38,6 +38,9 @@ PUSH_DEVICES = {}  # id -> device
 PUSH_PREFS = {"messages": True, "reminders": True, "dnd": False}
 PUSH_OUTBOX = {}  # id -> notification job
 PUSH_TIMERS = {}  # device_id -> timer
+AUTH_USERS = {OWNER_QQ: {"password": "mock1234", "token": "mock-token"}}
+AUTH_TOKENS = {"mock-token"}
+SETUP_CODES = {"HSHM-2026": False}
 
 
 def _publish_chat(target: str, reply: str) -> None:
@@ -252,7 +255,9 @@ class Handler(BaseHTTPRequestHandler):
         if not self.token:
             return True
         auth = self.headers.get("Authorization", "")
-        return auth == f"Bearer {self.token}"
+        if not auth.startswith("Bearer "):
+            return False
+        return auth[len("Bearer "):] in AUTH_TOKENS
 
     def _body(self):
         try:
@@ -501,6 +506,37 @@ class Handler(BaseHTTPRequestHandler):
         body = self._body()
         if path.startswith("/internal/"):
             self._json(404, {"error": "not_found", "path": path})
+            return
+        if path == "/api/auth/login":
+            qq = str(body.get("qq") or "").strip()
+            password = str(body.get("password") or "")
+            user = AUTH_USERS.get(qq)
+            if not user or user.get("password") != password:
+                self._json(401, {"ok": False, "error": "bad_credentials", "message": "QQ 或密码不正确"})
+                return
+            self._json(200, {"ok": True, "qq": qq, "token": user.get("token"), "mock": True})
+            return
+        if path == "/api/auth/setup":
+            qq = str(body.get("qq") or "").strip()
+            password = str(body.get("password") or "")
+            code = str(body.get("setup_code") or "").strip()
+            if qq not in AUTH_USERS and (not qq.isdigit() or len(qq) < 5):
+                self._json(400, {"ok": False, "error": "bad_qq", "message": "QQ 格式不正确"})
+                return
+            if len(password) < 6:
+                self._json(400, {"ok": False, "error": "weak_password", "message": "密码至少 6 位"})
+                return
+            if qq in AUTH_USERS:
+                self._json(409, {"ok": False, "error": "user_exists", "message": "该账号已设置过密码"})
+                return
+            if code not in SETUP_CODES or SETUP_CODES[code]:
+                self._json(403, {"ok": False, "error": "bad_setup_code", "message": "setup code 无效或已使用"})
+                return
+            SETUP_CODES[code] = True
+            token = "h_" + uuid.uuid4().hex
+            AUTH_USERS[qq] = {"password": password, "token": token}
+            AUTH_TOKENS.add(token)
+            self._json(200, {"ok": True, "qq": qq, "token": token, "mock": True})
             return
         if not self._authorized():
             self._json(401, {"error": "unauthorized", "message": "bad token"})
