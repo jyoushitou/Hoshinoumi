@@ -38,7 +38,7 @@ docs/design/v35/native/
 
 | 端 | 设计基准 |
 |---|---|
-| Qt | 原生窗口 / 托盘 / 小窗 / 键鼠；Windows + Linux（X11/Wayland） |
+| Qt | 原生窗口 / 托盘 / 小窗 / 键鼠；Windows D3D11 特效、Linux Vulkan/OpenGL |
 | HyperOS 手机 | HyperOS 视觉；系统通知、自启动/省电入口、小组件 |
 | HyperOS 平板 | 双栏 / 分屏 / 平行窗口 / 手写笔 |
 | HarmonyOS 2 | 鸿蒙 2 FA/Java/JS 风格；服务卡片、通知、后台 |
@@ -55,6 +55,7 @@ docs/design/v35/native/
 
 ```text
 v35.11.0.0 Qt 设计稿 + 架构
+v35.11.2.5 D3D11/QRhi 渲染与特效
 v35.11.4.0 Linux 桌面适配
 v35.13.0.0 HyperOS 设计稿 + 架构
 v35.14.0.0 HyperOS 平板设计稿 + 设备 profile
