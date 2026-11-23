@@ -66,9 +66,11 @@ function hidePage(){pageView.hidden=true;pageView.innerHTML=''}
 function showChat(){hidePage()}
 function pageHead(title,sub){return `<div class="pv-head"><div><h1>${title}</h1><p>${sub}</p></div></div>`}
 
+const DIARY_API_BASE = location.protocol === 'file:' ? 'http://127.0.0.1:27005' : ''
+const DIARY_HEADERS = { Authorization: 'Bearer mock-token' }
 async function loadDiaryPage(){
   try {
-    const r=await fetch('/api/diary?all=1'); if(!r.ok) throw new Error('http'); const j=await r.json(); if(!Array.isArray(j.data)) throw new Error('schema')
+    const r=await fetch(DIARY_API_BASE + '/api/diary?all=1', { headers: DIARY_HEADERS }); if(!r.ok) throw new Error('http'); const j=await r.json(); if(!Array.isArray(j.data)) throw new Error('schema')
     const data=j.data
     const dates=[...new Set(data.map(x=>x.date))].sort().reverse()
     const count=document.getElementById('diaryCount'); if(count) count.textContent=String(data.length)

@@ -656,11 +656,13 @@ function renderDiaryError(text){
   const last = document.getElementById('diaryLast'); if(last) last.textContent = '—'
   const holder = document.getElementById('diaryDates'); if(holder) holder.innerHTML = '<button>无后端连接</button>'
 }
+const DIARY_API_BASE = location.protocol === 'file:' ? 'http://127.0.0.1:27005' : ''
+const DIARY_HEADERS = { Authorization: 'Bearer mock-token' }
 async function loadDiary(){
   try {
     const [all, dates] = await Promise.all([
-      fetch('/api/diary?all=1').then(r => r.ok ? r.json() : Promise.reject()),
-      fetch('/api/diary/dates').then(r => r.ok ? r.json() : Promise.reject())
+      fetch(DIARY_API_BASE + '/api/diary?all=1', { headers: DIARY_HEADERS }).then(r => r.ok ? r.json() : Promise.reject()),
+      fetch(DIARY_API_BASE + '/api/diary/dates', { headers: DIARY_HEADERS }).then(r => r.ok ? r.json() : Promise.reject())
     ])
     renderDiary(Array.isArray(all.data) ? all.data : [])
   } catch { renderDiaryError('无后端连接') }
