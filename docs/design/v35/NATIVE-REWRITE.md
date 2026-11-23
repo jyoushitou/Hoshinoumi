@@ -51,7 +51,7 @@ HarmonyOS 2 不是 HarmonyOS NEXT，不直接套 ArkTS/Stage 模型
 docs/design/v35/native/qt/
 docs/design/v35/native/qt/linux/
 
-渲染与特效：[QT-RENDERING.md](QT-RENDERING.md)
+渲染与特效：[QT-RENDERING.md](QT-RENDERING.md) · [MOBILE-RENDERING.md](MOBILE-RENDERING.md)
 docs/design/v35/native/hyperos/
 docs/design/v35/native/hyperos-tablet/
 docs/design/v35/native/harmonyos2/
@@ -65,8 +65,10 @@ docs/design/v35/native/harmonyos2/
 v35.11.0.0 Qt 设计稿 + 原生架构
 v35.11.4.0 Linux X11/Wayland 适配
 v35.13.0.0 HyperOS 设计稿 + 原生架构
+v35.13.2.5 HyperOS RenderEffect/AGSL 特效
 v35.14.0.0 HyperOS 平板设计稿 + 设备 profile
 v35.15.0.0 HarmonyOS 2 设计稿 + 原生架构
+v35.15.2.5 HarmonyOS 2 原生动画/OpenGL ES 特效
 ```
 
 v35.12 原生 Android、EMUI 不排期。

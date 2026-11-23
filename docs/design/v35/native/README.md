@@ -58,6 +58,8 @@ v35.11.0.0 Qt 设计稿 + 架构
 v35.11.2.5 D3D11/QRhi 渲染与特效
 v35.11.4.0 Linux 桌面适配
 v35.13.0.0 HyperOS 设计稿 + 架构
+v35.13.2.5 HyperOS 渲染特效
 v35.14.0.0 HyperOS 平板设计稿 + 设备 profile
 v35.15.0.0 HarmonyOS 2 设计稿 + 架构
+v35.15.2.5 HarmonyOS 2 渲染特效
 ```
