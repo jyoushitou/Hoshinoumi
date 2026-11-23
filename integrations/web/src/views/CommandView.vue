@@ -11,6 +11,13 @@ const running = ref('')
 const output = ref('')
 const outputError = ref('')
 const updatedAt = ref('')
+const collapsed = ref<Set<string>>(new Set())
+function toggleGroup(group: string) {
+  const next = new Set(collapsed.value)
+  if (next.has(group)) next.delete(group)
+  else next.add(group)
+  collapsed.value = next
+}
 let timer: ReturnType<typeof setInterval> | null = null
 
 const groups = computed(() => {
@@ -72,8 +79,8 @@ onBeforeUnmount(() => { if (timer) clearInterval(timer) })
     <div v-if="error" class="error">{{ error }}</div>
     <div class="groups">
       <section v-for="[group, rows] in groups" :key="group" class="group">
-        <div class="group-title">{{ group }}<span>{{ rows.length }}</span></div>
-        <button v-for="row in rows" :key="row.name" type="button" class="cmd" :disabled="running === row.name" @click="run(row)">
+        <div class="group-title" role="button" tabindex="0" @click="toggleGroup(group)" @keydown.enter="toggleGroup(group)">{{ group }}<span>{{ rows.length }} {{ collapsed.has(group) ? '▸' : '▾' }}</span></div>
+        <button v-for="row in rows" v-show="!collapsed.has(group)" :key="row.name" type="button" class="cmd" :disabled="running === row.name" @click="run(row)">
           <b>{{ row.name }}</b><small>{{ row.help || '—' }}</small><em v-if="row.owner">OWNER</em>
         </button>
       </section>
@@ -91,7 +98,7 @@ onBeforeUnmount(() => { if (timer) clearInterval(timer) })
 .commands{position:relative;flex:1;min-height:0;overflow:auto;padding:20px 22px 26px;background:#f7faff;color:#17263b}
 .head{display:flex;align-items:center;gap:12px;margin-bottom:12px}.head h1{margin:0;font-size:24px;letter-spacing:-.03em}.head p{margin:3px 0 0;font-size:10px;color:#8a9bb0}.refresh{margin-left:auto;height:29px;border:1px solid #dbe8ff;background:#fff;color:#2563eb;border-radius:8px;font:10px inherit;padding:0 10px;cursor:pointer}
 .bar{display:flex;align-items:center;gap:8px;margin-bottom:12px}.bar input{flex:1;height:32px;border:1px solid #dbe8ff;border-radius:9px;background:#fff;padding:0 10px;font:10.5px inherit;outline:0}.bar span{font-size:9px;color:#9aabc0;white-space:nowrap}
-.groups{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}.group{background:#fff;border:1px solid #e3ebf7;border-radius:12px;padding:8px;animation:group-in .24s cubic-bezier(.22,1,.36,1) both}.group:nth-child(2){animation-delay:.04s}.group:nth-child(3){animation-delay:.08s}@keyframes group-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}.group-title{display:flex;justify-content:space-between;font-size:9px;font-weight:700;color:#52708f;padding:2px 4px 7px}.group-title span{font-weight:400;color:#9aabc0}
+.groups{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}.group{background:#fff;border:1px solid #e3ebf7;border-radius:12px;padding:8px;animation:group-in .24s cubic-bezier(.22,1,.36,1) both}.group:nth-child(2){animation-delay:.04s}.group:nth-child(3){animation-delay:.08s}@keyframes group-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}.group-title{cursor:pointer;user-select:none;display:flex;justify-content:space-between;font-size:9px;font-weight:700;color:#52708f;padding:2px 4px 7px}.group-title span{font-weight:400;color:#9aabc0}
 .cmd{display:grid;grid-template-columns:1fr auto;gap:2px 6px;width:100%;text-align:left;border:1px solid transparent;border-radius:8px;background:#f8fbff;padding:6px 8px;margin-bottom:4px;cursor:pointer;transition:background .18s,border-color .18s,transform .18s}.cmd:hover{border-color:#dbe8ff;background:#eef4ff;transform:translateY(-1px)}.cmd:disabled{opacity:.55}.cmd b{font-size:10px;color:#1e3a5f}.cmd small{grid-column:1;font-size:8px;color:#8a9bb0}.cmd em{grid-row:1/3;grid-column:2;align-self:center;font-style:normal;font-size:7px;color:#9a6b1f;background:#fff8e6;border:1px solid #f2d491;border-radius:5px;padding:1px 4px}
 .error{margin:8px 0;padding:7px 9px;border:1px solid #fecaca;background:#fff5f5;color:#b91c1c;border-radius:8px;font-size:9px}.empty{padding:24px;text-align:center;color:#9aabc0;font-size:10px}
 .output{position:sticky;bottom:0;margin-top:12px;background:#0f172a;color:#dbeafe;border-radius:12px;padding:11px 12px;box-shadow:0 12px 30px rgba(15,23,42,.22)}.output.bad{background:#3b0d16;color:#fecdd3}.output b{font-size:9px;letter-spacing:.08em;opacity:.75}.output pre{margin:6px 0 0;white-space:pre-wrap;font:10px/1.6 ui-monospace,monospace}.output button{position:absolute;right:9px;top:8px;border:0;background:rgba(255,255,255,.12);color:inherit;border-radius:5px;font:8px inherit;padding:3px 6px;cursor:pointer}
