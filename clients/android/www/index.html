@@ -55,14 +55,40 @@ button{width:100%;height:43px;border:0;border-radius:11px;font:11px inherit;font
     if(!/^https?:\/\//i.test(v)) v='https://'+v;
     return v.replace(/\/+$/,'');
   }
+  function hostAllowed(v){
+    try{
+      var u=new URL(v)
+      if(u.protocol==='https:') return true
+      if(u.protocol!=='http:') return false
+      var h=u.hostname
+      if(h==='localhost'||h==='127.0.0.1'||h==='10.0.2.2') return true
+      if(/^10\./.test(h)||/^192\.168\./.test(h)||/^172\.(1[6-9]|2[0-9]|3[01])\./.test(h)) return true
+      return false
+    }catch(e){return false}
+  }
+  function probeAndEnter(url){
+    // 开发 http 地址不做跨协议 fetch，直接交给 WebView
+    if(/^http:\/\//i.test(url)){ location.replace(url); return }
+    show('正在检查后端连接…','ok')
+    var done=false
+    var timer=setTimeout(function(){ if(done)return; done=true; show('连接超时，请检查后端地址；已留在配置页。','err') },3500)
+    fetch(url+'/healthz',{method:'GET',mode:'cors',cache:'no-store'}).then(function(r){
+      if(done)return; done=true; clearTimeout(timer)
+      if(r.ok) location.replace(url)
+      else show('后端返回 '+r.status+'，请检查地址；已留在配置页。','err')
+    }).catch(function(){
+      if(done)return; done=true; clearTimeout(timer)
+      show('连接失败，请检查后端地址；已留在配置页。','err')
+    })
+  }
   function show(msg,type){status.textContent=msg;status.className='status'+(type?' '+type:'')}
   document.getElementById('connect').addEventListener('click',function(){
     var url=normalize(input.value);
     if(!/^https?:\/\/[^\s]+$/i.test(url)){show('请输入完整的 http(s) 后端地址','err');return}
+    if(!hostAllowed(url)){show('只允许 HTTPS；HTTP 仅限 localhost/10.0.2.2/局域网地址','err');return}
     try{localStorage.setItem(KEY,url)}catch(e){}
     input.value=url;
-    show('正在连接 '+url+' …','ok');
-    setTimeout(function(){location.href=url},180);
+    probeAndEnter(url);
   });
   document.getElementById('clear').addEventListener('click',function(){
     try{localStorage.removeItem(KEY)}catch(e){}
@@ -72,9 +98,7 @@ button{width:100%;height:43px;border:0;border-radius:11px;font:11px inherit;font
   if(saved && back) back.style.display='block';
   if(saved && back) back.addEventListener('click',function(){location.replace(saved)});
   if(saved && !forceConfig){
-    show('正在连接 '+saved+' …','ok');
-    document.querySelector('.card').style.opacity='0.6';
-    setTimeout(function(){location.replace(saved)},80);
+    probeAndEnter(saved);
   } else if(saved){
     show('修改后端地址；保存后会重新加载。');
   }
