@@ -5,7 +5,7 @@
 | 端 | 署名位置 |
 |---|---|
 | 桌面 Vue / Electron | 设置页最底部 `POWERED BY JYOUSHITOU` |
-| 手机浏览器 Web | 设置 → 关于 `POWERED BY JYOUSHITOU` |
+| 手机浏览器 Web | 设置 → 关于 `POWERED BY JYOUSHITOU` + GitHub / 作者链接 |
 | 手机套壳 App | 复用手机 Web 署名 |
 | DSH 插件 | 设置模块最底部 `POWERED BY JYOUSHITOU` |
 | VS Code 插件 | 设置页最底部 `POWERED BY JYOUSHITOU` |
@@ -17,6 +17,13 @@
 - 有“关于”页面的端：放关于页。
 - 没有关于页面的端：放设置页面最底部。
 - 不再放全局 footer / 顶部水印 / 登录页水印。
+
+## 链接
+
+```text
+GitHub：https://github.com/jyoushitou/Hoshinoumi
+作者：https://github.com/jyoushitou
+```
 
 ## 设计演示
 

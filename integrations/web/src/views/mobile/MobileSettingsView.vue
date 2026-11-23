@@ -50,7 +50,7 @@ function changeBackend() {
     </div>
 
     <button class="logout" type="button" @click="logout">退出登录</button>
-    <div class="about-card"><b>关于 Hoshinoumi</b><span>v35.7 · Mobile Web</span><em>POWERED BY JYOUSHITOU</em></div>
+    <div class="about-card"><b>关于 Hoshinoumi</b><span>v35.7 · Mobile Web</span><div class="about-links"><a href="https://github.com/jyoushitou/Hoshinoumi" target="_blank" rel="noopener">GitHub</a><a href="https://github.com/jyoushitou" target="_blank" rel="noopener">作者 jyoushitou</a></div><em>POWERED BY JYOUSHITOU</em></div>
   </section>
 </template>
 
@@ -66,6 +66,6 @@ function changeBackend() {
 .quick-item.on{border-color:#93c5fd;background:#eef4ff;color:#2563eb;font-weight:700}
 .reset{width:100%;margin-top:8px;height:30px;border:1px solid #dbe8ff;background:#fff;color:#2563eb;border-radius:8px;font:10px inherit;cursor:pointer}
 .row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #f0f5fd;font-size:10px;color:#3d5470}.row:last-child{border-bottom:0}.row small{font-size:9px;color:#9aabc0}.backend-row{width:100%;border:0;background:none;text-align:left;cursor:pointer}.backend-row small{color:#2563eb}
-.about-card{margin-top:12px;padding:13px;border:1px solid #e3ebf7;border-radius:13px;background:#fff;text-align:center}.about-card b{display:block;font-size:10px;color:#314a65}.about-card span{display:block;font-size:8px;color:#9aabc0;margin-top:3px}.about-card em{display:block;font:7px ui-monospace,monospace;letter-spacing:.12em;color:#a8b5c7;font-style:normal;margin-top:7px}
+.about-card{margin-top:12px;padding:13px;border:1px solid #e3ebf7;border-radius:13px;background:#fff;text-align:center}.about-card b{display:block;font-size:10px;color:#314a65}.about-card span{display:block;font-size:8px;color:#9aabc0;margin-top:3px}.about-card em{display:block;font:7px ui-monospace,monospace;letter-spacing:.12em;color:#a8b5c7;font-style:normal;margin-top:7px}.about-links{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-top:8px}.about-links a{font-size:8px;text-decoration:none;border-radius:6px;padding:2px 7px;color:#2563eb;border:1px solid #dbe8ff;background:#f4f9ff}.about-links a:last-child{color:#607795;border-color:#e3ebf7;background:#fff}
 .logout{width:100%;height:36px;border:1px solid #fecaca;background:#fff5f5;color:#b91c1c;border-radius:9px;font:10px inherit;cursor:pointer}
 </style>

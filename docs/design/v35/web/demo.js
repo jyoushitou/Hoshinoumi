@@ -589,7 +589,8 @@
       pageView.innerHTML = '<div class="page-head"><div><h2>设置</h2><p>v35.5 Web 演示 · 登录 / 后端 / 连接</p></div><button class="back" id="backChat">← 返回聊天</button></div>' +
         '<div class="info-grid"><div class="info-panel"><h3>登录配置</h3><div class="info-row"><span>后端</span><b>' + esc(location.origin === 'null' ? '当前 Web 站点' : location.origin) + ' · 同源</b></div><div class="info-row"><span>token</span><b>' + (saved.token ? '已保存 · 掩码' : '未配置') + '</b></div><div class="info-row"><span>主人 QQ</span><b>' + esc(saved.qq || '') + '</b></div><div class="info-row"><span>操作</span><b><button class="back" id="relogin">登录 / 重新配置</button></b></div></div>' +
         '<div class="info-panel"><h3>连接</h3><div class="info-row"><span>状态</span><b class="ok">已连接 · MOCK</b></div><div class="info-row"><span>schema</span><b>35</b></div><div class="info-row"><span>延迟</span><b>42ms</b></div></div></div>' +
-        '<div style="margin-top:18px;padding-top:10px;border-top:1px solid #eef3fb;text-align:center;font:8px ui-monospace,monospace;letter-spacing:.12em;color:#a8b5c7">POWERED BY JYOUSHITOU</div>';
+        '<div style="margin-top:18px;padding-top:10px;border-top:1px solid #eef3fb;text-align:center;font:8px ui-monospace,monospace;letter-spacing:.12em;color:#a8b5c7">POWERED BY JYOUSHITOU</div>' +
+        '<div style="display:flex;justify-content:center;gap:6px;margin-top:8px"><a href="https://github.com/jyoushitou/Hoshinoumi" target="_blank" rel="noopener" style="font-size:9px;color:#2563eb;text-decoration:none">GitHub</a><span style="color:#c7d3e3">·</span><a href="https://github.com/jyoushitou" target="_blank" rel="noopener" style="font-size:9px;color:#6b7c95;text-decoration:none">作者 jyoushitou</a></div>';
       [top, msgs, composer, searchBar].forEach(x => x.classList.add('chat-hide'));
       pageView.classList.add('on');
       document.querySelectorAll('.rnav').forEach(x => x.classList.toggle('on', x.dataset.page === name));
