@@ -2,6 +2,7 @@ import { createRouter, createWebHashHistory, createWebHistory } from 'vue-router
 import ChatView from '@/views/ChatView.vue'
 import PageView from '@/views/PageView.vue'
 import RelationView from '@/views/RelationView.vue'
+import MemoryView from '@/views/MemoryView.vue'
 import MobilePermissionsView from '@/views/mobile/MobilePermissionsView.vue'
 import CommandView from '@/views/CommandView.vue'
 const meta = (title: string, desc: string) => ({ title, desc })
@@ -11,7 +12,7 @@ const router = createRouter({
     { path: '/', redirect: '/chat' },
     { path: '/chat', name: 'chat', component: ChatView },
     { path: '/home', name: 'home', component: PageView, meta: meta('主页', '10 个功能模块入口') },
-    { path: '/memory', name: 'memory', component: PageView, meta: meta('记忆', '记忆本 / 事件 / 画像 / 关系') },
+    { path: '/memory', name: 'memory', component: MemoryView, meta: meta('记忆', '记忆本 / 事件 / 画像 / 关系') },
     { path: '/relation', name: 'relation', component: RelationView, meta: meta('关系', '档位 / 最近变化 / 可见范围') },
     { path: '/savings', name: 'savings', component: PageView, meta: meta('存钱', '总余额 / 账户 / 记一笔 / CSV 导入') },
     { path: '/weekly', name: 'weekly', component: PageView, meta: meta('周计划表', '按周配置节次与时间') },
