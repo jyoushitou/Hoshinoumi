@@ -509,6 +509,34 @@ class Handler(BaseHTTPRequestHandler):
             item = next((x for x in PERSONAS if x["name"] == name), None)
             self._json(200 if item else 404, {"ok": bool(item), "data": item})
             return
+        if path == "/api/savings/overview":
+            frozen = sum(int(x.get("amount_cents") or 0) for x in SAVINGS.get("frozen", []))
+            available = int(SAVINGS["total_cents"]) - frozen
+            self._json(200, {"ok": True, "total_cents": SAVINGS["total_cents"], "frozen_cents": frozen, "available_cents": available, "goals": SAVINGS.get("goals", []), "mock": True})
+            return
+        if path == "/api/savings/goals":
+            self._json(200, {"ok": True, "data": SAVINGS.get("goals", []), "mock": True})
+            return
+        if path == "/api/savings/frozen":
+            self._json(200, {"ok": True, "data": SAVINGS.get("frozen", []), "mock": True})
+            return
+        if path == "/api/savings/fixed":
+            self._json(200, {"ok": True, "data": SAVINGS.get("fixed", []), "mock": True})
+            return
+        if path == "/api/savings/funds":
+            self._json(200, {"ok": True, "data": SAVINGS.get("funds", []), "mock": True})
+            return
+        if path == "/api/savings/monthly":
+            months = {}
+            for entry in SAVINGS.get("entries", []):
+                key = str(entry.get("occurred_at") or "")[:7]
+                if not key: continue
+                row = months.setdefault(key, {"month": key, "income_cents": 0, "expense_cents": 0})
+                amount = int(entry.get("amount_cents") or 0)
+                if amount >= 0: row["income_cents"] += amount
+                else: row["expense_cents"] += -amount
+            self._json(200, {"ok": True, "data": sorted(months.values(), key=lambda x: x["month"]), "mock": True})
+            return
         if path == "/api/savings":
             self._json(200, {"ok": True, **SAVINGS, "mock": True})
             return
