@@ -199,7 +199,15 @@ PERSONAS = [
 
 SAVINGS = {
     "total_cents": 330000,
-    "accounts": [{"account": "银行卡", "balance_cents": 330000}],
+    "accounts": [
+        {"account": "银行卡", "balance_cents": 210000, "kind": "bank"},
+        {"account": "微信", "balance_cents": 80000, "kind": "wallet"},
+        {"account": "现金", "balance_cents": 40000, "kind": "cash"},
+    ],
+    "goals": [{"id": 1, "name": "旅行", "target_cents": 600000, "saved_cents": 330000, "deadline": "2027-03-01"}],
+    "frozen": [{"id": 1, "name": "房租", "amount_cents": 120000, "due": "2026-12-01"}],
+    "fixed": [{"id": 1, "name": "三个月定期", "amount_cents": 50000, "rate": 1.8, "matures_at": "2027-02-01"}],
+    "funds": [{"code": "000001", "name": "示例基金", "shares": 120.5, "cost_cents": 50000, "value_cents": 51200}],
     "entries": [
         {"id": 2, "account": "银行卡", "kind": "income", "amount_cents": 800000, "category": "工资", "note": "mock", "occurred_at": "2026-11-01 09:00:00", "source": "manual"},
         {"id": 1, "account": "银行卡", "kind": "expense", "amount_cents": -470000, "category": "生活", "note": "mock", "occurred_at": "2026-11-02 12:00:00", "source": "manual"},
@@ -490,6 +498,10 @@ class Handler(BaseHTTPRequestHandler):
             return
         if path == "/api/savings":
             self._json(200, {"ok": True, **SAVINGS, "mock": True})
+            return
+        if path == "/api/finance/context":
+            available = int(SAVINGS["total_cents"]) - sum(x["amount_cents"] for x in SAVINGS.get("frozen", []))
+            self._json(200, {"ok": True, "context": f"总余额 {SAVINGS['total_cents']/100:.2f} 元，可用 {available/100:.2f} 元，{len(SAVINGS.get('goals', []))} 个目标。", "ai_visible": True, "mock": True})
             return
         if path == "/api/savings/events":
             self._json(200, {"ok": True, "events": [{"id": 1, "summary": "旅行计划", "created_at": "2026-11-01"}], "mock": True})
