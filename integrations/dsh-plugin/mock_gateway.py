@@ -542,8 +542,9 @@ class Handler(BaseHTTPRequestHandler):
             return
         if path == "/api/savings/overview":
             frozen = sum(int(x.get("amount_cents") or 0) for x in SAVINGS.get("frozen", []))
-            available = int(SAVINGS["total_cents"]) - frozen
-            self._json(200, {"ok": True, "total_cents": SAVINGS["total_cents"], "frozen_cents": frozen, "available_cents": available, "goals": SAVINGS.get("goals", []), "mock": True})
+            reserved = int(SAVINGS.get("reserved_cents") or 0)
+            available = int(SAVINGS["total_cents"]) - frozen - reserved
+            self._json(200, {"ok": True, "total_cents": SAVINGS["total_cents"], "frozen_cents": frozen + reserved, "available_cents": available, "goals": SAVINGS.get("goals", []), "mock": True})
             return
         if path == "/api/savings/goals":
             self._json(200, {"ok": True, "data": SAVINGS.get("goals", []), "mock": True})
@@ -869,6 +870,29 @@ class Handler(BaseHTTPRequestHandler):
             for x in PERSONAS:
                 x["active"] = x["name"] == name
             self._json(200 if any(x["name"] == name for x in PERSONAS) else 404, {"ok": True, "active": name})
+            return
+        if path.startswith("/api/savings/frozen/") and path.endswith("/unfreeze"):
+            try: fid = int(path.split("/")[-2])
+            except ValueError: self._json(400, {"ok": False, "error": "bad_frozen_id"}); return
+            item = next((x for x in SAVINGS.get("frozen", []) if x.get("id") == fid), None)
+            if not item: self._json(404, {"ok": False, "error": "frozen_not_found"}); return
+            SAVINGS["frozen"].remove(item)
+            self._json(200, {"ok": True, "unfrozen": fid, "amount_cents": item.get("amount_cents", 0), "mock": True})
+            return
+        if path.startswith("/api/savings/goals/") and path.endswith("/allocate"):
+            try: gid = int(path.split("/")[-2])
+            except ValueError: self._json(400, {"ok": False, "error": "bad_goal_id"}); return
+            try: amount = int(round(float(body.get("amount") or 0) * 100))
+            except (TypeError, ValueError): amount = 0
+            if amount <= 0: self._json(400, {"ok": False, "error": "bad_amount", "message": "分配金额必须大于 0"}); return
+            goal = next((x for x in SAVINGS.get("goals", []) if x.get("id") == gid), None)
+            if not goal: self._json(404, {"ok": False, "error": "goal_not_found"}); return
+            frozen = sum(int(x.get("amount_cents") or 0) for x in SAVINGS.get("frozen", []))
+            available = int(SAVINGS["total_cents"]) - frozen - int(SAVINGS.get("reserved_cents") or 0)
+            if amount > available: self._json(400, {"ok": False, "error": "insufficient_available", "message": "可用余额不足"}); return
+            goal["saved_cents"] = int(goal.get("saved_cents") or 0) + amount
+            SAVINGS["reserved_cents"] = int(SAVINGS.get("reserved_cents") or 0) + amount
+            self._json(200, {"ok": True, "goal": goal, "amount_cents": amount, "mock": True})
             return
         if path == "/api/savings/entries":
             amount = int(round(float(body.get("amount") or 0) * 100))
