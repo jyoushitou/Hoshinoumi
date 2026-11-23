@@ -21,6 +21,8 @@ import sys
 import threading
 import time
 import uuid
+import os
+import urllib.request
 from datetime import datetime, timedelta
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
@@ -32,6 +34,31 @@ READS = {}  # target_id -> last_read_id
 PUSH_DEVICES = {}  # id -> device
 PUSH_PREFS = {"messages": True, "reminders": True, "dnd": False}
 PUSH_OUTBOX = {}  # id -> notification job
+PUSH_TIMERS = {}  # device_id -> timer
+
+
+def _schedule_test_push(device):
+    delay = int(os.environ.get("HOSHINOUMI_PUSH_TEST_DELAY", "300"))
+    endpoint = str(device.get("endpoint") or "")
+    if not endpoint:
+        return
+
+    def send():
+        try:
+            body = "This is a 5-minute test notification".encode("utf-8")
+            req = urllib.request.Request(endpoint, data=body, method="POST")
+            req.add_header("Title", "Hoshinoumi Test")
+            req.add_header("Click", "/chat")
+            req.add_header("Content-Type", "text/plain; charset=utf-8")
+            with urllib.request.urlopen(req, timeout=10) as response:
+                print(f"[mock] test push sent to {endpoint}: HTTP {response.status}", flush=True)
+        except Exception as exc:
+            print(f"[mock] test push failed to {endpoint}: {exc}", flush=True)
+
+    timer = threading.Timer(max(1, delay), send)
+    timer.daemon = True
+    timer.start()
+    PUSH_TIMERS[device["id"]] = timer
 
 MEMORY = {
     OWNER_QQ: [
@@ -402,6 +429,8 @@ class Handler(BaseHTTPRequestHandler):
                 existing["last_seen_at"] = _now()
                 existing["platform"] = platform
                 existing["endpoint"] = endpoint
+                if existing["id"] not in PUSH_TIMERS:
+                    _schedule_test_push(existing)
                 self._json(200, {"ok": True, "data": existing, "created": False, "mock": True})
                 return
             did = uuid.uuid4().hex[:12]
@@ -416,6 +445,7 @@ class Handler(BaseHTTPRequestHandler):
                 "revoked_at": None,
             }
             PUSH_DEVICES[did] = device
+            _schedule_test_push(device)
             self._json(201, {"ok": True, "data": device, "created": True, "mock": True})
             return
         if path == "/api/app/update":

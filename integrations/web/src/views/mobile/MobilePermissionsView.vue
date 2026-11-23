@@ -29,6 +29,15 @@
       </div>
     </div>
     <div class="group">
+      <div class="group-title">消息推送</div>
+      <div class="row">
+        <span class="ic">⇪</span><div class="copy"><b>ntfy 测试</b><small>{{ push.registered ? '已注册 · ' + push.topic : '未开启' }}</small></div>
+        <button v-if="!push.registered" class="go" type="button" :disabled="!native || pushBusy" @click="startPush">开启测试</button>
+        <button v-else class="go" type="button" :disabled="!native" @click="stopPush">关闭</button>
+      </div>
+      <div class="push-note">Mock 注册后约 5 分钟推送一条测试消息；真机需把 ntfy 地址改成自托管 HTTPS。</div>
+    </div>
+    <div class="group">
       <div class="group-title">系统信息</div>
       <div class="row"><span class="ic">▣</span><div class="copy"><b>Android</b><small>{{ system }}</small></div><span class="state">系统</span></div>
     </div>
@@ -39,6 +48,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
 interface NativeBridge {
   getPermissionStatus?: () => string
@@ -46,11 +56,17 @@ interface NativeBridge {
   openAppSettings?: () => void
   openBatterySettings?: () => void
   openAutostartSettings?: () => void
+  startPush?: (backend: string, token: string, server: string) => void
+  stopPush?: () => void
+  getPushState?: () => string
 }
 const router = useRouter()
+const auth = useAuthStore()
 const native = ref(false)
 const status = ref<Record<string, boolean>>({ notifications: false, camera: false, microphone: false, photos: false })
 const system = ref('—')
+const push = ref<{ registered: boolean; topic: string; server: string }>({ registered: false, topic: '', server: '' })
+const pushBusy = ref(false)
 const appPermissions = [
   { key: 'notifications', icon: '◉', label: '通知', desc: '新消息 / 提醒' },
   { key: 'camera', icon: '▧', label: '相机', desc: '拍照发送' },
@@ -71,7 +87,28 @@ function refresh() {
       photos: Boolean(value.photos),
     }
     system.value = `Android ${value.android ?? '—'} · API ${value.sdk ?? '—'}`
+    refreshPush()
   } catch { /* keep last state */ }
+}
+function refreshPush() {
+  const b = bridge()
+  if (!b?.getPushState) return
+  try {
+    const value = JSON.parse(b.getPushState())
+    push.value = { registered: Boolean(value.registered), topic: String(value.topic || ''), server: String(value.server || '') }
+  } catch { /* ignore */ }
+}
+async function startPush() {
+  const b = bridge()
+  if (!b?.startPush) return
+  pushBusy.value = true
+  const ntfy = localStorage.getItem('hsh_ntfy_url') || 'http://127.0.0.1:2586'
+  b.startPush(window.location.origin, auth.token, ntfy)
+  window.setTimeout(() => { refreshPush(); pushBusy.value = false }, 1200)
+}
+function stopPush() {
+  bridge()?.stopPush?.()
+  window.setTimeout(refreshPush, 500)
 }
 function toggle(key: string) {
   const b = bridge()
@@ -99,5 +136,5 @@ onMounted(() => {
 .group{background:#fff;border:1px solid #e3ebf7;border-radius:13px;padding:4px 11px;margin-bottom:9px}.group-title{font-size:8px;color:#8a9bb0;padding:7px 0 2px;letter-spacing:.08em}
 .row{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid #f1f5fb}.row:last-child{border-bottom:0}.ic{width:27px;height:27px;border-radius:8px;background:#f4f8ff;color:#52708f;display:grid;place-items:center;font-size:12px;flex:none}.copy{flex:1;min-width:0}.copy b{display:block;font-size:9.5px;color:#314a65}.copy small{display:block;font-size:7px;color:#9aabc0;margin-top:2px}
 .switch{position:relative;flex:none;width:32px;height:18px;border:0;border-radius:10px;background:#cbd5e1;cursor:pointer;transition:background .18s}.switch.on{background:#2563eb}.switch:after{content:"";position:absolute;width:14px;height:14px;border-radius:50%;background:#fff;top:2px;left:2px;transition:left .18s}.switch.on:after{left:16px}.switch:disabled,.go:disabled{opacity:.5;cursor:not-allowed}
-.go{height:24px;border:1px solid #dbe8ff;border-radius:7px;background:#f4f9ff;color:#2563eb;font:8px inherit;padding:0 8px;flex:none}.state{font-size:7px;color:#8a9bb0;background:#f4f8ff;border-radius:5px;padding:2px 5px}.foot{text-align:center;color:#9aabc0;font-size:7px;line-height:1.7;padding:4px 0}
+.go{height:24px;border:1px solid #dbe8ff;border-radius:7px;background:#f4f9ff;color:#2563eb;font:8px inherit;padding:0 8px;flex:none}.state{font-size:7px;color:#8a9bb0;background:#f4f8ff;border-radius:5px;padding:2px 5px}.push-note{font-size:7px;line-height:1.7;color:#9aabc0;padding:4px 0 7px}.foot{text-align:center;color:#9aabc0;font-size:7px;line-height:1.7;padding:4px 0}
 </style>

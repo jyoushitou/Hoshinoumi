@@ -5,11 +5,13 @@ import android.app.DownloadManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.database.Cursor;
 import android.provider.Settings;
+import android.provider.Settings.Secure;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -34,6 +36,11 @@ import androidx.core.view.WindowInsetsControllerCompat;
 import com.getcapacitor.BridgeActivity;
 
 import org.json.JSONObject;
+
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 
 public class MainActivity extends BridgeActivity {
     private PermissionRequest pendingWebPermission;
@@ -254,6 +261,85 @@ public class MainActivity extends BridgeActivity {
                     startActivity(Intent.createChooser(send, "分享"));
                 });
             }
+            @JavascriptInterface
+            public void startPush(String backendUrl, String token, String ntfyServer) {
+                runOnUiThread(() -> {
+                    if (Build.VERSION.SDK_INT >= 33 && ContextCompat.checkSelfPermission(MainActivity.this, "android.permission.POST_NOTIFICATIONS") != PackageManager.PERMISSION_GRANTED) {
+                        ActivityCompat.requestPermissions(MainActivity.this, new String[]{"android.permission.POST_NOTIFICATIONS"}, 4301);
+                    }
+                });
+                SharedPreferences prefs = getSharedPreferences("hoshinoumi_push", MODE_PRIVATE);
+                String androidId = Secure.getString(getContentResolver(), Secure.ANDROID_ID);
+                String topic = prefs.getString("topic", "");
+                if (topic == null || topic.isEmpty()) topic = "hoshinoumi-" + (androidId == null ? "device" : androidId.toLowerCase());
+                final String finalTopic = topic;
+                final String backend = trimSlash(backendUrl);
+                final String server = trimSlash(ntfyServer);
+                final String finalToken = token == null ? "" : token;
+                prefs.edit().putString("backend", backend).putString("server", server).putString("topic", finalTopic).putLong("last_seen", System.currentTimeMillis()).apply();
+                new Thread(() -> {
+                    boolean registered = false;
+                    String deviceId = "";
+                    try {
+                        JSONObject payload = new JSONObject();
+                        payload.put("platform", "android");
+                        payload.put("topic", finalTopic);
+                        payload.put("endpoint", server + "/" + finalTopic);
+                        HttpURLConnection conn = (HttpURLConnection) new URL(backend + "/api/push/devices").openConnection();
+                        conn.setRequestMethod("POST");
+                        conn.setConnectTimeout(8000);
+                        conn.setReadTimeout(8000);
+                        conn.setDoOutput(true);
+                        conn.setRequestProperty("Content-Type", "application/json");
+                        if (!finalToken.isEmpty()) conn.setRequestProperty("Authorization", "Bearer " + finalToken);
+                        try (OutputStream out = conn.getOutputStream()) {
+                            out.write(payload.toString().getBytes(StandardCharsets.UTF_8));
+                        }
+                        int code = conn.getResponseCode();
+                        if (code >= 200 && code < 300) {
+                            registered = true;
+                            java.io.InputStream stream = conn.getInputStream();
+                            String text = new java.util.Scanner(stream, "UTF-8").useDelimiter("\\A").next();
+                            JSONObject response = new JSONObject(text);
+                            deviceId = response.optJSONObject("data") != null ? response.optJSONObject("data").optString("id", "") : "";
+                        }
+                    } catch (Exception ignored) {
+                    }
+                    prefs.edit().putBoolean("registered", registered).putString("device_id", deviceId).apply();
+                    Intent service = new Intent(MainActivity.this, NtfyService.class);
+                    service.setAction("START");
+                    service.putExtra(NtfyService.EXTRA_BACKEND, backend);
+                    service.putExtra(NtfyService.EXTRA_SERVER, server);
+                    service.putExtra(NtfyService.EXTRA_TOPIC, finalTopic);
+                    try {
+                        ContextCompat.startForegroundService(MainActivity.this, service);
+                    } catch (Exception ignored) {
+                    }
+                    final boolean wasRegistered = registered;
+                    runOnUiThread(() -> Toast.makeText(MainActivity.this, wasRegistered ? "推送已注册，测试消息约 5 分钟后到达" : "推送服务已启动，但后端注册失败", Toast.LENGTH_LONG).show());
+                }).start();
+            }
+
+            @JavascriptInterface
+            public void stopPush() {
+                stopService(new Intent(MainActivity.this, NtfyService.class));
+                getSharedPreferences("hoshinoumi_push", MODE_PRIVATE).edit().putBoolean("registered", false).apply();
+            }
+
+            @JavascriptInterface
+            public String getPushState() {
+                SharedPreferences prefs = getSharedPreferences("hoshinoumi_push", MODE_PRIVATE);
+                JSONObject o = new JSONObject();
+                try {
+                    o.put("registered", prefs.getBoolean("registered", false));
+                    o.put("topic", prefs.getString("topic", ""));
+                    o.put("server", prefs.getString("server", ""));
+                    o.put("deviceId", prefs.getString("device_id", ""));
+                } catch (Exception ignored) {
+                }
+                return o.toString();
+            }
+
         }, "HoshinoumiConfig");
     }
 
@@ -277,6 +363,30 @@ public class MainActivity extends BridgeActivity {
         } catch (Exception e) {
             Toast.makeText(this, "无法启动安装器：" + e.getMessage(), Toast.LENGTH_LONG).show();
         }
+    }
+
+    private static String trimSlash(String value) {
+        if (value == null) return "";
+        while (value.endsWith("/")) value = value.substring(0, value.length() - 1);
+        return value;
+    }
+
+    private void handleDeepLink(Intent intent) {
+        if (intent == null) return;
+        String link = intent.getStringExtra("deep_link");
+        if (link == null || link.isEmpty()) return;
+        String backend = getSharedPreferences("hoshinoumi_push", MODE_PRIVATE).getString("backend", "");
+        if (backend == null || backend.isEmpty()) return;
+        final String target = trimSlash(backend) + (link.startsWith("/") ? link : "/" + link);
+        intent.removeExtra("deep_link");
+        getBridge().getWebView().postDelayed(() -> getBridge().getWebView().loadUrl(target), 700);
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleDeepLink(intent);
     }
 
     @Override
