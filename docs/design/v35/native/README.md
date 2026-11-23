@@ -51,6 +51,12 @@ docs/design/v35/native/
 不在实现阶段临时重画
 ```
 
+## 拆分计划
+
+- [QT-v35.11.md](QT-v35.11.md)
+- [TABLET-v35.14.md](TABLET-v35.14.md)
+- [HARMONYOS2-v35.15.md](HARMONYOS2-v35.15.md)
+
 ## 版本门槛
 
 ```text
