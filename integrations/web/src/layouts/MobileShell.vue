@@ -110,7 +110,7 @@ onBeforeUnmount(() => {
 .brand small{display:block;font-size:7px;letter-spacing:.22em;color:#8a9bb0;font-weight:600;margin-top:2px}
 .conn{margin-left:auto;font-size:8px;color:#1f9d6b;border:1px solid #cdeee0;background:#eefbf5;border-radius:10px;padding:3px 7px}
 .conn.off{color:#8a9bb0;border-color:#e1e8f1;background:#f8fafc}
-.mobile-main{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y}
+.mobile-main{position:relative;flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y}
 .mobile-shell.keyboard-open :deep(.mc){padding-bottom:0}
 .mobile-shell.keyboard-open :deep(.composer){padding-bottom:0}
 .page-left-enter-active,.page-left-leave-active,.page-right-enter-active,.page-right-leave-active{transition:opacity .2s ease,transform .28s cubic-bezier(.22,1,.36,1)}
