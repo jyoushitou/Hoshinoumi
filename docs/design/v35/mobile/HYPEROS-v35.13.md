@@ -176,6 +176,7 @@ Android Studio 支持 API 37
 | v35.13.0.9 | 分享/相机显式 URI 授权 | 不再依赖隐式授权 |
 | v35.13.0.10 | IME 旋转恢复 / configChanges 适配 | 旋转后键盘行为正确 |
 | v35.13.0.11 | 后台音频 / mediaPlayback FGS | 后台播放不被静默 |
+| v35.13.0.12 | 开发者验证 / 包名签名登记 / 侧载引导 | GitHub APK 可安装 |
 
 说明：
 
@@ -189,3 +190,43 @@ Android 17 旋转后 IME 不自动恢复 → 依赖 configChanges 或显式 show
 PQC 混合签名 / 开发者验证属于发布阶段，不阻塞功能
 ```
 
+
+## Android 开发者验证（Developer Verification）
+
+来源：[Android 开发者验证](https://developer.android.com/developer-verification/guides?hl=zh-cn)
+
+执行节奏：
+
+```text
+2026-09 起：部分地区开始强制
+2027 年后：全球推广
+```
+
+对分发方式的影响：
+
+| 分发方式 | 影响 |
+|---|---|
+| Google Play | 98% 自动注册，基本无感 |
+| GitHub Releases APK 侧载 | 未验证开发者可能触发高级确认，甚至被拦 |
+| ADB 安装 | 始终绕过，但只适合开发者 |
+| 企业托管设备 | 豁免 |
+| 国内无 GMS 的 HyperOS | 由小米安装器策略决定，不等于不受影响 |
+
+适配要求：
+
+```text
+提前注册开发者身份
+登记包名 com.hoshinoumi.mobile
+登记 release 签名证书
+保持同一签名密钥，不轮换
+GitHub Release 附安装说明和高级确认步骤
+不能把“ADB 绕过”当作用户安装方案
+```
+
+边界：
+
+```text
+Google 验证不改变 APK 功能
+国内 HyperOS 是否弹验证，取决于设备上的验证代理/小米策略
+未注册时先保留 GitHub APK + 手动安装说明，但必须标注风险
+```
