@@ -9,6 +9,7 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
+import android.os.SystemClock;
 import android.database.Cursor;
 import android.provider.Settings;
 import android.provider.Settings.Secure;
@@ -402,6 +403,7 @@ public class MainActivity extends BridgeActivity {
     }
 
     private boolean backPending = false;
+    private long lastMainBackAt = 0;
 
     @Override
     public void onBackPressed() {
@@ -418,10 +420,24 @@ public class MainActivity extends BridgeActivity {
             return;
         }
         backPending = true;
-        webView.evaluateJavascript("(function(){try{return window.__hoshinoumiBack?String(window.__hoshinoumiBack()):'exit'}catch(e){return 'exit'}})()", value -> {
+        webView.evaluateJavascript("(function(){try{return window.__hoshinoumiBack?String(window.__hoshinoumiBack()):'main'}catch(e){return 'main'}})()", value -> {
             backPending = false;
             String decision = value == null ? "" : value.replace("\"", "");
-            if (!"handled".equals(decision)) finish();
+            if ("handled".equals(decision)) {
+                lastMainBackAt = 0;
+                return;
+            }
+            if ("main".equals(decision)) {
+                long now = SystemClock.elapsedRealtime();
+                if (lastMainBackAt > 0 && now - lastMainBackAt <= 2000) {
+                    finish();
+                } else {
+                    lastMainBackAt = now;
+                    Toast.makeText(MainActivity.this, "再滑一次退出应用", Toast.LENGTH_SHORT).show();
+                }
+                return;
+            }
+            finish();
         });
     }
 

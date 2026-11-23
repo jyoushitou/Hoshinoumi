@@ -22,17 +22,16 @@ const isOwner = useIsOwner()
 const viewportHeight = ref(0)
 const chatDetail = ref(false)
 const keyboardOpen = ref(false)
+const MAIN_ROUTES = new Set(['/chat', '/home', '/memory', '/relation', '/savings', '/weekly', '/info', '/persona', '/commands', '/cron', '/logs', '/settings'])
+
 function handleNativeBack(): string {
   if (chatDetail.value) {
     window.dispatchEvent(new CustomEvent('hoshinoumi:back-detail'))
     return 'handled'
   }
-  const state = window.history.state as { back?: string | null } | null
-  if (state?.back) {
-    router.back()
-    return 'handled'
-  }
-  return 'exit'
+  if (MAIN_ROUTES.has(route.path)) return 'main'
+  void router.push('/chat')
+  return 'handled'
 }
 
 function onPushRefresh() {
