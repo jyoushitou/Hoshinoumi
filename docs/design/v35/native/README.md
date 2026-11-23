@@ -1,9 +1,11 @@
 # 原生客户端设计稿
 
-只保留两台有真机的深度优化手机：
+深度优化客户端：
 
 ```text
+Qt 桌面
 HyperOS 手机
+HyperOS 平板
 HarmonyOS 2 手机
 ```
 
@@ -12,7 +14,9 @@ HarmonyOS 2 手机
 ```text
 docs/design/v35/native/
 ├─ tokens.md
+├─ qt/
 ├─ hyperos/
+├─ hyperos-tablet/
 └─ harmonyos2/
 ```
 
@@ -34,7 +38,9 @@ docs/design/v35/native/
 
 | 端 | 设计基准 |
 |---|---|
+| Qt | 原生窗口 / 托盘 / 小窗 / 键鼠 |
 | HyperOS 手机 | HyperOS 视觉；系统通知、自启动/省电入口、小组件 |
+| HyperOS 平板 | 双栏 / 分屏 / 平行窗口 / 手写笔 |
 | HarmonyOS 2 | 鸿蒙 2 FA/Java/JS 风格；服务卡片、通知、后台 |
 
 ## 冻结规则
@@ -48,6 +54,8 @@ docs/design/v35/native/
 ## 版本门槛
 
 ```text
+v35.11.0.0 Qt 设计稿 + 架构
 v35.13.0.0 HyperOS 设计稿 + 架构
+v35.14.0.0 HyperOS 平板设计稿 + 设备 profile
 v35.15.0.0 HarmonyOS 2 设计稿 + 架构
 ```
