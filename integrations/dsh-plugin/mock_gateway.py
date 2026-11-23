@@ -22,6 +22,9 @@ import threading
 import time
 import uuid
 import os
+import base64
+import struct
+import zlib
 import urllib.request
 from datetime import datetime, timedelta
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -180,6 +183,45 @@ WEEKLY = {
 }
 
 
+
+
+def _make_sticker_png(bg, accent):
+    size = 96
+    rows = []
+    for y in range(size):
+        row = bytearray([0])
+        for x in range(size):
+            dx, dy = x - 48, y - 48
+            inside = dx * dx + dy * dy <= 43 * 43
+            if not inside:
+                row += bytes((0, 0, 0, 0))
+                continue
+            c = bg
+            if (x - 33) ** 2 + (y - 38) ** 2 <= 28 or (x - 63) ** 2 + (y - 38) ** 2 <= 28:
+                c = (255, 255, 255)
+            if (x - 35) ** 2 + (y - 40) ** 2 <= 12 or (x - 61) ** 2 + (y - 40) ** 2 <= 12:
+                c = (40, 45, 60)
+            if 28 <= x <= 68 and 58 <= y <= 62:
+                c = accent
+            row += bytes((c[0], c[1], c[2], 255))
+        rows.append(bytes(row))
+    raw = b"".join(rows)
+    def chunk(tag, data):
+        return struct.pack(">I", len(data)) + tag + data + struct.pack(">I", zlib.crc32(tag + data) & 0xffffffff)
+    ihdr = struct.pack(">IIBBBBB", size, size, 8, 6, 0, 0, 0)
+    png = b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", ihdr) + chunk(b"IDAT", zlib.compress(raw, 9)) + chunk(b"IEND", b"")
+    return "data:image/png;base64," + base64.b64encode(png).decode("ascii")
+
+STICKER_SPECS = [
+    ("happy", "开心", (255, 214, 102), (240, 118, 94)),
+    ("calm", "安静", (167, 216, 255), (82, 130, 210)),
+    ("sleepy", "困困", (196, 181, 253), (120, 100, 190)),
+    ("love", "喜欢", (255, 182, 193), (220, 80, 120)),
+    ("shy", "害羞", (255, 204, 188), (230, 120, 100)),
+    ("cheer", "加油", (167, 243, 208), (40, 150, 110)),
+]
+STICKERS = [{"id": sid, "name": name, "url": _make_sticker_png(bg, accent), "mime": "image/png"} for sid, name, bg, accent in STICKER_SPECS]
+
 def _now() -> str:
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -265,6 +307,9 @@ class Handler(BaseHTTPRequestHandler):
             self._json(401, {"error": "unauthorized", "message": "bad token"})
             return
 
+        if path == "/api/stickers":
+            self._json(200, {"ok": True, "data": [{"id": x["id"], "name": x["name"], "url": x["url"], "mime": x["mime"]} for x in STICKERS], "mock": True})
+            return
         if path == "/api/push/devices":
             self._json(200, {"ok": True, "data": list(PUSH_DEVICES.values()), "preferences": PUSH_PREFS, "mock": True})
             return
@@ -282,9 +327,9 @@ class Handler(BaseHTTPRequestHandler):
                 "deepseek": True,
                 "doubao": False,
                 "clip": False,
-                "sticker_api": False,
+                "sticker_api": True,
                 "stats": {"images": 12, "memories": 4, "events": 7, "logs": len(LOGS), "keywords": 9, "ai_responses": 21},
-                "runtime": {"dialogue_targets": len(MEMORY), "global_keywords": 9, "stickers": 0, "daily_triggers": 2},
+                "runtime": {"dialogue_targets": len(MEMORY), "global_keywords": 9, "stickers": len(STICKERS), "daily_triggers": 2},
             })
             return
         if path == "/api/conversations":

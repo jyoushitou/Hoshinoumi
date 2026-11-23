@@ -37,12 +37,12 @@
       </div>
       <div v-if="mediaError" class="media-error">{{ mediaError }}</div>
       <div v-if="imagePreview" class="preview"><img :src="imagePreview" alt="预览"><span>{{ imageName }}</span><button type="button" @click="clearImage">×</button></div>
-      <div v-if="stickerOpen" class="stickers"><button v-for="e in stickers" :key="e" type="button" @click="sendSticker(e)">{{ e }}</button></div>
+      <div v-if="stickerOpen" class="stickers"><button v-for="sticker in stickerCatalog" :key="sticker.id" type="button" @click="sendSticker(sticker)"><img :src="sticker.url" :alt="sticker.name" loading="lazy"></button><span v-if="stickerLoading" class="sticker-tip">加载中…</span><span v-else-if="stickerError" class="sticker-tip">{{ stickerError }}</span><span v-else-if="!stickerCatalog.length" class="sticker-tip">暂无表情</span></div>
       <div class="composer">
         <input ref="fileInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden @change="onFile">
         <button type="button" class="tool" aria-label="图片" @click="pickImage">＋</button>
         <button type="button" class="tool" :class="{ rec: recording }" aria-label="语音" @click="toggleVoice">{{ recording ? '■' : '🎙' }}</button>
-        <button type="button" class="tool" aria-label="表情" @click="stickerOpen = !stickerOpen">☺</button>
+        <button type="button" class="tool" aria-label="表情" @click="toggleStickerPanel">☺</button>
         <textarea ref="textarea" v-model="draft" rows="1" placeholder="和奈绪说点什么…" enterkeyhint="send" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" @keydown="onKeydown" @input="autosize" @focus="scrollBottom" />
         <button type="button" class="send" :disabled="!canSend" @click="send">{{ session.sending ? '…' : '↑' }}</button>
       </div>
@@ -75,6 +75,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useSessionStore } from '@/stores/session'
 import { useAuthStore } from '@/stores/auth'
 import { http } from '@/api/client'
+import { cleanupStickerCache, getStickerDataUrl, type StickerMeta } from '@/lib/stickerCache'
 
 const session = useSessionStore()
 const auth = useAuthStore()
@@ -91,11 +92,30 @@ const imagePreview = ref('')
 const imageName = ref('')
 const mediaError = ref('')
 const stickerOpen = ref(false)
+const stickerCatalog = ref<StickerMeta[]>([])
+const stickerLoading = ref(false)
+const stickerError = ref('')
 const recording = ref(false)
 let recorder: MediaRecorder | null = null
 let chunks: BlobPart[] = []
 let stream: MediaStream | null = null
-const stickers = ['😊','😂','🥺','😳','😭','😡','🤔','😴','❤️','✨','👍','🎉']
+async function loadStickers() {
+  if (stickerCatalog.value.length || stickerLoading.value) return
+  stickerLoading.value = true
+  stickerError.value = ''
+  try {
+    const r = await http.get<{ data?: StickerMeta[] }>('/api/stickers')
+    stickerCatalog.value = Array.isArray(r.data) ? r.data : []
+  } catch (e) {
+    stickerError.value = e instanceof Error ? e.message : '表情加载失败'
+  } finally {
+    stickerLoading.value = false
+  }
+}
+function toggleStickerPanel() {
+  stickerOpen.value = !stickerOpen.value
+  if (stickerOpen.value) void loadStickers()
+}
 const searchOpen = ref(false)
 const searchQuery = ref('')
 const searchInput = ref<HTMLInputElement | null>(null)
@@ -133,6 +153,7 @@ const searchResults = computed<SearchHit[]>(() => {
 
 let viewportHandler: (() => void) | null = null
 onMounted(() => {
+  void cleanupStickerCache()
   window.addEventListener('hoshinoumi:back-detail', onNativeBackDetail)
   if (auth.loggedIn && !session.conversations.length) void session.refresh()
   if (deepTarget.value) void open(deepTarget.value)
@@ -231,12 +252,17 @@ async function toggleVoice() {
     r.start(); recording.value = true
   } catch { mediaError.value = '无法使用麦克风，请检查权限' }
 }
-async function sendSticker(e: string) {
-  const c = document.createElement('canvas'); c.width = 240; c.height = 240; const x = c.getContext('2d'); if (!x) return
-  x.clearRect(0, 0, 240, 240); x.font = '160px "Segoe UI Emoji","Apple Color Emoji",sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(e, 120, 132)
-  stickerOpen.value = false
-  const ok = await session.sendMessage('', { sticker: c.toDataURL('image/png') })
-  if (!ok) mediaError.value = session.sendError || '表情发送失败'; await scrollBottom()
+async function sendSticker(sticker: StickerMeta) {
+  stickerError.value = ''
+  try {
+    const data = await getStickerDataUrl(sticker)
+    stickerOpen.value = false
+    const ok = await session.sendMessage('', { sticker: data })
+    if (!ok) mediaError.value = session.sendError || '表情发送失败'
+    await scrollBottom()
+  } catch (e) {
+    stickerError.value = e instanceof Error ? e.message : '表情发送失败'
+  }
 }
 </script>
 
@@ -251,7 +277,7 @@ async function sendSticker(e: string) {
 .messages{flex:1;min-height:180px;overflow-y:auto;padding:12px 0;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none}.messages::-webkit-scrollbar{display:none}.row{display:flex;align-items:flex-end;gap:5px;margin-bottom:10px}.row.me{justify-content:flex-end}.box{max-width:82%;display:flex;flex-direction:column;align-items:flex-start}.row.me .box{align-items:flex-end}.mini{width:22px;height:22px;border-radius:7px;background:#eef4ff;color:#2563eb;display:grid;place-items:center;font-size:8px;font-weight:800;flex:none}.mini.mea{background:#2563eb;color:#fff}
 .bubble{padding:8px 11px;border-radius:12px 12px 12px 4px;background:#fff;border:1px solid #e3ebf7;color:#344b64;font-size:12px;line-height:1.65;white-space:pre-wrap;word-break:break-word}.row.me .bubble{background:#2563eb;border-color:#2563eb;color:#fff;border-radius:12px 12px 4px 12px}.recalled{font-size:9px;color:#93a3b8;border:1px dashed #dbe8ff;border-radius:8px;padding:5px 9px;background:#f8fbff}.stamp{font-size:7px;color:#a2b2c6;margin-top:3px}.row.me .stamp{text-align:right}.msg-img{max-width:180px;max-height:180px;border-radius:10px;display:block;margin-bottom:2px;object-fit:cover}.msg-img.sticker{width:96px;height:96px;object-fit:contain;background:transparent;border:0}.msg-audio{width:190px;max-width:100%;height:34px;display:block;margin-bottom:2px}
 .media-error{flex:none;color:#b91c1c;background:#fff5f5;border:1px solid #fecaca;border-radius:8px;font-size:9px;padding:6px 8px;margin:4px 0}.preview{display:flex;align-items:center;gap:7px;flex:none;border:1px solid #dbe8ff;background:#fff;border-radius:9px;padding:5px;margin-bottom:6px}.preview img{width:40px;height:40px;border-radius:6px;object-fit:cover}.preview span{flex:1;min-width:0;font-size:8px;color:#6b7c95;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.preview button{border:0;background:none;color:#8a9bb0;font-size:16px}
-.stickers{display:flex;flex-wrap:wrap;gap:4px;flex:none;padding:6px;margin-bottom:6px;border:1px solid #dbe8ff;border-radius:10px;background:#fff}.stickers button{width:36px;height:36px;border:0;border-radius:7px;background:#f8fbff;font-size:19px}
+.stickers{display:flex;flex-wrap:wrap;gap:4px;flex:none;padding:6px;margin-bottom:6px;border:1px solid #dbe8ff;border-radius:10px;background:#fff}.stickers button{width:36px;height:36px;border:0;border-radius:7px;background:#f8fbff;padding:2px;overflow:hidden}.stickers button img{width:100%;height:100%;object-fit:contain;display:block}.sticker-tip{font-size:8px;color:#8a9bb0;padding:5px}
 .composer{display:flex;gap:5px;align-items:flex-end;border-top:1px solid #e5edf9;padding:7px 0 0;background:#f7faff;flex:none}.tool{width:32px;height:34px;flex:none;border:1px solid #e5edf9;border-radius:9px;background:#fff;color:#607795;font-size:15px}.tool.rec{color:#c0264a;background:#ffecef;border-color:#fecaca}.composer textarea{flex:1;min-width:0;resize:none;max-height:96px;border:1px solid #e1ebf9;border-radius:11px;background:#fff;padding:8px 10px;font:16px/1.4 inherit;color:#344b64;outline:0}.composer textarea:focus{border-color:#93c5fd;box-shadow:0 0 0 3px rgba(37,99,235,.07)}.send{width:36px;height:36px;flex:none;border:0;border-radius:11px;background:#2563eb;color:#fff;font-size:17px}.send:disabled{background:#cbd5e1}
 @media(max-height:560px){.messages{min-height:100px}.head{padding-top:8px}}
 
