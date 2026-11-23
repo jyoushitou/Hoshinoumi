@@ -151,6 +151,29 @@ LOGS = [
     "2026-11-19 08:40:00 INFO  scheduler tick tasks=3",
 ]
 
+
+COMMAND_CATALOG = [
+    ("!help", "基础", "命令帮助", False), ("!ping", "基础", "连通性测试", False), ("!status", "基础", "运行状态", False),
+    ("!version", "基础", "版本信息", False), ("!uptime", "基础", "运行时长", False), ("!meta", "基础", "实例元信息", False),
+    ("!usage", "基础", "模型用量", False), ("!log", "基础", "最近日志", False), ("!db", "基础", "数据库状态", False),
+    ("!stats", "基础", "运行统计", False), ("!history", "基础", "历史记录", False), ("!reload", "基础", "重载配置", True),
+    ("!set", "基础", "修改配置", True), ("!exit", "基础", "退出实例", True), ("!quit", "基础", "退出实例", True),
+    ("!memory", "记忆", "记忆查询", False), ("!memorybook", "记忆", "记忆本", False), ("!event", "记忆", "事件列表", False),
+    ("!keywords", "记忆", "关键词", False), ("!clear", "记忆", "清空记忆", True), ("!profile", "记忆", "画像摘要", False),
+    ("!growth", "记忆", "成长记录", False), ("!relation", "记忆", "关系状态", False),
+    ("!img", "媒体", "搜图", False), ("!acg", "媒体", "二次元图", False), ("!sticker", "媒体", "表情包", False),
+    ("!clip", "媒体", "视频片段", False), ("!voice", "媒体", "语音", False), ("!vision", "媒体", "识图", False),
+    ("!say", "媒体", "主动发言", True), ("!sayg", "媒体", "群内发言", True),
+    ("!diary", "日常", "日记", False), ("!todo", "日常", "待办", False), ("!cron", "日常", "定时任务", False),
+    ("!hooks", "日常", "钩子", False), ("!backup", "日常", "备份", True), ("!update", "日常", "更新", False), ("!task", "日常", "任务", False),
+    ("!books", "阅读", "书架", False), ("!book", "阅读", "当前阅读", False),
+    ("!plan", "计划", "计划表", False),
+    ("!plugin", "插件", "插件管理", True),
+    ("!adduser", "账号", "添加用户", True), ("!persona", "账号", "人设", False),
+    ("!doing", "多端", "当前活动", False), ("!presence", "多端", "在线状态", False), ("!route", "多端", "消息路由", False),
+    ("!gw", "多端", "网关", True), ("!config", "多端", "配置", True), ("!code", "多端", "配对码", True), ("!apikeys", "多端", "API keys", True),
+]
+
 TASKS = [
     {"id": 1, "schedule_type": "daily", "content": "每日早报", "at_time": "08:00", "enabled": True, "next_ts": "2026-11-20 08:00:00"},
     {"id": 2, "schedule_type": "daily", "content": "日记提醒", "at_time": "22:30", "enabled": True, "next_ts": "2026-11-19 22:30:00"},
@@ -393,14 +416,7 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200, {"ok": True, "data": TASKS, "mock": True})
             return
         if path == "/api/commands":
-            data = [
-                {"name": "!help", "group": "基础", "help": "命令帮助", "owner": False},
-                {"name": "!status", "group": "基础", "help": "运行状态", "owner": False},
-                {"name": "!memory", "group": "记忆", "help": "记忆查询", "owner": False},
-                {"name": "!savings", "group": "日常", "help": "存钱统计", "owner": False},
-                {"name": "!persona", "group": "配置", "help": "人设", "owner": False},
-                {"name": "!cron", "group": "日常", "help": "定时任务", "owner": False},
-            ]
+            data = [{"name": name, "group": group, "help": help_text, "owner": owner} for name, group, help_text, owner in COMMAND_CATALOG]
             self._json(200, {"ok": True, "count": len(data), "data": data, "mock": True})
             return
         if path == "/api/memory":
@@ -797,6 +813,8 @@ class Handler(BaseHTTPRequestHandler):
                 result = "mock 命令目录：status / help / memory / logs"
             elif cmd == "memory":
                 result = "10001：3 条记忆"
+            elif any(name.lstrip("!").lower() == cmd for name, _, _, _ in COMMAND_CATALOG):
+                result = f"命令 !{cmd} 执行成功（mock）\n参数可用，结果仅用于界面验收。"
             else:
                 self._json(400, {"error": "unknown_command", "message": f"未知命令: {cmd}"})
                 return
