@@ -31,9 +31,9 @@
     <div class="group">
       <div class="group-title">消息推送</div>
       <div class="row">
-        <span class="ic">⇪</span><div class="copy"><b>ntfy 测试</b><small>{{ push.registered ? '已注册 · ' + push.topic : '未开启' }}</small></div>
-        <button v-if="!push.registered" class="go" type="button" :disabled="!native || pushBusy" @click="startPush">开启测试</button>
-        <button v-else class="go" type="button" :disabled="!native" @click="stopPush">关闭</button>
+        <span class="ic">⇪</span><div class="copy"><b>ntfy 测试</b><small>{{ !pushSupported ? '当前 APK 不支持推送' : push.registered ? '已注册 · ' + push.topic : '未开启' }}</small></div>
+        <button v-if="!push.registered" class="go" type="button" :disabled="!native || !pushSupported || pushBusy" @click="startPush">开启测试</button>
+        <button v-else class="go" type="button" :disabled="!native || !pushSupported" @click="stopPush">关闭</button>
       </div>
       <div class="push-note">Mock 注册后约 5 分钟推送一条测试消息；真机需把 ntfy 地址改成自托管 HTTPS。</div>
     </div>
@@ -67,6 +67,7 @@ const status = ref<Record<string, boolean>>({ notifications: false, camera: fals
 const system = ref('—')
 const push = ref<{ registered: boolean; topic: string; server: string }>({ registered: false, topic: '', server: '' })
 const pushBusy = ref(false)
+const pushSupported = ref(false)
 const appPermissions = [
   { key: 'notifications', icon: '◉', label: '通知', desc: '新消息 / 提醒' },
   { key: 'camera', icon: '▧', label: '相机', desc: '拍照发送' },
