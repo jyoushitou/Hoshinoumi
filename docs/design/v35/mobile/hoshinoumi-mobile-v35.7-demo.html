@@ -630,45 +630,73 @@ screens.diary = `
 <div class="screen-body" style="flex:1;min-height:0;display:flex;flex-direction:column">
   <div class="d-head"><h2>日记<small>DIARY</small></h2><div class="act" onclick="toast('新建日记（演示）')">＋</div></div>
   <div class="d-scroll">
-    <div class="info-stats"><div class="info-stat"><small>全部日记</small><b id="diaryCount">—</b></div><div class="info-stat"><small>最早</small><b id="diaryFirst">—</b></div><div class="info-stat"><small>最近</small><b id="diaryLast">—</b></div></div>
-    <div class="d-card" style="margin-bottom:8px"><div style="font-size:9px;font-weight:700;color:#52708f;margin-bottom:6px">全部日记时间</div><div class="cmd-chips" id="diaryDates"><button class="on">加载中…</button></div></div>
+    <div class="info-stats"><div class="info-stat"><small>全部日记</small><b id="diaryCount">—</b></div><div class="info-stat"><small>月份</small><b id="diaryMonthCount">—</b></div><div class="info-stat"><small>最近</small><b id="diaryLast">—</b></div></div>
+    <div class="d-card" style="margin-bottom:8px"><div style="font-size:9px;font-weight:700;color:#52708f;margin-bottom:6px">按月份查看</div><div class="cmd-chips" id="diaryMonths"><button>加载中…</button></div></div>
     <div id="diaryList"><div class="d-card" style="text-align:center;color:#9aabc0;font-size:9px;padding:18px">加载日记…</div></div>
-    <div class="d-card" style="margin-top:9px;font-size:8px;color:#8598ad;line-height:1.7">数据由日记命令写入；页面通过 <code>GET /api/diary</code> 读取全部日记，<code>GET /api/diary/dates</code> 读取全部日期。</div>
+    <div class="d-card" style="margin-top:9px;font-size:8px;color:#8598ad;line-height:1.7">数据由日记命令写入；页面通过 <code>GET /api/diary</code> 读取全部日记，支持按月份筛选；列表只展示前 50 字概览，点开进入详情页。</div>
   </div>
 </div>
 ${nav('chats')}`
 
-function renderDiary(data){
-  const list = document.getElementById('diaryList'); const count = document.getElementById('diaryCount'); if(!list) return
-  if(count) count.textContent = data.length
-  const dates = [...new Set(data.map(x => x.date))].sort().reverse()
-  if(document.getElementById('diaryFirst')) document.getElementById('diaryFirst').textContent = dates[dates.length-1] || '—'
-  if(document.getElementById('diaryLast')) document.getElementById('diaryLast').textContent = dates[0] || '—'
-  const holder = document.getElementById('diaryDates')
-  if(holder) holder.innerHTML = dates.length ? dates.map((d,i)=>`<button class="${i===0?'on':''}" onclick="selectSeg(this)">${d}</button>`).join('') : '<button>暂无</button>'
-  list.innerHTML = data.length ? data.map(item => `<div class="d-card" style="margin-bottom:7px" onclick="toast('打开日记详情（演示）')"><div style="display:flex;align-items:center;gap:6px"><b style="font-size:10px;color:#314a65">${item.title||'无标题'}</b><span style="margin-left:auto;font-size:7.5px;color:#9aabc0">${item.date}</span></div><p style="margin:5px 0 0;font-size:9px;line-height:1.7;color:#526982">${item.content||''}</p><div style="margin-top:6px;font-size:7.5px;color:#8a9bb0">${item.mood||'平静'} · ${item.source||'日记命令'}</div></div>`).join('') : '<div class="d-card" style="text-align:center;color:#9aabc0;font-size:9px;padding:18px">暂无日记</div>'
-}
+function diaryMonthOf(date){ return String(date || '').slice(0, 7) }
+let diaryData = []
+let diaryMonth = ''
 const DESIGN_DIARY = [
-  {date:'2026-11-19',title:'方案通过',content:'今天方案终于过了，客户没有继续改。',mood:'轻松',source:'!diary'},
-  {date:'2026-11-18',title:'旅行目标 60%',content:'这个月结余三千三，旅行目标到六成了。',mood:'开心',source:'!diary'},
-  {date:'2026-11-17',title:'窗边读书',content:'读完《十日终焉》第 3 章，窗边光线刚好。',mood:'平静',source:'!diary'}
+  {id:1,date:'2026-11-19',title:'方案通过',content:'今天方案终于过了，客户没有继续改。',mood:'轻松',source:'!diary'},
+  {id:2,date:'2026-11-18',title:'旅行目标 60%',content:'这个月结余三千三，旅行目标到六成了。',mood:'开心',source:'!diary'},
+  {id:3,date:'2026-11-17',title:'窗边读书',content:'读完《十日终焉》第 3 章，窗边光线刚好。',mood:'平静',source:'!diary'},
+  {id:4,date:'2026-10-28',title:'十月小记',content:'降温了，把夏天的衣服收起来，窗边开始有冷风。',mood:'平静',source:'!diary'}
 ]
-function renderDiaryError(text){
-  const list = document.getElementById('diaryList')
-  if(list) list.innerHTML = `<div class="d-card" style="text-align:center;color:#b23b52;font-size:9px;padding:18px">${text}</div>`
-  const count = document.getElementById('diaryCount'); if(count) count.textContent = '—'
-  const first = document.getElementById('diaryFirst'); if(first) first.textContent = '—'
-  const last = document.getElementById('diaryLast'); if(last) last.textContent = '—'
-  const holder = document.getElementById('diaryDates'); if(holder) holder.innerHTML = '<button>无后端连接</button>'
+function diaryPreview(text){ const value = String(text || '').replace(/\s+/g, ' ').trim(); return value.length > 50 ? value.slice(0, 50) + '…' : value }
+function diaryMonths(){ return [...new Set(diaryData.map(x => diaryMonthOf(x.date)))].filter(Boolean).sort().reverse() }
+function renderDiaryMonths(){
+  const holder = document.getElementById('diaryMonths')
+  if(!holder) return
+  const months = diaryMonths()
+  if(!diaryMonth || !months.includes(diaryMonth)) diaryMonth = months[0] || ''
+  holder.innerHTML = months.length ? months.map(m => `<button class="${m === diaryMonth ? 'on' : ''}" onclick="selectDiaryMonth('${m}')">${m.replace('-', ' 年 ')} 月</button>`).join('') : '<button>暂无月份</button>'
+}
+function selectDiaryMonth(month){
+  diaryMonth = month
+  renderDiaryMonths()
+  renderDiaryList()
+}
+function renderDiaryList(){
+  const list = document.getElementById('diaryList'); if(!list) return
+  const rows = diaryData.filter(x => diaryMonthOf(x.date) === diaryMonth).sort((a, b) => String(b.date).localeCompare(String(a.date)))
+  list.innerHTML = rows.length ? rows.map(item => `<div class="d-card" style="margin-bottom:7px" onclick="openDiaryDetail(${item.id})"><div style="display:flex;align-items:center;gap:6px"><b style="font-size:10px;color:#314a65">${item.title || '无标题'}</b><span style="margin-left:auto;font-size:7.5px;color:#9aabc0">${item.date}</span></div><p style="margin:5px 0 0;font-size:9px;line-height:1.7;color:#526982">${diaryPreview(item.content)}</p><div style="display:flex;align-items:center;margin-top:6px;font-size:7.5px;color:#8a9bb0"><span>${item.mood || '平静'} · ${item.source || '日记命令'}</span><button style="margin-left:auto;border:1px solid #dbe8ff;background:#f4f9ff;color:#2563eb;border-radius:5px;font-size:7.5px;padding:2px 6px" onclick="event.stopPropagation();openDiaryDetail(${item.id})">查看</button></div></div>`).join('') : '<div class="d-card" style="text-align:center;color:#9aabc0;font-size:9px;padding:18px">这个月还没有日记</div>'
+}
+function renderDiary(data){
+  diaryData = Array.isArray(data) ? data : []
+  const months = diaryMonths()
+  const count = document.getElementById('diaryCount'); if(count) count.textContent = diaryData.length
+  const mcount = document.getElementById('diaryMonthCount'); if(mcount) mcount.textContent = months.length
+  const last = document.getElementById('diaryLast'); if(last) last.textContent = diaryData.map(x => x.date).sort().reverse()[0] || '—'
+  renderDiaryMonths()
+  renderDiaryList()
+}
+function openDiaryDetail(id){
+  const item = diaryData.find(x => String(x.id) === String(id))
+  if(!item) return
+  currentScreen = 'diaryDetail'
+  app.innerHTML = `
+  <div class="screen-body" style="flex:1;min-height:0;display:flex;flex-direction:column">
+    <div class="d-head"><div class="act" style="margin-right:2px" onclick="go('diary')">‹</div><h2>日记详情<small>DIARY</small></h2><div class="act" onclick="toast('编辑日记（演示）')">✎</div></div>
+    <div class="d-scroll">
+      <div class="d-card">
+        <div style="display:flex;align-items:center;gap:7px"><b style="font-size:15px;color:#1e3a5f">${item.title || '无标题'}</b><span style="margin-left:auto;font-size:8px;color:#9aabc0">${item.date}</span></div>
+        <div style="margin-top:4px;font-size:8px;color:#8a9bb0">${item.mood || '平静'} · ${item.source || '日记命令'}</div>
+        <p style="margin:12px 0 0;font-size:10px;line-height:1.9;color:#405872;white-space:pre-wrap">${item.content || ''}</p>
+      </div>
+      <div class="d-card" style="margin-top:8px;font-size:8px;color:#8598ad;line-height:1.7">详情页按设计稿隐藏底栏；返回后回日记列表。</div>
+    </div>
+  </div>`
 }
 const DIARY_API_BASE = location.protocol === 'file:' ? 'http://127.0.0.1:27005' : ''
 const DIARY_HEADERS = { Authorization: 'Bearer mock-token' }
 async function loadDiary(){
   try {
-    const [all, dates] = await Promise.all([
-      fetch(DIARY_API_BASE + '/api/diary?all=1', { headers: DIARY_HEADERS }).then(r => r.ok ? r.json() : Promise.reject()),
-      fetch(DIARY_API_BASE + '/api/diary/dates', { headers: DIARY_HEADERS }).then(r => r.ok ? r.json() : Promise.reject())
-    ])
+    const all = await fetch(DIARY_API_BASE + '/api/diary?all=1', { headers: DIARY_HEADERS }).then(r => r.ok ? r.json() : Promise.reject())
     renderDiary(Array.isArray(all.data) && all.data.length ? all.data : DESIGN_DIARY)
   } catch { renderDiary(DESIGN_DIARY) }
 }
