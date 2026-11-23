@@ -1,14 +1,21 @@
 package com.hoshinoumi.mobile;
 
 import android.Manifest;
+import android.app.DownloadManager;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Environment;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.webkit.CookieManager;
 import android.webkit.JavascriptInterface;
+import android.webkit.URLUtil;
 import android.webkit.PermissionRequest;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.widget.Toast;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -62,6 +69,26 @@ public class MainActivity extends BridgeActivity {
             }
         });
 
+        getBridge().getWebView().setDownloadListener((url, userAgent, contentDisposition, mimeType, contentLength) -> {
+            try {
+                String fileName = URLUtil.guessFileName(url, contentDisposition, mimeType);
+                DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
+                request.setMimeType(mimeType);
+                request.addRequestHeader("User-Agent", userAgent);
+                String cookie = CookieManager.getInstance().getCookie(url);
+                if (cookie != null) request.addRequestHeader("Cookie", cookie);
+                request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+                request.setDestinationInExternalFilesDir(this, Environment.DIRECTORY_DOWNLOADS, fileName);
+                DownloadManager manager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
+                if (manager != null) {
+                    manager.enqueue(request);
+                    Toast.makeText(this, "开始下载：" + fileName, Toast.LENGTH_SHORT).show();
+                }
+            } catch (Exception e) {
+                Toast.makeText(this, "下载失败：" + e.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
+
         getBridge().getWebView().addJavascriptInterface(new Object() {
             @JavascriptInterface
             public void openConfig() {
@@ -69,6 +96,15 @@ public class MainActivity extends BridgeActivity {
                     String base = getBridge().getLocalUrl();
                     if (base.endsWith("/")) base = base.substring(0, base.length() - 1);
                     getBridge().getWebView().loadUrl(base + "/index.html?config=1");
+                });
+            }
+            @JavascriptInterface
+            public void shareText(String text) {
+                runOnUiThread(() -> {
+                    Intent send = new Intent(Intent.ACTION_SEND);
+                    send.setType("text/plain");
+                    send.putExtra(Intent.EXTRA_TEXT, text == null ? "" : text);
+                    startActivity(Intent.createChooser(send, "分享"));
                 });
             }
         }, "HoshinoumiConfig");
