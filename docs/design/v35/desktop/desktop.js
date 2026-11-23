@@ -68,29 +68,37 @@ function pageHead(title,sub){return `<div class="pv-head"><div><h1>${title}</h1>
 
 const DIARY_API_BASE = location.protocol === 'file:' ? 'http://127.0.0.1:27005' : ''
 const DIARY_HEADERS = { Authorization: 'Bearer mock-token' }
+let diaryData = []
+let diaryMonth = ''
+function diaryMonthOf(date){ return String(date || '').slice(0, 7) }
+function diaryPreview(text){ const v=String(text||'').replace(/\s+/g,' ').trim(); return v.length>50?v.slice(0,50)+'…':v }
+function renderDiaryDesktop(){
+  const months=[...new Set(diaryData.map(x=>diaryMonthOf(x.date)))].filter(Boolean).sort().reverse()
+  if(!diaryMonth||!months.includes(diaryMonth)) diaryMonth=months[0]||''
+  const count=document.getElementById('diaryCount'); if(count) count.textContent=String(diaryData.length)
+  const mc=document.getElementById('diaryMonthCount'); if(mc) mc.textContent=String(months.length)
+  const last=document.getElementById('diaryLast'); if(last) last.textContent=diaryData.map(x=>x.date).sort().reverse()[0]||'—'
+  const dh=document.getElementById('diaryMonths')
+  if(dh) dh.innerHTML=months.length?months.map(m=>`<button class="${m===diaryMonth?'on':''}" onclick="selectDiaryMonthDesktop('${m}')">${m.replace('-',' 年 ')} 月</button>`).join(''):'<button>暂无月份</button>'
+  const list=document.getElementById('diaryList')
+  if(!list) return
+  const rows=diaryData.filter(x=>diaryMonthOf(x.date)===diaryMonth).sort((a,b)=>String(b.date).localeCompare(String(a.date)))
+  list.innerHTML=rows.length?rows.map(x=>`<div class="pv-row" style="cursor:pointer" onclick="showDiaryDetail(${x.id})"><b style="font-size:10px">${x.title||'无标题'}</b><span>${x.date} · ${x.mood||''} · 查看</span><div style="grid-column:1/-1;font-size:9px;color:#6b7c95;line-height:1.7">${diaryPreview(x.content)}</div></div>`).join(''):'<div class="pv-row">这个月还没有日记<span>—</span></div>'
+}
+function selectDiaryMonthDesktop(month){ diaryMonth=month; renderDiaryDesktop() }
+function showDiaryDetail(id){
+  const item=diaryData.find(x=>String(x.id)===String(id)); if(!item) return
+  pageView.hidden=false
+  pageView.innerHTML=`<div class="pv-head"><div><h1>日记详情</h1><p>${item.date} · ${item.mood||''}</p></div><button class="back" onclick="showPage('diary')">← 返回日记</button></div><div class="pv-card" style="max-width:760px"><b style="font-size:16px">${item.title||'无标题'}</b><small>${item.date} · ${item.source||'!diary'}</small><div style="margin-top:14px;font-size:11px;line-height:1.9;color:#405872;white-space:pre-wrap">${item.content||''}</div></div>`
+}
 async function loadDiaryPage(){
   try {
     const r=await fetch(DIARY_API_BASE + '/api/diary?all=1', { headers: DIARY_HEADERS }); if(!r.ok) throw new Error('http'); const j=await r.json(); if(!Array.isArray(j.data)) throw new Error('schema')
-    const data=j.data
-    const dates=[...new Set(data.map(x=>x.date))].sort().reverse()
-    const count=document.getElementById('diaryCount'); if(count) count.textContent=String(data.length)
-    const first=document.getElementById('diaryFirst'); if(first) first.textContent=dates[dates.length-1]||'—'
-    const last=document.getElementById('diaryLast'); if(last) last.textContent=dates[0]||'—'
-    const dh=document.getElementById('diaryDates'); if(dh) dh.innerHTML=dates.map((d,i)=>`<button class="${i===0?'on':''}" onclick="toast('筛选 '+${JSON.stringify(d)}+'（演示）')">${d}</button>`).join('') || '<button>暂无</button>'
-    const list=document.getElementById('diaryList'); if(list) list.innerHTML=data.length?data.map(x=>`<div class="pv-row" onclick="toast('打开日记详情（演示）')"><b style="font-size:10px">${x.title||'无标题'}</b><span>${x.date} · ${x.mood||''}</span><div style="grid-column:1/-1;font-size:9px;color:#6b7c95;line-height:1.7">${x.content||''}</div></div>`).join(''):'<div class="pv-row">暂无日记<span>—</span></div>'
+    diaryData=j.data.length?j.data:[{id:1,date:'2026-11-19',title:'方案通过',content:'今天方案终于过了，客户没有继续改。',mood:'轻松',source:'!diary'}]
   } catch {
-    const sample=[
-      {date:'2026-11-19',title:'方案通过',content:'今天方案终于过了，客户没有继续改。',mood:'轻松'},
-      {date:'2026-11-18',title:'旅行目标 60%',content:'这个月结余三千三，旅行目标到六成了。',mood:'开心'},
-      {date:'2026-11-17',title:'窗边读书',content:'读完《十日终焉》第 3 章，窗边光线刚好。',mood:'平静'}
-    ]
-    const dates=[...new Set(sample.map(x=>x.date))].sort().reverse()
-    const count=document.getElementById('diaryCount'); if(count) count.textContent=String(sample.length)
-    const first=document.getElementById('diaryFirst'); if(first) first.textContent=dates[dates.length-1]
-    const last=document.getElementById('diaryLast'); if(last) last.textContent=dates[0]
-    const dh=document.getElementById('diaryDates'); if(dh) dh.innerHTML=dates.map((d,i)=>`<button class="${i===0?'on':''}" onclick="toast('筛选 '+${JSON.stringify(d)}+'（演示）')">${d}</button>`).join('')
-    const list=document.getElementById('diaryList'); if(list) list.innerHTML=sample.map(x=>`<div class="pv-row" onclick="toast('打开日记详情（演示）')"><b style="font-size:10px">${x.title}</b><span>${x.date} · ${x.mood}</span><div style="grid-column:1/-1;font-size:9px;color:#6b7c95;line-height:1.7">${x.content}</div></div>`).join('')
+    diaryData=[{id:1,date:'2026-11-19',title:'方案通过',content:'今天方案终于过了，客户没有继续改。',mood:'轻松',source:'!diary'},{id:2,date:'2026-10-28',title:'十月小记',content:'降温了，把夏天的衣服收起来，窗边开始有冷风。',mood:'平静',source:'!diary'}]
   }
+  renderDiaryDesktop()
 }
 
 function showPage(page){
@@ -151,7 +159,7 @@ function showPage(page){
     `</div><div class="cmd-result"><div class="cmd-result-head"><b>执行结果</b><span id="cmdState">选择上方命令运行</span></div><pre id="cmdOutput">点击任意命令，结果显示在这里。\n\n提示：最终版通过 POST /api/command 执行。</pre></div>`
 
   else if(page==='cron') pv.innerHTML=pageHead('定时任务','列表 / 启停 / 立即运行')+`<div class="pv-row">每日早报 · 08:00<span>启用</span></div><div class="pv-row">日记提醒 · 22:30<span>启用</span></div><div class="pv-row">健康检查 · 每小时<span>停用</span></div>`
-else if(page==='diary'){ pv.innerHTML=pageHead('日记','全部日期 · 数据来自 !diary / GET /api/diary')+`<div class="pv-grid"><div class="pv-card"><b id="diaryCount">—</b><small>全部日记</small></div><div class="pv-card"><b id="diaryFirst">—</b><small>最早</small></div><div class="pv-card"><b id="diaryLast">—</b><small>最近</small></div></div><div class="pv-sec">全部日记时间</div><div class="pv-chips" id="diaryDates"><button>加载中…</button></div><div class="pv-sec">日记内容</div><div id="diaryList"><div class="pv-row">正在读取 /api/diary<span>…</span></div></div>`; void loadDiaryPage() }
+else if(page==='diary'){ pv.innerHTML=pageHead('日记','按月查看 · 前 50 字概览 · 点开详情')+`<div class="pv-grid"><div class="pv-card"><b id="diaryCount">—</b><small>全部日记</small></div><div class="pv-card"><b id="diaryMonthCount">—</b><small>月份</small></div><div class="pv-card"><b id="diaryLast">—</b><small>最近</small></div></div><div class="pv-sec">按月份查看</div><div class="pv-chips" id="diaryMonths"><button>加载中…</button></div><div class="pv-sec">本月日记</div><div id="diaryList"><div class="pv-row">正在读取 /api/diary<span>…</span></div></div>`; void loadDiaryPage() }
     else if(page==='logs') pv.innerHTML=pageHead('运行日志','最近 3 条 · 设计稿')+`<div class="pv-code">09:13 INFO  chat target=10001 len=18
 09:12 INFO  command status
 09:04 WARN  search_images upstream timeout</div>`
