@@ -13,6 +13,11 @@ const quickLabel = computed(() => quickKeys.value.map(key => entries.find(entry 
 
 function toggle(key: string) { toggleQuick(key) }
 function logout() { auth.logout() }
+function changeBackend() {
+  const bridge = (window as any).HoshinoumiConfig
+  if (bridge?.open) bridge.open()
+  else window.alert('请在 Hoshinoumi App 内修改后端地址')
+}
 </script>
 
 <template>
@@ -39,6 +44,7 @@ function logout() { auth.logout() }
 
     <div class="block">
       <div class="row"><span>后端连接</span><small>{{ auth.loggedIn ? '已登录' : '未登录' }}</small></div>
+      <button class="row backend-row" type="button" @click="changeBackend"><span>后端地址</span><small>修改 ›</small></button>
       <div class="row"><span>账号</span><small>{{ auth.qq || '—' }}</small></div>
       <div class="row"><span>版本</span><small>v35.7</small></div>
     </div>
@@ -59,7 +65,7 @@ function logout() { auth.logout() }
 .quick-item b{font-size:14px;font-weight:400;line-height:1}.quick-item em{position:absolute;right:4px;top:2px;font-style:normal;color:#2563eb;font-size:8px}
 .quick-item.on{border-color:#93c5fd;background:#eef4ff;color:#2563eb;font-weight:700}
 .reset{width:100%;margin-top:8px;height:30px;border:1px solid #dbe8ff;background:#fff;color:#2563eb;border-radius:8px;font:10px inherit;cursor:pointer}
-.row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #f0f5fd;font-size:10px;color:#3d5470}.row:last-child{border-bottom:0}.row small{font-size:9px;color:#9aabc0}
+.row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #f0f5fd;font-size:10px;color:#3d5470}.row:last-child{border-bottom:0}.row small{font-size:9px;color:#9aabc0}.backend-row{width:100%;border:0;background:none;text-align:left;cursor:pointer}.backend-row small{color:#2563eb}
 .about-card{margin-top:12px;padding:13px;border:1px solid #e3ebf7;border-radius:13px;background:#fff;text-align:center}.about-card b{display:block;font-size:10px;color:#314a65}.about-card span{display:block;font-size:8px;color:#9aabc0;margin-top:3px}.about-card em{display:block;font:7px ui-monospace,monospace;letter-spacing:.12em;color:#a8b5c7;font-style:normal;margin-top:7px}
 .logout{width:100%;height:36px;border:1px solid #fecaca;background:#fff5f5;color:#b91c1c;border-radius:9px;font:10px inherit;cursor:pointer}
 </style>

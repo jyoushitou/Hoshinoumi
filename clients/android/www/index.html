@@ -35,6 +35,7 @@ button{width:100%;height:43px;border:0;border-radius:11px;font:11px inherit;font
     <div class="hint">支持 https；本地开发可填 <code>http://10.0.2.2:27006</code><br>配置只保存在本机，不会上传。</div>
     <button class="primary" id="connect">保存并进入</button>
     <button class="secondary" id="clear">清除地址</button>
+    <button class="secondary" id="back" style="display:none">取消，返回应用</button>
     <div class="status" id="status"></div>
   </div>
   <div class="foot"><b>Hoshinoumi Mobile Shell</b><br>POWERED BY JYOUSHITOU</div>
@@ -45,6 +46,7 @@ button{width:100%;height:43px;border:0;border-radius:11px;font:11px inherit;font
   var input=document.getElementById('url');
   var status=document.getElementById('status');
   var saved='';
+  var forceConfig=new URLSearchParams(location.search).has('config');
   try{saved=localStorage.getItem(KEY)||''}catch(e){}
   input.value=saved;
   function normalize(v){
@@ -66,7 +68,16 @@ button{width:100%;height:43px;border:0;border-radius:11px;font:11px inherit;font
     try{localStorage.removeItem(KEY)}catch(e){}
     input.value='';show('已清除本机地址');input.focus();
   });
-  if(saved) show('上次使用的地址已填入，可直接进入或修改。');
+  var back=document.getElementById('back');
+  if(saved && back) back.style.display='block';
+  if(saved && back) back.addEventListener('click',function(){location.replace(saved)});
+  if(saved && !forceConfig){
+    show('正在连接 '+saved+' …','ok');
+    document.querySelector('.card').style.opacity='0.6';
+    setTimeout(function(){location.replace(saved)},80);
+  } else if(saved){
+    show('修改后端地址；保存后会重新加载。');
+  }
 })();
 </script>
 </body>
