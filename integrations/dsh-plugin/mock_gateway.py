@@ -444,6 +444,9 @@ class Handler(BaseHTTPRequestHandler):
             rows = [x for x in MEMORY_ITEMS if (not q or q in x["content"].lower()) and (not tag or tag in x["tags"]) and (not source or x["source"] == source)]
             self._json(200, {"ok": True, "count": len(rows), "data": rows, "mock": True})
             return
+        if path == "/api/memory/events":
+            self._json(200, {"ok": True, "count": len(MEMORY_EVENTS), "data": MEMORY_EVENTS, "mock": True})
+            return
         if path == "/api/memory/stats":
             self._json(200, {"ok": True, "total": len(MEMORY_ITEMS), "targets": len({x["target_id"] for x in MEMORY_ITEMS}), "longterm": len([x for x in MEMORY_ITEMS if x["longterm"]]), "mock": True})
             return
