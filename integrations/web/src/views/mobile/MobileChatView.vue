@@ -65,6 +65,7 @@
       </div>
     </div>
   </div>
+  <NewGroupModal :open="newGroupOpen" @close="newGroupOpen = false" @created="onGroupCreated" />
 </template>
 
 <script setup lang="ts">
@@ -276,7 +277,7 @@ async function sendSticker(sticker: StickerMeta) {
 <style scoped>
 .mc{height:100%;min-height:0;display:flex;flex-direction:column;padding:0 12px calc(8px + env(safe-area-inset-bottom));background:#f7faff;color:#17263b}
 .mc:has(textarea:focus),.mc:focus-within{padding-bottom:6px!important}
-.head{display:flex;align-items:flex-end;justify-content:space-between;padding:14px 2px 9px}h1{margin:0;font-size:24px;letter-spacing:-.03em}p{margin:3px 0 0;color:#8a9bb0;font-size:10px}.dot{width:8px;height:8px;border-radius:50%;background:#1f9d6b;box-shadow:0 0 0 3px rgba(31,157,107,.1)}.dot.off{background:#cbd5e1;box-shadow:none}
+.head{display:flex;align-items:flex-end;justify-content:space-between;padding:14px 2px 9px}.new-group{width:30px;height:30px;border:1px solid #dbe8ff;border-radius:8px;background:#fff;color:#2563eb;font-size:17px;margin-left:auto;margin-right:7px;line-height:1}h1{margin:0;font-size:24px;letter-spacing:-.03em}p{margin:3px 0 0;color:#8a9bb0;font-size:10px}.dot{width:8px;height:8px;border-radius:50%;background:#1f9d6b;box-shadow:0 0 0 3px rgba(31,157,107,.1)}.dot.off{background:#cbd5e1;box-shadow:none}
 .search{height:36px;border:1px solid #e3ebf7;border-radius:11px;background:#fff;color:#9aabc0;display:flex;align-items:center;padding:0 11px;font-size:10px;margin-bottom:10px}
 .notice{border:1px dashed #d7e6ff;background:#f4f9ff;color:#7a8fa8;border-radius:11px;padding:12px;font-size:10px;line-height:1.6;margin:6px 0}.notice.error{border-color:#fecaca;background:#fff5f5;color:#b91c1c}
 .conv{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:1px solid transparent;background:transparent;padding:10px 8px;border-radius:12px;cursor:pointer}.conv:active{background:#fff;border-color:#e7efff}.avatar{width:38px;height:38px;border-radius:12px;background:#eef4ff;color:#2563eb;display:grid;place-items:center;font-weight:800;font-size:13px;flex:none}.copy{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}.copy b{font-size:12px;color:#253b56;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.copy small{font-size:9.5px;color:#8b9bb0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.meta{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex:none}.meta small{font-size:8px;color:#a2b2c6}.meta em{min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:#2563eb;color:#fff;font-size:8px;font-style:normal;display:grid;place-items:center}
