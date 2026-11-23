@@ -37,13 +37,13 @@ cd clients\android\android
 APK：
 
 ```text
-app\build\outputs\apk\debug\hoshinoumi-35.8.4.3.apk
+app\build\outputs\apk\debug\hoshinoumi-35.8.4.4.apk
 ```
 
 安装：
 
 ```powershell
-adb install -r app\build\outputs\apk\debug\hoshinoumi-35.8.4.3.apk
+adb install -r app\build\outputs\apk\debug\hoshinoumi-35.8.4.4.apk
 adb shell am start -n com.hoshinoumi.mobile/.MainActivity
 ```
 
