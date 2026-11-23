@@ -71,7 +71,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 const emit = defineEmits<{ (e: 'detail-change', value: boolean): void }>()
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useSessionStore } from '@/stores/session'
 import { useAuthStore } from '@/stores/auth'
 import { http } from '@/api/client'
@@ -79,6 +79,8 @@ import { http } from '@/api/client'
 const session = useSessionStore()
 const auth = useAuthStore()
 const router = useRouter()
+const route = useRoute()
+const deepTarget = computed(() => String(route.query.target || ''))
 const pane = ref<'list' | 'chat'>('list')
 watch(pane, value => emit('detail-change', value === 'chat'), { immediate: true })
 const draft = ref('')
@@ -132,6 +134,7 @@ const searchResults = computed<SearchHit[]>(() => {
 let viewportHandler: (() => void) | null = null
 onMounted(() => {
   if (auth.loggedIn && !session.conversations.length) void session.refresh()
+  if (deepTarget.value) void open(deepTarget.value)
   viewportHandler = () => { if (pane.value === 'chat') setTimeout(scrollBottom, 80) }
   window.visualViewport?.addEventListener('resize', viewportHandler)
 })
@@ -143,6 +146,11 @@ onBeforeUnmount(() => {
 })
 watch(() => session.messages.length, scrollBottom)
 watch(() => session.activeTarget, scrollBottom)
+watch(() => session.conversations.length, async length => {
+  if (length && deepTarget.value && session.activeTarget !== deepTarget.value) {
+    await open(deepTarget.value)
+  }
+})
 
 function timeOf(value?: string) { const d = value ? new Date(value) : null; return d && !Number.isNaN(d.getTime()) ? `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}` : '' }
 async function scrollBottom() { await nextTick(); const el = messageList.value; if (el) el.scrollTop = el.scrollHeight }

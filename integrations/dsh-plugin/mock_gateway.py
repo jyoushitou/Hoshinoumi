@@ -37,7 +37,47 @@ PUSH_OUTBOX = {}  # id -> notification job
 PUSH_TIMERS = {}  # device_id -> timer
 
 
-def _schedule_test_push(device):
+def _publish_chat(target: str, reply: str) -> None:
+    if not PUSH_PREFS.get("messages", True) or PUSH_PREFS.get("dnd"):
+        return
+    click = f"/chat?target={target}"
+    for device in list(PUSH_DEVICES.values()):
+        if device.get("revoked_at"):
+            continue
+        endpoint = str(device.get("endpoint") or "")
+        if not endpoint:
+            continue
+        status = "failed"
+        attempts = 1
+        try:
+            req = urllib.request.Request(endpoint, data=reply.encode("utf-8"), method="POST")
+            req.add_header("Title", "Hoshinoumi")
+            req.add_header("Click", click)
+            req.add_header("Content-Type", "text/plain; charset=utf-8")
+            with urllib.request.urlopen(req, timeout=8) as response:
+                if 200 <= response.status < 300:
+                    status = "sent"
+                    attempts = 1
+        except Exception as exc:
+            print(f"[mock] chat push failed to {endpoint}: {exc}", flush=True)
+        oid = uuid.uuid4().hex[:12]
+        PUSH_OUTBOX[oid] = {
+            "id": oid,
+            "user_id": OWNER_QQ,
+            "device_id": device["id"],
+            "kind": "message",
+            "title": "新消息",
+            "body": reply,
+            "deep_link": click,
+            "dedupe_key": "",
+            "status": status,
+            "attempts": attempts,
+            "next_at": _now(),
+            "created_at": _now(),
+        }
+
+
+def _schedule_test_push(device, target: str = OWNER_QQ):
     delay = int(os.environ.get("HOSHINOUMI_PUSH_TEST_DELAY", "300"))
     endpoint = str(device.get("endpoint") or "")
     if not endpoint:
@@ -48,7 +88,7 @@ def _schedule_test_push(device):
             body = "This is a 5-minute test notification".encode("utf-8")
             req = urllib.request.Request(endpoint, data=body, method="POST")
             req.add_header("Title", "Hoshinoumi Test")
-            req.add_header("Click", "/chat")
+            req.add_header("Click", f"/chat?target={target}")
             req.add_header("Content-Type", "text/plain; charset=utf-8")
             with urllib.request.urlopen(req, timeout=10) as response:
                 print(f"[mock] test push sent to {endpoint}: HTTP {response.status}", flush=True)
@@ -616,18 +656,21 @@ class Handler(BaseHTTPRequestHandler):
                 reply = "收到一段语音（mock）。"
                 _history(target).append({"id": len(_history(target)) + 1, "role": "user", "content": message or "[语音]", "audio_url": audio, "kind": "voice", "created_at": _now()})
                 _history(target).append({"id": len(_history(target)) + 1, "role": "assistant", "content": reply, "created_at": _now()})
+                _publish_chat(target, reply)
                 self._json(200, {"reply": reply, "target_id": target, "mock": True, "time": _now()})
                 return
             if sticker:
                 reply = "收到一个表情包（mock）。"
                 _history(target).append({"id": len(_history(target)) + 1, "role": "user", "content": message or "[表情包]", "image_url": sticker, "kind": "sticker", "created_at": _now()})
                 _history(target).append({"id": len(_history(target)) + 1, "role": "assistant", "content": reply, "created_at": _now()})
+                _publish_chat(target, reply)
                 self._json(200, {"reply": reply, "target_id": target, "mock": True, "time": _now()})
                 return
             if image:
                 reply = "收到一张图片（mock）。"
                 _history(target).append({"id": len(_history(target)) + 1, "role": "user", "content": message or "[图片]", "image_url": image, "kind": "image", "created_at": _now()})
                 _history(target).append({"id": len(_history(target)) + 1, "role": "assistant", "content": reply, "created_at": _now()})
+                _publish_chat(target, reply)
                 self._json(200, {"reply": reply, "target_id": target, "mock": True, "time": _now()})
                 return
             reply = {
@@ -638,6 +681,7 @@ class Handler(BaseHTTPRequestHandler):
             }.get(message, f"收到：{message}（mock 网关）")
             _history(target).append({"id": len(_history(target)) + 1, "role": "user", "content": message, "created_at": _now()})
             _history(target).append({"id": len(_history(target)) + 1, "role": "assistant", "content": reply, "created_at": _now()})
+            _publish_chat(target, reply)
             self._json(200, {"reply": reply, "target_id": target, "mock": True, "time": _now()})
             return
         if path.startswith("/api/tools/") and path.endswith("/call"):
