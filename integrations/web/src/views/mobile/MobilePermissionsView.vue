@@ -102,7 +102,7 @@ async function startPush() {
   const b = bridge()
   if (!b?.startPush) return
   pushBusy.value = true
-  const ntfy = localStorage.getItem('hsh_ntfy_url') || 'http://127.0.0.1:2586'
+  const ntfy = localStorage.getItem('hsh_ntfy_url') || `${window.location.protocol}//${window.location.hostname}:2586`
   b.startPush(window.location.origin, auth.token, ntfy)
   window.setTimeout(() => { refreshPush(); pushBusy.value = false }, 1200)
 }
