@@ -69,6 +69,8 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+
+const emit = defineEmits<{ (e: 'detail-change', value: boolean): void }>()
 import { useRouter } from 'vue-router'
 import { useSessionStore } from '@/stores/session'
 import { useAuthStore } from '@/stores/auth'
@@ -78,6 +80,7 @@ const session = useSessionStore()
 const auth = useAuthStore()
 const router = useRouter()
 const pane = ref<'list' | 'chat'>('list')
+watch(pane, value => emit('detail-change', value === 'chat'), { immediate: true })
 const draft = ref('')
 const messageList = ref<HTMLElement | null>(null)
 const textarea = ref<HTMLTextAreaElement | null>(null)
@@ -133,6 +136,7 @@ onMounted(() => {
   window.visualViewport?.addEventListener('resize', viewportHandler)
 })
 onBeforeUnmount(() => {
+  emit('detail-change', false)
   if (recorder && recording.value) recorder.stop()
   stream?.getTracks().forEach(t => t.stop())
   if (viewportHandler) window.visualViewport?.removeEventListener('resize', viewportHandler)

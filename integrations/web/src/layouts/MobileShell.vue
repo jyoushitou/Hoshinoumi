@@ -17,6 +17,8 @@ const auth = useAuthStore()
 const session = useSessionStore()
 const isOwner = useIsOwner()
 const viewportHeight = ref(0)
+const chatDetail = ref(false)
+const keyboardOpen = ref(false)
 let visualViewport: VisualViewport | null = null
 const shellStyle = computed(() => viewportHeight.value > 0 ? { height: viewportHeight.value + 'px' } : {})
 function syncViewport() {
@@ -44,6 +46,7 @@ const pageView = computed(() => {
   return MobilePageView
 })
 const title = computed(() => titles[String(route.name)] ?? 'Hoshinoumi')
+watch(() => route.name, () => { chatDetail.value = false })
 
 watchEffect(() => {
   if (route.name !== 'relation') return
@@ -59,6 +62,9 @@ onMounted(() => {
   window.addEventListener('resize', syncViewport)
   window.addEventListener('focusin', syncViewportSoon)
   window.addEventListener('focusout', syncViewportSoon)
+  const keyboard = (window as any).Capacitor?.Plugins?.Keyboard
+  keyboard?.addListener?.('keyboardWillShow', () => { keyboardOpen.value = true })
+  keyboard?.addListener?.('keyboardWillHide', () => { keyboardOpen.value = false })
   if (auth.loggedIn) { void session.refresh(); session.startSync() }
 })
 onBeforeUnmount(() => {
@@ -79,10 +85,10 @@ onBeforeUnmount(() => {
       <span class="conn" :class="{ off: !session.connected }">{{ session.connected ? '在线' : '离线' }}</span>
     </header>
     <main class="mobile-main">
-      <component :is="pageView" />
+      <component :is="pageView" @detail-change="chatDetail = $event" />
     </main>
     <MobileReminderPopup />
-    <MobileTabBar />
+    <MobileTabBar v-if="!chatDetail && !keyboardOpen" />
   </div>
 </template>
 
