@@ -30,6 +30,14 @@ function handleNativeBack(): string {
     return 'handled'
   }
   if (MAIN_ROUTES.has(route.path)) return 'main'
+  const segments = route.path.split('/').filter(Boolean)
+  if (segments.length > 1) {
+    const parent = '/' + segments.slice(0, -1).join('/')
+    if (router.resolve(parent).matched.length) {
+      void router.push(parent)
+      return 'handled'
+    }
+  }
   void router.push('/chat')
   return 'handled'
 }
