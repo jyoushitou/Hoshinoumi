@@ -3,6 +3,7 @@ import ChatView from '@/views/ChatView.vue'
 import PageView from '@/views/PageView.vue'
 import RelationView from '@/views/RelationView.vue'
 import MobilePermissionsView from '@/views/mobile/MobilePermissionsView.vue'
+import CommandView from '@/views/CommandView.vue'
 const meta = (title: string, desc: string) => ({ title, desc })
 const router = createRouter({
   history: typeof window !== 'undefined' && window.location.protocol === 'file:' ? createWebHashHistory() : createWebHistory(),
@@ -16,7 +17,7 @@ const router = createRouter({
     { path: '/weekly', name: 'weekly', component: PageView, meta: meta('周计划表', '按周配置节次与时间') },
     { path: '/info', name: 'info', component: PageView, meta: meta('信息', '运行 / 数据库 / 日志 / 计划 / 阅读') },
     { path: '/persona', name: 'persona', component: PageView, meta: meta('人设', '导入 / 导出 / 激活') },
-    { path: '/commands', name: 'commands', component: PageView, meta: meta('命令', '51 个命令 / 参数 / 二级命令') },
+    { path: '/commands', name: 'commands', component: CommandView, meta: meta('命令', '51 个命令 / 参数 / 二级命令') },
     { path: '/cron', name: 'cron', component: PageView, meta: meta('定时任务', '新增 / 编辑 / 启停 / 删除') },
     { path: '/logs', name: 'logs', component: PageView, meta: meta('运行日志', '一行一条 / 筛选 / 搜索') },
     { path: '/settings', name: 'settings', component: PageView, meta: meta('设置', '登录 / 后端 / 连接') },

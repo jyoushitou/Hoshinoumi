@@ -6,6 +6,7 @@ import MobileChatView from '@/views/mobile/MobileChatView.vue'
 import MobilePageView from '@/views/mobile/MobilePageView.vue'
 import MobileSettingsView from '@/views/mobile/MobileSettingsView.vue'
 import MobilePermissionsView from '@/views/mobile/MobilePermissionsView.vue'
+import CommandView from '@/views/CommandView.vue'
 import MobileWeeklyView from '@/views/mobile/MobileWeeklyView.vue'
 import MobileTabBar from '@/components/mobile/MobileTabBar.vue'
 import MobileReminderPopup from '@/components/mobile/MobileReminderPopup.vue'
@@ -75,6 +76,7 @@ const pageView = computed(() => {
   if (route.name === 'settings') return MobileSettingsView
   if (route.name === 'permissions') return MobilePermissionsView
   if (route.name === 'weekly') return MobileWeeklyView
+  if (route.name === 'commands') return CommandView
   return MobilePageView
 })
 const title = computed(() => titles[String(route.name)] ?? 'Hoshinoumi')

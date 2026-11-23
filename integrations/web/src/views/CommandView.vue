@@ -1,0 +1,99 @@
+<script setup lang="ts">
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { http } from '@/api/client'
+
+interface CommandRow { name: string; help?: string; group?: string; owner?: boolean }
+const commands = ref<CommandRow[]>([])
+const query = ref('')
+const loading = ref(false)
+const error = ref('')
+const running = ref('')
+const output = ref('')
+const outputError = ref('')
+const updatedAt = ref('')
+let timer: ReturnType<typeof setInterval> | null = null
+
+const groups = computed(() => {
+  const q = query.value.trim().toLowerCase()
+  const map = new Map<string, CommandRow[]>()
+  for (const row of commands.value) {
+    if (q && !`${row.name} ${row.help || ''} ${row.group || ''}`.toLowerCase().includes(q)) continue
+    const key = row.group || '其他'
+    if (!map.has(key)) map.set(key, [])
+    map.get(key)!.push(row)
+  }
+  return [...map.entries()]
+})
+async function load() {
+  loading.value = true
+  error.value = ''
+  try {
+    const r = await http.get<{ data?: CommandRow[] }>('/api/commands')
+    commands.value = Array.isArray(r.data) ? r.data : []
+    updatedAt.value = new Date().toLocaleTimeString()
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : '命令加载失败'
+  } finally {
+    loading.value = false
+  }
+}
+async function run(row: CommandRow) {
+  const cmd = row.name.replace(/^!/, '')
+  running.value = row.name
+  output.value = ''
+  outputError.value = ''
+  try {
+    const r = await http.post<{ result?: string; message?: string; success?: boolean }>('/api/command', { command: cmd })
+    if (r.success === false) outputError.value = r.message || '执行失败'
+    else output.value = r.result || '(无输出)'
+  } catch (e) {
+    outputError.value = e instanceof Error ? e.message : '执行失败'
+  } finally {
+    running.value = ''
+  }
+}
+onMounted(() => {
+  void load()
+  timer = setInterval(() => void load(), 15000)
+})
+onBeforeUnmount(() => { if (timer) clearInterval(timer) })
+</script>
+
+<template>
+  <section class="commands">
+    <header class="head">
+      <div><h1>命令</h1><p>按分组浏览 / 搜索 / 直接执行</p></div>
+      <button class="refresh" type="button" :disabled="loading" @click="load">{{ loading ? '刷新中…' : '刷新' }}</button>
+    </header>
+    <div class="bar">
+      <input v-model="query" placeholder="搜索命令 / 说明 / 分组">
+      <span>{{ commands.length }} 个 · {{ updatedAt || '—' }}</span>
+    </div>
+    <div v-if="error" class="error">{{ error }}</div>
+    <div class="groups">
+      <section v-for="[group, rows] in groups" :key="group" class="group">
+        <div class="group-title">{{ group }}<span>{{ rows.length }}</span></div>
+        <button v-for="row in rows" :key="row.name" type="button" class="cmd" :disabled="running === row.name" @click="run(row)">
+          <b>{{ row.name }}</b><small>{{ row.help || '—' }}</small><em v-if="row.owner">OWNER</em>
+        </button>
+      </section>
+      <div v-if="!groups.length && !loading" class="empty">没有匹配的命令</div>
+    </div>
+    <div v-if="output || outputError" class="output" :class="{ bad: outputError }">
+      <b>{{ outputError ? '执行失败' : '输出' }}</b>
+      <pre>{{ outputError || output }}</pre>
+      <button type="button" @click="output = ''; outputError = ''">关闭</button>
+    </div>
+  </section>
+</template>
+
+<style scoped>
+.commands{position:relative;flex:1;min-height:0;overflow:auto;padding:20px 22px 26px;background:#f7faff;color:#17263b}
+.head{display:flex;align-items:center;gap:12px;margin-bottom:12px}.head h1{margin:0;font-size:24px;letter-spacing:-.03em}.head p{margin:3px 0 0;font-size:10px;color:#8a9bb0}.refresh{margin-left:auto;height:29px;border:1px solid #dbe8ff;background:#fff;color:#2563eb;border-radius:8px;font:10px inherit;padding:0 10px;cursor:pointer}
+.bar{display:flex;align-items:center;gap:8px;margin-bottom:12px}.bar input{flex:1;height:32px;border:1px solid #dbe8ff;border-radius:9px;background:#fff;padding:0 10px;font:10.5px inherit;outline:0}.bar span{font-size:9px;color:#9aabc0;white-space:nowrap}
+.groups{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}.group{background:#fff;border:1px solid #e3ebf7;border-radius:12px;padding:8px}.group-title{display:flex;justify-content:space-between;font-size:9px;font-weight:700;color:#52708f;padding:2px 4px 7px}.group-title span{font-weight:400;color:#9aabc0}
+.cmd{display:grid;grid-template-columns:1fr auto;gap:2px 6px;width:100%;text-align:left;border:1px solid transparent;border-radius:8px;background:#f8fbff;padding:6px 8px;margin-bottom:4px;cursor:pointer;transition:background .18s,border-color .18s,transform .18s}.cmd:hover{border-color:#dbe8ff;background:#eef4ff;transform:translateY(-1px)}.cmd:disabled{opacity:.55}.cmd b{font-size:10px;color:#1e3a5f}.cmd small{grid-column:1;font-size:8px;color:#8a9bb0}.cmd em{grid-row:1/3;grid-column:2;align-self:center;font-style:normal;font-size:7px;color:#9a6b1f;background:#fff8e6;border:1px solid #f2d491;border-radius:5px;padding:1px 4px}
+.error{margin:8px 0;padding:7px 9px;border:1px solid #fecaca;background:#fff5f5;color:#b91c1c;border-radius:8px;font-size:9px}.empty{padding:24px;text-align:center;color:#9aabc0;font-size:10px}
+.output{position:sticky;bottom:0;margin-top:12px;background:#0f172a;color:#dbeafe;border-radius:12px;padding:11px 12px;box-shadow:0 12px 30px rgba(15,23,42,.22)}.output.bad{background:#3b0d16;color:#fecdd3}.output b{font-size:9px;letter-spacing:.08em;opacity:.75}.output pre{margin:6px 0 0;white-space:pre-wrap;font:10px/1.6 ui-monospace,monospace}.output button{position:absolute;right:9px;top:8px;border:0;background:rgba(255,255,255,.12);color:inherit;border-radius:5px;font:8px inherit;padding:3px 6px;cursor:pointer}
+@media(max-width:820px){.commands{padding:12px 12px 20px}.head h1{font-size:22px}.groups{grid-template-columns:1fr}.output{position:fixed;left:10px;right:10px;bottom:calc(64px + env(safe-area-inset-bottom));z-index:20}}
+</style>
