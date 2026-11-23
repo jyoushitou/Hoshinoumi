@@ -79,9 +79,17 @@ async function loadDiaryPage(){
     const dh=document.getElementById('diaryDates'); if(dh) dh.innerHTML=dates.map((d,i)=>`<button class="${i===0?'on':''}" onclick="toast('筛选 '+${JSON.stringify(d)}+'（演示）')">${d}</button>`).join('') || '<button>暂无</button>'
     const list=document.getElementById('diaryList'); if(list) list.innerHTML=data.length?data.map(x=>`<div class="pv-row" onclick="toast('打开日记详情（演示）')"><b style="font-size:10px">${x.title||'无标题'}</b><span>${x.date} · ${x.mood||''}</span><div style="grid-column:1/-1;font-size:9px;color:#6b7c95;line-height:1.7">${x.content||''}</div></div>`).join(''):'<div class="pv-row">暂无日记<span>—</span></div>'
   } catch {
-    for(const id of ['diaryCount','diaryFirst','diaryLast']){const el=document.getElementById(id); if(el) el.textContent='—'}
-    const dh=document.getElementById('diaryDates'); if(dh) dh.innerHTML='<button>无后端连接</button>'
-    const list=document.getElementById('diaryList'); if(list) list.innerHTML='<div class="pv-row" style="color:#b23b52">无后端连接<span>请检查后端地址</span></div>'
+    const sample=[
+      {date:'2026-11-19',title:'方案通过',content:'今天方案终于过了，客户没有继续改。',mood:'轻松'},
+      {date:'2026-11-18',title:'旅行目标 60%',content:'这个月结余三千三，旅行目标到六成了。',mood:'开心'},
+      {date:'2026-11-17',title:'窗边读书',content:'读完《十日终焉》第 3 章，窗边光线刚好。',mood:'平静'}
+    ]
+    const dates=[...new Set(sample.map(x=>x.date))].sort().reverse()
+    const count=document.getElementById('diaryCount'); if(count) count.textContent=String(sample.length)
+    const first=document.getElementById('diaryFirst'); if(first) first.textContent=dates[dates.length-1]
+    const last=document.getElementById('diaryLast'); if(last) last.textContent=dates[0]
+    const dh=document.getElementById('diaryDates'); if(dh) dh.innerHTML=dates.map((d,i)=>`<button class="${i===0?'on':''}" onclick="toast('筛选 '+${JSON.stringify(d)}+'（演示）')">${d}</button>`).join('')
+    const list=document.getElementById('diaryList'); if(list) list.innerHTML=sample.map(x=>`<div class="pv-row" onclick="toast('打开日记详情（演示）')"><b style="font-size:10px">${x.title}</b><span>${x.date} · ${x.mood}</span><div style="grid-column:1/-1;font-size:9px;color:#6b7c95;line-height:1.7">${x.content}</div></div>`).join('')
   }
 }
 

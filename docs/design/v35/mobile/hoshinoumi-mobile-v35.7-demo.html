@@ -632,7 +632,7 @@ screens.diary = `
   <div class="d-scroll">
     <div class="info-stats"><div class="info-stat"><small>全部日记</small><b id="diaryCount">—</b></div><div class="info-stat"><small>最早</small><b id="diaryFirst">—</b></div><div class="info-stat"><small>最近</small><b id="diaryLast">—</b></div></div>
     <div class="d-card" style="margin-bottom:8px"><div style="font-size:9px;font-weight:700;color:#52708f;margin-bottom:6px">全部日记时间</div><div class="cmd-chips" id="diaryDates"><button class="on">加载中…</button></div></div>
-    <div id="diaryList"><div class="d-card" style="text-align:center;color:#9aabc0;font-size:9px;padding:18px">正在读取 /api/diary…</div></div>
+    <div id="diaryList"><div class="d-card" style="text-align:center;color:#9aabc0;font-size:9px;padding:18px">加载日记…</div></div>
     <div class="d-card" style="margin-top:9px;font-size:8px;color:#8598ad;line-height:1.7">数据由日记命令写入；页面通过 <code>GET /api/diary</code> 读取全部日记，<code>GET /api/diary/dates</code> 读取全部日期。</div>
   </div>
 </div>
@@ -648,6 +648,11 @@ function renderDiary(data){
   if(holder) holder.innerHTML = dates.length ? dates.map((d,i)=>`<button class="${i===0?'on':''}" onclick="selectSeg(this)">${d}</button>`).join('') : '<button>暂无</button>'
   list.innerHTML = data.length ? data.map(item => `<div class="d-card" style="margin-bottom:7px" onclick="toast('打开日记详情（演示）')"><div style="display:flex;align-items:center;gap:6px"><b style="font-size:10px;color:#314a65">${item.title||'无标题'}</b><span style="margin-left:auto;font-size:7.5px;color:#9aabc0">${item.date}</span></div><p style="margin:5px 0 0;font-size:9px;line-height:1.7;color:#526982">${item.content||''}</p><div style="margin-top:6px;font-size:7.5px;color:#8a9bb0">${item.mood||'平静'} · ${item.source||'日记命令'}</div></div>`).join('') : '<div class="d-card" style="text-align:center;color:#9aabc0;font-size:9px;padding:18px">暂无日记</div>'
 }
+const DESIGN_DIARY = [
+  {date:'2026-11-19',title:'方案通过',content:'今天方案终于过了，客户没有继续改。',mood:'轻松',source:'!diary'},
+  {date:'2026-11-18',title:'旅行目标 60%',content:'这个月结余三千三，旅行目标到六成了。',mood:'开心',source:'!diary'},
+  {date:'2026-11-17',title:'窗边读书',content:'读完《十日终焉》第 3 章，窗边光线刚好。',mood:'平静',source:'!diary'}
+]
 function renderDiaryError(text){
   const list = document.getElementById('diaryList')
   if(list) list.innerHTML = `<div class="d-card" style="text-align:center;color:#b23b52;font-size:9px;padding:18px">${text}</div>`
@@ -664,8 +669,8 @@ async function loadDiary(){
       fetch(DIARY_API_BASE + '/api/diary?all=1', { headers: DIARY_HEADERS }).then(r => r.ok ? r.json() : Promise.reject()),
       fetch(DIARY_API_BASE + '/api/diary/dates', { headers: DIARY_HEADERS }).then(r => r.ok ? r.json() : Promise.reject())
     ])
-    renderDiary(Array.isArray(all.data) ? all.data : [])
-  } catch { renderDiaryError('无后端连接') }
+    renderDiary(Array.isArray(all.data) && all.data.length ? all.data : DESIGN_DIARY)
+  } catch { renderDiary(DESIGN_DIARY) }
 }
 
 screens.logs = `
