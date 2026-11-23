@@ -8,6 +8,10 @@ const items = ref<MemoryItem[]>([])
 const loading = ref(false)
 interface MemoryEvent { id: number; title: string; kind: string; created_at: string }
 const events = ref<MemoryEvent[]>([])
+const profile = ref<{ summary: string; keywords: string[] } | null>(null)
+async function loadProfile() {
+  try { profile.value = await http.get<{ summary: string; keywords: string[] }>('/api/memory/profile') } catch { profile.value = null }
+}
 async function loadEvents() {
   try { const r = await http.get<{ data?: MemoryEvent[] }>('/api/memory/events'); events.value = Array.isArray(r.data) ? r.data : [] } catch { events.value = [] }
 }
@@ -21,7 +25,7 @@ async function loadItems() {
 async function loadStats() {
   try { stats.value = await http.get<{ total: number; targets: number; longterm: number }>('/api/memory/stats') } catch { stats.value = null }
 }
-onMounted(() => { void loadStats(); void loadItems(); void loadEvents() })
+onMounted(() => { void loadStats(); void loadItems(); void loadEvents(); void loadProfile() })
 const tabs = [
   { key: 'memory', label: '记忆' },
   { key: 'events', label: '事件' },
@@ -56,7 +60,11 @@ const tabs = [
       <div v-if="!events.length" class="empty">暂无事件</div>
       <div v-for="event in events" v-else :key="event.id" class="event-row"><span class="dot" /><div><b>{{ event.title }}</b><small>{{ event.kind }} · {{ event.created_at.slice(0, 10) }}</small></div></div>
     </div>
-    <div v-else class="empty"><b>{{ tabs.find(t => t.key === tab)?.label }}</b><p>该分区在后续补丁接入。</p></div>
+    <div v-else-if="tab === 'profile'" class="profile">
+      <div v-if="!profile" class="empty">暂无画像</div>
+      <template v-else><p class="summary">{{ profile.summary }}</p><div class="keywords"><span v-for="word in profile.keywords" :key="word">{{ word }}</span></div></template>
+    </div>
+    <div v-else class="empty"><b>关系</b><p>关系数据由关系页提供。</p><RouterLink to="/relation" class="link">打开关系页</RouterLink></div>
   </section>
 </template>
 
@@ -68,6 +76,7 @@ const tabs = [
 .empty{background:#fff;border:1px dashed #cfe0f7;border-radius:12px;padding:26px;text-align:center;color:#8a9bb0}.empty b{color:#314a65;font-size:11px}.empty p{font-size:9px;margin:5px 0 0}
 .list{display:grid;gap:7px}.mem-card{background:#fff;border:1px solid #e3ebf7;border-radius:11px;padding:10px}.mem-card p{margin:0;font-size:10.5px;line-height:1.65;color:#314a65}.mem-meta{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-top:7px}.tag{font-size:7px;color:#52708f;background:#f4f8ff;border:1px solid #e3ebf7;border-radius:5px;padding:1px 5px}.source{font-size:7px;color:#9aabc0}.mem-meta em{font-style:normal;font-size:7px;color:#1f9d6b;background:#eefbf5;border-radius:5px;padding:1px 5px}.mem-meta small{margin-left:auto;font-size:7px;color:#9aabc0}
 .event-row{display:flex;gap:9px;align-items:flex-start;background:#fff;border:1px solid #e3ebf7;border-radius:10px;padding:9px 10px}.event-row .dot{width:7px;height:7px;border-radius:50%;background:#2563eb;margin-top:3px;flex:none}.event-row b{display:block;font-size:10px;color:#314a65}.event-row small{display:block;font-size:7.5px;color:#9aabc0;margin-top:2px}
+.profile{background:#fff;border:1px solid #e3ebf7;border-radius:11px;padding:11px}.summary{margin:0;font-size:10.5px;line-height:1.7;color:#526982}.keywords{display:flex;gap:5px;flex-wrap:wrap;margin-top:9px}.keywords span{font-size:8px;color:#2563eb;background:#eef4ff;border:1px solid #dbe8ff;border-radius:20px;padding:2px 7px}.link{display:inline-block;margin-top:8px;font-size:9px;color:#2563eb}
 @media(min-width:821px){.memory{padding:22px 24px}.overview{max-width:520px}.empty{max-width:520px}}
 .head,.tabs,.overview,.empty{animation:mem-in .28s cubic-bezier(.22,1,.36,1) both}.tabs{animation-delay:.03s}.overview{animation-delay:.06s}.empty{animation-delay:.09s}@keyframes mem-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}@media(prefers-reduced-motion:reduce){.head,.tabs,.overview,.empty{animation:none}}
 </style>

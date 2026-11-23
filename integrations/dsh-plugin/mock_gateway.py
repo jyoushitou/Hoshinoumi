@@ -447,6 +447,9 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/memory/events":
             self._json(200, {"ok": True, "count": len(MEMORY_EVENTS), "data": MEMORY_EVENTS, "mock": True})
             return
+        if path == "/api/memory/profile":
+            self._json(200, {"ok": True, **MEMORY_PROFILE, "mock": True})
+            return
         if path == "/api/memory/stats":
             self._json(200, {"ok": True, "total": len(MEMORY_ITEMS), "targets": len({x["target_id"] for x in MEMORY_ITEMS}), "longterm": len([x for x in MEMORY_ITEMS if x["longterm"]]), "mock": True})
             return
