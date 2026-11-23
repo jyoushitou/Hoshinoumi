@@ -8,6 +8,7 @@ import android.webkit.JavascriptInterface;
 import android.webkit.PermissionRequest;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
+import android.webkit.WebView;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -71,6 +72,19 @@ public class MainActivity extends BridgeActivity {
                 });
             }
         }, "HoshinoumiConfig");
+    }
+
+    @Override
+    public void onBackPressed() {
+        try {
+            WebView webView = getBridge().getWebView();
+            if (webView != null && webView.canGoBack()) {
+                webView.goBack();
+                return;
+            }
+        } catch (Exception ignored) {
+        }
+        super.onBackPressed();
     }
 
     @Override
