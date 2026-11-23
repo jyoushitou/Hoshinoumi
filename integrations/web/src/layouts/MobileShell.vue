@@ -92,7 +92,7 @@ watch(() => route.path, (to, from) => {
 })
 
 watchEffect(() => {
-  if (route.name !== 'relation') return
+  if (route.name !== 'relation' && route.name !== 'savings') return
   if (!auth.loggedIn) { void router.replace('/chat'); return }
   if (session.status && !isOwner.value) void router.replace('/chat')
 })

@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useSessionStore } from '@/stores/session'
+import { useIsOwner } from '@/composables/useIsOwner'
 const session = useSessionStore()
+const isOwner = useIsOwner()
 const relationProgress = computed(() => {
   const tier = String(session.relation?.tier || '')
   const map: Record<string, number> = { '陌生': 12, '认识': 28, '熟': 45, '亲近': 65, '知己': 82, '搭档': 92 }
@@ -42,7 +44,7 @@ const relationProgress = computed(() => {
       快捷
     </div>
     <div class="quick">
-      <RouterLink class="q" to="/savings"><b>存钱</b>{{ session.savings ? '¥' + (Number(session.savings.total_cents || 0) / 100).toFixed(2) : '未获取' }}</RouterLink>
+      <RouterLink v-if="isOwner" class="q" to="/savings"><b>存钱</b>{{ session.savings ? '¥' + (Number(session.savings.total_cents || 0) / 100).toFixed(2) : '未获取' }}</RouterLink>
       <RouterLink class="q" to="/memory"><b>记忆</b>{{ session.memoryTargets.length ? session.memoryTargets.length + ' 个会话' : '未获取' }}</RouterLink>
       <RouterLink class="q" to="/weekly"><b>周计划</b>{{ session.weekly ? '第 ' + (session.weekly.week || session.week) + ' 周 · ' + ((session.weekly.courses as unknown[]) || []).length + ' 门课' : '未获取' }}</RouterLink>
       <RouterLink class="q" to="/persona"><b>人设</b>{{ session.persona?.name || '未获取' }}</RouterLink>

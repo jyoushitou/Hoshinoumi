@@ -17,7 +17,7 @@ const baseNav = [
   { page: 'cron', icon: '◷', title: '定时任务' },
   { page: 'logs', icon: '≣', title: '运行日志' },
 ]
-const nav = computed(() => isOwner.value ? baseNav : baseNav.filter(n => n.page !== 'relation'))
+const nav = computed(() => isOwner.value ? baseNav : baseNav.filter(n => n.page !== 'relation' && n.page !== 'savings'))
 </script>
 <template>
   <aside class="rail">

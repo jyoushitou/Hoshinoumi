@@ -9,7 +9,7 @@ const router = useRouter()
 const auth = useAuthStore()
 const isOwner = useIsOwner()
 const { entries, quickKeys, toggleQuick, resetQuick } = useMobileNav()
-const visibleEntries = computed(() => isOwner.value ? entries : entries.filter(entry => entry.key !== 'relation'))
+const visibleEntries = computed(() => isOwner.value ? entries : entries.filter(entry => entry.key !== 'relation' && entry.key !== 'savings'))
 const message = computed(() => `${quickKeys.value.length} / 5`)
 const quickLabel = computed(() => quickKeys.value.map(key => entries.find(entry => entry.key === key)?.label).filter(Boolean).join(' / '))
 
