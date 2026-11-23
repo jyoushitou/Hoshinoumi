@@ -68,7 +68,7 @@ function go(path: string) {
       </button>
     </div>
 
-    <div v-if="expanded" class="all-grid">
+    <div class="all-grid">
       <button
         v-for="entry in visibleEntries"
         :key="entry.key"
@@ -90,9 +90,18 @@ function go(path: string) {
 .mobile-tabbar{
   position:relative;flex:none;display:flex;flex-direction:column;align-items:stretch;
   background:#fff;border-top:1px solid #e3ebf7;padding:0 6px max(6px, env(safe-area-inset-bottom));min-height:70px;
-  transition:max-height .28s cubic-bezier(.2,.8,.2,1);height:auto;max-height:70px;overflow:hidden;z-index:30;touch-action:pan-x;
+  transition:max-height .34s cubic-bezier(.22,1,.36,1);height:auto;max-height:70px;overflow:hidden;z-index:30;touch-action:pan-x;
 }
-.mobile-tabbar.expanded{height:auto;max-height:300px;overflow:visible}.mobile-tabbar.expanded .quick-row{display:none}.mobile-tabbar.expanded .all-grid{animation:tab-sheet-in .28s cubic-bezier(.2,.8,.2,1) both}@keyframes tab-sheet-in{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.mobile-tabbar.expanded{height:auto;max-height:300px;overflow:hidden}
+.quick-row{max-height:54px;overflow:hidden;opacity:1;transform:translateY(0);transition:max-height .3s cubic-bezier(.22,1,.36,1),opacity .18s ease,transform .3s cubic-bezier(.22,1,.36,1)}
+.mobile-tabbar.expanded .quick-row{max-height:0;opacity:0;transform:translateY(-6px);pointer-events:none}
+.all-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;max-height:0;padding:0 4px;border-top:1px solid transparent;opacity:0;transform:translateY(10px);overflow:hidden;transition:max-height .34s cubic-bezier(.22,1,.36,1),opacity .22s ease,transform .34s cubic-bezier(.22,1,.36,1),padding .34s cubic-bezier(.22,1,.36,1),border-color .2s}
+.mobile-tabbar.expanded .all-grid{max-height:260px;padding:4px 4px 2px;border-top-color:#eef3fb;opacity:1;transform:none}
+.all-item{opacity:0;transform:translateY(8px);transition:opacity .2s ease,transform .28s cubic-bezier(.22,1,.36,1),background .15s,border-color .15s,color .15s}
+.mobile-tabbar.expanded .all-item{opacity:1;transform:none}
+.mobile-tabbar.expanded .all-item:nth-child(4n+2){transition-delay:.015s}
+.mobile-tabbar.expanded .all-item:nth-child(4n+3){transition-delay:.03s}
+.mobile-tabbar.expanded .all-item:nth-child(4n+4){transition-delay:.045s}
 .mobile-tabbar:before{content:"";position:absolute;top:5px;left:50%;transform:translateX(-50%);width:30px;height:4px;border-radius:3px;background:#d8e5f5;z-index:2;pointer-events:none}
 .mobile-tabbar.expanded:before{background:#c7dcff}
 .quick-row{display:grid;height:54px;align-items:stretch}
@@ -105,7 +114,6 @@ function go(path: string) {
 .tab-unread{position:absolute;top:3px;right:calc(50% - 22px);min-width:14px;height:14px;padding:0 3px;border-radius:7px;background:#ef4444;color:#fff;font-size:7px;font-weight:800;display:grid;place-items:center}
 .tab-icon{font-size:15px;line-height:1}
 .tab-label{font-size:8px;line-height:1.2;white-space:nowrap}
-.all-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:4px 4px 2px;border-top:1px solid #eef3fb}
 .all-item{
   height:44px;border:1px solid #e1ebf9;background:#f8fbff;border-radius:9px;
   color:#687f9b;font-size:16px;display:grid;place-items:center;cursor:pointer;
