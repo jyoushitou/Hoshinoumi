@@ -12,6 +12,10 @@ const output = ref('')
 const outputError = ref('')
 const updatedAt = ref('')
 const collapsed = ref<Set<string>>(new Set())
+let groupsInitialized = false
+function isCollapsed(group: string) {
+  return !query.value.trim() && collapsed.value.has(group)
+}
 function toggleGroup(group: string) {
   const next = new Set(collapsed.value)
   if (next.has(group)) next.delete(group)
@@ -37,6 +41,10 @@ async function load() {
   try {
     const r = await http.get<{ data?: CommandRow[] }>('/api/commands')
     commands.value = Array.isArray(r.data) ? r.data : []
+    if (!groupsInitialized) {
+      collapsed.value = new Set(commands.value.map(row => row.group || '其他'))
+      groupsInitialized = true
+    }
     updatedAt.value = new Date().toLocaleTimeString()
   } catch (e) {
     error.value = e instanceof Error ? e.message : '命令加载失败'
@@ -79,8 +87,8 @@ onBeforeUnmount(() => { if (timer) clearInterval(timer) })
     <div v-if="error" class="error">{{ error }}</div>
     <div class="groups">
       <section v-for="[group, rows] in groups" :key="group" class="group">
-        <div class="group-title" role="button" tabindex="0" @click="toggleGroup(group)" @keydown.enter="toggleGroup(group)">{{ group }}<span>{{ rows.length }} {{ collapsed.has(group) ? '▸' : '▾' }}</span></div>
-        <button v-for="row in rows" v-show="!collapsed.has(group)" :key="row.name" type="button" class="cmd" :disabled="running === row.name" @click="run(row)">
+        <div class="group-title" role="button" tabindex="0" @click="toggleGroup(group)" @keydown.enter="toggleGroup(group)">{{ group }}<span>{{ rows.length }} {{ isCollapsed(group) ? '▸' : '▾' }}</span></div>
+        <button v-for="row in rows" v-show="!isCollapsed(group)" :key="row.name" type="button" class="cmd" :disabled="running === row.name" @click="run(row)">
           <b>{{ row.name }}</b><small>{{ row.help || '—' }}</small><em v-if="row.owner">OWNER</em>
         </button>
       </section>
