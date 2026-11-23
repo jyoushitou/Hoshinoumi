@@ -1,9 +1,11 @@
 ﻿<script setup lang="ts">
 import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { useMobileNav } from '@/composables/useMobileNav'
 import { useAuthStore } from '@/stores/auth'
 import { useIsOwner } from '@/composables/useIsOwner'
 
+const router = useRouter()
 const auth = useAuthStore()
 const isOwner = useIsOwner()
 const { entries, quickKeys, toggleQuick, resetQuick } = useMobileNav()
@@ -13,6 +15,7 @@ const quickLabel = computed(() => quickKeys.value.map(key => entries.find(entry 
 
 function toggle(key: string) { toggleQuick(key) }
 function logout() { auth.logout() }
+function openPermissions() { void router.push('/settings/permissions') }
 function changeBackend() {
   const bridge = (window as any).HoshinoumiConfig
   if (bridge?.open) bridge.open()
@@ -45,6 +48,7 @@ function changeBackend() {
     <div class="block">
       <div class="row"><span>后端连接</span><small>{{ auth.loggedIn ? '已登录' : '未登录' }}</small></div>
       <button class="row backend-row" type="button" @click="changeBackend"><span>后端地址</span><small>修改 ›</small></button>
+      <button class="row backend-row" type="button" @click="openPermissions"><span>权限与后台</span><small>管理 ›</small></button>
       <div class="row"><span>账号</span><small>{{ auth.qq || '—' }}</small></div>
       <div class="row"><span>版本</span><small>v35.7</small></div>
     </div>

@@ -2,6 +2,7 @@ import { createRouter, createWebHashHistory, createWebHistory } from 'vue-router
 import ChatView from '@/views/ChatView.vue'
 import PageView from '@/views/PageView.vue'
 import RelationView from '@/views/RelationView.vue'
+import MobilePermissionsView from '@/views/mobile/MobilePermissionsView.vue'
 const meta = (title: string, desc: string) => ({ title, desc })
 const router = createRouter({
   history: typeof window !== 'undefined' && window.location.protocol === 'file:' ? createWebHashHistory() : createWebHistory(),
@@ -19,6 +20,7 @@ const router = createRouter({
     { path: '/cron', name: 'cron', component: PageView, meta: meta('定时任务', '新增 / 编辑 / 启停 / 删除') },
     { path: '/logs', name: 'logs', component: PageView, meta: meta('运行日志', '一行一条 / 筛选 / 搜索') },
     { path: '/settings', name: 'settings', component: PageView, meta: meta('设置', '登录 / 后端 / 连接') },
+    { path: '/settings/permissions', name: 'permissions', component: MobilePermissionsView, meta: meta('权限与后台', '权限 / 自启动 / 电池') },
   ],
 })
 export default router

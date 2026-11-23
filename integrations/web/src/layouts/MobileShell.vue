@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import MobileChatView from '@/views/mobile/MobileChatView.vue'
 import MobilePageView from '@/views/mobile/MobilePageView.vue'
 import MobileSettingsView from '@/views/mobile/MobileSettingsView.vue'
+import MobilePermissionsView from '@/views/mobile/MobilePermissionsView.vue'
 import MobileWeeklyView from '@/views/mobile/MobileWeeklyView.vue'
 import MobileTabBar from '@/components/mobile/MobileTabBar.vue'
 import MobileReminderPopup from '@/components/mobile/MobileReminderPopup.vue'
@@ -45,6 +46,7 @@ const pageView = computed(() => {
   if (route.name === 'relation' && !isOwner.value) return MobileChatView
   if (route.name === 'chat') return MobileChatView
   if (route.name === 'settings') return MobileSettingsView
+  if (route.name === 'permissions') return MobilePermissionsView
   if (route.name === 'weekly') return MobileWeeklyView
   return MobilePageView
 })

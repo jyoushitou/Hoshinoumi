@@ -4,7 +4,9 @@ import android.Manifest;
 import android.app.DownloadManager;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Environment;
+import android.provider.Settings;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -18,12 +20,15 @@ import android.webkit.WebView;
 import android.widget.Toast;
 
 import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
 import com.getcapacitor.BridgeActivity;
+
+import org.json.JSONObject;
 
 public class MainActivity extends BridgeActivity {
     private PermissionRequest pendingWebPermission;
@@ -98,6 +103,73 @@ public class MainActivity extends BridgeActivity {
                     getBridge().getWebView().loadUrl(base + "/index.html?config=1");
                 });
             }
+            private boolean granted(String permission) {
+                return ContextCompat.checkSelfPermission(MainActivity.this, permission) == PackageManager.PERMISSION_GRANTED;
+            }
+
+            @JavascriptInterface
+            public String getPermissionStatus() {
+                JSONObject o = new JSONObject();
+                try {
+                    o.put("notifications", NotificationManagerCompat.from(MainActivity.this).areNotificationsEnabled());
+                    o.put("camera", granted(Manifest.permission.CAMERA));
+                    o.put("microphone", granted(Manifest.permission.RECORD_AUDIO));
+                    if (Build.VERSION.SDK_INT >= 33) o.put("photos", granted(Manifest.permission.READ_MEDIA_IMAGES));
+                    else o.put("photos", granted(Manifest.permission.READ_EXTERNAL_STORAGE));
+                    o.put("android", Build.VERSION.RELEASE);
+                    o.put("sdk", Build.VERSION.SDK_INT);
+                } catch (Exception ignored) {
+                }
+                return o.toString();
+            }
+
+            @JavascriptInterface
+            public void requestPermission(String key) {
+                runOnUiThread(() -> {
+                    if ("camera".equals(key)) {
+                        ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CAMERA}, 4201);
+                    } else if ("microphone".equals(key)) {
+                        ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.RECORD_AUDIO}, 4202);
+                    } else if ("photos".equals(key)) {
+                        String perm = Build.VERSION.SDK_INT >= 33 ? Manifest.permission.READ_MEDIA_IMAGES : Manifest.permission.READ_EXTERNAL_STORAGE;
+                        ActivityCompat.requestPermissions(MainActivity.this, new String[]{perm}, 4203);
+                    } else if ("notifications".equals(key) && Build.VERSION.SDK_INT >= 33) {
+                        ActivityCompat.requestPermissions(MainActivity.this, new String[]{"android.permission.POST_NOTIFICATIONS"}, 4204);
+                    } else {
+                        openAppSettings();
+                    }
+                });
+            }
+
+            @JavascriptInterface
+            public void openAppSettings() {
+                runOnUiThread(() -> {
+                    Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + getPackageName()));
+                    startActivity(intent);
+                });
+            }
+
+            @JavascriptInterface
+            public void openBatterySettings() {
+                runOnUiThread(() -> {
+                    Intent intent = new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
+                    try { startActivity(intent); } catch (Exception e) { openAppSettings(); }
+                });
+            }
+
+            @JavascriptInterface
+            public void openAutostartSettings() {
+                runOnUiThread(() -> {
+                    try {
+                        Intent intent = new Intent();
+                        intent.setClassName("com.miui.securitycenter", "com.miui.permcenter.autostart.AutoStartManagementActivity");
+                        startActivity(intent);
+                    } catch (Exception e) {
+                        openAppSettings();
+                    }
+                });
+            }
+
             @JavascriptInterface
             public void shareText(String text) {
                 runOnUiThread(() -> {
