@@ -3,10 +3,20 @@ import { onMounted, ref } from 'vue'
 import { http } from '@/api/client'
 const tab = ref<'memory' | 'events' | 'profile' | 'relation'>('memory')
 const stats = ref<{ total: number; targets: number; longterm: number } | null>(null)
+interface MemoryItem { id: number; content: string; tags: string[]; source: string; longterm: boolean; created_at: string; target_id: string }
+const items = ref<MemoryItem[]>([])
+const loading = ref(false)
+async function loadItems() {
+  loading.value = true
+  try {
+    const r = await http.get<{ data?: MemoryItem[] }>('/api/memory/items')
+    items.value = Array.isArray(r.data) ? r.data : []
+  } catch { items.value = [] } finally { loading.value = false }
+}
 async function loadStats() {
   try { stats.value = await http.get<{ total: number; targets: number; longterm: number }>('/api/memory/stats') } catch { stats.value = null }
 }
-onMounted(() => { void loadStats() })
+onMounted(() => { void loadStats(); void loadItems() })
 const tabs = [
   { key: 'memory', label: '记忆' },
   { key: 'events', label: '事件' },
@@ -29,10 +39,15 @@ const tabs = [
       <div class="stat"><b>{{ stats?.targets ?? '—' }}</b><small>会话</small></div>
       <div class="stat"><b>{{ stats?.longterm ?? '—' }}</b><small>长期</small></div>
     </div>
-    <div class="empty">
-      <b>记忆页框架已接入</b>
-      <p>具体统计、列表、事件和画像在 v35.9.2.2–2.6 接入。</p>
+    <div v-if="tab === 'memory'" class="list">
+      <div v-if="loading" class="empty">加载中…</div>
+      <div v-else-if="!items.length" class="empty">暂无记忆</div>
+      <article v-for="item in items" v-else :key="item.id" class="mem-card">
+        <p>{{ item.content }}</p>
+        <div class="mem-meta"><span v-for="tag in item.tags" :key="tag" class="tag">{{ tag }}</span><span class="source">{{ item.source }}</span><em v-if="item.longterm">长期</em><small>{{ item.created_at.slice(0, 10) }}</small></div>
+      </article>
     </div>
+    <div v-else class="empty"><b>{{ tabs.find(t => t.key === tab)?.label }}</b><p>该分区在后续补丁接入。</p></div>
   </section>
 </template>
 
@@ -42,6 +57,7 @@ const tabs = [
 .tabs{display:flex;gap:5px;margin-bottom:11px}.tabs button{flex:1;height:31px;border:1px solid #e3ebf7;border-radius:8px;background:#fff;color:#7d8ca3;font:10px inherit;cursor:pointer}.tabs button.on{background:#eef4ff;border-color:#c7dcff;color:#2563eb;font-weight:700}
 .overview{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:11px}.stat{background:#fff;border:1px solid #e3ebf7;border-radius:11px;padding:10px;text-align:center}.stat b{display:block;font-size:19px;color:#1e3a5f}.stat small{display:block;font-size:8px;color:#9aabc0;margin-top:2px}
 .empty{background:#fff;border:1px dashed #cfe0f7;border-radius:12px;padding:26px;text-align:center;color:#8a9bb0}.empty b{color:#314a65;font-size:11px}.empty p{font-size:9px;margin:5px 0 0}
+.list{display:grid;gap:7px}.mem-card{background:#fff;border:1px solid #e3ebf7;border-radius:11px;padding:10px}.mem-card p{margin:0;font-size:10.5px;line-height:1.65;color:#314a65}.mem-meta{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-top:7px}.tag{font-size:7px;color:#52708f;background:#f4f8ff;border:1px solid #e3ebf7;border-radius:5px;padding:1px 5px}.source{font-size:7px;color:#9aabc0}.mem-meta em{font-style:normal;font-size:7px;color:#1f9d6b;background:#eefbf5;border-radius:5px;padding:1px 5px}.mem-meta small{margin-left:auto;font-size:7px;color:#9aabc0}
 @media(min-width:821px){.memory{padding:22px 24px}.overview{max-width:520px}.empty{max-width:520px}}
 .head,.tabs,.overview,.empty{animation:mem-in .28s cubic-bezier(.22,1,.36,1) both}.tabs{animation-delay:.03s}.overview{animation-delay:.06s}.empty{animation-delay:.09s}@keyframes mem-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}@media(prefers-reduced-motion:reduce){.head,.tabs,.overview,.empty{animation:none}}
 </style>

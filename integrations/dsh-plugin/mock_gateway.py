@@ -437,6 +437,13 @@ class Handler(BaseHTTPRequestHandler):
             data = [{"name": name, "group": group, "help": help_text, "owner": owner} for name, group, help_text, owner in COMMAND_CATALOG]
             self._json(200, {"ok": True, "count": len(data), "data": data, "mock": True})
             return
+        if path == "/api/memory/items":
+            q = (parse_qs(urlparse(self.path).query).get("q") or [""])[0].strip().lower()
+            tag = (parse_qs(urlparse(self.path).query).get("tag") or [""])[0].strip()
+            source = (parse_qs(urlparse(self.path).query).get("source") or [""])[0].strip()
+            rows = [x for x in MEMORY_ITEMS if (not q or q in x["content"].lower()) and (not tag or tag in x["tags"]) and (not source or x["source"] == source)]
+            self._json(200, {"ok": True, "count": len(rows), "data": rows, "mock": True})
+            return
         if path == "/api/memory/stats":
             self._json(200, {"ok": True, "total": len(MEMORY_ITEMS), "targets": len({x["target_id"] for x in MEMORY_ITEMS}), "longterm": len([x for x in MEMORY_ITEMS if x["longterm"]]), "mock": True})
             return
