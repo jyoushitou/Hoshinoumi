@@ -206,6 +206,24 @@ SAVINGS = {
     ],
 }
 
+
+MEMORY_ITEMS = [
+    {"id": 1, "target_id": OWNER_QQ, "content": "昨天方案过了，终于松了口气。", "tags": ["工作", "情绪"], "source": "chat", "longterm": False, "created_at": "2026-11-22 21:04:00"},
+    {"id": 2, "target_id": OWNER_QQ, "content": "这个月结余三千三，旅行目标到六成了。", "tags": ["存钱", "旅行"], "source": "chat", "longterm": True, "created_at": "2026-11-21 20:18:00"},
+    {"id": 3, "target_id": OWNER_QQ, "content": "不喜欢香菜，喜欢窗边和热饮。", "tags": ["偏好", "生活"], "source": "chat", "longterm": True, "created_at": "2026-11-20 19:30:00"},
+    {"id": 4, "target_id": "10002", "content": "最近在看的书是《十日终焉》。", "tags": ["阅读"], "source": "chat", "longterm": False, "created_at": "2026-11-19 21:04:00"},
+    {"id": 5, "target_id": OWNER_QQ, "content": "周五晚上一起看新番。", "tags": ["约定", "日程"], "source": "chat", "longterm": False, "created_at": "2026-11-18 22:12:00"},
+]
+MEMORY_EVENTS = [
+    {"id": 1, "title": "旅行目标完成 60%", "kind": "savings", "created_at": "2026-11-18 10:00:00"},
+    {"id": 2, "title": "读完《十日终焉》第 3 章", "kind": "reading", "created_at": "2026-11-17 21:40:00"},
+    {"id": 3, "title": "方案通过", "kind": "chat", "created_at": "2026-11-22 21:04:00"},
+]
+MEMORY_PROFILE = {
+    "summary": "偏好安静、窗边、热饮；在意工作反馈和旅行目标；晚间聊天较多。",
+    "keywords": ["安静", "窗边", "热饮", "旅行", "读书", "猫"],
+}
+
 WEEKLY = {
     3: [
         {"name": "大学物理实验C9903班", "teacher": "5106.罗水平", "location": "未定", "weekday": 1, "weekday_name": "星期一", "period_start": 1, "period_end": 2, "weeks_raw": "3-5,7(未定)", "weeks": [3, 4, 5, 7], "start_week": 3, "end_week": 7, "source": "jwc_html"},
@@ -418,6 +436,9 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/commands":
             data = [{"name": name, "group": group, "help": help_text, "owner": owner} for name, group, help_text, owner in COMMAND_CATALOG]
             self._json(200, {"ok": True, "count": len(data), "data": data, "mock": True})
+            return
+        if path == "/api/memory/stats":
+            self._json(200, {"ok": True, "total": len(MEMORY_ITEMS), "targets": len({x["target_id"] for x in MEMORY_ITEMS}), "longterm": len([x for x in MEMORY_ITEMS if x["longterm"]]), "mock": True})
             return
         if path == "/api/memory":
             target = (q.get("target_id") or [""])[0]

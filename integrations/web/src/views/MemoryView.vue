@@ -1,6 +1,12 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
+import { http } from '@/api/client'
 const tab = ref<'memory' | 'events' | 'profile' | 'relation'>('memory')
+const stats = ref<{ total: number; targets: number; longterm: number } | null>(null)
+async function loadStats() {
+  try { stats.value = await http.get<{ total: number; targets: number; longterm: number }>('/api/memory/stats') } catch { stats.value = null }
+}
+onMounted(() => { void loadStats() })
 const tabs = [
   { key: 'memory', label: '记忆' },
   { key: 'events', label: '事件' },
@@ -19,9 +25,9 @@ const tabs = [
       <button v-for="item in tabs" :key="item.key" type="button" :class="{ on: tab === item.key }" @click="tab = item.key">{{ item.label }}</button>
     </nav>
     <div class="overview">
-      <div class="stat"><b>—</b><small>记忆条数</small></div>
-      <div class="stat"><b>—</b><small>会话</small></div>
-      <div class="stat"><b>—</b><small>长期</small></div>
+      <div class="stat"><b>{{ stats?.total ?? '—' }}</b><small>记忆条数</small></div>
+      <div class="stat"><b>{{ stats?.targets ?? '—' }}</b><small>会话</small></div>
+      <div class="stat"><b>{{ stats?.longterm ?? '—' }}</b><small>长期</small></div>
     </div>
     <div class="empty">
       <b>记忆页框架已接入</b>
