@@ -74,9 +74,9 @@ HyperOS 系统限制只跳转，不伪造状态
 必装：
 
 ```text
-Android Studio（最新稳定版）
-Android SDK Platform 35/36
-Android SDK Build-Tools
+Android Studio（支持 API 37 的最新版）
+Android SDK Platform 37（Android 17）
+Android SDK Build-Tools 37
 Android SDK Platform-Tools
 NDK（Rust JNI 用）
 JDK 17
@@ -149,5 +149,43 @@ Android 标准能力 + HyperOS 适配规范
 每项独立提交、独立真机验收
 不完全依赖“上架/认证”才做基础适配
 认证状态与代码状态分开记录
+```
+
+
+## Android 17（API 37）行为变更
+
+来源：[Android 17 应用适配指南](https://dev.mi.com/xiaomihyperos/documentation/detail?pId=2297)
+
+编译基线：
+
+```text
+compileSdk 37
+targetSdk 37
+Build-Tools 37
+Android Studio 支持 API 37
+真机：HyperOS Android 17
+```
+
+对本项目影响最大的项：
+
+| 版本 | 内容 | 验收 |
+|---|---|---|
+| v35.13.0.6 | 升 compileSdk/targetSdk 37 / API 37 工程 | 能编译启动 |
+| v35.13.0.7 | 明文流量迁移到 Network Security Config | 不再依赖 usesCleartextTraffic |
+| v35.13.0.8 | ACCESS_LOCAL_NETWORK 运行时权限 | 局域网后端可连 |
+| v35.13.0.9 | 分享/相机显式 URI 授权 | 不再依赖隐式授权 |
+| v35.13.0.10 | IME 旋转恢复 / configChanges 适配 | 旋转后键盘行为正确 |
+| v35.13.0.11 | 后台音频 / mediaPlayback FGS | 后台播放不被静默 |
+
+说明：
+
+```text
+usesCleartextTraffic 预计 Android 18 失效 → 现在改用 networkSecurityConfig
+targetSdk 37 访问局域网必须申请 ACCESS_LOCAL_NETWORK
+ACTION_SEND / ACTION_IMAGE_CAPTURE 要显式加 FLAG_GRANT_*_URI_PERMISSION
+Android 17 旋转后 IME 不自动恢复 → 依赖 configChanges 或显式 showSoftInput
+后台音量/焦点/播放会被严格限制 → 媒体播放用可见时启动的 FGS
+大屏 targetSdk 37 忽略方向限制 → 平板必须自适应
+PQC 混合签名 / 开发者验证属于发布阶段，不阻塞功能
 ```
 
