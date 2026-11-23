@@ -3,6 +3,7 @@ import ChatView from '@/views/ChatView.vue'
 import PageView from '@/views/PageView.vue'
 import RelationView from '@/views/RelationView.vue'
 import MemoryView from '@/views/MemoryView.vue'
+import SavingsView from '@/views/SavingsView.vue'
 import MobilePermissionsView from '@/views/mobile/MobilePermissionsView.vue'
 import CommandView from '@/views/CommandView.vue'
 const meta = (title: string, desc: string) => ({ title, desc })
@@ -14,7 +15,7 @@ const router = createRouter({
     { path: '/home', name: 'home', component: PageView, meta: meta('主页', '10 个功能模块入口') },
     { path: '/memory', name: 'memory', component: MemoryView, meta: meta('记忆', '记忆本 / 事件 / 画像 / 关系') },
     { path: '/relation', name: 'relation', component: RelationView, meta: meta('关系', '档位 / 最近变化 / 可见范围') },
-    { path: '/savings', name: 'savings', component: PageView, meta: meta('存钱', '总余额 / 账户 / 记一笔 / CSV 导入') },
+    { path: '/savings', name: 'savings', component: SavingsView, meta: meta('存钱', '总余额 / 账户 / 记一笔 / CSV 导入') },
     { path: '/weekly', name: 'weekly', component: PageView, meta: meta('周计划表', '按周配置节次与时间') },
     { path: '/info', name: 'info', component: PageView, meta: meta('信息', '运行 / 数据库 / 日志 / 计划 / 阅读') },
     { path: '/persona', name: 'persona', component: PageView, meta: meta('人设', '导入 / 导出 / 激活') },
