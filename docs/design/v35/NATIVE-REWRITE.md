@@ -30,7 +30,7 @@ EMUI
 
 | 客户端 | UI | 核心 / 系统 |
 |---|---|---|
-| Qt 桌面 | C++20 + Qt 6 + QML | QtNetwork / SQLite / 原生托盘 |
+| Qt 桌面（Windows / Linux） | C++20 + Qt 6 + QML | QtNetwork / SQLite / 原生托盘；Linux X11/Wayland |
 | HyperOS 手机 | Kotlin + Jetpack Compose | Rust JNI/NDK；通知/自启动/省电 |
 | HyperOS 平板 | Kotlin + Jetpack Compose | Rust JNI/NDK；多窗口/手写笔 |
 | HarmonyOS 2 手机 | Java UI 或 JS UI（FA 模型，按设备 API 版本） | C/C++ Native API；HAP；通知/后台 |
@@ -49,6 +49,7 @@ HarmonyOS 2 不是 HarmonyOS NEXT，不直接套 ArkTS/Stage 模型
 
 ```text
 docs/design/v35/native/qt/
+docs/design/v35/native/qt/linux/
 docs/design/v35/native/hyperos/
 docs/design/v35/native/hyperos-tablet/
 docs/design/v35/native/harmonyos2/
@@ -60,6 +61,7 @@ docs/design/v35/native/harmonyos2/
 
 ```text
 v35.11.0.0 Qt 设计稿 + 原生架构
+v35.11.4.0 Linux X11/Wayland 适配
 v35.13.0.0 HyperOS 设计稿 + 原生架构
 v35.14.0.0 HyperOS 平板设计稿 + 设备 profile
 v35.15.0.0 HarmonyOS 2 设计稿 + 原生架构
