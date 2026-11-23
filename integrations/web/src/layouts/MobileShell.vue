@@ -23,6 +23,7 @@ const viewportHeight = ref(0)
 const chatDetail = ref(false)
 const keyboardOpen = ref(false)
 const MAIN_ROUTES = new Set(['/chat', '/home', '/memory', '/relation', '/savings', '/weekly', '/info', '/persona', '/commands', '/cron', '/logs', '/settings'])
+const isMainRoute = computed(() => MAIN_ROUTES.has(route.path))
 
 function handleNativeBack(): string {
   if (chatDetail.value) {
@@ -130,7 +131,7 @@ onBeforeUnmount(() => {
       </Transition>
     </main>
     <MobileReminderPopup />
-    <MobileTabBar v-if="!chatDetail && !keyboardOpen" />
+    <MobileTabBar v-if="!chatDetail && !keyboardOpen && isMainRoute" />
   </div>
 </template>
 
