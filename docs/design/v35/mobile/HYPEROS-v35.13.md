@@ -68,3 +68,47 @@
 基础推送协议与 v35.8.4 一致，v35.13 只接原生通知
 HyperOS 系统限制只跳转，不伪造状态
 ```
+
+## 开发环境下载清单
+
+必装：
+
+```text
+Android Studio（最新稳定版）
+Android SDK Platform 35/36
+Android SDK Build-Tools
+Android SDK Platform-Tools
+NDK（Rust JNI 用）
+JDK 17
+Rust + cargo-ndk
+```
+
+小米开发者平台里真正需要看的：
+
+```text
+多任务与多窗口（文档/系统 API）
+小部件适配（AppWidget 文档）
+通知与状态栏（文档）
+权限管理（文档 + Android 运行时权限）
+系统设置（HyperOS 跳转 intent）
+MiHaptic（可选，触感）
+小米推送服务（可选；用 ntfy 时不需要）
+超级岛（可选，实时状态）
+```
+
+不需要：
+
+```text
+小米网页秒开引擎（原生重写不用 WebView）
+小米账号服务（登录仍用 HQQ/token）
+小米运动健康 / 妙播 / 车钥匙 / 支付 / 游戏服务
+CloudKit / 相机生态引擎（CameraX 足够）
+```
+
+说明：
+
+```text
+HyperOS 没有一套“澎湃专用 SDK”能替代 Android
+普通原生应用仍是 Android Studio + Android SDK
+小米能力只在推送、账号、触感、超级岛等模块按需接入
+```
