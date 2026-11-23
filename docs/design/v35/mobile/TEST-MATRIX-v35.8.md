@@ -5,7 +5,8 @@
 | 设备 | 系统 | API | WebView | App | 结果 |
 |---|---|---|---|---|---|
 | Android Emulator `sdk_gphone64_x86_64` | Android 15 | 35 | 124.0.6367.219 | 35.8.2 debug | ✅ |
-| MuMu 模拟器 | Android 15 | 35 | 110.0.5481.154 | 35.8.2 release | 🟡 仅手工看到配置页，ADB 断开待复测 |
+| MuMu 模拟器 | Android 15 | 35 | 110.0.5481.154 | 35.8.4.2 release | ✅ |
+| Honor 10 青春版 | EMUI | — | — | 35.8.4.2 release | ✅ 手机端真机实测通过 |
 
 ## 已验证
 
@@ -32,7 +33,7 @@ MuMu 当前连接
 ## 结论
 
 ```text
-2.3 不能标记完成
-当前只有 Android 15 模拟器通过
-剩余机型需要真机/模拟器逐个跑
+手机端真机（Honor 10 青春版）已通过
+模拟器 MuMu / Android 15 已通过
+Android 10–14、平板、刘海/手势仍未系统覆盖
 ```
