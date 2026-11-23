@@ -94,6 +94,7 @@ function refresh() {
 function refreshPush() {
   const b = bridge()
   if (!b?.getPushState) return
+  pushSupported.value = typeof b.startPush === 'function'
   try {
     const value = JSON.parse(b.getPushState())
     push.value = { registered: Boolean(value.registered), topic: String(value.topic || ''), server: String(value.server || '') }
