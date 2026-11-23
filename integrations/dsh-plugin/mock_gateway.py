@@ -31,6 +31,7 @@ OWNER_QQ = "10001"
 READS = {}  # target_id -> last_read_id
 PUSH_DEVICES = {}  # id -> device
 PUSH_PREFS = {"messages": True, "reminders": True, "dnd": False}
+PUSH_OUTBOX = {}  # id -> notification job
 
 MEMORY = {
     OWNER_QQ: [
@@ -199,6 +200,9 @@ class Handler(BaseHTTPRequestHandler):
 
         if path == "/api/push/devices":
             self._json(200, {"ok": True, "data": list(PUSH_DEVICES.values()), "preferences": PUSH_PREFS, "mock": True})
+            return
+        if path == "/api/push/outbox":
+            self._json(200, {"ok": True, "data": list(PUSH_OUTBOX.values()), "mock": True})
             return
         if path == "/api/status":
             self._json(200, {
@@ -427,6 +431,55 @@ class Handler(BaseHTTPRequestHandler):
             self._json(401, {"error": "unauthorized", "message": "bad token"})
             return
 
+        if path in ("/api/push/test", "/api/push/outbox"):
+            if not PUSH_PREFS.get("messages", True) or PUSH_PREFS.get("dnd"):
+                self._json(200, {"ok": True, "queued": 0, "reason": "preferences_off", "mock": True})
+                return
+            title = str(body.get("title") or "Hoshinoumi")
+            text = str(body.get("body") or "新消息")
+            deep_link = str(body.get("deep_link") or "/chat")
+            dedupe = str(body.get("dedupe_key") or "")
+            now = _now()
+            queued = 0
+            for device in PUSH_DEVICES.values():
+                if device.get("revoked_at"):
+                    continue
+                key = f"{device['id']}:{dedupe}" if dedupe else ""
+                if key and any(x.get("dedupe_key") == key and x.get("status") in ("pending", "sent") for x in PUSH_OUTBOX.values()):
+                    continue
+                oid = uuid.uuid4().hex[:12]
+                PUSH_OUTBOX[oid] = {
+                    "id": oid,
+                    "user_id": OWNER_QQ,
+                    "device_id": device["id"],
+                    "kind": "message",
+                    "title": title,
+                    "body": text,
+                    "deep_link": deep_link,
+                    "dedupe_key": key,
+                    "status": "pending",
+                    "attempts": 0,
+                    "next_at": now,
+                    "created_at": now,
+                }
+                queued += 1
+            self._json(200, {"ok": True, "queued": queued, "data": list(PUSH_OUTBOX.values()), "mock": True})
+            return
+        if path.startswith("/api/push/outbox/") and path.endswith("/retry"):
+            oid = path.split("/")[-2]
+            job = PUSH_OUTBOX.get(oid)
+            if not job:
+                self._json(404, {"error": "outbox_not_found"})
+                return
+            if job["attempts"] >= 3:
+                job["status"] = "failed"
+                self._json(409, {"error": "attempts_exhausted", "data": job, "mock": True})
+                return
+            job["attempts"] += 1
+            job["status"] = "pending" if job["attempts"] < 3 else "failed"
+            job["next_at"] = (datetime.now() + timedelta(minutes=job["attempts"])).strftime("%Y-%m-%d %H:%M:%S")
+            self._json(200, {"ok": True, "data": job, "mock": True})
+            return
         if path.startswith("/api/messages/") and path.endswith("/recall"):
             try:
                 mid = int(path.split("/")[-2])
