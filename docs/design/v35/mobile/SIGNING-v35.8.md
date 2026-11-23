@@ -175,14 +175,12 @@ v35.8.2.4  WebView 兼容模式 / APK 兜底
 
 ## Android 17 开发者验证
 
-GitHub Releases APK 属于侧载。Android 17 起，部分地区会要求已验证开发者注册；未注册应用可能触发高级确认。
+GitHub Releases APK 属于侧载。是否必须验证，取决于分发范围：
 
 ```text
-注册开发者身份
-登记包名 com.hoshinoumi.mobile
-登记 release 签名证书
-保持同一签名密钥
-发布页附安装说明
+自己 ADB 安装：不需要
+国内无 GMS HyperOS：通常不触发 Google 验证
+公开/全球 GMS 设备：需要注册并登记包名与签名证书
 ```
 
-ADB 安装绕过只用于开发，不作为用户安装方案。
+ADB 安装绕过只用于开发，不作为公开用户安装方案。
