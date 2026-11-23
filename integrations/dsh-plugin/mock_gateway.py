@@ -520,6 +520,16 @@ class Handler(BaseHTTPRequestHandler):
         if not self._authorized():
             self._json(401, {"error": "unauthorized", "message": "bad token"})
             return
+        if path.startswith("/api/memory/items/"):
+            try:
+                mid = int(path.rsplit("/", 1)[-1])
+            except ValueError:
+                self._json(400, {"error": "bad_memory_id"})
+                return
+            before = len(MEMORY_ITEMS)
+            MEMORY_ITEMS[:] = [x for x in MEMORY_ITEMS if x["id"] != mid]
+            self._json(200 if len(MEMORY_ITEMS) < before else 404, {"ok": len(MEMORY_ITEMS) < before, "id": mid, "mock": True})
+            return
         if path.startswith("/api/push/devices/"):
             did = path.rsplit("/", 1)[-1]
             device = PUSH_DEVICES.pop(did, None)
@@ -532,6 +542,24 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_PATCH(self):
         path = urlparse(self.path).path
+        if path.startswith("/api/memory/items/"):
+            if not self._authorized():
+                self._json(401, {"error": "unauthorized", "message": "bad token"})
+                return
+            try:
+                mid = int(path.rsplit("/", 1)[-1])
+            except ValueError:
+                self._json(400, {"error": "bad_memory_id"})
+                return
+            body = self._body()
+            item = next((x for x in MEMORY_ITEMS if x["id"] == mid), None)
+            if not item:
+                self._json(404, {"error": "memory_not_found"})
+                return
+            if "longterm" in body:
+                item["longterm"] = bool(body["longterm"])
+            self._json(200, {"ok": True, "data": item, "mock": True})
+            return
         if path != "/api/push/preferences":
             self._json(404, {"error": "not_found", "path": path})
             return
