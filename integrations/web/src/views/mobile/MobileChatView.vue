@@ -43,7 +43,7 @@
         <button type="button" class="tool" aria-label="图片" @click="pickImage">＋</button>
         <button type="button" class="tool" :class="{ rec: recording }" aria-label="语音" @click="toggleVoice">{{ recording ? '■' : '🎙' }}</button>
         <button type="button" class="tool" aria-label="表情" @click="stickerOpen = !stickerOpen">☺</button>
-        <textarea ref="textarea" v-model="draft" rows="1" placeholder="和奈绪说点什么…" enterkeyhint="send" @keydown="onKeydown" @input="autosize" @focus="scrollBottom" />
+        <textarea ref="textarea" v-model="draft" rows="1" placeholder="和奈绪说点什么…" enterkeyhint="send" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" @keydown="onKeydown" @input="autosize" @focus="scrollBottom" />
         <button type="button" class="send" :disabled="!canSend" @click="send">{{ session.sending ? '…' : '↑' }}</button>
       </div>
       <div v-if="session.sendError" class="media-error">{{ session.sendError }}</div>
