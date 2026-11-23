@@ -48,7 +48,8 @@ button{width:100%;height:43px;border:0;border-radius:11px;font:11px inherit;font
   var input=document.getElementById('url');
   var status=document.getElementById('status');
   var saved='';
-  var forceConfig=new URLSearchParams(location.search).has('config');
+  var params=new URLSearchParams(location.search);
+  var forceConfig=params.has('config')||params.has('error');
   try{saved=localStorage.getItem(KEY)||''}catch(e){}
   input.value=saved;
   function normalize(v){
@@ -110,6 +111,8 @@ button{width:100%;height:43px;border:0;border-radius:11px;font:11px inherit;font
   if(saved && back) back.addEventListener('click',function(){location.replace(saved)});
   if(saved && !forceConfig){
     probeAndEnter(saved);
+  } else if(params.has('error')){
+    show('无法连接上次的后端，已返回配置页。检查地址或稍后重试。','err');
   } else if(saved){
     show('修改后端地址；保存后会重新加载。');
   }
