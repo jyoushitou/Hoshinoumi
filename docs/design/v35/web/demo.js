@@ -79,15 +79,6 @@
     '多端': ['!doing','!presence','!route','!gw','!config','!code','!apikeys']
   };
 
-
-  const COMMAND_DESC = {
-    '!help':'命令帮助','!ping':'连通性测试','!status':'运行状态','!version':'版本信息','!uptime':'运行时长','!meta':'实例元信息','!usage':'模型用量','!log':'最近日志','!db':'数据库状态','!stats':'运行统计','!history':'历史记录','!reload':'重载配置','!set':'修改配置','!exit':'退出实例','!quit':'退出实例',
-    '!memory':'记忆查询','!memorybook':'记忆本','!event':'事件列表','!keywords':'关键词','!clear':'清空记忆','!profile':'画像摘要','!growth':'成长记录','!relation':'关系状态',
-    '!img':'搜图','!acg':'二次元图','!sticker':'表情包','!clip':'视频片段','!voice':'语音','!vision':'识图','!say':'主动发言','!sayg':'群内发言',
-    '!diary':'日记','!todo':'待办','!cron':'定时任务','!hooks':'钩子','!backup':'备份','!update':'更新','!task':'任务',
-    '!books':'书架','!book':'当前阅读','!plan':'计划表','!plugin':'插件管理','!adduser':'添加用户','!persona':'人设',
-    '!doing':'当前活动','!presence':'在线状态','!route':'消息路由','!gw':'网关','!config':'配置','!code':'配对码','!apikeys':'API keys'
-  };
   const TITLES = { home: '主页', memory: '记忆', savings: '存钱', weekly: '周计划表', persona: '人设', relation: '关系', info: '信息', commands: '命令', cron: '定时任务', logs: '运行日志', settings: '设置', plugins: '插件' };
 
   // 注入演示用样式
@@ -107,12 +98,12 @@
     .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(12px);opacity:0;pointer-events:none;z-index:30;transition:.2s;background:#fff;border:1px solid #dbe8ff;color:#243b55;font-size:10.5px;border-radius:9px;padding:8px 13px;box-shadow:0 10px 24px rgba(37,99,235,.12)}
     .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
     .typing{color:#8a9bb0;font-size:10px;padding:3px 4px 8px}
-    .cmd-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;align-items:start}
+    .cmd-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
     .cmd-group{border:1px solid #e3ebf7;border-radius:12px;background:#fff;padding:11px 12px;transition:border-color .18s,transform .18s,box-shadow .18s}
     .cmd-group:hover{border-color:#bcd4f7;transform:translateY(-2px);box-shadow:0 8px 18px rgba(37,99,235,.06)}
     .cmd-group h3{display:flex;align-items:center;font-size:11px;color:#1e3a5f;margin:0 0 7px}
     .cmd-group h3 span{margin-left:auto;font-weight:400;color:#93a3b8;font-size:9px}
-    .cmd-list{display:grid;gap:1px}.cmd-row{display:grid;grid-template-columns:1fr auto;gap:1px 4px;text-align:left;border:1px solid transparent;border-radius:6px;background:#f8fbff;padding:5px 6px;cursor:pointer;transition:background .16s,border-color .16s}.cmd-row:hover{background:#eef4ff;border-color:#dbe8ff}.cmd-row b{font:9px/1.3 ui-monospace,monospace;color:#314a65}.cmd-row small{grid-column:1;font-size:7.5px;color:#93a3b8}.cmd-row em{grid-column:2;grid-row:1/3;align-self:center;font-style:normal;font-size:7px;color:#c0264a}.cmd-row.on{background:#dbeafe;border-color:#93b7fa}
+    .cmd-chips{display:flex;flex-wrap:wrap;gap:5px}
     .cmd-chip{border:1px solid #e3ebf7;border-radius:6px;background:#f8fbff;color:#4b5f78;font-size:9px;padding:4px 7px;cursor:pointer;transition:background .16s,color .16s,border-color .16s,transform .16s}
     .cmd-chip:hover{background:#eef4ff;color:#2563eb;border-color:#bcd4f7;transform:translateY(-1px)}
     .cmd-chip.owner:after{content:' owner';color:#c0264a;font-size:8px}
@@ -124,7 +115,7 @@
     .cmd-result-head .st{margin-left:auto;color:#93a3b8;font-size:9.5px}
     .cmd-output{flex:1;min-height:0;overflow:auto;border:1px solid #e3ebf7;border-radius:9px;background:#f8fbff;padding:9px 10px;color:#4b5f78;font:10px/1.6 "Cascadia Code","Consolas",monospace;white-space:pre-wrap}
     .cmd-output .cmdline{color:#2563eb;margin-bottom:4px}
-    .cmd-row.on{background:#dbeafe;border-color:#93b7fa}
+    .cmd-chip.on{background:#dbeafe;color:#1d4ed8;border-color:#93b7fa}
     .home-head{display:flex;align-items:center;gap:9px;margin-bottom:6px}
     .home-head h2{font-size:18px;margin:0;color:#17263b}
     .home-pill{font-size:9px;color:#1d4ed8;border:1px solid #dbe8ff;background:#eef4ff;border-radius:20px;padding:3px 8px}
@@ -1163,8 +1154,8 @@
     }
     if (name === 'commands') {
       const groups = Object.entries(COMMAND_GROUPS).map(([g, cmds]) =>
-        '<div class="cmd-group"><h3>' + esc(g) + '<span>' + cmds.length + '</span></h3><div class="cmd-list">' +
-        cmds.map(c => '<button class="cmd-row' + (/!(reload|set|exit|quit|clear|say|sayg|backup|plugin|adduser|gw|config|code|apikeys)/.test(c) ? ' owner' : '') + '"><b>' + esc(c) + '</b><small>' + esc(COMMAND_DESC[c] || g) + '</small>' + (/!(reload|set|exit|quit|clear|say|sayg|backup|plugin|adduser|gw|config|code|apikeys)/.test(c) ? '<em>OWNER</em>' : '') + '</button>').join('') +
+        '<div class="cmd-group"><h3>' + esc(g) + '<span>' + cmds.length + '</span></h3><div class="cmd-chips">' +
+        cmds.map(c => '<button class="cmd-chip' + (/!(reload|set|exit|quit|clear|say|sayg|backup|plugin|adduser|gw|config|code|apikeys)/.test(c) ? ' owner' : '') + '">' + esc(c) + '</button>').join('') +
         '</div></div>').join('');
       pageView.innerHTML = '<div class="cmd-page"><div class="cmd-catalog"><div class="page-head"><div><h2>命令</h2><p>51 个命令 · MOCK 目录 · v35.14 改为 /api/commands 读取</p></div><button class="back" id="backChat">← 返回聊天</button></div><div class="cmd-runbar"><span class="prompt">&gt;</span><input id="cmdInput" placeholder="输入命令，例如 !persona activate nao"><button id="cmdRun">执行</button></div><div class="cmd-hint" id="cmdHint">无参命令直接执行；带参命令先填参数；二级命令点上方命令后按提示输入。</div><div class="cmd-grid">' + groups + '</div></div><div class="cmd-result"><div class="cmd-result-head"><b>执行结果</b><span class="st" id="cmdState">选择上方命令运行</span></div><div class="cmd-output" id="cmdOutput">点击任意命令，结果显示在这里。\n\n提示：最终版通过 POST /api/command 执行。</div></div></div>';
       [top, msgs, composer, searchBar].forEach(x => x.classList.add('chat-hide'));
@@ -1200,9 +1191,9 @@
         let result = RESULTS[base] || ('已执行 ' + value + '（MOCK）');
         if (meta && meta.sub && parts[1]) result = '已执行 ' + value + '\n二级命令：' + parts[1] + '（MOCK）';
         output.innerHTML = '<div class="cmdline">&gt; ' + esc(value) + '</div>' + esc(result);
-        pageView.querySelectorAll('.cmd-row').forEach(x => x.classList.toggle('on', x.textContent.replace(' owner', '').trim() === base));
+        pageView.querySelectorAll('.cmd-chip').forEach(x => x.classList.toggle('on', x.textContent.replace(' owner', '').trim() === base));
       }
-      pageView.querySelectorAll('.cmd-row').forEach(c => c.addEventListener('click', () => {
+      pageView.querySelectorAll('.cmd-chip').forEach(c => c.addEventListener('click', () => {
         const cmd = c.textContent.replace(' owner', '').trim();
         const input = document.getElementById('cmdInput');
         const meta = COMMAND_META[cmd];
