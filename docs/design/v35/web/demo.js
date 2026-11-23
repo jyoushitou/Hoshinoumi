@@ -79,7 +79,7 @@
     '多端': ['!doing','!presence','!route','!gw','!config','!code','!apikeys']
   };
 
-  const TITLES = { home: '主页', memory: '记忆', savings: '存钱', weekly: '周计划表', persona: '人设', relation: '关系', info: '信息', commands: '命令', cron: '定时任务', logs: '运行日志', settings: '设置', plugins: '插件' };
+  const TITLES = { home: '主页', memory: '记忆', savings: '存钱', weekly: '周计划表', persona: '人设', relation: '关系', info: '信息', commands: '命令', cron: '定时任务', logs: '运行日志', diary: '日记', settings: '设置', plugins: '插件' };
 
   // 注入演示用样式
   const css = document.createElement('style');
@@ -669,6 +669,41 @@
       renderPersona();
       return;
     }
+    if (name === 'diary') {
+      const DESIGN_DIARY = [
+        { id: 1, date: '2026-11-19', title: '方案通过', content: '今天方案终于过了，客户没有继续改。', mood: '轻松', source: '!diary' },
+        { id: 2, date: '2026-11-18', title: '旅行目标 60%', content: '这个月结余三千三，旅行目标到六成了。', mood: '开心', source: '!diary' },
+        { id: 3, date: '2026-11-17', title: '窗边读书', content: '读完《十日终焉》第 3 章，窗边光线刚好。', mood: '平静', source: '!diary' },
+        { id: 4, date: '2026-10-28', title: '十月小记', content: '降温了，把夏天的衣服收起来，窗边开始有冷风。', mood: '平静', source: '!diary' }
+      ];
+      let diaryData = DESIGN_DIARY, diaryMonth = '';
+      const monthOf = d => String(d || '').slice(0, 7);
+      const preview = t => { const v = String(t || '').replace(/\s+/g, ' ').trim(); return v.length > 50 ? v.slice(0, 50) + '…' : v; };
+      const render = () => {
+        const months = [...new Set(diaryData.map(x => monthOf(x.date)))].filter(Boolean).sort().reverse();
+        if (!diaryMonth || !months.includes(diaryMonth)) diaryMonth = months[0] || '';
+        const rows = diaryData.filter(x => monthOf(x.date) === diaryMonth).sort((a, b) => String(b.date).localeCompare(String(a.date)));
+        pageView.innerHTML = '<div class="page-head"><div><h2>日记</h2><p>按月查看 · 前 50 字概览 · 点开详情</p></div><button class="back" id="backChat">← 返回聊天</button></div>' +
+          '<div class="cmd-chips" style="margin:0 0 10px">' + months.map(m => '<button class="' + (m === diaryMonth ? 'on' : '') + '" data-diary-month="' + m + '">' + m.replace('-', ' 年 ') + ' 月</button>').join('') + '</div>' +
+          '<div class="pgrid" id="diaryList">' + (rows.length ? rows.map(x => '<div class="pcard2" data-diary-id="' + x.id + '" style="cursor:pointer"><h3>' + esc(x.title || '无标题') + '</h3><p>' + esc(x.date + ' · ' + (x.mood || '')) + '</p><p style="margin-top:6px;color:#526982">' + esc(preview(x.content)) + '</p><p style="margin-top:8px;color:#2563eb;font-size:9px">查看</p></div>').join('') : '<div class="pcard2">这个月还没有日记</div>') + '</div>';
+        document.getElementById('backChat').addEventListener('click', () => showChat());
+        pageView.querySelectorAll('[data-diary-month]').forEach(b => b.addEventListener('click', () => { diaryMonth = b.dataset.diaryMonth; render(); }));
+        pageView.querySelectorAll('[data-diary-id]').forEach(card => card.addEventListener('click', () => {
+          const item = diaryData.find(x => String(x.id) === card.dataset.diaryId); if (!item) return;
+          pageView.innerHTML = '<div class="page-head"><div><h2>日记详情</h2><p>' + esc(item.date + ' · ' + (item.mood || '')) + '</p></div><button class="back" id="diaryBack">← 返回日记</button></div><div class="pcard2" style="max-width:760px"><h3 style="font-size:16px">' + esc(item.title || '无标题') + '</h3><p style="font-size:9px;color:#8a9bb0">' + esc(item.date + ' · ' + (item.source || '!diary')) + '</p><p style="margin-top:14px;font-size:11px;line-height:1.9;color:#405872;white-space:pre-wrap">' + esc(item.content || '') + '</p></div>';
+          document.getElementById('diaryBack').addEventListener('click', render);
+        }));
+      };
+      pageView.classList.add('on');
+      [top, msgs, composer, searchBar].forEach(x => x.classList.add('chat-hide'));
+      document.querySelectorAll('.rnav').forEach(x => x.classList.toggle('on', x.dataset.page === 'diary'));
+      render();
+      fetch('http://127.0.0.1:27005/api/diary?all=1', { headers: { Authorization: 'Bearer mock-token' } })
+        .then(r => r.ok ? r.json() : Promise.reject())
+        .then(j => { if (Array.isArray(j.data) && j.data.length) { diaryData = j.data; render(); } })
+        .catch(() => {});
+      return;
+    }
     if (name === 'logs') {
       const LOGS = window.__logs || (window.__logs = [
         ['09:13','INFO','chat','len=18 target=10001'],
@@ -1253,7 +1288,7 @@
     document.getElementById('backChat').addEventListener('click', () => showChat());
   }
 
-  const railPages = ['home', 'chat', 'memory', 'relation', 'savings', 'weekly', 'info', 'persona', 'commands', 'cron', 'logs', 'settings'];
+  const railPages = ['home', 'chat', 'memory', 'relation', 'savings', 'weekly', 'info', 'persona', 'commands', 'cron', 'logs', 'diary', 'settings'];
   document.querySelectorAll('.rnav').forEach((b, i) => {
     b.dataset.page = b.dataset.page || railPages[i] || 'chat';
     b.addEventListener('click', () => {
