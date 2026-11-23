@@ -8,6 +8,7 @@ import MobileWeeklyView from '@/views/mobile/MobileWeeklyView.vue'
 import MobileTabBar from '@/components/mobile/MobileTabBar.vue'
 import MobileReminderPopup from '@/components/mobile/MobileReminderPopup.vue'
 import { useAuthStore } from '@/stores/auth'
+import { mobileEntries } from '@/composables/useMobileNav'
 import { useSessionStore } from '@/stores/session'
 import { useIsOwner } from '@/composables/useIsOwner'
 
@@ -38,6 +39,8 @@ const titles: Record<string, string> = {
   weekly: '周计划', info: '信息', persona: '人设', commands: '命令', cron: '定时任务',
   logs: '运行日志', settings: '设置',
 }
+const pageTransition = ref('page-left')
+const pageOrder = mobileEntries.map(entry => entry.path)
 const pageView = computed(() => {
   if (route.name === 'relation' && !isOwner.value) return MobileChatView
   if (route.name === 'chat') return MobileChatView
@@ -47,6 +50,11 @@ const pageView = computed(() => {
 })
 const title = computed(() => titles[String(route.name)] ?? 'Hoshinoumi')
 watch(() => route.name, () => { chatDetail.value = false })
+watch(() => route.path, (to, from) => {
+  const a = pageOrder.indexOf(from)
+  const b = pageOrder.indexOf(to)
+  pageTransition.value = b >= 0 && a >= 0 && b < a ? 'page-right' : 'page-left'
+})
 
 watchEffect(() => {
   if (route.name !== 'relation') return
@@ -85,7 +93,9 @@ onBeforeUnmount(() => {
       <span class="conn" :class="{ off: !session.connected }">{{ session.connected ? '在线' : '离线' }}</span>
     </header>
     <main class="mobile-main">
-      <component :is="pageView" @detail-change="chatDetail = $event" />
+      <Transition :name="pageTransition" mode="out-in">
+        <component :is="pageView" :key="route.path" @detail-change="chatDetail = $event" />
+      </Transition>
     </main>
     <MobileReminderPopup />
     <MobileTabBar v-if="!chatDetail && !keyboardOpen" />
@@ -103,4 +113,10 @@ onBeforeUnmount(() => {
 .mobile-main{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y}
 .mobile-shell.keyboard-open :deep(.mc){padding-bottom:0}
 .mobile-shell.keyboard-open :deep(.composer){padding-bottom:0}
+.page-left-enter-active,.page-left-leave-active,.page-right-enter-active,.page-right-leave-active{transition:opacity .2s ease,transform .28s cubic-bezier(.22,1,.36,1)}
+.page-left-enter-from{opacity:0;transform:translateX(18px)}
+.page-left-leave-to{opacity:0;transform:translateX(-14px)}
+.page-right-enter-from{opacity:0;transform:translateX(-18px)}
+.page-right-leave-to{opacity:0;transform:translateX(14px)}
+@media(prefers-reduced-motion:reduce){.page-left-enter-active,.page-left-leave-active,.page-right-enter-active,.page-right-leave-active{transition:none}}
 </style>
