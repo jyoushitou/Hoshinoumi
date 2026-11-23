@@ -1,75 +1,62 @@
-﻿# 深度优化客户端：原生重写规则
+# 深度优化客户端：仅 HyperOS 与 HarmonyOS 2
 
-适用：
-
-```text
-v35.11 Qt 桌面
-v35.12 Android
-v35.13 HyperOS 4 手机
-v35.14 HyperOS 3 平板
-v35.15 EMUI
-```
-
-## 定义
-
-“深度优化”= 用平台原生语言和原生 UI 重写整个客户端，不加载 Vue/WebView。
+只做两台有真机的手机：
 
 ```text
-不加载 HTML/CSS/JS
-不复用 WebView 壳
-不把页面搬进 iframe
-后端 REST/WebSocket 契约保持同一套
+澎湃 OS / HyperOS 手机
+鸿蒙 2 / HarmonyOS 2 手机
 ```
 
-## 语言与栈
+不做：
+
+```text
+原生 Android 独立客户端
+Qt 桌面原生重写
+HyperOS 平板
+EMUI
+```
+
+## 原生规则
+
+```text
+不加载 Vue/WebView
+用平台原生语言重写
+共用后端 REST / WebSocket
+不复制业务 API
+单独设计稿、单独排期、单独性能验收
+```
+
+## 技术栈
 
 | 客户端 | UI | 核心 / 系统 |
 |---|---|---|
-| Qt 桌面 | C++20 + Qt 6 + QML | QtNetwork / SQLite / 原生托盘 |
-| Android | Kotlin + Jetpack Compose | Rust JNI/NDK；Room、OkHttp、CameraX、Media3 |
-| HyperOS 手机 | Kotlin + Jetpack Compose | Rust JNI/NDK + HyperOS 系统能力 |
-| HyperOS 平板 | Kotlin + Compose | Rust JNI/NDK + 多窗口/手写笔 |
-| EMUI | Kotlin + Compose（Android 基线） | Rust JNI/NDK + EMUI 系统能力 |
+| HyperOS 手机 | Kotlin + Jetpack Compose | Rust JNI/NDK；通知/自启动/省电 |
+| HarmonyOS 2 手机 | Java UI 或 JS UI（FA 模型，按设备 API 版本） | C/C++ Native API；HAP；通知/后台 |
 
-## 设计稿必须先出
-
-每个原生客户端单独设计，不套 Web/Vue 稿：
+说明：
 
 ```text
-tokens / 组件
-登录 / 配置
-主界面 + 聊天
-业务页面
-权限 / 通知 / 后台
-深色 / 大字体 / 无障碍
+HarmonyOS 2 不是 HarmonyOS NEXT，不直接套 ArkTS/Stage 模型
+先按真机 API 版本确定 Java/JS FA 工程
+如果设备只支持 Android APK，只能跑套壳，不算鸿蒙原生深度优化
 ```
 
-目录与冻结规则：[native/README.md](native/README.md)。
+## 设计稿
 
-## 性能口径
+原生设计单独出：
 
 ```text
-冷启动 / 首帧有明确上限
-120Hz 掉帧率可测
-常驻内存有上限
-包体按 ABI 统计
-崩溃率有上限
+docs/design/v35/native/hyperos/
+docs/design/v35/native/harmonyos2/
 ```
 
-具体数值按客户端写，不拿桌面指标套手机。
+不套 Vue/Web 稿，不在实现阶段边写边设计。
 
-## 版本规则
+## 版本门槛
 
 ```text
-每个原生客户端独立列次版本
-先架构/登录，再聊天，再业务页面，最后性能和真机
-不和 v35.8 套壳小版本混做
-不复制后端业务 API
+v35.13.0.0 HyperOS 设计稿 + 原生架构
+v35.15.0.0 HarmonyOS 2 设计稿 + 原生架构
 ```
 
-## 非深度优化客户端
-
-```text
-Electron / Capacitor / VS Code / Qoder / DSH 插件：
-允许 WebView / Vue，只补壳和系统能力。
-```
+其余客户端不排期。
