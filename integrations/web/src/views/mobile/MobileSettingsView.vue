@@ -18,8 +18,16 @@ function logout() { auth.logout() }
 function openPermissions() { void router.push('/settings/permissions') }
 function changeBackend() {
   const bridge = (window as any).HoshinoumiConfig
-  if (bridge?.open) bridge.open()
-  else window.alert('请在 Hoshinoumi App 内修改后端地址')
+  if (bridge?.open) {
+    bridge.open()
+    return
+  }
+  // App 内桥异常时仍可回本地配置页；浏览器没有壳配置，保持只读
+  if (/Android/i.test(navigator.userAgent) && location.protocol.startsWith('http')) {
+    location.href = 'https://localhost/index.html?config=1'
+    return
+  }
+  window.alert('浏览器版的后端地址由当前站点决定；请在 Hoshinoumi App 内修改。')
 }
 </script>
 
