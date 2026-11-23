@@ -25,6 +25,23 @@ const isOwner = useIsOwner()
 const viewportHeight = ref(0)
 const chatDetail = ref(false)
 const keyboardOpen = ref(false)
+let focusOutTimer: ReturnType<typeof setTimeout> | null = null
+function isEditableTarget(target: EventTarget | null) {
+  const el = target as HTMLElement | null
+  if (!el) return false
+  return el.matches?.('input, textarea, select, [contenteditable="true"]') ?? false
+}
+function onFocusChange(event: FocusEvent) {
+  if (isEditableTarget(event.target)) {
+    if (focusOutTimer) { clearTimeout(focusOutTimer); focusOutTimer = null }
+    keyboardOpen.value = true
+    return
+  }
+  if (focusOutTimer) clearTimeout(focusOutTimer)
+  focusOutTimer = setTimeout(() => {
+    if (!isEditableTarget(document.activeElement)) keyboardOpen.value = false
+  }, 180)
+}
 const MAIN_ROUTES = new Set(['/chat', '/home', '/memory', '/relation', '/savings', '/weekly', '/info', '/persona', '/commands', '/cron', '/logs', '/settings'])
 const isMainRoute = computed(() => MAIN_ROUTES.has(route.path))
 
@@ -104,6 +121,8 @@ onMounted(() => {
   visualViewport?.addEventListener('scroll', syncViewport)
   window.addEventListener('resize', syncViewport)
   window.addEventListener('focusin', syncViewportSoon)
+  document.addEventListener('focusin', onFocusChange, true)
+  document.addEventListener('focusout', onFocusChange, true)
   window.addEventListener('focusout', syncViewportSoon)
   window.addEventListener('hoshinoumi:push', onPushRefresh)
   ;(window as any).__hoshinoumiBack = handleNativeBack
@@ -117,6 +136,9 @@ onBeforeUnmount(() => {
   visualViewport?.removeEventListener('scroll', syncViewport)
   window.removeEventListener('resize', syncViewport)
   window.removeEventListener('focusin', syncViewportSoon)
+  document.removeEventListener('focusin', onFocusChange, true)
+  document.removeEventListener('focusout', onFocusChange, true)
+  if (focusOutTimer) clearTimeout(focusOutTimer)
   window.removeEventListener('focusout', syncViewportSoon)
   window.removeEventListener('hoshinoumi:push', onPushRefresh)
   delete (window as any).__hoshinoumiBack
