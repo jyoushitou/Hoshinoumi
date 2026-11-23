@@ -100,7 +100,7 @@ MiHaptic（可选，触感）
 
 ```text
 小米网页秒开引擎（原生重写不用 WebView）
-小米账号服务（登录仍用 HQQ/token）
+小米账号服务（登录仍用 QQ/token）
 小米运动健康 / 妙播 / 车钥匙 / 支付 / 游戏服务
 CloudKit / 相机生态引擎（CameraX 足够）
 ```
