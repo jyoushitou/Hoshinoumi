@@ -13,6 +13,7 @@ const outputError = ref('')
 const updatedAt = ref('')
 const collapsed = ref<Set<string>>(new Set())
 let groupsInitialized = false
+const desktopLayout = typeof window !== 'undefined' && window.matchMedia('(min-width: 821px)').matches
 function isCollapsed(group: string) {
   return !query.value.trim() && collapsed.value.has(group)
 }
@@ -42,7 +43,7 @@ async function load() {
     const r = await http.get<{ data?: CommandRow[] }>('/api/commands')
     commands.value = Array.isArray(r.data) ? r.data : []
     if (!groupsInitialized) {
-      collapsed.value = new Set(commands.value.map(row => row.group || '其他'))
+      if (!desktopLayout) collapsed.value = new Set(commands.value.map(row => row.group || '其他'))
       groupsInitialized = true
     }
     updatedAt.value = new Date().toLocaleTimeString()
@@ -110,6 +111,8 @@ onBeforeUnmount(() => { if (timer) clearInterval(timer) })
 .cmd{display:grid;grid-template-columns:1fr auto;gap:2px 6px;width:100%;text-align:left;border:1px solid transparent;border-radius:8px;background:#f8fbff;padding:6px 8px;margin-bottom:4px;cursor:pointer;transition:background .18s,border-color .18s,transform .18s}.cmd:hover{border-color:#dbe8ff;background:#eef4ff;transform:translateY(-1px)}.cmd:disabled{opacity:.55}.cmd b{font-size:10px;color:#1e3a5f}.cmd small{grid-column:1;font-size:8px;color:#8a9bb0}.cmd em{grid-row:1/3;grid-column:2;align-self:center;font-style:normal;font-size:7px;color:#9a6b1f;background:#fff8e6;border:1px solid #f2d491;border-radius:5px;padding:1px 4px}
 .error{margin:8px 0;padding:7px 9px;border:1px solid #fecaca;background:#fff5f5;color:#b91c1c;border-radius:8px;font-size:9px}.empty{padding:24px;text-align:center;color:#9aabc0;font-size:10px}
 .output{position:sticky;bottom:0;margin-top:12px;background:#0f172a;color:#dbeafe;border-radius:12px;padding:11px 12px;box-shadow:0 12px 30px rgba(15,23,42,.22)}.output.bad{background:#3b0d16;color:#fecdd3}.output b{font-size:9px;letter-spacing:.08em;opacity:.75}.output pre{margin:6px 0 0;white-space:pre-wrap;font:10px/1.6 ui-monospace,monospace}.output button{position:absolute;right:9px;top:8px;border:0;background:rgba(255,255,255,.12);color:inherit;border-radius:5px;font:8px inherit;padding:3px 6px;cursor:pointer}
+@media(min-width:821px){.groups{grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}.commands{padding:18px 20px}}
+@media(min-width:1280px){.groups{grid-template-columns:repeat(7,minmax(0,1fr))}}
 @media(max-width:820px){.commands{padding:12px 12px 20px}.head h1{font-size:22px}.groups{grid-template-columns:1fr}.output{position:fixed;left:10px;right:10px;bottom:calc(64px + env(safe-area-inset-bottom));z-index:20}}
 @media(prefers-reduced-motion:reduce){.group{animation:none}.cmd{transition:none}}
 </style>
