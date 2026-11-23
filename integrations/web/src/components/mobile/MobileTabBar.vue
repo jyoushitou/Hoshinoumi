@@ -17,6 +17,15 @@ const visibleQuick = computed(() => {
 })
 const expanded = ref(false)
 const activePath = computed(() => route.path)
+const activeIndex = computed(() => visibleQuick.value.findIndex(entry => entry.path === activePath.value))
+const indicatorStyle = computed(() => {
+  const count = visibleQuick.value.length || 1
+  return {
+    width: `${100 / count}%`,
+    transform: `translateX(${Math.max(0, activeIndex.value) * 100}%)`,
+    opacity: activeIndex.value >= 0 ? 1 : 0,
+  }
+})
 let touchStartY: number | null = null
 let pointerStartY: number | null = null
 let lastSwipeAt = 0
@@ -54,6 +63,7 @@ function go(path: string) {
 <template>
   <nav class="mobile-tabbar" :class="{ expanded }" @touchstart="onTouchStart" @touchend="onTouchEnd" @pointerdown="onPointerDown" @pointerup="onPointerUp">
     <div class="quick-row" :style="{ gridTemplateColumns: `repeat(${visibleQuick.length}, 1fr)` }">
+      <span class="tab-indicator" :style="indicatorStyle" aria-hidden="true" />
       <button
         v-for="entry in visibleQuick"
         :key="entry.key"
@@ -104,13 +114,14 @@ function go(path: string) {
 .mobile-tabbar.expanded .all-item:nth-child(4n+4){transition-delay:.045s}
 .mobile-tabbar:before{content:"";position:absolute;top:5px;left:50%;transform:translateX(-50%);width:30px;height:4px;border-radius:3px;background:#d8e5f5;z-index:2;pointer-events:none}
 .mobile-tabbar.expanded:before{background:#c7dcff}
-.quick-row{display:grid;height:54px;align-items:stretch}
+.quick-row{position:relative;display:grid;height:54px;align-items:stretch}
+.tab-indicator{position:absolute;top:4px;bottom:4px;left:0;border-radius:12px;background:#eef4ff;z-index:0;transition:transform .36s cubic-bezier(.22,1,.36,1),width .3s ease,opacity .18s ease;pointer-events:none}
 .tab-item{
-  border:0;background:transparent;color:#8a9bb0;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:2px;min-width:0;border-radius:10px;cursor:pointer;
+  position:relative;z-index:1;border:0;background:transparent;color:#8a9bb0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:2px;min-width:0;border-radius:10px;cursor:pointer;transition:color .2s ease;
 }
 .tab-item{position:relative}
-.tab-item.on{color:#2563eb;background:#eef4ff;font-weight:700}
+.tab-item.on{color:#2563eb;font-weight:700}
 .tab-unread{position:absolute;top:3px;right:calc(50% - 22px);min-width:14px;height:14px;padding:0 3px;border-radius:7px;background:#ef4444;color:#fff;font-size:7px;font-weight:800;display:grid;place-items:center}
 .tab-icon{font-size:15px;line-height:1}
 .tab-label{font-size:8px;line-height:1.2;white-space:nowrap}

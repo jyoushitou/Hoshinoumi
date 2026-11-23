@@ -67,7 +67,8 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 20% 0%,
 .composer .input:empty:before{content:attr(data-ph);color:#aab7c8;font-size:10px}
 .bottom-nav{position:relative;height:auto;max-height:76px;overflow:hidden;flex:none;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-end;background:rgba(255,255,255,.96);border-top:1px solid #e5edf9;padding:0 8px 8px;backdrop-filter:blur(10px);transition:max-height .28s cubic-bezier(.2,.8,.2,1)}
 .bottom-nav.expanded{max-height:260px}
-.bottom-nav .nav-row{display:grid;grid-template-columns:repeat(4,1fr);width:100%;height:46px;max-height:46px;overflow:hidden;opacity:1;transition:max-height .3s cubic-bezier(.22,1,.36,1),opacity .18s ease}
+.bottom-nav .nav-row{position:relative;display:grid;grid-template-columns:repeat(4,1fr);width:100%;height:46px;max-height:46px;overflow:hidden;opacity:1;transition:max-height .3s cubic-bezier(.22,1,.36,1),opacity .18s ease}
+.nav-indicator{position:absolute;top:4px;bottom:4px;left:0;border-radius:12px;background:#eef4ff;z-index:0;transition:transform .36s cubic-bezier(.22,1,.36,1),width .3s ease;pointer-events:none}
 .nav-all{display:block;width:100%;max-height:0;overflow:hidden;opacity:0;transform:translateY(8px);padding:0 6px;transition:max-height .34s cubic-bezier(.22,1,.36,1),opacity .22s ease,transform .34s cubic-bezier(.22,1,.36,1),padding .34s cubic-bezier(.22,1,.36,1)}
 .bottom-nav.expanded .nav-all{max-height:220px;opacity:1;transform:none;padding:4px 6px 2px}
 .bottom-nav.expanded .nav-row{max-height:0;opacity:0;pointer-events:none}
@@ -108,9 +109,9 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 20% 0%,
 
 .bottom-nav .nav-row{background:transparent!important}
 .bottom-nav .nav-row .tab{color:#8a9bb0!important;background:transparent!important}
-.bottom-nav .nav-row .tab.on{color:#2563eb!important;background:#eef4ff!important;font-weight:700}
+.bottom-nav .nav-row .tab.on{color:#2563eb!important;background:transparent!important;font-weight:700}
 .bottom-nav .nav-row .tab .ic{color:inherit!important}
-.bottom-nav .nav-row .tab{position:relative}
+.bottom-nav .nav-row .tab{position:relative;z-index:1;transition:color .2s ease}
 .tab-unread{position:absolute;top:2px;right:calc(50% - 24px);min-width:14px;height:14px;padding:0 3px;border-radius:7px;background:#ef4444;color:#fff;font-size:7px;font-weight:800;display:grid;place-items:center;line-height:1}
 .quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;max-height:260px;overflow:auto}
 .quick-choice{position:relative;height:46px;border:1px solid #e1ebf9;background:#f8fbff;border-radius:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;color:#607896;font:8px inherit;cursor:pointer}
@@ -613,7 +614,8 @@ function nav(active){
   const quick = allEntries.filter(e => quickKeys.includes(e[0]))
   const tab = ([key,ic,label]) => `<div class="tab ${active===key?'on':''}" onclick="go('${key}')"><span class="ic">${ic}</span>${label}${key==='chats'&&demoUnread>0?'<span class="tab-unread">'+(demoUnread>99?'99+':demoUnread)+'</span>':''}</div>`
   const all = allEntries.map(([key,ic,label]) => `<button class="${active===key?'on':''}" title="${label}" aria-label="${label}" onclick="go('${key}')"><b>${ic}</b>${key==='chats'&&demoUnread>0?'<span class="all-unread">'+(demoUnread>99?'99+':demoUnread)+'</span>':''}</button>`).join('')
-  return `<nav class="bottom-nav ${navExpanded?'expanded':''}"><div class="nav-row" style="grid-template-columns:repeat(${quick.length},1fr)">${quick.map(tab).join('')}</div><div class="nav-all"><div class="nav-all-grid">${all}</div></div></nav>`
+  const idx=Math.max(0, quick.findIndex(e => e[0] === active)); const width=quick.length?100/quick.length:100
+  return `<nav class="bottom-nav ${navExpanded?'expanded':''}"><div class="nav-row" style="grid-template-columns:repeat(${quick.length},1fr)"><span class="nav-indicator" style="width:${width}%;transform:translateX(${idx*100}%)"></span>${quick.map(tab).join('')}</div><div class="nav-all"><div class="nav-all-grid">${all}</div></div></nav>`
 }
 function setNavExpanded(value){
   navExpanded = value
