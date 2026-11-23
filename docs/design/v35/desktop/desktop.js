@@ -66,7 +66,7 @@ function hidePage(){pageView.hidden=true;pageView.innerHTML=''}
 function showChat(){hidePage()}
 function pageHead(title,sub){return `<div class="pv-head"><div><h1>${title}</h1><p>${sub}</p></div></div>`}
 
-const DIARY_API_BASE = location.protocol === 'file:' ? 'http://127.0.0.1:27005' : ''
+const DIARY_API_BASE = (location.hostname === '127.0.0.1' || location.hostname === 'localhost') && location.port === '27005' ? '' : 'http://127.0.0.1:27005'
 const DIARY_HEADERS = { Authorization: 'Bearer mock-token' }
 let diaryData = []
 let diaryMonth = ''

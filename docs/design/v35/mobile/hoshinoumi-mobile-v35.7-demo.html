@@ -692,7 +692,7 @@ function openDiaryDetail(id){
     </div>
   </div>`
 }
-const DIARY_API_BASE = location.protocol === 'file:' ? 'http://127.0.0.1:27005' : ''
+const DIARY_API_BASE = (location.hostname === '127.0.0.1' || location.hostname === 'localhost') && location.port === '27005' ? '' : 'http://127.0.0.1:27005'
 const DIARY_HEADERS = { Authorization: 'Bearer mock-token' }
 async function loadDiary(){
   try {
