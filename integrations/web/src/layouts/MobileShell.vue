@@ -1,5 +1,6 @@
 ﻿<script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch, watchEffect } from 'vue'
+import logoUrl from '@/assets/hoshinoumi.svg'
 import { useRoute, useRouter } from 'vue-router'
 import MobileChatView from '@/views/mobile/MobileChatView.vue'
 import MobilePageView from '@/views/mobile/MobilePageView.vue'
@@ -90,7 +91,7 @@ onBeforeUnmount(() => {
 <template>
   <div class="mobile-shell" :class="{ 'keyboard-open': keyboardOpen }" :style="shellStyle">
     <header class="mobile-header">
-      <span class="logo">✦</span>
+      <span class="logo"><img :src="logoUrl" alt="" /></span>
       <span class="brand">HOSHINOUMI<small>{{ title }}</small></span>
       <span class="conn" :class="{ off: !session.connected }">{{ session.connected ? '在线' : '离线' }}</span>
     </header>
@@ -107,7 +108,7 @@ onBeforeUnmount(() => {
 <style scoped>
 .mobile-shell{position:fixed;top:0;left:0;right:0;width:100%;height:100vh;height:100dvh;height:var(--app-height,100dvh);display:flex;flex-direction:column;background:#f7faff;color:#17263b;overflow:hidden}
 .mobile-header{flex:none;height:calc(50px + env(safe-area-inset-top));display:flex;align-items:center;gap:9px;padding:env(safe-area-inset-top) 14px 0;background:rgba(255,255,255,.92);border-bottom:1px solid #e5edf9}
-.logo{width:28px;height:28px;border-radius:9px;background:#eef4ff;color:#2563eb;display:grid;place-items:center;font-size:13px}
+.logo{width:28px;height:28px;border-radius:9px;background:#eef4ff;display:grid;place-items:center;flex:none}.logo img{width:23px;height:23px;display:block}
 .brand{font-size:11px;font-weight:800;letter-spacing:.12em;line-height:1.1}
 .brand small{display:block;font-size:7px;letter-spacing:.22em;color:#8a9bb0;font-weight:600;margin-top:2px}
 .conn{margin-left:auto;font-size:8px;color:#1f9d6b;border:1px solid #cdeee0;background:#eefbf5;border-radius:10px;padding:3px 7px}
