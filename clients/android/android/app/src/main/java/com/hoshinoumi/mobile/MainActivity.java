@@ -401,17 +401,28 @@ public class MainActivity extends BridgeActivity {
         handleDeepLink(intent);
     }
 
+    private boolean backPending = false;
+
     @Override
     public void onBackPressed() {
+        if (backPending) return;
+        WebView webView;
         try {
-            WebView webView = getBridge().getWebView();
-            if (webView != null && webView.canGoBack()) {
-                webView.goBack();
-                return;
-            }
-        } catch (Exception ignored) {
+            webView = getBridge().getWebView();
+        } catch (Exception e) {
+            finish();
+            return;
         }
-        super.onBackPressed();
+        if (webView == null) {
+            finish();
+            return;
+        }
+        backPending = true;
+        webView.evaluateJavascript("(function(){try{return window.__hoshinoumiBack?String(window.__hoshinoumiBack()):'exit'}catch(e){return 'exit'}})()", value -> {
+            backPending = false;
+            String decision = value == null ? "" : value.replace("\"", "");
+            if (!"handled".equals(decision)) finish();
+        });
     }
 
     @Override

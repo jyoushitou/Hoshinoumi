@@ -133,12 +133,22 @@ const searchResults = computed<SearchHit[]>(() => {
 
 let viewportHandler: (() => void) | null = null
 onMounted(() => {
+  window.addEventListener('hoshinoumi:back-detail', onNativeBackDetail)
   if (auth.loggedIn && !session.conversations.length) void session.refresh()
   if (deepTarget.value) void open(deepTarget.value)
   viewportHandler = () => { if (pane.value === 'chat') setTimeout(scrollBottom, 80) }
   window.visualViewport?.addEventListener('resize', viewportHandler)
 })
+function onNativeBackDetail() {
+  if (pane.value === 'chat') {
+    pane.value = 'list'
+    imagePreview.value = ''
+    imageName.value = ''
+  }
+}
+
 onBeforeUnmount(() => {
+  window.removeEventListener('hoshinoumi:back-detail', onNativeBackDetail)
   emit('detail-change', false)
   if (recorder && recording.value) recorder.stop()
   stream?.getTracks().forEach(t => t.stop())

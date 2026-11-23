@@ -22,6 +22,19 @@ const isOwner = useIsOwner()
 const viewportHeight = ref(0)
 const chatDetail = ref(false)
 const keyboardOpen = ref(false)
+function handleNativeBack(): string {
+  if (chatDetail.value) {
+    window.dispatchEvent(new CustomEvent('hoshinoumi:back-detail'))
+    return 'handled'
+  }
+  const state = window.history.state as { back?: string | null } | null
+  if (state?.back) {
+    router.back()
+    return 'handled'
+  }
+  return 'exit'
+}
+
 function onPushRefresh() {
   if (!auth.loggedIn) return
   void session.refresh()
@@ -79,6 +92,7 @@ onMounted(() => {
   window.addEventListener('focusin', syncViewportSoon)
   window.addEventListener('focusout', syncViewportSoon)
   window.addEventListener('hoshinoumi:push', onPushRefresh)
+  ;(window as any).__hoshinoumiBack = handleNativeBack
   const keyboard = (window as any).Capacitor?.Plugins?.Keyboard
   keyboard?.addListener?.('keyboardWillShow', () => { keyboardOpen.value = true })
   keyboard?.addListener?.('keyboardWillHide', () => { keyboardOpen.value = false })
@@ -91,6 +105,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('focusin', syncViewportSoon)
   window.removeEventListener('focusout', syncViewportSoon)
   window.removeEventListener('hoshinoumi:push', onPushRefresh)
+  delete (window as any).__hoshinoumiBack
   session.stopSync()
 })
 </script>
