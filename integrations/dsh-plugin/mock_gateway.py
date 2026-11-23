@@ -217,6 +217,13 @@ SAVINGS = {
 }
 
 
+
+DIARY_ENTRIES = [
+    {"id": 1, "date": "2026-11-19", "title": "方案通过", "content": "今天方案终于过了，客户没有继续改。", "mood": "轻松", "source": "!diary"},
+    {"id": 2, "date": "2026-11-18", "title": "旅行目标 60%", "content": "这个月结余三千三，旅行目标到六成了。", "mood": "开心", "source": "!diary"},
+    {"id": 3, "date": "2026-11-17", "title": "窗边读书", "content": "读完《十日终焉》第 3 章，窗边光线刚好。", "mood": "平静", "source": "!diary"},
+]
+
 MEMORY_ITEMS = [
     {"id": 1, "target_id": OWNER_QQ, "content": "昨天方案过了，终于松了口气。", "tags": ["工作", "情绪"], "source": "chat", "longterm": False, "created_at": "2026-11-22 21:04:00"},
     {"id": 2, "target_id": OWNER_QQ, "content": "这个月结余三千三，旅行目标到六成了。", "tags": ["存钱", "旅行"], "source": "chat", "longterm": True, "created_at": "2026-11-21 20:18:00"},
@@ -502,6 +509,13 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/commands":
             data = [{"name": name, "group": group, "help": help_text, "owner": owner} for name, group, help_text, owner in COMMAND_CATALOG]
             self._json(200, {"ok": True, "count": len(data), "data": data, "mock": True})
+            return
+        if path == "/api/diary/dates":
+            dates = sorted({x["date"] for x in DIARY_ENTRIES}, reverse=True)
+            self._json(200, {"ok": True, "data": dates, "count": len(dates), "mock": True})
+            return
+        if path == "/api/diary":
+            self._json(200, {"ok": True, "data": DIARY_ENTRIES, "count": len(DIARY_ENTRIES), "mock": True})
             return
         if path == "/api/memory/items":
             q = (parse_qs(urlparse(self.path).query).get("q") or [""])[0].strip().lower()

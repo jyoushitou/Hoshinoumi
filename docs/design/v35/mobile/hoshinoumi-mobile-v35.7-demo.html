@@ -273,7 +273,7 @@ let currentScreen = 'chats'
 const allEntries = [
   ['home','⌂','主页'],['chats','◉','聊天'],['memory','◈','记忆'],['relation','♡','关系'],
   ['savings','¥','存钱'],['weekly','▦','周计划'],['info','≡','信息'],['persona','◇','人设'],
-  ['commands','⌘','命令'],['cron','◷','定时'],['logs','≣','日志'],['settings','⚙','设置']
+  ['commands','⌘','命令'],['cron','◷','定时'],['diary','✎','日记'],['logs','≣','日志'],['settings','⚙','设置']
 ]
 const QUICK_DEFAULT = ['chats','memory','relation','settings']
 let quickKeys = [...QUICK_DEFAULT]
@@ -439,6 +439,7 @@ screens.home = `
       <div class="module" onclick="go('commands')"><div class="ic">⌘</div><div><b>命令</b><small>51 个命令</small></div></div>
       <div class="module" onclick="go('cron')"><div class="ic">◷</div><div><b>定时任务</b><small>启停 / 执行</small></div></div>
       <div class="module" onclick="go('logs')"><div class="ic">≡</div><div><b>运行日志</b><small>筛选 / 搜索</small></div></div>
+      <div class="module" onclick="go('diary')"><div class="ic">✎</div><div><b>日记</b><small>全部日期 / 内容</small></div></div>
     </div>
   </div>
 </div>
@@ -509,6 +510,7 @@ screens.info = `
     <div class="info-row"><span class="ic">◈</span><div class="t">NapCat QQ</div><em style="color:#1f9d6b">正常</em></div>
     <div class="info-row" onclick="go('cron')"><span class="ic">◷</span><div class="t">定时任务</div><em>3 个</em></div>
     <div class="info-row" onclick="go('logs')"><span class="ic">≡</span><div class="t">运行日志</div><em>查看</em></div>
+    <div class="info-row" onclick="go('diary')"><span class="ic">✎</span><div class="t">日记</div><em>全部日期</em></div>
     <div class="info-row" onclick="toast('数据库详情演示')"><span class="ic">▤</span><div class="t">数据库 / schema</div><em>schema 35</em></div>
     <div class="info-row" onclick="toast('阅读状态演示')"><span class="ic">◫</span><div class="t">阅读 / 小说</div><em>查看</em></div>
   </div>
@@ -623,6 +625,44 @@ screens.cron = `
 </div>
 ${nav('chats')}`
 
+
+screens.diary = `
+<div class="screen-body" style="flex:1;min-height:0;display:flex;flex-direction:column">
+  <div class="d-head"><h2>日记<small>DIARY</small></h2><div class="act" onclick="toast('新建日记（演示）')">＋</div></div>
+  <div class="d-scroll">
+    <div class="info-stats"><div class="info-stat"><small>全部日记</small><b id="diaryCount">—</b></div><div class="info-stat"><small>最早</small><b id="diaryFirst">—</b></div><div class="info-stat"><small>最近</small><b id="diaryLast">—</b></div></div>
+    <div class="d-card" style="margin-bottom:8px"><div style="font-size:9px;font-weight:700;color:#52708f;margin-bottom:6px">全部日记时间</div><div class="cmd-chips" id="diaryDates"><button class="on">加载中…</button></div></div>
+    <div id="diaryList"><div class="d-card" style="text-align:center;color:#9aabc0;font-size:9px;padding:18px">正在读取 /api/diary…</div></div>
+    <div class="d-card" style="margin-top:9px;font-size:8px;color:#8598ad;line-height:1.7">数据由日记命令写入；页面通过 <code>GET /api/diary</code> 读取全部日记，<code>GET /api/diary/dates</code> 读取全部日期。</div>
+  </div>
+</div>
+${nav('chats')}`
+
+function renderDiary(data){
+  const list = document.getElementById('diaryList'); const count = document.getElementById('diaryCount'); if(!list) return
+  if(count) count.textContent = data.length
+  const dates = [...new Set(data.map(x => x.date))].sort().reverse()
+  if(document.getElementById('diaryFirst')) document.getElementById('diaryFirst').textContent = dates[dates.length-1] || '—'
+  if(document.getElementById('diaryLast')) document.getElementById('diaryLast').textContent = dates[0] || '—'
+  const holder = document.getElementById('diaryDates')
+  if(holder) holder.innerHTML = dates.length ? dates.map((d,i)=>`<button class="${i===0?'on':''}" onclick="selectSeg(this)">${d}</button>`).join('') : '<button>暂无</button>'
+  list.innerHTML = data.length ? data.map(item => `<div class="d-card" style="margin-bottom:7px" onclick="toast('打开日记详情（演示）')"><div style="display:flex;align-items:center;gap:6px"><b style="font-size:10px;color:#314a65">${item.title||'无标题'}</b><span style="margin-left:auto;font-size:7.5px;color:#9aabc0">${item.date}</span></div><p style="margin:5px 0 0;font-size:9px;line-height:1.7;color:#526982">${item.content||''}</p><div style="margin-top:6px;font-size:7.5px;color:#8a9bb0">${item.mood||'平静'} · ${item.source||'日记命令'}</div></div>`).join('') : '<div class="d-card" style="text-align:center;color:#9aabc0;font-size:9px;padding:18px">暂无日记</div>'
+}
+async function loadDiary(){
+  const fallback = [
+    {date:'2026-11-19',title:'方案通过',content:'今天方案终于过了，客户没有继续改。',mood:'轻松',source:'!diary'},
+    {date:'2026-11-18',title:'旅行目标 60%',content:'这个月结余三千三，旅行目标到六成了。',mood:'开心',source:'!diary'},
+    {date:'2026-11-17',title:'窗边读书',content:'读完《十日终焉》第 3 章，窗边光线刚好。',mood:'平静',source:'!diary'}
+  ]
+  try {
+    const [all, dates] = await Promise.all([
+      fetch('/api/diary?all=1').then(r => r.ok ? r.json() : Promise.reject()),
+      fetch('/api/diary/dates').then(r => r.ok ? r.json() : Promise.reject())
+    ])
+    renderDiary(Array.isArray(all.data) ? all.data : fallback)
+  } catch { renderDiary(fallback) }
+}
+
 screens.logs = `
 <div class="screen-body" style="flex:1;min-height:0;display:flex;flex-direction:column">
   <div class="d-head"><h2>运行日志<small>LOGS</small></h2><div class="act" onclick="toast('日志搜索演示')">⌕</div></div>
@@ -691,6 +731,7 @@ function go(name){
   if (staleNav) staleNav.outerHTML = nav(name)
   const quickVal = app.querySelector('[data-quick] .val')
   if (quickVal) quickVal.textContent = quickKeys.map(k => allEntries.find(e => e[0] === k)?.[2]).join(' / ')
+  if(name==='diary'){ void loadDiary() }
   if(name==='chats'){ renderExtraConversations(); document.querySelectorAll('.conv[data-conv]').forEach(c=>{ if(readConversations.has(c.dataset.conv)) c.querySelectorAll('.badge').forEach(b=>b.remove()) }) } if(name==='chat'){ const input=document.getElementById('input'); if(input) input.style.cssText='flex:1;height:35px;border-radius:10px;background:#f5f8fe;border:1px solid #e6eefb;padding:6px 10px;color:#4a6079;font-size:10px;overflow:auto'; setTimeout(()=>document.getElementById('msgs')?.scrollTo(0,9999),30) } }
 
 function openFirstLogin(){

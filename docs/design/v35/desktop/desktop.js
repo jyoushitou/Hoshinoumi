@@ -65,6 +65,25 @@ const pageView = $('#pageView')
 function hidePage(){pageView.hidden=true;pageView.innerHTML=''}
 function showChat(){hidePage()}
 function pageHead(title,sub){return `<div class="pv-head"><div><h1>${title}</h1><p>${sub}</p></div></div>`}
+
+async function loadDiaryPage(){
+  const fallback=[
+    {date:'2026-11-19',title:'方案通过',content:'今天方案终于过了，客户没有继续改。',mood:'轻松',source:'!diary'},
+    {date:'2026-11-18',title:'旅行目标 60%',content:'这个月结余三千三，旅行目标到六成了。',mood:'开心',source:'!diary'},
+    {date:'2026-11-17',title:'窗边读书',content:'读完《十日终焉》第 3 章，窗边光线刚好。',mood:'平静',source:'!diary'}
+  ]
+  let data=fallback
+  try {
+    const r=await fetch('/api/diary?all=1'); if(!r.ok) throw new Error('http'); const j=await r.json(); if(Array.isArray(j.data)&&j.data.length) data=j.data
+  } catch {}
+  const dates=[...new Set(data.map(x=>x.date))].sort().reverse()
+  const count=document.getElementById('diaryCount'); if(count) count.textContent=String(data.length)
+  const first=document.getElementById('diaryFirst'); if(first) first.textContent=dates[dates.length-1]||'—'
+  const last=document.getElementById('diaryLast'); if(last) last.textContent=dates[0]||'—'
+  const dh=document.getElementById('diaryDates'); if(dh) dh.innerHTML=dates.map((d,i)=>`<button class="${i===0?'on':''}" onclick="toast('筛选 '+${JSON.stringify(d)}+'（演示）')">${d}</button>`).join('')
+  const list=document.getElementById('diaryList'); if(list) list.innerHTML=data.map(x=>`<div class="pv-row" onclick="toast('打开日记详情（演示）')"><b style="font-size:10px">${x.title||'无标题'}</b><span>${x.date} · ${x.mood||''}</span><div style="grid-column:1/-1;font-size:9px;color:#6b7c95;line-height:1.7">${x.content||''}</div></div>`).join('')
+}
+
 function showPage(page){
   const pv=pageView; pv.hidden=false
   if(page==='home') pv.innerHTML=pageHead('主页','10 个模块 · 设计稿')+`<div class="pv-grid"><div class="pv-card"><b>已连接</b><small>后端 · schema 36</small></div><div class="pv-card"><b>4</b><small>记忆会话</small></div><div class="pv-card"><b>¥3,300</b><small>本月结余</small></div><div class="pv-card"><b>第 47 周</b><small>周计划</small></div></div><div class="pv-sec">模块</div><div class="pv-chips"><button>聊天</button><button>记忆</button><button>关系</button><button>存钱</button><button>周计划</button><button>信息</button><button>人设</button><button>命令</button><button>定时</button><button>日志</button></div>`
@@ -123,7 +142,8 @@ function showPage(page){
     `</div><div class="cmd-result"><div class="cmd-result-head"><b>执行结果</b><span id="cmdState">选择上方命令运行</span></div><pre id="cmdOutput">点击任意命令，结果显示在这里。\n\n提示：最终版通过 POST /api/command 执行。</pre></div>`
 
   else if(page==='cron') pv.innerHTML=pageHead('定时任务','列表 / 启停 / 立即运行')+`<div class="pv-row">每日早报 · 08:00<span>启用</span></div><div class="pv-row">日记提醒 · 22:30<span>启用</span></div><div class="pv-row">健康检查 · 每小时<span>停用</span></div>`
-  else if(page==='logs') pv.innerHTML=pageHead('运行日志','最近 3 条 · 设计稿')+`<div class="pv-code">09:13 INFO  chat target=10001 len=18
+else if(page==='diary'){ pv.innerHTML=pageHead('日记','全部日期 · 数据来自 !diary / GET /api/diary')+`<div class="pv-grid"><div class="pv-card"><b id="diaryCount">—</b><small>全部日记</small></div><div class="pv-card"><b id="diaryFirst">—</b><small>最早</small></div><div class="pv-card"><b id="diaryLast">—</b><small>最近</small></div></div><div class="pv-sec">全部日记时间</div><div class="pv-chips" id="diaryDates"><button>加载中…</button></div><div class="pv-sec">日记内容</div><div id="diaryList"><div class="pv-row">正在读取 /api/diary<span>…</span></div></div>`; void loadDiaryPage() }
+    else if(page==='logs') pv.innerHTML=pageHead('运行日志','最近 3 条 · 设计稿')+`<div class="pv-code">09:13 INFO  chat target=10001 len=18
 09:12 INFO  command status
 09:04 WARN  search_images upstream timeout</div>`
 }
