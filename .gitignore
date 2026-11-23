@@ -74,3 +74,5 @@ keystore.properties
 # 本地签名密钥目录
 /key/
 .vscode/settings.json
+
+clients\android\android\keystore.properties
