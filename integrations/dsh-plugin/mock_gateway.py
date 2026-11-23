@@ -222,6 +222,7 @@ DIARY_ENTRIES = [
     {"id": 1, "date": "2026-11-19", "title": "方案通过", "content": "今天方案终于过了，客户没有继续改。", "mood": "轻松", "source": "!diary"},
     {"id": 2, "date": "2026-11-18", "title": "旅行目标 60%", "content": "这个月结余三千三，旅行目标到六成了。", "mood": "开心", "source": "!diary"},
     {"id": 3, "date": "2026-11-17", "title": "窗边读书", "content": "读完《十日终焉》第 3 章，窗边光线刚好。", "mood": "平静", "source": "!diary"},
+    {"id": 4, "date": "2026-10-28", "title": "十月小记", "content": "降温了，把夏天的衣服收起来，窗边开始有冷风。", "mood": "平静", "source": "!diary"},
 ]
 
 MEMORY_ITEMS = [
