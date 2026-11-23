@@ -165,6 +165,16 @@ public class MainActivity extends BridgeActivity {
             }
 
             @JavascriptInterface
+            public void openUrl(String url) {
+                runOnUiThread(() -> {
+                    try {
+                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+                    } catch (Exception ignored) {
+                    }
+                });
+            }
+
+            @JavascriptInterface
             public void openAppSettings() {
                 runOnUiThread(() -> {
                     Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + getPackageName()));
