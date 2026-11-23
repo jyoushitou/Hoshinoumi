@@ -212,6 +212,10 @@ body.embed #view{height:100dvh!important}
 .cf-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:5px}.cf-kpis div{background:#f8fbff;border-radius:7px;padding:5px 6px}.cf-kpis small{display:block;font-size:6px;color:#8a9bb0}.cf-kpis b{display:block;font-size:9px;margin-top:1px}.cf-svg{width:100%;height:132px;display:block;overflow:visible}.cf-svg text{font:6px -apple-system,BlinkMacSystemFont,"Microsoft YaHei",sans-serif;fill:#9aabc0}.cf-svg .axis{stroke:#f0f5fd}.cf-svg .bar{transform-box:fill-box;transform-origin:bottom;animation:cf-in .5s cubic-bezier(.2,.8,.2,1) both}.cf-svg .netline{fill:none;stroke:#0f766e;stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round}.cf-legend{display:flex;align-items:center;gap:8px;font-size:6.5px;color:#8a9bb0;margin-top:2px}.cf-legend i{display:inline-block;width:5px;height:5px;border-radius:2px;margin-right:2px}.cf-legend em{font-style:normal;margin-left:auto}.cf-empty{height:110px;display:flex;align-items:center;justify-content:center;color:#9aabc0;font-size:8px;background:#f8fbff;border-radius:8px}@keyframes cf-in{from{transform:scaleY(0)}to{transform:scaleY(1)}}
 
 .new-chat-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}.new-chat-actions button{height:52px;border:1px solid #dbe8ff;border-radius:11px;background:#f8fbff;color:#2563eb;font:9px inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}.new-chat-actions button b{font-size:16px;font-weight:400}.new-contact{display:flex;align-items:center;gap:9px;padding:9px 2px;border-bottom:1px solid #f1f5fb}.new-contact:last-of-type{border-bottom:0}.new-contact .avatar{width:32px;height:32px;border-radius:10px;font-size:10px}.new-contact .copy{flex:1}.new-contact .copy b{display:block;font-size:9.5px;color:#314a65}.new-contact .copy small{display:block;font-size:7px;color:#9aabc0}.new-contact button{height:26px;border:1px solid #dbe8ff;border-radius:7px;background:#eef4ff;color:#2563eb;font:8px inherit;padding:0 9px}
+
+.perm-head{display:flex;align-items:center;gap:9px;padding:14px 2px 9px;flex:none}.perm-head .back{width:30px;height:32px;border:0;background:none;color:#52708f;font-size:22px}.perm-head h2{margin:0;font-size:22px;letter-spacing:-.03em}.perm-head small{display:block;font-size:7px;letter-spacing:.16em;color:#9aabc0;margin-top:2px}.perm-note{margin:0 2px 10px;padding:8px 9px;border:1px solid #dbe8ff;border-radius:9px;background:#f4f9ff;color:#71859d;font-size:7.5px;line-height:1.6}.perm-body{padding-bottom:18px}.perm-group{background:#fff;border:1px solid #e3ebf7;border-radius:13px;padding:4px 11px;margin-bottom:9px}.perm-title{font-size:8px;color:#8a9bb0;padding:7px 0 2px;letter-spacing:.08em}.perm-row{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid #f1f5fb}.perm-row:last-child{border-bottom:0}.perm-row .ic{width:27px;height:27px;border-radius:8px;background:#f4f8ff;color:#52708f;display:grid;place-items:center;font-size:12px;flex:none}.perm-row .t{flex:1;min-width:0}.perm-row .t b{display:block;font-size:9.5px;color:#314a65}.perm-row .t small{display:block;font-size:7px;color:#9aabc0;margin-top:2px}.perm-open{height:22px;border:1px solid #dbe8ff;border-radius:6px;background:#f4f9ff;color:#2563eb;font:7px inherit;padding:0 7px;flex:none}.perm-state{font-size:7px;border-radius:5px;padding:2px 5px}.perm-state.warn{color:#b7791f;background:#fff8e6;border:1px solid #f2d491}.perm-state.ok{color:#1f9d6b;background:#eefbf5;border:1px solid #cdeee0}.perm-foot{text-align:center;color:#9aabc0;font-size:7px;line-height:1.7;padding:5px 0 12px}
+
+.perm-row .switch{width:32px;height:18px;border-radius:10px;background:#cbd5e1;position:relative;flex:none;cursor:pointer;transition:background .18s}.perm-row .switch.on{background:#2563eb}.perm-row .switch:after{content:"";position:absolute;width:14px;height:14px;border-radius:50%;background:#fff;top:2px;left:2px;transition:left .18s}.perm-row .switch.on:after{left:16px}
 </style>
 <link rel="stylesheet" href="mobile-native.css">
 </head>
@@ -369,7 +373,7 @@ screens.settings = `
   <div class="set-body">
     <div class="profile" onclick="openAccount()"><div class="avatar">J</div><div class="t"><b>jyoushitou</b><small>主人账号 · 已连接</small></div><span class="chev">›</span></div>
     <div class="set-group"><div class="set-row" data-quick onclick="openQuickSettings()"><span class="ic">★</span><div class="t">底部快捷栏</div><span class="val">${quickKeys.map(k=>allEntries.find(e=>e[0]===k)?.[2]).join(' / ')}</span></div></div>
-    <div class="set-group"><div class="set-row" onclick="toast('连接设置演示')"><span class="ic">⌁</span><div class="t">连接 / 后端入口</div><span class="val">127.0.0.1:27005</span></div><div class="set-row" onclick="toast('外观设置演示')"><span class="ic">◐</span><div class="t">外观</div><span class="val">跟随系统</span></div><div class="set-row"><span class="ic">◉</span><div class="t">消息通知</div><div class="switch on" onclick="toggleSwitch(this)"></div></div></div>
+    <div class="set-group"><div class="set-row" onclick="toast('连接设置演示')"><span class="ic">⌁</span><div class="t">连接 / 后端入口</div><span class="val">127.0.0.1:27005</span></div><div class="set-row" onclick="toast('外观设置演示')"><span class="ic">◐</span><div class="t">外观</div><span class="val">跟随系统</span></div><div class="set-row" onclick="go('permissions')"><span class="ic">☑</span><div class="t">权限与后台</div><span class="val">HyperOS</span><span class="chev">›</span></div><div class="set-row"><span class="ic">◉</span><div class="t">消息通知</div><div class="switch on" onclick="toggleSwitch(this)"></div></div></div>
     <div class="set-group"><div class="set-row"><span class="ic">◇</span><div class="t">记忆</div><div class="switch on" onclick="toggleSwitch(this)"></div></div><div class="set-row" onclick="toast('关系显示范围演示')"><span class="ic">♡</span><div class="t">关系显示范围</div><span class="val">仅自己</span></div><div class="set-row" onclick="toast('桌面端状态演示')"><span class="ic">⬡</span><div class="t">桌面端</div><span class="val">已安装</span></div></div>
     <div class="set-group"><div class="set-row" onclick="toast('帮助与反馈演示')"><span class="ic">?</span><div class="t">帮助与反馈</div><span class="chev">›</span></div><div class="set-row" onclick="toast('关于 Hoshinoumi Mobile')"><span class="ic">◌</span><div class="t">关于</div><span class="val">v35.7</span></div></div>
     <div class="about-card"><b>关于 Hoshinoumi</b><span>v35.7 · 设计演示</span><em>POWERED BY JYOUSHITOU</em><div style="display:flex;justify-content:center;gap:6px;margin-top:8px;flex-wrap:wrap"><a href="https://github.com/jyoushitou/Hoshinoumi" target="_blank" rel="noopener" style="font-size:8px;color:#2563eb;text-decoration:none;border:1px solid #dbe8ff;background:#f4f9ff;border-radius:6px;padding:2px 7px">GitHub</a><a href="https://github.com/jyoushitou" target="_blank" rel="noopener" style="font-size:8px;color:#607795;text-decoration:none;border:1px solid #e3ebf7;background:#fff;border-radius:6px;padding:2px 7px">作者 jyoushitou</a></div></div>
@@ -377,6 +381,30 @@ screens.settings = `
 </div>
 ${nav('settings')}`
 
+
+screens.permissions = `
+<div class="screen-body" style="flex:1;min-height:0;display:flex;flex-direction:column">
+  <div class="perm-head"><button class="back" onclick="go('settings')">‹</button><div><h2>权限与后台</h2><small>HYPEROS · 系统能力</small></div></div>
+  <div class="perm-note">开关反映系统真实权限；自启动和电池优化只能跳转系统设置，不伪造开启状态。</div>
+  <div class="set-body perm-body">
+    <div class="perm-group"><div class="perm-title">应用权限</div>
+      <div class="perm-row"><span class="ic">◉</span><div class="t"><b>通知</b><small>新消息 / 提醒</small></div><div class="switch on" onclick="toggleSwitch(this)"></div></div>
+      <div class="perm-row"><span class="ic">▧</span><div class="t"><b>相机</b><small>拍照发送</small></div><div class="switch" onclick="toggleSwitch(this)"></div></div>
+      <div class="perm-row"><span class="ic">♩</span><div class="t"><b>麦克风</b><small>语音消息</small></div><div class="switch on" onclick="toggleSwitch(this)"></div></div>
+      <div class="perm-row"><span class="ic">▤</span><div class="t"><b>照片与文件</b><small>发图 / 下载</small></div><div class="switch on" onclick="toggleSwitch(this)"></div></div>
+    </div>
+    <div class="perm-group"><div class="perm-title">HyperOS 后台</div>
+      <div class="perm-row"><span class="ic">↻</span><div class="t"><b>自启动</b><small>重启后保持连接</small></div><button class="perm-open" onclick="toast('打开 HyperOS 自启动设置（演示）')">去设置</button></div>
+      <div class="perm-row"><span class="ic">◔</span><div class="t"><b>电池优化</b><small>后台不被清理</small></div><button class="perm-open" onclick="toast('打开电池优化设置（演示）')">去设置</button></div>
+      <div class="perm-row"><span class="ic">◫</span><div class="t"><b>后台弹窗 / 悬浮窗</b><small>提醒和通话样式</small></div><div class="switch" onclick="toggleSwitch(this)"></div></div>
+    </div>
+    <div class="perm-group"><div class="perm-title">系统信息</div>
+      <div class="perm-row"><span class="ic">▣</span><div class="t"><b>系统 WebView</b><small>Android System WebView 108</small></div><span class="perm-state warn">偏低</span></div>
+      <div class="perm-row"><span class="ic">◈</span><div class="t"><b>HyperOS</b><small>2.0 · Android 15</small></div><span class="perm-state ok">已适配</span></div>
+    </div>
+    <div class="perm-foot">权限被拒绝时功能会明确提示，不假装成功。</div>
+  </div>
+</div>`
 
 screens.group = `
 <div class="screen-body" style="flex:1;min-height:0;display:flex;flex-direction:column">
