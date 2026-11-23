@@ -43,6 +43,7 @@ PUSH_OUTBOX = {}  # id -> notification job
 PUSH_TIMERS = {}  # device_id -> timer
 AUTH_USERS = {OWNER_QQ: {"password": "mock1234", "token": "mock-token", "role": "owner"}}
 AUTH_TOKENS = {"mock-token"}
+FINANCE_AUDIT = []
 SETUP_CODES = {"HSHM-2026": False}
 
 
@@ -354,6 +355,17 @@ class Handler(BaseHTTPRequestHandler):
     def _is_owner(self) -> bool:
         return self._current_user() == OWNER_QQ
 
+
+    def _finance_forbidden(self, path: str, method: str) -> bool:
+        if not (path.startswith("/api/savings") or path.startswith("/api/finance")):
+            return False
+        if self._is_owner():
+            return False
+        FINANCE_AUDIT.insert(0, {"at": _now(), "user": self._current_user() or "anonymous", "method": method, "path": path, "status": 403})
+        del FINANCE_AUDIT[100:]
+        self._json(403, {"error": "forbidden", "message": "财务数据仅主人可见"})
+        return True
+
     def _body(self):
         try:
             n = int(self.headers.get("Content-Length", "0") or 0)
@@ -406,10 +418,12 @@ class Handler(BaseHTTPRequestHandler):
         if not self._authorized():
             self._json(401, {"error": "unauthorized", "message": "bad token"})
             return
-        if (path.startswith("/api/savings") or path.startswith("/api/finance")) and not self._is_owner():
-            self._json(403, {"error": "forbidden", "message": "财务数据仅主人可见"})
+        if self._finance_forbidden(path, "GET"):
             return
 
+        if path == "/api/finance/audit":
+            self._json(200, {"ok": True, "data": FINANCE_AUDIT, "mock": True})
+            return
         if path == "/api/stickers":
             self._json(200, {"ok": True, "data": [{"id": x["id"], "name": x["name"], "url": x["url"], "mime": x["mime"]} for x in STICKERS], "mock": True})
             return
@@ -720,8 +734,7 @@ class Handler(BaseHTTPRequestHandler):
         if not self._authorized():
             self._json(401, {"error": "unauthorized", "message": "bad token"})
             return
-        if (path.startswith("/api/savings") or path.startswith("/api/finance")) and not self._is_owner():
-            self._json(403, {"error": "forbidden", "message": "财务数据仅主人可见"})
+        if self._finance_forbidden(path, "GET"):
             return
         if path == "/api/push/devices":
             platform = str(body.get("platform") or "android").strip()
