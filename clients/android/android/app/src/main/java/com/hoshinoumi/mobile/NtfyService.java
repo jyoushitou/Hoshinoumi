@@ -142,6 +142,9 @@ public class NtfyService extends Service {
                 .build();
         NotificationManager manager = getSystemService(NotificationManager.class);
         if (manager != null) manager.notify((int) (System.currentTimeMillis() & 0xffff), notification);
+        Intent refresh = new Intent("com.hoshinoumi.PUSH_RECEIVED");
+        refresh.setPackage(getPackageName());
+        sendBroadcast(refresh);
     }
 
     private static String trimSlash(String value) {

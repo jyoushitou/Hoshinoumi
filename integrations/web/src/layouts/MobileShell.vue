@@ -22,6 +22,11 @@ const isOwner = useIsOwner()
 const viewportHeight = ref(0)
 const chatDetail = ref(false)
 const keyboardOpen = ref(false)
+function onPushRefresh() {
+  if (!auth.loggedIn) return
+  void session.refresh()
+  if (chatDetail.value) void session.syncNow(true)
+}
 let visualViewport: VisualViewport | null = null
 const shellStyle = computed(() => viewportHeight.value > 0 ? { height: viewportHeight.value + 'px' } : {})
 function syncViewport() {
@@ -73,6 +78,7 @@ onMounted(() => {
   window.addEventListener('resize', syncViewport)
   window.addEventListener('focusin', syncViewportSoon)
   window.addEventListener('focusout', syncViewportSoon)
+  window.addEventListener('hoshinoumi:push', onPushRefresh)
   const keyboard = (window as any).Capacitor?.Plugins?.Keyboard
   keyboard?.addListener?.('keyboardWillShow', () => { keyboardOpen.value = true })
   keyboard?.addListener?.('keyboardWillHide', () => { keyboardOpen.value = false })
@@ -84,6 +90,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('resize', syncViewport)
   window.removeEventListener('focusin', syncViewportSoon)
   window.removeEventListener('focusout', syncViewportSoon)
+  window.removeEventListener('hoshinoumi:push', onPushRefresh)
   session.stopSync()
 })
 </script>

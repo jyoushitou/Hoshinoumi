@@ -46,6 +46,7 @@ public class MainActivity extends BridgeActivity {
     private PermissionRequest pendingWebPermission;
     private long updateDownloadId = -1;
     private BroadcastReceiver updateReceiver;
+    private BroadcastReceiver pushRefreshReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -118,6 +119,17 @@ public class MainActivity extends BridgeActivity {
             }
         };
         ContextCompat.registerReceiver(this, updateReceiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE), ContextCompat.RECEIVER_NOT_EXPORTED);
+
+        pushRefreshReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                try {
+                    getBridge().getWebView().evaluateJavascript("window.dispatchEvent(new CustomEvent('hoshinoumi:push'))", null);
+                } catch (Exception ignored) {
+                }
+            }
+        };
+        ContextCompat.registerReceiver(this, pushRefreshReceiver, new IntentFilter("com.hoshinoumi.PUSH_RECEIVED"), ContextCompat.RECEIVER_NOT_EXPORTED);
 
         getBridge().getWebView().addJavascriptInterface(new Object() {
             @JavascriptInterface
@@ -406,6 +418,9 @@ public class MainActivity extends BridgeActivity {
     public void onDestroy() {
         if (updateReceiver != null) {
             try { unregisterReceiver(updateReceiver); } catch (Exception ignored) { }
+        }
+        if (pushRefreshReceiver != null) {
+            try { unregisterReceiver(pushRefreshReceiver); } catch (Exception ignored) { }
         }
         super.onDestroy();
     }

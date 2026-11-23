@@ -289,18 +289,21 @@ class Handler(BaseHTTPRequestHandler):
             return
         if path == "/api/conversations":
             rows = []
-            for tid, items in MEMORY.items():
+            for tid in MEMORY.keys():
+                items = _history(tid)
+                last = items[-1] if items else {}
                 rows.append({
                     "target_id": tid,
                     "name": "测试私聊" if tid == OWNER_QQ else "测试群 " + tid,
                     "type": "private" if tid == OWNER_QQ else "group",
                     "member_count": 0 if tid == OWNER_QQ else 5,
                     "count": len(items),
-                    "last_message": items[-1][0][:40] if items else "",
-                    "updated_at": "2026-11-19 21:04:00",
+                    "last_message": str(last.get("content") or "")[:40],
+                    "updated_at": str(last.get("created_at") or ""),
                     "last_read_id": int(READS.get(tid, 0)),
-                    "unread": len([x for x in _history(tid) if int(x.get("id") or 0) > int(READS.get(tid, 0))]),
+                    "unread": len([x for x in items if int(x.get("id") or 0) > int(READS.get(tid, 0))]),
                 })
+            rows.sort(key=lambda row: str(row.get("updated_at") or ""), reverse=True)
             self._json(200, {"ok": True, "data": rows, "mock": True})
             return
         if path == "/api/read-state":
