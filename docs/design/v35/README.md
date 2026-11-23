@@ -42,6 +42,14 @@ docs/design/v35/
    └─ demo-overview.png               全部功能总览演示预览
 ```
 
+## 原生客户端设计
+
+深度优化客户端（Qt / Android 原生 / HyperOS / 平板 / EMUI）使用单独设计稿，不复用 Web/Vue 设计：
+
+- [native/README.md](native/README.md)
+
+旧 `qt/`、`android/`、`emui/` 目录只作旧版参考。
+
 ## Mobile v35.7 演示（已定稿）
 
 ```text

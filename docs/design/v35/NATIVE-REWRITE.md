@@ -31,6 +31,21 @@ v35.15 EMUI
 | HyperOS 平板 | Kotlin + Compose | Rust JNI/NDK + 多窗口/手写笔 |
 | EMUI | Kotlin + Compose（Android 基线） | Rust JNI/NDK + EMUI 系统能力 |
 
+## 设计稿必须先出
+
+每个原生客户端单独设计，不套 Web/Vue 稿：
+
+```text
+tokens / 组件
+登录 / 配置
+主界面 + 聊天
+业务页面
+权限 / 通知 / 后台
+深色 / 大字体 / 无障碍
+```
+
+目录与冻结规则：[native/README.md](native/README.md)。
+
 ## 性能口径
 
 ```text
