@@ -292,6 +292,21 @@ def _auto_savings(message: str) -> None:
     SAVINGS["total_cents"] = sum(int(x.get("amount_cents") or 0) for x in SAVINGS["entries"])
     SAVINGS["accounts"][0]["balance_cents"] = sum(int(x.get("amount_cents") or 0) for x in SAVINGS["entries"] if x.get("account") == "银行卡")
 
+
+def _finance_context() -> dict:
+    total = int(SAVINGS.get("total_cents") or 0)
+    frozen = sum(int(x.get("amount_cents") or 0) for x in SAVINGS.get("frozen", []))
+    available = total - frozen
+    goals = SAVINGS.get("goals", [])
+    goal_text = "；".join(f"{g['name']} {int(g['saved_cents'])/100:.0f}/{int(g['target_cents'])/100:.0f}" for g in goals)
+    return {
+        "total_cents": total,
+        "available_cents": available,
+        "frozen_cents": frozen,
+        "goals": goal_text,
+        "summary": f"总余额 {total/100:.2f} 元，可用 {available/100:.2f} 元，冻结 {frozen/100:.2f} 元" + (f"；目标：{goal_text}" if goal_text else ""),
+    }
+
 def _now() -> str:
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -541,8 +556,7 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200, {"ok": True, **SAVINGS, "mock": True})
             return
         if path == "/api/finance/context":
-            available = int(SAVINGS["total_cents"]) - sum(x["amount_cents"] for x in SAVINGS.get("frozen", []))
-            self._json(200, {"ok": True, "context": f"总余额 {SAVINGS['total_cents']/100:.2f} 元，可用 {available/100:.2f} 元，{len(SAVINGS.get('goals', []))} 个目标。", "ai_visible": True, "mock": True})
+            self._json(200, {"ok": True, "context": _finance_context(), "ai_visible": True, "mock": True})
             return
         if path == "/api/savings/events":
             self._json(200, {"ok": True, "events": [{"id": 1, "summary": "旅行计划", "created_at": "2026-11-01"}], "mock": True})
@@ -911,6 +925,8 @@ class Handler(BaseHTTPRequestHandler):
                 "存钱": "本月结余 ¥3,300，旅行目标 60%。",
                 "书": "我在看《十日终焉》，窗边光线刚好。",
             }.get(message, f"收到：{message}（mock 网关）")
+            if any(word in message for word in ("钱", "存钱", "余额", "花", "收入", "支出", "工资", "预算")):
+                reply = f"{reply}\n财务上下文：{_finance_context()['summary']}"
             _history(target).append({"id": len(_history(target)) + 1, "role": "user", "content": message, "created_at": _now()})
             _history(target).append({"id": len(_history(target)) + 1, "role": "assistant", "content": reply, "created_at": _now()})
             _auto_savings(message)
