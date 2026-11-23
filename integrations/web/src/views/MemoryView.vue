@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { http } from '@/api/client'
+const desktop = typeof window !== 'undefined' && window.matchMedia('(min-width: 821px)').matches
 const tab = ref<'memory' | 'events' | 'profile' | 'relation'>('memory')
 const stats = ref<{ total: number; targets: number; longterm: number } | null>(null)
 interface MemoryItem { id: number; content: string; tags: string[]; source: string; longterm: boolean; created_at: string; target_id: string }
@@ -57,15 +58,17 @@ const tabs = [
       <div><h1>记忆</h1><p>记忆本 / 事件 / 画像 / 关系</p></div>
       <span class="sync">只读预览</span>
     </header>
-    <nav class="tabs">
+    <nav v-if="!desktop" class="tabs">
       <button v-for="item in tabs" :key="item.key" type="button" :class="{ on: tab === item.key }" @click="tab = item.key">{{ item.label }}</button>
     </nav>
-    <div class="overview">
+    <div class="overview" :class="{ desktop }">
       <div class="stat"><b>{{ stats?.total ?? '—' }}</b><small>记忆条数</small></div>
       <div class="stat"><b>{{ stats?.targets ?? '—' }}</b><small>会话</small></div>
       <div class="stat"><b>{{ stats?.longterm ?? '—' }}</b><small>长期</small></div>
+      <div v-if="desktop" class="stat"><b>{{ events.length }}</b><small>事件</small></div>
     </div>
-    <div v-if="tab === 'memory'" class="memory-pane">
+    <div class="body" :class="{ desktop }">
+    <div v-if="desktop || tab === 'memory'" class="memory-pane">
       <div class="filters">
         <input v-model="query" placeholder="搜索记忆 / 标签">
         <button type="button" :class="{ on: longtermOnly }" @click="longtermOnly = !longtermOnly">长期</button>
@@ -80,6 +83,11 @@ const tabs = [
         </article>
       </div>
     </div>
+    <aside v-if="desktop" class="side">
+      <div class="panel"><div class="panel-title">最近事件</div><div v-if="!events.length" class="empty">暂无事件</div><div v-for="event in events.slice(0, 5)" v-else :key="event.id" class="event-row"><span class="dot" /><div><b>{{ event.title }}</b><small>{{ event.kind }} · {{ event.created_at.slice(0, 10) }}</small></div></div></div>
+      <div class="panel"><div class="panel-title">画像摘要</div><p v-if="profile" class="summary">{{ profile.summary }}</p><div v-if="profile" class="keywords"><span v-for="word in profile.keywords" :key="word">{{ word }}</span></div><div v-else class="empty">暂无画像</div></div>
+      <div class="panel"><div class="panel-title">关系</div><RouterLink to="/relation" class="link">打开关系页</RouterLink></div>
+    </aside>
     <div v-else-if="tab === 'events'" class="list">
       <div v-if="!events.length" class="empty">暂无事件</div>
       <div v-for="event in events" v-else :key="event.id" class="event-row"><span class="dot" /><div><b>{{ event.title }}</b><small>{{ event.kind }} · {{ event.created_at.slice(0, 10) }}</small></div></div>
@@ -89,6 +97,7 @@ const tabs = [
       <template v-else><p class="summary">{{ profile.summary }}</p><div class="keywords"><span v-for="word in profile.keywords" :key="word">{{ word }}</span></div></template>
     </div>
     <div v-else class="empty"><b>关系</b><p>关系数据由关系页提供。</p><RouterLink to="/relation" class="link">打开关系页</RouterLink></div>
+    </div>
   </section>
 </template>
 
@@ -102,6 +111,6 @@ const tabs = [
 .event-row{display:flex;gap:9px;align-items:flex-start;background:#fff;border:1px solid #e3ebf7;border-radius:10px;padding:9px 10px}.event-row .dot{width:7px;height:7px;border-radius:50%;background:#2563eb;margin-top:3px;flex:none}.event-row b{display:block;font-size:10px;color:#314a65}.event-row small{display:block;font-size:7.5px;color:#9aabc0;margin-top:2px}
 .profile{background:#fff;border:1px solid #e3ebf7;border-radius:11px;padding:11px}.summary{margin:0;font-size:10.5px;line-height:1.7;color:#526982}.keywords{display:flex;gap:5px;flex-wrap:wrap;margin-top:9px}.keywords span{font-size:8px;color:#2563eb;background:#eef4ff;border:1px solid #dbe8ff;border-radius:20px;padding:2px 7px}.link{display:inline-block;margin-top:8px;font-size:9px;color:#2563eb}
 .memory-pane{display:grid;gap:7px}.filters{display:flex;gap:6px}.filters input{flex:1;min-width:0;height:30px;border:1px solid #e3ebf7;border-radius:8px;background:#fff;padding:0 9px;font:9px inherit;outline:0}.filters button{height:30px;border:1px solid #e3ebf7;border-radius:8px;background:#fff;color:#6b7c95;font:8.5px inherit;padding:0 9px;cursor:pointer}.filters button.on{background:#eef4ff;border-color:#c7dcff;color:#2563eb}.actions{display:flex;gap:5px;justify-content:flex-end;margin-top:7px}.actions button{border:1px solid #e3ebf7;background:#f8fbff;color:#607795;border-radius:5px;font:7.5px inherit;padding:2px 6px;cursor:pointer}.actions button.danger{color:#b91c1c;border-color:#fecaca;background:#fff5f5}
-@media(min-width:821px){.memory{padding:22px 24px}.overview{grid-template-columns:repeat(3,minmax(0,1fr));max-width:620px}.list{grid-template-columns:repeat(2,minmax(0,1fr))}.empty,.profile{max-width:620px}}
+@media(min-width:821px){.memory{padding:22px 24px}.body.desktop{display:grid;grid-template-columns:1.55fr 1fr;gap:10px;align-items:start}.overview.desktop{grid-template-columns:repeat(4,minmax(0,1fr));max-width:none}.body.desktop .list{grid-template-columns:1fr}.side{display:grid;gap:9px}.panel{background:#fff;border:1px solid #e3ebf7;border-radius:11px;padding:11px}.panel-title{font-size:9px;font-weight:700;color:#52708f;margin-bottom:7px}.panel .empty{padding:12px;border:0}.empty,.profile{max-width:620px}}
 .head,.tabs,.overview,.empty{animation:mem-in .28s cubic-bezier(.22,1,.36,1) both}.tabs{animation-delay:.03s}.overview{animation-delay:.06s}.empty{animation-delay:.09s}@keyframes mem-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}@media(prefers-reduced-motion:reduce){.head,.tabs,.overview,.empty{animation:none}}
 </style>
