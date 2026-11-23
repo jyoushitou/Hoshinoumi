@@ -34,6 +34,8 @@ VERSION = "35.2.25.0"
 SCHEMA = 35
 OWNER_QQ = "10001"
 READS = {}  # target_id -> last_read_id
+CUSTOM_GROUPS = {}
+GROUP_META = {}
 PUSH_DEVICES = {}  # id -> device
 PUSH_PREFS = {"messages": True, "reminders": True, "dnd": False}
 PUSH_OUTBOX = {}  # id -> notification job
@@ -133,7 +135,10 @@ GROUP_HISTORY = [
 
 
 def _history(target):
-    return HISTORY if str(target) in ("", OWNER_QQ) else (GROUP_HISTORY if str(target) == "10002" else [])
+    key = str(target)
+    if key in CUSTOM_GROUPS:
+        return CUSTOM_GROUPS[key]
+    return HISTORY if key in ("", OWNER_QQ) else (GROUP_HISTORY if key == "10002" else [])
 
 def _all_history():
     return list(HISTORY) + list(GROUP_HISTORY)
@@ -344,9 +349,9 @@ class Handler(BaseHTTPRequestHandler):
                 last = items[-1] if items else {}
                 rows.append({
                     "target_id": tid,
-                    "name": "测试私聊" if tid == OWNER_QQ else "测试群 " + tid,
+                    "name": ("测试私聊" if tid == OWNER_QQ else GROUP_META.get(tid, {}).get("name", "测试群 " + tid)),
                     "type": "private" if tid == OWNER_QQ else "group",
-                    "member_count": 0 if tid == OWNER_QQ else 5,
+                    "member_count": 0 if tid == OWNER_QQ else GROUP_META.get(tid, {}).get("member_count", 5),
                     "count": len(items),
                     "last_message": str(last.get("content") or "")[:40],
                     "updated_at": str(last.get("created_at") or ""),
@@ -506,6 +511,18 @@ class Handler(BaseHTTPRequestHandler):
         body = self._body()
         if path.startswith("/internal/"):
             self._json(404, {"error": "not_found", "path": path})
+            return
+        if path == "/api/groups":
+            name = str(body.get("name") or "").strip()
+            members = body.get("members") or []
+            if len(name) < 1 or len(name) > 40:
+                self._json(400, {"ok": False, "error": "bad_name", "message": "群名长度不正确"})
+                return
+            gid = "h_" + uuid.uuid4().hex[:12]
+            CUSTOM_GROUPS[gid] = []
+            MEMORY[gid] = []
+            GROUP_META[gid] = {"name": name, "member_count": len(members) if isinstance(members, list) else 0, "members": members}
+            self._json(200, {"ok": True, "id": gid, "name": name, "type": "group", "members": members, "mock": True})
             return
         if path == "/api/auth/login":
             qq = str(body.get("qq") or "").strip()
