@@ -37,4 +37,5 @@ const tabs = [
 .overview{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:11px}.stat{background:#fff;border:1px solid #e3ebf7;border-radius:11px;padding:10px;text-align:center}.stat b{display:block;font-size:19px;color:#1e3a5f}.stat small{display:block;font-size:8px;color:#9aabc0;margin-top:2px}
 .empty{background:#fff;border:1px dashed #cfe0f7;border-radius:12px;padding:26px;text-align:center;color:#8a9bb0}.empty b{color:#314a65;font-size:11px}.empty p{font-size:9px;margin:5px 0 0}
 @media(min-width:821px){.memory{padding:22px 24px}.overview{max-width:520px}.empty{max-width:520px}}
+.head,.tabs,.overview,.empty{animation:mem-in .28s cubic-bezier(.22,1,.36,1) both}.tabs{animation-delay:.03s}.overview{animation-delay:.06s}.empty{animation-delay:.09s}@keyframes mem-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}@media(prefers-reduced-motion:reduce){.head,.tabs,.overview,.empty{animation:none}}
 </style>
