@@ -525,6 +525,7 @@
   function openSearch(force) {
     const on = force !== undefined ? force : !searchBar.classList.contains('on');
     searchBar.classList.toggle('on', on);
+    searchBtn.style.display = on ? 'none' : '';
     if (on) { searchBar.querySelector('input').focus(); }
     else { clearSearchMarks(); searchBar.querySelector('input').value = ''; searchBar.querySelector('.count').textContent = ''; }
   }

@@ -216,7 +216,7 @@ watch(() => session.activeTarget, () => { searchOpen.value = false; searchQuery.
             <template v-if="activeConversation?.type === 'group'">群聊 · {{ activeConversation.member_count || 0 }} 人</template><template v-else>私聊 · 记忆同步</template> <span v-if="session.connected" class="pill">在线</span><span class="sync-pill" :class="session.syncState">{{ syncLabel }}</span>
           </div>
         </div>
-      </div><button class="tbtn" @click="toggleSearch">
+      </div><button v-if="!searchOpen" class="tbtn" @click="toggleSearch">
         ⌕ 聊天内搜索
       </button><button class="tbtn">
         ⋯
