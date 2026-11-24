@@ -8,7 +8,7 @@
       "version": "35.9.3.13",
       "versionCode": 359313,
       "file": "latest.apk",
-      "notes": "Debug 包，安装前先卸载旧签名版本",
+      "notes": "Release 包，直接覆盖安装",
       "recommended": true
     },
     {
@@ -19,7 +19,7 @@
       "version": "35.6.0",
       "versionCode": 0,
       "file": "Hoshinoumi-35.6.0-win.zip",
-      "notes": "Electron 套壳便携包，解压后运行 Hoshinoumi.exe",
+      "notes": "Electron 套壳 Release 便携包，解压后运行 Hoshinoumi.exe",
       "recommended": false
     }
   ]
