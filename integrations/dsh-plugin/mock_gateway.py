@@ -610,6 +610,10 @@ class Handler(BaseHTTPRequestHandler):
                 "sticker_api": True,
                 "stats": {"images": 12, "memories": 4, "events": 7, "logs": len(LOGS), "keywords": 9, "ai_responses": 21},
                 "runtime": {"dialogue_targets": len(MEMORY), "global_keywords": 9, "stickers": len(STICKERS), "daily_triggers": 2},
+                "napcat": {"connected": True, "port": 3001, "mode": "WebSocket"},
+                "db": {"engine": "MySQL 8", "tables": 42, "size_mb": 128},
+                "backup": {"last_at": "2026-11-24 03:00", "size_mb": 84, "kept": 7, "checksum": "ok"},
+                "uptime_seconds": 6 * 86400 + 4 * 3600,
             })
             return
         if path == "/api/conversations":

@@ -898,9 +898,12 @@
       return;
     }
     if (name === 'info') {
-      pageView.innerHTML = '<div class="page-head"><div><h2>信息</h2><p>v35.5 Web 演示 · MOCK 数据 · 运行状态 / 数据库 / 计划 / 阅读</p></div></div>' +
+      pageView.innerHTML = '<div class="page-head"><div><h2>信息</h2><p>v35.5 Web 演示 · MOCK 数据 · 实例 / 通道 / 存储 / 备份 / 计划 / 阅读</p></div></div>' +
         '<div class="info-stats"><div class="info-stat"><div class="k">版本</div><div class="v">v35.5</div></div><div class="info-stat"><div class="k">schema</div><div class="v">35</div></div><div class="info-stat"><div class="k">数据表</div><div class="v">42</div></div><div class="info-stat"><div class="k">命令</div><div class="v">51</div></div></div>' +
         '<div class="info-grid">' +
+        '<div class="info-panel"><h3>实例 <span>v35.2.25.0</span></h3><div class="info-row"><span>后端版本</span><b>v35.2.25.0</b></div><div class="info-row"><span>前端版本</span><b>v35.5 · Web</b></div><div class="info-row"><span>schema</span><b>35</b></div><div class="info-row"><span>主人 QQ</span><b>10001</b></div></div>' +
+        '<div class="info-panel"><h3>存储 <span>本机</span></h3><div class="info-row"><span>数据库</span><b>MySQL 8 · 128 MB</b></div><div class="info-row"><span>附件</span><b>1.2 GB</b></div><div class="info-row"><span>缓存</span><b>128 MB</b></div><div class="info-row"><span>日志</span><b>保留 7 天</b></div></div>' +
+        '<div class="info-panel"><h3>备份 <span>正常</span></h3><div class="info-row"><span>最近成功</span><b>11-24 03:00</b></div><div class="info-row"><span>大小</span><b>84 MB</b></div><div class="info-row"><span>保留</span><b>7 份</b></div><div class="info-row"><span>校验</span><b class="ok">通过</b></div></div>' +
         '<div class="info-panel"><h3>运行 <span>已连接</span></h3><div class="info-row"><span>后端</span><b>127.0.0.1:27004</b></div><div class="info-row"><span>延迟</span><b class="ok">42ms</b></div><div class="info-row"><span>运行时长</span><b>6 天 4 小时</b></div><div class="info-row"><span>API 余额</span><b>¥126.40</b></div></div>' +
         '<div class="info-panel"><h3>数据库 <span>schema 35</span></h3><div class="info-row"><span>引擎</span><b>MySQL 8</b></div><div class="info-row"><span>表数量</span><b>42</b></div><div class="info-row"><span>记忆 / 事件</span><b>4 / 7</b></div><div class="info-row"><span>日志</span><b>24 条</b></div></div>' +
         '<div class="info-panel"><h3>日志 <span>最近 24h</span></h3><div class="info-row"><span>INFO</span><b>23 条</b></div><div class="info-row"><span>WARN</span><b class="warn">1 条</b></div><div class="info-row"><span>最新</span><b>09:13 chat len=18</b></div><div class="info-row"><span>失败</span><b class="warn">search_images timeout</b></div></div>' +

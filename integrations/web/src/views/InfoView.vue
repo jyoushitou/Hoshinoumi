@@ -4,7 +4,7 @@ import { http } from '@/api/client'
 
 type Section = 'config' | 'backup' | 'plan' | 'account' | 'reading' | 'gateway'
 const section = ref<Section>('config')
-const status = ref<{ status?: string; master_qq?: string; schema?: number } | null>(null)
+const status = ref<{ status?: string; master_qq?: string; schema?: number; version?: string; uptime_seconds?: number; napcat?: { connected?: boolean; port?: number; mode?: string }; db?: { engine?: string; tables?: number; size_mb?: number }; backup?: { last_at?: string; size_mb?: number; kept?: number; checksum?: string } } | null>(null)
 const error = ref('')
 interface Backup { manifest?: { created_at?: string; counts?: Record<string, number>; checksums?: Record<string, string> }; db?: unknown }
 const backup = ref<Backup | null>(null)
@@ -78,6 +78,7 @@ const current = computed(() => sections.find(item => item.key === section.value)
 async function load() {
   try { status.value = await http.get('/api/status'); error.value = '' } catch { status.value = null; error.value = '无后端连接' }
 }
+const uptimeLabel = computed(() => { const seconds = Number(status.value?.uptime_seconds || 0); if (!seconds) return '—'; const days = Math.floor(seconds / 86400); const hours = Math.floor((seconds % 86400) / 3600); return days ? `${days} 天 ${hours} 小时` : `${hours} 小时` })
 onMounted(load)
 </script>
 
@@ -89,6 +90,12 @@ onMounted(load)
       <div><small>后端</small><b>{{ status?.status || '—' }}</b></div>
       <div><small>主人 QQ</small><b>{{ status?.master_qq || '—' }}</b></div>
       <div><small>schema</small><b>{{ status?.schema ?? '—' }}</b></div>
+    </div>
+    <div class="runtime-grid">
+      <div class="runtime-card"><small>实例</small><b>{{ status?.version || '—' }}</b><span>schema {{ status?.schema ?? '—' }} · {{ uptimeLabel }}</span></div>
+      <div class="runtime-card"><small>存储</small><b>{{ status?.db?.engine || '—' }}</b><span>{{ status?.db?.tables ?? '—' }} 张表 · {{ status?.db?.size_mb ?? '—' }} MB</span></div>
+      <div class="runtime-card"><small>NapCat</small><b :class="status?.napcat?.connected ? 'on' : 'off'">{{ status?.napcat?.connected ? '已连接' : '未连接' }}</b><span>WS {{ status?.napcat?.port ?? '—' }} · {{ status?.napcat?.mode || '—' }}</span></div>
+      <div class="runtime-card"><small>备份</small><b>{{ status?.backup?.last_at || '—' }}</b><span>{{ status?.backup?.size_mb ?? '—' }} MB · 保留 {{ status?.backup?.kept ?? '—' }} 份</span></div>
     </div>
     <div class="grid">
       <button v-for="item in sections" :key="item.key" type="button" class="entry" :class="{ on: section === item.key }" @click="section = item.key"><span class="icon">{{ item.icon }}</span><span><b>{{ item.title }}</b><small>{{ item.desc }}</small></span><em>›</em></button>
@@ -120,6 +127,6 @@ onMounted(load)
 .overview{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:10px}.overview div{background:#fff;border:1px solid #e3ebf7;border-radius:10px;padding:9px}.overview small{display:block;font-size:7.5px;color:#9aabc0}.overview b{display:block;font-size:12px;color:#1e3a5f;margin-top:3px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px}.entry{display:flex;align-items:center;gap:7px;text-align:left;background:#fff;border:1px solid #e3ebf7;border-radius:10px;padding:9px;cursor:pointer}.entry.on{background:#eef4ff;border-color:#c7dcff}.icon{width:26px;height:26px;border-radius:8px;background:#f4f8ff;display:grid;place-items:center;color:#52708f;flex:none}.entry b{display:block;font-size:9.5px;color:#314a65}.entry small{display:block;font-size:7px;color:#9aabc0;margin-top:2px}.entry em{margin-left:auto;font-style:normal;color:#9aabc0}
 .panel{background:#fff;border:1px solid #e3ebf7;border-radius:12px;padding:11px}.panel-head{display:flex;align-items:baseline;gap:7px;margin-bottom:7px}.progress{display:block!important;padding:3px 0!important;border:0!important}.progress i{display:block;height:4px;border-radius:3px;background:#2563eb;transition:width .2s}.progress small{display:block;font-size:7.5px;color:#8a9bb0;margin-top:3px}.cli-note{font-size:7.5px;color:#8a9bb0;line-height:1.6}.cli-note code{font-family:ui-monospace,monospace;color:#526982}.drill{margin-top:9px;border-top:1px solid #f1f5fb;padding-top:8px}.drill .primary{height:34px;min-height:34px;max-height:34px;font-size:10px}.drill-info{font-size:7.5px;color:#405872;margin-top:5px;line-height:1.6}.drill-note{font-size:7px;color:#9aabc0;margin-top:2px}.import-box{display:grid!important;width:100%!important;max-width:none;justify-self:stretch;grid-template-columns:minmax(0,1fr);margin-top:9px;border-top:1px solid #f1f5fb;padding-top:9px;display:grid;gap:6px;min-width:0}.import-title{font-size:8px;color:#8a9bb0}.file-pick{display:block;text-align:center;border:1px solid #dbe8ff;border-radius:7px;background:#f4f9ff;color:#2563eb;font-size:9px;line-height:28px;height:28px;cursor:pointer}.file-pick input{display:none}.import-box textarea{width:100%;min-width:0;box-sizing:border-box;min-height:64px;border:1px solid #e3ebf7;border-radius:7px;background:#f8fbff;padding:6px;font:8px ui-monospace,monospace;resize:vertical}.import-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;min-width:0}.import-actions button{min-width:0;height:28px;border:1px solid #dbe8ff;border-radius:6px;background:#f4f9ff;color:#2563eb;font:9px inherit;line-height:1;white-space:nowrap;cursor:pointer;padding:0 2px}.import-actions button.danger{color:#b91c1c;border-color:#fecaca;background:#fff5f5}.import-state{font-size:8px;color:#6b7c95}.primary{width:100%;height:34px;min-height:34px;max-height:34px;margin-top:8px;border:0;border-radius:7px;background:#2563eb;color:#fff;font:9px inherit;font-weight:700;cursor:pointer}.panel-head b{font-size:10px;color:#1e3a5f}.panel-head span{font-size:7.5px;color:#9aabc0}.rows>div{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid #f1f5fb}.rows>div:last-child{border-bottom:0}.rows>div>span{font-size:8.5px;color:#8a9bb0}.rows>div>b{font-size:8.5px;color:#405872;font-weight:600;text-align:right;word-break:break-all}.notice{border:1px solid #fecaca;background:#fff5f5;color:#b91c1c;border-radius:8px;padding:7px 9px;font-size:9px;margin-bottom:8px}
-@media(min-width:821px){.info{padding:22px 24px;max-width:980px}.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.overview{max-width:620px}}
+.runtime-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-bottom:10px}.runtime-card{background:#fff;border:1px solid #e3ebf7;border-radius:10px;padding:9px}.runtime-card small{display:block;font-size:7.5px;color:#9aabc0;letter-spacing:.06em}.runtime-card b{display:block;font-size:12px;color:#1e3a5f;margin-top:3px}.runtime-card b.on{color:#1f9d6b}.runtime-card b.off{color:#b23b52}.runtime-card span{display:block;font-size:7.5px;color:#8a9bb0;margin-top:3px;line-height:1.5}@media(min-width:821px){.info{padding:22px 24px;max-width:none;width:100%}.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.overview{max-width:none}}
 .head,.overview,.grid,.panel{animation:info-in .28s cubic-bezier(.22,1,.36,1) both}.overview{animation-delay:.03s}.grid{animation-delay:.06s}.panel{animation-delay:.09s}.entry{transition:background .18s,border-color .18s,transform .18s}.entry:hover{transform:translateY(-1px)}@keyframes info-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}@media(prefers-reduced-motion:reduce){.head,.overview,.grid,.panel{animation:none}}
 </style>
