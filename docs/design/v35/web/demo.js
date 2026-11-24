@@ -729,15 +729,41 @@
     }
     if (name === 'plugins') {
       const pluginCard = (title, desc, action, label) => '<div class="pcard2 plugin-card"><div class="plugin-copy"><h3>' + title + '</h3><p>' + desc + '</p></div><button class="plugin-action" onclick="toast(&quot;' + action + '（演示）&quot;)">' + label + '</button></div>';
-      pageView.innerHTML = '<div class="page-head"><div><h2>插件</h2><p>安装 / 审批 / 权限 / 错误 · 独立管理页</p></div><button class="back" id="backChat">← 返回聊天</button></div>' +
+      pageView.innerHTML = '<div class="page-head"><div><h2>插件</h2><p>安装 / 审批 / 权限 / 错误 · 独立管理页</p></div><button class="back" id="pluginAdd" style="margin-left:auto">＋ 安装插件</button><button class="back" id="backChat">← 返回聊天</button></div>' +
         '<div class="pgrid">' +
         '<div class="pcard2 plugin-section"><h3>已安装 6</h3>' + pluginCard('天气 · weather', '读天气 · network · v1.2.0', '已停用 weather', '停用') + pluginCard('读书摘要 · reader', '读写书架 · filesystem / db · v1.0.3', '已停用 reader', '停用') + pluginCard('音乐 · music', '播放 / 搜索 · network · v0.9.1', '已启用 music', '启用') + '</div>' +
         '<div class="pcard2 plugin-section"><h3>待审批 1</h3><div class="plugin-card"><div class="plugin-copy"><h3>记账助手 · ledger</h3><p>读写财务 · finance · 仅 owner</p></div><div class="plugin-actions"><button class="plugin-action primary" onclick="toast(&quot;已批准 ledger（演示）&quot;)">批准</button><button class="plugin-action danger" onclick="toast(&quot;已拒绝 ledger（演示）&quot;)">拒绝</button></div></div><h3 style="margin-top:14px">权限</h3><div class="plugin-line"><span>network</span><b>2 个插件</b></div><div class="plugin-line"><span>filesystem</span><b>1 个</b></div><div class="plugin-line"><span>finance</span><b>需 owner</b></div></div>' +
-        '<div class="pcard2 plugin-section"><h3>其他已安装</h3>' + pluginCard('面板 · dashboard', '前端 slot · read-only · v1.0.0', '已停用 dashboard', '停用') + pluginCard('提醒 · reminder', '定时提醒 · notifications · v1.0.2', '已停用 reminder', '停用') + '</div>' +
+        '<div class="pcard2 plugin-section" id="webInstalledExtra"><h3>其他已安装</h3>' + pluginCard('面板 · dashboard', '前端 slot · read-only · v1.0.0', '已停用 dashboard', '停用') + pluginCard('提醒 · reminder', '定时提醒 · notifications · v1.0.2', '已停用 reminder', '停用') + '</div>' +
         '<div class="pcard2 plugin-section"><h3>错误</h3><div class="plugin-line"><span>music 播放失败</span><b>20:12</b></div><div class="plugin-line"><span>weather 请求超时</span><b>18:03</b></div></div></div>';
       pageView.classList.add('on');
       [top, msgs, composer, searchBar].forEach(x => x.classList.add('chat-hide'));
       document.querySelectorAll('.rnav').forEach(x => x.classList.toggle('on', x.dataset.page === 'plugins'));
+      const addPluginWeb = (name, source) => {
+        const section = document.getElementById('webInstalledExtra');
+        if (!section) return;
+        const card = pluginCard(name + ' · imported', (source === 'url' ? '网址导入' : '文件导入') + ' · read-only · v0.1.0', '已导入 ' + name, '停用');
+        section.insertAdjacentHTML('beforeend', card);
+        toast((source === 'url' ? '已从网址导入 ' : '已从文件导入 ') + name + '（演示）');
+      };
+      document.getElementById('pluginAdd').addEventListener('click', () => {
+        const modal = document.createElement('div');
+        modal.className = 'savings-modal';
+        modal.innerHTML = '<div class="box"><h3>安装插件</h3><label>插件网址<input id="webPluginUrl" placeholder="https://example.com/plugin.json"></label><button class="back" id="webPluginUrlBtn" style="width:100%;margin-top:8px">从网址安装</button><label style="margin-top:10px">选择插件文件<input id="webPluginFile" type="file" accept=".json,.zip,.hoshinoumi"></label><div class="acts"><button id="webPluginCancel">取消</button></div></div>';
+        document.body.appendChild(modal);
+        const close = () => modal.remove();
+        modal.addEventListener('click', event => { if (event.target === modal) close(); });
+        modal.querySelector('#webPluginCancel').addEventListener('click', close);
+        modal.querySelector('#webPluginUrlBtn').addEventListener('click', () => {
+          const raw = modal.querySelector('#webPluginUrl').value.trim();
+          if (!/^https?:\/\/[^\s]+$/i.test(raw)) { toast('请输入完整的 http(s) 插件网址'); return; }
+          let name = '网址插件'; try { name = new URL(raw).hostname; } catch (e) {}
+          addPluginWeb(name, 'url'); close();
+        });
+        modal.querySelector('#webPluginFile').addEventListener('change', event => {
+          const file = event.target.files && event.target.files[0]; if (!file) return;
+          addPluginWeb(file.name.replace(/\.(json|zip|hoshinoumi)$/i, ''), 'file'); close();
+        });
+      });
       document.getElementById('backChat').addEventListener('click', () => showChat());
       return;
     }
