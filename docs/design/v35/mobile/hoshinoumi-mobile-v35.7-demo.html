@@ -228,6 +228,9 @@ body.embed #view{height:100dvh!important}
 .mode-row b{display:block;font-size:10px;color:#1e3a5f}.mode-row small{display:block;font-size:7.5px;color:#8a9bb0;margin-top:2px}
 .mode-row em{margin-left:auto;font-style:normal;font-size:7.5px;color:#9aabc0}
 .codeblock{margin-top:6px;padding:8px 9px;border-radius:8px;background:#0f172a;color:#dbeafe;font:8px/1.7 ui-monospace,monospace;overflow-x:auto}
+
+body.embed .download-entry{display:none!important}
+body.embed .nav-all-grid button[onclick*="downloads"],body.embed .nav-row .tab[onclick*="downloads"]{display:none!important}
 </style>
 <link rel="stylesheet" href="mobile-native.css">
 </head>
@@ -324,7 +327,7 @@ function filterChats(el, kind){
 screens.chats = `
 <div class="screen-body" style="flex:1;min-height:0;display:flex;flex-direction:column">
   <div class="mobile-head">
-    <div class="row1"><div class="avatar bot">奈</div><div class="brand">HOSHINOUMI<small>REC · ONLINE</small></div><div class="spacer"></div><div class="icon-btn" style="position:relative" onclick="openNotifications()">🔔<span class="bell-dot"></span></div><div class="icon-btn" onclick="openSearch()" title="搜索"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m16.5 16.5 4 4"></path></svg></div><div class="icon-btn" onclick="go('downloads')" title="下载"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v11m0 0 4-4m-4 4-4-4M5 20h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="icon-btn" onclick="openNewChat()">＋</div></div>
+    <div class="row1"><div class="avatar bot">奈</div><div class="brand">HOSHINOUMI<small>REC · ONLINE</small></div><div class="spacer"></div><div class="icon-btn" style="position:relative" onclick="openNotifications()">🔔<span class="bell-dot"></span></div><div class="icon-btn" onclick="openSearch()" title="搜索"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m16.5 16.5 4 4"></path></svg></div><div class="icon-btn" class="icon-btn download-entry" onclick="go('downloads')" title="下载"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v11m0 0 4-4m-4 4-4-4M5 20h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="icon-btn" onclick="openNewChat()">＋</div></div>
     <div class="search" onclick="openSearch()"><span class="search-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m16.5 16.5 4 4"></path></svg></span>搜索会话 / 记忆 / 命令<span class="k">⌘K</span></div>
     <div class="chips"><div class="chip on" onclick="filterChats(this,'all')">全部</div><div class="chip" onclick="filterChats(this,'private')">私聊</div><div class="chip" onclick="filterChats(this,'group')">群聊</div><div class="chip" onclick="filterChats(this,'mode')">模式</div></div>
   </div>
@@ -999,6 +1002,7 @@ document.addEventListener('pointerup', e => {
 
 
 function go(name){
+  if(document.body.classList.contains('embed') && name==='downloads'){ toast('客户端内不提供下载'); return }
   currentScreen = name
   if (navExpanded) { navExpanded = false; document.body.classList.remove('nav-expanded') }
   document.querySelector('.demo-overlay')?.remove(); app.innerHTML = screens[name]
