@@ -25,7 +25,7 @@ body{
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .app{display:grid;grid-template-columns:64px 292px minmax(0,1fr) 304px;height:100vh;transition:grid-template-columns .28s cubic-bezier(.22,1,.36,1)}
 /* rail */
-.rail{position:relative;transition:opacity .2s,transform .28s;background:rgba(8,15,27,.92);border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding:14px 0;gap:8px}
+.rail .logo{cursor:pointer;transition:filter .18s,transform .18s}.rail .logo:hover{filter:brightness(1.12);transform:translateY(-1px)}.rail{position:relative;transition:opacity .2s,transform .28s;background:rgba(8,15,27,.92);border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding:14px 0;gap:8px}
 .logo{width:38px;height:38px;display:grid;place-items:center;margin-bottom:14px;border-radius:12px;background:linear-gradient(145deg,rgba(126,231,255,.16),rgba(193,140,255,.12));border:1px solid rgba(126,231,255,.18)}
 .logo img{width:24px;height:24px}
 .rnav{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;color:#7f93b3;font-size:17px;position:relative}
@@ -222,8 +222,6 @@ body.rail-hidden .side .brand{padding-left:36px}
 .context{padding-top:46px}
 .edge-handle{display:none;position:fixed;top:52px;z-index:30;width:26px;height:56px;border:1px solid #c7dcff;background:#eef4ff;color:#2563eb;font:16px inherit;font-weight:700;cursor:pointer;align-items:center;justify-content:center;padding:0;box-shadow:0 4px 12px rgba(37,99,235,.12)}
 .edge-handle.right-edge{right:0;border-right:0;border-radius:8px 0 0 8px}
-.rail-collapse{position:absolute;top:8px;right:7px;width:17px;height:17px;border:0;border-radius:5px;background:transparent;color:#9aabc0;font:12px/1 inherit;cursor:pointer;opacity:.45;padding:0;z-index:6;transition:opacity .18s,background .18s,color .18s}
-.rail:hover .rail-collapse{opacity:1;background:#eef4ff;color:#2563eb}
 .rail-toggle{width:30px;height:30px;border:1px solid #dbe8ff;border-radius:8px;background:#f4f9ff;color:#2563eb;font:13px inherit;cursor:pointer;margin-bottom:2px}
 .rail-toggle.on{background:#2563eb;color:#fff;border-color:#2563eb}
 body.right-hidden #reopenRight{display:flex}
@@ -245,8 +243,7 @@ body.rail-hidden.left-hidden #reopenRailEdge{display:flex}
 <div class="app">
 
   <aside class="rail">
-    <div class="logo"><img src="../../logo/hoshinoumi.svg" alt="Hoshinoumi"></div>
-    <button id="toggleRail" class="rail-collapse" type="button" title="隐藏导航栏">‹</button>
+    <div class="logo" id="toggleRail" role="button" tabindex="0" title="收起导航栏"><img src="../../logo/hoshinoumi.svg" alt="Hoshinoumi"></div>
     <button class="rnav" data-page="home" title="主页">⌂</button>
     <button class="rnav on" data-page="chat" title="nao（聊天）">◉<span class="badge">2</span></button>
     <button class="rnav" data-page="memory" title="记忆">◈</button>
