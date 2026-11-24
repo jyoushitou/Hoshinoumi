@@ -111,10 +111,10 @@
     .plugin-copy{flex:1;min-width:0}
     .plugin-copy h3{font-size:11px;color:#1e3a5f;margin:0 0 3px}
     .plugin-copy p{font-size:9px;color:#8a9bb0;margin:0}
-    .plugin-action{flex:none;height:28px;border:1px solid #dbe8ff;border-radius:14px;background:#f4f9ff;color:#2563eb;font-size:9px;padding:0 12px;cursor:pointer}
+    .plugin-action{flex:none;margin-right:5px;height:28px;border:1px solid #dbe8ff;border-radius:14px;background:#f4f9ff;color:#2563eb;font-size:9px;padding:0 12px;cursor:pointer}
     .plugin-action.primary{background:#2563eb;border-color:#2563eb;color:#fff}
     .plugin-action.danger{background:#fff5f5;border-color:#fecaca;color:#b91c1c}
-    .plugin-actions{display:flex;gap:6px;flex:none}
+    .plugin-actions{display:flex;gap:6px;flex:none;margin-right:5px}
     .plugin-line{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f1f5fb;font-size:9px;color:#526982}
     .plugin-line b{color:#8a9bb0;font-weight:400}
     .pcard2 p{font-size:10px;line-height:1.6;color:var(--muted);margin:0}
