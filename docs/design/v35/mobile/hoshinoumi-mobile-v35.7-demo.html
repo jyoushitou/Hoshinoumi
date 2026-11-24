@@ -713,19 +713,80 @@ async function loadDiary(){
 
 screens.plugins = `
 <div class="screen-body" style="flex:1;min-height:0;display:flex;flex-direction:column">
-  <div class="d-head"><h2>插件<small>PLUGINS</small></h2><div class="act" onclick="toast('安装插件（演示）')">＋</div></div>
+  <div class="d-head"><h2>插件<small>PLUGINS</small></h2><div class="act" onclick="installPlugin()">＋</div></div>
   <div class="d-scroll">
-    <div class="info-stats"><div class="info-stat"><small>已安装</small><b>6</b></div><div class="info-stat"><small>待审批</small><b style="color:#b7791f">1</b></div><div class="info-stat"><small>错误</small><b>2</b></div></div>
-    <div class="cmd-chips" style="margin-bottom:8px"><button class="on" onclick="selectSeg(this)">已安装</button><button onclick="selectSeg(this)">待审批 1</button><button onclick="selectSeg(this)">权限</button><button onclick="selectSeg(this)">错误</button></div>
-    <div class="d-card" style="margin-bottom:7px"><div style="display:flex;align-items:center;gap:7px"><b style="font-size:10px;color:#314a65">天气 · weather</b><em style="margin-left:auto;font-style:normal;font-size:7.5px;color:#1f9d6b">启用</em></div><div style="font-size:8px;color:#8a9bb0;margin-top:4px">读天气 · network</div><div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:7px"><button class="add-btn" style="height:24px;font-size:8px;padding:0 7px" onclick="togglePlugin(this)">停用</button><div class="switch on" onclick="toggleSwitch(this)"></div></div></div>
-    <div class="d-card" style="margin-bottom:7px"><div style="display:flex;align-items:center;gap:7px"><b style="font-size:10px;color:#314a65">读书摘要 · reader</b><em style="margin-left:auto;font-style:normal;font-size:7.5px;color:#1f9d6b">启用</em></div><div style="font-size:8px;color:#8a9bb0;margin-top:4px">读写书架 · filesystem / db</div><div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:7px"><button class="add-btn" style="height:24px;font-size:8px;padding:0 7px" onclick="togglePlugin(this)">停用</button><div class="switch on" onclick="toggleSwitch(this)"></div></div></div>
-    <div class="d-card" style="margin-bottom:7px"><div style="display:flex;align-items:center;gap:7px"><b style="font-size:10px;color:#314a65">音乐 · music</b><em style="margin-left:auto;font-style:normal;font-size:7.5px;color:#9aabc0">停用</em></div><div style="font-size:8px;color:#8a9bb0;margin-top:4px">播放 / 搜索 · network</div><div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:7px"><button class="add-btn" style="height:24px;font-size:8px;padding:0 7px" onclick="togglePlugin(this)">启用</button><div class="switch" onclick="toggleSwitch(this)"></div></div></div>
-    <div class="d-card" style="margin-bottom:7px;border-color:#f2d491;background:#fffaf0"><div style="display:flex;align-items:center;gap:7px"><b style="font-size:10px;color:#314a65">记账助手 · ledger</b><em style="margin-left:auto;font-style:normal;font-size:7.5px;color:#b7791f">待审批</em></div><div style="font-size:8px;color:#8a9bb0;margin-top:4px">读写财务 · finance（owner）</div><div style="display:flex;gap:6px;margin-top:7px"><button class="add-btn" style="flex:1;height:26px" onclick="toast('已批准 ledger（演示）')">批准</button><button class="add-btn" style="flex:1;height:26px;background:#fff;color:#b23b52;border:1px solid #fecaca" onclick="toast('已拒绝 ledger（演示）')">拒绝</button></div></div>
-    <div class="d-card" style="margin-bottom:7px"><div style="display:flex;align-items:center;gap:7px"><b style="font-size:10px;color:#314a65">面板 · dashboard</b><em style="margin-left:auto;font-style:normal;font-size:7.5px;color:#1f9d6b">启用</em></div><div style="font-size:8px;color:#8a9bb0;margin-top:4px">前端 slot · read-only</div><div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:7px"><button class="add-btn" style="height:24px;font-size:8px;padding:0 7px" onclick="togglePlugin(this)">停用</button><div class="switch on" onclick="toggleSwitch(this)"></div></div></div>
+    <div class="info-stats"><div class="info-stat"><small>已安装</small><b id="pluginInstalled">6</b></div><div class="info-stat"><small>待审批</small><b id="pluginPending" style="color:#b7791f">1</b></div><div class="info-stat"><small>错误</small><b id="pluginErrors">2</b></div></div>
+    <div class="cmd-chips" id="pluginTabs" style="margin-bottom:8px">
+      <button class="on" onclick="selectPluginTab('installed')">已安装</button>
+      <button onclick="selectPluginTab('pending')">待审批 <span id="pendingTabCount">1</span></button>
+      <button onclick="selectPluginTab('permissions')">权限</button>
+      <button onclick="selectPluginTab('errors')">错误</button>
+    </div>
+    <div id="pluginContent"></div>
     <div class="d-card" style="margin-top:9px;font-size:8px;color:#8598ad;line-height:1.7">插件默认只读；写操作逐项审批并审计。安装 / 审批 / 权限 / 错误都在独立子页面管理。</div>
   </div>
 </div>
 ${nav('chats')}`
+
+let pluginTab = 'installed'
+let pluginItems = [
+  { id:'weather', name:'天气', slug:'weather', enabled:true, pending:false, version:'1.2.0', desc:'读天气', perm:['network'] },
+  { id:'reader', name:'读书摘要', slug:'reader', enabled:true, pending:false, version:'1.0.3', desc:'读写书架', perm:['filesystem','db'] },
+  { id:'music', name:'音乐', slug:'music', enabled:false, pending:false, version:'0.9.1', desc:'播放 / 搜索', perm:['network'] },
+  { id:'ledger', name:'记账助手', slug:'ledger', enabled:false, pending:true, version:'1.1.0', desc:'读写财务', perm:['finance'] },
+  { id:'dashboard', name:'面板', slug:'dashboard', enabled:true, pending:false, version:'1.0.0', desc:'前端 slot', perm:['read-only'] }
+]
+const pluginErrors = [
+  { plugin:'music', message:'播放失败', at:'20:12' },
+  { plugin:'weather', message:'请求超时', at:'18:03' }
+]
+function selectPluginTab(tab){ pluginTab = tab; renderPluginPage() }
+function pluginCard(item, pending=false){
+  if(pending) return `<div class="d-card" style="margin-bottom:7px;border-color:#f2d491;background:#fffaf0"><div style="display:flex;align-items:center;gap:7px"><b style="font-size:10px;color:#314a65">${item.name} · ${item.slug}</b><em style="margin-left:auto;font-style:normal;font-size:7.5px;color:#b7791f">待审批</em></div><div style="font-size:8px;color:#8a9bb0;margin-top:4px">${item.desc} · ${item.perm.join(' / ')}（owner）</div><div style="display:flex;gap:6px;margin-top:8px"><button class="add-btn" style="flex:1;height:28px" onclick="approvePlugin('${item.id}')">批准</button><button class="add-btn" style="flex:1;height:28px;background:#fff;color:#b23b52;border:1px solid #fecaca" onclick="rejectPlugin('${item.id}')">拒绝</button></div></div>`
+  return `<div class="d-card" style="margin-bottom:7px"><div style="display:flex;align-items:center;gap:7px"><b style="font-size:10px;color:#314a65">${item.name} · ${item.slug}</b><em style="margin-left:auto;font-style:normal;font-size:7.5px;color:${item.enabled?'#1f9d6b':'#9aabc0'}">${item.enabled?'启用':'停用'}</em></div><div style="font-size:8px;color:#8a9bb0;margin-top:4px">${item.desc} · ${item.perm.join(' / ')}</div><div style="display:flex;align-items:center;gap:8px;margin-top:8px"><small style="font-size:7px;color:#a8b5c7;margin-right:auto">v${item.version}</small><button class="add-btn" style="height:26px;font-size:8px;padding:0 8px" onclick="togglePluginState('${item.id}')">${item.enabled?'停用':'启用'}</button><div class="switch ${item.enabled?'on':''}" onclick="togglePluginState('${item.id}')"></div></div></div>`
+}
+function renderPluginPage(){
+  if(!document.getElementById('pluginContent')) return
+  const installed = pluginItems.filter(x=>!x.pending)
+  const pending = pluginItems.filter(x=>x.pending)
+  document.getElementById('pluginInstalled').textContent = installed.length
+  document.getElementById('pluginPending').textContent = pending.length
+  document.getElementById('pendingTabCount').textContent = pending.length
+  document.getElementById('pluginErrors').textContent = pluginErrors.length
+  document.querySelectorAll('#pluginTabs button').forEach((b,i)=>b.classList.toggle('on', ['installed','pending','permissions','errors'][i]===pluginTab))
+  let html = ''
+  if(pluginTab==='installed') html = installed.length ? installed.map(x=>pluginCard(x)).join('') : '<div class="d-card" style="text-align:center;color:#9aabc0;font-size:9px;padding:18px">暂无已安装插件</div>'
+  else if(pluginTab==='pending') html = pending.length ? pending.map(x=>pluginCard(x,true)).join('') : '<div class="d-card" style="text-align:center;color:#9aabc0;font-size:9px;padding:18px">没有待审批插件</div>'
+  else if(pluginTab==='permissions'){
+    const perms = {}
+    installed.forEach(item=>item.perm.forEach(p=>{ (perms[p]=perms[p]||[]).push(item.name) }))
+    html = '<div class="d-card">'+Object.entries(perms).map(([k,v])=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f1f5fb;font-size:8.5px"><b style="color:#314a65">${k}</b><span style="color:#8a9bb0">${v.join(' / ')}</span></div>`).join('')+'</div>'
+  } else html = '<div class="d-card">'+pluginErrors.map(x=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f1f5fb;font-size:8.5px"><b style="color:#314a65">${x.plugin}</b><span style="color:#8a9bb0">${x.message} · ${x.at}</span></div>`).join('')+'</div>'
+  document.getElementById('pluginContent').innerHTML = html
+}
+function togglePluginState(id){
+  const item = pluginItems.find(x=>x.id===id); if(!item) return
+  item.enabled = !item.enabled
+  renderPluginPage()
+  toast((item.enabled?'已启用 ':'已停用 ') + item.name + '（演示）')
+}
+function approvePlugin(id){
+  const item = pluginItems.find(x=>x.id===id); if(!item) return
+  item.pending = false; item.enabled = true; pluginTab='installed'
+  renderPluginPage(); toast('已批准 ' + item.name + '（演示）')
+}
+function rejectPlugin(id){
+  const item = pluginItems.find(x=>x.id===id); if(!item) return
+  pluginItems = pluginItems.filter(x=>x.id!==id)
+  renderPluginPage(); toast('已拒绝 ' + item.name + '（演示）')
+}
+function installPlugin(){
+  const name = prompt('插件名称', '新插件')
+  if(!name || !name.trim()) return
+  const slug = 'plugin_' + Math.random().toString(36).slice(2,7)
+  pluginItems.push({ id:slug, name:name.trim(), slug, enabled:true, pending:false, version:'0.1.0', desc:'手动安装', perm:['read-only'] })
+  pluginTab='installed'; renderPluginPage(); toast('已安装 ' + name.trim() + '（演示）')
+}
 
 screens.logs = `
 <div class="screen-body" style="flex:1;min-height:0;display:flex;flex-direction:column">
@@ -795,6 +856,7 @@ function go(name){
   if (staleNav) staleNav.outerHTML = nav(name)
   const quickVal = app.querySelector('[data-quick] .val')
   if (quickVal) quickVal.textContent = quickKeys.map(k => allEntries.find(e => e[0] === k)?.[2]).join(' / ')
+  if(name==='plugins'){ renderPluginPage() }
   if(name==='diary'){ void loadDiary() }
   if(name==='chats'){ renderExtraConversations(); document.querySelectorAll('.conv[data-conv]').forEach(c=>{ if(readConversations.has(c.dataset.conv)) c.querySelectorAll('.badge').forEach(b=>b.remove()) }) } if(name==='chat'){ const input=document.getElementById('input'); if(input) input.style.cssText='flex:1;height:35px;border-radius:10px;background:#f5f8fe;border:1px solid #e6eefb;padding:6px 10px;color:#4a6079;font-size:10px;overflow:auto'; setTimeout(()=>document.getElementById('msgs')?.scrollTo(0,9999),30) } }
 
@@ -879,17 +941,7 @@ function deleteCron(btn){
   toast('已删除定时任务（演示）')
 }
 function toggleSwitch(el){ el.classList.toggle('on'); toast(el.classList.contains('on')?'已开启演示':'已关闭演示') }
-function togglePlugin(btn){
-  const card = btn.closest('.d-card')
-  const sw = card?.querySelector('.switch')
-  if(!sw) return
-  sw.classList.toggle('on')
-  const on = sw.classList.contains('on')
-  const state = card.querySelector('em')
-  if(state){ state.textContent = on ? '启用' : '停用'; state.style.color = on ? '#1f9d6b' : '#9aabc0' }
-  btn.textContent = on ? '停用' : '启用'
-  toast((on ? '已启用 ' : '已停用 ') + (card.querySelector('b')?.textContent || '插件') + '（演示）')
-}
+
 
 function sendMsg(){
   const input=document.getElementById('input'); if(!input) return
