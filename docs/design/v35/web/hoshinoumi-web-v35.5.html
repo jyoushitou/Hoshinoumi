@@ -215,8 +215,8 @@ button{color:inherit}
 .layout-controls button{position:fixed;top:14px;z-index:22;width:28px;height:24px;border:1px solid #dbe8ff;border-radius:7px;background:#fff;color:#2563eb;font:12px inherit;cursor:pointer;box-shadow:0 3px 10px rgba(37,99,235,.08)}
 #toggleLeft{left:calc(64px + 292px - 36px)}
 #toggleRight{right:calc(304px - 36px)}
-.app.left-hidden #toggleLeft{left:8px}
-.app.right-hidden #toggleRight{right:8px}
+body.left-hidden #toggleLeft{left:8px}
+body.right-hidden #toggleRight{right:8px}
 .layout-controls button.on{background:#2563eb;color:#fff;border-color:#2563eb}
 .app.left-hidden{grid-template-columns:0 0 minmax(0,1fr) 304px}
 .app.left-hidden>.rail,.app.left-hidden>.side{display:none}
@@ -437,8 +437,8 @@ button{color:inherit}
   var left=document.getElementById('toggleLeft');
   var right=document.getElementById('toggleRight');
   if(!app||!left||!right) return;
-  left.addEventListener('click',function(){ app.classList.toggle('left-hidden'); left.classList.toggle('on',app.classList.contains('left-hidden')); });
-  right.addEventListener('click',function(){ app.classList.toggle('right-hidden'); right.classList.toggle('on',app.classList.contains('right-hidden')); });
+  left.addEventListener('click',function(){ app.classList.toggle('left-hidden'); document.body.classList.toggle('left-hidden'); left.classList.toggle('on',app.classList.contains('left-hidden')); });
+  right.addEventListener('click',function(){ app.classList.toggle('right-hidden'); document.body.classList.toggle('right-hidden'); right.classList.toggle('on',app.classList.contains('right-hidden')); });
 })();
 </script>
 </body>
