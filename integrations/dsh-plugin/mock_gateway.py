@@ -26,6 +26,7 @@ import re
 import hashlib
 import base64
 import struct
+import tempfile
 import zlib
 import urllib.request
 from datetime import datetime, timedelta
@@ -182,6 +183,21 @@ COMMAND_CATALOG = [
     ("!doing", "多端", "当前活动", False), ("!presence", "多端", "在线状态", False), ("!route", "多端", "消息路由", False),
     ("!gw", "多端", "网关", True), ("!config", "多端", "配置", True), ("!code", "多端", "配对码", True), ("!apikeys", "多端", "API keys", True),
 ]
+
+
+PLUGINS = [
+    {"id": "weather", "name": "天气", "slug": "weather", "enabled": True, "pending": False, "permissions": ["network"], "version": "1.2.0", "description": "读天气"},
+    {"id": "reader", "name": "读书摘要", "slug": "reader", "enabled": True, "pending": False, "permissions": ["filesystem", "db"], "version": "1.0.3", "description": "读写书架"},
+    {"id": "music", "name": "音乐", "slug": "music", "enabled": False, "pending": False, "permissions": ["network"], "version": "0.9.1", "description": "播放 / 搜索"},
+    {"id": "ledger", "name": "记账助手", "slug": "ledger", "enabled": False, "pending": True, "permissions": ["finance"], "version": "1.1.0", "description": "读写财务"},
+    {"id": "dashboard", "name": "面板", "slug": "dashboard", "enabled": True, "pending": False, "permissions": ["read-only"], "version": "1.0.0", "description": "前端 slot"},
+    {"id": "reminder", "name": "提醒", "slug": "reminder", "enabled": False, "pending": False, "permissions": ["notifications"], "version": "1.0.2", "description": "定时提醒"},
+]
+PLUGIN_ERRORS = [
+    {"id": "music-play", "plugin": "music", "message": "播放失败", "at": "2026-11-24 20:12:00"},
+    {"id": "weather-timeout", "plugin": "weather", "message": "请求超时", "at": "2026-11-24 18:03:00"},
+]
+PLUGIN_DIR = ROOT / "data" / "plugins"
 
 TASKS = [
     {"id": 1, "schedule_type": "daily", "content": "每日早报", "at_time": "08:00", "enabled": True, "next_ts": "2026-11-20 08:00:00"},
@@ -370,6 +386,32 @@ def _client_entries():
     if apk:
         return [{"id": "android", "name": "Android APK", "kind": "mobile", "platform": "android", "version": apk["versionName"], "versionCode": apk["versionCode"], "notes": apk["notes"], "recommended": True}]
     return []
+
+
+def _plugin_stats():
+    installed = [x for x in PLUGINS if not x.get("pending")]
+    pending = [x for x in PLUGINS if x.get("pending")]
+    permissions = {}
+    for item in installed:
+        for permission in item.get("permissions", []):
+            permissions.setdefault(permission, []).append(item["id"])
+    return installed, pending, permissions
+
+def _inspect_plugin_bytes(raw: bytes, filename: str):
+    sys.path.insert(0, str(ROOT / "scripts"))
+    from plugin_package import inspect_package, PluginPackageError
+    suffix = Path(filename or "").suffix.lower()
+    if suffix not in {".hoshinoumi", ".zip"}:
+        suffix = ".hoshinoumi"
+    PLUGIN_DIR.mkdir(parents=True, exist_ok=True)
+    tmp = None
+    try:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as handle:
+            handle.write(raw)
+            tmp = Path(handle.name)
+        return inspect_package(tmp)
+    finally:
+        if tmp and tmp.exists(): tmp.unlink(missing_ok=True)
 
 class Handler(BaseHTTPRequestHandler):
     server_version = "HoshinoumiMock/" + VERSION
@@ -620,6 +662,11 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/cron":
             self._json(200, {"ok": True, "data": TASKS, "mock": True})
             return
+        if path == "/api/plugins":
+            if not self._is_owner():
+                self._json(403, {"ok": False, "error": "forbidden", "message": "插件管理仅主人可用"}); return
+            installed, pending, permissions = _plugin_stats()
+            self._json(200, {"ok": True, "data": PLUGINS, "stats": {"installed": len(installed), "pending": len(pending), "errors": len(PLUGIN_ERRORS)}, "permissions": [{"name": key, "plugins": value} for key, value in permissions.items()], "errors": PLUGIN_ERRORS, "mock": True}); return
         if path == "/api/commands":
             data = [{"name": name, "group": group, "help": help_text, "owner": owner} for name, group, help_text, owner in COMMAND_CATALOG]
             self._json(200, {"ok": True, "count": len(data), "data": data, "mock": True})
@@ -824,6 +871,92 @@ class Handler(BaseHTTPRequestHandler):
         if path.startswith("/internal/"):
             self._json(404, {"error": "not_found", "path": path})
             return
+        if path in ("/api/plugins/install", "/api/plugins/import"):
+            if not self._is_owner():
+                self._json(403, {"ok": False, "error": "forbidden", "message": "插件管理仅主人可用"}); return
+            source = str(body.get("source") or "package")
+            raw = None
+            filename = str(body.get("filename") or "plugin.hoshinoumi")
+            manifest = None
+            try:
+                if source == "url":
+                    url = str(body.get("url") or "").strip()
+                    if not re.match(r"^https?://", url, re.I):
+                        self._json(400, {"ok": False, "error": "bad_url", "message": "插件网址必须是 http(s)"}); return
+                    request = urllib.request.Request(url, headers={"User-Agent": "HoshinoumiPlugin/1"})
+                    with urllib.request.urlopen(request, timeout=15) as response:
+                        raw = response.read(20 * 1024 * 1024 + 1)
+                    if len(raw) > 20 * 1024 * 1024:
+                        self._json(413, {"ok": False, "error": "package_too_large", "message": "插件包超过 20 MB"}); return
+                    filename = Path(urlparse(url).path).name or filename
+                    manifest = _inspect_plugin_bytes(raw, filename)
+                elif source == "file":
+                    data = str(body.get("data_base64") or "")
+                    if not data:
+                        self._json(400, {"ok": False, "error": "missing_file", "message": "缺少插件文件内容"}); return
+                    if len(data) > 28 * 1024 * 1024:
+                        self._json(413, {"ok": False, "error": "package_too_large", "message": "插件包超过 20 MB"}); return
+                    raw = base64.b64decode(data, validate=True)
+                    if len(raw) > 20 * 1024 * 1024:
+                        self._json(413, {"ok": False, "error": "package_too_large", "message": "插件包超过 20 MB"}); return
+                    manifest = _inspect_plugin_bytes(raw, filename)
+                elif source == "manifest":
+                    manifest = body.get("manifest") if isinstance(body.get("manifest"), dict) else body
+                    required = ("id", "name", "version", "apiVersion", "entry")
+                    missing = [key for key in required if not manifest.get(key)]
+                    if missing:
+                        self._json(400, {"ok": False, "error": "bad_manifest", "message": "manifest 缺少字段：" + ", ".join(missing)}); return
+                    permissions = manifest.get("permissions") or ["read-only"]
+                    if not isinstance(permissions, list) or any(p not in {"read-only", "network", "filesystem", "db", "notifications", "finance"} for p in permissions):
+                        self._json(400, {"ok": False, "error": "bad_permissions", "message": "包含未知权限"}); return
+                    manifest = {**manifest, "permissions": permissions}
+                else:
+                    name = str(body.get("name") or "新插件").strip()[:40]
+                    if not name:
+                        self._json(400, {"ok": False, "error": "bad_name", "message": "插件名不能为空"}); return
+                    pid = "plugin_" + uuid.uuid4().hex[:6]
+                    plugin = {"id": pid, "name": name, "slug": pid, "enabled": True, "pending": False, "permissions": ["read-only"], "version": "0.1.0", "description": "手动安装"}
+                    PLUGINS.append(plugin)
+                    self._json(200, {"ok": True, "data": plugin, "source": "manual", "mock": True}); return
+            except Exception as exc:
+                self._json(400, {"ok": False, "error": "bad_package", "message": str(exc)}); return
+            pid = str(manifest.get("id") or "").strip()[:64]
+            if not pid:
+                self._json(400, {"ok": False, "error": "bad_id", "message": "插件 id 不能为空"}); return
+            if any(item.get("id") == pid for item in PLUGINS):
+                self._json(409, {"ok": False, "error": "plugin_exists", "message": "插件已安装：" + pid}); return
+            permissions = list(manifest.get("permissions") or ["read-only"])
+            pending = "finance" in permissions
+            plugin = {"id": pid, "name": str(manifest.get("name") or pid)[:80], "slug": pid, "enabled": not pending, "pending": pending, "permissions": permissions, "version": str(manifest.get("version") or "0.1.0"), "description": str(manifest.get("description") or "导入插件")}
+            PLUGINS.append(plugin)
+            if raw is not None:
+                PLUGIN_DIR.mkdir(parents=True, exist_ok=True)
+                safe_name = re.sub(r"[^A-Za-z0-9_.-]", "_", pid)
+                (PLUGIN_DIR / (safe_name + ".hoshinoumi")).write_bytes(raw)
+            installed, pending_rows, permission_map = _plugin_stats()
+            self._json(200, {"ok": True, "data": plugin, "source": source, "stats": {"installed": len(installed), "pending": len(pending_rows)}, "mock": True}); return
+        plugin_action = re.match(r"^/api/plugins/([^/]+)/(toggle|approve|reject)$", path)
+        if plugin_action:
+            if not self._is_owner():
+                self._json(403, {"ok": False, "error": "forbidden", "message": "插件管理仅主人可用"}); return
+            plugin = next((x for x in PLUGINS if x.get("id") == plugin_action.group(1)), None)
+            if not plugin:
+                self._json(404, {"ok": False, "error": "plugin_not_found"}); return
+            action = plugin_action.group(2)
+            if action == "toggle":
+                if plugin.get("pending"):
+                    self._json(409, {"ok": False, "error": "pending_approval", "message": "插件待审批，不能直接启停"}); return
+                plugin["enabled"] = not bool(plugin.get("enabled"))
+            elif action == "approve":
+                if not plugin.get("pending"):
+                    self._json(409, {"ok": False, "error": "not_pending"}); return
+                plugin["pending"] = False; plugin["enabled"] = True
+            else:
+                if not plugin.get("pending"):
+                    self._json(409, {"ok": False, "error": "not_pending"}); return
+                PLUGINS.remove(plugin)
+            installed, pending_rows, permission_map = _plugin_stats()
+            self._json(200, {"ok": True, "data": plugin, "action": action, "stats": {"installed": len(installed), "pending": len(pending_rows), "errors": len(PLUGIN_ERRORS)}, "mock": True}); return
         if path == "/api/groups":
             name = str(body.get("name") or "").strip()
             members = body.get("members") or []

@@ -79,3 +79,5 @@ clients\android\android\keystore.properties
 data/apk/*.apk
 data/clients/*.apk
 data/clients/*.zip
+data/plugins/*.hoshinoumi
+data/plugins/*.zip
