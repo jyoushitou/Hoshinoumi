@@ -23,9 +23,9 @@ body{
   overflow:hidden;
 }
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
-.app{display:grid;grid-template-columns:64px 292px minmax(0,1fr) 304px;height:100vh}
+.app{display:grid;grid-template-columns:64px 292px minmax(0,1fr) 304px;height:100vh;transition:grid-template-columns .28s cubic-bezier(.22,1,.36,1)}
 /* rail */
-.rail{background:rgba(8,15,27,.92);border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding:14px 0;gap:8px}
+.rail{transition:opacity .2s,transform .28s;background:rgba(8,15,27,.92);border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding:14px 0;gap:8px}
 .logo{width:38px;height:38px;display:grid;place-items:center;margin-bottom:14px;border-radius:12px;background:linear-gradient(145deg,rgba(126,231,255,.16),rgba(193,140,255,.12));border:1px solid rgba(126,231,255,.18)}
 .logo img{width:24px;height:24px}
 .rnav{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;color:#7f93b3;font-size:17px;position:relative}
@@ -35,7 +35,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .rnav .badge{position:absolute;top:3px;right:2px;min-width:14px;height:14px;border-radius:8px;background:linear-gradient(135deg,var(--cyan),var(--blue));color:#06111f;font-size:9px;font-weight:700;display:grid;place-items:center;padding:0 3px}
 .rail .spacer{flex:1}
 /* side */
-.side{background:linear-gradient(180deg,rgba(13,23,40,.96),rgba(10,19,34,.96));border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.side{transition:opacity .2s,transform .28s;background:linear-gradient(180deg,rgba(13,23,40,.96),rgba(10,19,34,.96));border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
 .brand{padding:18px 18px 12px;display:flex;align-items:center;gap:9px}
 .brand .word{font-size:12px;letter-spacing:.19em;font-weight:700;color:#dfeaff}
 .brand .ver{margin-left:auto;font-size:9px;color:var(--dim);border:1px solid var(--line);border-radius:20px;padding:2px 7px}
@@ -94,7 +94,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .send:hover{filter:brightness(1.07)}
 .hint{font-size:9px;color:var(--dim);margin-top:6px;display:flex;justify-content:space-between}
 /* context */
-.context{border-left:1px solid var(--line);background:linear-gradient(180deg,rgba(12,22,38,.94),rgba(8,16,29,.94));padding:16px 15px;overflow:auto}
+.context{border-left:1px solid var(--line);transition:opacity .2s,transform .28s;background:linear-gradient(180deg,rgba(12,22,38,.94),rgba(8,16,29,.94));padding:16px 15px;overflow:auto}
 .pcard{border:1px solid var(--line);border-radius:14px;background:linear-gradient(150deg,rgba(126,231,255,.065),rgba(193,140,255,.045));padding:13px;display:flex;gap:11px;align-items:center}
 .pcard .biga{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,var(--cyan),var(--blue) 58%,var(--violet));color:#071322;display:grid;place-items:center;font-size:16px;font-weight:800}
 .pcard .name{font-size:13px;font-weight:650}
@@ -212,16 +212,16 @@ button{color:inherit}
 .chat-more{position:fixed;right:22px;top:52px;width:150px;background:#fff;border:1px solid #e3ebf7;border-radius:10px;box-shadow:0 12px 30px rgba(37,99,235,.14);padding:5px;z-index:45;display:none}.chat-more.on{display:block}.chat-more button{display:flex;width:100%;align-items:center;gap:7px;border:0;background:#fff;border-radius:7px;padding:7px 8px;text-align:left;font:9.5px inherit;color:#405a78;cursor:pointer}.chat-more button:hover{background:#f2f7ff;color:#2563eb}.chat-more .sep{height:1px;background:#eef3fb;margin:3px 4px}
 
 .layout-controls{position:static;z-index:22}
-.layout-controls button{position:fixed;top:14px;z-index:22;width:28px;height:24px;border:1px solid #dbe8ff;border-radius:7px;background:#fff;color:#2563eb;font:12px inherit;cursor:pointer;box-shadow:0 3px 10px rgba(37,99,235,.08)}
+.layout-controls button{position:fixed;top:14px;transition:left .28s cubic-bezier(.22,1,.36,1),right .28s cubic-bezier(.22,1,.36,1),background .18s;z-index:22;width:28px;height:24px;border:1px solid #dbe8ff;border-radius:7px;background:#fff;color:#2563eb;font:12px inherit;cursor:pointer;box-shadow:0 3px 10px rgba(37,99,235,.08)}
 #toggleLeft{left:calc(64px + 292px - 36px)}
 #toggleRight{right:calc(304px - 36px)}
 body.left-hidden #toggleLeft{left:8px}
 body.right-hidden #toggleRight{right:8px}
 .layout-controls button.on{background:#2563eb;color:#fff;border-color:#2563eb}
 .app.left-hidden{grid-template-columns:0 0 minmax(0,1fr) 304px}
-.app.left-hidden>.rail,.app.left-hidden>.side{display:none}
+.app.left-hidden>.rail,.app.left-hidden>.side{opacity:0;pointer-events:none;overflow:hidden;transform:translateX(-8px)}
 .app.right-hidden{grid-template-columns:64px 292px minmax(0,1fr) 0}
-.app.right-hidden>.context{display:none}
+.app.right-hidden>.context{opacity:0;pointer-events:none;overflow:hidden;transform:translateX(8px)}
 .app.left-hidden.right-hidden{grid-template-columns:0 0 minmax(0,1fr) 0}
 @media(max-width:1180px){.app.left-hidden{grid-template-columns:0 0 minmax(0,1fr)}#toggleLeft{left:calc(64px + 270px - 36px)}#toggleRight{right:8px}}
 </style>
