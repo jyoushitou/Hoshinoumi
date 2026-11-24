@@ -18,6 +18,7 @@ export const mobileEntries: MobileEntry[] = [
   { key: 'persona', path: '/persona', icon: '◇', label: '人设' },
   { key: 'commands', path: '/commands', icon: '⌘', label: '命令' },
   { key: 'cron', path: '/cron', icon: '◷', label: '定时' },
+  { key: 'diary', path: '/diary', icon: '✎', label: '日记' },
   { key: 'logs', path: '/logs', icon: '≣', label: '日志' },
   { key: 'settings', path: '/settings', icon: '⚙', label: '设置' },
 ]

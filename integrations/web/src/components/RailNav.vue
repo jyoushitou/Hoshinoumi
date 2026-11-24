@@ -15,6 +15,7 @@ const baseNav = [
   { page: 'persona', icon: '◇', title: '人设' },
   { page: 'commands', icon: '⌘', title: '命令' },
   { page: 'cron', icon: '◷', title: '定时任务' },
+  { page: 'diary', icon: '✎', title: '日记' },
   { page: 'logs', icon: '≣', title: '运行日志' },
 ]
 const nav = computed(() => isOwner.value ? baseNav : baseNav.filter(n => n.page !== 'relation' && n.page !== 'savings'))
