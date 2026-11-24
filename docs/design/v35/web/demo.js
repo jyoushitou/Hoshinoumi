@@ -609,7 +609,7 @@
   function showPage(name) {
     if (name === 'settings') {
       let saved = {}; try { saved = JSON.parse(localStorage.getItem('hsh_web_login') || '{}'); } catch {}
-      pageView.innerHTML = '<div class="page-head"><div><h2>设置</h2><p>v35.5 Web 演示 · 登录 / 后端 / 连接</p></div><button class="back" id="backChat">← 返回聊天</button></div>' +
+      pageView.innerHTML = '<div class="page-head"><div><h2>设置</h2><p>v35.5 Web 演示 · 登录 / 后端 / 连接</p></div></div>' +
         '<div class="info-grid"><div class="info-panel"><h3>登录配置</h3><div class="info-row"><span>后端</span><b>' + esc(location.origin === 'null' ? '当前 Web 站点' : location.origin) + ' · 同源</b></div><div class="info-row"><span>token</span><b>' + (saved.token ? '已保存 · 掩码' : '未配置') + '</b></div><div class="info-row"><span>主人 QQ</span><b>' + esc(saved.qq || '') + '</b></div><div class="info-row"><span>操作</span><b><button class="back" id="relogin">登录 / 重新配置</button></b></div></div>' +
         '<div class="info-panel"><h3>连接</h3><div class="info-row"><span>状态</span><b class="ok">已连接 · MOCK</b></div><div class="info-row"><span>schema</span><b>35</b></div><div class="info-row"><span>延迟</span><b>42ms</b></div></div></div>' +
         '<div style="margin-top:18px;padding-top:10px;border-top:1px solid #eef3fb;text-align:center;font:8px ui-monospace,monospace;letter-spacing:.12em;color:#a8b5c7">POWERED BY JYOUSHITOU</div>' +
@@ -617,7 +617,6 @@
       [top, msgs, composer, searchBar].forEach(x => x.classList.add('chat-hide'));
       pageView.classList.add('on');
       document.querySelectorAll('.rnav').forEach(x => x.classList.toggle('on', x.dataset.page === name));
-      document.getElementById('backChat').addEventListener('click', () => showChat());
       document.getElementById('relogin').addEventListener('click', openLogin);
       return;
     }
@@ -628,7 +627,7 @@
       ]);
       function renderPersona() {
         const cards = PS.map((p, i) => '<div class="persona-card"><div class="persona-top"><div class="persona-ava">' + esc(p.display.slice(0,1)) + '</div><h3>' + esc(p.display) + ' · ' + esc(p.name) + '</h3>' + (p.active ? '<span class="pill">当前</span>' : '') + '</div><p>' + esc(p.desc) + '</p><div class="persona-files">' + p.files.map(f => '<span>' + esc(f) + '</span>').join('') + '</div><div class="persona-actions"><button data-act="preview" data-i="' + i + '">预览</button><button data-act="activate" data-i="' + i + '">' + (p.active ? '已激活' : '激活') + '</button><button data-act="export" data-i="' + i + '">导出</button></div></div>').join('');
-        pageView.innerHTML = '<div class="page-head"><div><h2>人设</h2><p>v35.5 Web 演示 · MOCK 数据 · 导入 / 导出 / 激活</p></div><button class="back" id="backChat">← 返回聊天</button></div><div class="persona-toolbar"><button id="psImport">导入人设卡 JSON</button><input id="psFile" type="file" accept=".json,application/json"><span class="msg" id="psMsg">只读预览 · 仅 owner 可激活/导入</span></div><div class="persona-grid">' + cards + '</div>';
+        pageView.innerHTML = '<div class="page-head"><div><h2>人设</h2><p>v35.5 Web 演示 · MOCK 数据 · 导入 / 导出 / 激活</p></div></div><div class="persona-toolbar"><button id="psImport">导入人设卡 JSON</button><input id="psFile" type="file" accept=".json,application/json"><span class="msg" id="psMsg">只读预览 · 仅 owner 可激活/导入</span></div><div class="persona-grid">' + cards + '</div>';
         [top, msgs, composer, searchBar].forEach(x => x.classList.add('chat-hide'));
         pageView.classList.add('on');
         document.querySelectorAll('.rnav').forEach(x => x.classList.toggle('on', x.dataset.page === name));
@@ -664,8 +663,7 @@
             close(); renderSavings(); toast(isGoal ? '已新增存钱目标（MOCK）' : '已新增冻结 / 待缴费（MOCK）');
           };
         }
-        document.getElementById('backChat').addEventListener('click', () => showChat());
-        const cfToggle = document.getElementById('cfToggle');
+          const cfToggle = document.getElementById('cfToggle');
         if (cfToggle) cfToggle.addEventListener('click', () => { const next = cfToggle.textContent.includes('12') ? 6 : 12; cfToggle.textContent = '近 ' + next + ' 个月'; const el = document.getElementById('webCfChart'); if (el) el.innerHTML = cashflowWebSvg(next); });
         document.getElementById('psImport').addEventListener('click', () => document.getElementById('psFile').click());
         document.getElementById('psFile').addEventListener('change', e => {
@@ -706,11 +704,10 @@
         const months = [...new Set(diaryData.map(x => monthOf(x.date)))].filter(Boolean).sort().reverse();
         if (!diaryMonth || !months.includes(diaryMonth)) diaryMonth = months[0] || '';
         const rows = diaryData.filter(x => monthOf(x.date) === diaryMonth).sort((a, b) => String(b.date).localeCompare(String(a.date)));
-        pageView.innerHTML = '<div class="diary-page"><div class="page-head"><div><h2>日记</h2><p>按月查看 · 前 50 字概览 · 点开详情</p></div><button class="back" id="backChat">← 返回聊天</button></div>' +
+        pageView.innerHTML = '<div class="diary-page"><div class="page-head"><div><h2>日记</h2><p>按月查看 · 前 50 字概览 · 点开详情</p></div></div>' +
           '<div class="diary-months">' + months.map(m => '<button class="' + (m === diaryMonth ? 'on' : '') + '" data-diary-month="' + m + '">' + m.replace('-', ' 年 ') + ' 月</button>').join('') + '</div>' +
           '<div class="pgrid" id="diaryList">' + (rows.length ? rows.map(x => '<div class="pcard2" data-diary-id="' + x.id + '" style="cursor:pointer"><h3>' + esc(x.title || '无标题') + '</h3><p>' + esc(x.date + ' · ' + (x.mood || '')) + '</p><p style="margin-top:6px;color:#526982">' + esc(preview(x.content)) + '</p><p style="margin-top:8px;color:#2563eb;font-size:9px">查看</p></div>').join('') : '<div class="pcard2">这个月还没有日记</div>') + '</div></div>';
-        document.getElementById('backChat').addEventListener('click', () => showChat());
-        pageView.querySelectorAll('[data-diary-month]').forEach(b => b.addEventListener('click', () => { diaryMonth = b.dataset.diaryMonth; render(); }));
+          pageView.querySelectorAll('[data-diary-month]').forEach(b => b.addEventListener('click', () => { diaryMonth = b.dataset.diaryMonth; render(); }));
         pageView.querySelectorAll('[data-diary-id]').forEach(card => card.addEventListener('click', () => {
           const item = diaryData.find(x => String(x.id) === card.dataset.diaryId); if (!item) return;
           pageView.innerHTML = '<div class="diary-page"><div class="page-head"><div><h2>日记详情</h2><p>' + esc(item.date + ' · ' + (item.mood || '')) + '</p></div><button class="back" id="diaryBack">← 返回日记</button></div><div class="pcard2" style="max-width:760px"><h3 style="font-size:16px">' + esc(item.title || '无标题') + '</h3><p style="font-size:9px;color:#8a9bb0">' + esc(item.date + ' · ' + (item.source || '!diary')) + '</p><p style="margin-top:14px;font-size:11px;line-height:1.9;color:#405872;white-space:pre-wrap">' + esc(item.content || '') + '</p></div></div>';
@@ -791,11 +788,10 @@
       ]);
       let level = 'ALL', q = '';
       function renderLogs() {
-        pageView.innerHTML = '<div class="page-head"><div><h2>运行日志</h2><p>v35.5 Web 演示 · MOCK 数据 · 一行一条</p></div><button class="back" id="backChat">← 返回聊天</button></div>' +
+        pageView.innerHTML = '<div class="page-head"><div><h2>运行日志</h2><p>v35.5 Web 演示 · MOCK 数据 · 一行一条</p></div></div>' +
           '<div class="log-toolbar"><select id="logLevel"><option value="ALL">全部级别</option><option>INFO</option><option>WARN</option><option>ERROR</option></select><input id="logQ" placeholder="搜索日志…"><button class="back" id="logRefresh">刷新</button><button class="back" id="logClear">清空</button><span class="hint" id="logCount"></span></div>' +
           '<div class="log-console" id="logConsole"></div>';
-        document.getElementById('backChat').addEventListener('click', () => showChat());
-        document.getElementById('logLevel').value = level;
+          document.getElementById('logLevel').value = level;
         document.getElementById('logLevel').addEventListener('change', e => { level = e.target.value; paintLogs(); });
         document.getElementById('logQ').value = q;
         document.getElementById('logQ').addEventListener('input', e => { q = e.target.value; paintLogs(); });
@@ -829,12 +825,11 @@
       function renderCron() {
         const list = C.items.map(x => '<div class="cron-item"><span class="cron-dot' + (x.enabled ? '' : ' off') + '"></span><div class="cron-main"><div class="n">' + esc(x.name) + '</div><div class="e">' + esc(x.expr) + ' · ' + esc(x.desc) + '</div></div><span class="cron-state' + (x.enabled ? '' : ' off') + '">' + (x.enabled ? '启用' : '停用') + '</span><div class="cron-btns"><button data-act="run" data-id="' + x.id + '">立即运行</button><button data-act="edit" data-id="' + x.id + '">编辑</button><button data-act="toggle" data-id="' + x.id + '">' + (x.enabled ? '停用' : '启用') + '</button><button class="danger" data-act="del" data-id="' + x.id + '">删除</button></div></div>').join('');
         const form = showForm ? '<div class="cron-form"><div><label>名称</label><input id="crName" value="' + esc(editing ? editing.name : '') + '" placeholder="每日早报"></div><div><label>Cron</label><input id="crExpr" value="' + esc(editing ? editing.expr : '0 8 * * *') + '" placeholder="0 8 * * *"></div><div><label>说明</label><input id="crDesc" value="' + esc(editing ? editing.desc : '每天 08:00') + '"></div><div class="full"><label style="display:flex;align-items:center;gap:4px"><input type="checkbox" id="crEnabled" ' + (!editing || editing.enabled ? 'checked' : '') + '> 启用</label><button id="crSave">' + (editing ? '保存修改' : '新增任务') + '</button><button class="cancel" id="crCancel">取消</button><span class="msg" id="crMsg"></span></div></div>' : '';
-        pageView.innerHTML = '<div class="page-head"><div><h2>定时任务</h2><p>v35.5 Web 演示 · MOCK 数据 · 支持增加 / 修改 / 删除</p></div><div style="margin-left:auto;display:flex;gap:7px"><button class="back" id="crAdd">＋ 新增任务</button><button class="back" id="backChat">← 返回聊天</button></div></div>' + form + '<div class="cron-list">' + list + '</div>';
+        pageView.innerHTML = '<div class="page-head"><div><h2>定时任务</h2><p>v35.5 Web 演示 · MOCK 数据 · 支持增加 / 修改 / 删除</p></div><div style="margin-left:auto;display:flex;gap:7px"><button class="back" id="crAdd">＋ 新增任务</button></div></div>' + form + '<div class="cron-list">' + list + '</div>';
         [top, msgs, composer, searchBar].forEach(x => x.classList.add('chat-hide'));
         pageView.classList.add('on');
         document.querySelectorAll('.rnav').forEach(x => x.classList.toggle('on', x.dataset.page === name));
-        document.getElementById('backChat').addEventListener('click', () => showChat());
-        document.getElementById('crAdd').addEventListener('click', () => { editing = null; showForm = true; renderCron(); });
+          document.getElementById('crAdd').addEventListener('click', () => { editing = null; showForm = true; renderCron(); });
         pageView.querySelectorAll('.cron-btns button').forEach(b => b.addEventListener('click', () => {
           const id = Number(b.dataset.id), act = b.dataset.act, item = C.items.find(x => x.id === id);
           if (!item) return;
@@ -861,7 +856,7 @@
       return;
     }
     if (name === 'info') {
-      pageView.innerHTML = '<div class="page-head"><div><h2>信息</h2><p>v35.5 Web 演示 · MOCK 数据 · 运行状态 / 数据库 / 计划 / 阅读</p></div><button class="back" id="backChat">← 返回聊天</button></div>' +
+      pageView.innerHTML = '<div class="page-head"><div><h2>信息</h2><p>v35.5 Web 演示 · MOCK 数据 · 运行状态 / 数据库 / 计划 / 阅读</p></div></div>' +
         '<div class="info-stats"><div class="info-stat"><div class="k">版本</div><div class="v">v35.5</div></div><div class="info-stat"><div class="k">schema</div><div class="v">35</div></div><div class="info-stat"><div class="k">数据表</div><div class="v">42</div></div><div class="info-stat"><div class="k">命令</div><div class="v">51</div></div></div>' +
         '<div class="info-grid">' +
         '<div class="info-panel"><h3>运行 <span>已连接</span></h3><div class="info-row"><span>后端</span><b>127.0.0.1:27004</b></div><div class="info-row"><span>延迟</span><b class="ok">42ms</b></div><div class="info-row"><span>运行时长</span><b>6 天 4 小时</b></div><div class="info-row"><span>API 余额</span><b>¥126.40</b></div></div>' +
@@ -874,7 +869,6 @@
       [top, msgs, composer, searchBar].forEach(x => x.classList.add('chat-hide'));
       pageView.classList.add('on');
       document.querySelectorAll('.rnav').forEach(x => x.classList.toggle('on', x.dataset.page === name));
-      document.getElementById('backChat').addEventListener('click', () => showChat());
       return;
     }
     if (name === 'weekly') {
@@ -903,7 +897,7 @@
       }
       let sel = { day: 0, period: 1 }, editIdx = -1, showPeriods = false;
       function renderWeekly() {
-        let html = '<div class="page-head"><div><h2>周计划表</h2><p>v35.5 Web 演示 · MOCK 数据 · 第 ' + W.week + ' 周</p></div><button class="back" id="backChat">← 返回聊天</button></div>';
+        let html = '<div class="page-head"><div><h2>周计划表</h2><p>v35.5 Web 演示 · MOCK 数据 · 第 ' + W.week + ' 周</p></div></div>';
         html += '<div class="week-toolbar"><label>周次 <input id="wkNum" type="number" min="1" max="53" value="' + W.week + '"></label><button id="wkGo">跳转</button><button id="wkPeriods">节次设置</button><label class="file-btn">导入 HTML<input id="wkFile" type="file" accept=".html,text/html"></label><span class="week-msg" id="wkMsg">点击空格子新增；点课程编辑/删除</span></div>';
         if (showPeriods) {
           const ps = getPeriods(W.week);
@@ -929,8 +923,7 @@
         const c = editIdx >= 0 ? W.courses[editIdx] : null;
         html += '<div class="week-form"><div><label>课程名</label><input id="wkName" value="' + esc(c ? c.name : '') + '"></div><div><label>地点</label><input id="wkLoc" value="' + esc(c ? c.loc : '') + '"></div><div class="full"><button id="wkSave">' + (editIdx >= 0 ? '保存修改' : '添加到格子') + '</button>' + (editIdx >= 0 ? '<button class="del" id="wkDel">删除课程</button>' : '') + '<span class="msg" id="wkFormMsg"></span></div></div>';
         pageView.innerHTML = html;
-        document.getElementById('backChat').addEventListener('click', () => showChat());
-        document.getElementById('wkGo').addEventListener('click', () => {
+          document.getElementById('wkGo').addEventListener('click', () => {
           const n = Number(document.getElementById('wkNum').value); if (n >= 1 && n <= 53) { W.week = n; getPeriods(n); renderWeekly(); }
         });
         document.getElementById('wkPeriods').addEventListener('click', () => { showPeriods = !showPeriods; renderWeekly(); });
@@ -1068,7 +1061,7 @@
         }).join('');
         const accountRows = S.accounts.map(a => '<div class="money-row"><div><div>' + esc(a[0]) + '</div><div class="where">' + (a[1] ? '资金位置' : '暂无余额') + '</div></div><span class="amt">' + money(a[1]) + '</span></div>').join('');
         const frozenRows = (S.frozen || []).map((f, i) => '<div class="frozen-row"><div><div>' + esc(f.name) + '</div><div class="why">预计 ' + esc(f.due) + ' · 不可动用</div></div><div class="frozen-right"><span class="amt">' + money(f.amount) + '</span><span class="frozen-acts"><button data-pay="' + i + '">已缴费</button><button class="del" data-del="' + i + '">删除</button></span></div></div>').join('');
-        pageView.innerHTML = '<div class="page-head"><div><h2>存钱</h2><p>v35.5 Web 演示 · 多目标 / 资金位置 / 冻结预留</p></div><button class="back" id="backChat">← 返回聊天</button></div>' +
+        pageView.innerHTML = '<div class="page-head"><div><h2>存钱</h2><p>v35.5 Web 演示 · 多目标 / 资金位置 / 冻结预留</p></div></div>' +
           '<div class="savings-grid"><div class="savings-stat"><div class="k">可用余额</div><div class="v blue">' + money(available) + '</div></div><div class="savings-stat stat-amber"><div class="k">冻结 / 预留</div><div class="v">' + money(frozen) + '</div></div><div class="savings-stat"><div class="k">定期存款</div><div class="v">' + money(fixedTotal) + '</div></div><div class="savings-stat"><div class="k">总资产</div><div class="v">' + money(assetTotal) + '</div></div></div>' +
           '<div class="savings-panel cashflow-panel"><div class="panel-head"><h3>每月流水</h3><button class="mini-add" id="cfToggle">近 12 个月</button></div><div class="cf-kpis"><div><small>本月收入</small><b style="color:#1f9d6b">¥8,200</b></div><div><small>本月支出</small><b style="color:#dc2626">¥5,430</b></div><div><small>本月结余</small><b style="color:#2563eb">+¥2,770</b></div></div><div id="webCfChart">' + cashflowWebSvg(12) + '</div><div class="cf-legend"><span><i style="background:#60a5fa"></i>收入</span><span><i style="background:#fca5a5"></i>支出</span><span><i style="background:#0f766e"></i>净结余</span><em>仅主人可见 · 互转不计入</em></div></div>' +
           '<div class="savings-panel"><div class="panel-head"><h3>存钱目标</h3><button class="mini-add" id="addGoal">＋ 新目标</button></div><div class="savings-goals">' + goalCards + '</div></div>' +
@@ -1076,8 +1069,7 @@
           '<div class="savings-panel"><div class="panel-head"><h3>理财 / 基金</h3><button class="mini-add" id="addFund">＋ 买入</button></div>' + fundCards + '</div>' +
           '<div class="savings-two"><div class="savings-panel"><h3>钱存在哪</h3>' + accountRows + '<div class="frozen-tip">总余额 ' + money(total) + ' = 各账户余额合计</div></div><div class="savings-panel"><div class="panel-head"><h3>冻结 / 待缴费</h3><button class="mini-add" id="addFrozen">＋ 新增</button></div>' + frozenRows + '<div class="frozen-tip">可用余额 = 总资产 ' + money(assetTotal) + ' - 冻结 ' + money(frozen) + ' - 定期 ' + money(fixedTotal) + ' - 理财 ' + money(fundTotal) + ' = <b>' + money(available) + '</b></div></div></div>' +
           '<div class="savings-two"><div class="savings-panel"><h3>记一笔</h3><div class="savings-form"><div><label>金额</label><input id="svAmount" type="number" step="0.01" placeholder="35.50"></div><div><label>账户</label><select id="svAccount">' + S.accounts.map(a => '<option>' + esc(a[0]) + '</option>').join('') + '</select></div><div><label>类型</label><select id="svKind"><option value="expense">支出</option><option value="income">收入</option><option value="saving">存钱</option></select></div><div class="full"><label>备注</label><input id="svNote" placeholder="午饭 / 旅行目标 / 兼职"></div><div class="actions"><button id="svSave">保存</button><span class="import-status" id="svMsg"></span></div></div></div><div class="savings-panel"><h3>最近流水</h3><div class="entry-list">' + rows + '</div></div></div>';
-        document.getElementById('backChat').addEventListener('click', () => showChat());
-        function openSavingModal(kind) {
+          function openSavingModal(kind) {
           const isGoal = kind === 'goal';
           const box = document.createElement('div');
           box.className = 'savings-modal';
@@ -1236,12 +1228,11 @@
         ['logs','≣','运行日志','命令与任务执行记录。'],
         ['plugins','▣','插件','安装 / 审批 / 权限 / 错误。']
       ];
-      pageView.innerHTML = '<div class="page-head"><div><div class="home-head"><h2>主页</h2><span class="home-pill">10 个功能模块</span></div><p>从主页进入聊天、记忆、存钱、信息、人设、设置、命令、定时任务和运行日志。</p></div><button class="back" id="backChat">← 返回聊天</button></div><div class="home-grid">' +
+      pageView.innerHTML = '<div class="page-head"><div><div class="home-head"><h2>主页</h2><span class="home-pill">10 个功能模块</span></div><p>从主页进入聊天、记忆、存钱、信息、人设、设置、命令、定时任务和运行日志。</p></div></div><div class="home-grid">' +
         modules.map(m => '<div class="home-card" data-target="' + m[0] + '"><div class="home-ico">' + m[1] + '</div><h3>' + esc(m[2]) + '</h3><p>' + esc(m[3]) + '</p><div class="st">● 已连接 · MOCK</div></div>').join('') + '</div>';
       [top, msgs, composer, searchBar].forEach(x => x.classList.add('chat-hide'));
       pageView.classList.add('on');
       document.querySelectorAll('.rnav').forEach(x => x.classList.toggle('on', x.dataset.page === name));
-      document.getElementById('backChat').addEventListener('click', () => showChat());
       pageView.querySelectorAll('.home-card').forEach(c => c.addEventListener('click', () => {
         const t = c.dataset.target;
         if (t === 'chat') renderChat(document.querySelector('.conv.on')?.dataset.conv || 'nao');
@@ -1254,11 +1245,10 @@
         '<div class="cmd-group"><h3>' + esc(g) + '<span>' + cmds.length + '</span></h3><div class="cmd-chips">' +
         cmds.map(c => '<button class="cmd-chip' + (/!(reload|set|exit|quit|clear|say|sayg|backup|plugin|adduser|gw|config|code|apikeys)/.test(c) ? ' owner' : '') + '">' + esc(c) + '</button>').join('') +
         '</div></div>').join('');
-      pageView.innerHTML = '<div class="cmd-page"><div class="cmd-catalog"><div class="page-head"><div><h2>命令</h2><p>51 个命令 · MOCK 目录 · v35.14 改为 /api/commands 读取</p></div><button class="back" id="backChat">← 返回聊天</button></div><div class="cmd-runbar"><span class="prompt">&gt;</span><input id="cmdInput" placeholder="输入命令，例如 !persona activate nao"><button id="cmdRun">执行</button></div><div class="cmd-hint" id="cmdHint">无参命令直接执行；带参命令先填参数；二级命令点上方命令后按提示输入。</div><div class="cmd-grid">' + groups + '</div></div><div class="cmd-result"><div class="cmd-result-head"><b>执行结果</b><span class="st" id="cmdState">选择上方命令运行</span></div><div class="cmd-output" id="cmdOutput">点击任意命令，结果显示在这里。\n\n提示：最终版通过 POST /api/command 执行。</div></div></div>';
+      pageView.innerHTML = '<div class="cmd-page"><div class="cmd-catalog"><div class="page-head"><div><h2>命令</h2><p>51 个命令 · MOCK 目录 · v35.14 改为 /api/commands 读取</p></div></div><div class="cmd-runbar"><span class="prompt">&gt;</span><input id="cmdInput" placeholder="输入命令，例如 !persona activate nao"><button id="cmdRun">执行</button></div><div class="cmd-hint" id="cmdHint">无参命令直接执行；带参命令先填参数；二级命令点上方命令后按提示输入。</div><div class="cmd-grid">' + groups + '</div></div><div class="cmd-result"><div class="cmd-result-head"><b>执行结果</b><span class="st" id="cmdState">选择上方命令运行</span></div><div class="cmd-output" id="cmdOutput">点击任意命令，结果显示在这里。\n\n提示：最终版通过 POST /api/command 执行。</div></div></div>';
       [top, msgs, composer, searchBar].forEach(x => x.classList.add('chat-hide'));
       pageView.classList.add('on');
       document.querySelectorAll('.rnav').forEach(x => x.classList.toggle('on', x.dataset.page === name));
-      document.getElementById('backChat').addEventListener('click', () => showChat());
       const RESULTS = {
         '!ping': '🏓 Pong！奈绪在线~',
         '!status': '运行中（MOCK）\n主人 QQ：未配置\n记忆：4 条\nschema：35',
@@ -1316,7 +1306,7 @@
         { date: '11-18', target: '10001', text: '本月结余 ¥3,300，旅行目标 60%。', tags: ['财务'], long: false, src: '财务摘要 · 仅 owner', lock: true },
         { date: '11-18', target: '10001', text: '房租每月 5 日缴，金额 ¥1,800。', tags: ['缴费'], long: true, src: '财务摘要 · 仅 owner', lock: true }
       ];
-      pageView.innerHTML = '<div class="page-head"><div><h2>记忆</h2><p>v35.5 Web 演示 · MOCK 数据 · 最近 7 天</p></div><button class="back" id="backChat">← 返回聊天</button></div>' +
+      pageView.innerHTML = '<div class="page-head"><div><h2>记忆</h2><p>v35.5 Web 演示 · MOCK 数据 · 最近 7 天</p></div></div>' +
         '<div class="mem-stats"><div class="mem-stat"><div class="k">记忆总数</div><div class="v">18</div></div><div class="mem-stat"><div class="k">长期记忆</div><div class="v">4</div></div><div class="mem-stat"><div class="k">事件</div><div class="v">7</div></div><div class="mem-stat"><div class="k">会话</div><div class="v">2</div></div></div>' +
         '<div class="mem-layout"><div class="mem-list">' + M.map(m => '<div class="mem-card"><div class="mem-top"><b>' + esc(m.target) + ' · 记忆</b><span class="mem-date">' + esc(m.date) + '</span></div><div class="mem-text">' + esc(m.text) + '</div><div class="mem-meta">' + m.tags.map(t => '<span class="mem-tag">' + esc(t) + '</span>').join('') + (m.long ? '<span class="mem-tag long">长期</span>' : '') + (m.lock ? '<span class="mem-tag lock">owner</span>' : '') + '<span class="mem-src">来源：' + esc(m.src) + '</span></div></div>').join('') + '</div>' +
         '<div class="mem-side"><div class="mem-panel"><h3>最近事件</h3><div class="mem-event"><i></i><div>方案通过<small>11-19 · 来自聊天</small></div></div><div class="mem-event"><i></i><div>旅行目标 60%<small>11-18 · 财务</small></div></div><div class="mem-event"><i></i><div>读完《十日终焉》第 3 章<small>11-17 · 阅读</small></div></div></div>' +
@@ -1325,11 +1315,10 @@
       [top, msgs, composer, searchBar].forEach(x => x.classList.add('chat-hide'));
       pageView.classList.add('on');
       document.querySelectorAll('.rnav').forEach(x => x.classList.toggle('on', x.dataset.page === name));
-      document.getElementById('backChat').addEventListener('click', () => showChat());
       return;
     }
     if (name === 'relation') {
-      pageView.innerHTML = '<div class="page-head"><div><h2>关系</h2><p>v35.5 Web 演示 · MOCK 数据 · 仅 owner 可见</p></div><button class="back" id="backChat">← 返回聊天</button></div>' +
+      pageView.innerHTML = '<div class="page-head"><div><h2>关系</h2><p>v35.5 Web 演示 · MOCK 数据 · 仅 owner 可见</p></div></div>' +
         '<div class="rel-page"><div class="rel-card wide"><div class="rel-k">关系档位</div><div class="rel-tier">熟</div><div class="rel-bar"><i style="width:45%"></i></div><div class="rel-note">算是熟人：可以开玩笑，但别太热络</div></div>' +
         '<div class="rel-card"><div class="rel-k">最近变化</div><div class="rel-v">聊天</div><div class="rel-note">不展示具体增减数值</div></div>' +
         '<div class="rel-card"><div class="rel-k">可见范围</div><div class="rel-v">仅 owner 全量</div><div class="rel-note">普通用户只能查看自己的关系</div></div>' +
@@ -1337,17 +1326,15 @@
       [top, msgs, composer, searchBar].forEach(x => x.classList.add('chat-hide'));
       pageView.classList.add('on');
       document.querySelectorAll('.rnav').forEach(x => x.classList.toggle('on', x.dataset.page === name));
-      document.getElementById('backChat').addEventListener('click', () => showChat());
       return;
     }
     const rows = PAGES[name] || [];
     pageView.innerHTML = '<div class="page-head"><div><h2>' + esc(TITLES[name] || name) +
-      '</h2><p>v35.5 Web 演示 · MOCK 数据</p></div><button class="back" id="backChat">← 返回聊天</button></div>' +
+      '</h2><p>v35.5 Web 演示 · MOCK 数据</p></div></div>' +
       '<div class="pgrid">' + rows.map(r => '<div class="pcard2"><h3>' + esc(r[0]) + '</h3><p>' + esc(r[1]) + '</p></div>').join('') + '</div>';
     [top, msgs, composer, searchBar].forEach(x => x.classList.add('chat-hide'));
     pageView.classList.add('on');
     document.querySelectorAll('.rnav').forEach(x => x.classList.toggle('on', x.dataset.page === name));
-    document.getElementById('backChat').addEventListener('click', () => showChat());
   }
 
   const railPages = ['home', 'chat', 'memory', 'relation', 'savings', 'weekly', 'info', 'persona', 'commands', 'cron', 'logs', 'diary', 'plugins', 'settings'];
