@@ -105,6 +105,18 @@
     .diary-page .pcard2 p[style*="color:#2563eb"]{color:#2563eb!important;font-weight:600}
     .diary-page .pgrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
     .pcard2 h3{font-size:11px;margin:0 0 5px;color:#dbe8fb}
+    .plugin-section h3{color:#1e3a5f}
+    .plugin-card{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #f1f5fb}
+    .plugin-card:last-child{border-bottom:0}
+    .plugin-copy{flex:1;min-width:0}
+    .plugin-copy h3{font-size:11px;color:#1e3a5f;margin:0 0 3px}
+    .plugin-copy p{font-size:9px;color:#8a9bb0;margin:0}
+    .plugin-action{flex:none;height:28px;border:1px solid #dbe8ff;border-radius:14px;background:#f4f9ff;color:#2563eb;font-size:9px;padding:0 12px;cursor:pointer}
+    .plugin-action.primary{background:#2563eb;border-color:#2563eb;color:#fff}
+    .plugin-action.danger{background:#fff5f5;border-color:#fecaca;color:#b91c1c}
+    .plugin-actions{display:flex;gap:6px;flex:none}
+    .plugin-line{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f1f5fb;font-size:9px;color:#526982}
+    .plugin-line b{color:#8a9bb0;font-weight:400}
     .pcard2 p{font-size:10px;line-height:1.6;color:var(--muted);margin:0}
     .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(12px);opacity:0;pointer-events:none;z-index:30;transition:.2s;background:#fff;border:1px solid #dbe8ff;color:#243b55;font-size:10.5px;border-radius:9px;padding:8px 13px;box-shadow:0 10px 24px rgba(37,99,235,.12)}
     .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -716,11 +728,13 @@
       return;
     }
     if (name === 'plugins') {
+      const pluginCard = (title, desc, action, label) => '<div class="pcard2 plugin-card"><div class="plugin-copy"><h3>' + title + '</h3><p>' + desc + '</p></div><button class="plugin-action" onclick="toast(&quot;' + action + '（演示）&quot;)">' + label + '</button></div>';
       pageView.innerHTML = '<div class="page-head"><div><h2>插件</h2><p>安装 / 审批 / 权限 / 错误 · 独立管理页</p></div><button class="back" id="backChat">← 返回聊天</button></div>' +
-        '<div class="pgrid"><div class="pcard2"><h3>已安装 6</h3><p>天气 · weather · 启用 · network <span onclick="toast(&quot;已停用（演示）&quot;)" style="display:inline-block;width:44px;height:26px;border-radius:13px;background:#2563eb;position:relative;cursor:pointer;vertical-align:middle"><i style="position:absolute;width:22px;height:22px;border-radius:50%;background:#fff;top:2px;left:20px;box-shadow:0 1px 3px rgba(15,23,42,.18)"></i></span></p><p>读书摘要 · reader · 启用 · filesystem <span onclick="toast(&quot;已停用（演示）&quot;)" style="display:inline-block;width:44px;height:26px;border-radius:13px;background:#2563eb;position:relative;cursor:pointer;vertical-align:middle"><i style="position:absolute;width:22px;height:22px;border-radius:50%;background:#fff;top:2px;left:20px;box-shadow:0 1px 3px rgba(15,23,42,.18)"></i></span></p><p>音乐 · music · 停用 · network <span onclick="toast(&quot;已启用（演示）&quot;)" style="display:inline-block;width:44px;height:26px;border-radius:13px;background:#cbd5e1;position:relative;cursor:pointer;vertical-align:middle"><i style="position:absolute;width:22px;height:22px;border-radius:50%;background:#fff;top:2px;left:2px;box-shadow:0 1px 3px rgba(15,23,42,.18)"></i></span></p><p>面板 · dashboard · 启用 · read-only <span onclick="toast(&quot;已停用（演示）&quot;)" style="display:inline-block;width:44px;height:26px;border-radius:13px;background:#2563eb;position:relative;cursor:pointer;vertical-align:middle"><i style="position:absolute;width:22px;height:22px;border-radius:50%;background:#fff;top:2px;left:20px;box-shadow:0 1px 3px rgba(15,23,42,.18)"></i></span></p></div>' +
-        '<div class="pcard2"><h3>待审批 1</h3><p>记账助手 · ledger</p><p>需要 finance 权限 · 仅 owner</p><p style="margin-top:8px"><span class="badge pink">写操作必须审批</span></p></div>' +
-        '<div class="pcard2"><h3>权限</h3><p>network · 2 个插件</p><p>filesystem · 1 个</p><p>finance · 需 owner</p></div>' +
-        '<div class="pcard2"><h3>错误</h3><p>music 播放失败 · 20:12</p><p>weather 超时 · 18:03</p></div></div>';
+        '<div class="pgrid">' +
+        '<div class="pcard2 plugin-section"><h3>已安装 6</h3>' + pluginCard('天气 · weather', '读天气 · network · v1.2.0', '已停用 weather', '停用') + pluginCard('读书摘要 · reader', '读写书架 · filesystem / db · v1.0.3', '已停用 reader', '停用') + pluginCard('音乐 · music', '播放 / 搜索 · network · v0.9.1', '已启用 music', '启用') + '</div>' +
+        '<div class="pcard2 plugin-section"><h3>待审批 1</h3><div class="plugin-card"><div class="plugin-copy"><h3>记账助手 · ledger</h3><p>读写财务 · finance · 仅 owner</p></div><div class="plugin-actions"><button class="plugin-action primary" onclick="toast(&quot;已批准 ledger（演示）&quot;)">批准</button><button class="plugin-action danger" onclick="toast(&quot;已拒绝 ledger（演示）&quot;)">拒绝</button></div></div><h3 style="margin-top:14px">权限</h3><div class="plugin-line"><span>network</span><b>2 个插件</b></div><div class="plugin-line"><span>filesystem</span><b>1 个</b></div><div class="plugin-line"><span>finance</span><b>需 owner</b></div></div>' +
+        '<div class="pcard2 plugin-section"><h3>其他已安装</h3>' + pluginCard('面板 · dashboard', '前端 slot · read-only · v1.0.0', '已停用 dashboard', '停用') + pluginCard('提醒 · reminder', '定时提醒 · notifications · v1.0.2', '已停用 reminder', '停用') + '</div>' +
+        '<div class="pcard2 plugin-section"><h3>错误</h3><div class="plugin-line"><span>music 播放失败</span><b>20:12</b></div><div class="plugin-line"><span>weather 请求超时</span><b>18:03</b></div></div></div>';
       pageView.classList.add('on');
       [top, msgs, composer, searchBar].forEach(x => x.classList.add('chat-hide'));
       document.querySelectorAll('.rnav').forEach(x => x.classList.toggle('on', x.dataset.page === 'plugins'));
