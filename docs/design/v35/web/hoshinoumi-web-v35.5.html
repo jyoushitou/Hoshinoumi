@@ -222,7 +222,8 @@ body.rail-hidden .panel-expand{display:flex;align-items:center;justify-content:c
 .side .brand{padding-right:42px;gap:8px}
 .context{padding-top:46px}
 .edge-handle{display:none;position:fixed;top:52px;z-index:30;width:26px;height:56px;border:1px solid #c7dcff;background:#eef4ff;color:#2563eb;font:16px inherit;font-weight:700;cursor:pointer;align-items:center;justify-content:center;padding:0;box-shadow:0 4px 12px rgba(37,99,235,.12)}
-.edge-handle.right-edge{right:0;border-right:0;border-radius:8px 0 0 8px}
+.edge-handle.right-edge{right:0;border-right:0;border-radius:8px 0 0 8px;touch-action:none;cursor:grab;user-select:none}
+.edge-handle.right-edge:active{cursor:grabbing}
 .chat-side-toggle{display:none;width:30px;height:30px;border:0;border-radius:8px;background:transparent;cursor:pointer;flex:none;align-items:center;justify-content:center;padding:0}.chat-side-toggle:hover{background:#eef4ff}.chat-side-toggle img{width:24px;height:24px;display:block}
 body.left-hidden .chat-side-toggle{display:flex}
 .rail-toggle{width:30px;height:30px;border:1px solid #dbe8ff;border-radius:8px;background:#f4f9ff;color:#2563eb;font:13px inherit;cursor:pointer;margin-bottom:2px}
@@ -471,6 +472,41 @@ body.right-hidden #reopenRight{display:flex}
     app.classList.remove('rail-hidden','left-hidden');
     document.body.classList.remove('rail-hidden','left-hidden');
   });
+
+  var handle=reopenRight;
+  var dragging=false, startY=0, startTop=0, moved=0;
+  var KEY='hoshinoumi.rightHandleTop';
+  function clampTop(top){
+    var h=handle.offsetHeight||56;
+    return Math.max(8, Math.min(window.innerHeight-h-8, top));
+  }
+  function setTop(top, save){
+    var value=clampTop(top);
+    handle.style.top=value+'px';
+    if(save){ try{localStorage.setItem(KEY,String(value))}catch(e){} }
+  }
+  try{ var saved=parseInt(localStorage.getItem(KEY)||'',10); if(!isNaN(saved)) setTop(saved,false); }catch(e){}
+  handle.addEventListener('pointerdown',function(e){
+    if(e.button!==0) return;
+    dragging=true; moved=0; startY=e.clientY; startTop=handle.getBoundingClientRect().top;
+    try{handle.setPointerCapture(e.pointerId)}catch(err){}
+    e.preventDefault();
+  });
+  handle.addEventListener('pointermove',function(e){
+    if(!dragging) return;
+    moved=Math.max(moved,Math.abs(e.clientY-startY));
+    setTop(startTop+e.clientY-startY,false);
+  });
+  function endDrag(){
+    if(!dragging) return;
+    dragging=false; setTop(handle.getBoundingClientRect().top,true);
+  }
+  handle.addEventListener('pointerup',endDrag);
+  handle.addEventListener('pointercancel',endDrag);
+  handle.addEventListener('click',function(e){
+    if(moved>5){ e.stopImmediatePropagation(); e.preventDefault(); moved=0; }
+  },true);
+  window.addEventListener('resize',function(){ setTop(handle.getBoundingClientRect().top,false); });
 })();
 </script>
 </body>
