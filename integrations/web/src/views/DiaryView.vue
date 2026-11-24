@@ -28,7 +28,7 @@ async function load() {
     if (!months.value.includes(selectedMonth.value)) selectedMonth.value = months.value[0] || ''
   } catch (e) {
     entries.value = []
-    error.value = e instanceof Error ? e.message : '无后端连接'
+    error.value = '无后端连接'
   } finally { loading.value = false }
 }
 onMounted(load)
@@ -43,7 +43,7 @@ onMounted(load)
     <template v-else>
     <header class="head"><div><h1>日记</h1><p>按月查看 · 前 50 字概览</p></div><button type="button" class="refresh" :disabled="loading" @click="load">{{ loading ? '刷新中…' : '刷新' }}</button></header>
     <div class="stats"><div><b>{{ entries.length }}</b><small>全部日记</small></div><div><b>{{ months.length }}</b><small>月份</small></div><div><b>{{ entries[0]?.date || '—' }}</b><small>最近</small></div></div>
-    <div v-if="error" class="notice">{{ error }}</div>
+    <div v-if="error" class="notice">{{ error }}<button type="button" @click="load">重试</button></div>
     <div v-else-if="!months.length && !loading" class="notice">暂无日记</div>
     <template v-else>
       <div class="months"><button v-for="month in months" :key="month" type="button" :class="{ on: month === selectedMonth }" @click="selectedMonth = month">{{ month.replace('-', ' 年 ') }} 月</button></div>
@@ -65,6 +65,6 @@ onMounted(load)
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:10px}.stats div{background:#fff;border:1px solid #e3ebf7;border-radius:11px;padding:10px;text-align:center}.stats b{display:block;font-size:17px;color:#1e3a5f}.stats small{display:block;font-size:8px;color:#9aabc0;margin-top:2px}
 .months{display:flex;gap:7px;overflow:auto;margin-bottom:10px}.months button{flex:none;height:29px;border:1px solid #e3ebf7;border-radius:8px;background:#fff;color:#526982;font:9px inherit;padding:0 10px;cursor:pointer}.months button.on{background:#eef4ff;border-color:#c7dcff;color:#2563eb;font-weight:700}
 .grid{display:grid;gap:8px}.card{background:#fff;border:1px solid #e3ebf7;border-radius:12px;padding:12px 13px}.card-head{display:flex;align-items:center;gap:7px}.card-head b{font-size:12px;color:#1e3a5f}.card-head span{margin-left:auto;font-size:8px;color:#9aabc0}.card p{margin:8px 0 0;font-size:10.5px;line-height:1.75;color:#526982}.meta{display:flex;align-items:center;gap:6px;margin-top:9px;font-size:8px;color:#8a9bb0}.meta button{margin-left:auto;border:1px solid #dbe8ff;background:#f4f9ff;color:#2563eb;border-radius:6px;font:8px inherit;padding:3px 8px;cursor:pointer}
-.detail-head .back{width:29px;height:29px;border:1px solid #dbe8ff;border-radius:8px;background:#fff;color:#2563eb;font-size:18px;line-height:1;cursor:pointer}.detail-card{background:#fff;border:1px solid #e3ebf7;border-radius:13px;padding:18px}.detail-title{font-size:18px;font-weight:700;color:#1e3a5f}.detail-meta{font-size:8px;color:#8a9bb0;margin-top:5px}.detail-card p{margin:16px 0 0;white-space:pre-wrap;font-size:11px;line-height:1.9;color:#405872}.notice{border:1px dashed #cfe0f7;border-radius:12px;background:#fff;padding:24px;text-align:center;color:#8a9bb0;font-size:10px}
+.detail-head .back{width:29px;height:29px;border:1px solid #dbe8ff;border-radius:8px;background:#fff;color:#2563eb;font-size:18px;line-height:1;cursor:pointer}.detail-card{background:#fff;border:1px solid #e3ebf7;border-radius:13px;padding:18px}.detail-title{font-size:18px;font-weight:700;color:#1e3a5f}.detail-meta{font-size:8px;color:#8a9bb0;margin-top:5px}.detail-card p{margin:16px 0 0;white-space:pre-wrap;font-size:11px;line-height:1.9;color:#405872}.notice button{margin-left:8px;border:1px solid #dbe8ff;border-radius:6px;background:#f4f9ff;color:#2563eb;font:8px inherit;padding:2px 7px;cursor:pointer}.notice{border:1px dashed #cfe0f7;border-radius:12px;background:#fff;padding:24px;text-align:center;color:#8a9bb0;font-size:10px}
 @media(min-width:821px){.diary{padding:22px 24px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.stats{max-width:620px}.card{min-height:150px}}
 </style>
