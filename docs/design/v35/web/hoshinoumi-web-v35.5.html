@@ -329,7 +329,7 @@ body.right-hidden #reopenRight{display:flex}
   <main class="main">
     <div class="top">
       <div class="who">
-        <button id="chatSideToggle" class="chat-side-toggle" type="button" title="展开侧栏"><img src="../../logo/hoshinoumi.svg" alt="展开侧栏"></button>
+        <button id="chatSideToggle" class="chat-side-toggle" type="button" title="展开子页面导航"><img src="../../logo/hoshinoumi.svg" alt="展开子页面导航"></button>
         <div class="avatar">奈</div>
         <div>
           <div class="nm">友利奈绪</div>
@@ -471,9 +471,8 @@ body.right-hidden #reopenRight{display:flex}
   right.addEventListener('click',toggleRight);
   var chatSideToggle=document.getElementById('chatSideToggle');
   chatSideToggle.addEventListener('click',function(){
-    app.classList.remove('rail-hidden','left-hidden');
-    document.body.classList.remove('rail-hidden','left-hidden');
-    sideToggle.classList.remove('on');
+    app.classList.remove('rail-hidden');
+    document.body.classList.remove('rail-hidden');
   });
   reopenRight.addEventListener('click',toggleRight);
 
