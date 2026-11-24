@@ -219,15 +219,22 @@ button{color:inherit}
 .context{padding-top:46px}
 .edge-handle{display:none;position:fixed;top:52px;z-index:30;width:26px;height:56px;border:1px solid #c7dcff;background:#eef4ff;color:#2563eb;font:16px inherit;font-weight:700;cursor:pointer;align-items:center;justify-content:center;padding:0;box-shadow:0 4px 12px rgba(37,99,235,.12)}
 .edge-handle.right-edge{right:0;border-right:0;border-radius:8px 0 0 8px}
+.rail-collapse{width:26px;height:22px;border:1px solid #dbe8ff;border-radius:6px;background:#f4f9ff;color:#52708f;font:14px inherit;line-height:1;cursor:pointer;margin-bottom:2px}
+.rail-collapse:hover{background:#eef4ff;color:#2563eb}
 .rail-toggle{width:30px;height:30px;border:1px solid #dbe8ff;border-radius:8px;background:#f4f9ff;color:#2563eb;font:13px inherit;cursor:pointer;margin-bottom:2px}
 .rail-toggle.on{background:#2563eb;color:#fff;border-color:#2563eb}
 body.right-hidden #reopenRight{display:flex}
+body.rail-hidden #reopenRail{display:flex}
+.left-edge{left:0;border-left:0;border-radius:0 8px 8px 0}
+.app.rail-hidden{grid-template-columns:0 292px minmax(0,1fr) 304px}
 .app.left-hidden{grid-template-columns:64px 0 minmax(0,1fr) 304px}
+.app.rail-hidden.left-hidden{grid-template-columns:0 0 minmax(0,1fr) 304px}
+.app.rail-hidden>.rail{opacity:0;pointer-events:none;overflow:hidden;min-width:0;transform:translateX(-8px);visibility:hidden;transition:opacity .2s,transform .28s,visibility 0s .28s}
 .app.left-hidden>.side{opacity:0;pointer-events:none;overflow:hidden;min-width:0;transform:translateX(-8px);visibility:hidden;transition:opacity .2s,transform .28s,visibility 0s .28s}
 .app.right-hidden{grid-template-columns:64px 292px minmax(0,1fr) 0}
 .app.right-hidden>.context{opacity:0;pointer-events:none;overflow:hidden;min-width:0;transform:translateX(8px);visibility:hidden;transition:opacity .2s,transform .28s,visibility 0s .28s}
 .app.left-hidden.right-hidden{grid-template-columns:64px 0 minmax(0,1fr) 0}
-@media(max-width:1180px){.app.left-hidden{grid-template-columns:64px 0 minmax(0,1fr)}}
+@media(max-width:1180px){.app.rail-hidden{grid-template-columns:0 270px minmax(0,1fr)}.app.left-hidden{grid-template-columns:64px 0 minmax(0,1fr)}.app.rail-hidden.left-hidden{grid-template-columns:0 0 minmax(0,1fr)}}
 </style>
 </head>
 <body>
@@ -236,6 +243,7 @@ body.right-hidden #reopenRight{display:flex}
 
   <aside class="rail">
     <div class="logo"><img src="../../logo/hoshinoumi.svg" alt="Hoshinoumi"></div>
+    <button id="toggleRail" class="rail-collapse" type="button" title="隐藏导航栏">‹</button>
     <button class="rnav" data-page="home" title="主页">⌂</button>
     <button class="rnav on" data-page="chat" title="nao（聊天）">◉<span class="badge">2</span></button>
     <button class="rnav" data-page="memory" title="记忆">◈</button>
@@ -434,6 +442,7 @@ body.right-hidden #reopenRight{display:flex}
     </div>
   </aside>
 </div>
+<button id="reopenRail" class="edge-handle left-edge" type="button" title="展开导航栏">›</button>
 <button id="reopenRight" class="edge-handle right-edge" type="button" title="展开右侧栏">‹</button>
 <div class="tagdraft">DESIGN DRAFT · v35.5 · WEB · 2026-11-19</div>
 <script src="demo.js?v=35.5.34"></script>
@@ -444,10 +453,15 @@ body.right-hidden #reopenRight{display:flex}
   var left=document.getElementById('toggleLeft');
   var right=document.getElementById('toggleRight');
   var reopenRight=document.getElementById('reopenRight');
+  var reopenRail=document.getElementById('reopenRail');
+  var railToggle=document.getElementById('toggleRail');
   var sideToggle=document.getElementById('toggleSide');
   if(!app||!left||!right) return;
+  var toggleRail=function(){ app.classList.toggle('rail-hidden'); document.body.classList.toggle('rail-hidden'); };
   var toggleLeft=function(){ app.classList.toggle('left-hidden'); document.body.classList.toggle('left-hidden'); sideToggle.classList.toggle('on',app.classList.contains('left-hidden')); };
   var toggleRight=function(){ app.classList.toggle('right-hidden'); document.body.classList.toggle('right-hidden'); };
+  railToggle.addEventListener('click',toggleRail);
+  reopenRail.addEventListener('click',toggleRail);
   left.addEventListener('click',toggleLeft);
   sideToggle.addEventListener('click',toggleLeft);
   right.addEventListener('click',toggleRight);
