@@ -480,6 +480,14 @@ class Handler(BaseHTTPRequestHandler):
             if isinstance(data.get("diary"), list): DIARY_ENTRIES[:] = data["diary"]
             if isinstance(data.get("tasks"), list): TASKS[:] = data["tasks"]
             self._json(200, {"ok": True, "rolled_back": True, "mock": True}); return
+        if path == "/api/backup/drill":
+            try: size = max(10, min(5000, int(body.get("size") or 2000)))
+            except (TypeError, ValueError): size = 2000
+            started = time.time()
+            rows = [{"id": i, "target_id": OWNER_QQ, "content": f"迁移演练记录 {i}", "tags": ["迁移"], "source": "drill", "longterm": False, "created_at": _now()} for i in range(size)]
+            encoded = json.dumps({"memories": rows}, ensure_ascii=False, sort_keys=True).encode("utf-8")
+            checksum = hashlib.sha256(encoded).hexdigest()
+            self._json(200, {"ok": True, "entries": size, "bytes": len(encoded), "checksum": checksum, "steps": ["export", "checksum", "restore"], "elapsed_ms": int((time.time() - started) * 1000), "mock": True}); return
         if path == "/api/push/devices":
             self._json(200, {"ok": True, "data": list(PUSH_DEVICES.values()), "preferences": PUSH_PREFS, "mock": True})
             return
