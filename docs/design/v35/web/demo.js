@@ -717,7 +717,7 @@
     }
     if (name === 'plugins') {
       pageView.innerHTML = '<div class="page-head"><div><h2>插件</h2><p>安装 / 审批 / 权限 / 错误 · 独立管理页</p></div><button class="back" id="backChat">← 返回聊天</button></div>' +
-        '<div class="pgrid"><div class="pcard2"><h3>已安装 6</h3><p>天气 · weather · 启用 · network</p><p>读书摘要 · reader · 启用 · filesystem</p><p>音乐 · music · 停用 · network</p><p>面板 · dashboard · 启用 · read-only</p></div>' +
+        '<div class="pgrid"><div class="pcard2"><h3>已安装 6</h3><p>天气 · weather · 启用 · network <button class="back" onclick="toast(&quot;已停用 weather（演示）&quot;)">停用</button></p><p>读书摘要 · reader · 启用 · filesystem <button class="back" onclick="toast(&quot;已停用 reader（演示）&quot;)">停用</button></p><p>音乐 · music · 停用 · network <button class="back" onclick="toast(&quot;已启用 music（演示）&quot;)">启用</button></p><p>面板 · dashboard · 启用 · read-only <button class="back" onclick="toast(&quot;已停用 dashboard（演示）&quot;)">停用</button></p></div>' +
         '<div class="pcard2"><h3>待审批 1</h3><p>记账助手 · ledger</p><p>需要 finance 权限 · 仅 owner</p><p style="margin-top:8px"><span class="badge pink">写操作必须审批</span></p></div>' +
         '<div class="pcard2"><h3>权限</h3><p>network · 2 个插件</p><p>filesystem · 1 个</p><p>finance · 需 owner</p></div>' +
         '<div class="pcard2"><h3>错误</h3><p>music 播放失败 · 20:12</p><p>weather 超时 · 18:03</p></div></div>';

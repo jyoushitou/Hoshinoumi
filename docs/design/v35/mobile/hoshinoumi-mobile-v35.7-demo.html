@@ -717,11 +717,11 @@ screens.plugins = `
   <div class="d-scroll">
     <div class="info-stats"><div class="info-stat"><small>已安装</small><b>6</b></div><div class="info-stat"><small>待审批</small><b style="color:#b7791f">1</b></div><div class="info-stat"><small>错误</small><b>2</b></div></div>
     <div class="cmd-chips" style="margin-bottom:8px"><button class="on" onclick="selectSeg(this)">已安装</button><button onclick="selectSeg(this)">待审批 1</button><button onclick="selectSeg(this)">权限</button><button onclick="selectSeg(this)">错误</button></div>
-    <div class="d-card" style="margin-bottom:7px"><div style="display:flex;align-items:center;gap:7px"><b style="font-size:10px;color:#314a65">天气 · weather</b><em style="margin-left:auto;font-style:normal;font-size:7.5px;color:#1f9d6b">启用</em></div><div style="font-size:8px;color:#8a9bb0;margin-top:4px">读天气 · network</div><div style="display:flex;justify-content:flex-end;margin-top:7px"><div class="switch on" onclick="toggleSwitch(this)"></div></div></div>
-    <div class="d-card" style="margin-bottom:7px"><div style="display:flex;align-items:center;gap:7px"><b style="font-size:10px;color:#314a65">读书摘要 · reader</b><em style="margin-left:auto;font-style:normal;font-size:7.5px;color:#1f9d6b">启用</em></div><div style="font-size:8px;color:#8a9bb0;margin-top:4px">读写书架 · filesystem / db</div><div style="display:flex;justify-content:flex-end;margin-top:7px"><div class="switch on" onclick="toggleSwitch(this)"></div></div></div>
-    <div class="d-card" style="margin-bottom:7px"><div style="display:flex;align-items:center;gap:7px"><b style="font-size:10px;color:#314a65">音乐 · music</b><em style="margin-left:auto;font-style:normal;font-size:7.5px;color:#9aabc0">停用</em></div><div style="font-size:8px;color:#8a9bb0;margin-top:4px">播放 / 搜索 · network</div><div style="display:flex;justify-content:flex-end;margin-top:7px"><div class="switch" onclick="toggleSwitch(this)"></div></div></div>
+    <div class="d-card" style="margin-bottom:7px"><div style="display:flex;align-items:center;gap:7px"><b style="font-size:10px;color:#314a65">天气 · weather</b><em style="margin-left:auto;font-style:normal;font-size:7.5px;color:#1f9d6b">启用</em></div><div style="font-size:8px;color:#8a9bb0;margin-top:4px">读天气 · network</div><div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:7px"><button class="add-btn" style="height:24px;font-size:8px;padding:0 7px" onclick="togglePlugin(this)">停用</button><div class="switch on" onclick="toggleSwitch(this)"></div></div></div>
+    <div class="d-card" style="margin-bottom:7px"><div style="display:flex;align-items:center;gap:7px"><b style="font-size:10px;color:#314a65">读书摘要 · reader</b><em style="margin-left:auto;font-style:normal;font-size:7.5px;color:#1f9d6b">启用</em></div><div style="font-size:8px;color:#8a9bb0;margin-top:4px">读写书架 · filesystem / db</div><div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:7px"><button class="add-btn" style="height:24px;font-size:8px;padding:0 7px" onclick="togglePlugin(this)">停用</button><div class="switch on" onclick="toggleSwitch(this)"></div></div></div>
+    <div class="d-card" style="margin-bottom:7px"><div style="display:flex;align-items:center;gap:7px"><b style="font-size:10px;color:#314a65">音乐 · music</b><em style="margin-left:auto;font-style:normal;font-size:7.5px;color:#9aabc0">停用</em></div><div style="font-size:8px;color:#8a9bb0;margin-top:4px">播放 / 搜索 · network</div><div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:7px"><button class="add-btn" style="height:24px;font-size:8px;padding:0 7px" onclick="togglePlugin(this)">启用</button><div class="switch" onclick="toggleSwitch(this)"></div></div></div>
     <div class="d-card" style="margin-bottom:7px;border-color:#f2d491;background:#fffaf0"><div style="display:flex;align-items:center;gap:7px"><b style="font-size:10px;color:#314a65">记账助手 · ledger</b><em style="margin-left:auto;font-style:normal;font-size:7.5px;color:#b7791f">待审批</em></div><div style="font-size:8px;color:#8a9bb0;margin-top:4px">读写财务 · finance（owner）</div><div style="display:flex;gap:6px;margin-top:7px"><button class="add-btn" style="flex:1;height:26px" onclick="toast('已批准 ledger（演示）')">批准</button><button class="add-btn" style="flex:1;height:26px;background:#fff;color:#b23b52;border:1px solid #fecaca" onclick="toast('已拒绝 ledger（演示）')">拒绝</button></div></div>
-    <div class="d-card" style="margin-bottom:7px"><div style="display:flex;align-items:center;gap:7px"><b style="font-size:10px;color:#314a65">面板 · dashboard</b><em style="margin-left:auto;font-style:normal;font-size:7.5px;color:#1f9d6b">启用</em></div><div style="font-size:8px;color:#8a9bb0;margin-top:4px">前端 slot · read-only</div></div>
+    <div class="d-card" style="margin-bottom:7px"><div style="display:flex;align-items:center;gap:7px"><b style="font-size:10px;color:#314a65">面板 · dashboard</b><em style="margin-left:auto;font-style:normal;font-size:7.5px;color:#1f9d6b">启用</em></div><div style="font-size:8px;color:#8a9bb0;margin-top:4px">前端 slot · read-only</div><div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:7px"><button class="add-btn" style="height:24px;font-size:8px;padding:0 7px" onclick="togglePlugin(this)">停用</button><div class="switch on" onclick="toggleSwitch(this)"></div></div></div>
     <div class="d-card" style="margin-top:9px;font-size:8px;color:#8598ad;line-height:1.7">插件默认只读；写操作逐项审批并审计。安装 / 审批 / 权限 / 错误都在独立子页面管理。</div>
   </div>
 </div>
@@ -879,6 +879,17 @@ function deleteCron(btn){
   toast('已删除定时任务（演示）')
 }
 function toggleSwitch(el){ el.classList.toggle('on'); toast(el.classList.contains('on')?'已开启演示':'已关闭演示') }
+function togglePlugin(btn){
+  const card = btn.closest('.d-card')
+  const sw = card?.querySelector('.switch')
+  if(!sw) return
+  sw.classList.toggle('on')
+  const on = sw.classList.contains('on')
+  const state = card.querySelector('em')
+  if(state){ state.textContent = on ? '启用' : '停用'; state.style.color = on ? '#1f9d6b' : '#9aabc0' }
+  btn.textContent = on ? '停用' : '启用'
+  toast((on ? '已启用 ' : '已停用 ') + (card.querySelector('b')?.textContent || '插件') + '（演示）')
+}
 
 function sendMsg(){
   const input=document.getElementById('input'); if(!input) return
