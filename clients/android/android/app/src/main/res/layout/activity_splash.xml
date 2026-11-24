@@ -75,11 +75,12 @@
     </LinearLayout>
 
     <TextView
+        android:id="@+id/splashFoot"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|center_horizontal"
         android:layout_marginBottom="26dp"
-        android:text="POWERED BY JYOUSHITOU · v35.8"
+        android:text="POWERED BY JYOUSHITOU"
         android:textColor="#6F8CAE"
         android:textSize="7sp"
         android:letterSpacing="0.16" />
