@@ -45,6 +45,7 @@ PUSH_TIMERS = {}  # device_id -> timer
 AUTH_USERS = {OWNER_QQ: {"password": "mock1234", "token": "mock-token", "role": "owner"}}
 AUTH_TOKENS = {"mock-token"}
 FINANCE_AUDIT = []
+BACKUP_SNAPSHOT = {"data": None}
 SETUP_CODES = {"HSHM-2026": False}
 
 

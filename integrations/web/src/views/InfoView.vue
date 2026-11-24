@@ -8,12 +8,38 @@ const status = ref<{ status?: string; master_qq?: string; schema?: number } | nu
 const error = ref('')
 interface Backup { manifest?: { created_at?: string; counts?: Record<string, number>; checksums?: Record<string, string> }; db?: unknown }
 const backup = ref<Backup | null>(null)
+const exported = ref<unknown>(null)
+const importText = ref('')
+const importState = ref('')
+const importBusy = ref(false)
 const backupBusy = ref(false)
+async function importBackup(dryRun: boolean) {
+  let payload: unknown
+  try { payload = JSON.parse(importText.value) } catch { importState.value = 'JSON 格式错误'; return }
+  importBusy.value = true
+  try {
+    await http.post('/api/backup/import', { backup: payload, dry_run: dryRun })
+    if (dryRun) importState.value = '校验通过，可以恢复'
+    else { importState.value = '已恢复；可回滚'; await load() }
+  } catch (e) { importState.value = e instanceof Error ? e.message : '导入失败' } finally { importBusy.value = false }
+}
+async function rollbackBackup() {
+  importBusy.value = true
+  try { await http.post('/api/backup/rollback', {}); importState.value = '已回滚到导入前'; await load() } catch (e) { importState.value = e instanceof Error ? e.message : '回滚失败' } finally { importBusy.value = false }
+}
+function onImportFile(event: Event) {
+  const file = (event.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  const reader = new FileReader()
+  reader.onload = () => { importText.value = String(reader.result || ''); importState.value = '已读取文件，先校验' }
+  reader.readAsText(file)
+}
 async function exportBackup() {
   backupBusy.value = true
   try {
     const data = await http.get<Backup & { ok: boolean }>('/api/backup/export')
     backup.value = data
+    exported.value = data
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'hoshinoumi-backup.json'; a.click(); URL.revokeObjectURL(a.href)
   } catch { error.value = '导出失败：无后端连接' } finally { backupBusy.value = false }
@@ -54,6 +80,7 @@ onMounted(load)
         <div v-if="backup"><span>条目</span><b>记忆 {{ backup.manifest?.counts?.memories }} · 日记 {{ backup.manifest?.counts?.diary }}</b></div>
         <div v-if="backup"><span>data sha256</span><b>{{ backup.manifest?.checksums?.data?.slice(0, 16) }}…</b></div>
         <button type="button" class="primary" :disabled="backupBusy" @click="exportBackup">{{ backupBusy ? '导出中…' : '导出实例' }}</button>
+        <div class="import-box"><label>导入备份（JSON）<input type="file" accept=".json,application/json" @change="onImportFile"></label><textarea v-model="importText" placeholder="或粘贴导出的 JSON"></textarea><div class="import-actions"><button type="button" :disabled="importBusy || !importText.trim()" @click="importBackup(true)">校验</button><button type="button" class="danger" :disabled="importBusy || !importText.trim()" @click="importBackup(false)">恢复</button><button type="button" :disabled="importBusy" @click="rollbackBackup">回滚</button></div><div v-if="importState" class="import-state">{{ importState }}</div></div>
       </div>
       <div v-else-if="section === 'plan'" class="rows"><div><span>周计划</span><b>ISO 年周</b></div><div><span>定时任务</span><b>3 个</b></div></div>
       <div v-else-if="section === 'account'" class="rows"><div><span>主人</span><b>{{ status?.master_qq || '—' }}</b></div><div><span>成员</span><b>按 target 隔离</b></div></div>
@@ -67,7 +94,7 @@ onMounted(load)
 .info{flex:1;min-height:0;overflow:auto;padding:18px 18px 24px;background:#f7faff;color:#17263b;box-sizing:border-box}.head{display:flex;align-items:flex-end;gap:10px;margin-bottom:12px}.head h1{margin:0;font-size:24px;letter-spacing:-.03em}.head p{margin:3px 0 0;font-size:10px;color:#8a9bb0}.conn{margin-left:auto;font-size:8px;color:#1f9d6b;border:1px solid #cdeee0;background:#eefbf5;border-radius:10px;padding:3px 7px}.conn.off{color:#8a9bb0;border-color:#e3ebf7;background:#f8fbff}
 .overview{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:10px}.overview div{background:#fff;border:1px solid #e3ebf7;border-radius:10px;padding:9px}.overview small{display:block;font-size:7.5px;color:#9aabc0}.overview b{display:block;font-size:12px;color:#1e3a5f;margin-top:3px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px}.entry{display:flex;align-items:center;gap:7px;text-align:left;background:#fff;border:1px solid #e3ebf7;border-radius:10px;padding:9px;cursor:pointer}.entry.on{background:#eef4ff;border-color:#c7dcff}.icon{width:26px;height:26px;border-radius:8px;background:#f4f8ff;display:grid;place-items:center;color:#52708f;flex:none}.entry b{display:block;font-size:9.5px;color:#314a65}.entry small{display:block;font-size:7px;color:#9aabc0;margin-top:2px}.entry em{margin-left:auto;font-style:normal;color:#9aabc0}
-.panel{background:#fff;border:1px solid #e3ebf7;border-radius:12px;padding:11px}.panel-head{display:flex;align-items:baseline;gap:7px;margin-bottom:7px}.primary{width:100%;height:30px;margin-top:8px;border:0;border-radius:7px;background:#2563eb;color:#fff;font:9px inherit;font-weight:700;cursor:pointer}.panel-head b{font-size:10px;color:#1e3a5f}.panel-head span{font-size:7.5px;color:#9aabc0}.rows div{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid #f1f5fb}.rows div:last-child{border-bottom:0}.rows span{font-size:8.5px;color:#8a9bb0}.rows b{font-size:8.5px;color:#405872;font-weight:600;text-align:right;word-break:break-all}.notice{border:1px solid #fecaca;background:#fff5f5;color:#b91c1c;border-radius:8px;padding:7px 9px;font-size:9px;margin-bottom:8px}
+.panel{background:#fff;border:1px solid #e3ebf7;border-radius:12px;padding:11px}.panel-head{display:flex;align-items:baseline;gap:7px;margin-bottom:7px}.import-box{margin-top:9px;border-top:1px solid #f1f5fb;padding-top:9px;display:grid;gap:6px}.import-box label{font-size:8px;color:#8a9bb0}.import-box input{font-size:8px;margin-top:4px}.import-box textarea{min-height:68px;border:1px solid #e3ebf7;border-radius:7px;background:#f8fbff;padding:6px;font:8px ui-monospace,monospace;resize:vertical}.import-actions{display:flex;gap:5px}.import-actions button{flex:1;height:26px;border:1px solid #dbe8ff;border-radius:6px;background:#f4f9ff;color:#2563eb;font:8px inherit;cursor:pointer}.import-actions button.danger{color:#b91c1c;border-color:#fecaca;background:#fff5f5}.import-state{font-size:8px;color:#6b7c95}.primary{width:100%;height:30px;margin-top:8px;border:0;border-radius:7px;background:#2563eb;color:#fff;font:9px inherit;font-weight:700;cursor:pointer}.panel-head b{font-size:10px;color:#1e3a5f}.panel-head span{font-size:7.5px;color:#9aabc0}.rows div{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid #f1f5fb}.rows div:last-child{border-bottom:0}.rows span{font-size:8.5px;color:#8a9bb0}.rows b{font-size:8.5px;color:#405872;font-weight:600;text-align:right;word-break:break-all}.notice{border:1px solid #fecaca;background:#fff5f5;color:#b91c1c;border-radius:8px;padding:7px 9px;font-size:9px;margin-bottom:8px}
 @media(min-width:821px){.info{padding:22px 24px;max-width:980px}.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.overview{max-width:620px}}
 .head,.overview,.grid,.panel{animation:info-in .28s cubic-bezier(.22,1,.36,1) both}.overview{animation-delay:.03s}.grid{animation-delay:.06s}.panel{animation-delay:.09s}.entry{transition:background .18s,border-color .18s,transform .18s}.entry:hover{transform:translateY(-1px)}@keyframes info-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}@media(prefers-reduced-motion:reduce){.head,.overview,.grid,.panel{animation:none}}
 </style>
