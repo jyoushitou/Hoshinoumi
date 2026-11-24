@@ -212,15 +212,14 @@ button{color:inherit}
 .chat-more{position:fixed;right:22px;top:52px;width:150px;background:#fff;border:1px solid #e3ebf7;border-radius:10px;box-shadow:0 12px 30px rgba(37,99,235,.14);padding:5px;z-index:45;display:none}.chat-more.on{display:block}.chat-more button{display:flex;width:100%;align-items:center;gap:7px;border:0;background:#fff;border-radius:7px;padding:7px 8px;text-align:left;font:9.5px inherit;color:#405a78;cursor:pointer}.chat-more button:hover{background:#f2f7ff;color:#2563eb}.chat-more .sep{height:1px;background:#eef3fb;margin:3px 4px}
 
 .side,.context{position:relative}
-.panel-expand{display:none;position:absolute;top:12px;left:10px;width:26px;height:26px;border:1px solid #dbe8ff;border-radius:7px;background:#fff;color:#2563eb;font:13px inherit;line-height:1;cursor:pointer;z-index:6}
+.panel-expand{display:none;position:static;width:26px;height:26px;border:0;border-radius:7px;background:transparent;color:#2563eb;font:13px inherit;line-height:1;cursor:pointer;z-index:6;padding:0;flex:none}
 body.rail-hidden .panel-expand{display:flex;align-items:center;justify-content:center}
 .panel-expand img{width:18px;height:18px;display:block}
-body.rail-hidden .side .brand{padding-left:36px}
 .panel-hide{position:absolute;top:14px;width:22px;height:22px;border:0;border-radius:6px;background:transparent;color:#9aabc0;font:13px/1 inherit;cursor:pointer;z-index:5;padding:0;display:grid;place-items:center;transition:background .18s,color .18s}
 .panel-hide:hover{background:#eef4ff;color:#2563eb}
 #toggleLeft{right:10px}
 .context .panel-hide{left:10px;right:auto;top:12px}
-.side .brand{padding-right:42px}
+.side .brand{padding-right:42px;gap:8px}
 .context{padding-top:46px}
 .edge-handle{display:none;position:fixed;top:52px;z-index:30;width:26px;height:56px;border:1px solid #c7dcff;background:#eef4ff;color:#2563eb;font:16px inherit;font-weight:700;cursor:pointer;align-items:center;justify-content:center;padding:0;box-shadow:0 4px 12px rgba(37,99,235,.12)}
 .edge-handle.right-edge{right:0;border-right:0;border-radius:8px 0 0 8px}
@@ -266,9 +265,9 @@ body.rail-hidden.left-hidden #reopenRailEdge{display:flex}
   </aside>
 
   <aside class="side">
-    <button id="reopenRail" class="panel-expand" type="button" title="展开导航栏"><img src="../../logo/hoshinoumi.svg" alt="展开导航"></button>
     <button id="toggleLeft" class="panel-hide" type="button" title="隐藏左侧栏">‹</button>
     <div class="brand">
+      <button id="reopenRail" class="panel-expand" type="button" title="展开导航栏"><img src="../../logo/hoshinoumi.svg" alt="展开导航"></button>
       <div class="word">HOSHINOUMI</div>
       <div class="ver">WEB v35.5</div>
     </div>
