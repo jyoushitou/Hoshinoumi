@@ -67,13 +67,13 @@ body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 20% 0%,
 .composer .input:empty:before{content:attr(data-ph);color:#aab7c8;font-size:10px}
 .bottom-nav{position:relative;height:auto;max-height:76px;overflow:hidden;flex:none;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-end;background:rgba(255,255,255,.96);border-top:1px solid #e5edf9;padding:0 8px 8px;backdrop-filter:blur(10px);transition:max-height .28s cubic-bezier(.2,.8,.2,1)}
 .bottom-nav.expanded{max-height:260px}
-.bottom-nav .nav-row{position:relative;display:grid;grid-template-columns:repeat(4,1fr);width:100%;height:46px;max-height:46px;overflow:hidden;opacity:1;transition:max-height .3s cubic-bezier(.22,1,.36,1),opacity .18s ease}
+.bottom-nav .nav-row{position:relative;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));width:100%;height:46px;max-height:46px;overflow:hidden;opacity:1;transition:max-height .3s cubic-bezier(.22,1,.36,1),opacity .18s ease}
 .nav-indicator{position:absolute;top:4px;bottom:4px;left:0;border-radius:12px;background:#eef4ff;z-index:0;transition:transform .36s cubic-bezier(.22,1,.36,1),width .3s ease;pointer-events:none}
 .nav-all{display:block;width:100%;max-height:0;overflow:hidden;opacity:0;transform:translateY(8px);padding:0 6px;transition:max-height .34s cubic-bezier(.22,1,.36,1),opacity .22s ease,transform .34s cubic-bezier(.22,1,.36,1),padding .34s cubic-bezier(.22,1,.36,1)}
 .bottom-nav.expanded .nav-all{max-height:220px;opacity:1;transform:none;padding:4px 6px 2px}
 .bottom-nav.expanded .nav-row{max-height:0;opacity:0;pointer-events:none}
-.nav-all-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding-top:3px}
-.nav-all-grid button{position:relative;height:40px;border:1px solid #e1ebf9;background:#f8fbff;border-radius:9px;color:#5a718d;display:grid;place-items:center;cursor:pointer}
+.nav-all-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;padding-top:3px;width:100%;box-sizing:border-box}
+.nav-all-grid button{position:relative;min-width:0;height:40px;border:1px solid #e1ebf9;background:#f8fbff;border-radius:9px;color:#5a718d;display:grid;place-items:center;cursor:pointer;box-sizing:border-box}
 .all-unread{position:absolute;top:4px;right:6px;min-width:12px;height:12px;border-radius:6px;background:#ef4444;color:#fff;font-size:6px;font-weight:800;display:grid;place-items:center;padding:0 2px}
 .nav-all-grid button b{font-size:16px;line-height:1;font-weight:400;color:#687f9b}
 .nav-all-grid button.on{border-color:#bcd4ff;background:#eef4ff;color:#2563eb}
