@@ -223,10 +223,11 @@ body.rail-hidden .panel-expand{display:flex;align-items:center;justify-content:c
 .context{padding-top:46px}
 .edge-handle{display:none;position:fixed;top:52px;z-index:30;width:26px;height:56px;border:1px solid #c7dcff;background:#eef4ff;color:#2563eb;font:16px inherit;font-weight:700;cursor:pointer;align-items:center;justify-content:center;padding:0;box-shadow:0 4px 12px rgba(37,99,235,.12)}
 .edge-handle.right-edge{right:0;border-right:0;border-radius:8px 0 0 8px}
+.chat-side-toggle{display:none;width:26px;height:26px;border:1px solid #dbe8ff;border-radius:7px;background:#f4f9ff;color:#2563eb;font:12px inherit;cursor:pointer;flex:none;align-items:center;justify-content:center;padding:0}
+body.rail-hidden .chat-side-toggle,body.left-hidden .chat-side-toggle{display:flex}
 .rail-toggle{width:30px;height:30px;border:1px solid #dbe8ff;border-radius:8px;background:#f4f9ff;color:#2563eb;font:13px inherit;cursor:pointer;margin-bottom:2px}
 .rail-toggle.on{background:#2563eb;color:#fff;border-color:#2563eb}
 body.right-hidden #reopenRight{display:flex}
-body.rail-hidden.left-hidden #reopenRailEdge{display:flex}
 .left-edge{left:0;border-left:0;border-radius:0 8px 8px 0}
 .app.rail-hidden{grid-template-columns:0 292px minmax(0,1fr) 304px}
 .app.left-hidden{grid-template-columns:64px 0 minmax(0,1fr) 304px}
@@ -327,6 +328,7 @@ body.rail-hidden.left-hidden #reopenRailEdge{display:flex}
   <main class="main">
     <div class="top">
       <div class="who">
+        <button id="chatSideToggle" class="chat-side-toggle" type="button" title="展开侧栏">☰</button>
         <div class="avatar">奈</div>
         <div>
           <div class="nm">友利奈绪</div>
@@ -444,7 +446,6 @@ body.rail-hidden.left-hidden #reopenRailEdge{display:flex}
     </div>
   </aside>
 </div>
-<button id="reopenRailEdge" class="edge-handle left-edge" type="button" title="展开导航栏">›</button>
 <button id="reopenRight" class="edge-handle right-edge" type="button" title="展开右侧栏">‹</button>
 <div class="tagdraft">DESIGN DRAFT · v35.5 · WEB · 2026-11-19</div>
 <script src="demo.js?v=35.5.34"></script>
@@ -456,7 +457,6 @@ body.rail-hidden.left-hidden #reopenRailEdge{display:flex}
   var right=document.getElementById('toggleRight');
   var reopenRight=document.getElementById('reopenRight');
   var reopenRail=document.getElementById('reopenRail');
-  var reopenRailEdge=document.getElementById('reopenRailEdge');
   var railToggle=document.getElementById('toggleRail');
   var sideToggle=document.getElementById('toggleSide');
   if(!app||!left||!right) return;
@@ -465,11 +465,16 @@ body.rail-hidden.left-hidden #reopenRailEdge{display:flex}
   var toggleRight=function(){ app.classList.toggle('right-hidden'); document.body.classList.toggle('right-hidden'); };
   railToggle.addEventListener('click',toggleRail);
   reopenRail.addEventListener('click',toggleRail);
-  reopenRailEdge.addEventListener('click',toggleRail);
   left.addEventListener('click',toggleLeft);
   sideToggle.addEventListener('click',toggleLeft);
   right.addEventListener('click',toggleRight);
   reopenRight.addEventListener('click',toggleRight);
+  var chatSideToggle=document.getElementById('chatSideToggle');
+  chatSideToggle.addEventListener('click',function(){
+    app.classList.remove('rail-hidden','left-hidden');
+    document.body.classList.remove('rail-hidden','left-hidden');
+    sideToggle.classList.remove('on');
+  });
 })();
 </script>
 </body>
