@@ -31,10 +31,14 @@ import urllib.request
 from datetime import datetime, timedelta
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
+from pathlib import Path
 
 VERSION = "35.2.25.0"
 SCHEMA = 35
 OWNER_QQ = "10001"
+ROOT = Path(__file__).resolve().parents[2]
+APK_DIR = Path(os.environ.get("HOSHINOUMI_APK_DIR", ROOT / "data" / "apk"))
+CLIENTS_FILE = Path(os.environ.get("HOSHINOUMI_CLIENTS_FILE", ROOT / "data" / "clients" / "clients.json"))
 READS = {}  # target_id -> last_read_id
 CUSTOM_GROUPS = {}
 GROUP_META = {}
@@ -331,12 +335,96 @@ def _now() -> str:
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
+
+def _latest_apk():
+    if not APK_DIR.exists():
+        return None
+    preferred = APK_DIR / "latest.apk"
+    files = sorted(APK_DIR.glob("*.apk"), key=lambda x: x.stat().st_mtime, reverse=True)
+    apk = preferred if preferred.exists() else (files[0] if files else None)
+    if not apk:
+        return None
+    meta = {}
+    meta_file = APK_DIR / "latest.json"
+    if meta_file.exists():
+        try: meta = json.loads(meta_file.read_text(encoding="utf-8"))
+        except Exception: meta = {}
+    version = str(meta.get("versionName") or apk.stem.replace("hoshinoumi-", ""))
+    digest = hashlib.sha256()
+    with apk.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return {"path": apk, "versionName": version, "versionCode": int(meta.get("versionCode") or 0), "size": apk.stat().st_size, "sha256": digest.hexdigest(), "notes": str(meta.get("notes") or "后端内置最新安装包")}
+
+def _client_entries():
+    if CLIENTS_FILE.exists():
+        try:
+            payload = json.loads(CLIENTS_FILE.read_text(encoding="utf-8"))
+            clients = payload.get("clients") if isinstance(payload, dict) else payload
+            if isinstance(clients, list):
+                return [x for x in clients if isinstance(x, dict) and x.get("id")]
+        except Exception:
+            pass
+    apk = _latest_apk()
+    if apk:
+        return [{"id": "android", "name": "Android APK", "kind": "mobile", "platform": "android", "version": apk["versionName"], "versionCode": apk["versionCode"], "notes": apk["notes"], "recommended": True}]
+    return []
+
 class Handler(BaseHTTPRequestHandler):
     server_version = "HoshinoumiMock/" + VERSION
     token = "mock-token"
 
     def log_message(self, fmt, *args):
         print(f"[mock] {self.address_string()} {fmt % args}")
+
+    def _clients_payload(self):
+        host = self.headers.get("Host") or f"{self.server.server_address[0]}:{self.server.server_address[1]}"
+        scheme = self.headers.get("X-Forwarded-Proto", "http")
+        result = []
+        for client in _client_entries():
+            cid = str(client.get("id"))
+            path = None
+            if client.get("file"):
+                candidate = (APK_DIR / str(client["file"])).resolve()
+                try:
+                    candidate.relative_to(APK_DIR.resolve())
+                    if candidate.exists(): path = candidate
+                except ValueError:
+                    pass
+            if cid == "android" and not path:
+                apk = _latest_apk(); path = apk["path"] if apk else None
+            if not path:
+                continue
+            digest = hashlib.sha256()
+            with path.open("rb") as handle:
+                for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                    digest.update(chunk)
+            result.append({"id": cid, "name": str(client.get("name") or cid), "kind": str(client.get("kind") or "desktop"), "platform": str(client.get("platform") or ""), "version": str(client.get("version") or ""), "versionCode": int(client.get("versionCode") or 0), "size": path.stat().st_size, "sha256": digest.hexdigest(), "url": f"{scheme}://{host}/downloads/clients/{cid}", "notes": str(client.get("notes") or ""), "recommended": bool(client.get("recommended"))})
+        return result
+
+    def _serve_client(self, cid):
+        client = next((x for x in _client_entries() if str(x.get("id")) == cid), None)
+        path = None
+        if client and client.get("file"):
+            candidate = (APK_DIR / str(client["file"])).resolve()
+            try:
+                candidate.relative_to(APK_DIR.resolve())
+                if candidate.exists(): path = candidate
+            except ValueError:
+                pass
+        if cid == "android" and not path:
+            apk = _latest_apk(); path = apk["path"] if apk else None
+        if not path:
+            self._json(404, {"error": "client_file_missing"}); return
+        self.send_response(200)
+        self.send_header("Content-Type", "application/octet-stream")
+        self.send_header("Content-Disposition", f'attachment; filename="{path.name}"')
+        self.send_header("Content-Length", str(path.stat().st_size))
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.end_headers()
+        with path.open("rb") as handle:
+            for chunk in iter(lambda: handle.read(65536), b""):
+                self.wfile.write(chunk)
 
     def _send(self, status: int, data, content_type="application/json; charset=utf-8"):
         if isinstance(data, str):
@@ -428,14 +516,20 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header("Cache-Control", "public, max-age=86400")
             self.end_headers()
             return
+        if path == "/api/clients":
+            self._json(200, {"ok": True, "clients": self._clients_payload(), "mock": True})
+            return
+        if path.startswith("/downloads/clients/"):
+            self._serve_client(path.rsplit("/", 1)[-1])
+            return
+        if path == "/downloads/latest.apk":
+            self._serve_client("android"); return
         if path == "/api/app/update":
-            self._json(200, {
-                "versionCode": 35820,
-                "versionName": "35.8.2",
-                "apkUrl": "",
-                "notes": "mock 更新通道：当前已是最新开发版",
-                "mock": True,
-            })
+            clients = self._clients_payload()
+            android = next((x for x in clients if x.get("id") == "android"), None)
+            if not android:
+                self._json(404, {"error": "no_apk", "message": "后端未放置 APK"}); return
+            self._json(200, {"versionCode": android["versionCode"], "versionName": android["version"], "apkUrl": android["url"], "sha256": android["sha256"], "size": android["size"], "notes": android["notes"], "mock": True})
             return
         if not self._authorized():
             self._json(401, {"error": "unauthorized", "message": "bad token"})
@@ -844,13 +938,11 @@ class Handler(BaseHTTPRequestHandler):
             self._json(201, {"ok": True, "data": device, "created": True, "mock": True})
             return
         if path == "/api/app/update":
-            self._json(200, {
-                "versionCode": 35820,
-                "versionName": "35.8.2",
-                "apkUrl": "",
-                "notes": "mock 更新通道：当前已是最新开发版",
-                "mock": True,
-            })
+            clients = self._clients_payload()
+            android = next((x for x in clients if x.get("id") == "android"), None)
+            if not android:
+                self._json(404, {"error": "no_apk", "message": "后端未放置 APK"}); return
+            self._json(200, {"versionCode": android["versionCode"], "versionName": android["version"], "apkUrl": android["url"], "sha256": android["sha256"], "size": android["size"], "notes": android["notes"], "mock": True})
             return
         if not self._authorized():
             self._json(401, {"error": "unauthorized", "message": "bad token"})

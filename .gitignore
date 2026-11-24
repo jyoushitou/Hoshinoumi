@@ -76,3 +76,5 @@ keystore.properties
 .vscode/settings.json
 
 clients\android\android\keystore.properties
+data/apk/*.apk
+data/clients/*.apk
