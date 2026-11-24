@@ -442,6 +442,8 @@ class Handler(BaseHTTPRequestHandler):
             return
         if self._finance_forbidden(path, "GET"):
             return
+        if path.startswith("/api/backup") and not self._is_owner():
+            self._json(403, {"ok": False, "error": "forbidden", "message": "备份仅主人可用"}); return
 
         if path == "/api/finance/audit":
             self._json(200, {"ok": True, "data": FINANCE_AUDIT, "mock": True})
