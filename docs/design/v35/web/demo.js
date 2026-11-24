@@ -290,8 +290,8 @@
     .cmd-hint b{color:#4b5f78;font-weight:500}
 
 
-    .chat-search{display:flex;align-items:center;gap:7px;padding:0 18px;border-bottom:1px solid #e3ebf7;background:#f8fbff;flex:0 0 100%;max-height:0;opacity:0;overflow:hidden;transition:max-height .25s ease,opacity .2s ease,padding .25s ease}
-    .chat-search.on{max-height:60px;opacity:1;padding:7px 18px}
+    .chat-search{display:flex;align-items:center;gap:7px;padding:4px 8px;border:1px solid #e3ebf7;border-radius:8px;background:#f8fbff;flex:1 1 auto;min-width:0;max-width:0;opacity:0;overflow:hidden;transition:max-width .28s ease,opacity .2s ease,padding .25s ease}
+    .chat-search.on{max-width:100%;opacity:1;padding:4px 8px}
     .chat-search input{flex:1;border:1px solid #dbe8ff;border-radius:7px;background:#fff;color:#243b55;font:11px inherit;outline:0;padding:5px 8px}
     .chat-search input:focus{border-color:#93b7fa;box-shadow:0 0 0 3px rgba(37,99,235,.08)}
     .chat-search .count{font-size:9px;color:#8a9bb0;min-width:42px;text-align:right}
@@ -487,7 +487,8 @@
   const searchBar = document.createElement('div');
   searchBar.className = 'chat-search';
   searchBar.innerHTML = '<span>⌕</span><input id="chatSearchInput" placeholder="搜索当前聊天"><span class="count" id="chatSearchCount"></span><button id="searchPrev" title="上一条">↑</button><button id="searchNext" title="下一条">↓</button><button id="searchClose" title="关闭">×</button>';
-  top.appendChild(searchBar);
+  const topRight = top.querySelector('.right');
+  if (topRight) top.insertBefore(searchBar, topRight); else top.appendChild(searchBar);
   let hitEls = [], hitIndex = -1;
   function clearSearchMarks() {
     msgs.querySelectorAll('.msg .bubble').forEach(b => {
