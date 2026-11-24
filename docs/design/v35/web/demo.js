@@ -111,6 +111,7 @@
     .diary-page .pgrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
     .pcard2 h3{font-size:11px;margin:0 0 5px;color:#dbe8fb}
     .plugin-section h3{color:#1e3a5f}
+    .plugin-section{animation:pluginIn .28s cubic-bezier(.22,1,.36,1) both}.plugin-section:nth-child(2){animation-delay:.04s}.plugin-section:nth-child(3){animation-delay:.08s}@keyframes pluginIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
     .plugin-card{display:flex;align-items:center;gap:12px;padding:10px 12px;border-bottom:1px solid #f1f5fb}
     .plugin-card:last-child{border-bottom:0}
     .plugin-copy{flex:1;min-width:0}
