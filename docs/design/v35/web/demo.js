@@ -1,6 +1,11 @@
 // Hoshinoumi Web v35.5 · MOCK 交互演示（无后端）
 (() => {
   const CHATS = {
+    code: { name: '代码模式', sub: '独立会话 · 代码优先 · 记忆与奈绪共享', msgs: [
+      { r: 'bot', t: '代码模式窗口已打开。这里的回答优先保证技术正确性，但记忆和普通聊天是通的。', m: '13:02' },
+      { r: 'me', t: '帮我看看备份脚本为什么一直卡住。', m: '13:03 · 已读' },
+      { r: 'bot', t: '先定位阻塞点。上次的备份任务是 20:12 开始的，先看文件句柄和数据库锁。', m: '13:04', mem: '记忆共享 · 上周在写备份脚本' }
+    ] },
     nao: { name: '友利奈绪', sub: '私聊 · 记忆同步', msgs: [
       { r: 'bot', t: '你回来啦。今天外面有点冷，先喝点热的吧。', m: '20:58 · 已读' },
       { r: 'me', t: '刚到家。今天那个方案终于过了。', m: '21:00 · 已读' },
@@ -553,16 +558,18 @@
   function renderChat(id) {
     const c = CHATS[id] || CHATS.nao;
     nameEl.textContent = c.name;
-    subEl.innerHTML = esc(c.sub) + ' <span class="pill">在线</span>';
+    subEl.innerHTML = esc(c.sub) + (id === 'code' ? ' <span class="pill" style="border-color:#93b7fa;color:#1d4ed8">⌘ 代码模式</span>' : ' <span class="pill">在线</span>');
     msgs.innerHTML = '<div class="day"><b>今天</b> · 20:58</div>' + c.msgs.map(msgHtml).join('');
     openSearch(false);
+    const composerInput=document.querySelector('.composer textarea');
+    if(composerInput) composerInput.placeholder = id === 'code' ? '输入代码问题或代码片段…' : '和奈绪说点什么……';
     document.querySelectorAll('.conv').forEach(x => { const on = x.dataset.conv === id; x.classList.toggle('on', on); if (on) x.querySelector('.unread')?.remove(); });
     showChat();
     updateUnread();
     msgs.scrollTop = msgs.scrollHeight;
   }
 
-  const convIds = ['nao', 'seagroup', 'student', 'photo', 'test'];
+  const convIds = ['code', 'nao', 'seagroup', 'student', 'photo', 'test'];
   document.querySelectorAll('.conv').forEach((x, i) => {
     x.dataset.conv = convIds[i] || 'nao';
     x.addEventListener('click', () => { x.querySelector('.unread')?.remove(); updateUnread(); renderChat(x.dataset.conv); });
