@@ -748,7 +748,7 @@
       document.getElementById('pluginAdd').addEventListener('click', () => {
         const modal = document.createElement('div');
         modal.className = 'savings-modal';
-        modal.innerHTML = '<div class="box"><h3>安装插件</h3><label>插件网址<input id="webPluginUrl" placeholder="https://example.com/plugin.json"></label><button class="back" id="webPluginUrlBtn" style="width:100%;margin-top:8px">从网址安装</button><label style="margin-top:10px">选择插件文件<input id="webPluginFile" type="file" accept=".houshinoumi,.zip,.json"></label><div class="acts"><button id="webPluginCancel">取消</button></div></div>';
+        modal.innerHTML = '<div class="box"><h3>安装插件</h3><label>插件网址<input id="webPluginUrl" placeholder="https://example.com/plugin.json"></label><button class="back" id="webPluginUrlBtn" style="width:100%;margin-top:8px">从网址安装</button><label style="margin-top:10px">选择插件文件<input id="webPluginFile" type="file" accept=".hoshinoumi,.zip,.json"></label><div class="acts"><button id="webPluginCancel">取消</button></div></div>';
         document.body.appendChild(modal);
         const close = () => modal.remove();
         modal.addEventListener('click', event => { if (event.target === modal) close(); });
@@ -761,7 +761,7 @@
         });
         modal.querySelector('#webPluginFile').addEventListener('change', event => {
           const file = event.target.files && event.target.files[0]; if (!file) return;
-          addPluginWeb(file.name.replace(/\.(houshinoumi|zip|json)$/i, ''), 'file'); close();
+          addPluginWeb(file.name.replace(/\.(hoshinoumi|zip|json)$/i, ''), 'file'); close();
         });
       });
       document.getElementById('backChat').addEventListener('click', () => showChat());

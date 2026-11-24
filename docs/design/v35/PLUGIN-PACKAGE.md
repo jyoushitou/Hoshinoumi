@@ -1,12 +1,12 @@
-# `.houshinoumi` 插件包规范
+# `.hoshinoumi` 插件包规范
 
-> v35.9.4 起，Hoshinoumi 插件包推荐使用 `.houshinoumi`；同时兼容 `.zip`。
+> v35.9.4 起，Hoshinoumi 插件包推荐使用 `.hoshinoumi`；同时兼容 `.zip`。
 
 ## 容器
 
 ```text
-.houshinoumi / .zip = ZIP 容器（推荐 .houshinoumi）
-MIME: application/vnd.houshinoumi.plugin+zip（.zip 用 application/zip）
+.hoshinoumi / .zip = ZIP 容器（推荐 .hoshinoumi）
+MIME: application/vnd.hoshinoumi.plugin+zip（.zip 用 application/zip）
 建议上限：20 MB
 ```
 
@@ -38,8 +38,8 @@ signature.json    签名/校验信息（可选，正式分发建议必需）
 ## 安装规则
 
 ```text
-网址导入：http(s) 指向 .houshinoumi / .zip / plugin.json
-本地导入：.houshinoumi / .zip（单文件 plugin.json 仅开发调试）
+网址导入：http(s) 指向 .hoshinoumi / .zip / plugin.json
+本地导入：.hoshinoumi / .zip（单文件 plugin.json 仅开发调试）
 安装后默认只读
 write 权限逐项审批，owner 才能批准
 校验失败 / 清单缺失 / 版本不兼容 → 拒绝安装
@@ -48,7 +48,7 @@ write 权限逐项审批，owner 才能批准
 ## 演示与实现
 
 ```text
-手机设计稿：插件 → ＋ → 网址 / .houshinoumi / .zip 文件
-Web 设计稿：插件 → ＋ 安装插件 → 网址 / .houshinoumi / .zip 文件
+手机设计稿：插件 → ＋ → 网址 / .hoshinoumi / .zip 文件
+Web 设计稿：插件 → ＋ 安装插件 → 网址 / .hoshinoumi / .zip 文件
 Vue/API：v35.9.4.2–.6
 ```
