@@ -1,4 +1,9 @@
 ﻿const chats = [
+  { id:'code', name:'代码模式', type:'mode', sub:'独立会话 · 代码优先 · 记忆共享', unread:0, avatar:'⌘', time:'CODE', last:'独立会话 · 记忆与奈绪共享', msgs:[
+    ['bot','代码模式窗口已打开。这里优先保证技术正确性，但记忆和普通聊天是通的。','13:02'],
+    ['me','帮我看看备份脚本为什么一直卡住。','13:03'],
+    ['bot','先定位阻塞点。上次备份任务是 20:12 开始的，先看文件句柄和数据库锁。','13:04']
+  ]},
   { id:'nao', name:'友利奈绪', type:'private', sub:'私聊 · 记忆同步', unread:2, avatar:'奈', time:'21:04', last:'今天也一起加油吧', msgs:[
     ['bot','你回来啦。今天外面有点冷，先喝点热的吧。','20:58'],
     ['me','刚到家。今天那个方案终于过了。','21:00'],
@@ -34,7 +39,8 @@ function renderConvs(){
 function renderChat(){
   $('#peerName').textContent=current.name
   $('#peerAvatar').textContent=current.avatar
-  $('#peerSub').innerHTML=`${esc(current.sub)} <i class="online-pill">在线</i>`
+  $('#peerSub').innerHTML=`${esc(current.sub)} <i class="online-pill"${current.type==='mode'?' style="border-color:#93b7fa;color:#1d4ed8"':''}>${current.type==='mode'?'⌘ 代码模式':'在线'}</i>`
+  $('#input').placeholder = current.type==='mode' ? '输入代码问题或代码片段…' : '和奈绪说点什么…'
   $('#messages').innerHTML='<div class="day">今天</div>'+current.msgs.map((m,i)=>{
     const me=m[0]==='me'
     return `<div class="msg ${me?'me':''}" style="animation-delay:${Math.min(i*30,180)}ms"><span class="avatar ${me?'me':''}">${me?'你':esc(current.avatar)}</span><div><div class="bubble">${esc(m[1])}</div><div class="meta">${m[2]} · 已读</div></div></div>`
