@@ -908,6 +908,7 @@ function openPluginImport(){
       <button style="background:#2563eb;color:#fff" onclick="importPluginFromUrl()">从网址导入</button>
       <div style="text-align:center;font-size:8px;color:#9aabc0;margin:2px 0">或</div>
       <label class="add-btn" style="display:flex;align-items:center;justify-content:center;background:#f4f9ff;color:#2563eb;border:1px solid #dbe8ff;box-shadow:none;height:34px;border-radius:8px;font-size:9px;cursor:pointer">选择插件文件<input type="file" accept=".hoshinoumi,.zip,.json,application/json" style="display:none" onchange="importPluginFile(this)"></label>
+      <div id="pluginFileName" style="font-size:7.5px;color:#8a9bb0;line-height:1.5">未选择文件 · 最大 20 MB</div>
     </div>
     <div style="font-size:7.5px;color:#9aabc0;line-height:1.6;margin-top:6px">支持 .hoshinoumi / .zip / plugin.json / 下载链接。安装后默认只读，写权限逐项审批。</div>
     <button class="sheet-close" onclick="closeOverlay()">取消</button>
@@ -924,6 +925,11 @@ function importPluginFromUrl(){
 function importPluginFile(input){
   const file = input?.files?.[0]
   if(!file) return
+  const allowed = /\.(hoshinoumi|zip|json)$/i.test(file.name)
+  if(!allowed){ toast('只支持 .hoshinoumi / .zip / .json'); input.value=''; return }
+  if(file.size > 20 * 1024 * 1024){ toast('插件包超过 20 MB'); input.value=''; return }
+  const label = document.getElementById('pluginFileName')
+  if(label) label.textContent = file.name + ' · ' + (file.size / 1024 / 1024).toFixed(1) + ' MB'
   const reader = new FileReader()
   reader.onload = () => {
     let name = file.name.replace(/\.(hoshinoumi|zip|json)$/i, '')
