@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/splash_bg">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:paddingLeft="32dp"
+        android:paddingRight="32dp"
+        android:paddingBottom="46dp">
+
+        <FrameLayout
+            android:id="@+id/splashLogo"
+            android:layout_width="96dp"
+            android:layout_height="96dp"
+            android:layout_marginBottom="22dp">
+
+            <View
+                android:layout_width="96dp"
+                android:layout_height="96dp"
+                android:background="@drawable/splash_ring" />
+
+            <ImageView
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_notification"
+                android:tint="#DBEAFE"
+                android:contentDescription="@string/app_name" />
+        </FrameLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="HOSHINOUMI"
+            android:textColor="#FFFFFF"
+            android:textSize="25sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.18" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:text="REC · MOBILE"
+            android:textColor="#93C5FD"
+            android:textSize="8sp"
+            android:letterSpacing="0.3" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="26dp"
+            android:text="星之海，和奈绪一起"
+            android:textColor="#C7DCFF"
+            android:textSize="11sp"
+            android:letterSpacing="0.06" />
+
+        <FrameLayout
+            android:layout_width="160dp"
+            android:layout_height="2dp"
+            android:layout_marginTop="26dp"
+            android:background="#26FFFFFF">
+
+            <View
+                android:id="@+id/splashBar"
+                android:layout_width="72dp"
+                android:layout_height="2dp"
+                android:background="#93C5FD" />
+        </FrameLayout>
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="26dp"
+        android:text="POWERED BY JYOUSHITOU · v35.8"
+        android:textColor="#6F8CAE"
+        android:textSize="7sp"
+        android:letterSpacing="0.16" />
+</FrameLayout>
