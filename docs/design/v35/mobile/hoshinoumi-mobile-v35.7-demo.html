@@ -797,9 +797,9 @@ function openPluginImport(){
       <input id="pluginUrl" placeholder="https://example.com/plugin.json" inputmode="url" autocomplete="url">
       <button style="background:#2563eb;color:#fff" onclick="importPluginFromUrl()">从网址导入</button>
       <div style="text-align:center;font-size:8px;color:#9aabc0;margin:2px 0">或</div>
-      <label class="add-btn" style="display:flex;align-items:center;justify-content:center;background:#f4f9ff;color:#2563eb;border:1px solid #dbe8ff;box-shadow:none;height:34px;border-radius:8px;font-size:9px;cursor:pointer">选择插件文件<input type="file" accept=".json,.zip,.hoshinoumi,application/json" style="display:none" onchange="importPluginFile(this)"></label>
+      <label class="add-btn" style="display:flex;align-items:center;justify-content:center;background:#f4f9ff;color:#2563eb;border:1px solid #dbe8ff;box-shadow:none;height:34px;border-radius:8px;font-size:9px;cursor:pointer">选择插件文件<input type="file" accept=".rec,.json,application/json" style="display:none" onchange="importPluginFile(this)"></label>
     </div>
-    <div style="font-size:7.5px;color:#9aabc0;line-height:1.6;margin-top:6px">支持 plugin.json / zip 包 / 下载链接。安装后默认只读，写权限逐项审批。</div>
+    <div style="font-size:7.5px;color:#9aabc0;line-height:1.6;margin-top:6px">支持 .rec 插件包 / plugin.json / 下载链接。安装后默认只读，写权限逐项审批。</div>
     <button class="sheet-close" onclick="closeOverlay()">取消</button>
   </div>`)
 }
@@ -816,7 +816,7 @@ function importPluginFile(input){
   if(!file) return
   const reader = new FileReader()
   reader.onload = () => {
-    let name = file.name.replace(/\.(json|zip|hoshinoumi)$/i, '')
+    let name = file.name.replace(/\.(rec|json)$/i, '')
     try { const data = JSON.parse(String(reader.result || '{}')); if(data && data.name) name = data.name } catch(e) {}
     addImportedPlugin(name, 'file')
   }
