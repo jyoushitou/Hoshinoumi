@@ -451,43 +451,6 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/stickers":
             self._json(200, {"ok": True, "data": [{"id": x["id"], "name": x["name"], "url": x["url"], "mime": x["mime"]} for x in STICKERS], "mock": True})
             return
-        if path.startswith("/api/backup") and not self._is_owner():
-            self._json(403, {"ok": False, "error": "forbidden", "message": "备份仅主人可用"}); return
-        if path == "/api/backup/import":
-            payload = body.get("backup") if isinstance(body.get("backup"), dict) else body
-            data = payload.get("data") if isinstance(payload, dict) else None
-            manifest = payload.get("manifest") if isinstance(payload, dict) else None
-            if not isinstance(data, dict) or not isinstance(manifest, dict):
-                self._json(400, {"ok": False, "error": "bad_backup", "message": "备份格式错误"}); return
-            if int(manifest.get("schema") or 0) != 36:
-                self._json(400, {"ok": False, "error": "schema_mismatch", "message": "schema 不匹配"}); return
-            expected = (manifest.get("checksums") or {}).get("data")
-            actual = hashlib.sha256(json.dumps(data, ensure_ascii=False, sort_keys=True).encode("utf-8")).hexdigest()
-            if expected != actual:
-                self._json(400, {"ok": False, "error": "checksum_mismatch", "message": "校验和不匹配"}); return
-            if body.get("dry_run"):
-                self._json(200, {"ok": True, "valid": True, "schema": 36, "mock": True}); return
-            BACKUP_SNAPSHOT["data"] = _backup_payload()["data"]
-            if isinstance(data.get("memories"), list): MEMORY_ITEMS[:] = data["memories"]
-            if isinstance(data.get("diary"), list): DIARY_ENTRIES[:] = data["diary"]
-            if isinstance(data.get("tasks"), list): TASKS[:] = data["tasks"]
-            self._json(200, {"ok": True, "restored": True, "snapshot": True, "mock": True}); return
-        if path == "/api/backup/rollback":
-            if not BACKUP_SNAPSHOT["data"]:
-                self._json(400, {"ok": False, "error": "no_snapshot", "message": "没有可回滚的快照"}); return
-            data = BACKUP_SNAPSHOT["data"]
-            if isinstance(data.get("memories"), list): MEMORY_ITEMS[:] = data["memories"]
-            if isinstance(data.get("diary"), list): DIARY_ENTRIES[:] = data["diary"]
-            if isinstance(data.get("tasks"), list): TASKS[:] = data["tasks"]
-            self._json(200, {"ok": True, "rolled_back": True, "mock": True}); return
-        if path == "/api/backup/drill":
-            try: size = max(10, min(5000, int(body.get("size") or 2000)))
-            except (TypeError, ValueError): size = 2000
-            started = time.time()
-            rows = [{"id": i, "target_id": OWNER_QQ, "content": f"迁移演练记录 {i}", "tags": ["迁移"], "source": "drill", "longterm": False, "created_at": _now()} for i in range(size)]
-            encoded = json.dumps({"memories": rows}, ensure_ascii=False, sort_keys=True).encode("utf-8")
-            checksum = hashlib.sha256(encoded).hexdigest()
-            self._json(200, {"ok": True, "entries": size, "bytes": len(encoded), "checksum": checksum, "steps": ["export", "checksum", "restore"], "elapsed_ms": int((time.time() - started) * 1000), "mock": True}); return
         if path == "/api/push/devices":
             self._json(200, {"ok": True, "data": list(PUSH_DEVICES.values()), "preferences": PUSH_PREFS, "mock": True})
             return
@@ -812,6 +775,43 @@ class Handler(BaseHTTPRequestHandler):
             return
         if self._finance_forbidden(path, "GET"):
             return
+        if path.startswith("/api/backup") and not self._is_owner():
+            self._json(403, {"ok": False, "error": "forbidden", "message": "备份仅主人可用"}); return
+        if path == "/api/backup/import":
+            payload = body.get("backup") if isinstance(body.get("backup"), dict) else body
+            data = payload.get("data") if isinstance(payload, dict) else None
+            manifest = payload.get("manifest") if isinstance(payload, dict) else None
+            if not isinstance(data, dict) or not isinstance(manifest, dict):
+                self._json(400, {"ok": False, "error": "bad_backup", "message": "备份格式错误"}); return
+            if int(manifest.get("schema") or 0) != 36:
+                self._json(400, {"ok": False, "error": "schema_mismatch", "message": "schema 不匹配"}); return
+            expected = (manifest.get("checksums") or {}).get("data")
+            actual = hashlib.sha256(json.dumps(data, ensure_ascii=False, sort_keys=True).encode("utf-8")).hexdigest()
+            if expected != actual:
+                self._json(400, {"ok": False, "error": "checksum_mismatch", "message": "校验和不匹配"}); return
+            if body.get("dry_run"):
+                self._json(200, {"ok": True, "valid": True, "schema": 36, "mock": True}); return
+            BACKUP_SNAPSHOT["data"] = _backup_payload()["data"]
+            if isinstance(data.get("memories"), list): MEMORY_ITEMS[:] = data["memories"]
+            if isinstance(data.get("diary"), list): DIARY_ENTRIES[:] = data["diary"]
+            if isinstance(data.get("tasks"), list): TASKS[:] = data["tasks"]
+            self._json(200, {"ok": True, "restored": True, "snapshot": True, "mock": True}); return
+        if path == "/api/backup/rollback":
+            if not BACKUP_SNAPSHOT["data"]:
+                self._json(400, {"ok": False, "error": "no_snapshot", "message": "没有可回滚的快照"}); return
+            data = BACKUP_SNAPSHOT["data"]
+            if isinstance(data.get("memories"), list): MEMORY_ITEMS[:] = data["memories"]
+            if isinstance(data.get("diary"), list): DIARY_ENTRIES[:] = data["diary"]
+            if isinstance(data.get("tasks"), list): TASKS[:] = data["tasks"]
+            self._json(200, {"ok": True, "rolled_back": True, "mock": True}); return
+        if path == "/api/backup/drill":
+            try: size = max(10, min(5000, int(body.get("size") or 2000)))
+            except (TypeError, ValueError): size = 2000
+            started = time.time()
+            rows = [{"id": i, "target_id": OWNER_QQ, "content": f"迁移演练记录 {i}", "tags": ["迁移"], "source": "drill", "longterm": False, "created_at": _now()} for i in range(size)]
+            encoded = json.dumps({"memories": rows}, ensure_ascii=False, sort_keys=True).encode("utf-8")
+            checksum = hashlib.sha256(encoded).hexdigest()
+            self._json(200, {"ok": True, "entries": size, "bytes": len(encoded), "checksum": checksum, "steps": ["export", "checksum", "restore"], "elapsed_ms": int((time.time() - started) * 1000), "mock": True}); return
         if path == "/api/push/devices":
             platform = str(body.get("platform") or "android").strip()
             topic = str(body.get("topic") or "").strip()
