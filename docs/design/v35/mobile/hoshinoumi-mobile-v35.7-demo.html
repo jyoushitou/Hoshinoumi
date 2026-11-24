@@ -319,6 +319,11 @@ const allEntries = [
 const QUICK_DEFAULT = ['chats','memory','relation','settings']
 let quickKeys = [...QUICK_DEFAULT]
 try { const saved = JSON.parse(localStorage.getItem('hoshinoumi.quick') || 'null'); if (Array.isArray(saved) && saved.length >= 1 && saved.length <= 4) quickKeys = saved.filter(k => allEntries.some(e => e[0] === k)).slice(0,4) } catch {}
+let hiddenPages = new Set()
+try { const savedHidden = JSON.parse(localStorage.getItem('hoshinoumi.hiddenPages') || '[]'); if (Array.isArray(savedHidden)) hiddenPages = new Set(savedHidden.filter(k => allEntries.some(e => e[0] === k) && k !== 'settings')) } catch {}
+function visibleEntries(){ return allEntries.filter(e => !hiddenPages.has(e[0])) }
+function saveHiddenPages(){ try { localStorage.setItem('hoshinoumi.hiddenPages', JSON.stringify([...hiddenPages])) } catch {} }
+
 
 function toast(text){ const el=document.getElementById('toast'); el.textContent=text; el.classList.add('on'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('on'),1600) }
 
@@ -989,10 +994,29 @@ screens.logs = `
 </div>
 ${nav('chats')}`
 
+
+function updateVisibilitySummary(){
+  const el=document.getElementById('visibilitySummary')
+  if(el) el.textContent = hiddenPages.size ? ('隐藏 ' + hiddenPages.size + ' 个') : '全部'
+}
+function openPageVisibility(){
+  const rows=allEntries.filter(([key])=>key!=='settings').map(([key,ic,label])=>`<button class="quick-choice ${hiddenPages.has(key)?'':'on'}" onclick="togglePageVisibility('${key}',this)"><b>${ic}</b><span>${label}</span><em>${hiddenPages.has(key)?'隐藏':'显示'}</em></button>`).join('')
+  overlay(`<div class="sheet quick-sheet"><h4>页面可见性 <small>设置页不可隐藏</small></h4><div class="quick-grid">${rows}</div><button class="sheet-close" onclick="closeOverlay();go('settings')">完成</button></div>`)
+}
+function togglePageVisibility(key,el){
+  if(key==='settings') return
+  if(hiddenPages.has(key)) hiddenPages.delete(key); else hiddenPages.add(key)
+  saveHiddenPages(); updateVisibilitySummary()
+  el.classList.toggle('on', !hiddenPages.has(key))
+  const em=el.querySelector('em'); if(em) em.textContent=hiddenPages.has(key)?'隐藏':'显示'
+  const navEl=document.querySelector('.bottom-nav'); if(navEl) navEl.outerHTML=nav(currentScreen)
+}
+
 function nav(active){
-  const quick = allEntries.filter(e => quickKeys.includes(e[0]))
+  const entries = visibleEntries()
+  const quick = entries.filter(e => quickKeys.includes(e[0]))
   const tab = ([key,ic,label]) => `<div class="tab ${active===key?'on':''}" onclick="go('${key}')"><span class="ic">${ic}</span>${label}${key==='chats'&&demoUnread>0?'<span class="tab-unread">'+(demoUnread>99?'99+':demoUnread)+'</span>':''}</div>`
-  const all = allEntries.map(([key,ic,label]) => `<button class="${active===key?'on':''}" title="${label}" aria-label="${label}" onclick="go('${key}')"><b>${ic}</b>${key==='chats'&&demoUnread>0?'<span class="all-unread">'+(demoUnread>99?'99+':demoUnread)+'</span>':''}</button>`).join('')
+  const all = entries.map(([key,ic,label]) => `<button class="${active===key?'on':''}" title="${label}" aria-label="${label}" onclick="go('${key}')"><b>${ic}</b>${key==='chats'&&demoUnread>0?'<span class="all-unread">'+(demoUnread>99?'99+':demoUnread)+'</span>':''}</button>`).join('')
   const idx=Math.max(0, quick.findIndex(e => e[0] === active)); const width=quick.length?100/quick.length:100
   return `<nav class="bottom-nav ${navExpanded?'expanded':''}"><div class="nav-row" style="grid-template-columns:repeat(${quick.length},1fr)"><span class="nav-indicator" style="width:${width}%;transform:translateX(${idx*100}%)"></span>${quick.map(tab).join('')}</div><div class="nav-all"><div class="nav-all-grid">${all}</div></div></nav>`
 }
@@ -1036,6 +1060,7 @@ document.addEventListener('pointerup', e => {
 
 function go(name){
   if(document.body.classList.contains('embed') && name==='downloads'){ toast('客户端内不提供下载'); return }
+  if(hiddenPages.has(name) && name!=='settings'){ toast('该页面已在设置中隐藏'); return }
   currentScreen = name
   if (navExpanded) { navExpanded = false; document.body.classList.remove('nav-expanded') }
   document.querySelector('.demo-overlay')?.remove(); app.innerHTML = screens[name]
@@ -1043,6 +1068,7 @@ function go(name){
   if (staleNav) staleNav.outerHTML = nav(name)
   const quickVal = app.querySelector('[data-quick] .val')
   if (quickVal) quickVal.textContent = quickKeys.map(k => allEntries.find(e => e[0] === k)?.[2]).join(' / ')
+  updateVisibilitySummary()
   if(name==='downloads'){ void loadDownloads() }
   if(name==='plugins'){ renderPluginPage() }
   if(name==='diary'){ void loadDiary() }
@@ -1319,7 +1345,7 @@ function activatePersona(el,name){ [...document.querySelectorAll('.persona-card'
 
 function saveQuick(){ try { localStorage.setItem('hoshinoumi.quick', JSON.stringify(quickKeys)) } catch {} }
 function openQuickSettings(){
-  const rows = allEntries.map(([key,ic,label]) => `<button class="quick-choice ${quickKeys.includes(key)?'on':''}" onclick="toggleQuick('${key}')"><b>${ic}</b><span>${label}</span><em>${quickKeys.includes(key)?'✓':''}</em></button>`).join('')
+  const rows = visibleEntries().map(([key,ic,label]) => `<button class="quick-choice ${quickKeys.includes(key)?'on':''}" onclick="toggleQuick('${key}')"><b>${ic}</b><span>${label}</span><em>${quickKeys.includes(key)?'✓':''}</em></button>`).join('')
   overlay(`<div class="sheet quick-sheet"><h4>底部快捷栏 <small>${quickKeys.length}/5</small></h4><div class="quick-grid">${rows}</div><button class="sheet-close" onclick="closeQuickSettings()">完成</button><button class="sheet-close" style="margin-top:6px;background:#fff;border:1px solid #dbe8ff" onclick="resetQuick()">恢复默认</button></div>`)
 }
 function toggleQuick(key){
