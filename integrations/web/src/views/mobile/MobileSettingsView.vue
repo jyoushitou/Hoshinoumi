@@ -1,18 +1,34 @@
 ﻿<script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMobileNav } from '@/composables/useMobileNav'
 import { useAuthStore } from '@/stores/auth'
 import { useIsOwner } from '@/composables/useIsOwner'
+import { http } from '@/api/client'
 
 const router = useRouter()
 const auth = useAuthStore()
 const isOwner = useIsOwner()
+const apkVersion = ref('Web 预览')
+const backendVersion = ref('—')
 const { entries, quickKeys, toggleQuick, resetQuick } = useMobileNav()
 const visibleEntries = computed(() => isOwner.value ? entries : entries.filter(entry => entry.key !== 'relation' && entry.key !== 'savings'))
 const message = computed(() => `${quickKeys.value.length} / 5`)
 const quickLabel = computed(() => quickKeys.value.map(key => entries.find(entry => entry.key === key)?.label).filter(Boolean).join(' / '))
 
+onMounted(async () => {
+  try {
+    const bridge = (window as any).HoshinoumiConfig
+    if (bridge?.getEnvironment) {
+      const env = JSON.parse(bridge.getEnvironment())
+      apkVersion.value = `${env.appVersion || '—'}${env.versionCode ? ` (${env.versionCode})` : ''}`
+    }
+  } catch { /* web preview */ }
+  try {
+    const status = await http.get<{ version?: string; schema?: number }>('/api/status')
+    backendVersion.value = status.version || (status.schema ? `schema ${status.schema}` : '—')
+  } catch { backendVersion.value = '未连接' }
+})
 function toggle(key: string) { toggleQuick(key) }
 function logout() { auth.logout() }
 function openPermissions() { void router.push('/settings/permissions') }
@@ -58,11 +74,12 @@ function changeBackend() {
       <button class="row backend-row" type="button" @click="changeBackend"><span>后端地址</span><small>修改 ›</small></button>
       <button class="row backend-row" type="button" @click="openPermissions"><span>权限与后台</span><small>管理 ›</small></button>
       <div class="row"><span>账号</span><small>{{ auth.qq || '—' }}</small></div>
-      <div class="row"><span>版本</span><small>v35.7</small></div>
+      <div class="row"><span>手机 APK</span><small>{{ apkVersion }}</small></div>
+      <div class="row"><span>后端版本</span><small>{{ backendVersion }}</small></div>
     </div>
 
     <button class="logout" type="button" @click="logout">退出登录</button>
-    <div class="about-card"><b>关于 Hoshinoumi</b><span>v35.7 · Mobile Web</span><div class="about-links"><a href="https://github.com/jyoushitou/Hoshinoumi" target="_blank" rel="noopener">GitHub</a><a href="https://github.com/jyoushitou" target="_blank" rel="noopener">作者 jyoushitou</a></div><em>POWERED BY JYOUSHITOU</em></div>
+    <div class="about-card"><b>关于 Hoshinoumi</b><span>APK {{ apkVersion }} · 后端 {{ backendVersion }}</span><div class="about-links"><a href="https://github.com/jyoushitou/Hoshinoumi" target="_blank" rel="noopener">GitHub</a><a href="https://github.com/jyoushitou" target="_blank" rel="noopener">作者 jyoushitou</a></div><em>POWERED BY JYOUSHITOU</em></div>
   </section>
 </template>
 
