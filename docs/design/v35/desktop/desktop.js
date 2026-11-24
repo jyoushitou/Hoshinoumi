@@ -236,4 +236,23 @@ $('#updateNow').onclick=()=>{
 $('#updateCard').onclick=openUpdate
 document.querySelectorAll('.quick button').forEach(b=>b.onclick=()=>toast(`快捷入口：${b.textContent.split('\\n')[0]}`))
 setTimeout(()=>{const typing=document.createElement('div');typing.className='msg typing';typing.innerHTML=`<span class="avatar">${esc(current.avatar)}</span><div><div class="bubble"><i class="dot"></i><i class="dot"></i><i class="dot"></i></div></div>`;/* no auto on load */},0)
+
+// 侧栏独立隐藏
+const workspace = document.querySelector('.workspace')
+const railToggle = $('#railToggle')
+const reopenRail = $('#reopenRail')
+const hideSide = $('#hideSide')
+const chatSideReopen = $('#chatSideReopen')
+const hideContext = $('#hideContext')
+const reopenContext = $('#reopenContext')
+if (workspace) {
+  const toggleRail = () => workspace.classList.toggle('rail-hidden')
+  railToggle?.addEventListener('click', toggleRail)
+  railToggle?.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleRail() } })
+  reopenRail?.addEventListener('click', () => workspace.classList.remove('rail-hidden'))
+  hideSide?.addEventListener('click', () => workspace.classList.toggle('side-hidden'))
+  chatSideReopen?.addEventListener('click', () => workspace.classList.remove('rail-hidden', 'side-hidden'))
+  hideContext?.addEventListener('click', () => workspace.classList.toggle('context-hidden'))
+  reopenContext?.addEventListener('click', () => workspace.classList.remove('context-hidden'))
+}
 renderConvs(); renderChat(); renderMini()

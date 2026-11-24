@@ -25,7 +25,7 @@
 
     <div class="workspace">
       <nav class="rail">
-        <div class="rail-logo"><img src="../../logo/hoshinoumi.svg" alt=""></div>
+        <div class="rail-logo" id="railToggle" role="button" tabindex="0" title="收起导航栏"><img src="../../logo/hoshinoumi.svg" alt=""></div>
         <button class="rnav" data-page="home" title="主页">⌂</button>
         <button class="rnav on" data-page="chat" title="nao（聊天）">◉<span class="rbadge" id="railUnread">2</span></button>
         <button class="rnav" data-page="memory" title="记忆">◈</button>
@@ -44,7 +44,7 @@
       </nav>
 
       <aside class="side">
-        <div class="side-head"><b>HOSHINOUMI</b><span class="side-ver">DESKTOP</span><button class="soft" id="newChat">＋</button></div>
+        <div class="side-head"><button class="rail-reopen" id="reopenRail" title="展开导航栏"><img src="../../logo/hoshinoumi.svg" alt="展开导航栏"></button><b>HOSHINOUMI</b><span class="side-ver">DESKTOP</span><button class="soft" id="hideSide" title="隐藏会话列表">‹</button><button class="soft" id="newChat">＋</button></div>
         <div class="search">⌕ 搜索会话 / 记忆 / 命令 <kbd>⌘K</kbd></div>
         <div class="tabs"><button class="on" data-filter="all">全部</button><button data-filter="private">私聊</button><button data-filter="group">群聊</button></div>
         <div class="convs" id="convList"></div>
@@ -54,6 +54,7 @@
       <main class="chat">
         <header class="chat-head">
           <div class="peer">
+            <button class="chat-side-reopen" id="chatSideReopen" title="展开侧栏"><img src="../../logo/hoshinoumi.svg" alt="展开侧栏"></button>
             <span class="avatar" id="peerAvatar">奈</span>
             <div><b id="peerName">友利奈绪</b><small id="peerSub">私聊 · 记忆同步 <i class="online-pill">在线</i></small></div>
           </div>
@@ -70,6 +71,7 @@
       </main>
 
       <aside class="context">
+        <button class="ctx-hide" id="hideContext" title="隐藏上下文">›</button>
         <div class="persona-card">
           <span class="avatar big">奈</span><div><b>友利奈绪</b><small>nao · 当前人设</small></div><span class="conn-dot"></span>
         </div>
@@ -83,6 +85,7 @@
         <div class="quick"><button>存钱<small>本月流水</small></button><button>记忆<small>最近 7 天</small></button><button>周计划<small>第 47 周</small></button><button>人设<small>nao</small></button></div>
         <div class="update-card" id="updateCard"><span>◌</span><div><b>有可用更新</b><small>v35.6.0 · Tauri 套壳</small></div><button>查看</button></div>
       </aside>
+      <button class="ctx-edge" id="reopenContext" title="展开上下文">‹</button>
     </div>
 
     <footer class="statusbar">
