@@ -211,24 +211,27 @@ button{color:inherit}
 
 .chat-more{position:fixed;right:22px;top:52px;width:150px;background:#fff;border:1px solid #e3ebf7;border-radius:10px;box-shadow:0 12px 30px rgba(37,99,235,.14);padding:5px;z-index:45;display:none}.chat-more.on{display:block}.chat-more button{display:flex;width:100%;align-items:center;gap:7px;border:0;background:#fff;border-radius:7px;padding:7px 8px;text-align:left;font:9.5px inherit;color:#405a78;cursor:pointer}.chat-more button:hover{background:#f2f7ff;color:#2563eb}.chat-more .sep{height:1px;background:#eef3fb;margin:3px 4px}
 
-.layout-controls{position:static;z-index:22}
-.layout-controls button{position:fixed;top:14px;transition:left .28s cubic-bezier(.22,1,.36,1),right .28s cubic-bezier(.22,1,.36,1),background .18s;z-index:22;width:28px;height:24px;border:1px solid #dbe8ff;border-radius:7px;background:#fff;color:#2563eb;font:12px inherit;cursor:pointer;box-shadow:0 3px 10px rgba(37,99,235,.08)}
-#toggleLeft{left:calc(64px + 292px - 36px)}
-#toggleRight{right:calc(304px - 36px)}
-body.left-hidden #toggleLeft{left:8px}
-body.right-hidden #toggleRight{right:8px}
-.layout-controls button.on{background:#2563eb;color:#fff;border-color:#2563eb}
+.side,.context{position:relative}
+.panel-hide{position:absolute;top:12px;width:24px;height:24px;border:1px solid #dbe8ff;border-radius:7px;background:#fff;color:#52708f;font:13px inherit;line-height:1;cursor:pointer;z-index:5}
+#toggleLeft{right:10px}
+.context .panel-hide{left:10px;right:auto;top:12px}
+.side .brand{padding-right:38px}
+.context{padding-top:46px}
+.edge-handle{display:none;position:fixed;top:50%;transform:translateY(-50%);z-index:30;width:16px;height:54px;border:1px solid #dbe8ff;background:#fff;color:#52708f;font:12px inherit;cursor:pointer;align-items:center;justify-content:center;padding:0}
+.edge-handle.left-edge{left:0;border-left:0;border-radius:0 8px 8px 0}
+.edge-handle.right-edge{right:0;border-right:0;border-radius:8px 0 0 8px}
+body.left-hidden #reopenLeft{display:flex}
+body.right-hidden #reopenRight{display:flex}
 .app.left-hidden{grid-template-columns:0 0 minmax(0,1fr) 304px}
 .app.left-hidden>.rail,.app.left-hidden>.side{opacity:0;pointer-events:none;overflow:hidden;min-width:0;transform:translateX(-8px);visibility:hidden;transition:opacity .2s,transform .28s,visibility 0s .28s}
 .app.right-hidden{grid-template-columns:64px 292px minmax(0,1fr) 0}
 .app.right-hidden>.context{opacity:0;pointer-events:none;overflow:hidden;min-width:0;transform:translateX(8px);visibility:hidden;transition:opacity .2s,transform .28s,visibility 0s .28s}
 .app.left-hidden.right-hidden{grid-template-columns:0 0 minmax(0,1fr) 0}
-@media(max-width:1180px){.app.left-hidden{grid-template-columns:0 0 minmax(0,1fr)}#toggleLeft{left:calc(64px + 270px - 36px)}#toggleRight{right:8px}}
+@media(max-width:1180px){.app.left-hidden{grid-template-columns:0 0 minmax(0,1fr)}}
 </style>
 </head>
 <body>
 <div class="mock">MOCK 演示 · 数据非真实</div>
-<div class="layout-controls"><button id="toggleLeft" type="button" title="隐藏/显示左侧栏">◧</button><button id="toggleRight" type="button" title="隐藏/显示右侧栏">◨</button></div>
 <div class="app">
 
   <aside class="rail">
@@ -252,6 +255,7 @@ body.right-hidden #toggleRight{right:8px}
   </aside>
 
   <aside class="side">
+    <button id="toggleLeft" class="panel-hide" type="button" title="隐藏左侧栏">‹</button>
     <div class="brand">
       <div class="word">HOSHINOUMI</div>
       <div class="ver">WEB v35.5</div>
@@ -394,6 +398,7 @@ body.right-hidden #toggleRight{right:8px}
   </main>
 
   <aside class="context">
+    <button id="toggleRight" class="panel-hide" type="button" title="隐藏右侧栏">›</button>
     <div class="pcard">
       <div class="biga">奈</div>
       <div>
@@ -428,6 +433,8 @@ body.right-hidden #toggleRight{right:8px}
     </div>
   </aside>
 </div>
+<button id="reopenLeft" class="edge-handle left-edge" type="button" title="展开左侧栏">›</button>
+<button id="reopenRight" class="edge-handle right-edge" type="button" title="展开右侧栏">‹</button>
 <div class="tagdraft">DESIGN DRAFT · v35.5 · WEB · 2026-11-19</div>
 <script src="demo.js?v=35.5.34"></script>
 
@@ -436,9 +443,15 @@ body.right-hidden #toggleRight{right:8px}
   var app=document.querySelector('.app');
   var left=document.getElementById('toggleLeft');
   var right=document.getElementById('toggleRight');
+  var reopenLeft=document.getElementById('reopenLeft');
+  var reopenRight=document.getElementById('reopenRight');
   if(!app||!left||!right) return;
-  left.addEventListener('click',function(){ app.classList.toggle('left-hidden'); document.body.classList.toggle('left-hidden'); left.classList.toggle('on',app.classList.contains('left-hidden')); });
-  right.addEventListener('click',function(){ app.classList.toggle('right-hidden'); document.body.classList.toggle('right-hidden'); right.classList.toggle('on',app.classList.contains('right-hidden')); });
+  var toggleLeft=function(){ app.classList.toggle('left-hidden'); document.body.classList.toggle('left-hidden'); };
+  var toggleRight=function(){ app.classList.toggle('right-hidden'); document.body.classList.toggle('right-hidden'); };
+  left.addEventListener('click',toggleLeft);
+  reopenLeft.addEventListener('click',toggleLeft);
+  right.addEventListener('click',toggleRight);
+  reopenRight.addEventListener('click',toggleRight);
 })();
 </script>
 </body>
