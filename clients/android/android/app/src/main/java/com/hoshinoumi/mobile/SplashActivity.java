@@ -24,7 +24,7 @@ public class SplashActivity extends Activity {
         window.setNavigationBarColor(0xFF07101F);
         window.getDecorView().setSystemUiVisibility(0);
         setContentView(R.layout.activity_splash);
-        String version = "35.9.3.11";
+        String version = "35.9.3.12";
         try { version = getPackageManager().getPackageInfo(getPackageName(), 0).versionName; } catch (Exception ignored) {}
         ((android.widget.TextView) findViewById(R.id.splashFoot)).setText("POWERED BY JYOUSHITOU · v" + version);
 

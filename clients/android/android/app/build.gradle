@@ -13,8 +13,8 @@ android {
         applicationId "com.hoshinoumi.mobile"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 359311
-        versionName "35.9.3.11"
+        versionCode 359312
+        versionName "35.9.3.12"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
