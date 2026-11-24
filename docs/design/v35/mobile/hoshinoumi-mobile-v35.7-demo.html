@@ -713,7 +713,7 @@ async function loadDiary(){
 
 screens.plugins = `
 <div class="screen-body" style="flex:1;min-height:0;display:flex;flex-direction:column">
-  <div class="d-head"><h2>插件<small>PLUGINS</small></h2><div class="act" onclick="installPlugin()">＋</div></div>
+  <div class="d-head"><h2>插件<small>PLUGINS</small></h2><div class="act" onclick="openPluginImport()">＋</div></div>
   <div class="d-scroll">
     <div class="info-stats"><div class="info-stat"><small>已安装</small><b id="pluginInstalled">6</b></div><div class="info-stat"><small>待审批</small><b id="pluginPending" style="color:#b7791f">1</b></div><div class="info-stat"><small>错误</small><b id="pluginErrors">2</b></div></div>
     <div class="cmd-chips" id="pluginTabs" style="margin-bottom:8px">
@@ -782,6 +782,48 @@ function rejectPlugin(id){
   pluginItems = pluginItems.filter(x=>x.id!==id)
   renderPluginPage(); toast('已拒绝 ' + item.name + '（演示）')
 }
+
+function addImportedPlugin(name, source){
+  const clean = String(name || '导入插件').trim().slice(0, 40)
+  const slug = 'imported_' + Math.random().toString(36).slice(2, 7)
+  pluginItems.push({ id: slug, name: clean, slug, enabled: true, pending: false, version: '0.1.0', desc: source === 'url' ? '网址导入' : '文件导入', perm: ['read-only'] })
+  pluginTab = 'installed'; renderPluginPage(); closeOverlay()
+  toast((source === 'url' ? '已从网址导入 ' : '已从文件导入 ') + clean + '（演示）')
+}
+function openPluginImport(){
+  overlay(`<div class="sheet"><h4>导入插件</h4>
+    <div class="modal-form">
+      <label style="font-size:8px;color:#8a9bb0">插件网址</label>
+      <input id="pluginUrl" placeholder="https://example.com/plugin.json" inputmode="url" autocomplete="url">
+      <button style="background:#2563eb;color:#fff" onclick="importPluginFromUrl()">从网址导入</button>
+      <div style="text-align:center;font-size:8px;color:#9aabc0;margin:2px 0">或</div>
+      <label class="add-btn" style="display:flex;align-items:center;justify-content:center;background:#f4f9ff;color:#2563eb;border:1px solid #dbe8ff;box-shadow:none;height:34px;border-radius:8px;font-size:9px;cursor:pointer">选择插件文件<input type="file" accept=".json,.zip,.hoshinoumi,application/json" style="display:none" onchange="importPluginFile(this)"></label>
+    </div>
+    <div style="font-size:7.5px;color:#9aabc0;line-height:1.6;margin-top:6px">支持 plugin.json / zip 包 / 下载链接。安装后默认只读，写权限逐项审批。</div>
+    <button class="sheet-close" onclick="closeOverlay()">取消</button>
+  </div>`)
+}
+function importPluginFromUrl(){
+  const input = document.getElementById('pluginUrl')
+  const raw = String(input?.value || '').trim()
+  if(!/^https?:\/\/[^\s]+$/i.test(raw)){ toast('请输入完整的 http(s) 插件网址'); return }
+  let name = '网址插件'
+  try { name = new URL(raw).hostname } catch(e) {}
+  addImportedPlugin(name, 'url')
+}
+function importPluginFile(input){
+  const file = input?.files?.[0]
+  if(!file) return
+  const reader = new FileReader()
+  reader.onload = () => {
+    let name = file.name.replace(/\.(json|zip|hoshinoumi)$/i, '')
+    try { const data = JSON.parse(String(reader.result || '{}')); if(data && data.name) name = data.name } catch(e) {}
+    addImportedPlugin(name, 'file')
+  }
+  reader.onerror = () => toast('文件读取失败')
+  reader.readAsText(file)
+}
+
 function installPlugin(){
   const name = prompt('插件名称', '新插件')
   if(!name || !name.trim()) return
