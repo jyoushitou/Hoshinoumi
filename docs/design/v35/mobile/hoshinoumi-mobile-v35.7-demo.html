@@ -233,6 +233,10 @@ body.embed .download-entry{display:none!important}
 body.embed .nav-all-grid button[onclick*="downloads"],body.embed .nav-row .tab[onclick*="downloads"]{display:none!important}
 #pluginContent .d-card{animation:pluginIn .26s cubic-bezier(.22,1,.36,1) both}#pluginContent .d-card:nth-child(2){animation-delay:.035s}#pluginContent .d-card:nth-child(3){animation-delay:.07s}#pluginContent .d-card:nth-child(4){animation-delay:.105s}@keyframes pluginIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
 .set-body .set-group{animation:settingsIn .28s cubic-bezier(.22,1,.36,1) both}.set-body .set-group:nth-child(2){animation-delay:.03s}.set-body .set-group:nth-child(3){animation-delay:.06s}.set-body .set-group:nth-child(4){animation-delay:.09s}.set-body .set-group:nth-child(5){animation-delay:.12s}@keyframes settingsIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+
+body.nav-hidden .bottom-nav{display:none!important}
+.nav-ball{position:fixed;right:14px;bottom:24px;width:42px;height:42px;border-radius:50%;border:1px solid #bcd4ff;background:#2563eb;color:#fff;display:none;place-items:center;box-shadow:0 10px 24px rgba(37,99,235,.28);z-index:80;font:18px inherit;cursor:pointer}
+body.nav-hidden .nav-ball.show{display:grid}
 </style>
 <link rel="stylesheet" href="mobile-native.css">
 </head>
@@ -287,6 +291,26 @@ let navExpanded = false
 let demoUnread = 7
 let reminderHandled = false
 let currentScreen = 'chats'
+
+let navHidden = false
+try { navHidden = localStorage.getItem('hoshinoumi.navHidden') === '1' } catch {}
+function ensureNavBall(){
+  let ball = document.getElementById('navBall')
+  if(!ball){ ball = document.createElement('button'); ball.id='navBall'; ball.className='nav-ball'; ball.title='展开底部导航'; ball.textContent='◉'; ball.onclick=()=>{ navHidden=false; syncNavHidden(); toast('已恢复底部导航') }; document.body.appendChild(ball) }
+  ball.classList.toggle('show', navHidden)
+}
+function syncNavHidden(){
+  document.body.classList.toggle('nav-hidden', navHidden)
+  try { localStorage.setItem('hoshinoumi.navHidden', navHidden ? '1' : '0') } catch {}
+  const sw=document.getElementById('navVisibleSwitch'); if(sw) sw.classList.toggle('on', !navHidden)
+  ensureNavBall()
+}
+function toggleBottomNav(el){
+  navHidden = !navHidden
+  syncNavHidden()
+  toast(navHidden ? '底部导航已隐藏，点导航球恢复' : '底部导航已显示')
+}
+
 const allEntries = [
   ['home','⌂','主页'],['chats','◉','聊天'],['memory','◈','记忆'],['relation','♡','关系'],
   ['savings','¥','存钱'],['weekly','▦','周计划'],['info','≡','信息'],['persona','◇','人设'],
@@ -1311,6 +1335,7 @@ function closeQuickSettings(){ closeOverlay(); go(currentScreen) }
 
 const initial = new URLSearchParams(location.search).get('screen')
 const fallback = window.innerWidth <= 860 ? 'chats' : 'login'
+syncNavHidden()
 go(screens[initial] ? initial : fallback)
 // 有提醒就直接弹出；登录页不弹
 setTimeout(() => {
