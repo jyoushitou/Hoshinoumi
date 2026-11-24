@@ -219,9 +219,9 @@ body.left-hidden #toggleLeft{left:8px}
 body.right-hidden #toggleRight{right:8px}
 .layout-controls button.on{background:#2563eb;color:#fff;border-color:#2563eb}
 .app.left-hidden{grid-template-columns:0 0 minmax(0,1fr) 304px}
-.app.left-hidden>.rail,.app.left-hidden>.side{opacity:0;pointer-events:none;overflow:hidden;transform:translateX(-8px)}
+.app.left-hidden>.rail,.app.left-hidden>.side{opacity:0;pointer-events:none;overflow:hidden;min-width:0;transform:translateX(-8px);visibility:hidden;transition:opacity .2s,transform .28s,visibility 0s .28s}
 .app.right-hidden{grid-template-columns:64px 292px minmax(0,1fr) 0}
-.app.right-hidden>.context{opacity:0;pointer-events:none;overflow:hidden;transform:translateX(8px)}
+.app.right-hidden>.context{opacity:0;pointer-events:none;overflow:hidden;min-width:0;transform:translateX(8px);visibility:hidden;transition:opacity .2s,transform .28s,visibility 0s .28s}
 .app.left-hidden.right-hidden{grid-template-columns:0 0 minmax(0,1fr) 0}
 @media(max-width:1180px){.app.left-hidden{grid-template-columns:0 0 minmax(0,1fr)}#toggleLeft{left:calc(64px + 270px - 36px)}#toggleRight{right:8px}}
 </style>
