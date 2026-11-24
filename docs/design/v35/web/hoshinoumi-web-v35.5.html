@@ -224,6 +224,8 @@ body.rail-hidden .panel-expand{display:flex;align-items:center;justify-content:c
 .edge-handle{display:none;position:fixed;top:52px;z-index:30;width:26px;height:56px;border:1px solid #c7dcff;background:#eef4ff;color:#2563eb;font:16px inherit;font-weight:700;cursor:pointer;align-items:center;justify-content:center;padding:0;box-shadow:0 4px 12px rgba(37,99,235,.12)}
 .edge-handle.right-edge{right:0;border-right:0;border-radius:8px 0 0 8px;touch-action:none;cursor:grab;user-select:none}
 .edge-handle.right-edge:active{cursor:grabbing}
+.chat-side-toggle{display:none;width:30px;height:30px;border:0;border-radius:8px;background:transparent;cursor:pointer;flex:none;align-items:center;justify-content:center;padding:0}.chat-side-toggle:hover{background:#eef4ff}.chat-side-toggle img{width:24px;height:24px;display:block}
+body.rail-hidden.left-hidden .chat-side-toggle{display:flex}
 .rail-toggle{width:30px;height:30px;border:1px solid #dbe8ff;border-radius:8px;background:#f4f9ff;color:#2563eb;font:13px inherit;cursor:pointer;margin-bottom:2px;display:grid;place-items:center;padding:0}
 .rail-toggle.on{background:#2563eb;color:#fff;border-color:#2563eb}
 body.right-hidden #reopenRight{display:flex}
@@ -327,6 +329,7 @@ body.right-hidden #reopenRight{display:flex}
   <main class="main">
     <div class="top">
       <div class="who">
+        <button id="chatSideToggle" class="chat-side-toggle" type="button" title="展开侧栏"><img src="../../logo/hoshinoumi.svg" alt="展开侧栏"></button>
         <div class="avatar">奈</div>
         <div>
           <div class="nm">友利奈绪</div>
@@ -466,6 +469,12 @@ body.right-hidden #reopenRight{display:flex}
   left.addEventListener('click',toggleLeft);
   sideToggle.addEventListener('click',toggleLeft);
   right.addEventListener('click',toggleRight);
+  var chatSideToggle=document.getElementById('chatSideToggle');
+  chatSideToggle.addEventListener('click',function(){
+    app.classList.remove('rail-hidden','left-hidden');
+    document.body.classList.remove('rail-hidden','left-hidden');
+    sideToggle.classList.remove('on');
+  });
   reopenRight.addEventListener('click',toggleRight);
 
   var handle=reopenRight;
