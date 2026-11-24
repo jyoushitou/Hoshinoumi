@@ -10,6 +10,7 @@ import CommandView from '@/views/CommandView.vue'
 import MemoryView from '@/views/MemoryView.vue'
 import SavingsView from '@/views/SavingsView.vue'
 import DiaryView from '@/views/DiaryView.vue'
+import InfoView from '@/views/InfoView.vue'
 import MobileWeeklyView from '@/views/mobile/MobileWeeklyView.vue'
 import MobileTabBar from '@/components/mobile/MobileTabBar.vue'
 import MobileReminderPopup from '@/components/mobile/MobileReminderPopup.vue'
@@ -101,6 +102,7 @@ const pageView = computed(() => {
   if (route.name === 'memory') return MemoryView
   if (route.name === 'savings') return SavingsView
   if (route.name === 'diary') return DiaryView
+  if (route.name === 'info') return InfoView
   return MobilePageView
 })
 const title = computed(() => titles[String(route.name)] ?? 'Hoshinoumi')
