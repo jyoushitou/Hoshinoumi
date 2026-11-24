@@ -312,20 +312,29 @@ screens.login = `
   <div class="safe"></div>
 </div>`
 
+
+function filterChats(el, kind){
+  document.querySelectorAll('.chips .chip').forEach(c=>c.classList.toggle('on', c===el))
+  document.querySelectorAll('.conv[data-kind]').forEach(c=>{ c.style.display = (kind==='all'||c.dataset.kind===kind) ? '' : 'none' })
+  const modeTitle=document.getElementById('modeTitle'), recentTitle=document.getElementById('recentTitle')
+  if(modeTitle) modeTitle.style.display = (kind==='all'||kind==='mode') ? '' : 'none'
+  if(recentTitle) recentTitle.style.display = (kind==='all'||kind==='private'||kind==='group') ? '' : 'none'
+}
+
 screens.chats = `
 <div class="screen-body" style="flex:1;min-height:0;display:flex;flex-direction:column">
   <div class="mobile-head">
     <div class="row1"><div class="avatar bot">奈</div><div class="brand">HOSHINOUMI<small>REC · ONLINE</small></div><div class="spacer"></div><div class="icon-btn" style="position:relative" onclick="openNotifications()">🔔<span class="bell-dot"></span></div><div class="icon-btn" onclick="openSearch()" title="搜索"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m16.5 16.5 4 4"></path></svg></div><div class="icon-btn" onclick="go('downloads')" title="下载"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v11m0 0 4-4m-4 4-4-4M5 20h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="icon-btn" onclick="openNewChat()">＋</div></div>
     <div class="search" onclick="openSearch()"><span class="search-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m16.5 16.5 4 4"></path></svg></span>搜索会话 / 记忆 / 命令<span class="k">⌘K</span></div>
-    <div class="chips"><div class="chip on">全部</div><div class="chip">私聊</div><div class="chip">群聊</div></div>
+    <div class="chips"><div class="chip on" onclick="filterChats(this,'all')">全部</div><div class="chip" onclick="filterChats(this,'private')">私聊</div><div class="chip" onclick="filterChats(this,'group')">群聊</div><div class="chip" onclick="filterChats(this,'mode')">代码模式</div></div>
   </div>
   <div class="list">
-    <div class="sec-title"><span>模式会话</span><span>记忆共享</span></div>
-    <div class="conv" onclick="go('codeChat')"><div class="avatar" style="background:#e8f1ff;color:#1d4ed8">⌘</div><div class="copy"><b>代码模式</b><span>独立会话 · 知识优先 · 记忆与奈绪共享</span></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="when">独立</span><span class="badge" style="background:#eef4ff;color:#2563eb">CODE</span></div></div>
-    <div class="sec-title"><span>最近</span><span>已同步</span></div>
+    <div class="sec-title" id="modeTitle"><span>模式会话</span><span>记忆共享</span></div>
+    <div class="conv" data-kind="mode" onclick="go('codeChat')"><div class="avatar" style="background:#e8f1ff;color:#1d4ed8">⌘</div><div class="copy"><b>代码模式</b><span>独立会话 · 知识优先 · 记忆与奈绪共享</span></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="when">独立</span><span class="badge" style="background:#eef4ff;color:#2563eb">CODE</span></div></div>
+    <div class="sec-title" id="recentTitle"><span>最近</span><span>已同步</span></div>
     <div id="extraConvs"></div>
-    <div class="conv on" data-conv="nao" onclick="openConversation(this,'chat','nao')"><div class="avatar bot">奈</div><div class="copy"><b>奈绪</b><span>你回来啦。今天外面有点冷，先喝点热的吧。</span></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="when">刚刚</span><span class="badge blue unread-badge">2</span></div></div>
-    <div class="conv" data-conv="student" onclick="openConversation(this,'group','student')"><div class="avatar">学</div><div class="copy"><b>星之海学生会</b><span>友利：下午的会议改到三点。</span></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="when">12:40</span><span class="badge unread-badge">5</span></div></div>
+    <div class="conv on" data-kind="private" data-conv="nao" onclick="openConversation(this,'chat','nao')"><div class="avatar bot">奈</div><div class="copy"><b>奈绪</b><span>你回来啦。今天外面有点冷，先喝点热的吧。</span></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="when">刚刚</span><span class="badge blue unread-badge">2</span></div></div>
+    <div class="conv" data-kind="group" data-conv="student" onclick="openConversation(this,'group','student')"><div class="avatar">学</div><div class="copy"><b>星之海学生会</b><span>友利：下午的会议改到三点。</span></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="when">12:40</span><span class="badge unread-badge">5</span></div></div>
   </div>
 </div>
 ${nav('chats')}`
