@@ -239,6 +239,15 @@ body.right-hidden #reopenRight{display:flex}
 .app.right-hidden>.context{opacity:0;pointer-events:none;overflow:hidden;min-width:0;transform:translateX(8px);visibility:hidden;transition:opacity .2s,transform .28s,visibility 0s .28s}
 .app.left-hidden.right-hidden{grid-template-columns:64px 0 minmax(0,1fr) 0}
 @media(max-width:1180px){.app.rail-hidden{grid-template-columns:0 270px minmax(0,1fr)}.app.left-hidden{grid-template-columns:64px 0 minmax(0,1fr)}.app.rail-hidden.left-hidden{grid-template-columns:0 0 minmax(0,1fr)}}
+
+.download-card{background:#fff;border:1px solid #e3ebf7;border-radius:12px;padding:16px;transition:border-color .18s,box-shadow .18s}
+.download-card.featured{border-color:#93b7fa;box-shadow:0 10px 28px rgba(37,99,235,.08)}
+.download-card h3{font-size:14px;color:#1e3a5f;margin:0 0 4px}
+.download-card .ver{font-size:9px;color:#2563eb;font-weight:600}
+.download-card p{font-size:9.5px;line-height:1.7;color:#6b7c95;margin:8px 0 0}
+.download-card .download-btn{margin-top:12px;width:100%;height:32px;border:0;border-radius:8px;background:#2563eb;color:#fff;font:10px inherit;font-weight:700;cursor:pointer}
+.download-card.ghost .download-btn{background:#f4f9ff;border:1px solid #dbe8ff;color:#2563eb}
+.download-note{border:1px dashed #cfe0f7;border-radius:9px;background:#f8fbff;color:#8a9bb0;font-size:8.5px;line-height:1.7;padding:8px 10px;margin-top:12px}
 </style>
 </head>
 <body>
@@ -261,6 +270,7 @@ body.right-hidden #reopenRight{display:flex}
     <button class="rnav" data-page="diary" title="日记">✎</button>
     <button class="rnav" data-page="plugins" title="插件">▣</button>
     <div class="spacer"></div>
+    <button class="rnav" data-page="downloads" title="下载">⇩</button>
     <button class="rail-toggle" id="toggleSide" type="button" title="显示/隐藏会话列表">☰</button>
     <button class="rnav" data-page="settings" title="设置">⚙</button>
   </aside>

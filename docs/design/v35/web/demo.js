@@ -726,6 +726,21 @@
         .catch(() => {});
       return;
     }
+    if (name === 'downloads') {
+      const card = (title, ver, desc, cls) => '<div class="download-card ' + cls + '"><h3>' + title + '</h3><div class="ver">' + ver + '</div><p>' + desc + '</p><button class="download-btn" data-download="' + title + '">下载</button></div>';
+      pageView.innerHTML = '<div class="page-head"><div><h2>下载</h2><p>选择平台 · 版本由当前后端提供</p></div></div>' +
+        '<div class="pgrid">' +
+        card('Android APK', 'v35.9.3.13 · 推荐', '安装到 Android / HarmonyOS 手机；下载后校验 SHA-256。', 'featured') +
+        card('Windows 桌面端', 'v35.9.3.13', 'Electron 套壳，支持托盘、通知和自动更新。', '') +
+        card('macOS 桌面端', 'v35.9.3.13', 'Apple Silicon / Intel 通用安装包。', '') +
+        card('Web 当前站点', location.host, '直接使用当前浏览器页面，不需要安装。', 'ghost') +
+        '</div><div class="download-note">下载地址与版本来自当前后端的更新通道；前端只展示，不写死外部下载 IP。</div>';
+      pageView.classList.add('on');
+      [top, msgs, composer, searchBar].forEach(x => x.classList.add('chat-hide'));
+      document.querySelectorAll('.rnav').forEach(x => x.classList.toggle('on', x.dataset.page === 'downloads'));
+      pageView.querySelectorAll('.download-btn').forEach(btn => btn.addEventListener('click', () => toast('下载 ' + btn.dataset.download + '（演示）')));
+      return;
+    }
     if (name === 'plugins') {
       const pluginCard = (title, desc, action, label) => '<div class="pcard2 plugin-card"><div class="plugin-copy"><h3>' + title + '</h3><p>' + desc + '</p></div><button class="plugin-action" onclick="toast(&quot;' + action + '（演示）&quot;)">' + label + '</button></div>';
       pageView.innerHTML = '<div class="page-head"><div><h2>插件</h2><p>安装 / 审批 / 权限 / 错误 · 独立管理页</p></div><button class="back" id="pluginAdd" style="margin-left:auto">＋ 安装插件</button></div>' +
@@ -1339,7 +1354,7 @@
     document.querySelectorAll('.rnav').forEach(x => x.classList.toggle('on', x.dataset.page === name));
   }
 
-  const railPages = ['home', 'chat', 'memory', 'relation', 'savings', 'weekly', 'info', 'persona', 'commands', 'cron', 'logs', 'diary', 'plugins', 'settings'];
+  const railPages = ['home', 'chat', 'memory', 'relation', 'savings', 'weekly', 'info', 'persona', 'commands', 'cron', 'logs', 'diary', 'plugins', 'downloads', 'settings'];
   document.querySelectorAll('.rnav').forEach((b, i) => {
     b.dataset.page = b.dataset.page || railPages[i] || 'chat';
     b.addEventListener('click', () => {
