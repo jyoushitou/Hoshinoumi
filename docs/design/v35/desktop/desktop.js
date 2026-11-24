@@ -156,7 +156,15 @@ function showPage(page){
     return;
   }
   else if(page==='info') pv.innerHTML=pageHead('信息','运行 / 数据库 / 计划 / 阅读')+`<div class="pv-row">后端<span>已连接 · 42ms</span></div><div class="pv-row">数据库<span>schema 36 · 正常</span></div><div class="pv-row">今日对话<span>12 次</span></div><div class="pv-row">记忆<span>4 条 / 2 会话</span></div><div class="pv-row">阅读<span>《十日终焉》· 60%</span></div>`
-  else if(page==='persona') pv.innerHTML=pageHead('人设','nao · 当前激活')+`<div class="pv-card"><b>nao</b><small>友利奈绪 · 星之海学园</small></div><div class="pv-sec">文件</div><div class="pv-row">prompt.txt<span>已加载</span></div><div class="pv-row">supplement.txt<span>已加载</span></div><div class="pv-row">life.txt<span>已加载</span></div><div class="pv-row">state.json<span>mood 0.1</span></div>`
+  else if(page==='persona') pv.innerHTML=pageHead('人设','导入 / 导出 / 激活 · 人设卡与后端信息')+
+    `<div style="display:flex;justify-content:flex-end;gap:6px;margin-bottom:8px"><button class="soft" onclick="toast('导入人设卡 JSON / PNG（演示）')">⇧ 导入</button><button class="soft" onclick="toast('导出当前人设（演示）')">⇩ 导出</button></div>`+
+    `<div class="pv-card" style="display:flex;align-items:center;gap:10px"><span class="avatar">奈</span><div><b>nao</b><small>友利奈绪 · 星之海学园</small></div><span style="margin-left:auto;font-size:8px;color:#1f9d6b;border:1px solid #cdeee0;background:#eefbf5;border-radius:4px;padding:2px 6px">使用中</span></div>`+
+    `<div class="pv-sec">候选</div>`+
+    `<div class="pv-row">暑假奈绪<span>更放松 / 日常 · 切换</span></div><div class="pv-row">学生会长<span>正式 / 工作模式 · 切换</span></div>`+
+    `<div class="pv-sec">文件</div>`+
+    `<div class="pv-row">prompt.txt<span>已加载</span></div><div class="pv-row">supplement.txt<span>已加载</span></div><div class="pv-row">life.txt<span>已加载</span></div><div class="pv-row">state.json<span>mood 0.1</span></div><div class="pv-row">voice.json<span>zh-CN-XiaoxiaoNeural</span></div>`+
+    `<div class="pv-sec">后端信息</div>`+
+    `<div class="pv-row">数据源<span>/api/persona · schema 36</span></div><div class="pv-row">当前激活<span>nao · 1 个</span></div><div class="pv-row">权限<span>只读预览 · owner 可切换</span></div>`
   else if(page==='commands') pv.innerHTML=pageHead('命令','51 个命令 · 设计稿 · 最终走 /api/commands')+
     `<div class="cmd-run"><span>&gt;</span><input id="cmdInput" placeholder="输入命令，例如 !persona activate nao"><button id="cmdRun">执行</button></div><div class="cmd-hint" id="cmdHint">无参命令直接执行；带参命令先填参数；二级命令点上方命令后按提示输入。</div>`+
     `<div class="cmd-grid">`+
