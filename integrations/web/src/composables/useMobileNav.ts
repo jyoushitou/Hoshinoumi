@@ -1,4 +1,5 @@
 ﻿import { computed, ref } from 'vue'
+import { isNativeClient } from '@/lib/platform'
 
 export interface MobileEntry {
   key: string
@@ -47,7 +48,8 @@ function persist() {
 }
 
 export function useMobileNav() {
-  const quickEntries = computed(() => mobileEntries.filter(entry => quickKeys.value.includes(entry.key)))
+  const visibleMobileEntries = computed(() => isNativeClient() ? mobileEntries.filter(entry => entry.key !== 'logs') : mobileEntries)
+  const quickEntries = computed(() => visibleMobileEntries.value.filter(entry => quickKeys.value.includes(entry.key)))
 
   function toggleQuick(key: string) {
     const index = quickKeys.value.indexOf(key)
@@ -67,5 +69,5 @@ export function useMobileNav() {
     persist()
   }
 
-  return { entries: mobileEntries, quickEntries, quickKeys, toggleQuick, resetQuick, min: MIN_QUICK, max: MAX_QUICK }
+  return { entries: visibleMobileEntries.value, quickEntries, quickKeys, toggleQuick, resetQuick, min: MIN_QUICK, max: MAX_QUICK }
 }
