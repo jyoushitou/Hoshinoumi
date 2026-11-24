@@ -734,7 +734,9 @@ let pluginItems = [
   { id:'reader', name:'读书摘要', slug:'reader', enabled:true, pending:false, version:'1.0.3', desc:'读写书架', perm:['filesystem','db'] },
   { id:'music', name:'音乐', slug:'music', enabled:false, pending:false, version:'0.9.1', desc:'播放 / 搜索', perm:['network'] },
   { id:'ledger', name:'记账助手', slug:'ledger', enabled:false, pending:true, version:'1.1.0', desc:'读写财务', perm:['finance'] },
-  { id:'dashboard', name:'面板', slug:'dashboard', enabled:true, pending:false, version:'1.0.0', desc:'前端 slot', perm:['read-only'] }
+  { id:'dashboard', name:'面板', slug:'dashboard', enabled:true, pending:false, version:'1.0.0', desc:'前端 slot', perm:['read-only'] },
+  { id:'reminder', name:'提醒', slug:'reminder', enabled:true, pending:false, version:'1.0.2', desc:'定时提醒', perm:['notifications'] },
+  { id:'backup', name:'备份', slug:'backup', enabled:false, pending:false, version:'1.0.1', desc:'实例备份', perm:['filesystem'] }
 ]
 const pluginErrors = [
   { plugin:'music', message:'播放失败', at:'20:12' },
