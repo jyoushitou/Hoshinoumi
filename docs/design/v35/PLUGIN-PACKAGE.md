@@ -1,12 +1,12 @@
-# `.rec` 插件包规范
+# `.houshinoumi` 插件包规范
 
-> v35.9.4 起，Hoshinoumi 插件分发包统一使用 `.rec` 后缀。
+> v35.9.4 起，Hoshinoumi 插件分发包统一使用 `.houshinoumi` 后缀。
 
 ## 容器
 
 ```text
-.rec = ZIP 容器
-MIME: application/vnd.hoshinoumi.rec+zip
+.houshinoumi = ZIP 容器
+MIME: application/vnd.houshinoumi.plugin+zip
 建议上限：20 MB
 ```
 
@@ -38,8 +38,8 @@ signature.json    签名/校验信息（可选，正式分发建议必需）
 ## 安装规则
 
 ```text
-网址导入：http(s) 指向 .rec 或 plugin.json
-本地导入：.rec（单文件 plugin.json 仅开发调试）
+网址导入：http(s) 指向 .houshinoumi 或 plugin.json
+本地导入：.houshinoumi（单文件 plugin.json 仅开发调试）
 安装后默认只读
 write 权限逐项审批，owner 才能批准
 校验失败 / 清单缺失 / 版本不兼容 → 拒绝安装
@@ -48,7 +48,7 @@ write 权限逐项审批，owner 才能批准
 ## 演示与实现
 
 ```text
-手机设计稿：插件 → ＋ → 网址 / .rec 文件
-Web 设计稿：插件 → ＋ 安装插件 → 网址 / .rec 文件
+手机设计稿：插件 → ＋ → 网址 / .houshinoumi 文件
+Web 设计稿：插件 → ＋ 安装插件 → 网址 / .houshinoumi 文件
 Vue/API：v35.9.4.2–.6
 ```
