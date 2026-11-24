@@ -743,7 +743,7 @@
           holder.innerHTML = '<div class="pgrid">' + list.map(item => '<div class="download-card ' + (item.recommended ? 'featured' : '') + '"><h3>' + esc(item.name) + '</h3><div class="ver">' + esc(item.version || '') + (item.kind ? ' · ' + esc(item.kind) : '') + '</div><p>' + esc(item.platform || '') + (item.size ? ' · ' + fmtSize(item.size) : '') + (item.notes ? '<br>' + esc(item.notes) : '') + '</p><button class="download-btn" data-url="' + esc(item.url || '') + '">下载</button></div>').join('') + '</div>';
           holder.querySelectorAll('.download-btn').forEach(btn => btn.addEventListener('click', () => { if (btn.dataset.url) window.open(btn.dataset.url, '_blank'); }));
         })
-        .catch(() => { const holder = document.getElementById('downloadList'); if (holder) holder.innerHTML = '<div class="download-card"><h3>网关未连接</h3><p>无法读取 /api/clients，请确认后端可用。</p></div>'; });
+        .catch(() => { const holder = document.getElementById('downloadList'); if (holder) holder.innerHTML = '<div class="download-card"><h3>网关未连接</h3><p>无法读取 /api/clients，请确认后端可用。</p><button class="download-btn" id="downloadRetry">重试</button></div>'; document.getElementById('downloadRetry')?.addEventListener('click', () => location.reload()); });
       return;
     }
     if (name === 'plugins') {
