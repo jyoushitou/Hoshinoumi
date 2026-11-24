@@ -729,7 +729,7 @@
     }
     if (name === 'plugins') {
       const pluginCard = (title, desc, action, label) => '<div class="pcard2 plugin-card"><div class="plugin-copy"><h3>' + title + '</h3><p>' + desc + '</p></div><button class="plugin-action" onclick="toast(&quot;' + action + '（演示）&quot;)">' + label + '</button></div>';
-      pageView.innerHTML = '<div class="page-head"><div><h2>插件</h2><p>安装 / 审批 / 权限 / 错误 · 独立管理页</p></div><button class="back" id="pluginAdd" style="margin-left:auto">＋ 安装插件</button><button class="back" id="backChat">← 返回聊天</button></div>' +
+      pageView.innerHTML = '<div class="page-head"><div><h2>插件</h2><p>安装 / 审批 / 权限 / 错误 · 独立管理页</p></div><button class="back" id="pluginAdd" style="margin-left:auto">＋ 安装插件</button></div>' +
         '<div class="pgrid">' +
         '<div class="pcard2 plugin-section"><h3>已安装 6</h3>' + pluginCard('天气 · weather', '读天气 · network · v1.2.0', '已停用 weather', '停用') + pluginCard('读书摘要 · reader', '读写书架 · filesystem / db · v1.0.3', '已停用 reader', '停用') + pluginCard('音乐 · music', '播放 / 搜索 · network · v0.9.1', '已启用 music', '启用') + '</div>' +
         '<div class="pcard2 plugin-section"><h3>待审批 1</h3><div class="plugin-card"><div class="plugin-copy"><h3>记账助手 · ledger</h3><p>读写财务 · finance · 仅 owner</p></div><div class="plugin-actions"><button class="plugin-action primary" onclick="toast(&quot;已批准 ledger（演示）&quot;)">批准</button><button class="plugin-action danger" onclick="toast(&quot;已拒绝 ledger（演示）&quot;)">拒绝</button></div></div><h3 style="margin-top:14px">权限</h3><div class="plugin-line"><span>network</span><b>2 个插件</b></div><div class="plugin-line"><span>filesystem</span><b>1 个</b></div><div class="plugin-line"><span>finance</span><b>需 owner</b></div></div>' +
@@ -764,7 +764,6 @@
           addPluginWeb(file.name.replace(/\.(hoshinoumi|zip|json)$/i, ''), 'file'); close();
         });
       });
-      document.getElementById('backChat').addEventListener('click', () => showChat());
       return;
     }
     if (name === 'logs') {
