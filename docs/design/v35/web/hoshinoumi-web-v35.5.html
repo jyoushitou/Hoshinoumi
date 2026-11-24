@@ -212,6 +212,9 @@ button{color:inherit}
 .chat-more{position:fixed;right:22px;top:52px;width:150px;background:#fff;border:1px solid #e3ebf7;border-radius:10px;box-shadow:0 12px 30px rgba(37,99,235,.14);padding:5px;z-index:45;display:none}.chat-more.on{display:block}.chat-more button{display:flex;width:100%;align-items:center;gap:7px;border:0;background:#fff;border-radius:7px;padding:7px 8px;text-align:left;font:9.5px inherit;color:#405a78;cursor:pointer}.chat-more button:hover{background:#f2f7ff;color:#2563eb}.chat-more .sep{height:1px;background:#eef3fb;margin:3px 4px}
 
 .side,.context{position:relative}
+.panel-expand{display:none;position:absolute;top:12px;left:10px;width:24px;height:24px;border:1px solid #dbe8ff;border-radius:7px;background:#fff;color:#2563eb;font:13px inherit;line-height:1;cursor:pointer;z-index:6}
+body.rail-hidden .panel-expand{display:flex;align-items:center;justify-content:center}
+body.rail-hidden .side .brand{padding-left:36px}
 .panel-hide{position:absolute;top:12px;width:24px;height:24px;border:1px solid #dbe8ff;border-radius:7px;background:#fff;color:#52708f;font:13px inherit;line-height:1;cursor:pointer;z-index:5}
 #toggleLeft{right:10px}
 .context .panel-hide{left:10px;right:auto;top:12px}
@@ -224,7 +227,7 @@ button{color:inherit}
 .rail-toggle{width:30px;height:30px;border:1px solid #dbe8ff;border-radius:8px;background:#f4f9ff;color:#2563eb;font:13px inherit;cursor:pointer;margin-bottom:2px}
 .rail-toggle.on{background:#2563eb;color:#fff;border-color:#2563eb}
 body.right-hidden #reopenRight{display:flex}
-body.rail-hidden #reopenRail{display:flex}
+body.rail-hidden.left-hidden #reopenRailEdge{display:flex}
 .left-edge{left:0;border-left:0;border-radius:0 8px 8px 0}
 .app.rail-hidden{grid-template-columns:0 292px minmax(0,1fr) 304px}
 .app.left-hidden{grid-template-columns:64px 0 minmax(0,1fr) 304px}
@@ -264,6 +267,7 @@ body.rail-hidden #reopenRail{display:flex}
   </aside>
 
   <aside class="side">
+    <button id="reopenRail" class="panel-expand" type="button" title="展开导航栏">›</button>
     <button id="toggleLeft" class="panel-hide" type="button" title="隐藏左侧栏">‹</button>
     <div class="brand">
       <div class="word">HOSHINOUMI</div>
@@ -442,7 +446,7 @@ body.rail-hidden #reopenRail{display:flex}
     </div>
   </aside>
 </div>
-<button id="reopenRail" class="edge-handle left-edge" type="button" title="展开导航栏">›</button>
+<button id="reopenRailEdge" class="edge-handle left-edge" type="button" title="展开导航栏">›</button>
 <button id="reopenRight" class="edge-handle right-edge" type="button" title="展开右侧栏">‹</button>
 <div class="tagdraft">DESIGN DRAFT · v35.5 · WEB · 2026-11-19</div>
 <script src="demo.js?v=35.5.34"></script>
@@ -454,6 +458,7 @@ body.rail-hidden #reopenRail{display:flex}
   var right=document.getElementById('toggleRight');
   var reopenRight=document.getElementById('reopenRight');
   var reopenRail=document.getElementById('reopenRail');
+  var reopenRailEdge=document.getElementById('reopenRailEdge');
   var railToggle=document.getElementById('toggleRail');
   var sideToggle=document.getElementById('toggleSide');
   if(!app||!left||!right) return;
@@ -462,6 +467,7 @@ body.rail-hidden #reopenRail{display:flex}
   var toggleRight=function(){ app.classList.toggle('right-hidden'); document.body.classList.toggle('right-hidden'); };
   railToggle.addEventListener('click',toggleRail);
   reopenRail.addEventListener('click',toggleRail);
+  reopenRailEdge.addEventListener('click',toggleRail);
   left.addEventListener('click',toggleLeft);
   sideToggle.addEventListener('click',toggleLeft);
   right.addEventListener('click',toggleRight);
