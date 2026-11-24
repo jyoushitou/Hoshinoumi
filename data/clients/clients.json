@@ -1,0 +1,26 @@
+{
+  "clients": [
+    {
+      "id": "android",
+      "name": "Android APK",
+      "kind": "mobile",
+      "platform": "android",
+      "version": "35.9.3.13",
+      "versionCode": 359313,
+      "file": "latest.apk",
+      "notes": "Debug 包，安装前先卸载旧签名版本",
+      "recommended": true
+    },
+    {
+      "id": "windows",
+      "name": "Windows 桌面端",
+      "kind": "desktop",
+      "platform": "windows",
+      "version": "35.6.0",
+      "versionCode": 0,
+      "file": "Hoshinoumi-35.6.0-win.zip",
+      "notes": "Electron 套壳便携包，解压后运行 Hoshinoumi.exe",
+      "recommended": false
+    }
+  ]
+}

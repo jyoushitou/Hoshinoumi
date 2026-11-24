@@ -39,6 +39,7 @@ OWNER_QQ = "10001"
 ROOT = Path(__file__).resolve().parents[2]
 APK_DIR = Path(os.environ.get("HOSHINOUMI_APK_DIR", ROOT / "data" / "apk"))
 CLIENTS_FILE = Path(os.environ.get("HOSHINOUMI_CLIENTS_FILE", ROOT / "data" / "clients" / "clients.json"))
+CLIENTS_DIR = CLIENTS_FILE.parent
 READS = {}  # target_id -> last_read_id
 CUSTOM_GROUPS = {}
 GROUP_META = {}
@@ -385,12 +386,13 @@ class Handler(BaseHTTPRequestHandler):
             cid = str(client.get("id"))
             path = None
             if client.get("file"):
-                candidate = (APK_DIR / str(client["file"])).resolve()
-                try:
-                    candidate.relative_to(APK_DIR.resolve())
-                    if candidate.exists(): path = candidate
-                except ValueError:
-                    pass
+                for base in (CLIENTS_DIR, APK_DIR):
+                    candidate = (base / str(client["file"])).resolve()
+                    try:
+                        candidate.relative_to(base.resolve())
+                        if candidate.exists(): path = candidate; break
+                    except ValueError:
+                        pass
             if cid == "android" and not path:
                 apk = _latest_apk(); path = apk["path"] if apk else None
             if not path:
@@ -406,12 +408,13 @@ class Handler(BaseHTTPRequestHandler):
         client = next((x for x in _client_entries() if str(x.get("id")) == cid), None)
         path = None
         if client and client.get("file"):
-            candidate = (APK_DIR / str(client["file"])).resolve()
-            try:
-                candidate.relative_to(APK_DIR.resolve())
-                if candidate.exists(): path = candidate
-            except ValueError:
-                pass
+            for base in (CLIENTS_DIR, APK_DIR):
+                candidate = (base / str(client["file"])).resolve()
+                try:
+                    candidate.relative_to(base.resolve())
+                    if candidate.exists(): path = candidate; break
+                except ValueError:
+                    pass
         if cid == "android" and not path:
             apk = _latest_apk(); path = apk["path"] if apk else None
         if not path:
