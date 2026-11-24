@@ -727,18 +727,23 @@
       return;
     }
     if (name === 'downloads') {
-      const card = (title, ver, desc, cls) => '<div class="download-card ' + cls + '"><h3>' + title + '</h3><div class="ver">' + ver + '</div><p>' + desc + '</p><button class="download-btn" data-download="' + title + '">下载</button></div>';
-      pageView.innerHTML = '<div class="page-head"><div><h2>下载</h2><p>选择平台 · 版本由当前后端提供</p></div></div>' +
-        '<div class="pgrid">' +
-        card('Android APK', 'v35.9.3.13 · 推荐', '安装到 Android / HarmonyOS 手机；下载后校验 SHA-256。', 'featured') +
-        card('Windows 桌面端', 'v35.9.3.13', 'Electron 套壳，支持托盘、通知和自动更新。', '') +
-        card('macOS 桌面端', 'v35.9.3.13', 'Apple Silicon / Intel 通用安装包。', '') +
-        card('Web 当前站点', location.host, '直接使用当前浏览器页面，不需要安装。', 'ghost') +
-        '</div><div class="download-note">下载地址与版本来自当前后端的更新通道；前端只展示，不写死外部下载 IP。</div>';
+      pageView.innerHTML = '<div class="page-head"><div><h2>下载</h2><p>平台与版本来自当前后端 /api/clients</p></div></div><div id="downloadList"><div class="download-card"><h3>正在获取客户端…</h3><p>向网关请求可用安装包。</p></div></div><div class="download-note">只展示 /api/clients 返回的客户端；没有的端不会伪造下载入口。</div>';
       pageView.classList.add('on');
       [top, msgs, composer, searchBar].forEach(x => x.classList.add('chat-hide'));
       document.querySelectorAll('.rnav').forEach(x => x.classList.toggle('on', x.dataset.page === 'downloads'));
-      pageView.querySelectorAll('.download-btn').forEach(btn => btn.addEventListener('click', () => toast('下载 ' + btn.dataset.download + '（演示）')));
+      const base = (location.hostname === '127.0.0.1' || location.hostname === 'localhost') && location.port === '27005' ? '' : 'http://127.0.0.1:27005';
+      const fmtSize = bytes => bytes ? (bytes / 1024 / 1024).toFixed(1) + ' MB' : '';
+      fetch(base + '/api/clients', { cache: 'no-store' })
+        .then(r => r.ok ? r.json() : Promise.reject())
+        .then(data => {
+          const list = Array.isArray(data.clients) ? data.clients : [];
+          const holder = document.getElementById('downloadList');
+          if (!holder) return;
+          if (!list.length) { holder.innerHTML = '<div class="download-card"><h3>暂无可用客户端</h3><p>网关没有返回安装包。</p></div>'; return; }
+          holder.innerHTML = '<div class="pgrid">' + list.map(item => '<div class="download-card ' + (item.recommended ? 'featured' : '') + '"><h3>' + esc(item.name) + '</h3><div class="ver">' + esc(item.version || '') + (item.kind ? ' · ' + esc(item.kind) : '') + '</div><p>' + esc(item.platform || '') + (item.size ? ' · ' + fmtSize(item.size) : '') + (item.notes ? '<br>' + esc(item.notes) : '') + '</p><button class="download-btn" data-url="' + esc(item.url || '') + '">下载</button></div>').join('') + '</div>';
+          holder.querySelectorAll('.download-btn').forEach(btn => btn.addEventListener('click', () => { if (btn.dataset.url) window.open(btn.dataset.url, '_blank'); }));
+        })
+        .catch(() => { const holder = document.getElementById('downloadList'); if (holder) holder.innerHTML = '<div class="download-card"><h3>网关未连接</h3><p>无法读取 /api/clients，请确认后端可用。</p></div>'; });
       return;
     }
     if (name === 'plugins') {
