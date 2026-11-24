@@ -24,9 +24,9 @@ public class SplashActivity extends Activity {
         window.setNavigationBarColor(0xFF07101F);
         window.getDecorView().setSystemUiVisibility(0);
         setContentView(R.layout.activity_splash);
-        String version = "35.9.3.12";
+        String version = "35.9.3.13";
         try { version = getPackageManager().getPackageInfo(getPackageName(), 0).versionName; } catch (Exception ignored) {}
-        ((android.widget.TextView) findViewById(R.id.splashFoot)).setText("POWERED BY JYOUSHITOU · v" + version);
+        ((android.widget.TextView) findViewById(R.id.splashFoot)).setText("POWERED BY JYOUSHITOU 路 v" + version);
 
         View logo = findViewById(R.id.splashLogo);
         ObjectAnimator floatAnim = ObjectAnimator.ofFloat(logo, "translationY", 0f, -8f);
@@ -62,3 +62,4 @@ public class SplashActivity extends Activity {
         super.onDestroy();
     }
 }
+
