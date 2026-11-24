@@ -211,15 +211,19 @@ button{color:inherit}
 
 .chat-more{position:fixed;right:22px;top:52px;width:150px;background:#fff;border:1px solid #e3ebf7;border-radius:10px;box-shadow:0 12px 30px rgba(37,99,235,.14);padding:5px;z-index:45;display:none}.chat-more.on{display:block}.chat-more button{display:flex;width:100%;align-items:center;gap:7px;border:0;background:#fff;border-radius:7px;padding:7px 8px;text-align:left;font:9.5px inherit;color:#405a78;cursor:pointer}.chat-more button:hover{background:#f2f7ff;color:#2563eb}.chat-more .sep{height:1px;background:#eef3fb;margin:3px 4px}
 
-.layout-controls{position:fixed;right:14px;top:42px;z-index:22;display:flex;gap:4px}
-.layout-controls button{width:28px;height:24px;border:1px solid #dbe8ff;border-radius:7px;background:#fff;color:#2563eb;font:12px inherit;cursor:pointer;box-shadow:0 3px 10px rgba(37,99,235,.08)}
+.layout-controls{position:static;z-index:22}
+.layout-controls button{position:fixed;top:14px;z-index:22;width:28px;height:24px;border:1px solid #dbe8ff;border-radius:7px;background:#fff;color:#2563eb;font:12px inherit;cursor:pointer;box-shadow:0 3px 10px rgba(37,99,235,.08)}
+#toggleLeft{left:calc(64px + 292px - 36px)}
+#toggleRight{right:calc(304px - 36px)}
+.app.left-hidden #toggleLeft{left:8px}
+.app.right-hidden #toggleRight{right:8px}
 .layout-controls button.on{background:#2563eb;color:#fff;border-color:#2563eb}
 .app.left-hidden{grid-template-columns:0 0 minmax(0,1fr) 304px}
 .app.left-hidden>.rail,.app.left-hidden>.side{display:none}
 .app.right-hidden{grid-template-columns:64px 292px minmax(0,1fr) 0}
 .app.right-hidden>.context{display:none}
 .app.left-hidden.right-hidden{grid-template-columns:0 0 minmax(0,1fr) 0}
-@media(max-width:1180px){.app.left-hidden{grid-template-columns:0 0 minmax(0,1fr)}}
+@media(max-width:1180px){.app.left-hidden{grid-template-columns:0 0 minmax(0,1fr)}#toggleLeft{left:calc(64px + 270px - 36px)}#toggleRight{right:8px}}
 </style>
 </head>
 <body>
