@@ -227,6 +227,7 @@ body.embed #view{height:100dvh!important}
 .mode-row .ic{width:30px;height:30px;border-radius:8px;background:#eef4ff;display:grid;place-items:center;color:#2563eb;font:11px inherit;flex:none}
 .mode-row b{display:block;font-size:10px;color:#1e3a5f}.mode-row small{display:block;font-size:7.5px;color:#8a9bb0;margin-top:2px}
 .mode-row em{margin-left:auto;font-style:normal;font-size:7.5px;color:#9aabc0}
+.codeblock{margin-top:6px;padding:8px 9px;border-radius:8px;background:#0f172a;color:#dbeafe;font:8px/1.7 ui-monospace,monospace;overflow-x:auto}
 </style>
 <link rel="stylesheet" href="mobile-native.css">
 </head>
@@ -319,6 +320,8 @@ screens.chats = `
     <div class="chips"><div class="chip on">全部</div><div class="chip">私聊</div><div class="chip">群聊</div></div>
   </div>
   <div class="list">
+    <div class="sec-title"><span>模式会话</span><span>记忆共享</span></div>
+    <div class="conv" onclick="go('codeChat')"><div class="avatar" style="background:#e8f1ff;color:#1d4ed8">⌘</div><div class="copy"><b>代码模式</b><span>独立会话 · 知识优先 · 记忆与奈绪共享</span></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="when">独立</span><span class="badge" style="background:#eef4ff;color:#2563eb">CODE</span></div></div>
     <div class="sec-title"><span>最近</span><span>已同步</span></div>
     <div id="extraConvs"></div>
     <div class="conv on" data-conv="nao" onclick="openConversation(this,'chat','nao')"><div class="avatar bot">奈</div><div class="copy"><b>奈绪</b><span>你回来啦。今天外面有点冷，先喝点热的吧。</span></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="when">刚刚</span><span class="badge blue unread-badge">2</span></div></div>
@@ -326,6 +329,26 @@ screens.chats = `
   </div>
 </div>
 ${nav('chats')}`
+
+
+screens.codeChat = `
+<div class="screen-body" style="flex:1;min-height:0;display:flex;flex-direction:column">
+  <header class="chat-head">
+    <div class="row"><span class="back" onclick="go('chats')">‹</span><div class="avatar" style="background:#1d4ed8;color:#fff;font-size:11px">⌘</div><div class="who"><b>代码模式</b><span>独立会话 · 记忆共享</span></div><div class="acts"><span onclick="openModeSheet()">⌘</span><span onclick="openChatMenu()">☰</span></div></div>
+    <div class="subline"><span class="mode-chip code">⌘ 代码模式</span><span>知识正确性优先</span><span style="margin-left:auto">记忆已同步</span></div>
+  </header>
+  <div class="msgs" id="msgs">
+    <div class="day">代码模式 · 与普通聊天分开</div>
+    <div class="msg"><div class="avatar bot sm">奈</div><div><div class="bubble">代码模式窗口已打开。这里的回答优先保证技术正确性，但记忆和普通聊天是通的。</div><div class="stamp">13:02</div></div></div>
+    <div class="msg me"><div><div class="bubble">帮我看看备份脚本为什么一直卡住。</div><div class="stamp">13:03 · 已读</div></div><div class="avatar sm">你</div></div>
+    <div class="msg"><div class="avatar bot sm">奈</div><div><div class="bubble">先定位阻塞点。你上次的备份任务是 20:12 开始的，先看文件句柄和数据库锁。</div><div class="codeblock">sqlite3 data.db "PRAGMA busy_timeout;"<br>lsof -p &lt;pid&gt; | grep data.db</div><div class="memchip">✦ 记忆共享 · 上周在写备份脚本</div><div class="stamp">13:04</div></div></div>
+  </div>
+  <div class="composer">
+    <div class="bar"><div class="plus" onclick="openComposerSheet()">＋</div><div class="input" id="input" contenteditable="true" data-ph="输入代码问题或代码片段…"></div><div class="mic" onclick="toast('代码模式暂不支持语音')">◉</div><button class="send" onclick="sendMsg()">↑</button></div>
+    <div class="hint"><span>独立会话 · 不混入普通对话</span><span>记忆已共享</span></div>
+  </div>
+  <div class="safe"></div>
+</div>`
 
 screens.chat = `
 <div class="screen-body" style="flex:1;min-height:0;display:flex;flex-direction:column">
@@ -366,12 +389,9 @@ function openModeSheet(){
 function selectChatMode(mode){
   if(mode==='agent'||mode==='shell'){ toast('该模式待接入'); return }
   CHAT_MODE=mode
-  const chip=document.getElementById('chatModeChip')
-  if(chip){ chip.textContent = mode==='code' ? '⌘ 代码模式' : '💬 闲聊'; chip.classList.toggle('code',mode==='code') }
-  const input=document.getElementById('input')
-  if(input) input.dataset.ph = mode==='code' ? '输入代码问题或代码片段…' : '和奈绪说点什么…'
   document.querySelector('.mode-mask')?.remove()
-  toast(mode==='code' ? '已进入代码模式' : '已回到闲聊模式')
+  if(mode==='code'){ go('codeChat'); return }
+  toast('当前是闲聊模式')
 }
 
 screens.memory = `
