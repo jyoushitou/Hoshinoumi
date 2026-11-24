@@ -9,6 +9,7 @@ import MobilePermissionsView from '@/views/mobile/MobilePermissionsView.vue'
 import CommandView from '@/views/CommandView.vue'
 import MemoryView from '@/views/MemoryView.vue'
 import SavingsView from '@/views/SavingsView.vue'
+import DiaryView from '@/views/DiaryView.vue'
 import MobileWeeklyView from '@/views/mobile/MobileWeeklyView.vue'
 import MobileTabBar from '@/components/mobile/MobileTabBar.vue'
 import MobileReminderPopup from '@/components/mobile/MobileReminderPopup.vue'
@@ -42,7 +43,7 @@ function onFocusChange(event: FocusEvent) {
     if (!isEditableTarget(document.activeElement)) keyboardOpen.value = false
   }, 180)
 }
-const MAIN_ROUTES = new Set(['/chat', '/home', '/memory', '/relation', '/savings', '/weekly', '/info', '/persona', '/commands', '/cron', '/logs', '/settings'])
+const MAIN_ROUTES = new Set(['/chat', '/home', '/memory', '/relation', '/savings', '/weekly', '/info', '/persona', '/commands', '/cron', '/diary', '/logs', '/settings'])
 const isMainRoute = computed(() => MAIN_ROUTES.has(route.path))
 
 function handleNativeBack(): string {
@@ -85,6 +86,7 @@ function syncViewportSoon() {
 const titles: Record<string, string> = {
   chat: '聊天', home: '主页', memory: '记忆', relation: '关系', savings: '存钱',
   weekly: '周计划', info: '信息', persona: '人设', commands: '命令', cron: '定时任务',
+  diary: '日记',
   logs: '运行日志', settings: '设置',
 }
 const pageTransition = ref('page-left')
@@ -98,6 +100,7 @@ const pageView = computed(() => {
   if (route.name === 'commands') return CommandView
   if (route.name === 'memory') return MemoryView
   if (route.name === 'savings') return SavingsView
+  if (route.name === 'diary') return DiaryView
   return MobilePageView
 })
 const title = computed(() => titles[String(route.name)] ?? 'Hoshinoumi')
