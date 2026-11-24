@@ -516,10 +516,15 @@ class Handler(BaseHTTPRequestHandler):
             return
         if path == "/api/diary/dates":
             dates = sorted({x["date"] for x in DIARY_ENTRIES}, reverse=True)
-            self._json(200, {"ok": True, "data": dates, "count": len(dates), "mock": True})
+            months = sorted({d[:7] for d in dates}, reverse=True)
+            self._json(200, {"ok": True, "data": dates, "months": months, "count": len(dates), "mock": True})
             return
         if path == "/api/diary":
-            self._json(200, {"ok": True, "data": DIARY_ENTRIES, "count": len(DIARY_ENTRIES), "mock": True})
+            query = parse_qs(urlparse(self.path).query)
+            month = (query.get("month") or [""])[0].strip()
+            rows = [x for x in DIARY_ENTRIES if not month or str(x.get("date", "")).startswith(month)]
+            rows = sorted(rows, key=lambda x: x.get("date", ""), reverse=True)
+            self._json(200, {"ok": True, "data": rows, "count": len(rows), "month": month or None, "mock": True})
             return
         if path == "/api/memory/items":
             q = (parse_qs(urlparse(self.path).query).get("q") or [""])[0].strip().lower()
