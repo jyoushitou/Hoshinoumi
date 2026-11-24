@@ -218,16 +218,16 @@ button{color:inherit}
 .side .brand{padding-right:38px}
 .context{padding-top:46px}
 .edge-handle{display:none;position:fixed;top:50%;transform:translateY(-50%);z-index:30;width:16px;height:54px;border:1px solid #dbe8ff;background:#fff;color:#52708f;font:12px inherit;cursor:pointer;align-items:center;justify-content:center;padding:0}
-.edge-handle.left-edge{left:0;border-left:0;border-radius:0 8px 8px 0}
 .edge-handle.right-edge{right:0;border-right:0;border-radius:8px 0 0 8px}
-body.left-hidden #reopenLeft{display:flex}
+.rail-toggle{width:30px;height:30px;border:1px solid #dbe8ff;border-radius:8px;background:#f4f9ff;color:#2563eb;font:13px inherit;cursor:pointer;margin-bottom:2px}
+.rail-toggle.on{background:#2563eb;color:#fff;border-color:#2563eb}
 body.right-hidden #reopenRight{display:flex}
-.app.left-hidden{grid-template-columns:0 0 minmax(0,1fr) 304px}
-.app.left-hidden>.rail,.app.left-hidden>.side{opacity:0;pointer-events:none;overflow:hidden;min-width:0;transform:translateX(-8px);visibility:hidden;transition:opacity .2s,transform .28s,visibility 0s .28s}
+.app.left-hidden{grid-template-columns:64px 0 minmax(0,1fr) 304px}
+.app.left-hidden>.side{opacity:0;pointer-events:none;overflow:hidden;min-width:0;transform:translateX(-8px);visibility:hidden;transition:opacity .2s,transform .28s,visibility 0s .28s}
 .app.right-hidden{grid-template-columns:64px 292px minmax(0,1fr) 0}
 .app.right-hidden>.context{opacity:0;pointer-events:none;overflow:hidden;min-width:0;transform:translateX(8px);visibility:hidden;transition:opacity .2s,transform .28s,visibility 0s .28s}
-.app.left-hidden.right-hidden{grid-template-columns:0 0 minmax(0,1fr) 0}
-@media(max-width:1180px){.app.left-hidden{grid-template-columns:0 0 minmax(0,1fr)}}
+.app.left-hidden.right-hidden{grid-template-columns:64px 0 minmax(0,1fr) 0}
+@media(max-width:1180px){.app.left-hidden{grid-template-columns:64px 0 minmax(0,1fr)}}
 </style>
 </head>
 <body>
@@ -250,6 +250,7 @@ body.right-hidden #reopenRight{display:flex}
     <button class="rnav" data-page="diary" title="日记">✎</button>
     <button class="rnav" data-page="plugins" title="插件">▣</button>
     <div class="spacer"></div>
+    <button class="rail-toggle" id="toggleSide" type="button" title="显示/隐藏会话列表">☰</button>
     <button class="rnav" data-page="settings" title="设置">⚙</button>
   </aside>
   </aside>
@@ -433,7 +434,6 @@ body.right-hidden #reopenRight{display:flex}
     </div>
   </aside>
 </div>
-<button id="reopenLeft" class="edge-handle left-edge" type="button" title="展开左侧栏">›</button>
 <button id="reopenRight" class="edge-handle right-edge" type="button" title="展开右侧栏">‹</button>
 <div class="tagdraft">DESIGN DRAFT · v35.5 · WEB · 2026-11-19</div>
 <script src="demo.js?v=35.5.34"></script>
@@ -443,13 +443,13 @@ body.right-hidden #reopenRight{display:flex}
   var app=document.querySelector('.app');
   var left=document.getElementById('toggleLeft');
   var right=document.getElementById('toggleRight');
-  var reopenLeft=document.getElementById('reopenLeft');
   var reopenRight=document.getElementById('reopenRight');
+  var sideToggle=document.getElementById('toggleSide');
   if(!app||!left||!right) return;
-  var toggleLeft=function(){ app.classList.toggle('left-hidden'); document.body.classList.toggle('left-hidden'); };
+  var toggleLeft=function(){ app.classList.toggle('left-hidden'); document.body.classList.toggle('left-hidden'); sideToggle.classList.toggle('on',app.classList.contains('left-hidden')); };
   var toggleRight=function(){ app.classList.toggle('right-hidden'); document.body.classList.toggle('right-hidden'); };
   left.addEventListener('click',toggleLeft);
-  reopenLeft.addEventListener('click',toggleLeft);
+  sideToggle.addEventListener('click',toggleLeft);
   right.addEventListener('click',toggleRight);
   reopenRight.addEventListener('click',toggleRight);
 })();
