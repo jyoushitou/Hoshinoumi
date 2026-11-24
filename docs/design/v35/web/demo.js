@@ -106,7 +106,7 @@
     .diary-page .pgrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
     .pcard2 h3{font-size:11px;margin:0 0 5px;color:#dbe8fb}
     .plugin-section h3{color:#1e3a5f}
-    .plugin-card{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #f1f5fb}
+    .plugin-card{display:flex;align-items:center;gap:12px;padding:10px 12px;border-bottom:1px solid #f1f5fb}
     .plugin-card:last-child{border-bottom:0}
     .plugin-copy{flex:1;min-width:0}
     .plugin-copy h3{font-size:11px;color:#1e3a5f;margin:0 0 3px}
