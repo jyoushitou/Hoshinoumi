@@ -782,7 +782,7 @@
       document.getElementById('pluginAdd').addEventListener('click', () => {
         const modal = document.createElement('div');
         modal.className = 'savings-modal';
-        modal.innerHTML = '<div class="box"><h3>安装插件</h3><label>插件网址<input id="webPluginUrl" placeholder="https://example.com/plugin.json"></label><button class="back" id="webPluginUrlBtn" style="width:100%;margin-top:8px">从网址安装</button><label style="margin-top:10px">选择插件文件<input id="webPluginFile" type="file" accept=".hoshinoumi,.zip,.json"></label><div class="acts"><button id="webPluginCancel">取消</button></div></div>';
+        modal.innerHTML = '<div class="box"><h3>安装插件</h3><label>插件网址<input id="webPluginUrl" placeholder="https://example.com/plugin.hoshinoumi"></label><button class="back" id="webPluginUrlBtn" style="width:100%;margin-top:8px">从网址安装</button><label style="margin-top:10px">选择插件文件<input id="webPluginFile" type="file" accept=".hoshinoumi,.zip,.json"></label><div id="webPluginFileState" style="font-size:8px;color:#8a9bb0;line-height:1.5;margin-top:4px">支持 .hoshinoumi / .zip / .json · 最大 20 MB</div><div class="acts"><button id="webPluginCancel">取消</button></div></div>';
         document.body.appendChild(modal);
         const close = () => modal.remove();
         modal.addEventListener('click', event => { if (event.target === modal) close(); });
@@ -795,6 +795,10 @@
         });
         modal.querySelector('#webPluginFile').addEventListener('change', event => {
           const file = event.target.files && event.target.files[0]; if (!file) return;
+          if (!/\.(hoshinoumi|zip|json)$/i.test(file.name)) { toast('只支持 .hoshinoumi / .zip / .json'); return; }
+          if (file.size > 20 * 1024 * 1024) { toast('插件包超过 20 MB'); return; }
+          const state = modal.querySelector('#webPluginFileState');
+          if (state) state.textContent = file.name + ' · ' + (file.size / 1024 / 1024).toFixed(1) + ' MB';
           addPluginWeb(file.name.replace(/\.(hoshinoumi|zip|json)$/i, ''), 'file'); close();
         });
       });
