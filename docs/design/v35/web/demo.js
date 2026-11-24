@@ -209,6 +209,7 @@
     .log-empty{padding:16px;color:#8a9bb0;font-size:10px}
     .persona-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
     .persona-card{border:1px solid #e3ebf7;border-radius:12px;background:#fff;padding:12px 13px;transition:border-color .18s,transform .18s,box-shadow .18s}
+    .persona-card{animation:personaIn .28s cubic-bezier(.22,1,.36,1) both}.persona-card:nth-child(2){animation-delay:.04s}@keyframes personaIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
     .persona-card:hover{border-color:#bcd4f7;transform:translateY(-2px);box-shadow:0 8px 18px rgba(37,99,235,.06)}
     .persona-top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
     .persona-ava{width:27px;height:27px;border-radius:8px;background:#dbeafe;color:#1d4ed8;display:grid;place-items:center;font-size:11px;font-weight:700}
