@@ -23,6 +23,7 @@ import time
 import uuid
 import os
 import re
+import hashlib
 import base64
 import struct
 import zlib
@@ -316,6 +317,15 @@ def _finance_context() -> dict:
         "summary": f"总余额 {total/100:.2f} 元，可用 {available/100:.2f} 元，冻结 {frozen/100:.2f} 元" + (f"；目标：{goal_text}" if goal_text else ""),
     }
 
+
+def _backup_payload() -> dict:
+    data = {"memories": MEMORY_ITEMS, "diary": DIARY_ENTRIES, "savings": {"total_cents": SAVINGS.get("total_cents"), "entries": SAVINGS.get("entries", [])}, "tasks": TASKS}
+    db = {"schema": 36, "tables": {"memory_items": len(MEMORY_ITEMS), "diary_entries": len(DIARY_ENTRIES), "tasks": len(TASKS)}}
+    encoded = json.dumps(data, ensure_ascii=False, sort_keys=True).encode("utf-8")
+    checksums = {"data": hashlib.sha256(encoded).hexdigest(), "db": hashlib.sha256(json.dumps(db, sort_keys=True).encode("utf-8")).hexdigest()}
+    manifest = {"schema": 36, "version": VERSION, "created_at": _now(), "counts": {"memories": len(MEMORY_ITEMS), "diary": len(DIARY_ENTRIES), "tasks": len(TASKS)}, "checksums": checksums}
+    return {"manifest": manifest, "db": db, "data": data, "checksums": checksums}
+
 def _now() -> str:
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -513,6 +523,9 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/commands":
             data = [{"name": name, "group": group, "help": help_text, "owner": owner} for name, group, help_text, owner in COMMAND_CATALOG]
             self._json(200, {"ok": True, "count": len(data), "data": data, "mock": True})
+            return
+        if path == "/api/backup/export":
+            self._json(200, {"ok": True, **_backup_payload(), "mock": True})
             return
         if path == "/api/diary/dates":
             dates = sorted({x["date"] for x in DIARY_ENTRIES}, reverse=True)
