@@ -1,9 +1,19 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { http } from '@/api/client'
-import { useRouter } from 'vue-router'
+import { useSessionStore } from '@/stores/session'
 const desktop = typeof window !== 'undefined' && window.matchMedia('(min-width: 821px)').matches
-const router = useRouter()
+const session = useSessionStore()
+const tier = computed(() => String(session.relation?.tier || '未获取'))
+const relationDesc = computed(() => String(session.relation?.description || '暂未获取到关系描述'))
+const relationRecent = computed(() => {
+  const list = Array.isArray(session.relation?.events) ? session.relation.events as Array<Record<string, unknown>> : []
+  return list[0]?.reason ? String(list[0].reason) : '暂无最近变化'
+})
+const relationProgress = computed(() => {
+  const map: Record<string, number> = { '陌生': 12, '认识': 28, '熟': 45, '亲近': 65, '知己': 82, '搭档': 92 }
+  return map[tier.value] ?? (session.relation ? 50 : 0)
+})
 const tab = ref<'memory' | 'events' | 'profile' | 'relation'>('memory')
 const stats = ref<{ total: number; targets: number; longterm: number } | null>(null)
 interface MemoryItem { id: number; content: string; tags: string[]; source: string; longterm: boolean; created_at: string; target_id: string; kind?: string }
@@ -94,7 +104,14 @@ const tabs = [
     <aside v-if="desktop" class="side">
       <div class="panel"><div class="panel-title">最近事件</div><div v-if="!events.length" class="empty">暂无事件</div><div v-for="event in events.slice(0, 5)" v-else :key="event.id" class="event-row"><span class="dot" /><div><b>{{ event.title }}</b><small>{{ event.kind }} · {{ event.created_at.slice(0, 10) }}</small></div></div></div>
       <div class="panel"><div class="panel-title">画像摘要</div><p v-if="profile?.summary" class="summary">{{ profile.summary }}</p><div v-if="profile" class="keywords"><span v-for="word in profile.keywords" :key="word">{{ word }}</span></div><div v-else class="empty">暂无画像</div></div>
-      <div class="panel"><div class="panel-title">关系</div><button type="button" class="link" @click="router.push('/relation')">打开关系页</button></div>
+      <div class="panel"><div class="panel-title">关系</div>
+        <div v-if="session.relation" class="rel-inline">
+          <div class="rel-top"><b>{{ tier }}</b><span>{{ relationDesc }}</span></div>
+          <div class="rel-track"><i :style="{ width: relationProgress + '%' }" /></div>
+          <div class="rel-note">最近：{{ relationRecent }}</div>
+        </div>
+        <div v-else class="empty">暂无关系数据</div>
+      </div>
     </aside>
     <div v-else-if="tab === 'events'" class="list">
       <div v-if="!events.length" class="empty">暂无事件</div>
@@ -104,7 +121,10 @@ const tabs = [
       <div v-if="!profile" class="empty">暂无画像</div>
       <template v-else><p class="summary">{{ profile.summary }}</p><div class="keywords"><span v-for="word in profile.keywords" :key="word">{{ word }}</span></div></template>
     </div>
-    <div v-else class="empty"><b>关系</b><p>关系数据由关系页提供。</p><button type="button" class="link" @click="router.push('/relation')">打开关系页</button></div>
+    <div v-else-if="tab === 'relation'" class="profile">
+      <div v-if="session.relation"><p class="summary">关系档位：{{ tier }}</p><p class="summary">{{ relationDesc }}</p><p class="summary">最近：{{ relationRecent }}</p></div>
+      <div v-else class="empty">暂无关系数据</div>
+    </div>
     </div>
   </section>
 </template>
@@ -117,7 +137,7 @@ const tabs = [
 .empty{background:#fff;border:1px dashed #cfe0f7;border-radius:12px;padding:26px;text-align:center;color:#8a9bb0}.empty b{color:#314a65;font-size:11px}.empty p{font-size:9px;margin:5px 0 0}
 .list{display:grid;gap:7px}.mem-card{background:#fff;border:1px solid #e3ebf7;border-radius:11px;padding:10px}.mem-card p{margin:0;font-size:10.5px;line-height:1.65;color:#314a65}.mem-meta{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-top:7px}.tag{font-size:7px;color:#52708f;background:#f4f8ff;border:1px solid #e3ebf7;border-radius:5px;padding:1px 5px}.source{font-size:7px;color:#9aabc0}.mem-meta em{font-style:normal;font-size:7px;color:#1f9d6b;background:#eefbf5;border-radius:5px;padding:1px 5px}.mem-meta small{margin-left:auto;font-size:7px;color:#9aabc0}
 .event-row{display:flex;gap:9px;align-items:flex-start;background:#fff;border:1px solid #e3ebf7;border-radius:10px;padding:9px 10px}.event-row .dot{width:7px;height:7px;border-radius:50%;background:#2563eb;margin-top:3px;flex:none}.event-row b{display:block;font-size:10px;color:#314a65}.event-row small{display:block;font-size:7.5px;color:#9aabc0;margin-top:2px}
-.profile{background:#fff;border:1px solid #e3ebf7;border-radius:11px;padding:11px}.summary{margin:0;font-size:10.5px;line-height:1.7;color:#526982}.keywords{display:flex;gap:5px;flex-wrap:wrap;margin-top:9px}.keywords span{font-size:8px;color:#2563eb;background:#eef4ff;border:1px solid #dbe8ff;border-radius:20px;padding:2px 7px}.link{display:inline-block;margin-top:8px;font-size:9px;color:#2563eb;border:0;background:none;padding:0;cursor:pointer}
+.profile{background:#fff;border:1px solid #e3ebf7;border-radius:11px;padding:11px}.summary{margin:0;font-size:10.5px;line-height:1.7;color:#526982}.keywords{display:flex;gap:5px;flex-wrap:wrap;margin-top:9px}.keywords span{font-size:8px;color:#2563eb;background:#eef4ff;border:1px solid #dbe8ff;border-radius:20px;padding:2px 7px}.link{display:inline-block;margin-top:8px;font-size:9px;color:#2563eb;border:0;background:none;padding:0;cursor:pointer}.rel-inline{display:grid;gap:7px}.rel-top{display:flex;align-items:baseline;gap:8px}.rel-top b{font-size:16px;color:#2563eb}.rel-top span{font-size:9px;color:#8a9bb0;line-height:1.4}.rel-track{height:5px;border-radius:5px;background:#e8effa;overflow:hidden}.rel-track i{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,#6ea4ff,#2563eb);transition:width .45s}.rel-note{font-size:9px;color:#8a9bb0;line-height:1.5}
 .memory-pane{display:grid;gap:7px}.filters{display:flex;gap:6px}.filters input{flex:1;min-width:0;height:30px;border:1px solid #e3ebf7;border-radius:8px;background:#fff;padding:0 9px;font:9px inherit;outline:0}.filters button{height:30px;border:1px solid #e3ebf7;border-radius:8px;background:#fff;color:#6b7c95;font:8.5px inherit;padding:0 9px;cursor:pointer}.filters button.on{background:#eef4ff;border-color:#c7dcff;color:#2563eb}.actions{display:flex;gap:5px;justify-content:flex-end;margin-top:7px}.actions button{border:1px solid #e3ebf7;background:#f8fbff;color:#607795;border-radius:5px;font:7.5px inherit;padding:2px 6px;cursor:pointer}.actions button.danger{color:#b91c1c;border-color:#fecaca;background:#fff5f5}
 @media(min-width:821px){.memory{padding:22px 24px}.mem-card{min-height:132px;padding:16px 18px;display:flex;flex-direction:column;justify-content:space-between}.mem-card p{font-size:11.5px;line-height:1.75}.mem-meta{margin-top:12px}.actions{margin-top:10px}.body.desktop .memory-pane .empty{max-width:none;width:100%;min-height:132px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center}.body.desktop{display:grid;grid-template-columns:1.55fr 1fr;gap:10px;align-items:start}.overview.desktop{grid-template-columns:repeat(4,minmax(0,1fr));max-width:none}.body.desktop .list{grid-template-columns:1fr}.side{display:grid;gap:9px}.panel{background:#fff;border:1px solid #e3ebf7;border-radius:11px;padding:11px}.panel-title{font-size:9px;font-weight:700;color:#52708f;margin-bottom:7px}.panel .empty{padding:12px;border:0}.empty,.profile{max-width:none}}
 .head,.tabs,.overview,.empty{animation:mem-in .28s cubic-bezier(.22,1,.36,1) both}.tabs{animation-delay:.03s}.overview{animation-delay:.06s}.empty{animation-delay:.09s}@keyframes mem-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}@media(prefers-reduced-motion:reduce){.head,.tabs,.overview,.empty{animation:none}}
