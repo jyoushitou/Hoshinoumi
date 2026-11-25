@@ -2,8 +2,10 @@
 import { computed } from 'vue'
 import { useSessionStore } from '@/stores/session'
 import { useAuthStore } from '@/stores/auth'
+import { useIsOwner } from '@/composables/useIsOwner'
 const session = useSessionStore()
 const auth = useAuthStore()
+const isOwner = useIsOwner()
 const modules = [
   { path: '/chat', icon: '◉', label: '聊天', desc: '会话 / 消息' },
   { path: '/memory', icon: '◈', label: '记忆', desc: '记忆本 / 事件' },
@@ -16,6 +18,7 @@ const modules = [
   { path: '/cron', icon: '◷', label: '定时任务', desc: '启停 / 运行' },
   { path: '/logs', icon: '≣', label: '运行日志', desc: '筛选 / 搜索' },
 ]
+const visibleModules = computed(() => isOwner.value ? modules : modules.filter(item => item.path !== '/relation' && item.path !== '/savings'))
 const hour = new Date().getHours()
 const greeting = computed(() => hour < 6 ? '夜深了' : hour < 12 ? '早上好' : hour < 18 ? '下午好' : '晚上好')
 </script>
@@ -26,9 +29,9 @@ const greeting = computed(() => hour < 6 ? '夜深了' : hour < 12 ? '早上好'
       <div><p>{{ greeting }} · {{ auth.qq || '主人' }}</p><h1>今天也慢慢来。</h1><span>{{ session.connected ? '后端已连接 · 记忆同步中' : '后端离线 · 部分功能不可用' }}</span></div>
       <div class="hero-stats"><div><small>schema</small><b>{{ session.status?.schema || '—' }}</b></div><div><small>延迟</small><b>{{ session.statusLatencyMs != null ? session.statusLatencyMs + 'ms' : '—' }}</b></div><div><small>未读</small><b>{{ session.unread }}</b></div></div>
     </header>
-    <div class="section-title"><b>功能模块</b><span>10 个入口</span></div>
+    <div class="section-title"><b>功能模块</b><span>{{ visibleModules.length }} 个入口</span></div>
     <div class="module-grid">
-      <RouterLink v-for="item in modules" :key="item.path" :to="item.path" class="module">
+      <RouterLink v-for="item in visibleModules" :key="item.path" :to="item.path" class="module">
         <span class="icon">{{ item.icon }}</span>
         <div><b>{{ item.label }}</b><small>{{ item.desc }}</small></div>
         <em>›</em>
