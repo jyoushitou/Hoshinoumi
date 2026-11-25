@@ -607,6 +607,17 @@ PURE = {
             KEY idx_reminder_created (created_at)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """,
+    "finance_snapshots": """
+        CREATE TABLE IF NOT EXISTS finance_snapshots (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            user_id VARCHAR(64) NOT NULL DEFAULT '__owner__',
+            taken_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            total_cents BIGINT NOT NULL DEFAULT 0,
+            accounts_json TEXT NOT NULL,
+            note VARCHAR(200) NULL,
+            KEY idx_snapshot_time (user_id, taken_at)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
     "finance_imports": """
         CREATE TABLE IF NOT EXISTS finance_imports (
             id BIGINT AUTO_INCREMENT PRIMARY KEY,

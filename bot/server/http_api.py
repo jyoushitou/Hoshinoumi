@@ -17,7 +17,7 @@ from .routes_meta import (
 )
 from .routes_chat import handle_chat, handle_command, handle_conversations, handle_history, handle_commands, handle_read, handle_read_state, handle_recall, handle_topic
 from .routes_persona import handle_persona, handle_export as handle_persona_export, handle_import as handle_persona_import, handle_activate as handle_persona_activate
-from .routes_savings import handle_savings, handle_savings_import, handle_savings_add, handle_savings_events
+from .routes_savings import handle_savings, handle_savings_import, handle_savings_add, handle_savings_events, handle_snapshots_get, handle_snapshot_create, handle_reconcile
 from .routes_weekly_plan import handle_weekly_get, handle_weekly_put, handle_weekly_import, handle_weekly_weeks
 from .routes_reminders import handle_pending as handle_reminders_pending, handle_ack as handle_reminder_ack
 from .routes_balance import handle_balance
@@ -431,6 +431,9 @@ async def start_api_server():
     app.router.add_get("/api/persona", handle_persona)
     app.router.add_get("/api/savings", handle_savings)
     app.router.add_post("/api/savings/entries", handle_savings_add)
+    app.router.add_get("/api/savings/snapshots", handle_snapshots_get)
+    app.router.add_post("/api/savings/snapshots", handle_snapshot_create)
+    app.router.add_get("/api/savings/reconcile", handle_reconcile)
     app.router.add_get("/api/savings/events", handle_savings_events)
     app.router.add_get("/api/balance", handle_balance)
     app.router.add_get("/api/health/summary", handle_health_summary)

@@ -11,6 +11,9 @@ interface Goal { id: number; name: string; target_cents: number; saved_cents: nu
 interface Held { id: number; name: string; amount_cents?: number; code?: string; shares?: number; value_cents?: number; rate?: number; due?: string; matures_at?: string }
 interface MonthRow { month: string; income_cents: number; expense_cents: number }
 interface AuditRow { at: string; user: string; method: string; path: string; status: number }
+interface Snapshot { id: number; taken_at: string; total_cents: number; note?: string; accounts?: Account[] }
+interface ReconcileRow { account: string; snapshot_cents: number; current_cents: number; difference_cents: number }
+interface Reconcile { snapshot: Snapshot | null; accounts: ReconcileRow[]; difference_cents: number }
 const isOwner = useIsOwner()
 const data = ref<Savings | null>(null)
 const overview = ref<Overview | null>(null)
@@ -20,6 +23,9 @@ const fixed = ref<Held[]>([])
 const funds = ref<Held[]>([])
 const monthly = ref<MonthRow[]>([])
 const audit = ref<AuditRow[]>([])
+const snapshots = ref<Snapshot[]>([])
+const reconcile = ref<Reconcile | null>(null)
+const snapshotBusy = ref(false)
 const loading = ref(false)
 const error = ref('')
 const amount = ref('')
@@ -88,7 +94,16 @@ function exportCsv() {
   const blob = new Blob([new Uint8Array([0xef, 0xbb, 0xbf]), csv], { type: 'text/csv;charset=utf-8' })
   const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'hoshinoumi-savings.csv'; link.click(); URL.revokeObjectURL(link.href)
 }
-onMounted(() => { if (isOwner.value) void load() })
+async function loadReconcile() {
+  const [list, diff] = await Promise.allSettled([http.get<{ data?: Snapshot[] }>('/api/savings/snapshots'), http.get<Reconcile>('/api/savings/reconcile')])
+  snapshots.value = list.status === 'fulfilled' ? list.value.data || [] : []
+  reconcile.value = diff.status === 'fulfilled' ? diff.value : null
+}
+async function createSnapshot() {
+  snapshotBusy.value = true; error.value = ''
+  try { await http.post('/api/savings/snapshots', { note: '手动快照' }); await loadReconcile() } catch (e) { error.value = e instanceof Error ? e.message : '快照失败' } finally { snapshotBusy.value = false }
+}
+onMounted(() => { if (isOwner.value) { void load(); void loadReconcile() } })
 watch(isOwner, value => { if (value && !data.value) void load() })
 </script>
 
@@ -100,6 +115,12 @@ watch(isOwner, value => { if (value && !data.value) void load() })
     <div class="hero"><small>总余额</small><b>{{ fmt(overview?.total_cents ?? data?.total_cents ?? 0) }}</b><span>可用 {{ fmt(overview?.available_cents ?? data?.total_cents ?? 0) }} · 冻结 {{ fmt(overview?.frozen_cents || 0) }} · {{ accounts.length }} 个账户</span></div>
     <div class="accounts">
       <div v-for="item in accounts" :key="item.account" class="account"><b>{{ item.account }}</b><span>{{ fmt(item.balance_cents) }}</span></div>
+    </div>
+    <div class="panel recon-panel">
+      <div class="list-title">账户对账<span>{{ snapshots.length }} 个快照</span></div>
+      <div class="recon-head"><span>最近快照：{{ snapshots[0]?.taken_at || '暂无' }}</span><span>总差异：<b :class="{ diff: reconcile?.difference_cents }">{{ fmt(reconcile?.difference_cents || 0) }}</b></span><button class="mini" type="button" :disabled="snapshotBusy" @click="createSnapshot">{{ snapshotBusy ? '快照中…' : '拍快照' }}</button></div>
+      <div v-if="reconcile?.accounts?.length" class="recon-table"><div class="recon-row recon-th"><span>账户</span><span>快照</span><span>当前</span><span>差异</span></div><div v-for="row in reconcile.accounts" :key="row.account" class="recon-row"><b>{{ row.account }}</b><span>{{ fmt(row.snapshot_cents) }}</span><span>{{ fmt(row.current_cents) }}</span><em :class="{ diff: row.difference_cents }">{{ row.difference_cents > 0 ? '+' : '' }}{{ fmt(row.difference_cents) }}</em></div></div>
+      <div v-else class="recon-empty">拍一张快照后，可对比各账户当前余额与快照差异。</div>
     </div>
     <div v-if="goals.length" class="panel"><div class="list-title">存钱目标<span>{{ goals.length }}</span></div><div v-for="goal in goals" :key="goal.id" class="goal"><div><b>{{ goal.name }}</b><small>{{ goal.deadline || '无期限' }}</small></div><em>{{ fmt(goal.saved_cents) }} / {{ fmt(goal.target_cents) }}</em><button type="button" @click="allocate(goal)">存入</button><i><span :style="{ width: Math.min(100, goal.saved_cents / Math.max(1, goal.target_cents) * 100) + '%' }" /></i></div></div>
     <div v-if="frozen.length || fixed.length || funds.length" class="panel"><div class="list-title">资金位置<span>{{ frozen.length + fixed.length + funds.length }}</span></div><div v-for="item in frozen" :key="'f'+item.id" class="entry"><div><b>{{ item.name }}</b><small>冻结 · 到期 {{ item.due || '—' }}</small></div><em>{{ fmt(item.amount_cents || 0) }}</em><button class="mini" type="button" @click="unfreeze(item)">解冻</button></div><div v-for="item in fixed" :key="'d'+item.id" class="entry"><div><b>{{ item.name }}</b><small>定期 {{ item.rate || 0 }}% · {{ item.matures_at || '' }}</small></div><em>{{ fmt(item.amount_cents || 0) }}</em></div><div v-for="item in funds" :key="'u'+item.code" class="entry"><div><b>{{ item.name }}</b><small>基金 {{ item.code }} · {{ item.shares || 0 }} 份</small></div><em>{{ fmt(item.value_cents || 0) }}</em></div></div>
@@ -131,6 +152,6 @@ watch(isOwner, value => { if (value && !data.value) void load() })
 .entries{background:#fff;border:1px solid #e3ebf7;border-radius:12px;padding:9px}.list-title{display:flex;justify-content:space-between;font-size:9px;color:#52708f;font-weight:700;padding:2px 2px 7px}.list-title span{font-weight:400;color:#9aabc0}.entry{display:flex;align-items:center;justify-content:space-between;padding:7px 2px;border-bottom:1px solid #f1f5fb}.entry:last-child{border-bottom:0}.entry b{display:block;font-size:9.5px;color:#314a65}.entry small{display:block;font-size:7px;color:#9aabc0;margin-top:2px}.entry em{font-style:normal;font-size:10px;color:#c0264a}.entry em.income{color:#1f9d6b}.entry em.danger-text{color:#b91c1c;font-size:8px}.empty{text-align:center;color:#9aabc0;font-size:9px;padding:16px}
 .panel{background:#fff;border:1px solid #e3ebf7;border-radius:12px;padding:9px;margin-bottom:9px}.goal{display:grid;grid-template-columns:1fr auto;gap:3px;padding:6px 2px}.goal b{font-size:9.5px;color:#314a65}.goal small{display:block;font-size:7px;color:#9aabc0;margin-top:2px}.goal em{font-style:normal;font-size:8.5px;color:#2563eb}.goal button{grid-row:1/3;grid-column:2;align-self:center;border:1px solid #dbe8ff;background:#f4f9ff;color:#2563eb;border-radius:5px;font:7.5px inherit;padding:2px 6px;cursor:pointer}.entry .mini{margin-left:7px;border:1px solid #dbe8ff;background:#f4f9ff;color:#2563eb;border-radius:5px;font:7.5px inherit;padding:2px 6px;cursor:pointer}.bill-note{border:1px solid #f2d491;background:#fff8e6;color:#8a5a00;border-radius:8px;padding:7px 9px;font-size:8px;line-height:1.6;margin-bottom:8px}.goal i{grid-column:1/-1;height:4px;border-radius:3px;background:#eef4ff;overflow:hidden}.goal i span{display:block;height:100%;background:#2563eb;border-radius:3px}
 .chart{display:flex;align-items:flex-end;gap:10px;height:64px;padding:4px 2px}.bar-group,.bars{display:flex;flex-direction:column;align-items:center;gap:4px}.bars{flex-direction:row;align-items:flex-end;gap:2px;height:50px}.bars i{width:7px;border-radius:3px 3px 0 0;display:block}.bars .in{background:#34d399}.bars .out{background:#f87171}.bar-group small{font-size:7px;color:#9aabc0}.legend{display:flex;gap:9px;font-size:7px;color:#8a9bb0;padding:4px 2px}.legend i{display:inline-block;width:6px;height:6px;border-radius:2px;margin-right:3px}.legend .in{background:#34d399}.legend .out{background:#f87171}
-@media(min-width:821px){.savings{padding:22px 24px;max-width:none;width:100%}.accounts{flex-wrap:wrap}.form{grid-template-columns:1fr 1fr 1fr}.form .seg{grid-column:1/-1}.form .primary{grid-column:1/-1}}
+.recon-panel .recon-head{display:flex;align-items:center;gap:10px;font-size:8px;color:#8a9bb0;flex-wrap:wrap}.recon-head span:nth-child(2){margin-left:auto}.recon-head b{color:#168b63}.recon-head b.diff{color:#b23b52}.recon-head .mini{height:25px;border:1px solid #dbe8ff;border-radius:6px;background:#f4f9ff;color:#2563eb;font:8px inherit;padding:0 8px;cursor:pointer}.recon-table{margin-top:8px}.recon-row{display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr;gap:6px;padding:5px 0;border-bottom:1px solid #f1f5fb;font-size:8px;color:#405872}.recon-row:last-child{border-bottom:0}.recon-th{font-size:7px;color:#9aabc0}.recon-row em{font-style:normal;text-align:right;color:#168b63}.recon-row em.diff{color:#b23b52}.recon-row span:last-child,.recon-row em{text-align:right}.recon-empty{font-size:8px;color:#9aabc0;padding:8px 0 2px}@media(min-width:821px){.savings{padding:22px 24px;max-width:none;width:100%}.accounts{flex-wrap:wrap}.form{grid-template-columns:1fr 1fr 1fr}.form .seg{grid-column:1/-1}.form .primary{grid-column:1/-1}}
 .hero,.accounts,.form,.entries{animation:sv-in .26s cubic-bezier(.22,1,.36,1) both}.accounts{animation-delay:.03s}.form{animation-delay:.06s}.entries{animation-delay:.09s}@keyframes sv-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}@media(prefers-reduced-motion:reduce){.hero,.accounts,.form,.entries{animation:none}}
 </style>

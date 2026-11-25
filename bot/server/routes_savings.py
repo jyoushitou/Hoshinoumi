@@ -108,6 +108,102 @@ def _sqlite():
         return False
 
 
+
+def _accounts_now(c, uid):
+    c.execute("SELECT account,kind,SUM(amount_cents) AS total FROM finance_entries "
+              "WHERE user_id=%s GROUP BY account,kind ORDER BY account", (uid,))
+    accounts = {}
+    for row in c.fetchall() or []:
+        item = accounts.setdefault(row["account"], {"account": row["account"], "balance_cents": 0})
+        item["balance_cents"] += int(row["total"] or 0)
+    return sorted(accounts.values(), key=lambda x: x["account"])
+
+
+async def handle_snapshots_get(request):
+    uid = _uid(request)
+    from ..infra.conn import get_cursor
+    c = get_cursor()
+    try:
+        c.execute("SELECT id,taken_at,total_cents,accounts_json,note FROM finance_snapshots "
+                  "WHERE user_id=%s ORDER BY id DESC LIMIT 20", (uid,))
+        rows = []
+        for row in c.fetchall() or []:
+            item = dict(row)
+            try:
+                item["accounts"] = json.loads(item.pop("accounts_json") or "[]")
+            except Exception:
+                item["accounts"] = []
+            rows.append(item)
+        return json_response({"ok": True, "data": rows, "count": len(rows)})
+    except Exception as e:
+        return json_response({"ok": False, "error": "snapshots_failed", "message": str(e)}, 500)
+    finally:
+        try: c.close()
+        except Exception: pass
+
+
+async def handle_snapshot_create(request):
+    uid = _uid(request)
+    from ..infra.conn import get_cursor
+    c = get_cursor()
+    try:
+        try:
+            body = await request.json()
+        except Exception:
+            body = {}
+        accounts = _accounts_now(c, uid)
+        total = sum(int(x["balance_cents"] or 0) for x in accounts)
+        note = str((body or {}).get("note") or "").strip()[:200]
+        c.execute("INSERT INTO finance_snapshots(user_id,total_cents,accounts_json,note) "
+                  "VALUES(%s,%s,%s,%s)", (uid, total, json.dumps(accounts, ensure_ascii=False), note))
+        try: c.connection.commit()
+        except Exception: pass
+        c.execute("SELECT id,taken_at,total_cents,accounts_json,note FROM finance_snapshots "
+                  "WHERE user_id=%s ORDER BY id DESC LIMIT 1", (uid,))
+        row = c.fetchone()
+        item = dict(row) if row else {}
+        if item:
+            try: item["accounts"] = json.loads(item.pop("accounts_json") or "[]")
+            except Exception: item["accounts"] = []
+        return json_response({"ok": True, "data": item})
+    except Exception as e:
+        try: c.connection.rollback()
+        except Exception: pass
+        return json_response({"ok": False, "error": "snapshot_failed", "message": str(e)}, 500)
+    finally:
+        try: c.close()
+        except Exception: pass
+
+
+async def handle_reconcile(request):
+    uid = _uid(request)
+    from ..infra.conn import get_cursor
+    c = get_cursor()
+    try:
+        c.execute("SELECT id,taken_at,total_cents,accounts_json,note FROM finance_snapshots "
+                  "WHERE user_id=%s ORDER BY id DESC LIMIT 1", (uid,))
+        row = c.fetchone()
+        if not row:
+            return json_response({"ok": True, "snapshot": None, "accounts": [], "difference_cents": 0})
+        snapshot = dict(row)
+        try:
+            old = json.loads(snapshot.pop("accounts_json") or "[]")
+        except Exception:
+            old = []
+        old_map = {x.get("account"): int(x.get("balance_cents") or 0) for x in old if isinstance(x, dict)}
+        now = _accounts_now(c, uid)
+        now_map = {x["account"]: int(x["balance_cents"] or 0) for x in now}
+        names = sorted(set(old_map) | set(now_map))
+        rows = [{"account": name, "snapshot_cents": old_map.get(name, 0), "current_cents": now_map.get(name, 0),
+                 "difference_cents": now_map.get(name, 0) - old_map.get(name, 0)} for name in names]
+        return json_response({"ok": True, "snapshot": snapshot, "accounts": rows,
+                              "difference_cents": sum(x["difference_cents"] for x in rows)})
+    except Exception as e:
+        return json_response({"ok": False, "error": "reconcile_failed", "message": str(e)}, 500)
+    finally:
+        try: c.close()
+        except Exception: pass
+
 async def handle_savings(request):
     uid = _uid(request)
     from ..infra.conn import get_cursor
