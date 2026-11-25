@@ -17,7 +17,7 @@ namespace Gateway
     class RateLimiter
     {
     public:
-        explicit RateLimiter(int capacity = 60, double refillPerSec = 1.0);
+        explicit RateLimiter(int capacity = 600, double refillPerSec = 1.0);
 
         /// @brief 尝试取一个令牌
         bool Allow(const std::string& key);
