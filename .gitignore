@@ -91,4 +91,5 @@ data/push_outbox.tmp
 
 data/*.log
 
-pip-*/jieba.cache
+pip-*/
+jieba.cache
