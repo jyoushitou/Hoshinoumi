@@ -11,6 +11,7 @@ import HealthView from '@/views/HealthView.vue'
 import WeeklyView from '@/views/WeeklyView.vue'
 import CronView from '@/views/CronView.vue'
 import LogsView from '@/views/LogsView.vue'
+import SettingsView from '@/views/SettingsView.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useSessionStore } from '@/stores/session'
 import MobilePermissionsView from '@/views/mobile/MobilePermissionsView.vue'
@@ -33,7 +34,7 @@ const router = createRouter({
     { path: '/cron', name: 'cron', component: CronView, meta: meta('定时任务', '新增 / 编辑 / 启停 / 删除') },
     { path: '/diary', name: 'diary', component: DiaryView, meta: meta('日记', '按月 / 前 50 字概览 / 详情') },
     { path: '/logs', name: 'logs', component: LogsView, meta: meta('运行日志', '一行一条 / 筛选 / 搜索') },
-    { path: '/settings', name: 'settings', component: PageView, meta: meta('设置', '登录 / 后端 / 连接') },
+    { path: '/settings', name: 'settings', component: SettingsView, meta: meta('设置', '登录 / 后端 / 连接 / 可见性') },
     { path: '/settings/permissions', name: 'permissions', component: MobilePermissionsView, meta: meta('权限与后台', '权限 / 自启动 / 电池') },
   ],
 })

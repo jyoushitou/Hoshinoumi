@@ -10,3 +10,4 @@ button,input,select,textarea{font-family:inherit}
   textarea,select{font-size:16px!important}
   button{min-height:32px}
 }
+.motion-off *, .motion-off *::before, .motion-off *::after { animation: none !important; transition: none !important; }

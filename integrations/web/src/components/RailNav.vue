@@ -2,8 +2,10 @@
 import { computed } from 'vue'
 import { useSessionStore } from '@/stores/session'
 import { useIsOwner } from '@/composables/useIsOwner'
+import { useUiSettings } from '@/composables/useUiSettings'
 const session = useSessionStore()
 const isOwner = useIsOwner()
+const { isHidden } = useUiSettings()
 const baseNav = [
   { page: 'home', icon: '⌂', title: '主页' },
   { page: 'chat', icon: '◉', title: 'nao（聊天）' },
@@ -18,7 +20,7 @@ const baseNav = [
   { page: 'diary', icon: '✎', title: '日记' },
   { page: 'logs', icon: '≣', title: '运行日志' },
 ]
-const nav = computed(() => isOwner.value ? baseNav : baseNav.filter(n => n.page !== 'relation' && n.page !== 'savings'))
+const nav = computed(() => (isOwner.value ? baseNav : baseNav.filter(n => n.page !== 'relation' && n.page !== 'savings')).filter(n => !isHidden(n.page)))
 </script>
 <template>
   <aside class="rail">
