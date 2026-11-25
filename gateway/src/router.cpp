@@ -144,7 +144,30 @@ namespace Gateway
         }
         if (url.target.rfind("/api/cron", 0) == 0)
         {
-            Proxy(session, url, "/internal/cron", "GET", owner);
+            if (url.method == "GET")
+            {
+                Proxy(session, url, "/api/cron", "GET", owner);
+                return;
+            }
+            if (url.method == "POST")
+            {
+                const bool run = url.target.find("/run") != std::string::npos;
+                Proxy(session, url, run ? url.target : "/api/cron", "POST", owner);
+                return;
+            }
+            if (url.method == "PATCH")
+            {
+                Proxy(session, url, url.target, "PATCH", owner);
+                return;
+            }
+            if (url.method == "DELETE")
+            {
+                Proxy(session, url, url.target, "DELETE", owner);
+                return;
+            }
+            session->httpReplay("{\"ok\":false,\"error\":\"method_not_allowed\"}",
+                                boost::beast::http::status::method_not_allowed,
+                                JsonHeaders(NextRequestId()));
             return;
         }
         if (url.target.rfind("/api/diary", 0) == 0)
