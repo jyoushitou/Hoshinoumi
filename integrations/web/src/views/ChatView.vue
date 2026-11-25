@@ -210,7 +210,14 @@ async function goHit(i: number) {
   nodes[searchHits.value[searchIndex.value].i]?.scrollIntoView({ block: 'center', behavior: 'smooth' })
 }
 function nextHit(dir = 1) { void goHit(searchIndex.value + dir) }
-watch(() => session.activeTarget, () => { searchOpen.value = false; searchQuery.value = ''; searchIndex.value = 0 })
+watch(() => session.messages.length, async (_next, prev) => {
+  if (stickBottom.value || !prev) await scrollToBottom(prev ? 'smooth' : 'auto')
+})
+watch(() => session.activeTarget, async () => {
+  searchOpen.value = false; searchQuery.value = ''; searchIndex.value = 0
+  stickBottom.value = true
+  await scrollToBottom('auto')
+})
 </script>
 <template>
   <div class="chat" :class="{ motion }">
