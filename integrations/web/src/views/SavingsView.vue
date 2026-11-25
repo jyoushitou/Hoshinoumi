@@ -81,6 +81,13 @@ async function addEntry() {
     await load()
   } catch (e) { error.value = e instanceof Error ? e.message : '记录失败' } finally { saving.value = false }
 }
+function exportCsv() {
+  const header = ['日期', '账户', '类型', '金额(元)', '备注']
+  const lines = entries.value.map(entry => [String(entry.occurred_at || '').slice(0, 10), entry.account || '', entry.kind || '', (entry.amount_cents / 100).toFixed(2), entry.note || entry.category || ''])
+  const csv = [header, ...lines].map(row => row.map(value => `"${String(value).replace(/"/g, '""')}"`).join(',')).join('\n')
+  const blob = new Blob([new Uint8Array([0xef, 0xbb, 0xbf]), csv], { type: 'text/csv;charset=utf-8' })
+  const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'hoshinoumi-savings.csv'; link.click(); URL.revokeObjectURL(link.href)
+}
 onMounted(() => { if (isOwner.value) void load() })
 watch(isOwner, value => { if (value && !data.value) void load() })
 </script>
@@ -88,7 +95,7 @@ watch(isOwner, value => { if (value && !data.value) void load() })
 <template>
   <section class="savings" :class="{ locked: !isOwner }">
     <div v-if="!isOwner" class="owner-lock">财务数据仅主人可见</div>
-    <header class="head"><div><h1>存钱</h1><p>总余额 / 账户 / 流水</p></div><button class="refresh" type="button" :disabled="loading" @click="load">{{ loading ? '刷新中…' : '刷新' }}</button></header>
+    <header class="head"><div><h1>存钱</h1><p>总余额 / 账户 / 流水</p></div><div class="head-actions"><button class="refresh" type="button" :disabled="!entries.length" @click="exportCsv">导出 CSV</button><button class="refresh" type="button" :disabled="loading" @click="load">{{ loading ? '刷新中…' : '刷新' }}</button></div></header>
     <div v-if="error" class="error">{{ error }}</div>
     <div class="hero"><small>总余额</small><b>{{ fmt(overview?.total_cents ?? data?.total_cents ?? 0) }}</b><span>可用 {{ fmt(overview?.available_cents ?? data?.total_cents ?? 0) }} · 冻结 {{ fmt(overview?.frozen_cents || 0) }} · {{ accounts.length }} 个账户</span></div>
     <div class="accounts">
@@ -117,7 +124,7 @@ watch(isOwner, value => { if (value && !data.value) void load() })
 </template>
 
 <style scoped>
-.savings.locked > *:not(.owner-lock):not(.head){display:none}.owner-lock{background:#fff;border:1px dashed #cfe0f7;border-radius:12px;padding:26px;text-align:center;color:#8a9bb0;font-size:10px}.savings{flex:1;min-height:0;overflow:auto;padding:18px 18px 24px;background:#f7faff;color:#17263b}.head{display:flex;align-items:flex-end;margin-bottom:12px}.head h1{margin:0;font-size:24px;letter-spacing:-.03em}.head p{margin:3px 0 0;font-size:10px;color:#8a9bb0}.refresh{margin-left:auto;height:29px;border:1px solid #dbe8ff;border-radius:8px;background:#fff;color:#2563eb;font:10px inherit;padding:0 10px;cursor:pointer}
+.savings.locked > *:not(.owner-lock):not(.head){display:none}.owner-lock{background:#fff;border:1px dashed #cfe0f7;border-radius:12px;padding:26px;text-align:center;color:#8a9bb0;font-size:10px}.savings{flex:1;min-height:0;overflow:auto;padding:18px 18px 24px;background:#f7faff;color:#17263b}.head{display:flex;align-items:flex-end;margin-bottom:12px}.head-actions{margin-left:auto;display:flex;gap:6px}.head h1{margin:0;font-size:24px;letter-spacing:-.03em}.head p{margin:3px 0 0;font-size:10px;color:#8a9bb0}.refresh{margin-left:auto;height:29px;border:1px solid #dbe8ff;border-radius:8px;background:#fff;color:#2563eb;font:10px inherit;padding:0 10px;cursor:pointer}
 .hero{background:linear-gradient(135deg,#2563eb,#3b82f6);border-radius:14px;padding:15px;color:#fff;margin-bottom:9px}.hero small{display:block;font-size:8px;opacity:.7;letter-spacing:.12em}.hero b{display:block;font-size:26px;letter-spacing:-.03em;margin-top:3px}.hero span{font-size:8px;opacity:.72}
 .accounts{display:flex;gap:6px;overflow:auto;margin-bottom:9px}.account{flex:none;min-width:104px;background:#fff;border:1px solid #e3ebf7;border-radius:10px;padding:8px 9px}.account b{display:block;font-size:8px;color:#8a9bb0}.account span{display:block;font-size:12px;color:#1e3a5f;margin-top:3px}
 .form{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:#fff;border:1px solid #e3ebf7;border-radius:12px;padding:9px;margin-bottom:9px}.seg{grid-column:1/-1;display:flex;gap:4px}.seg button{flex:1;height:25px;border:1px solid #e3ebf7;border-radius:6px;background:#f8fbff;color:#6b7c95;font:9px inherit}.seg button.on{background:#eef4ff;color:#2563eb;border-color:#c7dcff}.form input{min-width:0;height:29px;border:1px solid #e3ebf7;border-radius:7px;background:#f8fbff;padding:0 8px;font:9.5px inherit;outline:0}.form .primary{grid-column:1/-1;height:30px;border:0;border-radius:7px;background:#2563eb;color:#fff;font:9.5px inherit;font-weight:700}.error{border:1px solid #fecaca;background:#fff5f5;color:#b91c1c;border-radius:8px;padding:7px 9px;font-size:9px;margin-bottom:8px}
