@@ -2,17 +2,32 @@
 import { computed, onMounted, ref } from 'vue'
 import { http } from '@/api/client'
 import type { InfoBalance, InfoStatus } from '@/lib/infoContract'
+import { useSessionStore } from '@/stores/session'
 
 type Section = 'config' | 'backup' | 'plan' | 'account' | 'reading' | 'gateway'
 const section = ref<Section>('config')
 const status = ref<InfoStatus | null>(null)
 const error = ref('')
+const session = useSessionStore()
 const balance = ref<InfoBalance | null>(null)
 const balanceError = ref('')
 const balanceCurrency = computed(() => balance.value?.balance_infos?.[0]?.currency || 'CNY')
 const balanceTotal = computed(() => balance.value?.balance_infos?.[0]?.total_balance || '—')
 const balanceGranted = computed(() => balance.value?.balance_infos?.[0]?.granted_balance || '0.00')
 const balanceTopped = computed(() => balance.value?.balance_infos?.[0]?.topped_up_balance || '0.00')
+const copied = ref(false)
+async function copyDiagnostics() {
+  const text = [
+    `Hoshinoumi Web ${new Date().toISOString()}`,
+    `status=${status.value?.status || '—'} schema=${status.value?.schema || '—'} version=${status.value?.version || '—'}`,
+    `master_qq=${status.value?.master_qq || '—'} latency=${session.statusLatencyMs ?? '—'}ms`,
+    `napcat=${status.value?.napcat?.connected ? 'connected' : 'offline'} port=${status.value?.napcat?.port || '—'}`,
+    `db=${status.value?.db?.engine || '—'} tables=${status.value?.db?.tables ?? '—'} size=${status.value?.db?.size_mb ?? '—'}MB`,
+    `backup=${status.value?.backup?.last_at || '—'} size=${status.value?.backup?.size_mb ?? '—'}MB kept=${status.value?.backup?.kept ?? '—'}`,
+    `api_balance=${balance.value?.balance_infos?.[0]?.total_balance || '—'}`,
+  ].join('\n')
+  try { await navigator.clipboard.writeText(text); copied.value = true; setTimeout(() => { copied.value = false }, 1500) } catch { copied.value = false }
+}
 async function loadBalance() { try { balance.value = await http.get('/api/balance'); balanceError.value = '' } catch { balance.value = null; balanceError.value = 'API 余额不可用' } }
 interface Backup { manifest?: { created_at?: string; counts?: Record<string, number>; checksums?: Record<string, string> }; db?: unknown }
 const backup = ref<Backup | null>(null)
@@ -92,7 +107,7 @@ onMounted(() => { void load(); void loadBalance() })
 
 <template>
   <section class="info">
-    <header class="head"><div><h1>信息</h1><p>运行 / 配置 / 备份 / 账号 / 阅读 / 网关</p></div><span class="conn" :class="{ off: !status }">{{ status ? '已连接' : '离线' }}</span></header>
+    <header class="head"><div><h1>信息</h1><p>运行 / 配置 / 备份 / 账号 / 阅读 / 网关</p></div><button class="diag" type="button" @click="copyDiagnostics">{{ copied ? '已复制' : '复制诊断' }}</button><span class="conn" :class="{ off: !status }">{{ status ? '已连接' : '离线' }}</span></header>
     <div v-if="error" class="notice">{{ error }}</div>
     <div class="overview">
       <div><small>后端</small><b>{{ status?.status || '—' }}</b></div>
@@ -136,7 +151,7 @@ onMounted(() => { void load(); void loadBalance() })
 </template>
 
 <style scoped>
-.info{flex:1;min-height:0;overflow:auto;padding:18px 18px 24px;background:#f7faff;color:#17263b;box-sizing:border-box}.head{display:flex;align-items:flex-end;gap:10px;margin-bottom:12px}.head h1{margin:0;font-size:24px;letter-spacing:-.03em}.head p{margin:3px 0 0;font-size:10px;color:#8a9bb0}.conn{margin-left:auto;font-size:8px;color:#1f9d6b;border:1px solid #cdeee0;background:#eefbf5;border-radius:10px;padding:3px 7px}.conn.off{color:#8a9bb0;border-color:#e3ebf7;background:#f8fbff}
+.info{flex:1;min-height:0;overflow:auto;padding:18px 18px 24px;background:#f7faff;color:#17263b;box-sizing:border-box}.head{display:flex;align-items:flex-end;gap:10px;margin-bottom:12px}.head h1{margin:0;font-size:24px;letter-spacing:-.03em}.head p{margin:3px 0 0;font-size:10px;color:#8a9bb0}.diag{height:26px;border:1px solid #dbe8ff;border-radius:7px;background:#fff;color:#2563eb;font:8.5px inherit;padding:0 8px;cursor:pointer}.conn{margin-left:8px;font-size:8px;color:#1f9d6b;border:1px solid #cdeee0;background:#eefbf5;border-radius:10px;padding:3px 7px}.conn.off{color:#8a9bb0;border-color:#e3ebf7;background:#f8fbff}
 .overview{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:10px}.overview div{background:#fff;border:1px solid #e3ebf7;border-radius:10px;padding:9px}.overview small{display:block;font-size:7.5px;color:#9aabc0}.overview b{display:block;font-size:12px;color:#1e3a5f;margin-top:3px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px}.entry{display:flex;align-items:center;gap:7px;text-align:left;background:#fff;border:1px solid #e3ebf7;border-radius:10px;padding:9px;cursor:pointer}.entry.on{background:#eef4ff;border-color:#c7dcff}.icon{width:26px;height:26px;border-radius:8px;background:#f4f8ff;display:grid;place-items:center;color:#52708f;flex:none}.entry b{display:block;font-size:9.5px;color:#314a65}.entry small{display:block;font-size:7px;color:#9aabc0;margin-top:2px}.entry em{margin-left:auto;font-style:normal;color:#9aabc0}
 .panel{background:#fff;border:1px solid #e3ebf7;border-radius:12px;padding:11px}.panel-head{display:flex;align-items:baseline;gap:7px;margin-bottom:7px}.progress{display:block!important;padding:3px 0!important;border:0!important}.progress i{display:block;height:4px;border-radius:3px;background:#2563eb;transition:width .2s}.progress small{display:block;font-size:7.5px;color:#8a9bb0;margin-top:3px}.cli-note{font-size:7.5px;color:#8a9bb0;line-height:1.6}.cli-note code{font-family:ui-monospace,monospace;color:#526982}.drill{margin-top:9px;border-top:1px solid #f1f5fb;padding-top:8px}.drill .primary{height:34px;min-height:34px;max-height:34px;font-size:10px}.drill-info{font-size:7.5px;color:#405872;margin-top:5px;line-height:1.6}.drill-note{font-size:7px;color:#9aabc0;margin-top:2px}.import-box{display:grid!important;width:100%!important;max-width:none;justify-self:stretch;grid-template-columns:minmax(0,1fr);margin-top:9px;border-top:1px solid #f1f5fb;padding-top:9px;display:grid;gap:6px;min-width:0}.import-title{font-size:8px;color:#8a9bb0}.file-pick{display:block;text-align:center;border:1px solid #dbe8ff;border-radius:7px;background:#f4f9ff;color:#2563eb;font-size:9px;line-height:28px;height:28px;cursor:pointer}.file-pick input{display:none}.import-box textarea{width:100%;min-width:0;box-sizing:border-box;min-height:64px;border:1px solid #e3ebf7;border-radius:7px;background:#f8fbff;padding:6px;font:8px ui-monospace,monospace;resize:vertical}.import-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;min-width:0}.import-actions button{min-width:0;height:28px;border:1px solid #dbe8ff;border-radius:6px;background:#f4f9ff;color:#2563eb;font:9px inherit;line-height:1;white-space:nowrap;cursor:pointer;padding:0 2px}.import-actions button.danger{color:#b91c1c;border-color:#fecaca;background:#fff5f5}.import-state{font-size:8px;color:#6b7c95}.primary{width:100%;height:34px;min-height:34px;max-height:34px;margin-top:8px;border:0;border-radius:7px;background:#2563eb;color:#fff;font:9px inherit;font-weight:700;cursor:pointer}.panel-head b{font-size:10px;color:#1e3a5f}.panel-head span{font-size:7.5px;color:#9aabc0}.rows>div{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid #f1f5fb}.rows>div:last-child{border-bottom:0}.rows>div>span{font-size:8.5px;color:#8a9bb0}.rows>div>b{font-size:8.5px;color:#405872;font-weight:600;text-align:right;word-break:break-all}.notice{border:1px solid #fecaca;background:#fff5f5;color:#b91c1c;border-radius:8px;padding:7px 9px;font-size:9px;margin-bottom:8px}
