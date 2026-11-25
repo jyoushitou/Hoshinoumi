@@ -25,6 +25,12 @@ namespace Gateway
         /// @brief 调后端的超时（毫秒）
         int backendTimeoutMs = 5000;
 
+        /// @brief 每 IP 令牌桶容量
+        int rateLimitCapacity = 600;
+
+        /// @brief 每 IP 每秒补充令牌
+        int rateLimitRefillPerSec = 20;
+
         /// @brief 内部协议：http / tcp（v26）
         std::string backendProtocol = "tcp";
 

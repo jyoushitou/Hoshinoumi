@@ -109,7 +109,8 @@ namespace Gateway
     } // namespace
 
     Router::Router(Config cfg)
-        : cfg_(std::move(cfg)), auth_(cfg_), backend_(cfg_), probe_(std::make_shared<ProbeState>())
+        : cfg_(std::move(cfg)), auth_(cfg_), backend_(cfg_), probe_(std::make_shared<ProbeState>()),
+          limiter_(cfg_.rateLimitCapacity, static_cast<double>(cfg_.rateLimitRefillPerSec))
     {
         if (cfg_.startupWait)
         {

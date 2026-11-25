@@ -121,6 +121,12 @@ namespace Gateway
             cfg.startupMaxAttempts = GetInt(b, "startup_max_attempts",
                                             cfg.startupMaxAttempts);
         }
+        if (const auto* rl = obj.if_contains("rate_limit"); rl != nullptr && rl->is_object())
+        {
+            const auto& r = rl->as_object();
+            cfg.rateLimitCapacity = GetInt(r, "capacity", cfg.rateLimitCapacity);
+            cfg.rateLimitRefillPerSec = GetInt(r, "refill_per_sec", cfg.rateLimitRefillPerSec);
+        }
         if (const auto* auth = obj.if_contains("auth"); auth != nullptr && auth->is_object())
         {
             const auto& a = auth->as_object();
@@ -132,6 +138,10 @@ namespace Gateway
             envSecret != nullptr && *envSecret != '\0')
         {
             cfg.ownerSecret = envSecret;
+        }
+        if (cfg.rateLimitCapacity < 1 || cfg.rateLimitRefillPerSec < 1)
+        {
+            throw std::runtime_error("rate_limit 必须 >= 1");
         }
         cfg.logLevel = GetString(obj, "log_level", cfg.logLevel);
         cfg.Validate();
