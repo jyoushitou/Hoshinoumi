@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useSessionStore } from '@/stores/session'
+import { useAuthStore } from '@/stores/auth'
 import { useIsOwner } from '@/composables/useIsOwner'
 import { useUiSettings } from '@/composables/useUiSettings'
 const session = useSessionStore()
+const auth = useAuthStore()
 const isOwner = useIsOwner()
 const { isHidden } = useUiSettings()
 const baseNav = [
@@ -42,6 +44,15 @@ const nav = computed(() => (isOwner.value ? baseNav : baseNav.filter(n => n.page
     <div class="spacer" />
     <RouterLink
       to="/settings"
+      class="rail-status"
+      :class="{ off: !session.connected || !auth.token }"
+      :title="`${session.connected ? '后端已连接' : '后端离线'} · ${auth.token ? 'token 已配置' : '未配置 token'} · schema ${session.status?.schema || '—'}`"
+      aria-label="连接状态"
+    >
+      <i />
+    </RouterLink>
+    <RouterLink
+      to="/settings"
       class="rnav"
       title="设置"
     >
@@ -56,5 +67,5 @@ const nav = computed(() => (isOwner.value ? baseNav : baseNav.filter(n => n.page
 .rnav:hover{background:#eaf2ff;color:#1d4ed8;transform:translateY(-1px)}.rnav.router-link-active{background:#dbeafe;color:#1d4ed8}
 .rnav.router-link-active:before{content:"";position:absolute;left:-12px;width:3px;height:18px;border-radius:3px;background:#2563eb}
 .rnav .badge{position:absolute;top:3px;right:2px;min-width:14px;height:14px;border-radius:8px;background:#2563eb;color:#fff;font-size:9px;font-weight:700;display:grid;place-items:center;padding:0 3px}
-.spacer{flex:1}
+.spacer{flex:1}.rail-status{width:22px;height:22px;display:grid;place-items:center;border-radius:7px;text-decoration:none;margin-bottom:2px}.rail-status i{width:7px;height:7px;border-radius:50%;background:#1f9d6b;box-shadow:0 0 0 3px #eefbf5}.rail-status.off i{background:#c0264a;box-shadow:0 0 0 3px #fff5f7}.rail-status:hover{background:#f4f9ff}
 </style>
