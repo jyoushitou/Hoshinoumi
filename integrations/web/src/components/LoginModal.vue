@@ -14,7 +14,10 @@ async function loginReal(qqValue: string, passwordValue: string, setupCodeValue 
   return token
 }
 
-async function registerReal(qqValue: string, passwordValue: string, code: string) {
+async function setupReal(qqValue: string, passwordValue: string, code: string) {
+  // 已有用户首次设置密码：/api/login + setup_code
+  try { return await loginReal(qqValue, passwordValue, code) } catch { /* 需要注册时再走邀请码 */ }
+  // 新用户邀请码注册
   await http.post('/api/register', { user_id: qqValue, invite: code, password: passwordValue, nickname: qqValue })
   return await loginReal(qqValue, passwordValue, code)
 }
@@ -29,8 +32,8 @@ async function save() {
     } else if (mode.value === 'login') {
       nextToken = await loginReal(qq.value.trim(), password.value)
     } else {
-      if (password.value.length < 6) throw new Error('密码至少 6 位')
-      nextToken = await registerReal(qq.value.trim(), password.value, setupCode.value.trim())
+      if (password.value.length < 8) throw new Error('密码至少 8 位')
+      nextToken = await setupReal(qq.value.trim(), password.value, setupCode.value.trim())
     }
     http.setToken(nextToken)
     await http.get('/healthz')
