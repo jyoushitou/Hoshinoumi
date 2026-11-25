@@ -308,6 +308,11 @@ async def send_short_reply(tid, text, ws, uid, is_group=False, kws=None):
                     try:
                         from ..delivery.hub import fanout_text
                         fanout_text(uid, tid, _txt, "private", _mid)
+                        try:
+                            from ..server.routes_push import notify as push_notify
+                            push_notify("奈绪", _txt[:160], "/chat", key=f"qq:{_mid or _txt[:40]}")
+                        except Exception as _pe:
+                            log_api(f"[Push] ntfy 投递失败（忽略）: {_pe}")
                     except Exception as _he:
                         log_api(f"[DeliveryHub] 扇出失败（忽略）: {_he}")
             except Exception as _e:
