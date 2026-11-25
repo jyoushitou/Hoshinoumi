@@ -188,7 +188,7 @@ export const useSessionStore = defineStore('session', () => {
     messages.value.push({ id: localId, role: 'user', content: text, image_url: imageUrl || undefined, audio_url: audio || undefined, kind, created_at: stamp, pending: true })
     sending.value = true; sendError.value = ''
     try {
-      const r = await http.post<{ success?: boolean; reply?: string; error?: string; message?: string }>('/api/chat', {
+      const r = await http.post<{ success?: boolean; reply?: string; segments?: string[]; error?: string; message?: string }>('/api/chat', {
         message: text,
         target_id: activeTarget.value,
         client_message_id: clientId,
@@ -202,7 +202,10 @@ export const useSessionStore = defineStore('session', () => {
       await loadHistory(target)
       if (!messages.value.length) {
         messages.value.push({ role: 'user', content: text, image_url: imageUrl || undefined, audio_url: audio || undefined, kind, created_at: stamp })
-        messages.value.push({ role: 'assistant', content: r.reply, created_at: new Date().toISOString().slice(0, 19).replace('T', ' ') })
+        const segments = Array.isArray(r.segments) && r.segments.length ? r.segments : [r.reply]
+        for (const [index, segment] of segments.entries()) {
+          messages.value.push({ role: 'assistant', content: segment, created_at: new Date(Date.now() + index * 1000).toISOString().slice(0, 19).replace('T', ' ') })
+        }
         lastSeq.value = Math.max(lastSeq.value, ...messages.value.map(seqOf))
       }
       return true
