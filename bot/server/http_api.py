@@ -17,13 +17,12 @@ from .routes_meta import (
 )
 from .routes_chat import handle_chat, handle_command, handle_conversations, handle_history, handle_commands, handle_read, handle_read_state, handle_recall, handle_topic
 from .routes_persona import handle_persona, handle_export as handle_persona_export, handle_import as handle_persona_import, handle_activate as handle_persona_activate
-from .routes_savings import handle_savings, handle_savings_import, handle_savings_add, handle_savings_events, handle_snapshots_get, handle_snapshot_create, handle_reconcile, handle_overview, handle_monthly, handle_goals, handle_frozen, handle_fixed, handle_funds, handle_finance_audit
+from .routes_savings import handle_savings, handle_savings_import, handle_savings_add, handle_savings_events, handle_snapshots_get, handle_snapshot_create, handle_reconcile, handle_overview, handle_monthly, handle_goals, handle_frozen, handle_fixed, handle_funds, handle_finance_audit, handle_savings_init_get, handle_savings_init_post
 from .routes_weekly_plan import handle_weekly_get, handle_weekly_put, handle_weekly_import, handle_weekly_weeks
 from .routes_reminders import handle_pending as handle_reminders_pending, handle_ack as handle_reminder_ack
 from .routes_balance import handle_balance
 from .routes_health import handle_summary as handle_health_summary, handle_add_meal as handle_health_add_meal, handle_delete_meal as handle_health_delete_meal, handle_recognize as handle_health_recognize
 from .routes_memory import handle_item_update as handle_memory_item_update, handle_item_delete as handle_memory_item_delete
-from .routes_setup import handle_get as handle_setup_get, handle_init as handle_setup_init
 from .routes_groups import handle_list as handle_groups_list, handle_create as handle_groups_create
 from .routes_push import handle_devices as handle_push_devices, handle_register as handle_push_register, handle_delete as handle_push_delete, handle_preferences as handle_push_preferences, handle_test as handle_push_test, handle_outbox as handle_push_outbox
 from .routes_plugins import handle_list as handle_plugins_list, handle_install as handle_plugins_install, handle_toggle as handle_plugins_toggle, handle_approve as handle_plugins_approve, handle_reject as handle_plugins_reject
@@ -409,8 +408,6 @@ async def start_api_server():
     app.router.add_get("/healthz", handle_healthz)
     app.router.add_get("/readyz", handle_readyz)
     app.router.add_get("/api/health", handle_health)
-    app.router.add_get("/api/setup", handle_setup_get)
-    app.router.add_post("/api/setup", handle_setup_init)
     app.router.add_get("/api/status", handle_status)
     app.router.add_get("/api/avatar", handle_avatar)
     app.router.add_get("/api/usage", handle_usage)
@@ -440,6 +437,8 @@ async def start_api_server():
     app.router.add_get("/api/persona", handle_persona)
     app.router.add_get("/api/savings", handle_savings)
     app.router.add_post("/api/savings/entries", handle_savings_add)
+    app.router.add_get("/api/savings/init", handle_savings_init_get)
+    app.router.add_post("/api/savings/init", handle_savings_init_post)
     app.router.add_get("/api/savings/overview", handle_overview)
     app.router.add_get("/api/savings/goals", handle_goals)
     app.router.add_get("/api/savings/frozen", handle_frozen)

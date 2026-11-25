@@ -218,6 +218,85 @@ async def handle_reconcile(request):
         try: c.close()
         except Exception: pass
 
+
+def _meta_get(c, key, default=""):
+    c.execute("SELECT v FROM bot_meta WHERE k=%s", (key,))
+    row = c.fetchone()
+    return str(row.get("v") or default) if row else default
+
+
+def _meta_set(c, key, value):
+    if _sqlite():
+        c.execute("INSERT OR REPLACE INTO bot_meta(k,v,updated_at) VALUES(%s,%s,CURRENT_TIMESTAMP)", (key, value))
+    else:
+        c.execute("REPLACE INTO bot_meta(k,v,updated_at) VALUES(%s,%s,CURRENT_TIMESTAMP)", (key, value))
+
+
+async def handle_savings_init_get(request):
+    uid = _uid(request)
+    from ..infra.conn import get_cursor
+    c = get_cursor()
+    try:
+        _ensure_accounts(c, uid)
+        c.execute("SELECT account FROM finance_accounts WHERE user_id=%s ORDER BY id", (uid,))
+        accounts = [r["account"] for r in (c.fetchall() or [])]
+        return json_response({
+            "ok": True, "initialized": _meta_get(c, "savings_initialized") == "1",
+            "accounts": accounts,
+        })
+    finally:
+        try: c.close()
+        except Exception: pass
+
+
+async def handle_savings_init_post(request):
+    uid = _uid(request)
+    try:
+        body = await request.json()
+    except Exception:
+        return json_response({"ok": False, "error": "invalid_json"}, 400)
+    balances = (body or {}).get("balances")
+    if not isinstance(balances, dict):
+        return json_response({"ok": False, "error": "bad_balances"}, 400)
+    from ..infra.conn import get_cursor
+    from ..config import CST
+    c = get_cursor()
+    try:
+        _ensure_accounts(c, uid)
+        if _meta_get(c, "savings_initialized") == "1":
+            return json_response({"ok": False, "error": "already_initialized"}, 409)
+        allowed = {"银行卡", "微信", "支付宝", "现金"}
+        now = datetime.now(CST).strftime("%Y-%m-%d %H:%M:%S")
+        created = 0
+        for account, raw in balances.items():
+            name = str(account)
+            if name not in allowed:
+                continue
+            try:
+                yuan = float(raw or 0)
+            except (TypeError, ValueError):
+                continue
+            if abs(yuan) < 0.005:
+                continue
+            cents = int(round(yuan * 100))
+            raw_hash = hashlib.sha256(f"init:{uid}:{name}:{cents}:{now}".encode()).hexdigest()
+            c.execute(
+                "INSERT INTO finance_entries(user_id,account,kind,amount_cents,category,note,occurred_at,raw_hash,source) "
+                "VALUES(%s,%s,%s,%s,%s,%s,%s,%s,'initial')",
+                (uid, name, "income" if cents >= 0 else "expense", cents, "初始余额", "存钱初始化", now, raw_hash))
+            created += 1
+        _meta_set(c, "savings_initialized", "1")
+        try: c.connection.commit()
+        except Exception: pass
+        return json_response({"ok": True, "initialized": True, "created": created})
+    except Exception as e:
+        try: c.connection.rollback()
+        except Exception: pass
+        return json_response({"ok": False, "error": "init_failed", "message": str(e)}, 500)
+    finally:
+        try: c.close()
+        except Exception: pass
+
 async def handle_savings(request):
     uid = _uid(request)
     from ..infra.conn import get_cursor

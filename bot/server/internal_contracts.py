@@ -7,7 +7,6 @@ import re
 # (internal regex, allowed HTTP methods)
 _CONTRACTS = [
     (r"/internal/health", {"GET"}),
-    (r"/internal/setup", {"GET", "POST"}),
     (r"/internal/status", {"GET"}),
     (r"/internal/avatar", {"GET"}),
     (r"/internal/usage", {"GET"}),
@@ -34,6 +33,7 @@ _CONTRACTS = [
     (r"/internal/savings/import", {"POST"}),
     (r"/internal/savings/snapshots", {"GET", "POST"}),
     (r"/internal/savings/reconcile", {"GET"}),
+    (r"/internal/savings/init", {"GET", "POST"}),
     (r"/internal/savings/overview", {"GET"}),
     (r"/internal/savings/goals", {"GET"}),
     (r"/internal/savings/frozen", {"GET"}),

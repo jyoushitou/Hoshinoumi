@@ -1,16 +1,11 @@
 ﻿<script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 import AppShell from '@/layouts/AppShell.vue'
 import MobileShell from '@/layouts/MobileShell.vue'
 import LoginModal from '@/components/LoginModal.vue'
-import SetupWizard from '@/components/SetupWizard.vue'
-import { http } from '@/api/client'
-import { useIsOwner } from '@/composables/useIsOwner'
 import { useAuthStore } from '@/stores/auth'
 import { cleanupStickerCache } from '@/lib/stickerCache'
 const auth = useAuthStore()
-const isOwner = useIsOwner()
-const setupOpen = ref(false)
 const isMobile = ref(false)
 let media: MediaQueryList | null = null
 let viewportRaf = 0
@@ -22,13 +17,6 @@ function syncViewport() {
     document.documentElement.classList.toggle('device-mobile', window.innerWidth <= 820)
     document.documentElement.classList.toggle('device-tablet', window.innerWidth > 820 && window.innerWidth <= 1180)
   })
-}
-async function checkSetup() {
-  if (!auth.loggedIn || !isOwner.value) { setupOpen.value = false; return }
-  try {
-    const state = await http.get<{ initialized?: boolean }>('/api/setup')
-    setupOpen.value = !state.initialized
-  } catch { setupOpen.value = false }
 }
 const MOBILE_QUERY = '(max-width: 820px)'
 function forcedLayout() {
@@ -49,9 +37,8 @@ onMounted(() => {
   window.addEventListener('orientationchange', syncViewport, { passive: true })
   void cleanupStickerCache()
   stickerCleanupTimer = setInterval(() => { void cleanupStickerCache() }, 6 * 60 * 60 * 1000)
-  void auth.validate().then(() => checkSetup())
+  void auth.validate()
 })
-watch(() => [auth.loggedIn, isOwner.value], () => { void checkSetup() })
 onBeforeUnmount(() => {
   media?.removeEventListener('change', sync)
   window.removeEventListener('resize', syncViewport)
@@ -62,7 +49,6 @@ onBeforeUnmount(() => {
 </script>
 <template>
   <LoginModal v-if="!auth.loggedIn" />
-  <SetupWizard :open="setupOpen" @close="setupOpen = false" @done="setupOpen = false" />
   <MobileShell v-if="isMobile" />
   <AppShell v-else />
 </template>

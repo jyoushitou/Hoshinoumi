@@ -2,6 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { http } from '@/api/client'
 import { useIsOwner } from '@/composables/useIsOwner'
+import SavingsInitModal from '@/components/SavingsInitModal.vue'
 
 interface Account { account: string; balance_cents: number }
 interface Entry { id?: number; account: string; kind: string; amount_cents: number; category?: string; note?: string; occurred_at?: string }
@@ -15,6 +16,8 @@ interface Snapshot { id: number; taken_at: string; total_cents: number; note?: s
 interface ReconcileRow { account: string; snapshot_cents: number; current_cents: number; difference_cents: number }
 interface Reconcile { snapshot: Snapshot | null; accounts: ReconcileRow[]; difference_cents: number }
 const isOwner = useIsOwner()
+const initOpen = ref(false)
+const initAccounts = ref<string[]>([])
 const data = ref<Savings | null>(null)
 const overview = ref<Overview | null>(null)
 const goals = ref<Goal[]>([])
@@ -105,8 +108,21 @@ async function createSnapshot() {
   snapshotBusy.value = true; error.value = ''
   try { await http.post('/api/savings/snapshots', { note: '手动快照' }); await loadReconcile() } catch (e) { error.value = e instanceof Error ? e.message : '快照失败' } finally { snapshotBusy.value = false }
 }
-onMounted(() => { if (isOwner.value) { void load(); void loadReconcile() } })
-watch(isOwner, value => { if (value && !data.value) void load() })
+async function loadInit() {
+  if (!isOwner.value) return
+  try {
+    const state = await http.get<{ initialized?: boolean; accounts?: string[] }>('/api/savings/init')
+    initAccounts.value = Array.isArray(state.accounts) && state.accounts.length ? state.accounts : defaultAccounts
+    initOpen.value = !state.initialized
+  } catch { initOpen.value = false }
+}
+async function finishInit() {
+  initOpen.value = false
+  await load()
+  await loadReconcile()
+}
+onMounted(() => { if (isOwner.value) { void load(); void loadReconcile(); void loadInit() } })
+watch(isOwner, value => { if (value && !data.value) { void load(); void loadInit() } })
 </script>
 
 <template>
@@ -144,6 +160,7 @@ watch(isOwner, value => { if (value && !data.value) void load() })
         <em :class="{ income: entry.amount_cents > 0 }">{{ entry.amount_cents > 0 ? '+' : '' }}{{ fmt(entry.amount_cents) }}</em>
       </div>
     </div>
+    <SavingsInitModal :open="initOpen" :accounts="initAccounts" @close="initOpen = false" @done="finishInit" />
   </section>
 </template>
 
