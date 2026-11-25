@@ -14,8 +14,10 @@ const msgsEl = ref<HTMLElement | null>(null)
 const bottomAnchor = ref<HTMLElement | null>(null)
 const showJump = ref(false)
 const stickBottom = ref(true)
-function onMsgScroll() { const el = msgsEl.value; if (!el) return; const distance = el.scrollHeight - el.scrollTop - el.clientHeight; showJump.value = distance > 140; stickBottom.value = distance < 80 }
-async function scrollToBottom(behavior: ScrollBehavior = 'auto') { await nextTick(); const el = msgsEl.value; if (!el) return; bottomAnchor.value?.scrollIntoView({ block: 'end', behavior }); el.scrollTo({ top: el.scrollHeight, behavior }); showJump.value = false; stickBottom.value = true }
+let programmaticScroll = false
+let pinnedOnce = false
+function onMsgScroll() { const el = msgsEl.value; if (!el || programmaticScroll) return; const distance = el.scrollHeight - el.scrollTop - el.clientHeight; showJump.value = distance > 140; stickBottom.value = distance < 80 }
+async function scrollToBottom(behavior: ScrollBehavior = 'auto') { await nextTick(); const el = msgsEl.value; if (!el) return; programmaticScroll = true; stickBottom.value = true; el.scrollTop = el.scrollHeight; bottomAnchor.value?.scrollIntoView({ block: 'end', behavior: 'auto' }); showJump.value = false; requestAnimationFrame(() => { programmaticScroll = false }); pinnedOnce = true }
 function pinBottomSoon() {
   if (!stickBottom.value) return
   requestAnimationFrame(() => { bottomAnchor.value?.scrollIntoView({ block: 'end' }); const el = msgsEl.value; if (el) el.scrollTop = el.scrollHeight })
@@ -216,12 +218,13 @@ async function goHit(i: number) {
   nodes[searchHits.value[searchIndex.value].i]?.scrollIntoView({ block: 'center', behavior: 'smooth' })
 }
 function nextHit(dir = 1) { void goHit(searchIndex.value + dir) }
-watch(() => session.messages.length, async (_next, prev) => {
-  if (stickBottom.value || !prev) await scrollToBottom(prev ? 'smooth' : 'auto')
+watch(() => session.messages.length, async () => {
+  if (!pinnedOnce || stickBottom.value) await scrollToBottom('auto')
 })
 watch(() => session.activeTarget, async () => {
   searchOpen.value = false; searchQuery.value = ''; searchIndex.value = 0
   stickBottom.value = true
+  pinnedOnce = false
   await scrollToBottom('auto')
 })
 </script>
