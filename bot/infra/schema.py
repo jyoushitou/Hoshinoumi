@@ -618,6 +618,16 @@ PURE = {
             KEY idx_custom_groups_user (user_id, created_at)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """,
+    "finance_accounts": """
+        CREATE TABLE IF NOT EXISTS finance_accounts (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            user_id VARCHAR(64) NOT NULL DEFAULT '__owner__',
+            account VARCHAR(64) NOT NULL,
+            kind VARCHAR(16) NOT NULL DEFAULT 'bank',
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY uk_finance_account (user_id, account)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
     "finance_snapshots": """
         CREATE TABLE IF NOT EXISTS finance_snapshots (
             id BIGINT AUTO_INCREMENT PRIMARY KEY,

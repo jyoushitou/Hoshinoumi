@@ -100,6 +100,20 @@ def _insert_ignore(c, uid, row, raw_hash):
                     row["category"], row["note"], row["occurred_at"], raw_hash, row["source"]))
 
 
+_DEFAULT_ACCOUNTS = (("银行卡", "bank"), ("微信", "wallet"), ("支付宝", "wallet"), ("现金", "cash"))
+
+
+def _ensure_accounts(c, uid):
+    for name, kind in _DEFAULT_ACCOUNTS:
+        try:
+            if _sqlite():
+                c.execute("INSERT OR IGNORE INTO finance_accounts(user_id,account,kind) VALUES(%s,%s,%s)", (uid, name, kind))
+            else:
+                c.execute("INSERT IGNORE INTO finance_accounts(user_id,account,kind) VALUES(%s,%s,%s)", (uid, name, kind))
+        except Exception:
+            pass
+
+
 def _sqlite():
     try:
         from ..infra.conn import _resolve_backend
@@ -209,6 +223,7 @@ async def handle_savings(request):
     from ..infra.conn import get_cursor
     c = get_cursor()
     try:
+        _ensure_accounts(c, uid)
         c.execute("SELECT account,kind,SUM(amount_cents) AS total FROM finance_entries "
                   "WHERE user_id=%s GROUP BY account,kind ORDER BY account", (uid,))
         rows = c.fetchall() or []
@@ -221,6 +236,9 @@ async def handle_savings(request):
                   "LEFT JOIN finance_entry_meta m ON m.entry_id=e.id "
                   "WHERE e.user_id=%s ORDER BY e.id DESC LIMIT 50", (uid,))
         entries = [dict(r) for r in (c.fetchall() or [])]
+        c.execute("SELECT account FROM finance_accounts WHERE user_id=%s ORDER BY id", (uid,))
+        for row in c.fetchall() or []:
+            accounts.setdefault(row["account"], {"account": row["account"], "balance_cents": 0})
         total = sum(x["balance_cents"] for x in accounts.values())
         return json_response({
             "ok": True,
