@@ -84,11 +84,11 @@ namespace Gateway
                 {
                     if (path == item) return true;
                 }
-                return StartsWith(path, "/api/messages/") ||
-                       StartsWith(path, "/api/tools/") ||
-                       StartsWith(path, "/api/endpoints/") ||
-                       StartsWith(path, "/api/reminders/") ||
-                       StartsWith(path, "/api/cron/") ||
+                return (StartsWith(path, "/api/messages/") && EndsWith(path, "/recall")) ||
+                       (StartsWith(path, "/api/tools/") && EndsWith(path, "/call")) ||
+                       (StartsWith(path, "/api/endpoints/") && EndsWith(path, "/ack")) ||
+                       (StartsWith(path, "/api/reminders/") && EndsWith(path, "/ack")) ||
+                       (StartsWith(path, "/api/cron/") && EndsWith(path, "/run")) ||
                        (StartsWith(path, "/api/plugins/") &&
                         (EndsWith(path, "/toggle") || EndsWith(path, "/approve") || EndsWith(path, "/reject")));
             }
