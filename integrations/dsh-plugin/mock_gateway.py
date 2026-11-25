@@ -973,6 +973,20 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_PATCH(self):
         path = urlparse(self.path).path
+        cron_action = re.match(r"^/api/cron/(\d+)$", path)
+        if cron_action:
+            if not self._is_owner():
+                self._json(403, {"ok": False, "error": "forbidden"}); return
+            task = next((x for x in TASKS if int(x.get("id") or 0) == int(cron_action.group(1))), None)
+            if not task:
+                self._json(404, {"ok": False, "error": "task_not_found"}); return
+            body = self._body()
+            if "enabled" in body: task["enabled"] = bool(body["enabled"])
+            if "content" in body: task["content"] = str(body["content"])[:100]
+            if "at_time" in body: task["at_time"] = str(body["at_time"])[:20]
+            if "schedule_type" in body and body["schedule_type"] in ("daily", "hourly", "weekly"): task["schedule_type"] = body["schedule_type"]
+            self._json(200, {"ok": True, "data": task, "mock": True}); return
+        path = urlparse(self.path).path
         if path.startswith("/api/memory/items/"):
             if not self._authorized():
                 self._json(401, {"error": "unauthorized", "message": "bad token"})

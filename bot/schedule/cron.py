@@ -101,6 +101,36 @@ def add(target_id, schedule_type, content, at_time=None, weekdays=None,
         return None
 
 
+
+def update(task_id, user_id="__owner__", **fields):
+    """更新任务字段；仅允许白名单，返回是否成功。"""
+    allowed = {"content", "at_time", "schedule_type", "weekdays", "once_at", "interval_min", "rule", "timing", "enabled", "suffix"}
+    sets = []
+    params = []
+    for key, value in fields.items():
+        if key not in allowed:
+            continue
+        sets.append(f"{key}=%s")
+        params.append(value)
+    if not sets:
+        return True
+    user_id = _uid(user_id)
+    from ..infra.conn import get_cursor
+    try:
+        c = get_cursor()
+        params.extend([int(task_id), str(user_id)])
+        c.execute(f"UPDATE cron_tasks SET {', '.join(sets)} WHERE id=%s AND user_id=%s", params)
+        c.connection.commit()
+        try:
+            from ..infra import cache
+            cache.invalidate("cron:list")
+        except Exception:
+            pass
+        return True
+    except Exception as e:
+        log_err(f"[定时] 更新失败: {e}")
+        return False
+
 def set_suffix(task_id, suffix, user_id="__owner__"):
     """v32.3：给一条钩子追加补充话术；空串清除。"""
     from ..infra.conn import get_cursor

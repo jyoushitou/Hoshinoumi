@@ -21,6 +21,7 @@ from .routes_savings import handle_savings, handle_savings_import, handle_saving
 from .routes_weekly_plan import handle_weekly_get, handle_weekly_put, handle_weekly_import
 from .routes_reminders import handle_pending as handle_reminders_pending, handle_ack as handle_reminder_ack
 from .routes_balance import handle_balance
+from .routes_cron import handle_list as handle_cron_list, handle_create as handle_cron_create, handle_update as handle_cron_update, handle_delete as handle_cron_delete, handle_run as handle_cron_run
 from .routes_relation import handle_relation
 from .routes_plan import handle_get as handle_plan_get, handle_put as handle_plan_put, handle_import as handle_plan_import, handle_export as handle_plan_export
 from .routes_presence import handle_get as handle_presence_get, handle_post as handle_presence_post, handle_delete as handle_presence_delete
@@ -458,7 +459,11 @@ async def start_api_server():
     app.router.add_get("/internal/state", handle_internal_state)
     app.router.add_get("/api/reminders", handle_reminders_pending)
     app.router.add_post("/api/reminders/{id}/ack", handle_reminder_ack)
-    app.router.add_get("/api/cron", handle_internal_cron)
+    app.router.add_get("/api/cron", handle_cron_list)
+    app.router.add_post("/api/cron", handle_cron_create)
+    app.router.add_patch("/api/cron/{id}", handle_cron_update)
+    app.router.add_delete("/api/cron/{id}", handle_cron_delete)
+    app.router.add_post("/api/cron/{id}/run", handle_cron_run)
     app.router.add_get("/internal/cron", handle_internal_cron)
     app.router.add_get("/internal/diary", handle_internal_diary)
     app.router.add_get("/internal/shelf", handle_internal_shelf)

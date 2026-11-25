@@ -23,14 +23,14 @@ async function save() {
   if (!content) { error.value = '请填写任务内容'; return }
   const payload = { content, schedule_type: form.value.schedule_type, at_time: form.value.at_time, enabled: form.value.enabled }
   try {
-    if (editing.value) await http.post('/api/cron/' + editing.value.id, payload)
+    if (editing.value) await http.request('/api/cron/' + editing.value.id, { method: 'PATCH', body: payload })
     else await http.post('/api/cron', payload)
     showForm.value = false; editing.value = null; await load()
   } catch (e) { error.value = e instanceof Error ? e.message : '保存失败' }
 }
 async function toggle(task: CronTask) {
   const next = !task.enabled
-  try { await http.post('/api/cron/' + task.id, { enabled: next }); task.enabled = next } catch { error.value = '启停失败' }
+  try { await http.request('/api/cron/' + task.id, { method: 'PATCH', body: { enabled: next } }); task.enabled = next } catch { error.value = '启停失败' }
 }
 async function run(task: CronTask) {
   try { await http.post('/api/cron/' + task.id + '/run', {}); error.value = `已触发：${task.content}` } catch { error.value = '运行失败' }
