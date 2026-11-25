@@ -21,6 +21,7 @@ const baseNav = [
   { page: 'cron', icon: '◷', title: '定时任务' },
   { page: 'diary', icon: '✎', title: '日记' },
   { page: 'logs', icon: '≣', title: '运行日志' },
+  { page: 'plugins', icon: '▣', title: '插件' },
 ]
 const nav = computed(() => (isOwner.value ? baseNav : baseNav.filter(n => n.page !== 'relation' && n.page !== 'savings')).filter(n => !isHidden(n.page)))
 </script>
