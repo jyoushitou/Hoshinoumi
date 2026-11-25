@@ -124,35 +124,23 @@ GET  /api/hoshinoumi/relation
 
 DSH 本机插件默认使用 owner token，所以桌面端看到的是全部目标。
 
-## Mock 网关
+## 真实网关
 
-没有真实后端时：
+生产与开发都只启动真实网关，不启动 Mock：
 
 ```powershell
-python integrations/dsh-plugin/mock_gateway.py --port 27005 --token mock-token
+gateway\build\Release\rec_gateway.exe --config gateway\build\gateway.json
 ```
 
 配置：
 
 ```text
 后端地址  http://127.0.0.1:27005
-token     mock-token
+token     真实登录 /api/login 返回的 access token
 主人 QQ   <主人QQ>
 ```
 
-Mock 支持：
-
-```text
-状态 / 记忆 / 历史 / 日志 / 计划 / 定时任务
-聊天 / 命令
-人设卡
-存钱 / 存钱导入 / 记一笔 / 关联事件
-周计划表 / 教务 HTML 导入
-API 余额
-关系（owner 与其他 target 不同）
-```
-
-Mock 数据在内存里，重启后恢复初始值；页面会明确标记 mock 来源。
+网关要求 worker 已在 27004 提供 typed protobuf 内部服务。
 
 ## 开发
 
