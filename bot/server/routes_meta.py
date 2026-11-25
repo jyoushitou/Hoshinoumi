@@ -245,6 +245,8 @@ async def handle_get_token(request):
         "port": apicfg.API_PORT,
         "endpoints": [
             {"path": "/api/health", "method": "GET", "auth": False},
+            {"path": "/api/setup", "method": "GET", "auth": True},
+            {"path": "/api/setup", "method": "POST", "auth": True},
             {"path": "/api/status", "method": "GET", "auth": True},
             {"path": "/api/groups", "method": "GET", "auth": True},
             {"path": "/api/groups", "method": "POST", "auth": True},

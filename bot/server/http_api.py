@@ -23,6 +23,7 @@ from .routes_reminders import handle_pending as handle_reminders_pending, handle
 from .routes_balance import handle_balance
 from .routes_health import handle_summary as handle_health_summary, handle_add_meal as handle_health_add_meal, handle_delete_meal as handle_health_delete_meal, handle_recognize as handle_health_recognize
 from .routes_memory import handle_item_update as handle_memory_item_update, handle_item_delete as handle_memory_item_delete
+from .routes_setup import handle_get as handle_setup_get, handle_init as handle_setup_init
 from .routes_groups import handle_list as handle_groups_list, handle_create as handle_groups_create
 from .routes_push import handle_devices as handle_push_devices, handle_register as handle_push_register, handle_delete as handle_push_delete, handle_preferences as handle_push_preferences, handle_test as handle_push_test, handle_outbox as handle_push_outbox
 from .routes_plugins import handle_list as handle_plugins_list, handle_install as handle_plugins_install, handle_toggle as handle_plugins_toggle, handle_approve as handle_plugins_approve, handle_reject as handle_plugins_reject
@@ -408,6 +409,8 @@ async def start_api_server():
     app.router.add_get("/healthz", handle_healthz)
     app.router.add_get("/readyz", handle_readyz)
     app.router.add_get("/api/health", handle_health)
+    app.router.add_get("/api/setup", handle_setup_get)
+    app.router.add_post("/api/setup", handle_setup_init)
     app.router.add_get("/api/status", handle_status)
     app.router.add_get("/api/avatar", handle_avatar)
     app.router.add_get("/api/usage", handle_usage)

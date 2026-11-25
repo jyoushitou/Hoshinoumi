@@ -48,7 +48,7 @@ namespace Gateway
             if (method == "GET")
             {
                 static const char* kExact[] = {
-                    "/api/health", "/api/status", "/api/avatar", "/api/usage", "/api/memory",
+                    "/api/health", "/api/setup", "/api/status", "/api/avatar", "/api/usage", "/api/memory",
                     "/api/logs", "/api/token", "/api/conversations", "/api/read-state",
                     "/api/commands", "/api/groups", "/api/endpoints", "/api/tools",
                     "/api/persona", "/api/savings", "/api/savings/snapshots",
@@ -75,7 +75,7 @@ namespace Gateway
             if (method == "POST")
             {
                 static const char* kExact[] = {
-                    "/api/chat", "/api/command", "/api/topic", "/api/read",
+                    "/api/setup", "/api/chat", "/api/command", "/api/topic", "/api/read",
                     "/api/persona/import", "/api/persona/activate",
                     "/api/savings/entries", "/api/savings/import", "/api/savings/snapshots",
                     "/api/weekly-plan", "/api/weekly-plan/import", "/api/plan", "/api/plan/import",
