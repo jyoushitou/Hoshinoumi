@@ -65,6 +65,7 @@ _CONTRACTS = [
     (r"/internal/history", {"GET"}),
     (r"/internal/read", {"POST"}),
     (r"/internal/messages/[^/]+/recall", {"POST"}),
+    (r"/internal/recall", {"POST"}),
     (r"/internal/topic", {"POST"}),
     (r"/internal/diary", {"GET"}),
     (r"/internal/shelf", {"GET"}),
