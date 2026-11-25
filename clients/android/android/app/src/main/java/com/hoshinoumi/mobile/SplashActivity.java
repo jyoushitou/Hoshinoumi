@@ -30,7 +30,7 @@ public class SplashActivity extends Activity {
 
         View logo = findViewById(R.id.splashLogo);
         ObjectAnimator floatAnim = ObjectAnimator.ofFloat(logo, "translationY", 0f, -8f);
-        floatAnim.setDuration(1400);
+        floatAnim.setDuration(900);
         floatAnim.setRepeatMode(ValueAnimator.REVERSE);
         floatAnim.setRepeatCount(ValueAnimator.INFINITE);
         floatAnim.setInterpolator(new DecelerateInterpolator());
@@ -38,12 +38,12 @@ public class SplashActivity extends Activity {
 
         View bar = findViewById(R.id.splashBar);
         ObjectAnimator barAnim = ObjectAnimator.ofFloat(bar, "translationX", -72f, 160f);
-        barAnim.setDuration(1200);
+        barAnim.setDuration(800);
         barAnim.setRepeatCount(ValueAnimator.INFINITE);
         barAnim.setInterpolator(new DecelerateInterpolator());
         barAnim.start();
 
-        handler.postDelayed(this::enterApp, 2200);
+        handler.postDelayed(this::enterApp, 900);
     }
 
     private void enterApp() {
