@@ -11,6 +11,7 @@ import MemoryView from '@/views/MemoryView.vue'
 import SavingsView from '@/views/SavingsView.vue'
 import DiaryView from '@/views/DiaryView.vue'
 import InfoView from '@/views/InfoView.vue'
+import HealthView from '@/views/HealthView.vue'
 import MobileLogsView from '@/views/mobile/MobileLogsView.vue'
 import { isNativeClient } from '@/lib/platform'
 import MobileWeeklyView from '@/views/mobile/MobileWeeklyView.vue'
@@ -105,6 +106,7 @@ const pageView = computed(() => {
   if (route.name === 'savings') return SavingsView
   if (route.name === 'diary') return DiaryView
   if (route.name === 'info') return InfoView
+  if (route.name === 'health') return HealthView
   if (route.name === 'logs') return MobileLogsView
   return MobilePageView
 })

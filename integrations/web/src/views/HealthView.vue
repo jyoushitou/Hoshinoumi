@@ -1,0 +1,63 @@
+<script setup lang="ts">
+import { computed, ref } from 'vue'
+
+interface Meal { id: number; name: string; kcal: number; time: string }
+const target = ref(2000)
+const burn = ref(320)
+const weight = ref(52.4)
+const meals = ref<Meal[]>([
+  { id: 1, name: '早餐 · 三明治', kcal: 420, time: '08:10' },
+  { id: 2, name: '午餐 · 鸡胸饭', kcal: 680, time: '12:20' },
+  { id: 3, name: '加餐 · 酸奶', kcal: 160, time: '15:40' },
+])
+const intake = computed(() => meals.value.reduce((sum, meal) => sum + meal.kcal, 0))
+const remaining = computed(() => target.value + burn.value - intake.value)
+const percent = computed(() => Math.max(0, Math.min(100, Math.round((intake.value / Math.max(1, target.value)) * 100))))
+const form = ref({ name: '', kcal: '' })
+function addMeal() {
+  const name = form.value.name.trim()
+  const kcal = Number(form.value.kcal)
+  if (!name || !Number.isFinite(kcal) || kcal <= 0) return
+  meals.value.push({ id: Date.now(), name, kcal: Math.round(kcal), time: new Date().toTimeString().slice(0, 5) })
+  form.value = { name: '', kcal: '' }
+}
+function removeMeal(id: number) { meals.value = meals.value.filter(meal => meal.id !== id) }
+</script>
+
+<template>
+  <section class="health">
+    <header class="head">
+      <div><h1>健康 / 热量</h1><p>今日摄入 · 目标 · 运动 · 体重</p></div>
+      <RouterLink to="/info" class="back">返回信息</RouterLink>
+    </header>
+    <div class="hero">
+      <div class="ring" :style="{ '--p': percent + '%' }"><div class="ring-inner"><b>{{ intake }}</b><small>kcal 摄入</small></div></div>
+      <div class="hero-copy"><small>今日目标</small><b>{{ target }} kcal</b><span>运动消耗 {{ burn }} kcal · 剩余 {{ remaining }} kcal</span><span>体重 {{ weight }} kg</span></div>
+      <div class="hero-stats"><div><small>已摄入</small><b>{{ intake }}</b></div><div><small>剩余</small><b>{{ remaining }}</b></div><div><small>完成度</small><b>{{ percent }}%</b></div></div>
+    </div>
+    <div class="grid">
+      <div class="panel">
+        <div class="panel-title">今日饮食 <span>{{ meals.length }} 条</span></div>
+        <div v-for="meal in meals" :key="meal.id" class="meal"><div><b>{{ meal.name }}</b><small>{{ meal.time }}</small></div><em>{{ meal.kcal }} kcal</em><button type="button" @click="removeMeal(meal.id)">×</button></div>
+        <div v-if="!meals.length" class="empty">今天还没有记录</div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">记一笔 <span>手动 / 识图</span></div>
+        <label class="field">食物<input v-model="form.name" placeholder="例如：鸡胸饭"></label>
+        <label class="field">热量 kcal<input v-model="form.kcal" inputmode="numeric" placeholder="例如：680"></label>
+        <button class="primary" type="button" @click="addMeal">添加记录</button>
+        <button class="ghost" type="button" disabled>拍照识别（待接入）</button>
+        <p class="note">热量为估算值；识图与健康 API 在 v35.9.6.6 / .7 接入。</p>
+      </div>
+    </div>
+  </section>
+</template>
+
+<style scoped>
+.health{flex:1;min-height:0;overflow:auto;padding:18px 18px 24px;background:#f7faff;color:#17263b;box-sizing:border-box}.head{display:flex;align-items:flex-end;gap:10px;margin-bottom:12px}.head h1{margin:0;font-size:24px;letter-spacing:-.03em}.head p{margin:3px 0 0;font-size:10px;color:#8a9bb0}.back{margin-left:auto;font-size:9px;color:#2563eb;text-decoration:none;border:1px solid #dbe8ff;border-radius:8px;background:#fff;padding:5px 9px}
+.hero{display:flex;align-items:center;gap:16px;background:#fff;border:1px solid #e3ebf7;border-radius:14px;padding:16px;margin-bottom:10px;flex-wrap:wrap}.ring{width:104px;height:104px;border-radius:50%;background:conic-gradient(#2563eb var(--p),#e8effa 0);display:grid;place-items:center;flex:none}.ring-inner{width:78px;height:78px;border-radius:50%;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center}.ring-inner b{font-size:20px;color:#1e3a5f}.ring-inner small{font-size:7px;color:#8a9bb0;margin-top:2px}.hero-copy small{display:block;font-size:8px;color:#9aabc0}.hero-copy b{display:block;font-size:20px;color:#1d4ed8;margin:2px 0}.hero-copy span{display:block;font-size:8.5px;color:#7d8ca3;line-height:1.7}.hero-stats{margin-left:auto;display:grid;gap:5px;min-width:88px}.hero-stats div{display:flex;justify-content:space-between;gap:9px;font-size:8px;color:#8a9bb0}.hero-stats b{color:#314a65}
+.grid{display:grid;grid-template-columns:1.4fr 1fr;gap:9px}.panel{background:#fff;border:1px solid #e3ebf7;border-radius:12px;padding:12px}.panel-title{display:flex;justify-content:space-between;font-size:10px;font-weight:700;color:#314a65;margin-bottom:8px}.panel-title span{font-weight:400;font-size:8px;color:#9aabc0}.meal{display:flex;align-items:center;gap:7px;padding:8px 0;border-bottom:1px solid #f1f5fb}.meal:last-child{border-bottom:0}.meal b{display:block;font-size:9.5px;color:#314a65}.meal small{display:block;font-size:7.5px;color:#9aabc0;margin-top:2px}.meal em{font-style:normal;font-size:9px;color:#2563eb;margin-left:auto}.meal button{border:0;background:none;color:#b0bfd1;font:14px inherit;cursor:pointer;padding:0 2px}.empty{text-align:center;color:#9aabc0;font-size:9px;padding:18px}
+.field{display:block;font-size:8.5px;color:#8a9bb0;margin-bottom:8px}.field input{display:block;width:100%;height:30px;border:1px solid #dbe8ff;border-radius:7px;background:#f8fbff;padding:0 8px;font:10px inherit;outline:0;margin-top:3px;box-sizing:border-box}.primary{width:100%;height:32px;border:0;border-radius:8px;background:#2563eb;color:#fff;font:10px inherit;font-weight:700;cursor:pointer}.ghost{width:100%;height:30px;margin-top:6px;border:1px solid #dbe8ff;border-radius:8px;background:#fff;color:#8a9bb0;font:9px inherit}.note{font-size:7.5px;color:#9aabc0;line-height:1.6;margin:8px 0 0}
+@media(min-width:821px){.health{padding:22px 24px}.grid{grid-template-columns:1.4fr 1fr}}
+@media(max-width:820px){.health{padding:16px 14px 18px}.grid{grid-template-columns:1fr}.hero{gap:10px}.hero-stats{margin-left:0;width:100%;grid-template-columns:repeat(3,1fr)}.hero-stats div{flex-direction:column;gap:1px}}
+</style>

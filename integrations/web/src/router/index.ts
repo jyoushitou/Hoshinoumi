@@ -6,6 +6,7 @@ import MemoryView from '@/views/MemoryView.vue'
 import SavingsView from '@/views/SavingsView.vue'
 import DiaryView from '@/views/DiaryView.vue'
 import InfoView from '@/views/InfoView.vue'
+import HealthView from '@/views/HealthView.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useSessionStore } from '@/stores/session'
 import MobilePermissionsView from '@/views/mobile/MobilePermissionsView.vue'
@@ -22,6 +23,7 @@ const router = createRouter({
     { path: '/savings', name: 'savings', component: SavingsView, meta: { ...meta('存钱', '总余额 / 账户 / 记一笔 / CSV 导入'), ownerOnly: true } },
     { path: '/weekly', name: 'weekly', component: PageView, meta: meta('周计划表', '按周配置节次与时间') },
     { path: '/info', name: 'info', component: InfoView, meta: meta('信息', '运行 / 配置 / 备份 / 账号 / 阅读 / 网关') },
+    { path: '/health', name: 'health', component: HealthView, meta: meta('健康 / 热量', '摄入 / 目标 / 运动 / 体重') },
     { path: '/persona', name: 'persona', component: PageView, meta: meta('人设', '导入 / 导出 / 激活') },
     { path: '/commands', name: 'commands', component: CommandView, meta: meta('命令', '51 个命令 / 参数 / 二级命令') },
     { path: '/cron', name: 'cron', component: PageView, meta: meta('定时任务', '新增 / 编辑 / 启停 / 删除') },
