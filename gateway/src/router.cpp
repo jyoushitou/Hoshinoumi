@@ -48,13 +48,16 @@ namespace Gateway
             if (method == "GET")
             {
                 static const char* kExact[] = {
-                    "/api/status", "/api/usage", "/api/memory", "/api/persona",
-                    "/api/savings", "/api/balance", "/api/relation", "/api/logs",
-                    "/api/commands", "/api/state", "/api/presence", "/api/cron",
-                    "/api/diary", "/api/shelf", "/api/weekly-plan", "/api/weekly-plan/weeks",
-                    "/api/savings/snapshots", "/api/savings/reconcile", "/api/health/summary",
-                    "/api/plugins", "/api/push/devices", "/api/push/preferences",
-                    "/api/push/outbox", "/api/groups", "/api/conversations",
+                    "/api/health", "/api/status", "/api/avatar", "/api/usage", "/api/memory",
+                    "/api/logs", "/api/token", "/api/conversations", "/api/read-state",
+                    "/api/commands", "/api/groups", "/api/endpoints", "/api/tools",
+                    "/api/persona", "/api/savings", "/api/savings/snapshots",
+                    "/api/savings/reconcile", "/api/savings/events", "/api/balance",
+                    "/api/health/summary", "/api/push/devices", "/api/push/preferences",
+                    "/api/push/outbox", "/api/plugins", "/api/relation",
+                    "/api/weekly-plan/weeks", "/api/weekly-plan", "/api/plan",
+                    "/api/plan/export", "/api/presence", "/api/state", "/api/reminders",
+                    "/api/cron", "/api/diary", "/api/shelf", "/api/history",
                 };
                 for (const auto* item : kExact)
                 {
@@ -63,6 +66,7 @@ namespace Gateway
                 return StartsWith(path, "/api/persona/export") ||
                        StartsWith(path, "/api/history") ||
                        StartsWith(path, "/api/diary/") ||
+                       StartsWith(path, "/api/endpoints/") ||
                        StartsWith(path, "/api/health/meals");
             }
             if (method == "POST")
@@ -71,16 +75,20 @@ namespace Gateway
                     "/api/chat", "/api/command", "/api/topic", "/api/read",
                     "/api/persona/import", "/api/persona/activate",
                     "/api/savings/entries", "/api/savings/import", "/api/savings/snapshots",
-                    "/api/weekly-plan", "/api/weekly-plan/import",
+                    "/api/weekly-plan", "/api/weekly-plan/import", "/api/plan", "/api/plan/import",
                     "/api/health/meals", "/api/health/recognize",
                     "/api/plugins/install", "/api/push/devices", "/api/push/test",
-                    "/api/groups",
+                    "/api/groups", "/api/endpoints", "/api/reminders",
                 };
                 for (const auto* item : kExact)
                 {
                     if (path == item) return true;
                 }
                 return StartsWith(path, "/api/messages/") ||
+                       StartsWith(path, "/api/tools/") ||
+                       StartsWith(path, "/api/endpoints/") ||
+                       StartsWith(path, "/api/reminders/") ||
+                       StartsWith(path, "/api/cron/") ||
                        (StartsWith(path, "/api/plugins/") &&
                         (EndsWith(path, "/toggle") || EndsWith(path, "/approve") || EndsWith(path, "/reject")));
             }
@@ -91,7 +99,8 @@ namespace Gateway
             if (method == "DELETE")
             {
                 return StartsWith(path, "/api/health/meals/") ||
-                       StartsWith(path, "/api/push/devices/");
+                       StartsWith(path, "/api/push/devices/") ||
+                       StartsWith(path, "/api/endpoints/");
             }
             return false;
         }
