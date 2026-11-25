@@ -2,10 +2,14 @@
 # 只读 personas/<name>/，给 DSH 插件展示真实人设卡。
 # 不返回完整 prompt 给非 owner；DSH 的 API token 本身是 owner。
 from pathlib import Path
+import base64
+import io
 import json
 import os
 import shutil
 import tempfile
+import zipfile
+from aiohttp import web
 
 from ..ai import persona_loader
 from .common import json_response
@@ -49,6 +53,7 @@ def _summary(name: str, full=False):
     prompt = _read_text(d / "prompt.txt", 160) or ""
     item = {
         "name": name,
+        "display": _read_text(d / "display.txt", 80) or name,
         "active": persona_loader.active_name() == name,
         "files": {
             "prompt": (d / "prompt.txt").is_file(),
@@ -106,7 +111,22 @@ async def handle_export(request):
     item = _summary(name, full=True)
     if not item:
         return json_response({"ok": False, "error": "persona_not_found"}, 404)
-    return json_response({"ok": True, "data": item})
+    if (request.query.get("format") or "package") == "json":
+        return json_response({"ok": True, "data": item})
+    buffer = io.BytesIO()
+    folder = CARD_ROOT / name
+    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr("name.txt", name)
+        for filename in ("display.txt", "prompt.txt", "life.txt", "supplement.txt", "state.json", "voice.json"):
+            path = folder / filename
+            if path.is_file():
+                archive.writestr(filename, path.read_bytes())
+    payload = buffer.getvalue()
+    return web.Response(body=payload, content_type="application/octet-stream", headers={
+        "Content-Disposition": f'attachment; filename="{name}.hoshinoumi.persona"',
+        "Content-Length": str(len(payload)),
+        "Access-Control-Allow-Origin": "*",
+    })
 
 
 async def handle_import(request):
@@ -116,7 +136,27 @@ async def handle_import(request):
         return json_response({"ok": False, "error": "invalid_json"}, 400)
     if not isinstance(body, dict):
         return json_response({"ok": False, "error": "invalid_body"}, 400)
-    data = body.get("data") if isinstance(body.get("data"), dict) else body
+    if body.get("package_base64"):
+        try:
+            raw = base64.b64decode(str(body.get("package_base64")), validate=True)
+            with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+                names = archive.namelist()
+                if len(names) > 20 or any(("/" in n or "\\" in n or n.startswith("..")) for n in names):
+                    raise ValueError("非法包路径")
+                package_name = archive.read("name.txt").decode("utf-8").strip() if "name.txt" in names else ""
+                name = _safe_name(str(body.get("name") or package_name))
+                if not name or "prompt.txt" not in names:
+                    raise ValueError("包缺少 name.txt / prompt.txt")
+                def read_text(filename):
+                    return archive.read(filename).decode("utf-8") if filename in names else ""
+                data = {"name": name, "display": read_text("display.txt").strip(), "prompt": read_text("prompt.txt"), "supplement": read_text("supplement.txt"), "life": read_text("life.txt")}
+                for filename, key in (("state.json", "state"), ("voice.json", "voice")):
+                    if filename in names:
+                        data[key] = json.loads(archive.read(filename).decode("utf-8"))
+        except Exception as exc:
+            return json_response({"ok": False, "error": "bad_package", "message": str(exc)}, 400)
+    else:
+        data = body.get("data") if isinstance(body.get("data"), dict) else body
     name = _safe_name(data.get("name", ""))
     if not name:
         return json_response({"ok": False, "error": "bad_name"}, 400)
@@ -134,6 +174,7 @@ async def handle_import(request):
     try:
         files = {
             "prompt.txt": prompt.strip() + "\n",
+            "display.txt": str(data.get("display") or name).strip() + "\n",
             "supplement.txt": str(data.get("supplement") or "").strip() + ("\n" if data.get("supplement") else ""),
             "life.txt": str(data.get("life") or "").strip() + ("\n" if data.get("life") else ""),
         }

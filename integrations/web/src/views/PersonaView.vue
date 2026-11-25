@@ -41,21 +41,31 @@ async function activate(persona: Persona) {
 }
 async function exportPersona(persona: Persona) {
   try {
-    const result = await http.get<{ data?: Persona }>('/api/persona/export?name=' + encodeURIComponent(persona.name))
-    const blob = new Blob([JSON.stringify(result.data || persona, null, 2)], { type: 'application/json' })
-    const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `${persona.name}.persona.json`; link.click(); URL.revokeObjectURL(link.href)
-    notice.value = `已导出 ${persona.name}`
+    const token = localStorage.getItem('hsh_web_token') || ''
+    const response = await fetch(`/api/persona/export?name=${encodeURIComponent(persona.name)}&format=package`, { headers: token ? { authorization: `Bearer ${token}` } : {} })
+    if (!response.ok) throw new Error(await response.text())
+    const blob = await response.blob()
+    const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `${persona.name}.hoshinoumi.persona`; link.click(); URL.revokeObjectURL(link.href)
+    notice.value = `已导出 ${persona.name}.hoshinoumi.persona`
   } catch { error.value = '导出失败' }
 }
 async function importFile(event: Event) {
   const file = (event.target as HTMLInputElement).files?.[0]
   if (!file) return
-  if (!/\.json$/i.test(file.name)) { error.value = '只支持 JSON 人设卡'; return }
   try {
-    const data = JSON.parse(await file.text())
-    if (!data?.name || !data?.prompt) { error.value = '人设卡需要 name 和 prompt'; return }
-    await http.post('/api/persona/import', { data, overwrite: true })
-    await load(); notice.value = `已导入 ${data.name}`
+    if (/\.hoshinoumi\.persona$/i.test(file.name)) {
+      const dataBase64 = await new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result || '').split(',')[1] || ''); reader.onerror = () => reject(new Error('read_failed')); reader.readAsDataURL(file) })
+      const packageName = file.name.replace(/\.hoshinoumi\.persona$/i, '')
+      await http.post('/api/persona/import', { package_base64: dataBase64, name: packageName, overwrite: true })
+      await load(); notice.value = `已导入 ${packageName}.hoshinoumi.persona`
+    } else if (/\.json$/i.test(file.name)) {
+      const data = JSON.parse(await file.text())
+      if (!data?.name || !data?.prompt) { error.value = '人设卡需要 name 和 prompt'; return }
+      await http.post('/api/persona/import', { data, overwrite: true })
+      await load(); notice.value = `已导入 ${data.name}`
+    } else {
+      error.value = '只支持 .hoshinoumi.persona 或 .json'
+    }
   } catch (e) { error.value = e instanceof Error ? e.message : '导入失败' } finally { if (fileInput.value) fileInput.value.value = '' }
 }
 onMounted(load)
@@ -65,7 +75,7 @@ onMounted(load)
   <section class="persona-page">
     <header class="head"><div><h1>人设</h1><p>v35.5 Web 演示 · MOCK 数据 · 导入 / 导出 / 激活</p></div></header>
     <div class="toolbar">
-      <label class="btn">导入人设卡 JSON<input ref="fileInput" type="file" accept=".json,application/json" @change="importFile"></label>
+      <label class="btn">导入人设卡 JSON<input ref="fileInput" type="file" accept=".hoshinoumi.persona,.json,application/json" @change="importFile"></label>
       <span class="hint">只读预览 · 仅 owner 可激活/导入</span>
     </div>
     <div class="backend">数据源 <b>/api/persona</b> · schema 35 · 当前激活 {{ activeName }} · {{ personas.length }} 个</div>

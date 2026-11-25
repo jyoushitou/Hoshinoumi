@@ -24,10 +24,12 @@ import uuid
 import os
 import re
 import hashlib
+import io
 import base64
 import struct
 import tempfile
 import zlib
+import zipfile
 import urllib.request
 from datetime import datetime, timedelta
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -497,6 +499,20 @@ def _persona_cards(full=False):
                     out.append(item)
     return out
 
+
+def _persona_package_bytes(name):
+    folder = PERSONA_ROOT / name
+    if not folder.is_dir():
+        return None
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr("name.txt", name)
+        for filename in ("display.txt", "prompt.txt", "life.txt", "supplement.txt", "state.json", "voice.json"):
+            path = folder / filename
+            if path.is_file():
+                archive.writestr(filename, path.read_bytes())
+    return buffer.getvalue()
+
 class Handler(BaseHTTPRequestHandler):
     server_version = "HoshinoumiMock/" + VERSION
     token = "mock-token"
@@ -826,8 +842,22 @@ class Handler(BaseHTTPRequestHandler):
             return
         if path == "/api/persona/export":
             name = _safe_persona_name((q.get("name") or [""])[0])
-            item = _persona_card(name, full=True) if name else None
-            self._json(200 if item else 404, {"ok": bool(item), "data": item})
+            if not name:
+                self._json(400, {"ok": False, "error": "bad_name"}); return
+            item = _persona_card(name, full=True)
+            if not item:
+                self._json(404, {"ok": False, "error": "persona_not_found"}); return
+            fmt = (q.get("format") or ["package"])[0]
+            if fmt == "json":
+                self._json(200, {"ok": True, "data": item}); return
+            payload = _persona_package_bytes(name)
+            self.send_response(200)
+            self.send_header("Content-Type", "application/octet-stream")
+            self.send_header("Content-Disposition", f'attachment; filename="{name}.hoshinoumi.persona"')
+            self.send_header("Content-Length", str(len(payload)))
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(payload)
             return
         if path == "/api/savings/overview":
             frozen = sum(int(x.get("amount_cents") or 0) for x in SAVINGS.get("frozen", []))
@@ -1294,6 +1324,28 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200, {"ok": True, "target_id": target, "last_read_id": READS[target], "unread": len([x for x in _history(target) if int(x.get("id") or 0) > READS[target]]), "mock": True})
             return
         if path == "/api/persona/import":
+            if body.get("package_base64"):
+                try:
+                    raw = base64.b64decode(str(body.get("package_base64")), validate=True)
+                    with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+                        names = archive.namelist()
+                        if len(names) > 20 or any(("/" in n or "\\" in n or n.startswith("..")) for n in names):
+                            raise ValueError("非法包路径")
+                        package_name = archive.read("name.txt").decode("utf-8").strip() if "name.txt" in names else ""
+                        name = _safe_persona_name(str(body.get("name") or package_name))
+                        if not name or "prompt.txt" not in names:
+                            raise ValueError("包缺少 name.txt / prompt.txt")
+                        target = PERSONA_ROOT / name
+                        if target.exists() and not body.get("overwrite"):
+                            self._json(409, {"ok": False, "error": "exists"}); return
+                        target.mkdir(parents=True, exist_ok=True)
+                        allowed = {"display.txt", "prompt.txt", "life.txt", "supplement.txt", "state.json", "voice.json"}
+                        for filename in allowed:
+                            if filename in names:
+                                (target / filename).write_bytes(archive.read(filename))
+                    self._json(200, {"ok": True, "data": _persona_card(name, full=False), "source": "package", "mock": True}); return
+                except Exception as exc:
+                    self._json(400, {"ok": False, "error": "bad_package", "message": str(exc)}); return
             data = body.get("data") if isinstance(body.get("data"), dict) else body
             name = _safe_persona_name(data.get("name"))
             prompt = str(data.get("prompt") or "").strip()
