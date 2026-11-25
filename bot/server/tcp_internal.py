@@ -49,7 +49,7 @@ async def dispatch(req: P.InternalRequest):
     import os as _os
     if _os.name == "nt":
         internal_port = int(_os.getenv("NAO_INTERNAL_API_PORT", "27007"))
-        connector = aiohttp.TCPConnector(host="127.0.0.1", port=internal_port)
+        connector = aiohttp.TCPConnector()
         base_url = f"http://127.0.0.1:{internal_port}"
     else:
         connector = aiohttp.UnixConnector(path=worker.internal_api_socket())

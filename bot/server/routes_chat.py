@@ -285,3 +285,23 @@ async def handle_commands(request):
             "subcommands": [],
         })
     return json_response({"ok": True, "count": len(rows), "data": rows})
+
+
+async def handle_history(request):
+    """GET /api/history?target_id=...：owner 的会话历史。"""
+    from ..infra import repo_conversation, tenant
+    target = (request.query.get("target_id") or "").strip()
+    if not target:
+        return json_response({"ok": False, "error": "target_id required"}, status=400)
+    try:
+        limit = int(request.query.get("limit") or 100)
+    except ValueError:
+        limit = 100
+    rows = repo_conversation.recent(target, limit=limit, user_id=tenant.owner_id())
+    data = []
+    for r in rows:
+        item = dict(r)
+        if item.get("created_at") is not None:
+            item["created_at"] = str(item["created_at"])
+        data.append(item)
+    return json_response({"ok": True, "data": data})
