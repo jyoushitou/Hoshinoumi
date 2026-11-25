@@ -13,19 +13,15 @@ const visible = computed(() => rows.value.filter(row => (level.value === 'ALL' |
 const counts = computed(() => ({ INFO: rows.value.filter(r => r.level === 'INFO').length, WARN: rows.value.filter(r => r.level === 'WARN').length, ERROR: rows.value.filter(r => r.level === 'ERROR').length }))
 function parse(line: string): LogRow {
   const raw = String(line || '').trimEnd()
-  const bracket = raw.match(/^\[(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2}:\d{2})\]\s*(.*)$/)
-  if (bracket) {
-    const body = bracket[3]
-    const level: LogRow['level'] = /(错误|失败|异常|ERROR|ERR)/i.test(body) ? 'ERROR' : /(警告|降级|WARN)/i.test(body) ? 'WARN' : 'INFO'
-    return { time: `${bracket[1]} ${bracket[2]}`, level, text: body.replace(/^\[[^\]]+\]\s*/, ''), raw }
-  }
-  const match = raw.match(/^(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2}:\d{2})\s+(INFO|WARN|ERROR|ERR)\s+(.*)$/)
+  const match = raw.match(/^\[(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2}:\d{2})\]\s*\[([^\]]+)\]\s*(.*)$/)
   if (!match) return { time: '', level: 'INFO', text: raw, raw }
-  return { time: `${match[1]} ${match[2]}`, level: (match[3] === 'ERR' ? 'ERROR' : match[3]) as LogRow['level'], text: match[4], raw }
+  const body = match[4]
+  const level: LogRow['level'] = /(错误|失败|异常|ERROR|ERR)/i.test(body) ? 'ERROR' : /(警告|降级|WARN)/i.test(body) ? 'WARN' : 'INFO'
+  return { time: `${match[1]} ${match[2]}`, level, text: body, raw }
 }
 async function load() {
   loading.value = true; error.value = ''
-  try { const result = await http.get<{ logs?: string[] | string }>('/api/logs?limit=200'); const raw = result.logs; const lines = Array.isArray(raw) ? raw : String(raw || '').split(/\r?\n/).filter(Boolean); rows.value = lines.map(parse) }
+  try { const result = await http.get<{ logs: string[] }>('/api/logs?limit=200'); rows.value = result.logs.map(parse) }
   catch { error.value = '无法读取运行日志' } finally { loading.value = false }
 }
 onMounted(load)

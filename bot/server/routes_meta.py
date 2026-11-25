@@ -189,9 +189,10 @@ async def handle_logs(request):
 
     try:
         logs_text = get_recent_logs(limit)
+        lines = [line for line in str(logs_text).splitlines() if line.strip()]
         return json_response({
-            "count": limit,
-            "logs": logs_text,
+            "count": len(lines),
+            "logs": lines,
         })
     except Exception as e:
         return json_response({"error": "log_query_failed", "message": str(e)}, 500)

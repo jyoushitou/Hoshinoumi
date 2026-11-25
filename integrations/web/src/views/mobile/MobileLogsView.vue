@@ -11,25 +11,19 @@ const error = ref('')
 
 const visible = computed(() => logs.value.filter(row => (level.value === 'ALL' || row.level === level.value) && (!query.value.trim() || row.text.toLowerCase().includes(query.value.trim().toLowerCase()))))
 
-function parseLog(line: string): LogRow {
+function parseLog(line: string) {
   const raw = String(line || '').trimEnd()
-  const bracket = raw.match(/^\[(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2}:\d{2})\]\s*(.*)$/)
-  if (bracket) {
-    const body = bracket[3]
-    const level = /(错误|失败|异常|ERROR|ERR)/i.test(body) ? 'ERROR' : /(警告|降级|WARN)/i.test(body) ? 'WARN' : 'INFO'
-    return { time: `${bracket[1].slice(5)} ${bracket[2].slice(0, 5)}`, level, text: body.replace(/^\[[^\]]+\]\s*/, '') }
-  }
-  const match = raw.match(/^(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2}:\d{2})\s+(INFO|WARN|ERROR|ERR)\s+(.*)$/)
+  const match = raw.match(/^\[(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2}:\d{2})\]\s*\[([^\]]+)\]\s*(.*)$/)
   if (!match) return { time: '', level: 'INFO', text: raw }
-  return { time: `${match[1].slice(5)} ${match[2].slice(0, 5)}`, level: match[3] === 'ERR' ? 'ERROR' : match[3], text: match[4] }
+  const body = match[4]
+  const level = /(错误|失败|异常|ERROR|ERR)/i.test(body) ? 'ERROR' : /(警告|降级|WARN)/i.test(body) ? 'WARN' : 'INFO'
+  return { time: `${match[1].slice(5)} ${match[2].slice(0, 5)}`, level, text: body }
 }
 async function load() {
   loading.value = true; error.value = ''
   try {
-    const result = await http.get<{ logs?: string[] | string }>('/api/logs?limit=200')
-    const raw = result.logs
-    const lines = Array.isArray(raw) ? raw : String(raw || '').split(/\r?\n/).filter(Boolean)
-    logs.value = lines.map(parseLog)
+    const result = await http.get<{ logs: string[] }>('/api/logs?limit=200')
+    logs.value = result.logs.map(parseLog)
   } catch { error.value = '无法读取运行日志，请确认后端可用' } finally { loading.value = false }
 }
 onMounted(load)
