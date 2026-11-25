@@ -17,6 +17,8 @@ const DB_NAME = 'hoshinoumi-stickers'
 const STORE = 'stickers'
 const MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000
 const MAX_BYTES = 200 * 1024 * 1024
+const LAST_CLEANUP_KEY = 'hoshinoumi.stickers.lastCleanup'
+export interface StickerCacheStats { count: number; bytes: number; lastCleanupAt: number }
 
 function openDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -76,8 +78,8 @@ async function touchRecord(record: StickerRecord): Promise<void> {
   await writeRecord(record)
 }
 
-export async function cleanupStickerCache(now = Date.now()): Promise<void> {
-  if (typeof indexedDB === 'undefined') return
+export async function cleanupStickerCache(now = Date.now()): Promise<StickerCacheStats> {
+  if (typeof indexedDB === 'undefined') return { count: 0, bytes: 0, lastCleanupAt: 0 }
   const db = await openDb()
   try {
     const tx = db.transaction(STORE, 'readwrite')
@@ -95,9 +97,24 @@ export async function cleanupStickerCache(now = Date.now()): Promise<void> {
       tx.oncomplete = () => resolve()
       tx.onerror = () => reject(tx.error ?? new Error('cleanup sticker failed'))
     })
+    const stats = { count: all.filter(row => row.lastUsedAt && now - Number(row.lastUsedAt) <= MAX_AGE_MS).length, bytes: alive.reduce((sum, row) => sum + Number(row.bytes || 0), 0), lastCleanupAt: now }
+    try { localStorage.setItem(LAST_CLEANUP_KEY, String(now)) } catch { /* ignore */ }
+    return stats
   } finally {
     db.close()
   }
+}
+
+export async function getStickerCacheStats(): Promise<StickerCacheStats> {
+  let lastCleanupAt = 0
+  try { lastCleanupAt = Number(localStorage.getItem(LAST_CLEANUP_KEY) || 0) } catch { /* ignore */ }
+  if (typeof indexedDB === 'undefined') return { count: 0, bytes: 0, lastCleanupAt }
+  const db = await openDb()
+  try {
+    const tx = db.transaction(STORE, 'readonly')
+    const all = (await requestToPromise(tx.objectStore(STORE).getAll())) as StickerRecord[]
+    return { count: all.length, bytes: all.reduce((sum, row) => sum + Number(row.bytes || 0), 0), lastCleanupAt }
+  } finally { db.close() }
 }
 
 export async function getStickerDataUrl(sticker: StickerMeta): Promise<string> {

@@ -4,10 +4,12 @@ import AppShell from '@/layouts/AppShell.vue'
 import MobileShell from '@/layouts/MobileShell.vue'
 import LoginModal from '@/components/LoginModal.vue'
 import { useAuthStore } from '@/stores/auth'
+import { cleanupStickerCache } from '@/lib/stickerCache'
 const auth = useAuthStore()
 const isMobile = ref(false)
 let media: MediaQueryList | null = null
 let viewportRaf = 0
+let stickerCleanupTimer: ReturnType<typeof setInterval> | null = null
 function syncViewport() {
   cancelAnimationFrame(viewportRaf)
   viewportRaf = requestAnimationFrame(() => {
@@ -33,6 +35,8 @@ onMounted(() => {
   media.addEventListener('change', sync)
   window.addEventListener('resize', syncViewport, { passive: true })
   window.addEventListener('orientationchange', syncViewport, { passive: true })
+  void cleanupStickerCache()
+  stickerCleanupTimer = setInterval(() => { void cleanupStickerCache() }, 6 * 60 * 60 * 1000)
   void auth.validate()
 })
 onBeforeUnmount(() => {
@@ -40,6 +44,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('resize', syncViewport)
   window.removeEventListener('orientationchange', syncViewport)
   cancelAnimationFrame(viewportRaf)
+  if (stickerCleanupTimer) clearInterval(stickerCleanupTimer)
 })
 </script>
 <template>
