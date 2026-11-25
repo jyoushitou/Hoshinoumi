@@ -156,12 +156,12 @@ async def handle_conversations(request):
     owner = str(tenant.owner_id())
     # Web 端人设会话独立于 QQ 私聊，避免共享同一份历史
     merged.pop(owner, None)
-    if WEB_PERSONA_TARGET not in merged:
-        merged[WEB_PERSONA_TARGET] = {
-            "target_id": WEB_PERSONA_TARGET, "type": "private", "name": "友利奈绪",
-            "member_count": 0, "count": 0, "last_message": "",
-            "last_role": "", "updated_at": "", "persona": True,
-        }
+    persona_row = merged.get(WEB_PERSONA_TARGET) or {
+        "target_id": WEB_PERSONA_TARGET, "count": 0, "last_message": "",
+        "last_role": "", "updated_at": "",
+    }
+    persona_row.update({"type": "private", "name": "友利奈绪", "member_count": 0, "persona": True})
+    merged[WEB_PERSONA_TARGET] = persona_row
     out = sorted(merged.values(), key=lambda x: str(x.get("updated_at") or ""), reverse=True)[:100]
     return json_response({"ok": True, "data": out})
 
