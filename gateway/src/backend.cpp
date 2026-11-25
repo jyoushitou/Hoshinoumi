@@ -37,6 +37,39 @@ namespace Gateway
             return "gw-be-" + std::to_string(++seq);
         }
 
+        std::string UrlDecode(const std::string& value)
+        {
+            std::string out;
+            out.reserve(value.size());
+            for (std::size_t i = 0; i < value.size(); ++i)
+            {
+                if (value[i] == '+')
+                {
+                    out.push_back(' ');
+                }
+                else if (value[i] == '%' && i + 2 < value.size())
+                {
+                    const auto hex = value.substr(i + 1, 2);
+                    char* end = nullptr;
+                    const long code = std::strtol(hex.c_str(), &end, 16);
+                    if (end != nullptr && *end == '\0')
+                    {
+                        out.push_back(static_cast<char>(code));
+                        i += 2;
+                    }
+                    else
+                    {
+                        out.push_back(value[i]);
+                    }
+                }
+                else
+                {
+                    out.push_back(value[i]);
+                }
+            }
+            return out;
+        }
+
         std::pair<std::string, std::map<std::string, std::string>> SplitQuery(const std::string& path)
         {
             std::map<std::string, std::string> query;
@@ -55,11 +88,11 @@ namespace Gateway
                 const auto eq = part.find('=');
                 if (eq != std::string::npos)
                 {
-                    query[part.substr(0, eq)] = part.substr(eq + 1);
+                    query[UrlDecode(part.substr(0, eq))] = UrlDecode(part.substr(eq + 1));
                 }
                 else if (!part.empty())
                 {
-                    query[part] = "";
+                    query[UrlDecode(part)] = "";
                 }
                 if (end == std::string::npos) break;
                 start = end + 1;

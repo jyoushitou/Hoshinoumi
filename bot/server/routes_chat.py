@@ -9,6 +9,8 @@ from ..infra.repo_ai import get_recent_usage
 from ..log import log_err
 from .common import json_response, format_dt
 
+WEB_PERSONA_TARGET = "persona:nao"
+
 
 def _clean_api_segments(text: str) -> list[str]:
     """把模型原始五行输出拆成用户可见气泡，剥离内部元数据。"""
@@ -152,11 +154,13 @@ async def handle_conversations(request):
         row["last_read_id"] = read_state.last_read(uid, row["target_id"])
         row["unread"] = read_state.unread_count(uid, row["target_id"])
     owner = str(tenant.owner_id())
-    if owner not in merged:
-        merged[owner] = {
-            "target_id": owner, "type": "private", "name": "奈绪",
+    # Web 端人设会话独立于 QQ 私聊，避免共享同一份历史
+    merged.pop(owner, None)
+    if WEB_PERSONA_TARGET not in merged:
+        merged[WEB_PERSONA_TARGET] = {
+            "target_id": WEB_PERSONA_TARGET, "type": "private", "name": "友利奈绪",
             "member_count": 0, "count": 0, "last_message": "",
-            "last_role": "", "updated_at": "",
+            "last_role": "", "updated_at": "", "persona": True,
         }
     out = sorted(merged.values(), key=lambda x: str(x.get("updated_at") or ""), reverse=True)[:100]
     return json_response({"ok": True, "data": out})
