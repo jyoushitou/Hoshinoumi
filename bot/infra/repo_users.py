@@ -371,9 +371,10 @@ def verify_login(user_id, password, setup_code=None):
     if row.get("status") != "active":
         return None, "banned"
     if needs_password(row):
-        # 首次登录：直接设置新密码；有 setup code 时仍校验它
-        if setup_code and not verify_setup_code(user_id, setup_code, row):
-            return None, "password_setup_required"
+        # owner 账号可直接初始化；普通用户必须有 owner 添加 QQ 时生成的 setup code
+        if row.get("role") != "owner":
+            if not setup_code or not verify_setup_code(user_id, setup_code, row):
+                return None, "password_setup_required"
         if len(str(password or "")) < 8:
             return None, "password_too_short"
         finish_setup(user_id, password)

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { http } from '@/api/client'
+import { ApiError, http } from '@/api/client'
 import { useAuthStore } from '@/stores/auth'
 import { useSessionStore } from '@/stores/session'
 const auth = useAuthStore(); const session = useSessionStore()
@@ -14,12 +14,21 @@ async function loginReal(qqValue: string, passwordValue: string, setupCodeValue 
   return token
 }
 
+function errorCode(e: unknown) {
+  return e instanceof ApiError ? String((e.data as { error?: string } | undefined)?.error || '') : ''
+}
+
 async function setupReal(qqValue: string, passwordValue: string, code: string) {
-  // 已有用户首次设置密码：/api/login + setup_code
-  try { return await loginReal(qqValue, passwordValue, code) } catch { /* 需要注册时再走邀请码 */ }
-  // 新用户邀请码注册
-  await http.post('/api/register', { user_id: qqValue, invite: code, password: passwordValue, nickname: qqValue })
-  return await loginReal(qqValue, passwordValue, code)
+  try {
+    return await loginReal(qqValue, passwordValue, code)
+  } catch (e) {
+    if (errorCode(e) === 'password_setup_required') throw new Error('setup code 不正确或已过期，请让 owner 重新添加')
+    if (errorCode(e) === 'invalid_credentials' && code) {
+      await http.post('/api/register', { user_id: qqValue, invite: code, password: passwordValue, nickname: qqValue })
+      return await loginReal(qqValue, passwordValue, code)
+    }
+    throw e
+  }
 }
 
 async function save() {
@@ -41,7 +50,15 @@ async function save() {
     auth.setCredentials(nextToken, qq.value.trim())
     await session.refresh()
     status.value = '已连接'
-  } catch (e) { status.value = '连接失败：' + (e instanceof Error ? e.message : String(e)) }
+  } catch (e) {
+    if (errorCode(e) === 'password_setup_required') {
+      mode.value = 'setup'
+      status.value = '该 QQ 还没有密码，请输入 owner 添加时生成的 setup code，并设置新密码'
+      return
+    }
+    if (errorCode(e) === 'password_too_short') { status.value = '密码至少 8 位'; return }
+    status.value = '连接失败：' + (e instanceof Error ? e.message : String(e))
+  }
   finally { saving.value = false }
 }
 </script>
@@ -49,17 +66,17 @@ async function save() {
   <div class="mask">
     <div class="card">
       <h2>连接 Hoshinoumi</h2>
-      <p class="sub">首次登录会自动设置密码；已有密码直接登录。<br>后端地址使用当前站点，不需要填写 URL。</p>
+      <p class="sub">owner 添加 QQ 后会生成 setup code；首次用 setup code 设置密码。<br>已有密码直接登录，后端地址使用当前站点。</p>
       <div class="modes">
         <button type="button" :class="{ on: mode === 'login' }" @click="mode = 'login'">密码登录</button>
         <button type="button" :class="{ on: mode === 'setup' }" @click="mode = 'setup'">首次设置</button>
         <button type="button" :class="{ on: mode === 'token' }" @click="mode = 'token'">Token</button>
       </div>
-      <label>主人 QQ<input v-model="qq" placeholder="请输入主人 QQ"></label>
+      <label>QQ<input v-model="qq" placeholder="请输入 QQ"></label>
       <label v-if="mode === 'token'">访问 token<input v-model="token" type="password" placeholder="Bearer token"></label>
       <template v-else>
         <label>密码<input v-model="password" type="password" placeholder="密码（首次登录即设置，至少 8 位）"></label>
-        <label v-if="mode === 'setup'">邀请码 / setup code<input v-model="setupCode" placeholder="HSHM-2026"></label>
+        <label v-if="mode === 'setup'">setup code<input v-model="setupCode" placeholder="owner 添加 QQ 时生成"></label>
       </template>
       <div class="actions"><button class="primary" :disabled="saving" @click="save">{{ saving ? '连接中…' : '保存并进入' }}</button></div>
       <div class="status">{{ status }}</div>
