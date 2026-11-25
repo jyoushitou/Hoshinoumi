@@ -75,12 +75,14 @@ function selectCommand(row: CommandRow) {
 async function executeInput() {
   const value = commandInput.value.trim()
   if (!value) { resultState.value = '先输入命令'; return }
-  const cmd = value.replace(/^!/, '').split(/\s+/)[0]
+  const parts = value.replace(/^!/, '').split(/\s+/).filter(Boolean)
+  const cmd = parts[0]
+  const args = parts.slice(1)
   remember(value)
   resultState.value = '执行中…'
   resultOutput.value = ''
   try {
-    const r = await http.post<{ result?: string; message?: string; success?: boolean }>('/api/command', { command: cmd })
+    const r = await http.post<{ result?: string; message?: string; success?: boolean }>('/api/command', { command: cmd, args })
     if (r.success === false) { resultState.value = '执行失败'; resultOutput.value = r.message || '执行失败' }
     else { resultState.value = '200 OK'; resultOutput.value = r.result || '(无输出)' }
   } catch (e) {

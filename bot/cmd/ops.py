@@ -95,10 +95,25 @@ async def cmd_version(ctx):
 
 @command("vision")
 async def cmd_vision(ctx):
-    """!vision test - 视觉自检（画一张测试图跑一遍）"""
-    from ..ai.vision import self_test
+    """!vision [test] - 查看视觉配置；test 才跑自检"""
+    if ctx.args and str(ctx.args[0]).lower() == "test":
+        from ..ai.vision import self_test
+        return await self_test()
 
-    return await self_test()
+    from ..ai.vision import providers
+    provs = providers()
+    usable = [p for p in provs if p.get("name") != "DeepSeek"]
+    if not usable:
+        return ("🖼️ 视觉未配置\n"
+                "   缺少豆包/方舟 ARK_API_KEY 或 NAO_VISION_KEY。\n"
+                "   当前只有 DeepSeek 文本模型，不能识图。\n"
+                "   配置：.venv\\Scripts\\python.exe scripts\\configure_api.py\n"
+                "   自检：!vision test")
+    names = "、".join(p["name"] for p in usable)
+    model = usable[0].get("model") or "（未配置）"
+    return (f"🖼️ 视觉已配置（{names}）\n"
+            f"   模型：{model}\n"
+            f"   发图片时自动识别；`!vision test` 跑自检")
 
 
 @command("update")
