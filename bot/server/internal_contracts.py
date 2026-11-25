@@ -47,6 +47,8 @@ _CONTRACTS = [
     (r"/internal/health/summary", {"GET"}),
     (r"/internal/health/meals", {"POST"}),
     (r"/internal/health/meals/[^/]+", {"DELETE"}),
+    (r"/internal/health/exercises", {"POST"}),
+    (r"/internal/health/exercises/[^/]+", {"DELETE"}),
     (r"/internal/health/recognize", {"POST"}),
     (r"/internal/push/devices", {"GET", "POST"}),
     (r"/internal/push/devices/[^/]+", {"DELETE"}),

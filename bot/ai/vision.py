@@ -199,7 +199,7 @@ def parse_reply(text):
     return desc, tags[:5]
 
 
-async def describe_image(img_bytes):
+async def describe_image(img_bytes, prompt=None, max_tokens=200):
     """看图 → (描述, 标签)；所有后端都失败返回 (None, [])
 
     v18.1：按 providers() 顺序尝试；每次失败都记 status + 响应前 200 字。
@@ -224,12 +224,12 @@ async def describe_image(img_bytes):
                     "role": "user",
                     "content": [
                         {"type": "text",
-                         "text": prompt_with_hint(animated, frames)},
+                         "text": prompt or prompt_with_hint(animated, frames)},
                         {"type": "image_url",
                          "image_url": {"url": f"data:image/jpeg;base64,{b64}"}},
                     ],
                 }],
-                "max_tokens": 200,
+                "max_tokens": int(max_tokens or 200),
                 "temperature": 0.3,
             }
             headers = {"Authorization": f"Bearer {prov['key']}",

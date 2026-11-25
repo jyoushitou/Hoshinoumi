@@ -73,7 +73,7 @@ namespace Gateway
                        StartsWith(path, "/api/history") ||
                        StartsWith(path, "/api/diary/") ||
                        StartsWith(path, "/api/endpoints/") ||
-                       StartsWith(path, "/api/health/meals");
+                       StartsWith(path, "/api/health/meals") || StartsWith(path, "/api/health/exercises");
             }
             if (method == "POST")
             {
@@ -82,7 +82,7 @@ namespace Gateway
                     "/api/persona/import", "/api/persona/activate",
                     "/api/savings/init", "/api/savings/entries", "/api/savings/import", "/api/savings/snapshots",
                     "/api/weekly-plan", "/api/weekly-plan/import", "/api/plan", "/api/plan/import",
-                    "/api/health/init", "/api/health/meals", "/api/health/recognize",
+                    "/api/health/init", "/api/health/meals", "/api/health/exercises", "/api/health/recognize",
                     "/api/plugins/install", "/api/push/devices", "/api/push/test",
                     "/api/groups", "/api/endpoints", "/api/reminders",
                 };
@@ -105,6 +105,7 @@ namespace Gateway
             if (method == "DELETE")
             {
                 return StartsWith(path, "/api/health/meals/") ||
+                       StartsWith(path, "/api/health/exercises/") ||
                        StartsWith(path, "/api/push/devices/") ||
                        StartsWith(path, "/api/memory/items/") ||
                        StartsWith(path, "/api/endpoints/");

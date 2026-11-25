@@ -21,7 +21,7 @@ from .routes_savings import handle_savings, handle_savings_import, handle_saving
 from .routes_weekly_plan import handle_weekly_get, handle_weekly_put, handle_weekly_import, handle_weekly_weeks
 from .routes_reminders import handle_pending as handle_reminders_pending, handle_ack as handle_reminder_ack
 from .routes_balance import handle_balance
-from .routes_health import handle_summary as handle_health_summary, handle_add_meal as handle_health_add_meal, handle_delete_meal as handle_health_delete_meal, handle_recognize as handle_health_recognize, handle_init_get as handle_health_init_get, handle_init_post as handle_health_init_post
+from .routes_health import handle_summary as handle_health_summary, handle_add_meal as handle_health_add_meal, handle_delete_meal as handle_health_delete_meal, handle_recognize as handle_health_recognize, handle_init_get as handle_health_init_get, handle_init_post as handle_health_init_post, handle_add_exercise as handle_health_add_exercise, handle_delete_exercise as handle_health_delete_exercise
 from .routes_memory import handle_item_update as handle_memory_item_update, handle_item_delete as handle_memory_item_delete
 from .routes_groups import handle_list as handle_groups_list, handle_create as handle_groups_create
 from .routes_push import handle_devices as handle_push_devices, handle_register as handle_push_register, handle_delete as handle_push_delete, handle_preferences as handle_push_preferences, handle_test as handle_push_test, handle_outbox as handle_push_outbox
@@ -468,6 +468,8 @@ async def start_api_server():
     app.router.add_post("/api/plugins/{id}/reject", handle_plugins_reject)
     app.router.add_post("/api/health/meals", handle_health_add_meal)
     app.router.add_delete("/api/health/meals/{id}", handle_health_delete_meal)
+    app.router.add_post("/api/health/exercises", handle_health_add_exercise)
+    app.router.add_delete("/api/health/exercises/{id}", handle_health_delete_exercise)
     app.router.add_post("/api/health/recognize", handle_health_recognize)
     app.router.add_get("/api/relation", handle_relation)
     app.router.add_get("/api/weekly-plan/weeks", handle_weekly_weeks)
