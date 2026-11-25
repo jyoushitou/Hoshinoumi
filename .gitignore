@@ -83,3 +83,4 @@ data/plugins/*.hoshinoumi
 data/plugins/*.zip
 data/health.json
 data/health.tmp
+data/plugins/web/
