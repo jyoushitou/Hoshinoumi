@@ -171,9 +171,9 @@
 | v35.8.2.1 | 启动自检 / 错误提示 | ✅ |
 | v35.8.2.2 | 更新 / 安装 / 回退 | 🟡 检查+下载+安装，回退待真机 |
 | v35.8.2.3 | 真机矩阵验收 | 🟡 Honor/OriginOS 真机+MuMu+Android 15 通过；平板/旧版本待测 |
-| v35.8.4.0 | ntfy 自托管 / 设备注册 / 权限 | 🟡 Mock 注册/注销/偏好接口；ntfy 未接 |
-| v35.8.4.1 | push_outbox / 触发 / 重试去重 | 🟡 Mock outbox/去重/重试；未投递 ntfy |
-| v35.8.4.2 | UnifiedPush/ntfy 接入 / 深链 / 真机 | 🟡 本地 ntfy SSE 联调通过；真 ntfy/UnifiedPush 待真机 |
+| v35.8.4.0 | ntfy 自托管 / 设备注册 / 权限 | ✅ 真实 ntfy 设备注册/偏好/测试 |
+| v35.8.4.1 | push_outbox / 触发 / 重试去重 | ✅ QQ 出站触发 outbox/去重/重试 |
+| v35.8.4.2 | UnifiedPush/ntfy 接入 / 深链 / 真机 | 🟡 ntfy 真实接入；UnifiedPush/真机待验 |
 > 真实状态审计见 `docs/versions/AUDIT-2026-11-25.md`。
 
 ## v35.9（158 个，含 v35.9.30 手机 Vue 20 个，v35.9.34 桌面套壳 Vue 6 个）
