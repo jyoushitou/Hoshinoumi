@@ -117,8 +117,8 @@ onMounted(() => { void load(); void loadBalance() })
     <div class="runtime-grid">
       <div class="runtime-card"><small>实例</small><b>{{ status?.version || '—' }}</b><span>schema {{ status?.schema ?? '—' }} · {{ uptimeLabel }}</span></div>
       <div class="runtime-card"><small>存储</small><b>{{ status?.db?.engine || '—' }}</b><span>{{ status?.db?.tables ?? '—' }} 张表 · {{ status?.db?.size_mb ?? '—' }} MB</span></div>
-      <div class="runtime-card"><small>NapCat</small><b :class="status?.napcat?.connected ? 'on' : 'off'">{{ status?.napcat?.connected ? '已连接' : '未连接' }}</b><span>WS {{ status?.napcat?.port ?? '—' }} · {{ status?.napcat?.mode || '—' }}</span></div>
-      <div class="runtime-card"><small>备份</small><b>{{ status?.backup?.last_at || '—' }}</b><span>{{ status?.backup?.size_mb ?? '—' }} MB · 保留 {{ status?.backup?.kept ?? '—' }} 份</span></div>
+      <div class="runtime-card"><small>NapCat</small><b :class="status?.napcat?.connected ? 'on' : 'off'">{{ status?.napcat?.connected ? '已连接' : (status?.napcat?.mode === '未接入' ? '未接入' : '未连接') }}</b><span>WS {{ status?.napcat?.port ?? '—' }} · {{ status?.napcat?.mode || '—' }}</span></div>
+      <div class="runtime-card"><small>备份</small><b>{{ status?.backup?.last_at || (status?.backup?.kept ? '—' : '暂无备份') }}</b><span>{{ status?.backup?.size_mb ?? 0 }} MB · 保留 {{ status?.backup?.kept ?? 0 }} 份</span></div>
     </div>
     <div class="balance-card">
       <div><small>API 余额</small><b>{{ balanceCurrency }} {{ balanceTotal }}</b><span v-if="balance">赠送 {{ balanceGranted }} · 充值 {{ balanceTopped }}<template v-if="balance.fetched_at"> · {{ balance.fetched_at }}</template></span><span v-else class="muted">{{ balanceError || '读取中…' }}</span></div>

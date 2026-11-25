@@ -2,13 +2,17 @@
 # health / status / usage / memory / logs / token
 # 迁移自 api_server.py（v5-R5），逻辑逐字未改
 
+import os
+import time
 from datetime import datetime
 
 from bot.core import state as cfg
-from ..config import CST, MASTER_QQ
+from ..config import CST, LISTEN_PORT_QQ, MASTER_QQ
 from ..infra.repo_ai import get_recent_usage
 from ..infra.log_sink import get_recent_logs
 from . import config as apicfg
+
+_PROCESS_START = time.time()
 from .common import json_response, format_dt
 
 
@@ -17,6 +21,50 @@ async def handle_health(request):
         "status": "ok",
         "timestamp": datetime.now(CST).strftime('%Y-%m-%d %H:%M:%S'),
     })
+
+
+def _db_status():
+    try:
+        from ..core import settings
+        from ..infra.conn import get_cursor
+        engine = settings.storage_backend()
+        tables = 0
+        size_mb = 0.0
+        c = get_cursor()
+        try:
+            if engine == "sqlite":
+                c.execute("SELECT COUNT(*) AS n FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")
+                row = c.fetchone()
+                tables = int((row or {}).get("n", 0) or 0) if isinstance(row, dict) else int((row or [0])[0] or 0)
+                path = settings.sqlite_path()
+                size_mb = round(os.path.getsize(path) / 1024 / 1024, 1) if os.path.exists(path) else 0.0
+            else:
+                c.execute("SELECT COUNT(*) AS n FROM information_schema.tables WHERE table_schema=DATABASE()")
+                row = c.fetchone()
+                tables = int((row or {}).get("n", 0) or 0) if isinstance(row, dict) else int((row or [0])[0] or 0)
+                c.execute("SELECT COALESCE(SUM(data_length+index_length),0) AS b FROM information_schema.tables WHERE table_schema=DATABASE()")
+                row = c.fetchone()
+                size_mb = round(int((row or {}).get("b", 0) or 0) / 1024 / 1024, 1) if isinstance(row, dict) else 0.0
+        finally:
+            try: c.close()
+            except Exception: pass
+        return {"engine": engine, "tables": tables, "size_mb": size_mb}
+    except Exception as e:
+        return {"engine": "unknown", "tables": 0, "size_mb": 0.0, "error": str(e)}
+
+
+def _backup_status():
+    try:
+        from ..infra import backup
+        items = backup.list_backups()
+        return {
+            "last_at": items[0].get("at") if items else "",
+            "size_mb": round(sum(int(x.get("size") or 0) for x in items) / 1024 / 1024, 1),
+            "kept": len(items),
+            "latest": items[0].get("file") if items else "",
+        }
+    except Exception:
+        return {"last_at": "", "size_mb": 0.0, "kept": 0, "latest": ""}
 
 
 async def handle_status(request):
@@ -66,7 +114,15 @@ async def handle_status(request):
             "global_keywords": len(cfg.global_keyword_set),
             "stickers": len(cfg.STICKER_DATA),
             "daily_triggers": len(cfg.daily_trigger),
-        }
+        },
+        "uptime_seconds": int(time.time() - _PROCESS_START),
+        "db": _db_status(),
+        "backup": _backup_status(),
+        "napcat": {
+            "connected": bool(getattr(cfg, "active_ws_qq", None)),
+            "port": int(LISTEN_PORT_QQ or 0),
+            "mode": "NapCat WS" if getattr(cfg, "active_ws_qq", None) else "未接入",
+        },
     })
 
 
