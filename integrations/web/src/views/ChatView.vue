@@ -12,8 +12,10 @@ const botQq = computed(() => String(session.status?.self_qq || ''))
 const draft = ref('')
 const msgsEl = ref<HTMLElement | null>(null)
 const showJump = ref(false)
-function onMsgScroll() { const el = msgsEl.value; if (!el) return; showJump.value = el.scrollHeight - el.scrollTop - el.clientHeight > 140 }
-async function jumpToBottom() { await nextTick(); msgsEl.value?.scrollTo({ top: msgsEl.value.scrollHeight, behavior: 'smooth' }); showJump.value = false }
+const stickBottom = ref(true)
+function onMsgScroll() { const el = msgsEl.value; if (!el) return; const distance = el.scrollHeight - el.scrollTop - el.clientHeight; showJump.value = distance > 140; stickBottom.value = distance < 80 }
+async function scrollToBottom(behavior: ScrollBehavior = 'auto') { await nextTick(); const el = msgsEl.value; if (!el) return; el.scrollTo({ top: el.scrollHeight, behavior }); showJump.value = false; stickBottom.value = true }
+async function jumpToBottom() { await scrollToBottom('smooth') }
 const textarea = ref<HTMLTextAreaElement | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
 const imagePreview = ref('')
@@ -53,6 +55,7 @@ async function send() {
   const name = imageName.value
   draft.value = ''; imagePreview.value = ''; imageName.value = ''
   const ok = await session.sendMessage(content, image ? { image } : {})
+  if (ok) await scrollToBottom('smooth')
   if (!ok) { draft.value = content; imagePreview.value = image; imageName.value = name }
   textarea.value?.focus()
 }
