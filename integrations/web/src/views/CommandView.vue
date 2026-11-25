@@ -12,6 +12,10 @@ const output = ref('')
 const outputError = ref('')
 const updatedAt = ref('')
 const commandInput = ref('')
+const recent = ref<string[]>(loadRecent())
+function loadRecent(): string[] { try { const raw = JSON.parse(localStorage.getItem('hoshinoumi.command.recent') || '[]'); return Array.isArray(raw) ? raw.filter((x): x is string => typeof x === 'string').slice(0, 8) : [] } catch { return [] } }
+function remember(command: string) { const value = command.trim(); if (!value) return; recent.value = [value, ...recent.value.filter(x => x !== value)].slice(0, 8); try { localStorage.setItem('hoshinoumi.command.recent', JSON.stringify(recent.value)) } catch { /* ignore */ } }
+function clearRecent() { recent.value = []; localStorage.removeItem('hoshinoumi.command.recent') }
 const resultState = ref('选择上方命令运行')
 const resultOutput = ref('点击任意命令，结果显示在这里。\n\n提示：最终版通过 POST /api/command 执行。')
 const collapsed = ref<Set<string>>(new Set())
@@ -65,6 +69,7 @@ async function executeInput() {
   const value = commandInput.value.trim()
   if (!value) { resultState.value = '先输入命令'; return }
   const cmd = value.replace(/^!/, '').split(/\s+/)[0]
+  remember(value)
   resultState.value = '执行中…'
   resultOutput.value = ''
   try {
@@ -78,6 +83,7 @@ async function executeInput() {
 }
 async function run(row: CommandRow) {
   const cmd = row.name.replace(/^!/, '')
+  remember(row.name)
   running.value = row.name
   output.value = ''
   outputError.value = ''
@@ -105,6 +111,7 @@ onBeforeUnmount(() => { if (timer) clearInterval(timer) })
       <button class="refresh" type="button" :disabled="loading" @click="load">{{ loading ? '刷新中…' : '刷新' }}</button>
     </header>
     <template v-if="desktopLayout">
+      <div v-if="recent.length" class="recent"><span>最近</span><button v-for="item in recent" :key="item" type="button" @click="commandInput = item + ' '; executeInput()">{{ item }}</button><button class="clear" type="button" @click="clearRecent">清空</button></div>
       <div class="runbar"><span class="prompt">&gt;</span><input v-model="commandInput" placeholder="输入命令，例如 !persona activate nao" @keydown.enter.prevent="executeInput"><button type="button" :disabled="!commandInput.trim()" @click="executeInput">执行</button></div>
       <div class="hint">无参命令直接执行；带参命令先填参数；二级命令点上方命令后按提示输入。</div>
       <div class="groups desktop">
@@ -119,6 +126,7 @@ onBeforeUnmount(() => { if (timer) clearInterval(timer) })
       <div class="result"><div class="result-head"><b>执行结果</b><span>{{ resultState }}</span></div><pre>{{ resultOutput }}</pre></div>
     </template>
     <template v-else>
+      <div v-if="recent.length" class="recent"><span>最近</span><button v-for="item in recent" :key="item" type="button" @click="commandInput = item + ' '; executeInput()">{{ item }}</button><button class="clear" type="button" @click="clearRecent">清空</button></div>
       <div class="bar">
         <input v-model="query" placeholder="搜索命令 / 说明 / 分组">
         <span>{{ commands.length }} 个 · {{ updatedAt || '—' }}</span>
@@ -145,7 +153,7 @@ onBeforeUnmount(() => { if (timer) clearInterval(timer) })
 <style scoped>
 .commands{position:relative;flex:1;min-height:0;overflow:auto;padding:20px 22px 26px;background:#f7faff;color:#17263b}
 .head{display:flex;align-items:center;gap:12px;margin-bottom:12px}.head h1{margin:0;font-size:24px;letter-spacing:-.03em}.head p{margin:3px 0 0;font-size:10px;color:#8a9bb0}.refresh{margin-left:auto;height:29px;border:1px solid #dbe8ff;background:#fff;color:#2563eb;border-radius:8px;font:10px inherit;padding:0 10px;cursor:pointer}
-.bar{display:flex;align-items:center;gap:8px;margin-bottom:12px}.bar input{flex:1;height:32px;border:1px solid #dbe8ff;border-radius:9px;background:#fff;padding:0 10px;font:10.5px inherit;outline:0}.bar span{font-size:9px;color:#9aabc0;white-space:nowrap}
+.recent{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:8px}.recent span{font-size:8px;color:#9aabc0}.recent button{height:24px;border:1px solid #e3ebf7;border-radius:6px;background:#fff;color:#4b5f78;font:8px ui-monospace,monospace;padding:0 7px;cursor:pointer}.recent button:hover{background:#eef4ff;color:#2563eb}.recent button.clear{color:#b23b52;border-color:#f0d7dd;background:#fff7f9}.bar{display:flex;align-items:center;gap:8px;margin-bottom:12px}.bar input{flex:1;height:32px;border:1px solid #dbe8ff;border-radius:9px;background:#fff;padding:0 10px;font:10.5px inherit;outline:0}.bar span{font-size:9px;color:#9aabc0;white-space:nowrap}
 .groups{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}.group{background:#fff;border:1px solid #e3ebf7;border-radius:12px;padding:8px;animation:group-in .24s cubic-bezier(.22,1,.36,1) both}.group:nth-child(2){animation-delay:.04s}.group:nth-child(3){animation-delay:.08s}@keyframes group-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}.group-title{cursor:pointer;user-select:none;display:flex;justify-content:space-between;font-size:9px;font-weight:700;color:#52708f;padding:2px 4px 7px}.group-title span{font-weight:400;color:#9aabc0}
 .cmd{display:grid;grid-template-columns:1fr auto;gap:2px 6px;width:100%;text-align:left;border:1px solid transparent;border-radius:8px;background:#f8fbff;padding:6px 8px;margin-bottom:4px;cursor:pointer;transition:background .18s,border-color .18s,transform .18s}.cmd:hover{border-color:#dbe8ff;background:#eef4ff;transform:translateY(-1px)}.cmd:disabled{opacity:.55}.cmd b{font-size:10px;color:#1e3a5f}.cmd small{grid-column:1;font-size:8px;color:#8a9bb0}.cmd em{grid-row:1/3;grid-column:2;align-self:center;font-style:normal;font-size:7px;color:#9a6b1f;background:#fff8e6;border:1px solid #f2d491;border-radius:5px;padding:1px 4px}
 .error{margin:8px 0;padding:7px 9px;border:1px solid #fecaca;background:#fff5f5;color:#b91c1c;border-radius:8px;font-size:9px}.empty{padding:24px;text-align:center;color:#9aabc0;font-size:10px}
