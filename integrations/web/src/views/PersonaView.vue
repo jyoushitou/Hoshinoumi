@@ -30,6 +30,8 @@ async function load() {
 function fileList(files?: PersonaFiles) { return Object.entries(files || {}).filter(([, enabled]) => enabled).map(([name]) => name) }
 function voiceLabel(persona: Persona) { return typeof persona.voice === 'string' ? persona.voice : persona.voice?.voice || '—' }
 function avatar(name: string) { return name.slice(0, 1).toUpperCase() }
+const displayNames: Record<string, string> = { nao: '友利奈绪', student: '学生会长' }
+function displayTitle(name: string) { return displayNames[name] ? `${displayNames[name]} · ${name}` : name }
 async function activate(persona: Persona) {
   if (persona.active) return
   try {
@@ -61,11 +63,12 @@ onMounted(load)
 
 <template>
   <section class="persona-page">
-    <header class="head">
-      <div><h1>人设</h1><p>导入 / 导出 / 激活 · 当前 {{ activeName }}</p></div>
-      <label class="btn primary">导入 JSON<input ref="fileInput" type="file" accept=".json,application/json" @change="importFile"></label>
-      <button class="btn" type="button" :disabled="loading" @click="load">{{ loading ? '刷新中…' : '刷新' }}</button>
-    </header>
+    <header class="head"><div><h1>人设</h1><p>v35.5 Web 演示 · MOCK 数据 · 导入 / 导出 / 激活</p></div></header>
+    <div class="toolbar">
+      <label class="btn">导入人设卡 JSON<input ref="fileInput" type="file" accept=".json,application/json" @change="importFile"></label>
+      <span class="hint">只读预览 · 仅 owner 可激活/导入</span>
+    </div>
+    <div class="backend">数据源 <b>/api/persona</b> · schema 35 · 当前激活 {{ activeName }} · {{ personas.length }} 个</div>
     <div v-if="error" class="notice error">{{ error }}</div>
     <div v-if="notice" class="notice ok">{{ notice }}</div>
     <div v-if="loading && !personas.length" class="empty">加载中…</div>
@@ -73,27 +76,22 @@ onMounted(load)
     <div class="grid">
       <article v-for="persona in personas" :key="persona.name" class="card" :class="{ active: persona.active }">
         <div class="card-head">
-          <span class="avatar">{{ avatar(persona.name) }}</span>
-          <div class="title"><b>{{ persona.name }}</b><small>{{ persona.active ? '使用中' : '可切换' }}</small></div>
+          <span class="avatar">{{ avatar(displayNames[persona.name] || persona.name) }}</span>
+          <div class="title"><b>{{ displayTitle(persona.name) }}</b></div>
           <span v-if="persona.active" class="badge">当前</span>
         </div>
         <p class="excerpt">{{ persona.prompt_excerpt || '暂无摘要' }}</p>
         <div class="tags"><span v-for="file in fileList(persona.files)" :key="file">{{ file }}</span><span v-if="!fileList(persona.files).length">无文件</span></div>
-        <div class="state">
-          <span>mood <b>{{ persona.state?.mood ?? '—' }}</b></span>
-          <span>energy <b>{{ persona.state?.energy ?? '—' }}</b></span>
-          <span>voice <b>{{ voiceLabel(persona) }}</b></span>
-        </div>
         <div class="actions">
           <button type="button" @click="preview = persona">预览</button>
-          <button type="button" class="primary" :disabled="persona.active" @click="activate(persona)">{{ persona.active ? '已激活' : '激活' }}</button>
+          <button type="button" :disabled="persona.active" @click="activate(persona)">{{ persona.active ? '已激活' : '激活' }}</button>
           <button type="button" @click="exportPersona(persona)">导出</button>
         </div>
       </article>
     </div>
     <div v-if="preview" class="mask" @click.self="preview = null">
       <div class="modal">
-        <header><b>{{ preview.name }}</b><button type="button" @click="preview = null">×</button></header>
+        <header><b>{{ displayTitle(preview.name) }}</b><button type="button" @click="preview = null">×</button></header>
         <pre>{{ preview.prompt || preview.prompt_excerpt || '暂无 prompt' }}</pre>
       </div>
     </div>
@@ -101,8 +99,9 @@ onMounted(load)
 </template>
 
 <style scoped>
-.persona-page{flex:1;min-height:0;overflow:auto;padding:18px 18px 24px;background:#f7faff;color:#17263b;box-sizing:border-box}.head{display:flex;align-items:flex-end;gap:8px;margin-bottom:12px}.head h1{margin:0;font-size:24px;letter-spacing:-.03em}.head p{margin:3px 0 0;font-size:10px;color:#8a9bb0}.head .btn{margin-left:0;height:29px;border:1px solid #dbe8ff;border-radius:8px;background:#fff;color:#2563eb;font:9px inherit;padding:0 10px;cursor:pointer}.head .btn.primary{margin-left:auto;background:#2563eb;border-color:#2563eb;color:#fff;display:inline-flex;align-items:center}.head .btn input{display:none}.notice{border-radius:8px;padding:7px 9px;font-size:9px;margin-bottom:8px}.notice.error{border:1px solid #fecaca;background:#fff5f5;color:#b91c1c}.notice.ok{border:1px solid #cdeee0;background:#eefbf5;color:#168b63}
-.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.card{background:#fff;border:1px solid #e3ebf7;border-radius:12px;padding:12px;display:flex;flex-direction:column;transition:border-color .18s,transform .18s,box-shadow .18s}.card:hover{border-color:#bcd4f7;transform:translateY(-2px);box-shadow:0 8px 18px rgba(37,99,235,.06)}.card.active{border-color:#93b7fa;background:linear-gradient(180deg,#f8fbff,#fff)}.card-head{display:flex;align-items:center;gap:8px}.avatar{width:30px;height:30px;border-radius:9px;background:#dbeafe;color:#1d4ed8;display:grid;place-items:center;font-size:11px;font-weight:700;flex:none}.title b{display:block;font-size:11px;color:#1e3a5f}.title small{display:block;font-size:7.5px;color:#9aabc0;margin-top:2px}.badge{margin-left:auto;font-size:7.5px;color:#168b63;border:1px solid #cdeee0;background:#eefbf5;border-radius:4px;padding:1px 5px}.excerpt{font-size:9.5px;line-height:1.65;color:#6b7c95;margin:8px 0;min-height:32px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.tags{display:flex;flex-wrap:wrap;gap:4px}.tags span{font-size:7.5px;color:#6b7c95;border:1px solid #e3ebf7;border-radius:4px;padding:1px 5px}.state{display:grid;gap:3px;margin-top:8px}.state span{font-size:7.5px;color:#9aabc0}.state b{color:#526982;font-weight:500}.actions{display:flex;gap:5px;margin-top:auto;padding-top:9px}.actions button{flex:1;height:28px;border:1px solid #e3ebf7;border-radius:6px;background:#f8fbff;color:#607795;font:8px inherit;cursor:pointer}.actions button.primary{background:#2563eb;border-color:#2563eb;color:#fff;font-weight:700}.actions button:disabled{opacity:.65;cursor:default}
+.persona-page{flex:1;min-height:0;overflow:auto;padding:24px 30px 30px;background:#f7faff;color:#17263b;box-sizing:border-box;width:100%}.head h1{margin:0;font-size:27px;letter-spacing:-.03em;line-height:1.15}.head p{margin:6px 0 0;font-size:11.5px;color:#8a9bb0}.toolbar{display:flex;align-items:center;gap:10px;margin:22px 0 10px}.btn{height:31px;border:1px solid #dbe8ff;border-radius:8px;background:#fff;color:#2563eb;font:10.5px inherit;padding:0 11px;display:inline-flex;align-items:center;cursor:pointer}.btn input{display:none}.hint{margin-left:auto;font-size:10px;color:#8a9bb0}.backend{font-size:10px;color:#8a9bb0;margin-bottom:16px}.backend b{color:#526982;font-weight:500}
+.notice{border-radius:8px;padding:8px 10px;font-size:10px;margin-bottom:10px}.notice.error{border:1px solid #fecaca;background:#fff5f5;color:#b91c1c}.notice.ok{border:1px solid #cdeee0;background:#eefbf5;color:#168b63}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.card{background:#fff;border:1px solid #e3ebf7;border-radius:13px;padding:16px 17px;display:flex;flex-direction:column;min-height:168px;transition:border-color .18s,box-shadow .18s}.card:hover{border-color:#bcd4f7;box-shadow:0 8px 20px rgba(37,99,235,.05)}.card.active{border-color:#93b7fa;background:linear-gradient(180deg,#f8fbff,#fff)}.card-head{display:flex;align-items:center;gap:10px}.avatar{width:36px;height:36px;border-radius:9px;background:#e0e7ff;color:#4338ca;display:grid;place-items:center;font-size:14px;font-weight:700;flex:none}.title b{display:block;font-size:15px;color:#1e3a5f;letter-spacing:-.01em}.badge{margin-left:auto;font-size:8.5px;color:#168b63;border:1px solid #cdeee0;background:#eefbf5;border-radius:5px;padding:2px 6px}.excerpt{font-size:12px;line-height:1.65;color:#6b7c95;margin:12px 0;min-height:38px}.tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px}.tags span{font-size:8.5px;color:#6b7c95;border:1px solid #e3ebf7;border-radius:5px;padding:2px 6px;background:#fbfdff}.actions{display:flex;gap:6px;margin-top:auto}.actions button{height:29px;border:1px solid #dbe8ff;border-radius:6px;background:#fff;color:#2563eb;font:9.5px inherit;padding:0 10px;cursor:pointer}.actions button:disabled{color:#9aabc0;border-color:#e3ebf7;background:#f8fbff;cursor:default}
 .empty{border:1px dashed #cfe0f7;border-radius:12px;background:#f8fbff;padding:32px;text-align:center;color:#8a9bb0;font-size:10px}.mask{position:fixed;inset:0;z-index:80;background:#0f172a52;display:grid;place-items:center;padding:20px}.modal{width:min(560px,100%);background:#fff;border-radius:14px;padding:15px;box-shadow:0 24px 60px #0f264e3d}.modal header{display:flex;align-items:center;margin-bottom:9px}.modal header b{font-size:14px;color:#1e3a5f}.modal header button{margin-left:auto;border:0;background:none;font-size:18px;color:#8a9bb0;cursor:pointer}.modal pre{margin:0;max-height:52vh;overflow:auto;white-space:pre-wrap;background:#f8fbff;border:1px solid #e3ebf7;border-radius:9px;padding:10px;font:10px/1.7 ui-monospace,monospace;color:#405872}
-@media(max-width:1180px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:820px){.persona-page{padding:16px 14px 20px}.head{flex-wrap:wrap}.head .btn.primary{margin-left:0}.grid{grid-template-columns:1fr}}
+@media(max-width:820px){.persona-page{padding:18px 14px 22px}.toolbar{flex-wrap:wrap}.hint{margin-left:0;width:100%}.grid{grid-template-columns:1fr}.head h1{font-size:24px}}
 </style>

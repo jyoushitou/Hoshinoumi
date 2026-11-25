@@ -228,10 +228,16 @@ PLAN = {
 PERSONAS = [
     {"name": "nao", "active": True,
      "files": {"prompt": True, "life": True, "supplement": True, "state": True, "voice": True},
-     "prompt_excerpt": "你是友利奈绪(Charlotte)，15岁傲娇毒舌学生会会长。",
+     "prompt_excerpt": "口语、简短、带行动；优先记住对话里的枝末细节。",
      "state": {"mood": 0.1, "energy": 0.7, "lonely": 0.15},
      "voice": {"voice": "zh-CN-XiaoxiaoNeural"},
      "prompt": "你是友利奈绪(Charlotte)。", "supplement": "mock supplement", "life": "mock life"},
+    {"name": "student", "active": False,
+     "files": {"prompt": True, "state": True},
+     "prompt_excerpt": "更正式、更克制的学生会语气，适合公共群。",
+     "state": {"mood": 0.0, "energy": 0.6, "lonely": 0.1},
+     "voice": {"voice": "zh-CN-XiaoxiaoNeural"},
+     "prompt": "你是星之海学园的学生会长，回答正式、克制、有条理。"},
 ]
 
 SAVINGS = {
