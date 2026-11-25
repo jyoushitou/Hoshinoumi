@@ -45,8 +45,12 @@ def _configure_db():
         )
         log_system(f"[存储] 已注入配置：{backend}")
         try:
-            from ..infra.repo_pool import enable as _enable_repo_pool
-            _enable_repo_pool()  # v28.1：启动后才启用 repo 池会话，测试默认关闭
+            from ..infra import repo_pool
+            if backend == "sqlite":
+                # SQLite 单连接池在并发 API 下会互相关闭 cursor；开发机直接用线程本地连接
+                repo_pool.disable()
+            else:
+                repo_pool.enable()
         except Exception:
             pass
         return backend

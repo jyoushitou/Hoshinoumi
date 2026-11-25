@@ -10,6 +10,20 @@ from ..log import log_err
 from .common import json_response, format_dt
 
 
+def _clean_api_reply(text: str) -> str:
+    """把模型原始五行输出变成用户可见文本，剥离内部元数据。"""
+    import re
+    from ..chat.reply import split_reply_text
+    dialog, action, _meta = split_reply_text(str(text or ""))
+    lines = list(dialog) + ([action] if action else [])
+    out = []
+    for line in lines:
+        line = re.sub(r"^【[^】]{1,12}】\s*", "", str(line)).strip()
+        if line:
+            out.append(line)
+    return "\n".join(out).strip() or "……"
+
+
 async def handle_chat(request):
     """POST /api/chat - AI对话（和QQ完全一致，共享记忆）"""
     try:
@@ -29,9 +43,20 @@ async def handle_chat(request):
 
     try:
         reply = await get_character_reply(message, target_id, keywords)
+        clean = _clean_api_reply(reply)
+        try:
+            from ..infra import repo_conversation, tenant
+            uid = tenant.owner_id()
+            thread = f"web:private:{target_id}"
+            repo_conversation.append(user_id=uid, target_id=target_id, content=message,
+                                     role="user", channel="web", thread_id=thread)
+            repo_conversation.append(user_id=uid, target_id=target_id, content=clean,
+                                     role="assistant", channel="web", thread_id=thread)
+        except Exception as _e:
+            log_err(f"Web 对话落库失败: {_e}")
         return json_response({
             "success": True,
-            "reply": reply,
+            "reply": clean,
             "target_id": target_id,
         })
     except Exception as e:
