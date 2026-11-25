@@ -1,63 +1,62 @@
-# ===================== 内部 TCP 帧服务（v26.2） =====================
-# 27004 只接受 8+4+body；业务处理仍复用现有 HTTP handler：
-# 通过 data/.../internal-api.sock 转发 JSON，避免重写所有路由。
-
+# ===================== 内部 TCP 帧服务（v35.9.36 typed protobuf） =====================
+# 27004 只接受 8+4+body；body 是 typed InternalRequest/InternalResponse。
+# 网关路径必须先通过 internal_contracts 的逐接口白名单。
 import asyncio
 import json
 import uuid
 
+from google.protobuf.json_format import MessageToDict, ParseDict
+from google.protobuf.struct_pb2 import Struct
+
 from ..core import worker
 from ..log import log_api, log_system
 from . import frame
-from . import proto_wire as P
+from . import internal_contracts
+from .proto.nao.v1 import internal_v2_pb2 as P
 
 HOST = "127.0.0.1"
 MAX_CLIENTS = 64
 
 
-def _status_from_http(code):
-    return int(code) if code else 500
+def _struct_from_json(body):
+    data = Struct()
+    if isinstance(body, list):
+        body = {"data": body}
+    if isinstance(body, dict):
+        ParseDict(body, data, ignore_unknown_fields=False)
+    return data
 
 
 async def dispatch(req: P.InternalRequest):
-    payload = P.decode_json_value(req.payload)
-    method = (req.method or "").strip()
-    if "?" in method:
-        from urllib.parse import parse_qsl, urlsplit
-        _u = urlsplit(method)
-        method = _u.path
-        for k, v in parse_qsl(_u.query, keep_blank_values=True):
-            payload.setdefault(k, v)
-    if method == "/internal/health":
-        return P.InternalResponse(req.request_id, 200, "",
-                                  P.encode_json_value({"ok": True, "status": "ok"}))
-    path = method if method.startswith(("/internal/", "/api/")) else ""
-    if not path:
-        return P.InternalResponse(req.request_id, 404, "unknown method",
-                                  P.encode_json_value({"ok": False, "error": "unknown method"}))
+    public_path = internal_contracts.resolve(req.path, req.http_method)
+    if not public_path:
+        return P.InternalResponse(
+            request_id=req.request_id, status=404, error="internal_contract_not_found",
+            data=_struct_from_json({"ok": False, "error": "internal_contract_not_found"}),
+        )
+    try:
+        params = MessageToDict(req.params) if req.params.ByteSize() else {}
+    except Exception:
+        params = {}
+    query = dict(req.query)
+    is_get = str(req.http_method or "POST").upper() == "GET"
     import aiohttp
     from . import config as apicfg
 
-    is_public_api = path.startswith("/api/")
-    get_like = is_public_api or path in (
-        "/internal/history", "/internal/state", "/internal/cron",
-        "/internal/diary", "/internal/shelf", "/internal/auth/owner",
-    )
     headers = {"X-User-Id": req.user_id or "__owner__", "X-Role": req.role or "owner"}
-    if is_public_api:
-        # gateway 已校验 JWT；这里用本机 API token 访问 worker HTTP API
+    if public_path.startswith("/api/"):
         headers["Authorization"] = "Bearer " + apicfg.API_TOKEN
     connector = aiohttp.UnixConnector(path=worker.internal_api_socket())
     timeout = aiohttp.ClientTimeout(total=60)
     try:
         async with aiohttp.ClientSession(connector=connector, timeout=timeout) as s:
             kwargs = {"headers": headers}
-            if get_like:
-                kwargs["params"] = {k: str(v) for k, v in payload.items()}
-                call = s.get("http://internal" + path, **kwargs)
+            if is_get:
+                kwargs["params"] = query or {k: str(v) for k, v in params.items()}
+                call = s.get("http://internal" + public_path, **kwargs)
             else:
-                kwargs["json"] = payload
-                call = s.post("http://internal" + path, **kwargs)
+                kwargs["json"] = params if isinstance(params, dict) else {}
+                call = s.request(str(req.http_method or "POST"), "http://internal" + public_path, **kwargs)
             async with call as r:
                 raw = await r.read()
                 try:
@@ -65,12 +64,14 @@ async def dispatch(req: P.InternalRequest):
                 except Exception:
                     body = {"ok": False, "error": raw.decode("utf-8", "replace")[:500]}
                 return P.InternalResponse(
-                    req.request_id, _status_from_http(r.status), "",
-                    P.encode_json_value(body),
+                    request_id=req.request_id, status=int(r.status), error="",
+                    data=_struct_from_json(body),
                 )
     except Exception as e:
-        return P.InternalResponse(req.request_id, 503, str(e),
-                                  P.encode_json_value({"ok": False, "error": str(e)}))
+        return P.InternalResponse(
+            request_id=req.request_id, status=503, error=str(e),
+            data=_struct_from_json({"ok": False, "error": str(e)}),
+        )
 
 
 async def handle_client(reader, writer):
@@ -84,21 +85,24 @@ async def handle_client(reader, writer):
             if t != frame.TYPE_REQUEST:
                 continue
             try:
-                req = P.decode_request(body)
+                req = P.InternalRequest()
+                if not req.ParseFromString(body):
+                    raise ValueError("bad InternalRequest")
                 if not req.request_id:
                     req.request_id = uuid.uuid4().hex
                 resp = await dispatch(req)
-                await frame.write_frame(writer, frame.TYPE_RESPONSE,
-                                        P.encode_response(resp))
+                await frame.write_frame(writer, frame.TYPE_RESPONSE, resp.SerializeToString())
             except Exception as e:
                 rid = ""
                 try:
-                    rid = P.decode_request(body).request_id
+                    req = P.InternalRequest(); req.ParseFromString(body); rid = req.request_id
                 except Exception:
                     pass
-                err = P.InternalResponse(rid, 400, str(e),
-                                         P.encode_json_value({"ok": False, "error": str(e)}))
-                await frame.write_frame(writer, frame.TYPE_RESPONSE, P.encode_response(err))
+                err = P.InternalResponse(
+                    request_id=rid, status=400, error=str(e),
+                    data=_struct_from_json({"ok": False, "error": str(e)}),
+                )
+                await frame.write_frame(writer, frame.TYPE_RESPONSE, err.SerializeToString())
     except (asyncio.IncompleteReadError, ConnectionError):
         pass
     except Exception as e:

@@ -1,12 +1,14 @@
 /// @file        backend.cpp
-/// @brief       后端客户端：HTTP/JSON（回滚）或 8+4+body TCP/protobuf（v26）
-/// @author      jyoushitou
-/// @date        2026-11-13
-/// @copyright   Copyright (c) 2026
-
+/// @brief       后端客户端：TCP 8+4+body + typed protobuf InternalRequest/Response
 #include "backend.h"
 
+#include "api_contract.h"
+
 #include "NetHttpClient.h"
+
+#include "nao/v1/internal_v2.pb.h"
+
+#include <google/protobuf/util/json_util.h>
 
 #include <boost/asio/buffer.hpp>
 #include <boost/asio/connect.hpp>
@@ -17,7 +19,6 @@
 
 #include <array>
 #include <atomic>
-#include <chrono>
 #include <cstdint>
 #include <map>
 #include <string>
@@ -30,121 +31,60 @@ namespace Gateway
     {
         constexpr std::size_t MAX_BODY = 8 * 1024 * 1024;
 
-        void PutVarint(std::string& out, std::uint64_t value)
-        {
-            while (true)
-            {
-                const auto b = static_cast<unsigned char>(value & 0x7F);
-                value >>= 7;
-                if (value != 0)
-                {
-                    out.push_back(static_cast<char>(b | 0x80));
-                }
-                else
-                {
-                    out.push_back(static_cast<char>(b));
-                    return;
-                }
-            }
-        }
-
-        bool ReadVarint(const std::string& data, std::size_t& pos, std::uint64_t& value)
-        {
-            value = 0;
-            int shift = 0;
-            while (pos < data.size() && shift <= 63)
-            {
-                const auto b = static_cast<unsigned char>(data[pos++]);
-                value |= static_cast<std::uint64_t>(b & 0x7F) << shift;
-                if ((b & 0x80) == 0)
-                {
-                    return true;
-                }
-                shift += 7;
-            }
-            return false;
-        }
-
-        void PutStr(std::string& out, int field, const std::string& value)
-        {
-            PutVarint(out, static_cast<std::uint64_t>((field << 3) | 2));
-            PutVarint(out, value.size());
-            out.append(value);
-        }
-
-        void PutBytes(std::string& out, int field, const std::string& value)
-        {
-            PutStr(out, field, value);
-        }
-
-        struct Fields
-        {
-            std::map<int, std::string> strings;
-            std::map<int, std::uint64_t> ints;
-        };
-
-        bool DecodeFields(const std::string& data, Fields& fields)
-        {
-            std::size_t pos = 0;
-            while (pos < data.size())
-            {
-                std::uint64_t tag = 0;
-                if (!ReadVarint(data, pos, tag))
-                {
-                    return false;
-                }
-                const int field = static_cast<int>(tag >> 3);
-                const int wire = static_cast<int>(tag & 7);
-                if (wire == 0)
-                {
-                    std::uint64_t v = 0;
-                    if (!ReadVarint(data, pos, v))
-                    {
-                        return false;
-                    }
-                    fields.ints[field] = v;
-                }
-                else if (wire == 2)
-                {
-                    std::uint64_t len = 0;
-                    if (!ReadVarint(data, pos, len) || len > data.size() - pos)
-                    {
-                        return false;
-                    }
-                    fields.strings[field] = data.substr(pos, static_cast<std::size_t>(len));
-                    pos += static_cast<std::size_t>(len);
-                }
-                else if (wire == 1)
-                {
-                    if (pos + 8 > data.size()) return false;
-                    pos += 8;
-                }
-                else if (wire == 5)
-                {
-                    if (pos + 4 > data.size()) return false;
-                    pos += 4;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
-
         std::string NextRequestId()
         {
-            static std::atomic<std::uint64_t> counter{0};
-            const auto now = std::chrono::steady_clock::now().time_since_epoch();
-            const auto us = std::chrono::duration_cast<std::chrono::microseconds>(now).count();
-            return "gw-" + std::to_string(us) + "-" + std::to_string(counter.fetch_add(1));
+            static std::atomic<unsigned long long> seq{0};
+            return "gw-be-" + std::to_string(++seq);
         }
 
-        std::string StringValue(const std::string& json)
+        std::pair<std::string, std::map<std::string, std::string>> SplitQuery(const std::string& path)
+        {
+            std::map<std::string, std::string> query;
+            const auto pos = path.find('?');
+            if (pos == std::string::npos)
+            {
+                return {path, query};
+            }
+            const std::string clean = path.substr(0, pos);
+            std::string raw = path.substr(pos + 1);
+            std::size_t start = 0;
+            while (start <= raw.size())
+            {
+                const auto end = raw.find('&', start);
+                const std::string part = raw.substr(start, end == std::string::npos ? std::string::npos : end - start);
+                const auto eq = part.find('=');
+                if (eq != std::string::npos)
+                {
+                    query[part.substr(0, eq)] = part.substr(eq + 1);
+                }
+                else if (!part.empty())
+                {
+                    query[part] = "";
+                }
+                if (end == std::string::npos) break;
+                start = end + 1;
+            }
+            return {clean, query};
+        }
+
+        bool FillParams(const std::string& body, google::protobuf::Struct& params)
+        {
+            if (body.empty())
+            {
+                return true;
+            }
+            const auto status = google::protobuf::util::JsonStringToMessage(body, &params);
+            return status.ok();
+        }
+
+        std::string StructToJson(const google::protobuf::Struct& data)
         {
             std::string out;
-            PutStr(out, 1, json);
-            return out;
+            google::protobuf::util::JsonPrintOptions options;
+            options.add_whitespace = false;
+            options.always_print_fields_with_no_presence = false;
+            const auto status = google::protobuf::util::MessageToJsonString(data, &out, options);
+            return status.ok() ? out : "{}";
         }
     } // namespace
 
@@ -169,6 +109,10 @@ namespace Gateway
                                                  const std::string& body,
                                                  const std::string& owner) const
     {
+        Result result;
+        const auto split = SplitQuery(path);
+        const std::string cleanPath = split.first;
+
         if (cfg_.backendProtocol != "tcp")
         {
             boost::asio::io_context io;
@@ -189,7 +133,6 @@ namespace Gateway
             }
             boost::system::error_code ec;
             const Net::Client::Http::Response resp = client.Send(req, ec);
-            Result result;
             if (ec)
             {
                 result.error = "backend request failed: " + ec.message();
@@ -205,27 +148,37 @@ namespace Gateway
             return result;
         }
 
-        Result result;
         try
         {
-            std::string methodPath = path;
-            if (methodPath == "/api/health")
-            {
-                methodPath = "/internal/health";
-            }
+            nao::v1::InternalRequest request;
             const std::string rid = NextRequestId();
-            const std::string payload = StringValue(body.empty() ? "{}" : body);
+            request.set_request_id(rid);
+            request.set_method(ApiMethodFor(method, cleanPath));
+            request.set_path(InternalPathFor(cleanPath));
+            request.set_http_method(method);
+            request.set_user_id(owner);
+            request.set_role("");
+            if (!FillParams(body, *request.mutable_params()))
+            {
+                result.error = "invalid json params";
+                return result;
+            }
+            for (const auto& [key, value] : split.second)
+            {
+                (*request.mutable_query())[key] = value;
+            }
+
             std::string reqBody;
-            PutStr(reqBody, 1, rid);
-            PutStr(reqBody, 2, methodPath);
-            PutStr(reqBody, 3, owner);
-            PutStr(reqBody, 4, "");
-            PutBytes(reqBody, 5, payload);
+            if (!request.SerializeToString(&reqBody) || reqBody.size() > MAX_BODY)
+            {
+                result.error = "protobuf encode failed";
+                return result;
+            }
 
             std::array<unsigned char, 12> header{};
             header[0] = 'N'; header[1] = 'A'; header[2] = 'O'; header[3] = '1';
-            header[4] = 1; // version
-            header[5] = 1; // request
+            header[4] = 1;
+            header[5] = 1;
             const auto len = static_cast<std::uint32_t>(reqBody.size());
             header[8] = static_cast<unsigned char>((len >> 24) & 0xFF);
             header[9] = static_cast<unsigned char>((len >> 16) & 0xFF);
@@ -264,23 +217,15 @@ namespace Gateway
             {
                 boost::asio::read(socket, boost::asio::buffer(respBody.data(), rlen));
             }
-            Fields fields;
-            if (!DecodeFields(respBody, fields))
+            nao::v1::InternalResponse response;
+            if (!response.ParseFromString(respBody))
             {
                 result.error = "bad protobuf response";
                 return result;
             }
-            result.status = static_cast<unsigned>(fields.ints.count(2) ? fields.ints.at(2) : 200);
-            result.error = fields.strings.count(3) ? fields.strings.at(3) : "";
-            if (fields.strings.count(4))
-            {
-                Fields payloadFields;
-                if (DecodeFields(fields.strings.at(4), payloadFields) &&
-                    payloadFields.strings.count(1))
-                {
-                    result.body = payloadFields.strings.at(1);
-                }
-            }
+            result.status = static_cast<unsigned>(response.status());
+            result.error = response.error();
+            result.body = StructToJson(response.data());
             result.ok = result.status >= 200 && result.status < 300;
             if (!result.ok && result.error.empty())
             {

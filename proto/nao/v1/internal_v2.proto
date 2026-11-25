@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package nao.v1;
+
+import "google/protobuf/struct.proto";
+
+// v35.9.36：网关 ↔ worker 的内部契约。
+// 不再使用 JsonPayload.json；参数和结果都是 protobuf Struct（typed Value）。
+// method 表示接口组，path 保留逐接口 /internal/* 契约路径。
+enum ApiMethod {
+  API_UNSPECIFIED = 0;
+  API_AUTH = 1;
+  API_CHAT = 2;
+  API_HISTORY = 3;
+  API_STATE = 4;
+  API_PERSONA = 5;
+  API_SAVINGS = 6;
+  API_WEEKLY = 7;
+  API_PLAN = 8;
+  API_PLUGIN = 9;
+  API_HEALTH = 10;
+  API_PUSH = 11;
+  API_GROUP = 12;
+  API_CRON = 13;
+  API_TOOL = 14;
+  API_ENDPOINT = 15;
+  API_QUERY = 16;
+  API_COMMAND = 17;
+  API_ADMIN = 18;
+}
+
+message InternalRequest {
+  string request_id = 1;
+  ApiMethod method = 2;
+  string path = 3;                       // /internal/<domain>/<action>
+  string http_method = 4;
+  string user_id = 5;
+  string role = 6;
+  google.protobuf.Struct params = 7;     // typed 字段树，不再字符串化 JSON
+  map<string, string> query = 8;
+  map<string, string> path_params = 9;
+}
+
+message InternalResponse {
+  string request_id = 1;
+  int32 status = 2;
+  string error = 3;
+  google.protobuf.Struct data = 4;
+}

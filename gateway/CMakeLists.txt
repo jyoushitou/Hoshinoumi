@@ -11,6 +11,7 @@ find_package(CommonNet CONFIG REQUIRED)
 
 # HS256 JWT 直接使用 OpenSSL HMAC
 find_package(OpenSSL REQUIRED)
+find_package(Protobuf CONFIG REQUIRED)
 
 add_executable(rec_gateway
     main.cpp
@@ -19,14 +20,17 @@ add_executable(rec_gateway
     src/backend.cpp
     src/auth.cpp
     src/rate_limit.cpp
+    src/api_contract.cpp
+    src/proto/nao/v1/internal_v2.pb.cc
 )
 
-target_include_directories(rec_gateway PRIVATE src)
+target_include_directories(rec_gateway PRIVATE src src/proto)
 
 target_link_libraries(rec_gateway PRIVATE
     Common::Net::HttpServer
     Common::Net::HttpClient
     OpenSSL::Crypto
+    protobuf::libprotobuf
 )
 
 # CommonNet 的 Windows 实现用了 AcceptEx / GetAcceptExSockaddrs
