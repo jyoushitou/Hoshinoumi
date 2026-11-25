@@ -88,3 +88,7 @@ data/push_devices.json
 data/push_devices.tmp
 data/push_outbox.json
 data/push_outbox.tmp
+
+data/*.log
+
+pip-*/
