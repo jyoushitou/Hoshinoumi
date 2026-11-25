@@ -22,6 +22,7 @@ from .routes_weekly_plan import handle_weekly_get, handle_weekly_put, handle_wee
 from .routes_reminders import handle_pending as handle_reminders_pending, handle_ack as handle_reminder_ack
 from .routes_balance import handle_balance
 from .routes_health import handle_summary as handle_health_summary, handle_add_meal as handle_health_add_meal, handle_delete_meal as handle_health_delete_meal, handle_recognize as handle_health_recognize
+from .routes_push import handle_devices as handle_push_devices, handle_register as handle_push_register, handle_delete as handle_push_delete, handle_preferences as handle_push_preferences, handle_test as handle_push_test, handle_outbox as handle_push_outbox
 from .routes_plugins import handle_list as handle_plugins_list, handle_install as handle_plugins_install, handle_toggle as handle_plugins_toggle, handle_approve as handle_plugins_approve, handle_reject as handle_plugins_reject
 from .routes_cron import handle_list as handle_cron_list, handle_create as handle_cron_create, handle_update as handle_cron_update, handle_delete as handle_cron_delete, handle_run as handle_cron_run
 from .routes_relation import handle_relation
@@ -433,6 +434,13 @@ async def start_api_server():
     app.router.add_get("/api/savings/events", handle_savings_events)
     app.router.add_get("/api/balance", handle_balance)
     app.router.add_get("/api/health/summary", handle_health_summary)
+    app.router.add_get("/api/push/devices", handle_push_devices)
+    app.router.add_post("/api/push/devices", handle_push_register)
+    app.router.add_delete("/api/push/devices/{id}", handle_push_delete)
+    app.router.add_get("/api/push/preferences", handle_push_preferences)
+    app.router.add_patch("/api/push/preferences", handle_push_preferences)
+    app.router.add_post("/api/push/test", handle_push_test)
+    app.router.add_get("/api/push/outbox", handle_push_outbox)
     app.router.add_get("/api/plugins", handle_plugins_list)
     app.router.add_post("/api/plugins/install", handle_plugins_install)
     app.router.add_post("/api/plugins/{id}/toggle", handle_plugins_toggle)
