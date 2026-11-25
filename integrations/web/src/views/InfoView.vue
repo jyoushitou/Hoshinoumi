@@ -9,6 +9,8 @@ const section = ref<Section>('config')
 const status = ref<InfoStatus | null>(null)
 const error = ref('')
 const session = useSessionStore()
+const webVersion = __APP_VERSION__
+const backendVersion = computed(() => String(status.value?.version || '—'))
 const balance = ref<InfoBalance | null>(null)
 interface ShelfBook { title?: string; last_no?: number; last_title?: string; intro?: string }
 const shelf = ref<{ books?: ShelfBook[]; day?: string; chapters?: number } | null>(null)
@@ -22,7 +24,7 @@ const copied = ref(false)
 async function copyDiagnostics() {
   const text = [
     `Hoshinoumi Web ${new Date().toISOString()}`,
-    `status=${status.value?.status || '—'} schema=${status.value?.schema || '—'} version=${status.value?.version || '—'}`,
+    `status=${status.value?.status || '—'} schema=${status.value?.schema || '—'} web=${webVersion} backend=${status.value?.version || '—'}`,
     `master_qq=${status.value?.master_qq || '—'} latency=${session.statusLatencyMs ?? '—'}ms`,
     `napcat=${status.value?.napcat?.connected ? 'connected' : 'offline'} port=${status.value?.napcat?.port || '—'}`,
     `db=${status.value?.db?.engine || '—'} tables=${status.value?.db?.tables ?? '—'} size=${status.value?.db?.size_mb ?? '—'}MB`,
@@ -119,7 +121,7 @@ onMounted(() => { void load(); void loadBalance(); void loadShelf() })
       <div><small>schema</small><b>{{ status?.schema ?? '—' }}</b></div>
     </div>
     <div class="runtime-grid">
-      <div class="runtime-card"><small>实例</small><b>{{ status?.version || '—' }}</b><span>schema {{ status?.schema ?? '—' }} · {{ uptimeLabel }}</span></div>
+      <div class="runtime-card"><small>实例</small><b>Web v{{ webVersion }}</b><span>后端 {{ backendVersion }} · schema {{ status?.schema ?? '—' }} · {{ uptimeLabel }}</span></div>
       <div class="runtime-card"><small>存储</small><b>{{ status?.db?.engine || '—' }}</b><span>{{ status?.db?.tables ?? '—' }} 张表 · {{ status?.db?.size_mb ?? '—' }} MB</span></div>
       <div class="runtime-card"><small>NapCat</small><b :class="status?.napcat?.connected ? 'on' : 'off'">{{ status?.napcat?.connected ? '已连接' : (status?.napcat?.mode === '未接入' ? '未接入' : '未连接') }}</b><span>WS {{ status?.napcat?.port ?? '—' }} · {{ status?.napcat?.mode || '—' }}</span></div>
       <div class="runtime-card"><small>备份</small><b>{{ status?.backup?.last_at || (status?.backup?.kept ? '—' : '暂无备份') }}</b><span>{{ status?.backup?.size_mb ?? 0 }} MB · 保留 {{ status?.backup?.kept ?? 0 }} 份</span></div>
