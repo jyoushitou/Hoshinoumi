@@ -13,6 +13,7 @@ import CronView from '@/views/CronView.vue'
 import LogsView from '@/views/LogsView.vue'
 import SettingsView from '@/views/SettingsView.vue'
 import PluginsView from '@/views/PluginsView.vue'
+import HomeView from '@/views/HomeView.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useSessionStore } from '@/stores/session'
 import MobilePermissionsView from '@/views/mobile/MobilePermissionsView.vue'
@@ -23,7 +24,7 @@ const router = createRouter({
   routes: [
     { path: '/', redirect: '/chat' },
     { path: '/chat', name: 'chat', component: ChatView },
-    { path: '/home', name: 'home', component: PageView, meta: meta('主页', '10 个功能模块入口') },
+    { path: '/home', name: 'home', component: HomeView, meta: meta('主页', '10 个功能模块入口') },
     { path: '/memory', name: 'memory', component: MemoryView, meta: meta('记忆', '记忆本 / 事件 / 画像 / 关系') },
     { path: '/relation', name: 'relation', component: RelationView, meta: meta('关系', '档位 / 最近变化 / 可见范围') },
     { path: '/savings', name: 'savings', component: SavingsView, meta: { ...meta('存钱', '总余额 / 账户 / 记一笔 / CSV 导入'), ownerOnly: true } },

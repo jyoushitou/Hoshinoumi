@@ -14,6 +14,7 @@ import InfoView from '@/views/InfoView.vue'
 import PersonaView from '@/views/PersonaView.vue'
 import CronView from '@/views/CronView.vue'
 import PluginsView from '@/views/PluginsView.vue'
+import HomeView from '@/views/HomeView.vue'
 import HealthView from '@/views/HealthView.vue'
 import MobileLogsView from '@/views/mobile/MobileLogsView.vue'
 import { isNativeClient } from '@/lib/platform'
@@ -112,6 +113,7 @@ const pageView = computed(() => {
   if (route.name === 'persona') return PersonaView
   if (route.name === 'cron') return CronView
   if (route.name === 'plugins') return PluginsView
+  if (route.name === 'home') return HomeView
   if (route.name === 'health') return HealthView
   if (route.name === 'logs') return MobileLogsView
   return MobilePageView
