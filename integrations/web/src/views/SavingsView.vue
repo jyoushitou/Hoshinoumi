@@ -3,6 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { http } from '@/api/client'
 import { useIsOwner } from '@/composables/useIsOwner'
 import SavingsInitModal from '@/components/SavingsInitModal.vue'
+import HealthInitModal from '@/components/HealthInitModal.vue'
 
 interface Account { account: string; balance_cents: number }
 interface Entry { id?: number; account: string; kind: string; amount_cents: number; category?: string; note?: string; occurred_at?: string }
@@ -38,6 +39,8 @@ const healthOpen = ref(true)
 const healthBusy = ref(false)
 const mealName = ref('')
 const mealKcal = ref('')
+const healthInitOpen = ref(false)
+const healthDefaults = ref({ target: 2000, burn: 320, weight: 52.4 })
 const loading = ref(false)
 const error = ref('')
 const amount = ref('')
@@ -125,6 +128,17 @@ async function loadHealth() {
     healthRemaining.value = Number(r.remaining || 0)
   } catch { health.value = null }
 }
+async function loadHealthInit() {
+  try {
+    const state = await http.get<{ initialized?: boolean; target?: number; burn?: number; weight?: number }>('/api/health/init')
+    healthDefaults.value = { target: state.target ?? 2000, burn: state.burn ?? 320, weight: state.weight ?? 52.4 }
+    healthInitOpen.value = !state.initialized && !initOpen.value
+  } catch { healthInitOpen.value = false }
+}
+async function finishHealthInit() {
+  healthInitOpen.value = false
+  await loadHealth()
+}
 async function addMeal() {
   const name = mealName.value.trim(); const kcal = Number(mealKcal.value)
   if (!name || !Number.isFinite(kcal) || kcal <= 0) return
@@ -147,8 +161,9 @@ async function finishInit() {
   initOpen.value = false
   await load()
   await loadReconcile()
+  await loadHealthInit()
 }
-onMounted(() => { if (isOwner.value) { void load(); void loadReconcile(); void loadInit(); void loadHealth() } })
+onMounted(() => { if (isOwner.value) { void load(); void loadReconcile(); void loadInit(); void loadHealth(); void loadHealthInit() } })
 watch(isOwner, value => { if (value && !data.value) { void load(); void loadInit() } })
 </script>
 
@@ -211,6 +226,7 @@ watch(isOwner, value => { if (value && !data.value) { void load(); void loadInit
       </div>
     </div>
     <SavingsInitModal :open="initOpen" :accounts="initAccounts" @close="initOpen = false" @done="finishInit" />
+    <HealthInitModal :open="healthInitOpen" :target="healthDefaults.target" :burn="healthDefaults.burn" :weight="healthDefaults.weight" @close="healthInitOpen = false" @done="finishHealthInit" />
   </section>
 </template>
 

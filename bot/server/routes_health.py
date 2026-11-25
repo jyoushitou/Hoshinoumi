@@ -12,7 +12,7 @@ from .common import json_response
 ROOT = Path(__file__).resolve().parents[2]
 HEALTH_FILE = ROOT / "data" / "health.json"
 _LOCK = threading.Lock()
-_DEFAULT = {"target": 2000, "burn": 320, "weight": 52.4, "meals": []}
+_DEFAULT = {"target": 2000, "burn": 320, "weight": 52.4, "meals": [], "initialized": False}
 
 
 def _load():
@@ -92,3 +92,29 @@ async def handle_recognize(request):
         "error": "vision_not_configured",
         "message": "视觉识别模型尚未配置，请手动填写食物与热量",
     }, 501)
+
+async def handle_init_get(request):
+    data = _load()
+    return json_response({"ok": True, "initialized": bool(data.get("initialized")),
+                          "target": data.get("target", 2000), "burn": data.get("burn", 320),
+                          "weight": data.get("weight", 52.4)})
+
+
+async def handle_init_post(request):
+    try:
+        body = await request.json()
+    except Exception:
+        return json_response({"ok": False, "error": "invalid_json"}, 400)
+    with _LOCK:
+        data = _load()
+        try:
+            target = int((body or {}).get("target") or data.get("target", 2000))
+            burn = int((body or {}).get("burn") or data.get("burn", 320))
+            weight = float((body or {}).get("weight") or data.get("weight", 52.4))
+        except (TypeError, ValueError):
+            return json_response({"ok": False, "error": "bad_values"}, 400)
+        if target < 0 or burn < 0 or weight <= 0:
+            return json_response({"ok": False, "error": "bad_values"}, 400)
+        data.update({"target": target, "burn": burn, "weight": round(weight, 1), "initialized": True})
+        _save(data)
+    return json_response({"ok": True, "initialized": True, "target": target, "burn": burn, "weight": round(weight, 1)})

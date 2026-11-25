@@ -21,7 +21,7 @@ from .routes_savings import handle_savings, handle_savings_import, handle_saving
 from .routes_weekly_plan import handle_weekly_get, handle_weekly_put, handle_weekly_import, handle_weekly_weeks
 from .routes_reminders import handle_pending as handle_reminders_pending, handle_ack as handle_reminder_ack
 from .routes_balance import handle_balance
-from .routes_health import handle_summary as handle_health_summary, handle_add_meal as handle_health_add_meal, handle_delete_meal as handle_health_delete_meal, handle_recognize as handle_health_recognize
+from .routes_health import handle_summary as handle_health_summary, handle_add_meal as handle_health_add_meal, handle_delete_meal as handle_health_delete_meal, handle_recognize as handle_health_recognize, handle_init_get as handle_health_init_get, handle_init_post as handle_health_init_post
 from .routes_memory import handle_item_update as handle_memory_item_update, handle_item_delete as handle_memory_item_delete
 from .routes_groups import handle_list as handle_groups_list, handle_create as handle_groups_create
 from .routes_push import handle_devices as handle_push_devices, handle_register as handle_push_register, handle_delete as handle_push_delete, handle_preferences as handle_push_preferences, handle_test as handle_push_test, handle_outbox as handle_push_outbox
@@ -451,6 +451,8 @@ async def start_api_server():
     app.router.add_get("/api/savings/reconcile", handle_reconcile)
     app.router.add_get("/api/savings/events", handle_savings_events)
     app.router.add_get("/api/balance", handle_balance)
+    app.router.add_get("/api/health/init", handle_health_init_get)
+    app.router.add_post("/api/health/init", handle_health_init_post)
     app.router.add_get("/api/health/summary", handle_health_summary)
     app.router.add_get("/api/push/devices", handle_push_devices)
     app.router.add_post("/api/push/devices", handle_push_register)

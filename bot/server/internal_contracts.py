@@ -43,6 +43,7 @@ _CONTRACTS = [
     (r"/internal/finance/audit", {"GET"}),
     (r"/internal/savings/events", {"GET"}),
     (r"/internal/balance", {"GET"}),
+    (r"/internal/health/init", {"GET", "POST"}),
     (r"/internal/health/summary", {"GET"}),
     (r"/internal/health/meals", {"POST"}),
     (r"/internal/health/meals/[^/]+", {"DELETE"}),

@@ -59,7 +59,7 @@ namespace Gateway
                     "/api/savings/init", "/api/savings/overview", "/api/savings/goals", "/api/savings/frozen",
                     "/api/savings/fixed", "/api/savings/funds", "/api/savings/monthly",
                     "/api/finance/audit",
-                    "/api/health/summary", "/api/push/devices", "/api/push/preferences",
+                    "/api/health/summary", "/api/health/init", "/api/push/devices", "/api/push/preferences",
                     "/api/push/outbox", "/api/plugins", "/api/relation",
                     "/api/weekly-plan/weeks", "/api/weekly-plan", "/api/plan",
                     "/api/plan/export", "/api/presence", "/api/state", "/api/reminders",
@@ -82,7 +82,7 @@ namespace Gateway
                     "/api/persona/import", "/api/persona/activate",
                     "/api/savings/init", "/api/savings/entries", "/api/savings/import", "/api/savings/snapshots",
                     "/api/weekly-plan", "/api/weekly-plan/import", "/api/plan", "/api/plan/import",
-                    "/api/health/meals", "/api/health/recognize",
+                    "/api/health/init", "/api/health/meals", "/api/health/recognize",
                     "/api/plugins/install", "/api/push/devices", "/api/push/test",
                     "/api/groups", "/api/endpoints", "/api/reminders",
                 };
