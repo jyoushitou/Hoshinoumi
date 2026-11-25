@@ -199,6 +199,18 @@ PLUGIN_ERRORS = [
 ]
 PLUGIN_DIR = ROOT / "data" / "plugins"
 
+
+HEALTH = {
+    "target": 2000,
+    "burn": 320,
+    "weight": 52.4,
+    "meals": [
+        {"id": 1, "name": "早餐 · 三明治", "kcal": 420, "time": "08:10"},
+        {"id": 2, "name": "午餐 · 鸡胸饭", "kcal": 680, "time": "12:20"},
+        {"id": 3, "name": "加餐 · 酸奶", "kcal": 160, "time": "15:40"},
+    ],
+}
+
 TASKS = [
     {"id": 1, "schedule_type": "daily", "content": "每日早报", "at_time": "08:00", "enabled": True, "next_ts": "2026-11-20 08:00:00"},
     {"id": 2, "schedule_type": "daily", "content": "日记提醒", "at_time": "22:30", "enabled": True, "next_ts": "2026-11-19 22:30:00"},
@@ -596,6 +608,9 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/push/outbox":
             self._json(200, {"ok": True, "data": list(PUSH_OUTBOX.values()), "mock": True})
             return
+        if path == "/api/health/summary":
+            intake = sum(int(x.get("kcal") or 0) for x in HEALTH["meals"])
+            self._json(200, {"ok": True, "data": HEALTH, "intake": intake, "remaining": HEALTH["target"] + HEALTH["burn"] - intake, "mock": True}); return
         if path == "/api/status":
             self._json(200, {
                 "status": "running",
@@ -801,6 +816,15 @@ class Handler(BaseHTTPRequestHandler):
         self._json(404, {"error": "not_found", "path": path})
 
     def do_DELETE(self):
+        if path.startswith("/api/health/meals/"):
+            if not self._is_owner():
+                self._json(403, {"ok": False, "error": "forbidden"}); return
+            try: mid = int(path.rsplit("/", 1)[-1])
+            except ValueError:
+                self._json(400, {"ok": False, "error": "bad_id"}); return
+            before = len(HEALTH["meals"])
+            HEALTH["meals"] = [x for x in HEALTH["meals"] if int(x.get("id") or 0) != mid]
+            self._json(200 if len(HEALTH["meals"]) < before else 404, {"ok": len(HEALTH["meals"]) < before, "deleted": mid}); return
         path = urlparse(self.path).path
         if not self._authorized():
             self._json(401, {"error": "unauthorized", "message": "bad token"})
@@ -875,6 +899,33 @@ class Handler(BaseHTTPRequestHandler):
         if path.startswith("/internal/"):
             self._json(404, {"error": "not_found", "path": path})
             return
+        if path == "/api/health/meals":
+            if not self._is_owner():
+                self._json(403, {"ok": False, "error": "forbidden"}); return
+            name = str(body.get("name") or "").strip()[:80]
+            try: kcal = int(body.get("kcal") or 0)
+            except (TypeError, ValueError): kcal = 0
+            if not name or kcal <= 0:
+                self._json(400, {"ok": False, "error": "bad_meal", "message": "食物名和热量必填"}); return
+            meal = {"id": int(time.time() * 1000) % 2147483647, "name": name, "kcal": kcal, "time": _now()[11:16]}
+            HEALTH["meals"].append(meal)
+            self._json(200, {"ok": True, "data": meal, "intake": sum(int(x.get("kcal") or 0) for x in HEALTH["meals"]), "mock": True}); return
+        if path == "/api/health/recognize":
+            if not self._is_owner():
+                self._json(403, {"ok": False, "error": "forbidden"}); return
+            data = str(body.get("data_base64") or "")
+            if len(data) > 12 * 1024 * 1024:
+                self._json(413, {"ok": False, "error": "image_too_large"}); return
+            if not data:
+                self._json(400, {"ok": False, "error": "missing_image"}); return
+            filename = str(body.get("filename") or "")
+            if "奶茶" in filename or "milk" in filename.lower():
+                food, kcal = "奶茶", 360
+            elif "沙拉" in filename or "salad" in filename.lower():
+                food, kcal = "鸡胸沙拉", 320
+            else:
+                food, kcal = "鸡胸饭", 680
+            self._json(200, {"ok": True, "food": food, "kcal": kcal, "items": [{"name": food, "kcal": kcal}], "confidence": 0.86, "mock": True}); return
         if path in ("/api/plugins/install", "/api/plugins/import"):
             if not self._is_owner():
                 self._json(403, {"ok": False, "error": "forbidden", "message": "插件管理仅主人可用"}); return

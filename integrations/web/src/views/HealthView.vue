@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { http } from '@/api/client'
 
 interface Meal { id: number; name: string; kcal: number; time: string }
@@ -37,6 +37,21 @@ const recognizeBusy = ref(false)
 const recognizeError = ref('')
 const recognized = ref<{ name: string; kcal: number } | null>(null)
 const photoInput = ref<HTMLInputElement | null>(null)
+const healthError = ref('')
+interface HealthPayload { target?: number; burn?: number; weight?: number; meals?: Meal[] }
+async function loadHealth() {
+  try {
+    const result = await http.get<{ data?: HealthPayload }>('/api/health/summary')
+    if (result.data) {
+      target.value = Number(result.data.target || target.value)
+      burn.value = Number(result.data.burn || burn.value)
+      weight.value = Number(result.data.weight || weight.value)
+      if (Array.isArray(result.data.meals)) meals.value = result.data.meals
+    }
+    healthError.value = ''
+  } catch { healthError.value = '健康数据未连接，当前为本地演示' }
+}
+onMounted(loadHealth)
 function applyRecognized() { if (!recognized.value) return; form.value = { name: recognized.value.name, kcal: String(recognized.value.kcal) }; recognized.value = null }
 async function onPhoto(event: Event) {
   const file = (event.target as HTMLInputElement).files?.[0]
@@ -54,14 +69,20 @@ async function onPhoto(event: Event) {
     recognized.value = { name, kcal: Math.round(kcal) }
   } catch { recognizeError.value = '识别失败，请重试或手动填写' } finally { recognizeBusy.value = false; if (photoInput.value) photoInput.value.value = '' }
 }
-function addMeal() {
+async function addMeal() {
   const name = form.value.name.trim()
   const kcal = Number(form.value.kcal)
   if (!name || !Number.isFinite(kcal) || kcal <= 0) return
-  meals.value.push({ id: Date.now(), name, kcal: Math.round(kcal), time: new Date().toTimeString().slice(0, 5) })
+  const localMeal = { id: Date.now(), name, kcal: Math.round(kcal), time: new Date().toTimeString().slice(0, 5) }
+  meals.value.push(localMeal)
   form.value = { name: '', kcal: '' }
+  try {
+    const result = await http.post<{ data?: Meal }>('/api/health/meals', { name, kcal })
+    if (result.data) Object.assign(localMeal, result.data)
+    healthError.value = ''
+  } catch { healthError.value = '已记录到本地，后端未同步' }
 }
-function removeMeal(id: number) { meals.value = meals.value.filter(meal => meal.id !== id) }
+function removeMeal(id: number) { meals.value = meals.value.filter(meal => meal.id !== id); void http.request(`/api/health/meals/${id}`, { method: 'DELETE' }).catch(() => { healthError.value = '本地已删除，后端未同步' }) }
 </script>
 
 <template>
@@ -78,6 +99,7 @@ function removeMeal(id: number) { meals.value = meals.value.filter(meal => meal.
     <div class="grid">
       <div class="panel">
         <div class="panel-title">今日饮食 <span>{{ meals.length }} 条</span></div>
+        <div v-if="healthError" class="error">{{ healthError }}</div>
         <div v-for="meal in meals" :key="meal.id" class="meal"><div><b>{{ meal.name }}</b><small>{{ meal.time }}</small></div><em>{{ meal.kcal }} kcal</em><button type="button" @click="removeMeal(meal.id)">×</button></div>
         <div v-if="!meals.length" class="empty">今天还没有记录</div>
       </div>
