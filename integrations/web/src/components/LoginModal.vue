@@ -6,26 +6,17 @@ import { useSessionStore } from '@/stores/session'
 const auth = useAuthStore(); const session = useSessionStore()
 const qq = ref(auth.qq); const token = ref(''); const password = ref(''); const setupCode = ref(''); const status = ref(auth.authError || ''); const saving = ref(false); const mode = ref<'login' | 'setup' | 'token'>('login')
 async function loginReal(qqValue: string, passwordValue: string, setupCodeValue = '') {
-  try {
-    const real = await http.post<{ ok?: boolean; token?: string; tokens?: { access?: string }; message?: string; error?: string }>('/api/login', {
-      user_id: qqValue, password: passwordValue, setup_code: setupCodeValue,
-    })
-    const token = real.tokens?.access || real.token
-    if (token) return token
-  } catch { /* fall through to mock/local gateway */ }
-  const mock = await http.post<{ ok?: boolean; token?: string; message?: string }>('/api/auth/login', { qq: qqValue, password: passwordValue })
-  if (!mock.token) throw new Error(mock.message || '登录失败')
-  return mock.token
+  const result = await http.post<{ ok?: boolean; token?: string; tokens?: { access?: string }; message?: string }>('/api/login', {
+    user_id: qqValue, password: passwordValue, setup_code: setupCodeValue,
+  })
+  const token = result.tokens?.access || result.token
+  if (!token) throw new Error(result.message || '登录失败')
+  return token
 }
 
 async function registerReal(qqValue: string, passwordValue: string, code: string) {
-  try {
-    await http.post('/api/register', { user_id: qqValue, invite: code, password: passwordValue, nickname: qqValue })
-    return await loginReal(qqValue, passwordValue, code)
-  } catch { /* fall through to mock setup */ }
-  const mock = await http.post<{ ok?: boolean; token?: string; message?: string }>('/api/auth/setup', { qq: qqValue, password: passwordValue, setup_code: code })
-  if (!mock.token) throw new Error(mock.message || '首次设置失败')
-  return mock.token
+  await http.post('/api/register', { user_id: qqValue, invite: code, password: passwordValue, nickname: qqValue })
+  return await loginReal(qqValue, passwordValue, code)
 }
 
 async function save() {
