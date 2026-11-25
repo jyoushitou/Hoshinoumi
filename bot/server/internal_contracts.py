@@ -86,7 +86,8 @@ def resolve(internal_path, http_method):
     for pattern, methods in _COMPILED:
         if method in methods and pattern.match(internal_path):
             if (internal_path.startswith("/internal/auth/") or
-                    internal_path in ("/internal/audit", "/internal/recall")):
+                    internal_path in ("/internal/audit", "/internal/recall",
+                                      "/internal/diary", "/internal/shelf")):
                 return internal_path
             return "/api/" + internal_path[len("/internal/"):]
     return None
