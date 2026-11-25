@@ -22,12 +22,14 @@ import MobileWeeklyView from '@/views/mobile/MobileWeeklyView.vue'
 import MobileTabBar from '@/components/mobile/MobileTabBar.vue'
 import MobileReminderPopup from '@/components/mobile/MobileReminderPopup.vue'
 import { useAuthStore } from '@/stores/auth'
-import { mobileEntries } from '@/composables/useMobileNav'
+import { mobileEntries, useMobileNav } from '@/composables/useMobileNav'
 import { useSessionStore } from '@/stores/session'
 import { useIsOwner } from '@/composables/useIsOwner'
 import { useUiSettings } from '@/composables/useUiSettings'
 
-const { navHidden } = useUiSettings()
+const { navHidden, navBall } = useUiSettings()
+const { quickEntries } = useMobileNav()
+const navMenu = ref(false)
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
@@ -181,7 +183,11 @@ onBeforeUnmount(() => {
     </main>
     <MobileReminderPopup />
     <MobileTabBar v-if="!navHidden && !chatDetail && !keyboardOpen && isMainRoute" />
-    <button v-if="navHidden" class="nav-ball-fallback" type="button" title="展开底部导航" @click="navHidden = false">◎</button>
+    <button v-if="navHidden || navBall" class="nav-ball-fallback" type="button" title="导航" @click="navHidden ? (navHidden = false) : (navMenu = !navMenu)">◎</button>
+    <div v-if="navMenu && !navHidden" class="nav-ball-menu">
+      <button v-for="entry in quickEntries" :key="entry.key" type="button" @click="navMenu = false; router.push(entry.path)">{{ entry.icon }} {{ entry.label }}</button>
+      <button class="hide" type="button" @click="navMenu = false; navHidden = true">隐藏底部导航</button>
+    </div>
   </div>
 </template>
 
@@ -202,5 +208,5 @@ onBeforeUnmount(() => {
 .page-right-enter-from{opacity:0;transform:translateX(-18px)}
 .page-right-leave-to{opacity:0;transform:translateX(14px)}
 @media(prefers-reduced-motion:reduce){.page-left-enter-active,.page-left-leave-active,.page-right-enter-active,.page-right-leave-active{transition:none}}
-.nav-ball-fallback{position:fixed;right:14px;bottom:22px;z-index:60;width:42px;height:42px;border-radius:50%;border:1px solid #bcd4ff;background:#2563eb;color:#fff;font:18px inherit;box-shadow:0 10px 24px rgba(37,99,235,.28)}
+.nav-ball-menu{position:fixed;right:14px;bottom:72px;z-index:61;width:148px;background:#fff;border:1px solid #e3ebf7;border-radius:12px;padding:6px;box-shadow:0 12px 30px rgba(15,23,42,.16);display:grid;gap:2px}.nav-ball-menu button{height:30px;border:0;border-radius:7px;background:transparent;color:#405872;font:9px inherit;text-align:left;padding:0 8px}.nav-ball-menu button:hover{background:#eef4ff;color:#2563eb}.nav-ball-menu .hide{color:#b23b52;border-top:1px solid #f1f5fb;border-radius:0 0 7px 7px;margin-top:2px}.nav-ball-fallback{position:fixed;right:14px;bottom:22px;z-index:60;width:42px;height:42px;border-radius:50%;border:1px solid #bcd4ff;background:#2563eb;color:#fff;font:18px inherit;box-shadow:0 10px 24px rgba(37,99,235,.28)}
 </style>

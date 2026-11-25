@@ -13,7 +13,7 @@ const isOwner = useIsOwner()
 const apkVersion = ref('Web 预览')
 const backendVersion = ref('—')
 const { entries, quickKeys, toggleQuick, resetQuick } = useMobileNav()
-const { navHidden, hiddenPages, togglePage } = useUiSettings()
+const { navHidden, navBall, hiddenPages, togglePage } = useUiSettings()
 const visibilityEntries = computed(() => entries.value.filter(entry => !['settings', 'chats'].includes(entry.key)))
 const visibleEntries = computed(() => isOwner.value ? entries.value : entries.value.filter(entry => entry.key !== 'relation' && entry.key !== 'savings'))
 const message = computed(() => `${quickKeys.value.length} / 5`)
@@ -79,7 +79,7 @@ function changeBackend() {
 
     <div class="block">
       <div class="row"><span>底部导航</span><button class="nav-switch" :class="{ on: !navHidden }" type="button" role="switch" :aria-checked="!navHidden" @click="navHidden = !navHidden"><i /></button></div>
-      <div class="row"><span>导航球</span><small>关闭底部导航后可用</small></div>
+      <div class="row"><span>导航球</span><button class="nav-switch" :class="{ on: navBall }" type="button" role="switch" :aria-checked="navBall" @click="navBall = !navBall"><i /></button></div>
     </div>
 
     <div class="block">
