@@ -7,6 +7,15 @@ import { useAuthStore } from '@/stores/auth'
 const auth = useAuthStore()
 const isMobile = ref(false)
 let media: MediaQueryList | null = null
+let viewportRaf = 0
+function syncViewport() {
+  cancelAnimationFrame(viewportRaf)
+  viewportRaf = requestAnimationFrame(() => {
+    document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`)
+    document.documentElement.classList.toggle('device-mobile', window.innerWidth <= 820)
+    document.documentElement.classList.toggle('device-tablet', window.innerWidth > 820 && window.innerWidth <= 1180)
+  })
+}
 const MOBILE_QUERY = '(max-width: 820px)'
 function forcedLayout() {
   if (typeof window === 'undefined') return ''
@@ -20,11 +29,18 @@ function sync(event?: MediaQueryListEvent) {
 }
 onMounted(() => {
   media = window.matchMedia(MOBILE_QUERY)
-  sync()
+  sync(); syncViewport()
   media.addEventListener('change', sync)
+  window.addEventListener('resize', syncViewport, { passive: true })
+  window.addEventListener('orientationchange', syncViewport, { passive: true })
   void auth.validate()
 })
-onBeforeUnmount(() => { media?.removeEventListener('change', sync) })
+onBeforeUnmount(() => {
+  media?.removeEventListener('change', sync)
+  window.removeEventListener('resize', syncViewport)
+  window.removeEventListener('orientationchange', syncViewport)
+  cancelAnimationFrame(viewportRaf)
+})
 </script>
 <template>
   <LoginModal v-if="!auth.loggedIn" />
