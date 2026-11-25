@@ -146,41 +146,6 @@ namespace Gateway
         const auto split = SplitQuery(path);
         const std::string cleanPath = split.first;
 
-        if (cfg_.backendProtocol != "tcp")
-        {
-            boost::asio::io_context io;
-            Net::Client::Http::HttpClient client(io);
-            Net::Client::Http::Request req;
-            req.method = method;
-            req.url = cfg_.backendBase + path;
-            req.body = body;
-            req.timeoutMs = cfg_.backendTimeoutMs;
-            if (!body.empty())
-            {
-                req.headers.emplace_back("Content-Type", "application/json");
-            }
-            if (!owner.empty())
-            {
-                req.headers.emplace_back("X-User-Id", owner);
-                req.headers.emplace_back("X-Owner-Id", owner);
-            }
-            boost::system::error_code ec;
-            const Net::Client::Http::Response resp = client.Send(req, ec);
-            if (ec)
-            {
-                result.error = "backend request failed: " + ec.message();
-                return result;
-            }
-            result.status = resp.status;
-            result.body = resp.body;
-            result.ok = resp.status >= 200 && resp.status < 300;
-            if (!result.ok)
-            {
-                result.error = "backend status=" + std::to_string(resp.status);
-            }
-            return result;
-        }
-
         try
         {
             nao::v1::InternalRequest request;

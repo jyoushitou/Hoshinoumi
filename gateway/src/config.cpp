@@ -158,9 +158,9 @@ namespace Gateway
         {
             throw std::runtime_error("listen.port 必须在 1..65535");
         }
-        if (backendProtocol != "http" && backendProtocol != "tcp")
+        if (backendProtocol != "tcp")
         {
-            throw std::runtime_error("backend.protocol 只支持 http / tcp");
+            throw std::runtime_error("backend.protocol 只支持 tcp：网关↔后端必须使用 protobuf");
         }
         if (backendTcpHost != "127.0.0.1" && backendTcpHost != "localhost")
         {
