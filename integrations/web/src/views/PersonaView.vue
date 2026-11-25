@@ -5,6 +5,7 @@ import { http } from '@/api/client'
 interface PersonaFiles { prompt?: boolean; life?: boolean; supplement?: boolean; state?: boolean; voice?: boolean }
 interface Persona {
   name: string
+  display?: string
   active?: boolean
   files?: PersonaFiles
   prompt_excerpt?: string
@@ -29,9 +30,8 @@ async function load() {
 }
 function fileList(files?: PersonaFiles) { return Object.entries(files || {}).filter(([, enabled]) => enabled).map(([name]) => name) }
 function voiceLabel(persona: Persona) { return typeof persona.voice === 'string' ? persona.voice : persona.voice?.voice || '—' }
-function avatar(name: string) { return name.slice(0, 1).toUpperCase() }
-const displayNames: Record<string, string> = { nao: '友利奈绪', student: '学生会长' }
-function displayTitle(name: string) { return displayNames[name] ? `${displayNames[name]} · ${name}` : name }
+function avatar(name: string) { return (name || '?').slice(0, 1).toUpperCase() }
+function displayTitle(persona: Persona) { return persona.display ? `${persona.display} · ${persona.name}` : persona.name }
 async function activate(persona: Persona) {
   if (persona.active) return
   try {
@@ -76,8 +76,8 @@ onMounted(load)
     <div class="grid">
       <article v-for="persona in personas" :key="persona.name" class="card" :class="{ active: persona.active }">
         <div class="card-head">
-          <span class="avatar">{{ avatar(displayNames[persona.name] || persona.name) }}</span>
-          <div class="title"><b>{{ displayTitle(persona.name) }}</b></div>
+          <span class="avatar">{{ avatar(persona.display || persona.name) }}</span>
+          <div class="title"><b>{{ displayTitle(persona) }}</b></div>
           <span v-if="persona.active" class="badge">当前</span>
         </div>
         <p class="excerpt">{{ persona.prompt_excerpt || '暂无摘要' }}</p>
@@ -91,7 +91,7 @@ onMounted(load)
     </div>
     <div v-if="preview" class="mask" @click.self="preview = null">
       <div class="modal">
-        <header><b>{{ displayTitle(preview.name) }}</b><button type="button" @click="preview = null">×</button></header>
+        <header><b>{{ displayTitle(preview) }}</b><button type="button" @click="preview = null">×</button></header>
         <pre>{{ preview.prompt || preview.prompt_excerpt || '暂无 prompt' }}</pre>
       </div>
     </div>
