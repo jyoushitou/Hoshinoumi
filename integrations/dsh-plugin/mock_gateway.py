@@ -288,6 +288,12 @@ MEMORY_PROFILE = {
 }
 
 WEEKLY = {
+    48: [
+        {"name": "高等数学", "teacher": "王老师", "location": "教三 201", "weekday": 1, "weekday_name": "星期一", "period_start": 1, "period_end": 2, "weeks_raw": "1-16", "weeks": list(range(1, 17)), "start_week": 1, "end_week": 16, "source": "mock"},
+        {"name": "大学英语Ⅲ", "teacher": "徐老师", "location": "5-628（南楼）", "weekday": 1, "weekday_name": "星期一", "period_start": 3, "period_end": 4, "weeks_raw": "1-16", "weeks": list(range(1, 17)), "start_week": 1, "end_week": 16, "source": "mock"},
+        {"name": "数据结构", "teacher": "李老师", "location": "实验楼 302", "weekday": 3, "weekday_name": "星期三", "period_start": 5, "period_end": 6, "weeks_raw": "1-16", "weeks": list(range(1, 17)), "start_week": 1, "end_week": 16, "source": "mock"},
+        {"name": "学生会例会", "teacher": "", "location": "学生会室", "weekday": 5, "weekday_name": "星期五", "period_start": 7, "period_end": 8, "weeks_raw": "1-16", "weeks": list(range(1, 17)), "start_week": 1, "end_week": 16, "source": "mock"},
+    ],
     3: [
         {"name": "大学物理实验C9903班", "teacher": "5106.罗水平", "location": "未定", "weekday": 1, "weekday_name": "星期一", "period_start": 1, "period_end": 2, "weeks_raw": "3-5,7(未定)", "weeks": [3, 4, 5, 7], "start_week": 3, "end_week": 7, "source": "jwc_html"},
         {"name": "大学英语Ⅲ0203班", "teacher": "4930.徐小芳", "location": "5-628（南楼）", "weekday": 1, "weekday_name": "星期一", "period_start": 3, "period_end": 4, "weeks_raw": "3-17(5-628（南楼）)", "weeks": list(range(3, 18)), "start_week": 3, "end_week": 17, "source": "jwc_html"},

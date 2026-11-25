@@ -8,6 +8,7 @@ import DiaryView from '@/views/DiaryView.vue'
 import InfoView from '@/views/InfoView.vue'
 import PersonaView from '@/views/PersonaView.vue'
 import HealthView from '@/views/HealthView.vue'
+import WeeklyView from '@/views/WeeklyView.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useSessionStore } from '@/stores/session'
 import MobilePermissionsView from '@/views/mobile/MobilePermissionsView.vue'
@@ -22,7 +23,7 @@ const router = createRouter({
     { path: '/memory', name: 'memory', component: MemoryView, meta: meta('记忆', '记忆本 / 事件 / 画像 / 关系') },
     { path: '/relation', name: 'relation', component: RelationView, meta: meta('关系', '档位 / 最近变化 / 可见范围') },
     { path: '/savings', name: 'savings', component: SavingsView, meta: { ...meta('存钱', '总余额 / 账户 / 记一笔 / CSV 导入'), ownerOnly: true } },
-    { path: '/weekly', name: 'weekly', component: PageView, meta: meta('周计划表', '按周配置节次与时间') },
+    { path: '/weekly', name: 'weekly', component: WeeklyView, meta: meta('周计划表', '按周配置节次与时间') },
     { path: '/info', name: 'info', component: InfoView, meta: meta('信息', '运行 / 配置 / 备份 / 账号 / 阅读 / 网关') },
     { path: '/health', name: 'health', component: HealthView, meta: meta('健康 / 热量', '摄入 / 目标 / 运动 / 体重') },
     { path: '/persona', name: 'persona', component: PersonaView, meta: meta('人设', '导入 / 导出 / 激活') },
