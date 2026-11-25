@@ -17,33 +17,39 @@ async function toggleLongterm(item: MemoryItem) {
   try {
     await http.request(`/api/memory/items/${item.id}`, { method: 'PATCH', body: { longterm: !item.longterm } })
     item.longterm = !item.longterm
-    await loadStats()
+    await loadAll()
   } catch { /* keep state */ }
 }
 async function removeItem(item: MemoryItem) {
   if (!window.confirm('删除这条记忆？')) return
-  try { await http.request(`/api/memory/items/${item.id}`, { method: 'DELETE' }); await loadItems(); await loadStats() } catch { /* keep state */ }
+  try { await http.request(`/api/memory/items/${item.id}`, { method: 'DELETE' }); await loadAll() } catch { /* keep state */ }
 }
 interface MemoryEvent { id: number; title: string; kind: string; created_at: string }
 const events = ref<MemoryEvent[]>([])
 const profile = ref<{ summary: string; keywords: string[] } | null>(null)
-async function loadProfile() {
-  try { profile.value = await http.get<{ summary: string; keywords: string[] }>('/api/memory/profile') } catch { profile.value = null }
+interface MemoryPayload {
+  stats?: { total?: number; targets?: number; longterm?: number; events?: number }
+  items?: MemoryItem[]
+  events?: MemoryEvent[]
+  profile?: { summary: string; keywords: string[] } | null
 }
-async function loadEvents() {
-  try { const r = await http.get<{ data?: MemoryEvent[] }>('/api/memory/events'); events.value = Array.isArray(r.data) ? r.data : [] } catch { events.value = [] }
-}
-async function loadItems() {
+async function loadAll() {
   loading.value = true
   try {
-    const r = await http.get<{ data?: MemoryItem[] }>('/api/memory/items')
-    items.value = Array.isArray(r.data) ? r.data : []
-  } catch { items.value = [] } finally { loading.value = false }
+    const r = await http.get<MemoryPayload>('/api/memory')
+    stats.value = {
+      total: Number(r.stats?.total || 0),
+      targets: Number(r.stats?.targets || 0),
+      longterm: Number(r.stats?.longterm || 0),
+    }
+    items.value = Array.isArray(r.items) ? r.items : []
+    events.value = Array.isArray(r.events) ? r.events : []
+    profile.value = r.profile && r.profile.summary ? r.profile : null
+  } catch {
+    stats.value = null; items.value = []; events.value = []; profile.value = null
+  } finally { loading.value = false }
 }
-async function loadStats() {
-  try { stats.value = await http.get<{ total: number; targets: number; longterm: number }>('/api/memory/stats') } catch { stats.value = null }
-}
-onMounted(() => { void loadStats(); void loadItems(); void loadEvents(); void loadProfile() })
+onMounted(() => { void loadAll() })
 const tabs = [
   { key: 'memory', label: '记忆' },
   { key: 'events', label: '事件' },

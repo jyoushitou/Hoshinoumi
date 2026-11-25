@@ -160,24 +160,8 @@ async def handle_memory(request):
             "count": len(records),
             "records": records[-20:],
         })
-    db = _db_memory_targets(uid)
-    targets = []
-    seen = set()
-    for tid, deq in cfg.user_memory_pool.items():
-        targets.append({
-            "target_id": tid,
-            "count": max(len(deq), db.get(tid, 0)),
-            "last_message": deq[-1][0][:30] if deq else "",
-        })
-        seen.add(tid)
-    for tid, n in sorted(db.items(), key=lambda x: (-x[1], x[0])):
-        if tid in seen or n <= 0:
-            continue
-        targets.append({"target_id": tid, "count": n, "last_message": ""})
-    return json_response({
-        "total_targets": len(targets),
-        "targets": targets,
-    })
+    from .routes_memory import build_memory_payload
+    return json_response(build_memory_payload())
 
 
 async def handle_logs(request):
@@ -210,6 +194,8 @@ async def handle_get_token(request):
             {"path": "/api/groups", "method": "POST", "auth": True},
             {"path": "/api/usage", "method": "GET", "auth": True},
             {"path": "/api/memory", "method": "GET", "auth": True},
+            {"path": "/api/memory/items/{id}", "method": "PATCH", "auth": True},
+            {"path": "/api/memory/items/{id}", "method": "DELETE", "auth": True},
             {"path": "/api/persona", "method": "GET", "auth": True},
             {"path": "/api/savings", "method": "GET", "auth": True},
             {"path": "/api/savings/entries", "method": "POST", "auth": True},

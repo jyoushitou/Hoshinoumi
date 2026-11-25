@@ -11,6 +11,7 @@ _CONTRACTS = [
     (r"/internal/avatar", {"GET"}),
     (r"/internal/usage", {"GET"}),
     (r"/internal/memory", {"GET"}),
+    (r"/internal/memory/items/[^/]+", {"PATCH", "DELETE"}),
     (r"/internal/logs", {"GET"}),
     (r"/internal/token", {"GET"}),
     (r"/internal/conversations", {"GET"}),

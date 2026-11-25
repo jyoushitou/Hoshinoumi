@@ -94,12 +94,13 @@ namespace Gateway
             }
             if (method == "PATCH")
             {
-                return path == "/api/push/preferences";
+                return path == "/api/push/preferences" || StartsWith(path, "/api/memory/items/");
             }
             if (method == "DELETE")
             {
                 return StartsWith(path, "/api/health/meals/") ||
                        StartsWith(path, "/api/push/devices/") ||
+                       StartsWith(path, "/api/memory/items/") ||
                        StartsWith(path, "/api/endpoints/");
             }
             return false;
