@@ -29,6 +29,73 @@ namespace Gateway
                 {"X-Gateway", "hoshinoumi-gateway/26.4.0"},
             };
         }
+
+
+        bool EndsWith(const std::string& value, const std::string& suffix)
+        {
+            return value.size() >= suffix.size() &&
+                   value.compare(value.size() - suffix.size(), suffix.size(), suffix) == 0;
+        }
+
+        bool StartsWith(const std::string& value, const std::string& prefix)
+        {
+            return value.rfind(prefix, 0) == 0;
+        }
+
+        /// @brief 网关显式 API 路由表；不在表中的 /api/* 一律 404
+        bool AllowedApiRoute(const std::string& method, const std::string& path)
+        {
+            if (method == "GET")
+            {
+                static const char* kExact[] = {
+                    "/api/status", "/api/usage", "/api/memory", "/api/persona",
+                    "/api/savings", "/api/balance", "/api/relation", "/api/logs",
+                    "/api/commands", "/api/state", "/api/presence", "/api/cron",
+                    "/api/diary", "/api/shelf", "/api/weekly-plan", "/api/weekly-plan/weeks",
+                    "/api/savings/snapshots", "/api/savings/reconcile", "/api/health/summary",
+                    "/api/plugins", "/api/push/devices", "/api/push/preferences",
+                    "/api/push/outbox", "/api/groups", "/api/conversations",
+                };
+                for (const auto* item : kExact)
+                {
+                    if (path == item) return true;
+                }
+                return StartsWith(path, "/api/persona/export") ||
+                       StartsWith(path, "/api/history") ||
+                       StartsWith(path, "/api/diary/") ||
+                       StartsWith(path, "/api/health/meals");
+            }
+            if (method == "POST")
+            {
+                static const char* kExact[] = {
+                    "/api/chat", "/api/command", "/api/topic", "/api/read",
+                    "/api/persona/import", "/api/persona/activate",
+                    "/api/savings/entries", "/api/savings/import", "/api/savings/snapshots",
+                    "/api/weekly-plan", "/api/weekly-plan/import",
+                    "/api/health/meals", "/api/health/recognize",
+                    "/api/plugins/install", "/api/push/devices", "/api/push/test",
+                    "/api/groups",
+                };
+                for (const auto* item : kExact)
+                {
+                    if (path == item) return true;
+                }
+                return StartsWith(path, "/api/messages/") ||
+                       (StartsWith(path, "/api/plugins/") &&
+                        (EndsWith(path, "/toggle") || EndsWith(path, "/approve") || EndsWith(path, "/reject")));
+            }
+            if (method == "PATCH")
+            {
+                return path == "/api/push/preferences";
+            }
+            if (method == "DELETE")
+            {
+                return StartsWith(path, "/api/health/meals/") ||
+                       StartsWith(path, "/api/push/devices/");
+            }
+            return false;
+        }
+
     } // namespace
 
     Router::Router(Config cfg)
@@ -180,24 +247,18 @@ namespace Gateway
             Proxy(session, url, "/internal/shelf", "GET", owner);
             return;
         }
-        // v35.7：其余已鉴权的 GET API 直接透传到 worker 的 HTTP API
-        // v35.9.35：通用写转发（POST/PATCH/DELETE），供人设/存钱/周计划/插件/健康等写接口使用
+        // 网关显式路由：未登记路径不转发，避免通用 /api/* 绕过网关路由表
         if (url.target.rfind("/api/", 0) == 0)
         {
             const auto query = url.target.find('?');
             const std::string pathOnly = query == std::string::npos ? url.target : url.target.substr(0, query);
-            if (url.method == "GET")
-            {
-                Proxy(session, url, pathOnly, "GET", owner);
-                return;
-            }
-            if (url.method == "POST" || url.method == "PATCH" || url.method == "DELETE")
+            if (AllowedApiRoute(url.method, pathOnly))
             {
                 Proxy(session, url, pathOnly, url.method, owner);
                 return;
             }
-            session->httpReplay("{\"ok\":false,\"error\":\"method_not_allowed\"}",
-                                boost::beast::http::status::method_not_allowed,
+            session->httpReplay("{\"ok\":false,\"error\":\"route_not_found\"}",
+                                boost::beast::http::status::not_found,
                                 JsonHeaders(NextRequestId()));
             return;
         }
