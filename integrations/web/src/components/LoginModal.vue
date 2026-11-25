@@ -5,6 +5,29 @@ import { useAuthStore } from '@/stores/auth'
 import { useSessionStore } from '@/stores/session'
 const auth = useAuthStore(); const session = useSessionStore()
 const qq = ref(auth.qq); const token = ref(''); const password = ref(''); const setupCode = ref(''); const status = ref(auth.authError || ''); const saving = ref(false); const mode = ref<'login' | 'setup' | 'token'>('login')
+async function loginReal(qqValue: string, passwordValue: string, setupCodeValue = '') {
+  try {
+    const real = await http.post<{ ok?: boolean; token?: string; tokens?: { access?: string }; message?: string; error?: string }>('/api/login', {
+      user_id: qqValue, password: passwordValue, setup_code: setupCodeValue,
+    })
+    const token = real.tokens?.access || real.token
+    if (token) return token
+  } catch { /* fall through to mock/local gateway */ }
+  const mock = await http.post<{ ok?: boolean; token?: string; message?: string }>('/api/auth/login', { qq: qqValue, password: passwordValue })
+  if (!mock.token) throw new Error(mock.message || '登录失败')
+  return mock.token
+}
+
+async function registerReal(qqValue: string, passwordValue: string, code: string) {
+  try {
+    await http.post('/api/register', { user_id: qqValue, invite: code, password: passwordValue, nickname: qqValue })
+    return await loginReal(qqValue, passwordValue, code)
+  } catch { /* fall through to mock setup */ }
+  const mock = await http.post<{ ok?: boolean; token?: string; message?: string }>('/api/auth/setup', { qq: qqValue, password: passwordValue, setup_code: code })
+  if (!mock.token) throw new Error(mock.message || '首次设置失败')
+  return mock.token
+}
+
 async function save() {
   if (!qq.value.trim()) { status.value = '请填写 QQ'; return }
   saving.value = true; status.value = '正在连接…'
@@ -13,13 +36,10 @@ async function save() {
     if (mode.value === 'token') {
       if (!nextToken) throw new Error('token 不能为空')
     } else if (mode.value === 'login') {
-      const r = await http.post<{ ok?: boolean; token?: string; message?: string }>('/api/auth/login', { qq: qq.value.trim(), password: password.value })
-      if (!r.token) throw new Error(r.message || '登录失败')
-      nextToken = r.token
+      nextToken = await loginReal(qq.value.trim(), password.value)
     } else {
-      const r = await http.post<{ ok?: boolean; token?: string; message?: string }>('/api/auth/setup', { qq: qq.value.trim(), password: password.value, setup_code: setupCode.value.trim() })
-      if (!r.token) throw new Error(r.message || '首次设置失败')
-      nextToken = r.token
+      if (password.value.length < 6) throw new Error('密码至少 6 位')
+      nextToken = await registerReal(qq.value.trim(), password.value, setupCode.value.trim())
     }
     http.setToken(nextToken)
     await http.get('/healthz')
@@ -44,8 +64,8 @@ async function save() {
       <label>主人 QQ<input v-model="qq" placeholder="请输入主人 QQ"></label>
       <label v-if="mode === 'token'">访问 token<input v-model="token" type="password" placeholder="Bearer token"></label>
       <template v-else>
-        <label>密码<input v-model="password" type="password" placeholder="至少 6 位"></label>
-        <label v-if="mode === 'setup'">setup code<input v-model="setupCode" placeholder="HSHM-2026"></label>
+        <label>密码<input v-model="password" type="password" placeholder="密码"></label>
+        <label v-if="mode === 'setup'">邀请码 / setup code<input v-model="setupCode" placeholder="HSHM-2026"></label>
       </template>
       <div class="actions"><button class="primary" :disabled="saving" @click="save">{{ saving ? '连接中…' : '保存并进入' }}</button></div>
       <div class="status">{{ status }}</div>
