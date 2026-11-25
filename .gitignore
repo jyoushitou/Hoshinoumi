@@ -81,3 +81,5 @@ data/clients/*.apk
 data/clients/*.zip
 data/plugins/*.hoshinoumi
 data/plugins/*.zip
+data/health.json
+data/health.tmp
