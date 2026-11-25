@@ -22,6 +22,7 @@ from .routes_weekly_plan import handle_weekly_get, handle_weekly_put, handle_wee
 from .routes_reminders import handle_pending as handle_reminders_pending, handle_ack as handle_reminder_ack
 from .routes_balance import handle_balance
 from .routes_health import handle_summary as handle_health_summary, handle_add_meal as handle_health_add_meal, handle_delete_meal as handle_health_delete_meal, handle_recognize as handle_health_recognize
+from .routes_plugins import handle_list as handle_plugins_list, handle_install as handle_plugins_install, handle_toggle as handle_plugins_toggle, handle_approve as handle_plugins_approve, handle_reject as handle_plugins_reject
 from .routes_cron import handle_list as handle_cron_list, handle_create as handle_cron_create, handle_update as handle_cron_update, handle_delete as handle_cron_delete, handle_run as handle_cron_run
 from .routes_relation import handle_relation
 from .routes_plan import handle_get as handle_plan_get, handle_put as handle_plan_put, handle_import as handle_plan_import, handle_export as handle_plan_export
@@ -432,6 +433,11 @@ async def start_api_server():
     app.router.add_get("/api/savings/events", handle_savings_events)
     app.router.add_get("/api/balance", handle_balance)
     app.router.add_get("/api/health/summary", handle_health_summary)
+    app.router.add_get("/api/plugins", handle_plugins_list)
+    app.router.add_post("/api/plugins/install", handle_plugins_install)
+    app.router.add_post("/api/plugins/{id}/toggle", handle_plugins_toggle)
+    app.router.add_post("/api/plugins/{id}/approve", handle_plugins_approve)
+    app.router.add_post("/api/plugins/{id}/reject", handle_plugins_reject)
     app.router.add_post("/api/health/meals", handle_health_add_meal)
     app.router.add_delete("/api/health/meals/{id}", handle_health_delete_meal)
     app.router.add_post("/api/health/recognize", handle_health_recognize)
