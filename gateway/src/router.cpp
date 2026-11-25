@@ -27,6 +27,9 @@ namespace Gateway
                 {"Content-Type", "application/json; charset=utf-8"},
                 {"X-Request-Id", requestId},
                 {"X-Gateway", "hoshinoumi-gateway/26.4.0"},
+                {"Access-Control-Allow-Origin", "*"},
+                {"Access-Control-Allow-Headers", "authorization, content-type, accept"},
+                {"Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS"},
             };
         }
 
@@ -154,6 +157,11 @@ namespace Gateway
             }
         }
 
+        if (url.method == "OPTIONS" && url.target.rfind("/api/", 0) == 0)
+        {
+            session->httpReplay("", boost::beast::http::status::no_content, JsonHeaders(NextRequestId()));
+            return;
+        }
         if (url.target == "/healthz")
         {
             Health(session, url);
