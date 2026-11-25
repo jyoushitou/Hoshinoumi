@@ -220,7 +220,15 @@ async function onGroupCreated(id: string) {
   await session.refresh()
   await open(id)
 }
-async function open(target: string) { await session.selectConversation(target); pane.value = 'chat'; imagePreview.value = ''; imageName.value = ''; mediaError.value = ''; await scrollBottom() }
+async function open(target: string) {
+  if (!target) return
+  pane.value = 'chat'
+  imagePreview.value = ''; imageName.value = ''; mediaError.value = ''
+  await scrollBottom()
+  try { await session.selectConversation(target) }
+  catch (e) { mediaError.value = e instanceof Error ? e.message : '加载会话失败' }
+  finally { await scrollBottom() }
+}
 function autosize() { const el = textarea.value; if (!el) return; el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 96) + 'px' }
 function onKeydown(e: KeyboardEvent) { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); void send() } }
 async function send() {
