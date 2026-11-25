@@ -46,17 +46,24 @@ async def dispatch(req: P.InternalRequest):
     headers = {"X-User-Id": req.user_id or "__owner__", "X-Role": req.role or "owner"}
     if public_path.startswith("/api/"):
         headers["Authorization"] = "Bearer " + apicfg.API_TOKEN
-    connector = aiohttp.UnixConnector(path=worker.internal_api_socket())
+    import os as _os
+    if _os.name == "nt":
+        internal_port = int(_os.getenv("NAO_INTERNAL_API_PORT", "27007"))
+        connector = aiohttp.TCPConnector(host="127.0.0.1", port=internal_port)
+        base_url = f"http://127.0.0.1:{internal_port}"
+    else:
+        connector = aiohttp.UnixConnector(path=worker.internal_api_socket())
+        base_url = "http://internal"
     timeout = aiohttp.ClientTimeout(total=60)
     try:
         async with aiohttp.ClientSession(connector=connector, timeout=timeout) as s:
             kwargs = {"headers": headers}
             if is_get:
                 kwargs["params"] = query or {k: str(v) for k, v in params.items()}
-                call = s.get("http://internal" + public_path, **kwargs)
+                call = s.get(base_url + public_path, **kwargs)
             else:
                 kwargs["json"] = params if isinstance(params, dict) else {}
-                call = s.request(str(req.http_method or "POST"), "http://internal" + public_path, **kwargs)
+                call = s.request(str(req.http_method or "POST"), base_url + public_path, **kwargs)
             async with call as r:
                 raw = await r.read()
                 try:

@@ -507,17 +507,24 @@ async def start_api_server():
     await runner.setup()
     from ..core import worker
     if os.getenv("NAO_INTERNAL_TCP", "1") != "0":
-        sock = worker.internal_api_socket()
-        try:
-            import os as _os
-            if _os.path.exists(sock):
-                _os.unlink(sock)
-        except OSError:
-            pass
-        site = web.UnixSite(runner, sock)
-        await site.start()
-        worker.chmod_socket(sock)
-        log_system(f"内部 API 已启动: unix:{sock}（27004 由 TCP 帧服务占用）")
+        if os.name == "nt":
+            # Windows 无 AF_UNIX 支持时，内部 API 走 loopback TCP；27004 仍由帧服务占用
+            internal_port = int(os.getenv("NAO_INTERNAL_API_PORT", "27007"))
+            site = web.TCPSite(runner, "127.0.0.1", internal_port)
+            await site.start()
+            log_system(f"内部 API 已启动: http://127.0.0.1:{internal_port}（27004 由 TCP 帧服务占用）")
+        else:
+            sock = worker.internal_api_socket()
+            try:
+                import os as _os
+                if _os.path.exists(sock):
+                    _os.unlink(sock)
+            except OSError:
+                pass
+            site = web.UnixSite(runner, sock)
+            await site.start()
+            worker.chmod_socket(sock)
+            log_system(f"内部 API 已启动: unix:{sock}（27004 由 TCP 帧服务占用）")
     elif worker.enabled():
         sock = worker.prepare_socket("api.sock")
         site = web.UnixSite(runner, sock)
