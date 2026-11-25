@@ -1,5 +1,5 @@
 {
-  "versionName": "35.9.3.13",
-  "versionCode": 359313,
-  "notes": "后端内置 Android Release 包"
+  "versionName": "35.9.7.0",
+  "versionCode": 359700,
+  "notes": "R8/资源压缩 Release 包，0.94 MB"
 }

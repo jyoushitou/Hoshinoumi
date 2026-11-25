@@ -174,7 +174,7 @@
 | v35.8.4.0 | ntfy 自托管 / 设备注册 / 权限 | 🟡 Mock 注册/注销/偏好接口；ntfy 未接 |
 | v35.8.4.1 | push_outbox / 触发 / 重试去重 | 🟡 Mock outbox/去重/重试；未投递 ntfy |
 | v35.8.4.2 | UnifiedPush/ntfy 接入 / 深链 / 真机 | 🟡 本地 ntfy SSE 联调通过；真 ntfy/UnifiedPush 待真机 |
-## v35.9（144 个，含 v35.9.30 手机 Vue 17 个）
+## v35.9（149 个，含 v35.9.30 手机 Vue 17 个）
 
 > 存钱页完整计划：v35.9.1.6–.18；设计稿见 `docs/design/v35/web/hoshinoumi-web-v35.5-savings.png`。
 
@@ -252,6 +252,11 @@
 | v35.9.6.5 | 热量动画 | ✅ 环/数字/餐次入场 |
 | v35.9.6.6 | 热量识图 | ✅ 选图识别/填入 |
 | v35.9.6.7 | 健康 / 热量 API | ✅ summary/meals/recognize |
+| v35.9.7.0 | Android 启动优化 | ✅ Splash 2200→900ms |
+| v35.9.7.1 | Android 图片/WebView 缓存 | ✅ LOAD_DEFAULT + DOM/DB |
+| v35.9.7.2 | Android 包体优化 | ✅ R8，Release 0.94MB |
+| v35.9.7.3 | Android 低内存回收 | ✅ onTrimMemory / onLowMemory |
+| v35.9.7.4 | Android 真机/构建验收 | ✅ Debug/Release 均通过 |
 | v35.9.8.0 | Web 设备优化 | ⬜ |
 | v35.9.10.0 | Web 壳 导航/Token/状态栏 | ⬜ |
 | v35.9.11.0 | Web 聊天页 | ⬜ |
@@ -635,6 +640,6 @@
 
 - v35.0–v35.9 已编号：372 个
 - v35.10–v35.22 已知编号：64 个
-- 合计：479 个
+- 合计：484 个
 - 已完成：v35.1、v35.2、v35.4.0–15、v35.5.0–5.1、v35.9.23/25
 - 取消：v35.3.0.0、v35.3.1.0

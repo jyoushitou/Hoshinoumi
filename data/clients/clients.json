@@ -5,10 +5,10 @@
       "name": "Android APK",
       "kind": "mobile",
       "platform": "android",
-      "version": "35.9.3.13",
-      "versionCode": 359313,
+      "version": "35.9.7.0",
+      "versionCode": 359700,
       "file": "latest.apk",
-      "notes": "Release 包，直接覆盖安装",
+      "notes": "Release 包 · R8 压缩 0.94 MB",
       "recommended": true
     },
     {
