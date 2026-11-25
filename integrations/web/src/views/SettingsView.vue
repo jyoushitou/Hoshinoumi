@@ -61,7 +61,7 @@ onMounted(() => { if (auth.loggedIn) void auth.validate() })
       <div class="panel motion">
         <div class="panel-title">外观 <span>本机偏好</span></div>
         <div class="setting-row"><div><b>页面动画</b><small>关闭后移除过渡与入场动画</small></div><button class="switch" :class="{ on: motion }" type="button" role="switch" :aria-checked="motion" @click="motion = !motion"><i></i></button></div>
-        <div class="about"><RouterLink to="/info">查看运行信息</RouterLink><span>·</span><a href="https://github.com/jyoushitou/Hoshinoumi" target="_blank" rel="noopener">GitHub</a><span>·</span><a href="https://github.com/jyoushitou" target="_blank" rel="noopener">作者 jyoushitou</a></div>
+        <div class="about"><RouterLink to="/persona">人设卡</RouterLink><span>·</span><RouterLink to="/info">查看运行信息</RouterLink><span>·</span><a href="https://github.com/jyoushitou/Hoshinoumi" target="_blank" rel="noopener">GitHub</a><span>·</span><a href="https://github.com/jyoushitou" target="_blank" rel="noopener">作者 jyoushitou</a></div>
         <div class="powered">POWERED BY JYOUSHITOU</div>
       </div>
     </div>
