@@ -49,7 +49,7 @@ async function save() {
   <div class="mask">
     <div class="card">
       <h2>连接 Hoshinoumi</h2>
-      <p class="sub">登录，或用 setup code 首次设置密码。<br>后端地址使用当前站点，不需要填写 URL。</p>
+      <p class="sub">首次登录会自动设置密码；已有密码直接登录。<br>后端地址使用当前站点，不需要填写 URL。</p>
       <div class="modes">
         <button type="button" :class="{ on: mode === 'login' }" @click="mode = 'login'">密码登录</button>
         <button type="button" :class="{ on: mode === 'setup' }" @click="mode = 'setup'">首次设置</button>
@@ -58,7 +58,7 @@ async function save() {
       <label>主人 QQ<input v-model="qq" placeholder="请输入主人 QQ"></label>
       <label v-if="mode === 'token'">访问 token<input v-model="token" type="password" placeholder="Bearer token"></label>
       <template v-else>
-        <label>密码<input v-model="password" type="password" placeholder="密码"></label>
+        <label>密码<input v-model="password" type="password" placeholder="密码（首次登录即设置，至少 8 位）"></label>
         <label v-if="mode === 'setup'">邀请码 / setup code<input v-model="setupCode" placeholder="HSHM-2026"></label>
       </template>
       <div class="actions"><button class="primary" :disabled="saving" @click="save">{{ saving ? '连接中…' : '保存并进入' }}</button></div>
