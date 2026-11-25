@@ -97,11 +97,12 @@ CURRENT = {
     "global_keywords": """
         CREATE TABLE IF NOT EXISTS global_keywords (
             id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            target_id VARCHAR(64) NOT NULL DEFAULT '__owner__',
             keyword VARCHAR(64) NOT NULL,
             weight DECIMAL(6,3) NOT NULL DEFAULT 1,
             updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
                        ON UPDATE CURRENT_TIMESTAMP,
-            UNIQUE KEY uk_keyword (keyword)
+            UNIQUE KEY uk_keyword (target_id, keyword)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """,
     "user_memory": """
