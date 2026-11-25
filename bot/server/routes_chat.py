@@ -40,77 +40,42 @@ async def handle_chat(request):
 
 
 async def handle_command(request):
-    """POST /api/command - 执行只读类命令"""
+    """POST /api/command - 执行真实命令注册表中的只读/文本命令。"""
     try:
         body = await request.json()
     except Exception:
         return json_response({"error": "invalid_json", "message": "请求体必须是 JSON 格式"}, 400)
 
-    cmd = body.get("command", "").strip().lower()
-    args = body.get("args", [])
+    raw = str(body.get("command", "") or "").strip().lstrip("!")
+    args = body.get("args", []) or []
+    if not raw:
+        return json_response({"error": "empty_command", "message": "command 不能为空"}, 400)
+    cmd = raw.lower()
+    if not isinstance(args, list):
+        return json_response({"error": "bad_args", "message": "args 必须是数组"}, 400)
+
+    # 发送类/进程控制类命令不能从 Web API 执行
+    blocked = {"say", "sayg", "img", "acg", "voice", "sticker", "exit", "quit", "reload", "backup", "update", "adduser", "set", "code"}
+    if cmd in blocked:
+        return json_response({"error": "command_not_allowed", "message": f"!{cmd} 不能在 Web API 执行"}, 403)
 
     try:
-        if cmd == "help":
-            result = fmt.build_cmd_help()
-        elif cmd == "status":
-            result = fmt.format_status_detailed()
-        elif cmd == "task":
-            result = "⏰ `!task` 已移除：真实计划用 `!cron`，钩子状态用 `!hooks`"
-        elif cmd == "memory":
-            if args:
-                target = args[0]
-                if target in cfg.user_memory_pool:
-                    deq = cfg.user_memory_pool[target]
-                    lines = [f"{target} 的对话记忆（共{len(deq)}条）："]
-                    for i, (u, b) in enumerate(deq[-10:], 1):
-                        lines.append(f"  {i}. 用户: {u[:30]}...")
-                        lines.append(f"     奈绪: {b[:30]}...")
-                    result = "\n".join(lines)
-                else:
-                    result = f"{target} 暂无对话记忆"
-            else:
-                result = fmt.format_memory_stats()
-        elif cmd == "sticker":
-            result = fmt.format_sticker_stats()
-        elif cmd == "clip":
-            result = fmt.format_clip_status()
-        elif cmd == "keywords":
-            result = fmt.format_keywords()
-        elif cmd == "apikeys":
-            result = fmt.format_apikeys()
-        elif cmd == "usage":
-            records = get_recent_usage(10)
-            if not records:
-                result = "暂无token用量记录"
-            else:
-                lines = ["最近10次AI调用token用量："]
-                total_prompt = 0
-                total_completion = 0
-                total_all = 0
-                for i, r in enumerate(records, 1):
-                    model = r["model_name"]
-                    pt = r["prompt_tokens"] or 0
-                    ct = r["completion_tokens"] or 0
-                    tt = r["total_tokens"] or 0
-                    tm = format_dt(r.get("created_at"))
-                    lines.append(f"  {i}. [{model}] 输入{pt}+输出{ct}={tt} ({tm})")
-                    total_prompt += pt
-                    total_completion += ct
-                    total_all += tt
-                lines.append("  ---")
-                lines.append(f"  合计: 输入{total_prompt}+输出{total_completion}={total_all}")
-                result = "\n".join(lines)
-        else:
+        from ..cmd import registry
+        from ..cmd.registry import CommandContext
+        # 导入命令模块，触发 @command 注册
+        from ..cmd import admin, basic, books_cmd, cron_cmd, diary_cmd, history_cmd
+        from ..cmd import memory_cmd, ops, plan_cmd, plugin_cmd, presence_cmd, query, route_cmd, gw_cmd  # noqa: F401
+        if cmd not in registry.COMMANDS:
             return json_response({"error": "unknown_command", "message": f"未知命令: {cmd}"}, 400)
-
-        return json_response({
-            "success": True,
-            "command": cmd,
-            "args": args,
-            "result": result,
-        })
+        from ..infra import tenant
+        ctx = CommandContext(parts=[cmd, *[str(a) for a in args]], uid=tenant.owner_id(),
+                             ws=None, is_group=False, gid=0)
+        result = await registry.run(cmd, ctx)
+        return json_response({"success": True, "command": cmd, "args": args, "result": str(result or "")})
     except Exception as e:
+        log_err(f"API 命令执行失败 !{cmd}: {e}")
         return json_response({"error": "command_failed", "message": str(e)}, 500)
+
 
 async def handle_conversations(request):
     """GET /api/conversations：好友/群目录 + 历史聚合（含未读）。"""
