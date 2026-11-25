@@ -10,7 +10,7 @@ export default defineConfig({
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
   server: {
     port: 27006,
-    host: '127.0.0.1',
+    host: '0.0.0.0',
     proxy: {
       '/api': { target: apiProxy, changeOrigin: true },
       '/internal': { target: apiProxy, changeOrigin: true },
