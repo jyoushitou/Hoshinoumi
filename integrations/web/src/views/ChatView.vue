@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUpdated, ref, watch } from 'vue'
 import { cleanupStickerCache, getStickerDataUrl, type StickerMeta } from '@/lib/stickerCache'
 import { http } from '@/api/client'
 import EmptyState from '@/components/EmptyState.vue'
@@ -15,6 +15,10 @@ const showJump = ref(false)
 const stickBottom = ref(true)
 function onMsgScroll() { const el = msgsEl.value; if (!el) return; const distance = el.scrollHeight - el.scrollTop - el.clientHeight; showJump.value = distance > 140; stickBottom.value = distance < 80 }
 async function scrollToBottom(behavior: ScrollBehavior = 'auto') { await nextTick(); const el = msgsEl.value; if (!el) return; el.scrollTo({ top: el.scrollHeight, behavior }); showJump.value = false; stickBottom.value = true }
+function pinBottomSoon() {
+  if (!stickBottom.value) return
+  requestAnimationFrame(() => { const el = msgsEl.value; if (el) el.scrollTop = el.scrollHeight })
+}
 async function jumpToBottom() { await scrollToBottom('smooth') }
 const textarea = ref<HTMLTextAreaElement | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -136,7 +140,8 @@ async function sendSticker(sticker: StickerMeta) {
     stickerError.value = e instanceof Error ? e.message : '表情发送失败'
   }
 }
-onMounted(() => { void cleanupStickerCache() })
+onMounted(() => { void cleanupStickerCache(); void scrollToBottom('auto'); setTimeout(() => { void scrollToBottom('auto') }, 120); setTimeout(() => { void scrollToBottom('auto') }, 600) })
+onUpdated(pinBottomSoon)
 function onKeydown(e: KeyboardEvent) {
   if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
     e.preventDefault()
