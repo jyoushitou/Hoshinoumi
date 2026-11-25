@@ -3,6 +3,7 @@ package com.hoshinoumi.mobile;
 import android.Manifest;
 import android.app.DownloadManager;
 import android.content.BroadcastReceiver;
+import android.content.ComponentCallbacks2;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -446,6 +447,29 @@ public class MainActivity extends BridgeActivity {
             }
             finish();
         });
+    }
+
+
+    @Override
+    public void onTrimMemory(int level) {
+        super.onTrimMemory(level);
+        if (level >= ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW) {
+            try {
+                WebView webView = getBridge().getWebView();
+                webView.freeMemory();
+                webView.clearCache(false);
+            } catch (Exception ignored) { }
+        }
+    }
+
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        try {
+            WebView webView = getBridge().getWebView();
+            webView.freeMemory();
+            webView.clearCache(true);
+        } catch (Exception ignored) { }
     }
 
     @Override
