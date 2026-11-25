@@ -181,10 +181,24 @@ namespace Gateway
             return;
         }
         // v35.7：其余已鉴权的 GET API 直接透传到 worker 的 HTTP API
-        // （chat/history/state/cron/diary/shelf 仍走内部专用路径）
+        // v35.9.35：通用写转发（POST/PATCH/DELETE），供人设/存钱/周计划/插件/健康等写接口使用
         if (url.target.rfind("/api/", 0) == 0)
         {
-            Proxy(session, url, url.target, "GET", owner);
+            const auto query = url.target.find('?');
+            const std::string pathOnly = query == std::string::npos ? url.target : url.target.substr(0, query);
+            if (url.method == "GET")
+            {
+                Proxy(session, url, pathOnly, "GET", owner);
+                return;
+            }
+            if (url.method == "POST" || url.method == "PATCH" || url.method == "DELETE")
+            {
+                Proxy(session, url, pathOnly, url.method, owner);
+                return;
+            }
+            session->httpReplay("{\"ok\":false,\"error\":\"method_not_allowed\"}",
+                                boost::beast::http::status::method_not_allowed,
+                                JsonHeaders(NextRequestId()));
             return;
         }
         NotFound(session, url);
