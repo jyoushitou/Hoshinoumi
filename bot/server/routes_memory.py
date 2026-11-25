@@ -82,8 +82,14 @@ def build_memory_payload():
         tags["对话"] += 1
     from ..infra.repo_profile import build_profile_text
     summary = build_profile_text(uid)
-    profile = {"summary": "" if summary == "无" else summary,
-               "keywords": [k for k, _ in tags.most_common(12)]}
+    keywords = [k for k, _ in tags.most_common(12)]
+    if summary == "无":
+        conv_count = len(conv_rows)
+        top = "、".join(f"{k}×{v}" for k, v in tags.most_common(5))
+        summary = (f"暂无显式画像，按最近 {len(items)} 条记忆、{conv_count} 轮对话聚合")
+        if top:
+            summary += f"：{top}"
+    profile = {"summary": summary, "keywords": keywords}
     counts = Counter()
     for row in rows:
         counts[str(row.get("target_id") or "")] += 1

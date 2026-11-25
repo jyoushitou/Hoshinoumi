@@ -44,7 +44,7 @@ async function loadAll() {
     }
     items.value = Array.isArray(r.items) ? r.items : []
     events.value = Array.isArray(r.events) ? r.events : []
-    profile.value = r.profile && r.profile.summary ? r.profile : null
+    profile.value = r.profile && (r.profile.summary || r.profile.keywords?.length) ? r.profile : null
   } catch {
     stats.value = null; items.value = []; events.value = []; profile.value = null
   } finally { loading.value = false }
@@ -91,7 +91,7 @@ const tabs = [
     </div>
     <aside v-if="desktop" class="side">
       <div class="panel"><div class="panel-title">最近事件</div><div v-if="!events.length" class="empty">暂无事件</div><div v-for="event in events.slice(0, 5)" v-else :key="event.id" class="event-row"><span class="dot" /><div><b>{{ event.title }}</b><small>{{ event.kind }} · {{ event.created_at.slice(0, 10) }}</small></div></div></div>
-      <div class="panel"><div class="panel-title">画像摘要</div><p v-if="profile" class="summary">{{ profile.summary }}</p><div v-if="profile" class="keywords"><span v-for="word in profile.keywords" :key="word">{{ word }}</span></div><div v-else class="empty">暂无画像</div></div>
+      <div class="panel"><div class="panel-title">画像摘要</div><p v-if="profile?.summary" class="summary">{{ profile.summary }}</p><div v-if="profile" class="keywords"><span v-for="word in profile.keywords" :key="word">{{ word }}</span></div><div v-else class="empty">暂无画像</div></div>
       <div class="panel"><div class="panel-title">关系</div><RouterLink to="/relation" class="link">打开关系页</RouterLink></div>
     </aside>
     <div v-else-if="tab === 'events'" class="list">
