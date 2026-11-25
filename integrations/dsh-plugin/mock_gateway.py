@@ -41,6 +41,8 @@ ROOT = Path(__file__).resolve().parents[2]
 APK_DIR = Path(os.environ.get("HOSHINOUMI_APK_DIR", ROOT / "data" / "apk"))
 CLIENTS_FILE = Path(os.environ.get("HOSHINOUMI_CLIENTS_FILE", ROOT / "data" / "clients" / "clients.json"))
 CLIENTS_DIR = CLIENTS_FILE.parent
+PERSONA_ROOT = ROOT / "personas"
+PERSONA_ACTIVE_FILE = PERSONA_ROOT / ".active"
 READS = {}  # target_id -> last_read_id
 CUSTOM_GROUPS = {}
 GROUP_META = {}
@@ -431,6 +433,70 @@ def _inspect_plugin_bytes(raw: bytes, filename: str):
     finally:
         if tmp and tmp.exists(): tmp.unlink(missing_ok=True)
 
+
+def _safe_persona_name(name):
+    name = str(name or "").strip()
+    if not name or "/" in name or "\\" in name or name.startswith("."):
+        return ""
+    return name
+
+def _persona_active():
+    try:
+        saved = PERSONA_ACTIVE_FILE.read_text(encoding="utf-8").strip()
+        if saved and (PERSONA_ROOT / saved).is_dir():
+            return saved
+    except Exception:
+        pass
+    return "nao" if (PERSONA_ROOT / "nao").is_dir() else ""
+
+def _persona_card(name, full=False):
+    d = PERSONA_ROOT / name
+    if not d.is_dir():
+        return None
+    def text(filename, limit=0):
+        try:
+            value = (d / filename).read_text(encoding="utf-8").strip()
+            return value[:limit] if limit else value
+        except Exception:
+            return None
+    def js(filename):
+        try:
+            value = json.loads((d / filename).read_text(encoding="utf-8"))
+            return value if isinstance(value, (dict, list)) else None
+        except Exception:
+            return None
+    prompt = text("prompt.txt") or ""
+    item = {
+        "name": name,
+        "display": text("display.txt", 80) or name,
+        "active": _persona_active() == name,
+        "files": {
+            "prompt": (d / "prompt.txt").is_file(),
+            "life": (d / "life.txt").is_file(),
+            "supplement": (d / "supplement.txt").is_file(),
+            "state": (d / "state.json").is_file(),
+            "voice": (d / "voice.json").is_file(),
+        },
+        "prompt_excerpt": prompt[:160],
+        "state": js("state.json"),
+        "voice": js("voice.json"),
+    }
+    if full:
+        item["prompt"] = prompt
+        item["supplement"] = text("supplement.txt")
+        item["life"] = text("life.txt")
+    return item
+
+def _persona_cards(full=False):
+    out = []
+    if PERSONA_ROOT.is_dir():
+        for d in sorted(PERSONA_ROOT.iterdir(), key=lambda x: x.name.lower()):
+            if d.is_dir() and not d.name.startswith("."):
+                item = _persona_card(d.name, full=full)
+                if item:
+                    out.append(item)
+    return out
+
 class Handler(BaseHTTPRequestHandler):
     server_version = "HoshinoumiMock/" + VERSION
     token = "mock-token"
@@ -750,16 +816,17 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200, {"records": [], "summary": {"total_prompt_tokens": 0, "total_completion_tokens": 0, "total_tokens": 0, "count": 0}, "mock": True})
             return
         if path == "/api/persona":
-            name = (q.get("name") or [""])[0]
+            name = _safe_persona_name((q.get("name") or [""])[0])
             if name:
-                item = next((x for x in PERSONAS if x["name"] == name), None)
-                self._json(200 if item else 404, {"ok": bool(item), "data": item, "active": "nao"})
+                item = _persona_card(name, full=(q.get("full") or [""])[0] in ("1", "true"))
+                self._json(200 if item else 404, {"ok": bool(item), "data": item, "active": _persona_active()})
             else:
-                self._json(200, {"ok": True, "data": PERSONAS, "active": "nao", "count": len(PERSONAS)})
+                cards = _persona_cards(full=(q.get("full") or [""])[0] in ("1", "true"))
+                self._json(200, {"ok": True, "data": cards, "active": _persona_active(), "count": len(cards)})
             return
         if path == "/api/persona/export":
-            name = (q.get("name") or [""])[0]
-            item = next((x for x in PERSONAS if x["name"] == name), None)
+            name = _safe_persona_name((q.get("name") or [""])[0])
+            item = _persona_card(name, full=True) if name else None
             self._json(200 if item else 404, {"ok": bool(item), "data": item})
             return
         if path == "/api/savings/overview":
@@ -1228,26 +1295,29 @@ class Handler(BaseHTTPRequestHandler):
             return
         if path == "/api/persona/import":
             data = body.get("data") if isinstance(body.get("data"), dict) else body
-            name = str(data.get("name") or "").strip()
-            if not name or not data.get("prompt"):
-                self._json(400, {"ok": False, "error": "prompt_required"})
-                return
-            item = next((x for x in PERSONAS if x["name"] == name), None)
-            if item and not body.get("overwrite"):
-                self._json(409, {"ok": False, "error": "exists"})
-                return
-            if item is None:
-                item = {"name": name, "files": {"prompt": True, "life": False, "supplement": False, "state": False, "voice": False}, "prompt_excerpt": str(data.get("prompt"))[:160], "state": data.get("state"), "voice": data.get("voice"), "active": False}
-                PERSONAS.append(item)
-            item["prompt"] = str(data.get("prompt"))
-            item["prompt_excerpt"] = item["prompt"][:160]
-            self._json(200, {"ok": True, "data": item, "mock": True})
-            return
+            name = _safe_persona_name(data.get("name"))
+            prompt = str(data.get("prompt") or "").strip()
+            if not name or not prompt:
+                self._json(400, {"ok": False, "error": "prompt_required"}); return
+            target = PERSONA_ROOT / name
+            if target.exists() and not body.get("overwrite"):
+                self._json(409, {"ok": False, "error": "exists"}); return
+            target.mkdir(parents=True, exist_ok=True)
+            (target / "prompt.txt").write_text(prompt, encoding="utf-8")
+            if data.get("display"): (target / "display.txt").write_text(str(data["display"])[:80], encoding="utf-8")
+            if data.get("supplement") is not None: (target / "supplement.txt").write_text(str(data["supplement"]), encoding="utf-8")
+            if data.get("life") is not None: (target / "life.txt").write_text(str(data["life"]), encoding="utf-8")
+            if data.get("state") is not None: (target / "state.json").write_text(json.dumps(data["state"], ensure_ascii=False, indent=2), encoding="utf-8")
+            if data.get("voice") is not None: (target / "voice.json").write_text(json.dumps(data["voice"], ensure_ascii=False, indent=2), encoding="utf-8")
+            item = _persona_card(name, full=True)
+            self._json(200, {"ok": True, "data": item, "mock": True}); return
         if path == "/api/persona/activate":
-            name = str(body.get("name") or "")
-            for x in PERSONAS:
-                x["active"] = x["name"] == name
-            self._json(200 if any(x["name"] == name for x in PERSONAS) else 404, {"ok": True, "active": name})
+            name = _safe_persona_name(body.get("name"))
+            if not name or not (PERSONA_ROOT / name).is_dir():
+                self._json(404, {"ok": False, "error": "persona_not_found"}); return
+            PERSONA_ROOT.mkdir(parents=True, exist_ok=True)
+            PERSONA_ACTIVE_FILE.write_text(name, encoding="utf-8")
+            self._json(200, {"ok": True, "active": name, "data": _persona_card(name, full=True)})
             return
         if path.startswith("/api/savings/frozen/") and path.endswith("/unfreeze"):
             try: fid = int(path.split("/")[-2])
