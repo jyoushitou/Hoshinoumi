@@ -6,6 +6,7 @@ import MemoryView from '@/views/MemoryView.vue'
 import SavingsView from '@/views/SavingsView.vue'
 import DiaryView from '@/views/DiaryView.vue'
 import InfoView from '@/views/InfoView.vue'
+import PersonaView from '@/views/PersonaView.vue'
 import HealthView from '@/views/HealthView.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useSessionStore } from '@/stores/session'
@@ -24,7 +25,7 @@ const router = createRouter({
     { path: '/weekly', name: 'weekly', component: PageView, meta: meta('周计划表', '按周配置节次与时间') },
     { path: '/info', name: 'info', component: InfoView, meta: meta('信息', '运行 / 配置 / 备份 / 账号 / 阅读 / 网关') },
     { path: '/health', name: 'health', component: HealthView, meta: meta('健康 / 热量', '摄入 / 目标 / 运动 / 体重') },
-    { path: '/persona', name: 'persona', component: PageView, meta: meta('人设', '导入 / 导出 / 激活') },
+    { path: '/persona', name: 'persona', component: PersonaView, meta: meta('人设', '导入 / 导出 / 激活') },
     { path: '/commands', name: 'commands', component: CommandView, meta: meta('命令', '51 个命令 / 参数 / 二级命令') },
     { path: '/cron', name: 'cron', component: PageView, meta: meta('定时任务', '新增 / 编辑 / 启停 / 删除') },
     { path: '/diary', name: 'diary', component: DiaryView, meta: meta('日记', '按月 / 前 50 字概览 / 详情') },
