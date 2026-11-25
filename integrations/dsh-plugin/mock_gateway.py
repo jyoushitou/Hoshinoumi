@@ -914,6 +914,9 @@ class Handler(BaseHTTPRequestHandler):
                 aff, tier, desc = 0.18, "认识", "只是认识：礼貌、有距离，不主动交底"
             self._json(200, {"ok": True, "target_id": tid, "affinity": aff, "tier": tier, "description": desc, "events": [{"delta": 0.02 if tid == OWNER_QQ else -0.01, "reason": "聊天", "severity": "minor", "created_at": "2026-11-19 12:00:00"}], "mock": True})
             return
+        if path == "/api/weekly-plan/weeks":
+            weeks = sorted(int(week) for week in WEEKLY.keys())
+            self._json(200, {"ok": True, "weeks": weeks, "current": datetime.now().isocalendar().week, "mock": True}); return
         if path == "/api/weekly-plan":
             week = int((q.get("week") or ["1"])[0])
             rows = WEEKLY.get(week, [])
