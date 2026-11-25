@@ -364,3 +364,58 @@ async def handle_savings_add(request):
             c.close()
         except Exception:
             pass
+
+async def handle_overview(request):
+    uid = _uid(request)
+    from ..infra.conn import get_cursor
+    c = get_cursor()
+    try:
+        accounts = _accounts_now(c, uid)
+        total = sum(int(x["balance_cents"] or 0) for x in accounts)
+        return json_response({"total_cents": total, "frozen_cents": 0, "available_cents": total})
+    finally:
+        try: c.close()
+        except Exception: pass
+
+
+async def handle_monthly(request):
+    uid = _uid(request)
+    from ..infra.conn import get_cursor
+    c = get_cursor()
+    try:
+        c.execute("SELECT occurred_at,kind,amount_cents FROM finance_entries WHERE user_id=%s ORDER BY occurred_at", (uid,))
+        months = {}
+        for row in c.fetchall() or []:
+            month = str(row.get("occurred_at") or "")[:7]
+            if not month:
+                continue
+            item = months.setdefault(month, {"month": month, "income_cents": 0, "expense_cents": 0})
+            amount = int(row.get("amount_cents") or 0)
+            if amount >= 0:
+                item["income_cents"] += amount
+            else:
+                item["expense_cents"] += -amount
+        return json_response({"ok": True, "data": sorted(months.values(), key=lambda x: x["month"])[-6:]})
+    finally:
+        try: c.close()
+        except Exception: pass
+
+
+async def handle_goals(request):
+    return json_response({"ok": True, "data": []})
+
+
+async def handle_frozen(request):
+    return json_response({"ok": True, "data": []})
+
+
+async def handle_fixed(request):
+    return json_response({"ok": True, "data": []})
+
+
+async def handle_funds(request):
+    return json_response({"ok": True, "data": []})
+
+
+async def handle_finance_audit(request):
+    return json_response({"ok": True, "data": [], "count": 0})

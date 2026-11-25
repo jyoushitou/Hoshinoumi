@@ -135,7 +135,7 @@ watch(isOwner, value => { if (value && !data.value) void load() })
       <button class="primary" type="button" :disabled="saving" @click="addEntry">{{ saving ? '保存中…' : '记一笔' }}</button>
     </div>
     <div v-if="monthly.length" class="panel"><div class="list-title">月流水<span>{{ monthly.length }} 个月</span></div><div class="chart"><div v-for="row in monthly" :key="row.month" class="bar-group"><div class="bars"><i class="in" :style="{ height: Math.max(4, row.income_cents / Math.max(1, ...monthly.map(m => Math.max(m.income_cents, m.expense_cents))) * 48) + 'px' }" /><i class="out" :style="{ height: Math.max(4, row.expense_cents / Math.max(1, ...monthly.map(m => Math.max(m.income_cents, m.expense_cents))) * 48) + 'px' }" /></div><small>{{ row.month.slice(5) }}</small></div></div><div class="legend"><span><i class="in" />收入</span><span><i class="out" />支出</span></div></div>
-    <div class="panel"><div class="list-title">403 审计<span>{{ audit.length }}</span></div><div v-if="!audit.length" class="empty">暂无越权访问</div><div v-for="row in audit.slice(0, 5)" :key="row.at + row.path" class="entry"><div><b>{{ row.method }} {{ row.path }}</b><small>{{ row.user }} · {{ row.at }}</small></div><em class="danger-text">403</em></div></div>
+    <div class="panel"><div class="list-title">权限审计<span>{{ audit.length }}</span></div><div v-if="!audit.length" class="empty">暂无越权访问记录</div><div v-for="row in audit.slice(0, 5)" :key="row.at + row.path" class="entry"><div><b>{{ row.method }} {{ row.path }}</b><small>{{ row.user }} · {{ row.at }}</small></div><em class="danger-text">403</em></div></div>
     <div class="entries">
       <div class="list-title">流水<span>{{ entries.length }}</span></div>
       <div v-if="!entries.length" class="empty">暂无流水</div>

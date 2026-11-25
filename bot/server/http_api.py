@@ -17,7 +17,7 @@ from .routes_meta import (
 )
 from .routes_chat import handle_chat, handle_command, handle_conversations, handle_history, handle_commands, handle_read, handle_read_state, handle_recall, handle_topic
 from .routes_persona import handle_persona, handle_export as handle_persona_export, handle_import as handle_persona_import, handle_activate as handle_persona_activate
-from .routes_savings import handle_savings, handle_savings_import, handle_savings_add, handle_savings_events, handle_snapshots_get, handle_snapshot_create, handle_reconcile
+from .routes_savings import handle_savings, handle_savings_import, handle_savings_add, handle_savings_events, handle_snapshots_get, handle_snapshot_create, handle_reconcile, handle_overview, handle_monthly, handle_goals, handle_frozen, handle_fixed, handle_funds, handle_finance_audit
 from .routes_weekly_plan import handle_weekly_get, handle_weekly_put, handle_weekly_import, handle_weekly_weeks
 from .routes_reminders import handle_pending as handle_reminders_pending, handle_ack as handle_reminder_ack
 from .routes_balance import handle_balance
@@ -437,6 +437,13 @@ async def start_api_server():
     app.router.add_get("/api/persona", handle_persona)
     app.router.add_get("/api/savings", handle_savings)
     app.router.add_post("/api/savings/entries", handle_savings_add)
+    app.router.add_get("/api/savings/overview", handle_overview)
+    app.router.add_get("/api/savings/goals", handle_goals)
+    app.router.add_get("/api/savings/frozen", handle_frozen)
+    app.router.add_get("/api/savings/fixed", handle_fixed)
+    app.router.add_get("/api/savings/funds", handle_funds)
+    app.router.add_get("/api/savings/monthly", handle_monthly)
+    app.router.add_get("/api/finance/audit", handle_finance_audit)
     app.router.add_get("/api/savings/snapshots", handle_snapshots_get)
     app.router.add_post("/api/savings/snapshots", handle_snapshot_create)
     app.router.add_get("/api/savings/reconcile", handle_reconcile)
