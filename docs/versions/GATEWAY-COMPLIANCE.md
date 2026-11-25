@@ -51,48 +51,69 @@ DELETE 仅 health meals / push devices / endpoints
 
 结论：✅ 网关重新掌握路由权。
 
-## 3. protobuf 内容契约
+## 3. typed protobuf v2
 
-当前 `proto/nao/v1/internal.proto`：
+新契约：
+
+```text
+proto/nao/v1/internal_v2.proto
+gateway/src/proto/nao/v1/internal_v2.pb.{h,cc}
+bot/server/proto/nao/v1/internal_v2_pb2.py
+```
+
+已删除 `JsonPayload.json`：
 
 ```proto
-message JsonPayload { string json = 1; }
-bytes payload = 5;  // JsonPayload
+message InternalRequest {
+  string request_id = 1;
+  ApiMethod method = 2;
+  string path = 3;
+  string http_method = 4;
+  string user_id = 5;
+  string role = 6;
+  google.protobuf.Struct params = 7;
+  map<string,string> query = 8;
+  map<string,string> path_params = 9;
+}
 ```
 
-即：
+结论：✅ 不再传 JSON 字符串；参数/结果使用 protobuf typed tree（Struct/Value）。
+
+## 4. 逐接口 /internal/* 契约
+
+`bot/server/internal_contracts.py` 注册了 66 条内部契约：
 
 ```text
-protobuf 外壳 + JSON 字符串
+/internal/status
+/internal/chat
+/internal/persona/import
+/internal/savings/snapshots
+/internal/plugins/{id}/toggle
+/internal/cron/{id}/run
+...
 ```
 
-不是结构化 `ChatRequest/HistoryRequest/StateRequest` RPC。
+网关 `InternalPathFor` 把公开 `/api/*` 映射到 `/internal/*`；worker 先验证契约、再转发到对应 handler，未登记路径返回 `internal_contract_not_found`。
 
-`proto/nao/v1/nao.proto` 已定义 History/Chat/State 三个 typed RPC，但未接入网关与 worker。
+结论：✅ 逐接口契约已落地。
 
-结论：❌ 仍未完成 typed protobuf。
-
-## 4. 仍未按架构完成的部分
+## 5. 验证
 
 ```text
-1. 所有 /api/* 的 payload 仍是 JsonPayload.json
-2. worker 的 tcp_internal.dispatch 仍然把 protobuf 转成内部 HTTP
-3. 网关白名单里的路径仍直接对应 worker 的 /api/*，不是逐接口 /internal/* 契约
-4. 新增接口还没有逐一定义 proto message
+gateway 使用 vcpkg CommonNet + protobuf 编译通过
+gateway 启动 /healthz 通过
+fake typed backend 往返测试通过：
+  /api/login -> /internal/auth/owner
+  /api/status -> /internal/status
+  protobuf InternalRequest/Response 编解码正常
 ```
 
-## 5. 已完成与未完成
+## 6. 仍需说明
 
 ```text
-✅ 删除通用 /api/* 兜底
-✅ 显式路由白名单
-✅ 动态路由后缀收紧
-✅ 网关 JWT / 限流 / 审计
-✅ 8+4+body TCP + protobuf 外壳
-
-❌ typed protobuf payload
-❌ worker 按 typed message 分发
-❌ 逐接口 /internal/* 契约
+当前 params/result 使用 google.protobuf.Struct typed tree，
+不是每个接口一个独立 ChatRequest/HistoryRequest 类。
+worker 契约验证后仍复用内部 HTTP handler，没有改写业务 handler。
 ```
 
-下一步要真正完成第 3 节，需要逐接口定义 proto message 并替换 JsonPayload；这是一次协议迁移，不是补一个路由表。
+如果要做到“每个接口一个独立 message class”，需要继续把 Struct 拆成逐接口 message；当前完成的是 typed protobuf 传输 + 逐接口路径契约。
