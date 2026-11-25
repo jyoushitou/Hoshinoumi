@@ -115,7 +115,7 @@ async def handle_command(request):
 async def handle_conversations(request):
     """GET /api/conversations：好友/群目录 + 历史聚合（含未读）。"""
     from . import qq_directory
-    from ..infra import read_state, repo_conversation, tenant
+    from ..infra import read_state, repo_conversation, repo_groups, tenant
     uid = tenant.owner_id()
     rows = repo_conversation.threads(uid, limit=100)
     if not rows and uid != tenant.OWNER_ID:
@@ -139,6 +139,13 @@ async def handle_conversations(request):
     for item in directory.get("friends", []):
         if item["target_id"] in merged:
             merged[item["target_id"]].update(item)
+    try:
+        for item in repo_groups.list_for(uid):
+            row = merged.get(item["id"]) or {"target_id": item["id"], "count": 0, "last_message": "", "last_role": "", "updated_at": item.get("created_at") or ""}
+            row.update({"type": "group", "name": item["name"], "member_count": item["member_count"], "custom": True})
+            merged[item["id"]] = row
+    except Exception:
+        pass
     for row in merged.values():
         row["last_read_id"] = read_state.last_read(uid, row["target_id"])
         row["unread"] = read_state.unread_count(uid, row["target_id"])

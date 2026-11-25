@@ -205,6 +205,8 @@ async def handle_get_token(request):
         "endpoints": [
             {"path": "/api/health", "method": "GET", "auth": False},
             {"path": "/api/status", "method": "GET", "auth": True},
+            {"path": "/api/groups", "method": "GET", "auth": True},
+            {"path": "/api/groups", "method": "POST", "auth": True},
             {"path": "/api/usage", "method": "GET", "auth": True},
             {"path": "/api/memory", "method": "GET", "auth": True},
             {"path": "/api/persona", "method": "GET", "auth": True},

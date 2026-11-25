@@ -607,6 +607,16 @@ PURE = {
             KEY idx_reminder_created (created_at)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """,
+    "custom_groups": """
+        CREATE TABLE IF NOT EXISTS custom_groups (
+            id VARCHAR(64) PRIMARY KEY,
+            user_id VARCHAR(64) NOT NULL DEFAULT '__owner__',
+            name VARCHAR(40) NOT NULL,
+            members_json TEXT NOT NULL,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            KEY idx_custom_groups_user (user_id, created_at)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
     "finance_snapshots": """
         CREATE TABLE IF NOT EXISTS finance_snapshots (
             id BIGINT AUTO_INCREMENT PRIMARY KEY,

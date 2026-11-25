@@ -22,6 +22,7 @@ from .routes_weekly_plan import handle_weekly_get, handle_weekly_put, handle_wee
 from .routes_reminders import handle_pending as handle_reminders_pending, handle_ack as handle_reminder_ack
 from .routes_balance import handle_balance
 from .routes_health import handle_summary as handle_health_summary, handle_add_meal as handle_health_add_meal, handle_delete_meal as handle_health_delete_meal, handle_recognize as handle_health_recognize
+from .routes_groups import handle_list as handle_groups_list, handle_create as handle_groups_create
 from .routes_push import handle_devices as handle_push_devices, handle_register as handle_push_register, handle_delete as handle_push_delete, handle_preferences as handle_push_preferences, handle_test as handle_push_test, handle_outbox as handle_push_outbox
 from .routes_plugins import handle_list as handle_plugins_list, handle_install as handle_plugins_install, handle_toggle as handle_plugins_toggle, handle_approve as handle_plugins_approve, handle_reject as handle_plugins_reject
 from .routes_cron import handle_list as handle_cron_list, handle_create as handle_cron_create, handle_update as handle_cron_update, handle_delete as handle_cron_delete, handle_run as handle_cron_run
@@ -421,6 +422,8 @@ async def start_api_server():
     app.router.add_post("/api/messages/{id}/recall", handle_recall)
     app.router.add_post("/api/topic", handle_topic)
     app.router.add_get("/api/commands", handle_commands)
+    app.router.add_get("/api/groups", handle_groups_list)
+    app.router.add_post("/api/groups", handle_groups_create)
     app.router.add_get("/api/endpoints", handle_endpoints_list)
     app.router.add_post("/api/endpoints", handle_endpoint_register)
     app.router.add_delete("/api/endpoints/{id}", handle_endpoint_disable)
