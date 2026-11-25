@@ -10,6 +10,9 @@ const status = ref<InfoStatus | null>(null)
 const error = ref('')
 const session = useSessionStore()
 const balance = ref<InfoBalance | null>(null)
+interface ShelfBook { title?: string; last_no?: number; last_title?: string; intro?: string }
+const shelf = ref<{ books?: ShelfBook[]; day?: string; chapters?: number } | null>(null)
+const currentBook = computed(() => Array.isArray(shelf.value?.books) ? shelf.value!.books![0] : null)
 const balanceError = ref('')
 const balanceCurrency = computed(() => balance.value?.balance_infos?.[0]?.currency || 'CNY')
 const balanceTotal = computed(() => balance.value?.balance_infos?.[0]?.total_balance || '—')
@@ -28,6 +31,7 @@ async function copyDiagnostics() {
   ].join('\n')
   try { await navigator.clipboard.writeText(text); copied.value = true; setTimeout(() => { copied.value = false }, 1500) } catch { copied.value = false }
 }
+async function loadShelf() { try { const r = await http.get<{ data?: { books?: ShelfBook[]; day?: string; chapters?: number } }>('/api/shelf'); shelf.value = r.data || null } catch { shelf.value = null } }
 async function loadBalance() { try { balance.value = await http.get('/api/balance'); balanceError.value = '' } catch { balance.value = null; balanceError.value = 'API 余额不可用' } }
 interface Backup { manifest?: { created_at?: string; counts?: Record<string, number>; checksums?: Record<string, string> }; db?: unknown }
 const backup = ref<Backup | null>(null)
@@ -102,7 +106,7 @@ async function load() {
   try { status.value = await http.get('/api/status'); error.value = '' } catch { status.value = null; error.value = '无后端连接' }
 }
 const uptimeLabel = computed(() => { const seconds = Number(status.value?.uptime_seconds || 0); if (!seconds) return '—'; const days = Math.floor(seconds / 86400); const hours = Math.floor((seconds % 86400) / 3600); return days ? `${days} 天 ${hours} 小时` : `${hours} 小时` })
-onMounted(() => { void load(); void loadBalance() })
+onMounted(() => { void load(); void loadBalance(); void loadShelf() })
 </script>
 
 <template>
@@ -144,7 +148,14 @@ onMounted(() => { void load(); void loadBalance() })
       </div>
       <div v-else-if="section === 'plan'" class="rows"><div><span>周计划</span><b>ISO 年周</b></div><div><span>定时任务</span><b>3 个</b></div></div>
       <div v-else-if="section === 'account'" class="rows"><div><span>主人</span><b>{{ status?.master_qq || '—' }}</b></div><div><span>成员</span><b>按 target 隔离</b></div></div>
-      <div v-else-if="section === 'reading'" class="rows"><div><span>当前阅读</span><b>《十日终焉》</b></div><div><span>进度</span><b>60%</b></div></div>
+      <div v-else-if="section === 'reading'" class="rows">
+        <template v-if="currentBook">
+          <div><span>当前阅读</span><b>《{{ currentBook.title || '未命名' }}》</b></div>
+          <div><span>最近章节</span><b>{{ currentBook.last_title || '—' }}{{ currentBook.last_no ? ' · 第 ' + currentBook.last_no + ' 章' : '' }}</b></div>
+          <div><span>今日章节</span><b>{{ shelf?.chapters ?? 0 }} 章</b></div>
+        </template>
+        <div v-else><span>当前阅读</span><b>暂无阅读记录</b></div>
+      </div>
       <div v-else class="rows"><div><span>连接</span><b>{{ status ? '正常' : '离线' }}</b></div><div><span>路由</span><b>本机 / 局域网</b></div></div>
     </div>
   </section>
