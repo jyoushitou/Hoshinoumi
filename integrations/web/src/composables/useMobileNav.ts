@@ -1,5 +1,6 @@
 ﻿import { computed, ref } from 'vue'
 import { isNativeClient } from '@/lib/platform'
+import { useUiSettings } from '@/composables/useUiSettings'
 
 export interface MobileEntry {
   key: string
@@ -48,7 +49,8 @@ function persist() {
 }
 
 export function useMobileNav() {
-  const visibleMobileEntries = computed(() => isNativeClient() ? mobileEntries.filter(entry => entry.key !== 'logs') : mobileEntries)
+  const { hiddenPages } = useUiSettings()
+  const visibleMobileEntries = computed(() => (isNativeClient() ? mobileEntries.filter(entry => entry.key !== 'logs') : mobileEntries).filter(entry => !hiddenPages.value.includes(entry.key)))
   const quickEntries = computed(() => visibleMobileEntries.value.filter(entry => quickKeys.value.includes(entry.key)))
 
   function toggleQuick(key: string) {
@@ -69,5 +71,5 @@ export function useMobileNav() {
     persist()
   }
 
-  return { entries: visibleMobileEntries.value, quickEntries, quickKeys, toggleQuick, resetQuick, min: MIN_QUICK, max: MAX_QUICK }
+  return { entries: visibleMobileEntries, quickEntries, quickKeys, toggleQuick, resetQuick, min: MIN_QUICK, max: MAX_QUICK }
 }

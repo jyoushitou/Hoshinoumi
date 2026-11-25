@@ -25,7 +25,9 @@ import { useAuthStore } from '@/stores/auth'
 import { mobileEntries } from '@/composables/useMobileNav'
 import { useSessionStore } from '@/stores/session'
 import { useIsOwner } from '@/composables/useIsOwner'
+import { useUiSettings } from '@/composables/useUiSettings'
 
+const { navHidden } = useUiSettings()
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
@@ -178,7 +180,8 @@ onBeforeUnmount(() => {
       </Transition>
     </main>
     <MobileReminderPopup />
-    <MobileTabBar v-if="!chatDetail && !keyboardOpen && isMainRoute" />
+    <MobileTabBar v-if="!navHidden && !chatDetail && !keyboardOpen && isMainRoute" />
+    <button v-if="navHidden" class="nav-ball-fallback" type="button" title="展开底部导航" @click="navHidden = false">◎</button>
   </div>
 </template>
 
@@ -199,4 +202,5 @@ onBeforeUnmount(() => {
 .page-right-enter-from{opacity:0;transform:translateX(-18px)}
 .page-right-leave-to{opacity:0;transform:translateX(14px)}
 @media(prefers-reduced-motion:reduce){.page-left-enter-active,.page-left-leave-active,.page-right-enter-active,.page-right-leave-active{transition:none}}
+.nav-ball-fallback{position:fixed;right:14px;bottom:22px;z-index:60;width:42px;height:42px;border-radius:50%;border:1px solid #bcd4ff;background:#2563eb;color:#fff;font:18px inherit;box-shadow:0 10px 24px rgba(37,99,235,.28)}
 </style>

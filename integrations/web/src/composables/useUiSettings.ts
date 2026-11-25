@@ -2,6 +2,7 @@ import { computed, ref, watch } from 'vue'
 
 const HIDDEN_KEY = 'hoshinoumi.ui.hiddenPages'
 const MOTION_KEY = 'hoshinoumi.ui.motion'
+const NAV_HIDDEN_KEY = 'hoshinoumi.mobile.navHidden'
 
 function readHidden(): string[] {
   try {
@@ -14,6 +15,7 @@ function readHidden(): string[] {
 
 const hiddenPages = ref<string[]>(readHidden())
 const motion = ref(localStorage.getItem(MOTION_KEY) !== 'off')
+const navHidden = ref(localStorage.getItem(NAV_HIDDEN_KEY) === '1')
 
 watch(hiddenPages, value => {
   try { localStorage.setItem(HIDDEN_KEY, JSON.stringify(value)) } catch { /* ignore */ }
@@ -24,6 +26,8 @@ watch(motion, value => {
   document.documentElement.classList.toggle('motion-off', !value)
 }, { immediate: true })
 
+watch(navHidden, value => { try { localStorage.setItem(NAV_HIDDEN_KEY, value ? '1' : '0') } catch { /* ignore */ } })
+
 export function useUiSettings() {
   const hiddenCount = computed(() => hiddenPages.value.length)
   function isHidden(page: string) { return hiddenPages.value.includes(page) }
@@ -32,5 +36,5 @@ export function useUiSettings() {
     hiddenPages.value = isHidden(page) ? hiddenPages.value.filter(item => item !== page) : [...hiddenPages.value, page]
   }
   function resetPages() { hiddenPages.value = [] }
-  return { hiddenPages, hiddenCount, isHidden, togglePage, resetPages, motion }
+  return { hiddenPages, hiddenCount, isHidden, togglePage, resetPages, motion, navHidden }
 }

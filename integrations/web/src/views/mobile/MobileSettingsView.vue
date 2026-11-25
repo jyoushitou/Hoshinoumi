@@ -5,6 +5,7 @@ import { useMobileNav } from '@/composables/useMobileNav'
 import { useAuthStore } from '@/stores/auth'
 import { useIsOwner } from '@/composables/useIsOwner'
 import { http } from '@/api/client'
+import { useUiSettings } from '@/composables/useUiSettings'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -12,9 +13,11 @@ const isOwner = useIsOwner()
 const apkVersion = ref('Web 预览')
 const backendVersion = ref('—')
 const { entries, quickKeys, toggleQuick, resetQuick } = useMobileNav()
-const visibleEntries = computed(() => isOwner.value ? entries : entries.filter(entry => entry.key !== 'relation' && entry.key !== 'savings'))
+const { navHidden, hiddenPages, togglePage } = useUiSettings()
+const visibilityEntries = computed(() => entries.value.filter(entry => !['settings', 'chats'].includes(entry.key)))
+const visibleEntries = computed(() => isOwner.value ? entries.value : entries.value.filter(entry => entry.key !== 'relation' && entry.key !== 'savings'))
 const message = computed(() => `${quickKeys.value.length} / 5`)
-const quickLabel = computed(() => quickKeys.value.map(key => entries.find(entry => entry.key === key)?.label).filter(Boolean).join(' / '))
+const quickLabel = computed(() => quickKeys.value.map(key => entries.value.find(entry => entry.key === key)?.label).filter(Boolean).join(' / '))
 
 onMounted(async () => {
   try {
@@ -70,6 +73,16 @@ function changeBackend() {
     </div>
 
     <div class="block">
+      <div class="block-title">页面可见性 <span>隐藏 {{ hiddenPages.length }} 个</span></div>
+      <div class="visibility-grid"><button v-for="entry in visibilityEntries" :key="entry.key" type="button" class="visibility-item" :class="{ on: !hiddenPages.includes(entry.key) }" @click="togglePage(entry.key)">{{ entry.label }}<em>{{ hiddenPages.includes(entry.key) ? '隐藏' : '显示' }}</em></button></div>
+    </div>
+
+    <div class="block">
+      <div class="row"><span>底部导航</span><button class="nav-switch" :class="{ on: !navHidden }" type="button" role="switch" :aria-checked="!navHidden" @click="navHidden = !navHidden"><i /></button></div>
+      <div class="row"><span>导航球</span><small>关闭底部导航后可用</small></div>
+    </div>
+
+    <div class="block">
       <div class="row"><span>后端连接</span><small>{{ auth.loggedIn ? '已登录' : '未登录' }}</small></div>
       <button class="row backend-row" type="button" @click="changeBackend"><span>后端地址</span><small>修改 ›</small></button>
       <button class="row backend-row" type="button" @click="openPermissions"><span>权限与后台</span><small>管理 ›</small></button>
@@ -94,7 +107,7 @@ function changeBackend() {
 .quick-item b{font-size:14px;font-weight:400;line-height:1}.quick-item em{position:absolute;right:4px;top:2px;font-style:normal;color:#2563eb;font-size:8px}
 .quick-item.on{border-color:#93c5fd;background:#eef4ff;color:#2563eb;font-weight:700}
 .reset{width:100%;margin-top:8px;height:30px;border:1px solid #dbe8ff;background:#fff;color:#2563eb;border-radius:8px;font:10px inherit;cursor:pointer}
-.row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #f0f5fd;font-size:10px;color:#3d5470}.row:last-child{border-bottom:0}.row small{font-size:9px;color:#9aabc0}.backend-row{width:100%;border:0;background:none;text-align:left;cursor:pointer}.backend-row small{color:#2563eb}
+.row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #f0f5fd;font-size:10px;color:#3d5470}.row:last-child{border-bottom:0}.visibility-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.visibility-item{height:30px;border:1px solid #e3ebf7;border-radius:7px;background:#f8fbff;color:#8a9bb0;font:8px inherit;display:flex;align-items:center;justify-content:space-between;padding:0 7px;cursor:pointer}.visibility-item.on{background:#fff;color:#405872;border-color:#dbe8ff}.visibility-item em{font-style:normal;font-size:7px;color:#9aabc0}.visibility-item.on em{color:#168b63}.nav-switch{position:relative;width:38px;height:22px;border:0;border-radius:11px;background:#cbd5e1;cursor:pointer}.nav-switch.on{background:#2563eb}.nav-switch i{position:absolute;left:2px;top:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s}.nav-switch.on i{left:18px}.row small{font-size:9px;color:#9aabc0}.backend-row{width:100%;border:0;background:none;text-align:left;cursor:pointer}.backend-row small{color:#2563eb}
 .about-card{margin-top:12px;padding:13px;border:1px solid #e3ebf7;border-radius:13px;background:#fff;text-align:center}.about-card b{display:block;font-size:10px;color:#314a65}.about-card span{display:block;font-size:8px;color:#9aabc0;margin-top:3px}.about-card em{display:block;font:7px ui-monospace,monospace;letter-spacing:.12em;color:#a8b5c7;font-style:normal;margin-top:7px}.about-links{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-top:8px}.about-links a{font-size:8px;text-decoration:none;border-radius:6px;padding:2px 7px;color:#2563eb;border:1px solid #dbe8ff;background:#f4f9ff}.about-links a:last-child{color:#607795;border-color:#e3ebf7;background:#fff}
 .logout{width:100%;height:36px;border:1px solid #fecaca;background:#fff5f5;color:#b91c1c;border-radius:9px;font:10px inherit;cursor:pointer}
 </style>
