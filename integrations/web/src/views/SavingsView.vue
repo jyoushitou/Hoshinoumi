@@ -15,6 +15,8 @@ interface AuditRow { at: string; user: string; method: string; path: string; sta
 interface Snapshot { id: number; taken_at: string; total_cents: number; note?: string; accounts?: Account[] }
 interface ReconcileRow { account: string; snapshot_cents: number; current_cents: number; difference_cents: number }
 interface Reconcile { snapshot: Snapshot | null; accounts: ReconcileRow[]; difference_cents: number }
+interface Health { target?: number; burn?: number; weight?: number; meals?: Array<{ id?: number; name?: string; kcal?: number; time?: string }> }
+interface HealthPayload { data?: Health; intake?: number; remaining?: number }
 const isOwner = useIsOwner()
 const initOpen = ref(false)
 const initAccounts = ref<string[]>([])
@@ -29,6 +31,13 @@ const audit = ref<AuditRow[]>([])
 const snapshots = ref<Snapshot[]>([])
 const reconcile = ref<Reconcile | null>(null)
 const snapshotBusy = ref(false)
+const health = ref<Health | null>(null)
+const healthIntake = ref(0)
+const healthRemaining = ref(0)
+const healthOpen = ref(true)
+const healthBusy = ref(false)
+const mealName = ref('')
+const mealKcal = ref('')
 const loading = ref(false)
 const error = ref('')
 const amount = ref('')
@@ -108,6 +117,24 @@ async function createSnapshot() {
   snapshotBusy.value = true; error.value = ''
   try { await http.post('/api/savings/snapshots', { note: '手动快照' }); await loadReconcile() } catch (e) { error.value = e instanceof Error ? e.message : '快照失败' } finally { snapshotBusy.value = false }
 }
+async function loadHealth() {
+  try {
+    const r = await http.get<HealthPayload>('/api/health/summary')
+    health.value = r.data || null
+    healthIntake.value = Number(r.intake || 0)
+    healthRemaining.value = Number(r.remaining || 0)
+  } catch { health.value = null }
+}
+async function addMeal() {
+  const name = mealName.value.trim(); const kcal = Number(mealKcal.value)
+  if (!name || !Number.isFinite(kcal) || kcal <= 0) return
+  healthBusy.value = true
+  try {
+    await http.post('/api/health/meals', { name, kcal })
+    mealName.value = ''; mealKcal.value = ''
+    await loadHealth()
+  } finally { healthBusy.value = false }
+}
 async function loadInit() {
   if (!isOwner.value) return
   try {
@@ -121,7 +148,7 @@ async function finishInit() {
   await load()
   await loadReconcile()
 }
-onMounted(() => { if (isOwner.value) { void load(); void loadReconcile(); void loadInit() } })
+onMounted(() => { if (isOwner.value) { void load(); void loadReconcile(); void loadInit(); void loadHealth() } })
 watch(isOwner, value => { if (value && !data.value) { void load(); void loadInit() } })
 </script>
 
@@ -160,6 +187,29 @@ watch(isOwner, value => { if (value && !data.value) { void load(); void loadInit
         <em :class="{ income: entry.amount_cents > 0 }">{{ entry.amount_cents > 0 ? '+' : '' }}{{ fmt(entry.amount_cents) }}</em>
       </div>
     </div>
+    <div class="panel health-panel">
+      <div class="list-title health-title">健康 / 热量
+        <button type="button" class="health-toggle" @click="healthOpen = !healthOpen">{{ healthOpen ? '收起' : '展开' }}</button>
+      </div>
+      <div v-if="healthOpen" class="health-body">
+        <div v-if="health" class="health-stats">
+          <div><small>今日摄入</small><b>{{ healthIntake }} kcal</b></div>
+          <div><small>目标</small><b>{{ health.target ?? 0 }} kcal</b></div>
+          <div><small>运动</small><b>{{ health.burn ?? 0 }} kcal</b></div>
+          <div><small>剩余</small><b>{{ healthRemaining }} kcal</b></div>
+          <div><small>体重</small><b>{{ health.weight ?? '—' }} kg</b></div>
+        </div>
+        <div v-else class="empty">健康数据未配置</div>
+        <div v-if="health?.meals?.length" class="health-meals">
+          <div v-for="meal in health.meals" :key="meal.id" class="health-meal"><span>{{ meal.name }}</span><em>{{ meal.kcal }} kcal · {{ meal.time || '' }}</em></div>
+        </div>
+        <div class="health-form">
+          <input v-model="mealName" placeholder="食物">
+          <input v-model="mealKcal" inputmode="decimal" placeholder="热量 kcal">
+          <button type="button" :disabled="healthBusy" @click="addMeal">{{ healthBusy ? '保存中…' : '记录' }}</button>
+        </div>
+      </div>
+    </div>
     <SavingsInitModal :open="initOpen" :accounts="initAccounts" @close="initOpen = false" @done="finishInit" />
   </section>
 </template>
@@ -167,7 +217,7 @@ watch(isOwner, value => { if (value && !data.value) { void load(); void loadInit
 <style scoped>
 .savings.locked > *:not(.owner-lock):not(.head){display:none}.owner-lock{background:#fff;border:1px dashed #cfe0f7;border-radius:12px;padding:26px;text-align:center;color:#8a9bb0;font-size:10px}.savings{flex:1;min-height:0;overflow:auto;padding:18px 18px 24px;background:#f7faff;color:#17263b}.head{display:flex;align-items:flex-end;margin-bottom:12px}.head-actions{margin-left:auto;display:flex;gap:6px}.head h1{margin:0;font-size:24px;letter-spacing:-.03em}.head p{margin:3px 0 0;font-size:10px;color:#8a9bb0}.refresh{margin-left:auto;height:29px;border:1px solid #dbe8ff;border-radius:8px;background:#fff;color:#2563eb;font:10px inherit;padding:0 10px;cursor:pointer}
 .hero{background:linear-gradient(135deg,#2563eb,#3b82f6);border-radius:14px;padding:15px;color:#fff;margin-bottom:9px}.hero small{display:block;font-size:8px;opacity:.7;letter-spacing:.12em}.hero b{display:block;font-size:26px;letter-spacing:-.03em;margin-top:3px}.hero span{font-size:8px;opacity:.72}
-.account-select{height:32px;border:1px solid #dbe8ff;border-radius:8px;background:#f8fbff;color:#243b55;font:10px inherit;padding:0 7px;outline:0}.accounts{display:flex;gap:6px;overflow:auto;margin-bottom:9px}.account{flex:none;min-width:104px;background:#fff;border:1px solid #e3ebf7;border-radius:10px;padding:8px 9px}.account b{display:block;font-size:8px;color:#8a9bb0}.account span{display:block;font-size:12px;color:#1e3a5f;margin-top:3px}
+.health-panel{margin-top:10px}.health-title{display:flex;align-items:center}.health-toggle{margin-left:auto;border:0;background:none;color:#2563eb;font:8px inherit;cursor:pointer}.health-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:8px 0}.health-stats div{background:#f8fbff;border:1px solid #e3ebf7;border-radius:8px;padding:7px}.health-stats small{display:block;font-size:7px;color:#9aabc0}.health-stats b{display:block;font-size:10px;color:#1e3a5f;margin-top:2px}.health-meals{display:grid;gap:4px;margin:6px 0}.health-meal{display:flex;justify-content:space-between;font-size:8px;color:#526982;padding:4px 0;border-bottom:1px solid #f1f5fb}.health-meal em{font-style:normal;color:#9aabc0}.health-form{display:flex;gap:6px;margin-top:7px}.health-form input{flex:1;min-width:0;height:28px;border:1px solid #dbe8ff;border-radius:7px;background:#f8fbff;font:9px inherit;padding:0 7px;outline:0}.health-form button{height:28px;border:0;border-radius:7px;background:#2563eb;color:#fff;font:8px inherit;padding:0 10px;cursor:pointer}.account-select{height:32px;border:1px solid #dbe8ff;border-radius:8px;background:#f8fbff;color:#243b55;font:10px inherit;padding:0 7px;outline:0}.accounts{display:flex;gap:6px;overflow:auto;margin-bottom:9px}.account{flex:none;min-width:104px;background:#fff;border:1px solid #e3ebf7;border-radius:10px;padding:8px 9px}.account b{display:block;font-size:8px;color:#8a9bb0}.account span{display:block;font-size:12px;color:#1e3a5f;margin-top:3px}
 .form{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:#fff;border:1px solid #e3ebf7;border-radius:12px;padding:9px;margin-bottom:9px}.seg{grid-column:1/-1;display:flex;gap:4px}.seg button{flex:1;height:25px;border:1px solid #e3ebf7;border-radius:6px;background:#f8fbff;color:#6b7c95;font:9px inherit}.seg button.on{background:#eef4ff;color:#2563eb;border-color:#c7dcff}.form input{min-width:0;height:29px;border:1px solid #e3ebf7;border-radius:7px;background:#f8fbff;padding:0 8px;font:9.5px inherit;outline:0}.form .primary{grid-column:1/-1;height:30px;border:0;border-radius:7px;background:#2563eb;color:#fff;font:9.5px inherit;font-weight:700}.error{border:1px solid #fecaca;background:#fff5f5;color:#b91c1c;border-radius:8px;padding:7px 9px;font-size:9px;margin-bottom:8px}
 .entries{background:#fff;border:1px solid #e3ebf7;border-radius:12px;padding:9px}.list-title{display:flex;justify-content:space-between;font-size:9px;color:#52708f;font-weight:700;padding:2px 2px 7px}.list-title span{font-weight:400;color:#9aabc0}.entry{display:flex;align-items:center;justify-content:space-between;padding:7px 2px;border-bottom:1px solid #f1f5fb}.entry:last-child{border-bottom:0}.entry b{display:block;font-size:9.5px;color:#314a65}.entry small{display:block;font-size:7px;color:#9aabc0;margin-top:2px}.entry em{font-style:normal;font-size:10px;color:#c0264a}.entry em.income{color:#1f9d6b}.entry em.danger-text{color:#b91c1c;font-size:8px}.empty{text-align:center;color:#9aabc0;font-size:9px;padding:16px}
 .panel{background:#fff;border:1px solid #e3ebf7;border-radius:12px;padding:9px;margin-bottom:9px}.goal{display:grid;grid-template-columns:1fr auto;gap:3px;padding:6px 2px}.goal b{font-size:9.5px;color:#314a65}.goal small{display:block;font-size:7px;color:#9aabc0;margin-top:2px}.goal em{font-style:normal;font-size:8.5px;color:#2563eb}.goal button{grid-row:1/3;grid-column:2;align-self:center;border:1px solid #dbe8ff;background:#f4f9ff;color:#2563eb;border-radius:5px;font:7.5px inherit;padding:2px 6px;cursor:pointer}.entry .mini{margin-left:7px;border:1px solid #dbe8ff;background:#f4f9ff;color:#2563eb;border-radius:5px;font:7.5px inherit;padding:2px 6px;cursor:pointer}.bill-note{border:1px solid #f2d491;background:#fff8e6;color:#8a5a00;border-radius:8px;padding:7px 9px;font-size:8px;line-height:1.6;margin-bottom:8px}.goal i{grid-column:1/-1;height:4px;border-radius:3px;background:#eef4ff;overflow:hidden}.goal i span{display:block;height:100%;background:#2563eb;border-radius:3px}

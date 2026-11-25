@@ -130,7 +130,6 @@ onMounted(() => { void load(); void loadBalance(); void loadShelf() })
       <div><small>API 余额</small><b>{{ balanceCurrency }} {{ balanceTotal }}</b><span v-if="balance">赠送 {{ balanceGranted }} · 充值 {{ balanceTopped }}<template v-if="balance.fetched_at"> · {{ balance.fetched_at }}</template></span><span v-else class="muted">{{ balanceError || '读取中…' }}</span></div>
       <button type="button" :disabled="!balance" @click="loadBalance">刷新余额</button>
     </div>
-    <RouterLink to="/health" class="health-entry"><span><small>健康 / 热量</small><b>今日摄入 · 目标 · 运动 · 体重</b></span><em>打开 ›</em></RouterLink>
     <div class="grid">
       <button v-for="item in sections" :key="item.key" type="button" class="entry" :class="{ on: section === item.key }" @click="section = item.key"><span class="icon">{{ item.icon }}</span><span><b>{{ item.title }}</b><small>{{ item.desc }}</small></span><em>›</em></button>
     </div>
