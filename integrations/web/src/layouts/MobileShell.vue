@@ -87,6 +87,7 @@ function syncViewport() {
   const height = visualViewport?.height ?? window.innerHeight
   const safe = Math.max(320, Math.round(Number(height) || 0))
   viewportHeight.value = safe
+  if (safe >= Math.round((window.innerHeight || 0) * 0.88)) keyboardOpen.value = false
   if (typeof document !== 'undefined') document.documentElement.style.setProperty('--app-height', safe + 'px')
   if (visualViewport && visualViewport.offsetTop > 0) window.scrollTo(0, 0)
 }
@@ -123,7 +124,18 @@ const pageView = computed(() => {
   return MobilePageView
 })
 const title = computed(() => titles[String(route.name)] ?? 'Hoshinoumi')
-watch(() => route.name, () => { chatDetail.value = false })
+watch(() => route.name, () => {
+  chatDetail.value = false
+  keyboardOpen.value = false
+  navMenu.value = false
+  if (focusOutTimer) { clearTimeout(focusOutTimer); focusOutTimer = null }
+})
+function resetLayering() {
+  keyboardOpen.value = false
+  navMenu.value = false
+  if (focusOutTimer) { clearTimeout(focusOutTimer); focusOutTimer = null }
+}
+
 watch(() => route.path, (to, from) => {
   const a = pageOrder.indexOf(from)
   const b = pageOrder.indexOf(to)
@@ -161,6 +173,8 @@ onBeforeUnmount(() => {
   window.removeEventListener('focusin', syncViewportSoon)
   document.removeEventListener('focusin', onFocusChange, true)
   document.removeEventListener('focusout', onFocusChange, true)
+  window.removeEventListener('hoshinoumi:back-detail', resetLayering)
+  document.removeEventListener('visibilitychange', resetLayering)
   if (focusOutTimer) clearTimeout(focusOutTimer)
   window.removeEventListener('focusout', syncViewportSoon)
   window.removeEventListener('hoshinoumi:push', onPushRefresh)
