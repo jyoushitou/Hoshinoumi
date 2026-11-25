@@ -117,6 +117,13 @@ async def handle_conversations(request):
     for row in merged.values():
         row["last_read_id"] = read_state.last_read(uid, row["target_id"])
         row["unread"] = read_state.unread_count(uid, row["target_id"])
+    owner = str(tenant.owner_id())
+    if owner not in merged:
+        merged[owner] = {
+            "target_id": owner, "type": "private", "name": "奈绪",
+            "member_count": 0, "count": 0, "last_message": "",
+            "last_role": "", "updated_at": "",
+        }
     out = sorted(merged.values(), key=lambda x: str(x.get("updated_at") or ""), reverse=True)[:100]
     return json_response({"ok": True, "data": out})
 
@@ -265,7 +272,13 @@ async def handle_history(request):
         limit = int(request.query.get("limit") or 100)
     except ValueError:
         limit = 100
-    rows = repo_conversation.recent(target, limit=limit, user_id=tenant.owner_id())
+    from ..infra.conn import get_cursor
+    c = get_cursor()
+    try:
+        rows = repo_conversation.recent(target, limit=limit, user_id=tenant.owner_id(), cursor=c)
+    finally:
+        try: c.close()
+        except Exception: pass
     data = []
     for r in rows:
         item = dict(r)
