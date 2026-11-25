@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { http } from '@/api/client'
 
 interface Plugin { id: string; name: string; slug: string; enabled: boolean; pending: boolean; permissions: string[]; version: string; description: string }
@@ -63,12 +63,14 @@ async function importFromFile(event: Event) {
   const data = await new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result || '').split(',')[1] || ''); reader.onerror = () => reject(new Error('read_failed')); reader.readAsDataURL(file) })
   await install({ source: 'file', filename: file.name, data_base64: data })
 }
-onMounted(load)
+function onFocus() { void load() }
+onMounted(() => { void load(); window.addEventListener('focus', onFocus) })
+onBeforeUnmount(() => window.removeEventListener('focus', onFocus))
 </script>
 
 <template>
   <section class="plugins-page">
-    <header class="head"><div><h1>插件</h1><p>安装 / 审批 / 权限 / 错误 · 独立管理页</p></div><button class="add" type="button" @click="showImport = true">＋ 安装插件</button><button class="refresh" type="button" :disabled="loading" @click="load">{{ loading ? '刷新中…' : '刷新' }}</button></header>
+    <header class="head"><div><h1>插件</h1><p>安装 / 审批 / 权限 / 错误 · 真实 API · 仅 owner</p></div><button class="add" type="button" @click="showImport = true">＋ 安装插件</button><button class="refresh" type="button" :disabled="loading" @click="load">{{ loading ? '刷新中…' : '刷新' }}</button></header>
     <div v-if="error" class="notice error">{{ error }}</div>
     <div v-if="notice" class="notice ok">{{ notice }}</div>
     <div class="overview"><div><small>已安装</small><b>{{ stats.installed }}</b></div><div><small>待审批</small><b class="warn">{{ stats.pending }}</b></div><div><small>错误</small><b class="bad">{{ stats.errors }}</b></div></div>
