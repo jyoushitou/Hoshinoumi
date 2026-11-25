@@ -51,6 +51,11 @@ def _valid_courses(courses):
     return out
 
 
+async def handle_weekly_weeks(request):
+    weeks = weekly_plan.list_weeks(_uid(request))
+    return json_response({"ok": True, "weeks": weeks})
+
+
 async def handle_weekly_get(request):
     week = _week(request.query.get("week", 1))
     data = weekly_plan.load_week(_uid(request), week)

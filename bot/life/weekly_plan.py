@@ -121,6 +121,18 @@ def _uid_dir(uid: str) -> Path:
     return d
 
 
+def list_weeks(uid: str):
+    """当前 uid 已保存的周次，升序。"""
+    d = _uid_dir(uid)
+    weeks = []
+    for p in d.glob("week-*.json"):
+        try:
+            weeks.append(int(p.stem.split("-", 1)[1]))
+        except Exception:
+            continue
+    return sorted(set(weeks))
+
+
 def load_week(uid: str, week: int):
     p = _uid_dir(uid) / f"week-{int(week)}.json"
     try:
