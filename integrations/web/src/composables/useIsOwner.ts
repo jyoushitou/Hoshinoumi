@@ -23,11 +23,11 @@ export function useIsOwner() {
   const session = useSessionStore()
   return computed(() => {
     if (!auth.loggedIn) return false
-    const role = tokenRole(auth.token)
-    if (role === 'owner') return true
-    if (role === 'user') return false
     const master = session.status?.master_qq
-    if (master === undefined || master === null || master === '') return false
-    return String(auth.qq).trim() === String(master).trim()
+    if (master !== undefined && master !== null && master !== '') {
+      return String(auth.qq).trim() === String(master).trim()
+    }
+    const role = tokenRole(auth.token)
+    return role === 'owner'
   })
 }
