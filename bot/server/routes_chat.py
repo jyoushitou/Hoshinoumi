@@ -71,7 +71,10 @@ async def handle_command(request):
         ctx = CommandContext(parts=[cmd, *[str(a) for a in args]], uid=tenant.owner_id(),
                              ws=None, is_group=False, gid=0)
         result = await registry.run(cmd, ctx)
-        return json_response({"success": True, "command": cmd, "args": args, "result": str(result or "")})
+        text = str(result or "")
+        if cmd == "vision" and "视觉 ❌" in text:
+            return json_response({"success": False, "error": "vision_failed", "command": cmd, "result": text}, 502)
+        return json_response({"success": True, "command": cmd, "args": args, "result": text})
     except Exception as e:
         log_err(f"API 命令执行失败 !{cmd}: {e}")
         return json_response({"error": "command_failed", "message": str(e)}, 500)

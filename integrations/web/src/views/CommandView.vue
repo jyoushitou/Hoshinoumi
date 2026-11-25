@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { http } from '@/api/client'
+import { ApiError, http } from '@/api/client'
 
 interface CommandRow { name: string; help?: string; group?: string; owner?: boolean }
 const commands = ref<CommandRow[]>([])
@@ -29,6 +29,13 @@ function toggleGroup(group: string) {
   if (next.has(group)) next.delete(group)
   else next.add(group)
   collapsed.value = next
+}
+function errorDetail(e: unknown) {
+  if (e instanceof ApiError) {
+    const data = e.data as { result?: string; message?: string } | undefined
+    return { status: e.status, text: data?.result || data?.message || e.message }
+  }
+  return { status: 0, text: e instanceof Error ? e.message : '执行失败' }
 }
 let timer: ReturnType<typeof setInterval> | null = null
 
@@ -77,8 +84,9 @@ async function executeInput() {
     if (r.success === false) { resultState.value = '执行失败'; resultOutput.value = r.message || '执行失败' }
     else { resultState.value = '200 OK'; resultOutput.value = r.result || '(无输出)' }
   } catch (e) {
-    resultState.value = '执行失败'
-    resultOutput.value = e instanceof Error ? e.message : '执行失败'
+    const detail = errorDetail(e)
+    resultState.value = detail.status ? `${detail.status}` : '执行失败'
+    resultOutput.value = detail.text
   }
 }
 async function run(row: CommandRow) {
@@ -92,7 +100,7 @@ async function run(row: CommandRow) {
     if (r.success === false) outputError.value = r.message || '执行失败'
     else output.value = r.result || '(无输出)'
   } catch (e) {
-    outputError.value = e instanceof Error ? e.message : '执行失败'
+    outputError.value = errorDetail(e).text
   } finally {
     running.value = ''
   }

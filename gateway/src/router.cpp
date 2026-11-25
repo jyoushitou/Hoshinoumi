@@ -765,6 +765,11 @@ namespace Gateway
                                              ? static_cast<boost::beast::http::status>(result.status)
                                              : boost::beast::http::status::bad_gateway;
                             }
+                            audit(static_cast<int>(status));
+                            session->httpAsyncReplay(seq,
+                                                     result.body.empty() ? boost::json::serialize(out) : result.body,
+                                                     status, JsonHeaders(requestId));
+                            return;
                         }
                         audit(static_cast<int>(status));
                         session->httpAsyncReplay(seq, boost::json::serialize(out), status,
