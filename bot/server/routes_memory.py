@@ -67,14 +67,33 @@ def build_memory_payload():
         items.append(item)
         events.append({"id": row["id"], "title": item["content"], "kind": item["kind"],
                        "created_at": item["created_at"]})
+    # 对话记忆：user_memory 是后端已有的“用户/奈绪”轮次表
+    conv_rows = _rows(
+        "SELECT id,target_id,user_msg,bot_msg,created_at FROM user_memory "
+        "ORDER BY id DESC LIMIT 100", ())
+    for row in conv_rows:
+        content = f"用户：{row.get('user_msg') or ''}\n奈绪：{row.get('bot_msg') or ''}"[:800]
+        items.append({
+            "id": -int(row["id"]), "content": content, "tags": ["对话"],
+            "source": "对话摘要", "longterm": False,
+            "created_at": str(row.get("created_at") or ""),
+            "target_id": row.get("target_id") or "", "kind": "conversation",
+        })
+        tags["对话"] += 1
     from ..infra.repo_profile import build_profile_text
     summary = build_profile_text(uid)
     profile = {"summary": "" if summary == "无" else summary,
                "keywords": [k for k, _ in tags.most_common(12)]}
-    target_rows = _rows(
-        "SELECT target_id,COUNT(*) AS count FROM memories WHERE user_id=%s AND deleted_at IS NULL "
-        "GROUP BY target_id ORDER BY count DESC", (uid,))
-    targets = [{"target_id": r["target_id"], "count": int(r["count"] or 0)} for r in target_rows]
+    counts = Counter()
+    for row in rows:
+        counts[str(row.get("target_id") or "")] += 1
+    for row in conv_rows:
+        counts[str(row.get("target_id") or "")] += 1
+    targets = [{"target_id": k, "count": v} for k, v in counts.most_common() if k]
+    events.extend({"id": -int(x["id"]), "title": x["content"][:120], "kind": "conversation",
+                   "created_at": x["created_at"]} for x in items if x["id"] < 0)
+    items.sort(key=lambda x: str(x.get("created_at") or ""), reverse=True)
+    events.sort(key=lambda x: str(x.get("created_at") or ""), reverse=True)
     return {
         "total_targets": len(targets), "targets": targets,
         "stats": {"total": len(items), "targets": len(targets),
@@ -92,6 +111,8 @@ async def handle_item_update(request):
         body = await request.json()
     except Exception:
         return json_response({"error": "invalid_json"}, 400)
+    if item_id < 0:
+        return json_response({"ok": False, "error": "conversation_not_editable"}, 400)
     longterm = bool((body or {}).get("longterm"))
     from ..infra.conn import get_cursor
     c = get_cursor()
@@ -114,8 +135,11 @@ async def handle_item_delete(request):
     from ..infra.conn import get_cursor
     c = get_cursor()
     try:
-        c.execute("UPDATE memories SET deleted_at=CURRENT_TIMESTAMP "
-                  "WHERE id=%s AND user_id=%s AND deleted_at IS NULL", (item_id, _uid()))
+        if item_id < 0:
+            c.execute("DELETE FROM user_memory WHERE id=%s", (abs(item_id),))
+        else:
+            c.execute("UPDATE memories SET deleted_at=CURRENT_TIMESTAMP "
+                      "WHERE id=%s AND user_id=%s AND deleted_at IS NULL", (item_id, _uid()))
         c.connection.commit()
         return json_response({"ok": True, "id": item_id, "deleted": True})
     finally:

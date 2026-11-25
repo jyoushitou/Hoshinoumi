@@ -58,6 +58,8 @@ async def handle_chat(request):
             for segment in segments:
                 repo_conversation.append(user_id=uid, target_id=target_id, content=segment,
                                          role="assistant", channel="web", thread_id=thread)
+            from ..infra.repo_memory import add_user_memory_to_db
+            add_user_memory_to_db(target_id, message, clean)
         except Exception as _e:
             log_err(f"Web 对话落库失败: {_e}")
         return json_response({

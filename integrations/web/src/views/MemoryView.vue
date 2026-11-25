@@ -4,7 +4,7 @@ import { http } from '@/api/client'
 const desktop = typeof window !== 'undefined' && window.matchMedia('(min-width: 821px)').matches
 const tab = ref<'memory' | 'events' | 'profile' | 'relation'>('memory')
 const stats = ref<{ total: number; targets: number; longterm: number } | null>(null)
-interface MemoryItem { id: number; content: string; tags: string[]; source: string; longterm: boolean; created_at: string; target_id: string }
+interface MemoryItem { id: number; content: string; tags: string[]; source: string; longterm: boolean; created_at: string; target_id: string; kind?: string }
 const items = ref<MemoryItem[]>([])
 const loading = ref(false)
 const query = ref('')
@@ -85,7 +85,7 @@ const tabs = [
         <article v-for="item in filteredItems" :key="item.id" class="mem-card">
           <p>{{ item.content }}</p>
           <div class="mem-meta"><span v-for="tag in item.tags" :key="tag" class="tag">{{ tag }}</span><span class="source">{{ item.source }}</span><em v-if="item.longterm">长期</em><small>{{ item.created_at.slice(0, 10) }}</small></div>
-          <div class="actions"><button type="button" @click="toggleLongterm(item)">{{ item.longterm ? '取消长期' : '标长期' }}</button><button type="button" class="danger" @click="removeItem(item)">删除</button></div>
+          <div class="actions"><button v-if="item.kind !== 'conversation'" type="button" @click="toggleLongterm(item)">{{ item.longterm ? '取消长期' : '标长期' }}</button><button type="button" class="danger" @click="removeItem(item)">删除</button></div>
         </article>
       </div>
     </div>
