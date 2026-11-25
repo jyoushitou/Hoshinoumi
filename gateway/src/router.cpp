@@ -745,24 +745,11 @@ namespace Gateway
                         };
                         if (result.ok)
                         {
-                            try
-                            {
-                                const auto parsed = boost::json::parse(result.body);
-                                if (parsed.is_object() && parsed.as_object().contains("ok"))
-                                {
-                                    audit(200);
-                                    session->httpAsyncReplay(seq, result.body, status,
-                                                             JsonHeaders(requestId));
-                                    return;
-                                }
-                                out["ok"] = true;
-                                out["data"] = parsed;
-                            }
-                            catch (const std::exception&)
-                            {
-                                out["ok"] = true;
-                                out["data"] = result.body;
-                            }
+                            audit(result.status ? static_cast<int>(result.status) : 200);
+                            session->httpAsyncReplay(seq, result.body.empty() ? "{}" : result.body,
+                                                     boost::beast::http::status::ok,
+                                                     JsonHeaders(requestId));
+                            return;
                         }
                         else
                         {
