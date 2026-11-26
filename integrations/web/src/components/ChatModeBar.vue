@@ -62,6 +62,10 @@ async function approve(approved: boolean) {
     if (!approved) shellCommand.value = ''
   } catch (e) { error.value = e instanceof Error ? e.message : '审批失败' }
 }
+function onModeEvent(event: Event) {
+  const value = String((event as CustomEvent).detail || '')
+  if (modes.value.some(item => item.id === value)) void select(value)
+}
 function startClock() {
   if (timer) clearInterval(timer)
   timer = setInterval(() => {
@@ -71,8 +75,8 @@ function startClock() {
   }, 1000)
 }
 watch(mode, value => { if (value === 'agent') void loadAgentTools() })
-onMounted(() => { void load().then(() => { if (mode.value === 'agent') void loadAgentTools() }); startClock() })
-onBeforeUnmount(() => { if (timer) clearInterval(timer) })
+onMounted(() => { window.addEventListener('hoshinoumi:chat-mode', onModeEvent); void load().then(() => { if (mode.value === 'agent') void loadAgentTools() }); startClock() })
+onBeforeUnmount(() => { if (timer) clearInterval(timer); window.removeEventListener('hoshinoumi:chat-mode', onModeEvent) })
 </script>
 
 <template>

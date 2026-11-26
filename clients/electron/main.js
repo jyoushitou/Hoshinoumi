@@ -104,6 +104,7 @@ function refreshTrayMenu() {
     { label: '打开主窗口', click: () => { if (win) { win.show(); win.focus() } } },
     { label: '迷你窗口', enabled: !!shellSettings.miniWindow, click: toggleMini },
     { label: '插件管理', click: openPlugins },
+    { label: '代码模式', click: openCodeMode },
     { label: '设置', click: openSettings },
     { label: '检查更新', click: checkUpdate },
     { label: '回退上一版本', click: rollbackUpdate },
@@ -122,6 +123,11 @@ function openPlugins() {
   if (!win) return
   win.show(); win.focus()
   win.webContents.executeJavaScript("location.hash='#/plugins'").catch(() => {})
+}
+function openCodeMode() {
+  if (!win) return
+  win.show(); win.focus()
+  win.webContents.executeJavaScript("if (location.hash !== '#/chat') location.hash='#/chat'; setTimeout(() => window.dispatchEvent(new CustomEvent('hoshinoumi:chat-mode', { detail: 'code' })), 260)").catch(() => {})
 }
 function openSettings() {
   if (settingsWin) { settingsWin.show(); settingsWin.focus(); return }
