@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { useSessionStore } from '@/stores/session'
 import { useAuthStore } from '@/stores/auth'
 import { useIsOwner } from '@/composables/useIsOwner'
+import { isNativeClient } from '@/lib/platform'
 const session = useSessionStore()
 const auth = useAuthStore()
 const isOwner = useIsOwner()
@@ -21,7 +22,7 @@ const modules = [
   { path: '/cron', icon: '◷', label: '定时任务', desc: '启停 / 运行' },
   { path: '/logs', icon: '≣', label: '运行日志', desc: '筛选 / 搜索' },
 ]
-const visibleModules = computed(() => isOwner.value ? modules : modules.filter(item => item.path !== '/relation' && item.path !== '/savings'))
+const visibleModules = computed(() => (isOwner.value ? modules : modules.filter(item => item.path !== '/relation' && item.path !== '/savings')).filter(item => !(isNativeClient() && item.path === '/downloads')))
 const hour = new Date().getHours()
 const greeting = computed(() => hour < 6 ? '夜深了' : hour < 12 ? '早上好' : hour < 18 ? '下午好' : '晚上好')
 </script>
