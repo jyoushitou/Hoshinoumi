@@ -285,6 +285,25 @@ body.right-hidden #reopenRight{display:flex}
 .confirm-card button.pri{background:#c0264a;border-color:#c0264a;color:#fff;font-weight:600}
 .design-toast{position:fixed;z-index:140;left:50%;bottom:34px;transform:translateX(-50%) translateY(8px);background:#17263b;color:#fff;font-size:9px;border-radius:20px;padding:6px 12px;opacity:0;pointer-events:none;transition:opacity .18s,transform .18s}
 .design-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ===== v35.9.36 message context menu (design demo) ===== */
+.msg-menu{position:fixed;z-index:150;width:188px;background:#fff;border:1px solid #dbe8ff;border-radius:12px;box-shadow:0 18px 46px rgba(15,35,70,.22);padding:5px;display:none}
+.msg-menu.open{display:block;animation:ctxpop .13s ease-out both}
+.reaction-bar{display:flex;gap:2px;padding:4px 3px 6px;border-bottom:1px solid #f1f5fb;margin-bottom:4px}
+.reaction-bar button{width:25px;height:25px;border:0;border-radius:8px;background:#f8fbff;font-size:15px;line-height:1;display:grid;place-items:center;cursor:pointer;padding:0}
+.reaction-bar button:hover{background:#eef4ff;transform:translateY(-1px)}
+.reaction-bar .add{color:#2563eb;font-size:13px;font-weight:700;background:#eef4ff}
+.msg-menu .mrow{display:flex;align-items:center;gap:8px;width:100%;text-align:left;border:0;background:none;color:#405872;font:9.5px inherit;padding:6px 8px;border-radius:6px;cursor:pointer}
+.msg-menu .mrow:hover{background:#eef4ff;color:#1d4ed8}.msg-menu .mrow.danger{color:#b23b52}.msg-menu .mrow.danger:hover{background:#fff1f4;color:#c0264a}
+.msg-menu .sep{height:1px;background:#f1f5fb;margin:3px 0}
+.msg.selected .bubble{outline:2px solid #93b7fa;outline-offset:2px}
+.msg.essence .bubble{box-shadow:inset 0 0 0 1px #f2d491}
+.essence-badge{display:inline-block;margin-top:5px;font-size:7px;color:#95610b;background:#fff4d8;border:1px solid #f2d491;border-radius:4px;padding:1px 5px}
+.reaction-chips{display:flex;gap:3px;margin-top:5px;flex-wrap:wrap}.reaction-chip{font-size:7.5px;color:#526982;background:#f8fbff;border:1px solid #e3ebf7;border-radius:9px;padding:2px 6px;cursor:pointer}.reaction-chip:hover{background:#eef4ff}
+.system-note{text-align:center;font-size:8.5px;color:#93a3b8;margin:4px 0 12px}
+.quote-banner{display:flex;align-items:center;gap:7px;border-left:2px solid #93b7fa;background:#f8fbff;border-radius:5px;padding:5px 8px;margin-bottom:7px;font-size:8.5px;color:#526982}.quote-banner span{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.quote-banner button{border:0;background:none;color:#8a9bb0;cursor:pointer;font-size:11px}
+.msg-confirm-mask{position:fixed;inset:0;z-index:160;background:rgba(15,23,42,.32);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:20px}.msg-confirm-mask.open{display:flex}
+.msg-confirm{width:340px;background:#fff;border:1px solid #dbe8ff;border-radius:14px;padding:18px;box-shadow:0 24px 64px rgba(15,23,42,.26)}.msg-confirm h3{margin:0 0 5px;font-size:16px;color:#17263b}.msg-confirm p{margin:0 0 14px;font-size:9px;line-height:1.7;color:#8a9bb0}.msg-confirm .acts{display:flex;gap:7px;justify-content:flex-end}.msg-confirm button{height:29px;border:1px solid #dbe8ff;border-radius:7px;background:#fff;color:#7d8ca3;font:9px inherit;padding:0 12px}.msg-confirm button.pri{background:#c0264a;border-color:#c0264a;color:#fff;font-weight:600}
 </style>
 </head>
 <body>
@@ -636,6 +655,67 @@ body.right-hidden #reopenRight{display:flex}
   document.getElementById('confirmCancel').addEventListener('click',function(){ mask.classList.remove('open'); pending=null; });
   document.getElementById('confirmOk').addEventListener('click',function(){ var cb=pending; pending=null; mask.classList.remove('open'); if(cb) cb(); });
   mask.addEventListener('click',function(e){ if(e.target===mask){ mask.classList.remove('open'); pending=null; } });
+})();
+</script>
+
+<div id="msgMenu" class="msg-menu" role="menu">
+  <div class="reaction-bar">
+    <button type="button" data-emoji="👍">👍</button><button type="button" data-emoji="👌">👌</button><button type="button" data-emoji="❤️">❤️</button><button type="button" data-emoji="😆">😆</button><button type="button" data-emoji="😮">😮</button><button type="button" data-emoji="😢">😢</button><button class="add" type="button" data-emoji="add">＋</button>
+  </div>
+  <button type="button" class="mrow" data-act="copy">⧉ 复制</button>
+  <button type="button" class="mrow" data-act="forward">↪ 转发</button>
+  <button type="button" class="mrow" data-act="favorite">☆ 收藏</button>
+  <button type="button" class="mrow" data-act="multi">☑ 多选</button>
+  <button type="button" class="mrow" data-act="quote">❝ 引用</button>
+  <button type="button" class="mrow" data-act="essence">✦ 设为精华</button>
+  <div class="sep"></div>
+  <button type="button" class="mrow danger" data-act="recall">↺ 撤回</button>
+  <button type="button" class="mrow danger" data-act="delete">⌫ 删除</button>
+</div>
+<div id="msgConfirmMask" class="msg-confirm-mask">
+  <div class="msg-confirm"><h3 id="msgConfirmTitle">确认操作</h3><p id="msgConfirmText"></p><div class="acts"><button type="button" id="msgConfirmCancel">取消</button><button type="button" class="pri" id="msgConfirmOk">确认</button></div></div>
+</div>
+
+<script>
+(function(){
+  var menu=document.getElementById('msgMenu');
+  var mask=document.getElementById('msgConfirmMask');
+  var target=null, pending=null;
+  function closeMenu(){ menu.classList.remove('open'); if(target) target.classList.remove('menu-target'); target=null; }
+  function showToast(text){ if(window.toast) window.toast(text); }
+  function ask(title,text,ok,cb){ document.getElementById('msgConfirmTitle').textContent=title; document.getElementById('msgConfirmText').textContent=text; document.getElementById('msgConfirmOk').textContent=ok; pending=cb; mask.classList.add('open') }
+  function openMenu(msg,x,y){
+    closeMenu(); target=msg;
+    menu.classList.add('open');
+    var w=menu.offsetWidth||188,h=menu.offsetHeight||310;
+    menu.style.left=Math.min(x,window.innerWidth-w-10)+'px'; menu.style.top=Math.min(y,window.innerHeight-h-10)+'px';
+  }
+  document.querySelector('.msgs')?.addEventListener('contextmenu',function(e){
+    var msg=e.target.closest('.msg'); if(!msg) return;
+    e.preventDefault(); openMenu(msg,e.clientX,e.clientY);
+  });
+  menu.addEventListener('click',function(e){
+    e.stopPropagation();
+    var emoji=e.target.closest('button[data-emoji]');
+    if(emoji){ if(!target) return; var v=emoji.dataset.emoji; if(v==='add'){ showToast('更多表情（设计演示）'); closeMenu(); return; }
+      var wrap=target.querySelector('.reaction-chips'); if(!wrap){wrap=document.createElement('div');wrap.className='reaction-chips';var b=target.querySelector('.bubble');if(b)b.insertAdjacentElement('afterend',wrap)}
+      var chip=document.createElement('span'); chip.className='reaction-chip'; chip.textContent=v+' 1'; wrap.appendChild(chip); closeMenu(); return; }
+    var btn=e.target.closest('button[data-act]'); if(!btn||!target) return;
+    var act=btn.dataset.act, msg=target, text=(msg.querySelector('.bubble')?.innerText||'').trim();
+    if(act==='copy'){ try{ navigator.clipboard?.writeText(text); }catch(err){} showToast('已复制消息'); closeMenu(); return; }
+    if(act==='forward'){ showToast('转发面板（设计演示）'); closeMenu(); return; }
+    if(act==='favorite'){ showToast('已收藏（设计演示）'); closeMenu(); return; }
+    if(act==='multi'){ msg.classList.toggle('selected'); showToast(msg.classList.contains('selected')?'已进入多选':'已取消多选'); closeMenu(); return; }
+    if(act==='quote'){ var c=document.querySelector('.composer'); if(c){ var old=c.querySelector('.quote-banner'); if(old) old.remove(); var q=document.createElement('div'); q.className='quote-banner'; q.innerHTML='<span>引用：'+text.replace(/</g,'&lt;').slice(0,60)+'</span><button type="button">×</button>'; q.querySelector('button').onclick=function(){q.remove()}; c.insertBefore(q,c.firstChild); } showToast('已引用消息'); closeMenu(); return; }
+    if(act==='essence'){ if(!msg.querySelector('.essence-badge')){ msg.classList.add('essence'); var badge=document.createElement('div'); badge.className='essence-badge'; badge.textContent='群精华'; var meta=msg.querySelector('.meta'); if(meta) meta.insertAdjacentElement('beforebegin',badge); } showToast('已设为群精华'); closeMenu(); return; }
+    if(act==='recall'){ ask('撤回这条消息？','撤回后群成员会看到系统提示。设计演示不会影响真实数据。','撤回',function(){ msg.remove(); var n=document.createElement('div'); n.className='system-note'; n.textContent='管理员撤回了一条消息'; document.querySelector('.msgs')?.appendChild(n); showToast('已撤回消息'); }); closeMenu(); return; }
+    if(act==='delete'){ ask('删除这条消息？','仅从当前会话删除，不影响对方。','删除',function(){ msg.remove(); showToast('已删除消息'); }); closeMenu(); }
+  });
+  document.addEventListener('click',function(e){ if(!menu.contains(e.target)) closeMenu(); });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape'){ closeMenu(); mask.classList.remove('open'); } });
+  document.getElementById('msgConfirmCancel').addEventListener('click',function(){ mask.classList.remove('open'); pending=null });
+  document.getElementById('msgConfirmOk').addEventListener('click',function(){ var cb=pending; pending=null; mask.classList.remove('open'); if(cb) cb() });
+  mask.addEventListener('click',function(e){ if(e.target===mask){ mask.classList.remove('open'); pending=null } });
 })();
 </script>
 </body>
