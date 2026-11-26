@@ -46,9 +46,10 @@ async def handle_chat(request):
         return json_response({"error": "missing_target_id", "message": "target_id 不能为空，用于记忆隔离"}, 400)
 
     keywords = body.get("keywords", None)
+    memory_target = str(body.get("memory_target") or target_id).strip() or target_id
 
     try:
-        reply = await get_character_reply(message, target_id, keywords)
+        reply = await get_character_reply(message, memory_target, keywords)
         segments = _clean_api_segments(reply)
         clean = "\n".join(segments)
         try:
@@ -61,7 +62,7 @@ async def handle_chat(request):
                 repo_conversation.append(user_id=uid, target_id=target_id, content=segment,
                                          role="assistant", channel="web", thread_id=thread)
             from ..infra.repo_memory import add_user_memory_to_db
-            add_user_memory_to_db(target_id, message, clean)
+            add_user_memory_to_db(memory_target, message, clean)
         except Exception as _e:
             log_err(f"Web 对话落库失败: {_e}")
         return json_response({
