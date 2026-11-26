@@ -576,7 +576,7 @@ body.right-hidden #reopenRight{display:flex}
   <div class="sep" id="convMenuSep"></div>
   <button type="button" class="danger only-private" data-act="contact">♡ 删除联系人</button>
   <button type="button" class="danger only-group" data-act="leave">⇥ 退出群聊</button>
-  <button type="button" class="danger only-group-owner" data-act="dissolve">✕ 解散群聊</button>
+  <button type="button" class="danger only-group-owner" data-act="dissolve">⇥ 退出并解散</button>
 </div>
 <div id="confirmMask" class="confirm-mask">
   <div class="confirm-card">
@@ -629,7 +629,7 @@ body.right-hidden #reopenRight{display:flex}
     if(act==='delete'){ confirmAction('删除会话？','仅从会话列表隐藏「'+name+'」，QQ 关系和历史记录保留。','删除',function(){ row.remove(); closeMenu(); toastShow('已删除会话'); }); closeMenu(); return; }
     if(act==='contact'){ confirmAction('删除联系人？','将从会话列表移除「'+name+'」。QQ 好友关系需要 NapCat 在线时同步删除。','删除',function(){ row.remove(); closeMenu(); toastShow('已删除联系人'); }); closeMenu(); return; }
     if(act==='leave'){ confirmAction('退出群聊「'+name+'」？','退出后将不再接收群消息，并从会话列表移除。群主 / 管理员身份请先在 QQ 侧处理。','退出群聊',function(){ row.remove(); closeMenu(); toastShow('已退出群聊'); }); closeMenu(); return; }
-    if(act==='dissolve'){ confirmAction('解散群聊「'+name+'」？','你是群主。解散后所有成员会被移出，群聊和记录将不可恢复。该操作需要二次确认。','解散群聊',function(){ row.remove(); closeMenu(); toastShow('已解散群聊'); }); closeMenu(); }
+    if(act==='dissolve'){ confirmAction('退出并解散「'+name+'」？','你是群主。退群会自动解散群聊，所有成员被移出，群聊和记录不可恢复。该操作需要二次确认。','退出并解散',function(){ row.remove(); closeMenu(); toastShow('已退出并解散群聊'); }); closeMenu(); }
   });
   document.addEventListener('click',function(e){ if(!menu.contains(e.target)) closeMenu(); });
   document.addEventListener('keydown',function(e){ if(e.key==='Escape'){ closeMenu(); mask.classList.remove('open'); } });

@@ -255,7 +255,7 @@ body.nav-hidden .bottom-nav{display:none!important}
 .swipe-wrap .conv.swiped .badge{display:none}
 .conv.muted .copy b{color:#9aabc0}.conv.muted .copy span{color:#aab8ca}.conv.muted .badge{display:none}
 .conv.muted:after{content:"静音";position:absolute;right:8px;bottom:8px;font-size:7px;color:#9aabc0;background:#f1f5fb;border-radius:4px;padding:1px 4px}
-.swipe-confirm{width:310px;background:#fff;border:1px solid #dbe8ff;border-radius:15px;padding:18px;box-shadow:0 26px 70px rgba(15,23,42,.26);position:relative;z-index:2}
+.swipe-confirm{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(310px,calc(100% - 32px));background:#fff;border:1px solid #dbe8ff;border-radius:15px;padding:18px;box-shadow:0 26px 70px rgba(15,23,42,.26);z-index:2}
 .swipe-confirm .ci{width:30px;height:30px;border-radius:9px;background:#fff1f4;color:#c0264a;display:grid;place-items:center;font-size:14px;font-weight:700;margin-bottom:9px}
 .swipe-confirm h4{margin:0 0 5px;font-size:15px;color:#17263b}.swipe-confirm p{margin:0 0 13px;font-size:8.5px;line-height:1.7;color:#8a9bb0}
 .swipe-confirm .acts{display:flex;gap:6px;justify-content:flex-end}.swipe-confirm button{height:29px;border:1px solid #dbe8ff;border-radius:7px;background:#fff;color:#7d8ca3;font:8.5px inherit;padding:0 12px}.swipe-confirm button.pri{background:#c0264a;border-color:#c0264a;color:#fff;font-weight:600}
@@ -265,6 +265,15 @@ body.nav-hidden .bottom-nav{display:none!important}
 .demo-actions button:hover{background:#eef4ff;border-color:#bcd4f7}
 .demo-actions button.primary{background:#2563eb;color:#fff;border-color:#2563eb;font-weight:600}
 .demo-finger{position:fixed;z-index:999;width:24px;height:24px;border-radius:50%;background:rgba(37,99,235,.18);border:2px solid #2563eb;box-shadow:0 0 0 7px rgba(37,99,235,.08);pointer-events:none;transition:transform .38s cubic-bezier(.22,1,.36,1),opacity .3s;opacity:.9}.demo-finger:after{content:"";position:absolute;left:50%;top:50%;width:6px;height:6px;border-radius:50%;background:#2563eb;transform:translate(-50%,-50%)}
+
+.admin-sheet .admin-head{display:flex;align-items:center;margin-bottom:10px}.admin-sheet .admin-head h4{margin:0}.admin-sheet .admin-head small{margin-left:auto;font-size:7.5px;color:#9aabc0;font-weight:400}
+.admin-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #eef3fb;font-size:9px}.admin-row:last-child{border-bottom:0}
+.admin-row .av{width:27px;height:27px;border-radius:9px;display:grid;place-items:center;background:#eef4ff;color:#2563eb;font-size:9px;font-weight:700;flex:none}
+.admin-row .who{flex:1;min-width:0}.admin-row .who b{display:block;font-size:9.5px;color:#2f4665}.admin-row .who small{display:block;font-size:7.5px;color:#9aabc0;margin-top:2px}
+.admin-role{font-size:7px;border-radius:5px;padding:2px 5px;background:#eef4ff;color:#2563eb;flex:none}.admin-role.owner{background:#fff4d8;color:#95610b}
+.admin-row button{border:1px solid #dbe8ff;background:#f8fbff;color:#2563eb;border-radius:5px;padding:3px 6px;font:7.5px inherit;cursor:pointer;flex:none}
+.admin-note{font-size:7.5px;color:#8a9bb0;line-height:1.6;background:#f8fbff;border:1px dashed #dbe8ff;border-radius:7px;padding:7px 8px;margin-top:8px}
+.admin-recall{margin-left:6px;border:1px solid #f0d7dd;background:#fff;color:#b23b52;border-radius:4px;padding:1px 4px;font:7px inherit;cursor:pointer;vertical-align:middle}
 </style>
 <link rel="stylesheet" href="mobile-native.css">
 </head>
@@ -1120,7 +1129,7 @@ function go(name){
   if(name==='downloads'){ void loadDownloads() }
   if(name==='plugins'){ renderPluginPage() }
   if(name==='diary'){ void loadDiary() }
-  if(name==='chats'){ renderExtraConversations(); document.querySelectorAll('.conv[data-conv]').forEach(c=>{ if(readConversations.has(c.dataset.conv)) c.querySelectorAll('.badge').forEach(b=>b.remove()) }); setTimeout(decorateSwipe,0) } if(name==='chat'){ const input=document.getElementById('input'); if(input) input.style.cssText='flex:1;height:35px;border-radius:10px;background:#f5f8fe;border:1px solid #e6eefb;padding:6px 10px;color:#4a6079;font-size:10px;overflow:auto'; setTimeout(()=>document.getElementById('msgs')?.scrollTo(0,9999),30) } }
+  if(name==='group'){ setTimeout(decorateAdminRecall,0) } if(name==='chats'){ renderExtraConversations(); document.querySelectorAll('.conv[data-conv]').forEach(c=>{ if(readConversations.has(c.dataset.conv)) c.querySelectorAll('.badge').forEach(b=>b.remove()) }); setTimeout(decorateSwipe,0) } if(name==='chat'){ const input=document.getElementById('input'); if(input) input.style.cssText='flex:1;height:35px;border-radius:10px;background:#f5f8fe;border:1px solid #e6eefb;padding:6px 10px;color:#4a6079;font-size:10px;overflow:auto'; setTimeout(()=>document.getElementById('msgs')?.scrollTo(0,9999),30) } }
 
 function openFirstLogin(){
   overlay(`<div class="cron-sheet" style="max-width:340px">
@@ -1310,7 +1319,7 @@ function openSearch(){
   const q=document.getElementById('q'); q.focus(); q.oninput=()=>{ const v=q.value.trim(); toast(v?('搜索：'+v+'（演示）'):'输入关键词搜索') }
 }
 function openChatMenu(){
-  overlay(`<div class="sheet"><h4>会话操作</h4><div class="sheet-grid"><button onclick="openSearch()"><b>⌕</b>搜索</button><button onclick="recallLast()"><b>↺</b>撤回</button><button onclick="toast('会话置顶演示')"><b>⇧</b>置顶</button><button onclick="toast('免打扰演示')"><b>◔</b>免打扰</button></div><button class="sheet-close" onclick="closeOverlay()">取消</button></div>`)
+  overlay(`<div class="sheet"><h4>会话操作</h4><div class="sheet-grid"><button onclick="openSearch()"><b>⌕</b>搜索</button><button onclick="recallLast()"><b>↺</b>撤回</button><button onclick="toast('会话置顶演示')"><b>⇧</b>置顶</button><button onclick="toast('免打扰演示')"><b>◔</b>免打扰</button><button onclick="openGroupAdmin()"><b>⚙</b>群管理</button></div><button class="sheet-close" onclick="closeOverlay()">取消</button></div>`)
 }
 function openComposerSheet(){
   overlay(`<div class="sheet"><h4>发送内容</h4><div class="sheet-grid"><button onclick="sendImage()"><b>▧</b>图片</button><button onclick="sendVoice()"><b>◉</b>语音</button><button onclick="toast('表情包演示')"><b>☺</b>表情</button><button onclick="toast('文件演示')"><b>⌁</b>文件</button></div><button class="sheet-close" onclick="closeOverlay()">取消</button></div>`)
@@ -1415,7 +1424,7 @@ function decorateSwipe(){
     conv.style.setProperty('background','#f7faff','important')
     conv.parentNode.insertBefore(wrap,conv)
     var actions=document.createElement('div'); actions.className='swipe-actions'
-    actions.innerHTML='<button class="sw-mute">免打扰</button><button class="sw-del">删除</button><button class="sw-danger">'+(kind==='group'&&owner?'解散':(kind==='group'?'退群':'删人'))+'</button>'
+    actions.innerHTML='<button class="sw-mute">免打扰</button><button class="sw-del">删除</button><button class="sw-danger">'+(kind==='group'&&owner?'退出':(kind==='group'?'退群':'删人'))+'</button>'
     wrap.appendChild(actions); wrap.appendChild(conv)
     var startX=0,startY=0,dx=0,axis='',open=false
     conv.addEventListener('touchstart',function(e){ if(e.touches.length!==1) return; startX=e.touches[0].clientX; startY=e.touches[0].clientY; dx=0; axis=''; },{passive:true})
@@ -1428,8 +1437,8 @@ function decorateSwipe(){
   })
 }
 function swipeDanger(name,kind,wrap){
-  var label=kind==='group-owner'?'解散群聊':(kind==='group'?'退出群聊':'删除联系人')
-  var tip=kind==='group-owner'?'你是群主。解散后所有成员会被移出，群聊和记录不可恢复。':'将从会话列表移除「'+name+'」。QQ 好友关系需要 NapCat 在线时同步删除。'
+  var label=kind==='group-owner'?'退出并解散':(kind==='group'?'退出群聊':'删除联系人')
+  var tip=kind==='group-owner'?'你是群主。退群会自动解散群聊，所有成员被移出，群聊和记录不可恢复。':'将从会话列表移除「'+name+'」。QQ 好友关系需要 NapCat 在线时同步删除。'
   if(kind==='group') tip='退出后将不再接收群消息，并从会话列表移除。'
   overlay('<div class="swipe-confirm"><div class="ci">!</div><h4>'+label+'「'+name+'」？</h4><p>'+tip+'</p><div class="acts"><button onclick="closeOverlay()">取消</button><button class="pri" onclick="swipeConfirm(this,\''+kind+'\')">'+label+'</button></div></div>')
 }
@@ -1443,6 +1452,31 @@ document.addEventListener('click',function(e){
   if(e.target.closest('.swipe-wrap')) return
   document.querySelectorAll('.conv.swiped').forEach(function(c){ c.classList.remove('swiped'); c.style.transform='translateX(0)' })
 })
+function openGroupAdmin(){
+  overlay(`<div class="sheet admin-sheet"><div class="admin-head"><h4>群管理</h4><small>星之海学生会 · 3 人</small></div>
+  <div class="admin-row"><span class="av" style="background:#fff4d8;color:#95610b">你</span><div class="who"><b>你</b><small>群主</small></div><span class="admin-role owner">群主</span><span style="font-size:7px;color:#9aabc0">不可变更</span></div>
+  <div class="admin-row"><span class="av">友</span><div class="who"><b>友利</b><small>管理员 · 可撤回群内任意消息</small></div><span class="admin-role">管理员</span><button onclick="toggleAdmin(this)">取消管理员</button></div>
+  <div class="admin-row"><span class="av">奈</span><div class="who"><b>奈绪</b><small>成员</small></div><span class="admin-role" style="background:#f1f5fb;color:#8a9bb0">成员</span><button onclick="toggleAdmin(this)">设为管理员</button></div>
+  <div class="admin-note">管理员可撤回群聊内所有成员的消息；群主退群会自动解散群聊。</div>
+  <button class="sheet-close" onclick="closeOverlay()">完成</button></div>`)
+}
+function toggleAdmin(btn){
+  var row=btn.closest('.admin-row'), role=row.querySelector('.admin-role')
+  if(role.classList.contains('owner')) return
+  var isAdmin=role.textContent==='管理员'
+  role.textContent=isAdmin?'成员':'管理员'
+  role.style.background=isAdmin?'#f1f5fb':'#eef4ff'; role.style.color=isAdmin?'#8a9bb0':'#2563eb'
+  btn.textContent=isAdmin?'设为管理员':'取消管理员'
+  toast(isAdmin?'已取消「'+row.querySelector('.who b').textContent+'」管理员':'已设为管理员')
+}
+function decorateAdminRecall(){
+  document.querySelectorAll('#msgs .msg').forEach(function(m){
+    if(m.querySelector('.admin-recall')) return
+    var stamp=m.querySelector('.stamp'); if(!stamp) return
+    var b=document.createElement('button'); b.className='admin-recall'; b.textContent='撤回'; b.onclick=function(e){ e.stopPropagation(); m.remove(); var n=document.createElement('div'); n.className='system-note'; n.textContent='管理员撤回了一条消息'; document.getElementById('msgs').appendChild(n); toast('已撤回群内消息') }
+    stamp.appendChild(b)
+  })
+}
 function clearDemoOverlays(){ document.querySelectorAll('.notice-popup,.demo-overlay').forEach(function(x){x.remove()}) }
 function demoSwipe(){
   clearDemoOverlays()
