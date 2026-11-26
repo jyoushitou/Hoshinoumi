@@ -644,6 +644,23 @@ PURE = {
             KEY idx_fixed_due (user_id, status, matures_at)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """,
+    "finance_fund_holdings": """
+        CREATE TABLE IF NOT EXISTS finance_fund_holdings (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            user_id VARCHAR(64) NOT NULL DEFAULT '__owner__',
+            code VARCHAR(32) NOT NULL,
+            name VARCHAR(80) NOT NULL,
+            kind VARCHAR(16) NOT NULL DEFAULT 'fund',
+            shares DOUBLE NOT NULL DEFAULT 0,
+            nav DOUBLE NOT NULL DEFAULT 1,
+            cost_cents BIGINT NOT NULL DEFAULT 0,
+            value_cents BIGINT NOT NULL DEFAULT 0,
+            account VARCHAR(64) NULL,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY uk_fund_holding (user_id, code)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
     "finance_snapshots": """
         CREATE TABLE IF NOT EXISTS finance_snapshots (
             id BIGINT AUTO_INCREMENT PRIMARY KEY,

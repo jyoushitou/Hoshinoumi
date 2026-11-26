@@ -473,8 +473,12 @@ async def handle_overview(request):
                   "WHERE user_id=%s AND status IN ('active','matured')", (uid,))
         row = c.fetchone()
         fixed = int((row or {}).get("total", 0) or 0) if isinstance(row, dict) else int((row or [0])[0] or 0)
-        total = cash + fixed
-        return json_response({"total_cents": total, "frozen_cents": 0, "available_cents": cash, "fixed_cents": fixed})
+        c.execute("SELECT COALESCE(SUM(value_cents),0) AS total FROM finance_fund_holdings WHERE user_id=%s", (uid,))
+        row = c.fetchone()
+        funds = int((row or {}).get("total", 0) or 0) if isinstance(row, dict) else int((row or [0])[0] or 0)
+        total = cash + fixed + funds
+        return json_response({"total_cents": total, "frozen_cents": 0, "available_cents": cash,
+                              "fixed_cents": fixed, "funds_cents": funds})
     finally:
         try: c.close()
         except Exception: pass
@@ -632,8 +636,131 @@ async def handle_fixed_settle(request):
         except Exception: pass
 
 
+def _fund_rows(c, uid):
+    c.execute("SELECT id,code,name,kind,shares,nav,cost_cents,value_cents,account FROM finance_fund_holdings "
+              "WHERE user_id=%s ORDER BY id", (uid,))
+    rows = []
+    for r in c.fetchall() or []:
+        item = dict(r)
+        shares = float(item.get("shares") or 0)
+        nav = float(item.get("nav") or 1)
+        value = int(round(shares * nav * 100))
+        item.update({"shares": round(shares, 4), "nav": round(nav, 4), "value_cents": value,
+                     "profit_cents": value - int(item.get("cost_cents") or 0)})
+        rows.append(item)
+    return rows
+
+
 async def handle_funds(request):
-    return json_response({"ok": True, "data": []})
+    uid = _uid(request)
+    from ..infra.conn import get_cursor
+    c = get_cursor()
+    try:
+        rows = _fund_rows(c, uid)
+        return json_response({"ok": True, "data": rows, "total_cents": sum(x["value_cents"] for x in rows)})
+    finally:
+        try: c.close()
+        except Exception: pass
+
+
+async def handle_fund_buy(request):
+    uid = _uid(request)
+    try:
+        body = await request.json()
+    except Exception:
+        return json_response({"ok": False, "error": "invalid_json"}, 400)
+    code = str(body.get("code") or "").strip()[:32]
+    name = str(body.get("name") or code).strip()[:80]
+    kind = "money" if str(body.get("kind") or "") == "money" else "fund"
+    try:
+        amount = float(body.get("amount") or 0)
+        nav = 1.0 if kind == "money" else float(body.get("nav") or 0)
+    except (TypeError, ValueError):
+        return json_response({"ok": False, "error": "bad_values"}, 400)
+    if not code or amount <= 0 or nav <= 0:
+        return json_response({"ok": False, "error": "bad_values"}, 400)
+    shares = amount / nav
+    cents = int(round(amount * 100))
+    account = str(body.get("account") or "银行卡")[:64]
+    from ..infra.conn import get_cursor
+    c = get_cursor()
+    try:
+        c.execute("SELECT id,shares,cost_cents FROM finance_fund_holdings WHERE user_id=%s AND code=%s", (uid, code))
+        row = c.fetchone()
+        if row:
+            new_shares = float(row.get("shares") or 0) + shares
+            new_cost = int(row.get("cost_cents") or 0) + cents
+            c.execute("UPDATE finance_fund_holdings SET name=%s,kind=%s,shares=%s,nav=%s,cost_cents=%s,"
+                      "value_cents=%s,account=%s,updated_at=CURRENT_TIMESTAMP WHERE id=%s",
+                      (name, kind, new_shares, nav, new_cost, int(round(new_shares * nav * 100)), account, row.get("id")))
+            hid = row.get("id")
+        else:
+            c.execute("INSERT INTO finance_fund_holdings(user_id,code,name,kind,shares,nav,cost_cents,value_cents,account) "
+                      "VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+                      (uid, code, name, kind, shares, nav, cents, int(round(shares * nav * 100)), account))
+            c.execute("SELECT id FROM finance_fund_holdings WHERE user_id=%s AND code=%s", (uid, code))
+            hid = (c.fetchone() or {}).get("id")
+        try: c.connection.commit()
+        except Exception: pass
+        return json_response({"ok": True, "id": hid, "code": code, "shares": round(shares, 4),
+                              "nav": round(nav, 4), "amount_cents": cents})
+    finally:
+        try: c.close()
+        except Exception: pass
+
+
+async def handle_fund_redeem(request):
+    uid = _uid(request)
+    try:
+        item_id = int(request.match_info["id"])
+    except (KeyError, ValueError):
+        return json_response({"ok": False, "error": "bad_id"}, 400)
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    from ..infra.conn import get_cursor
+    c = get_cursor()
+    try:
+        c.execute("SELECT id,code,name,shares,nav,cost_cents,account FROM finance_fund_holdings "
+                  "WHERE id=%s AND user_id=%s", (item_id, uid))
+        row = c.fetchone()
+        if not row:
+            return json_response({"ok": False, "error": "not_found"}, 404)
+        total_shares = float(row.get("shares") or 0)
+        if total_shares <= 0:
+            return json_response({"ok": False, "error": "empty_holding"}, 400)
+        try:
+            shares = float(body.get("shares")) if (body or {}).get("shares") is not None else total_shares
+        except (TypeError, ValueError):
+            return json_response({"ok": False, "error": "bad_shares"}, 400)
+        shares = min(max(0.0, shares), total_shares)
+        if shares <= 0:
+            return json_response({"ok": False, "error": "bad_shares"}, 400)
+        nav = float(row.get("nav") or 1)
+        proceeds = int(round(shares * nav * 100))
+        cost_removed = int(round(float(row.get("cost_cents") or 0) * shares / total_shares))
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        raw_hash = hashlib.sha256(f"fund-redeem:{uid}:{item_id}:{shares}:{now}".encode()).hexdigest()
+        account = row.get("account") or "银行卡"
+        c.execute("INSERT INTO finance_entries(user_id,account,kind,amount_cents,category,note,occurred_at,raw_hash,source) "
+                  "VALUES(%s,%s,'income',%s,'基金赎回',%s,%s,%s,'fund')",
+                  (uid, account, proceeds, str(row.get("name") or row.get("code") or "基金")[:60], now, raw_hash))
+        remain = total_shares - shares
+        if remain <= 1e-6:
+            c.execute("DELETE FROM finance_fund_holdings WHERE id=%s AND user_id=%s", (item_id, uid))
+        else:
+            c.execute("UPDATE finance_fund_holdings SET shares=%s,cost_cents=%s,value_cents=%s,updated_at=CURRENT_TIMESTAMP "
+                      "WHERE id=%s AND user_id=%s",
+                      (remain, max(0, int(row.get("cost_cents") or 0) - cost_removed),
+                       int(round(remain * nav * 100)), item_id, uid))
+        try: c.connection.commit()
+        except Exception: pass
+        return json_response({"ok": True, "id": item_id, "shares": round(shares, 4), "proceeds_cents": proceeds,
+                              "account": account})
+    finally:
+        try: c.close()
+        except Exception: pass
 
 
 async def handle_finance_audit(request):

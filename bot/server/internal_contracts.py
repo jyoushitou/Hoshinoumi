@@ -40,6 +40,8 @@ _CONTRACTS = [
     (r"/internal/savings/fixed", {"GET", "POST"}),
     (r"/internal/savings/fixed/[^/]+/settle", {"POST"}),
     (r"/internal/savings/funds", {"GET"}),
+    (r"/internal/savings/funds/buy", {"POST"}),
+    (r"/internal/savings/funds/[^/]+/redeem", {"POST"}),
     (r"/internal/savings/monthly", {"GET"}),
     (r"/internal/finance/audit", {"GET"}),
     (r"/internal/savings/events", {"GET"}),

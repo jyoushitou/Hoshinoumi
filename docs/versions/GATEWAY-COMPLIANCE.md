@@ -35,7 +35,7 @@ if (url.target.rfind("/api/", 0) == 0) Proxy(...)
 
 ```text
 GET    状态 / 信息 / 会话 / 人设 / 存钱 / 周计划 / 插件 / 推送 / 群聊...
-POST   聊天 / 命令 / 人设写 / 存钱写 / 周计划写 / 插件写 / 推送 / 群聊...
+POST   聊天 / 命令 / 人设写 / 存钱写 / 基金买入 / 周计划写 / 插件写 / 推送 / 群聊...
 PATCH  仅 /api/push/preferences
 DELETE 仅 health meals/exercises / push devices / endpoints
 动态路由只允许：
@@ -45,6 +45,7 @@ DELETE 仅 health meals/exercises / push devices / endpoints
   /api/reminders/{id}/ack
   /api/cron/{id}/run
   /api/savings/fixed/{id}/settle
+  /api/savings/funds/{id}/redeem
   /api/plugins/{id}/toggle|approve|reject
 ```
 

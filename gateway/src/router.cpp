@@ -80,7 +80,7 @@ namespace Gateway
                 static const char* kExact[] = {
                     "/api/chat", "/api/command", "/api/topic", "/api/read",
                     "/api/persona/import", "/api/persona/activate",
-                    "/api/savings/init", "/api/savings/entries", "/api/savings/import", "/api/savings/fixed", "/api/savings/snapshots",
+                    "/api/savings/init", "/api/savings/entries", "/api/savings/import", "/api/savings/fixed", "/api/savings/funds/buy", "/api/savings/snapshots",
                     "/api/weekly-plan", "/api/weekly-plan/import", "/api/plan", "/api/plan/import",
                     "/api/health/init", "/api/health/meals", "/api/health/exercises", "/api/health/recognize",
                     "/api/plugins/install", "/api/push/devices", "/api/push/test",
@@ -96,6 +96,7 @@ namespace Gateway
                        (StartsWith(path, "/api/reminders/") && EndsWith(path, "/ack")) ||
                        (StartsWith(path, "/api/cron/") && EndsWith(path, "/run")) ||
                        (StartsWith(path, "/api/savings/fixed/") && EndsWith(path, "/settle")) ||
+                       (StartsWith(path, "/api/savings/funds/") && EndsWith(path, "/redeem")) ||
                        (StartsWith(path, "/api/plugins/") &&
                         (EndsWith(path, "/toggle") || EndsWith(path, "/approve") || EndsWith(path, "/reject") || EndsWith(path, "/settle")));
             }
