@@ -17,7 +17,7 @@ from .routes_meta import (
 )
 from .routes_chat import handle_chat, handle_command, handle_conversations, handle_history, handle_commands, handle_read, handle_read_state, handle_recall, handle_topic
 from .routes_persona import handle_persona, handle_export as handle_persona_export, handle_import as handle_persona_import, handle_activate as handle_persona_activate
-from .routes_files import handle_files, handle_init as handle_file_init, handle_chunk as handle_file_chunk, handle_complete as handle_file_complete, handle_download as handle_file_download, handle_delete as handle_file_delete, handle_share_create as handle_file_share_create, handle_share_info as handle_file_share_info, handle_share_download as handle_file_share_download
+from .routes_files import handle_files, handle_init as handle_file_init, handle_chunk as handle_file_chunk, handle_complete as handle_file_complete, handle_download as handle_file_download, handle_delete as handle_file_delete, handle_share_create as handle_file_share_create, handle_share_info as handle_file_share_info, handle_share_download as handle_file_share_download, handle_upload_status as handle_file_upload_status
 from .routes_books import handle_books, handle_book, handle_book_content, handle_book_progress_get, handle_book_progress_put, handle_books_refresh
 from .routes_savings import handle_savings, handle_savings_import, handle_savings_add, handle_savings_events, handle_snapshots_get, handle_snapshot_create, handle_reconcile, handle_overview, handle_monthly, handle_goals, handle_frozen, handle_fixed, handle_funds, handle_finance_audit, handle_savings_init_get, handle_savings_init_post, handle_fixed_add, handle_fixed_settle, handle_fund_buy, handle_fund_redeem
 from .routes_weekly_plan import handle_weekly_get, handle_weekly_put, handle_weekly_import, handle_weekly_weeks
@@ -543,6 +543,7 @@ async def start_api_server():
     app.router.add_get("/internal/diary", handle_internal_diary)
     app.router.add_get("/api/files", handle_files)
     app.router.add_post("/api/files/init", handle_file_init)
+    app.router.add_get("/api/files/{id}/upload", handle_file_upload_status)
     app.router.add_put("/api/files/{id}/chunk", handle_file_chunk)
     app.router.add_post("/api/files/{id}/complete", handle_file_complete)
     app.router.add_get("/api/files/{id}/download", handle_file_download)

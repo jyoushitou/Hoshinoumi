@@ -85,6 +85,7 @@ _CONTRACTS = [
     (r"/internal/diary", {"GET"}),
     (r"/internal/files", {"GET"}),
     (r"/internal/files/init", {"POST"}),
+    (r"/internal/files/[^/]+/upload", {"GET"}),
     (r"/internal/files/[^/]+/chunk", {"PUT"}),
     (r"/internal/files/[^/]+/complete", {"POST"}),
     (r"/internal/files/[^/]+/download", {"GET"}),

@@ -3,7 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { http } from '@/api/client'
 
 interface FileItem { id: string; name: string; mime: string; size: number; sha256?: string; created_at?: string; downloads?: number; max_downloads?: number; share_token?: string; share_url?: string; share_expires_at?: string }
-interface UploadState { name: string; progress: number; error: string }
+interface UploadState { name: string; progress: number; error: string; file: File; id?: string; offset: number }
 const files = ref<FileItem[]>([])
 const used = ref(0)
 const quota = ref(2 * 1024 * 1024 * 1024)
@@ -49,27 +49,39 @@ function encode(data: Uint8Array): string {
   for (let i = 0; i < data.length; i += 0x8000) text += String.fromCharCode(...data.subarray(i, i + 0x8000))
   return btoa(text)
 }
+async function uploadOne(state: UploadState) {
+  try {
+    let id = state.id
+    if (!id) {
+      const init = await http.post<{ id?: string; chunk_size?: number }>('/api/files/init', { name: state.file.name, size: state.file.size, mime: state.file.type || 'application/octet-stream' })
+      if (!init.id) throw new Error('init failed')
+      id = init.id; state.id = id
+    }
+    const status = await http.get<{ offset?: number }>('/api/files/' + encodeURIComponent(id) + '/upload')
+    let offset = Number(status.offset || 0)
+    const size = chunkSize
+    while (offset < state.file.size) {
+      const buf = new Uint8Array(await state.file.slice(offset, offset + size).arrayBuffer())
+      await http.put('/api/files/' + encodeURIComponent(id) + '/chunk', { offset, data_base64: encode(buf) })
+      offset += buf.length
+      state.offset = offset
+      state.progress = Math.round(Math.min(1, offset / Math.max(1, state.file.size)) * 100)
+    }
+    await http.post('/api/files/' + encodeURIComponent(id) + '/complete', {})
+    state.progress = 100; state.error = ''
+    await load()
+    setTimeout(() => { uploads.value = uploads.value.filter(item => item !== state) }, 800)
+  } catch (e) { state.error = e instanceof Error ? e.message : '上传失败'; state.progress = Math.round(state.offset / Math.max(1, state.file.size) * 100); error.value = state.name + ' 上传失败，可重试' }
+}
 async function uploadFiles(list: File[]) {
   for (const file of list) {
     if (file.size > 30 * 1024 * 1024) { error.value = file.name + ' 超过 30 MB'; continue }
-    const state: UploadState = { name: file.name, progress: 0, error: '' }
+    const state: UploadState = { name: file.name, progress: 0, error: '', file, offset: 0 }
     uploads.value.push(state)
-    try {
-      const init = await http.post<{ id?: string; chunk_size?: number }>('/api/files/init', { name: file.name, size: file.size, mime: file.type || 'application/octet-stream' })
-      if (!init.id) throw new Error('init failed')
-      const size = Number(init.chunk_size || chunkSize)
-      for (let offset = 0; offset < file.size; offset += size) {
-        const buf = new Uint8Array(await file.slice(offset, offset + size).arrayBuffer())
-        await http.put('/api/files/' + encodeURIComponent(init.id) + '/chunk', { offset, data_base64: encode(buf) })
-        state.progress = Math.round(Math.min(1, (offset + buf.length) / Math.max(1, file.size)) * 100)
-      }
-      await http.post('/api/files/' + encodeURIComponent(init.id) + '/complete', {})
-      state.progress = 100
-      await load()
-    } catch (e) { state.error = e instanceof Error ? e.message : '上传失败'; error.value = state.name + ' 上传失败' }
+    await uploadOne(state)
   }
-  setTimeout(() => { uploads.value = [] }, 1400)
 }
+function retryUpload(state: UploadState) { state.error = ''; void uploadOne(state) }
 async function download(item: FileItem) {
   try {
     const chunks: Uint8Array[] = []
@@ -115,7 +127,7 @@ onMounted(load)
     <div class="drop" :class="{ on: drop }" @dragover.prevent="drop = true" @dragleave.prevent="drop = false" @drop.prevent="onDrop" @click="choose">
       <b>拖拽文件到这里</b><span>或点击选择 · 单文件 ≤ 30 MB · 分片 4 MB</span><input ref="input" type="file" multiple hidden @change="onPick">
     </div>
-    <div v-for="up in uploads" :key="up.name" class="upload"><span>{{ up.name }}</span><i :style="{ width: up.progress + '%' }" /><em>{{ up.error || up.progress + '%' }}</em></div>
+    <div v-for="up in uploads" :key="up.id || up.name" class="upload"><span>{{ up.name }}</span><i :style="{ width: up.progress + '%' }" /><em>{{ up.error || up.progress + '%' }}</em><button v-if="up.error" type="button" class="retry" @click="retryUpload(up)">重试</button></div>
     <div class="toolbar"><input v-model="search" placeholder="搜索文件"><span>{{ visible.length }} 个文件</span></div>
     <div v-if="loading" class="empty">加载中…</div>
     <div v-else-if="!visible.length" class="empty">暂无文件，上传第一个吧。</div>
@@ -135,7 +147,7 @@ onMounted(load)
 <style scoped>
 .files{flex:1;min-height:0;overflow:auto;padding:22px 24px 28px;background:#f7faff;color:#17263b;box-sizing:border-box;width:100%}.head{display:flex;align-items:flex-end;gap:7px;margin-bottom:10px;flex-wrap:wrap}.head h1{margin:0;font-size:24px;letter-spacing:-.03em}.head p{margin:3px 0 0;font-size:10px;color:#8a9bb0}.primary,.refresh{margin-left:auto;height:29px;border:1px solid #2563eb;border-radius:8px;background:#2563eb;color:#fff;font:9px inherit;padding:0 10px;cursor:pointer}.refresh{margin-left:0;background:#fff;color:#2563eb;border-color:#dbe8ff}.notice{border:1px solid #fecaca;background:#fff5f5;color:#b91c1c;border-radius:8px;padding:7px 9px;font-size:9px;margin-bottom:8px}
 .quota{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e3ebf7;border-radius:10px;padding:8px 10px;margin-bottom:9px;font-size:8px;color:#8a9bb0}.quota>div:first-child{min-width:120px}.quota small{display:block;font-size:7px;color:#9aabc0}.quota b{display:block;font-size:10px;color:#314a65;margin-top:2px}.quota .bar{flex:1;height:5px;border-radius:5px;background:#eef3fa;overflow:hidden}.quota .bar i{display:block;height:100%;background:#2563eb}.quota>span{font-size:8px;color:#2563eb}
-.drop{border:1px dashed #bcd4f7;border-radius:11px;background:#f8fbff;padding:16px;text-align:center;cursor:pointer;margin-bottom:8px;transition:.18s}.drop.on{border-color:#2563eb;background:#eef4ff}.drop b{display:block;font-size:10px;color:#526982}.drop span{display:block;font-size:8px;color:#9aabc0;margin-top:3px}.upload{display:flex;align-items:center;gap:7px;font-size:8px;color:#526982;background:#fff;border:1px solid #e3ebf7;border-radius:7px;padding:5px 8px;margin-bottom:4px;position:relative;overflow:hidden}.upload i{position:absolute;left:0;bottom:0;height:2px;background:#2563eb}.upload em{margin-left:auto;font-style:normal;color:#9aabc0}
+.drop{border:1px dashed #bcd4f7;border-radius:11px;background:#f8fbff;padding:16px;text-align:center;cursor:pointer;margin-bottom:8px;transition:.18s}.drop.on{border-color:#2563eb;background:#eef4ff}.drop b{display:block;font-size:10px;color:#526982}.drop span{display:block;font-size:8px;color:#9aabc0;margin-top:3px}.upload{display:flex;align-items:center;gap:7px;font-size:8px;color:#526982;background:#fff;border:1px solid #e3ebf7;border-radius:7px;padding:5px 8px;margin-bottom:4px;position:relative;overflow:hidden}.upload i{position:absolute;left:0;bottom:0;height:2px;background:#2563eb}.upload em{margin-left:auto;font-style:normal;color:#9aabc0}.upload .retry{margin-left:6px;border:1px solid #dbe8ff;border-radius:4px;background:#fff;color:#2563eb;font:7px inherit;padding:1px 5px;cursor:pointer}
 .toolbar{display:flex;align-items:center;gap:8px;margin-bottom:8px}.toolbar input{flex:1;height:28px;border:1px solid #dbe8ff;border-radius:7px;background:#fff;font:9px inherit;padding:0 8px;outline:0}.toolbar span{font-size:8px;color:#9aabc0}
 .grid{display:grid;grid-template-columns:1fr;gap:6px}.card{display:flex;align-items:center;gap:9px;background:#fff;border:1px solid #e3ebf7;border-radius:10px;padding:9px}.icon{width:31px;height:31px;border-radius:8px;background:#eef4ff;color:#2563eb;display:grid;place-items:center;font-size:12px;font-weight:700;flex:none}.meta{min-width:0;flex:1}.meta b{display:block;font-size:10px;color:#314a65;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.meta span{display:block;font-size:7.5px;color:#9aabc0;margin-top:2px}.meta small{display:block;font-size:7px;color:#2563eb;margin-top:2px}.acts{display:flex;gap:4px;flex:none}.acts button{height:24px;border:1px solid #dbe8ff;border-radius:5px;background:#f8fbff;color:#2563eb;font:8px inherit;padding:0 7px;cursor:pointer}.acts button.danger{color:#b23b52;border-color:#f0d7dd;background:#fff}.empty{border:1px dashed #cfe0f7;border-radius:10px;background:#fff;padding:24px;text-align:center;color:#9aabc0;font-size:9px}
 .mask{position:fixed;inset:0;z-index:80;background:#0f172a52;display:grid;place-items:center;padding:18px}.modal{width:min(400px,100%);background:#fff;border-radius:14px;padding:15px;box-shadow:0 24px 60px #0f264e3d}.modal header{display:flex;align-items:center;margin-bottom:8px}.modal header b{font-size:13px;color:#1e3a5f}.modal header button{margin-left:auto;border:0;background:none;color:#8a9bb0;font-size:17px;cursor:pointer}.modal label{display:block;font-size:8.5px;color:#8a9bb0;margin-bottom:8px}.modal input{display:block;width:100%;height:29px;border:1px solid #dbe8ff;border-radius:7px;background:#f8fbff;font:9px inherit;padding:0 8px;margin-top:3px;box-sizing:border-box}.wide{width:100%;height:30px;border:0;border-radius:7px;background:#2563eb;color:#fff;font:9px inherit;cursor:pointer}.share-result{display:flex;gap:5px;margin-top:8px}.share-result input{flex:1;font-size:8px}.share-result button{border:1px solid #dbe8ff;border-radius:6px;background:#f8fbff;color:#2563eb;font:8px inherit;padding:0 8px;cursor:pointer}.hint{font-size:7.5px;color:#9aabc0;margin:8px 0 0;line-height:1.5}

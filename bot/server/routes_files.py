@@ -277,3 +277,21 @@ async def handle_share_info(request):
     finally:
         try: c.close()
         except Exception: pass
+
+async def handle_upload_status(request):
+    uid = _uid(request)
+    file_id = str(request.match_info.get("id") or "")
+    if not re.fullmatch(r"[a-f0-9]{32}", file_id):
+        return json_response({"ok": False, "error": "bad_id"}, 400)
+    c = _cursor()
+    try:
+        c.execute("SELECT size FROM shared_files WHERE id=%s AND user_id=%s", (file_id, uid))
+        row = c.fetchone()
+    finally:
+        try: c.close()
+        except Exception: pass
+    if not row:
+        return json_response({"ok": False, "error": "not_found"}, 404)
+    part = FILES_ROOT / (file_id + ".part")
+    offset = part.stat().st_size if part.exists() else 0
+    return json_response({"ok": True, "id": file_id, "offset": offset, "size": int(row.get("size") or 0)})
