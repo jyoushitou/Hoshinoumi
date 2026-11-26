@@ -7,7 +7,7 @@ import hashlib
 import io
 import json
 import uuid
-from datetime import datetime
+from datetime import datetime, date
 
 from ..infra import tenant
 from .common import json_response
@@ -468,8 +468,13 @@ async def handle_overview(request):
     c = get_cursor()
     try:
         accounts = _accounts_now(c, uid)
-        total = sum(int(x["balance_cents"] or 0) for x in accounts)
-        return json_response({"total_cents": total, "frozen_cents": 0, "available_cents": total})
+        cash = sum(int(x["balance_cents"] or 0) for x in accounts)
+        c.execute("SELECT COALESCE(SUM(principal_cents),0) AS total FROM finance_fixed_deposits "
+                  "WHERE user_id=%s AND status IN ('active','matured')", (uid,))
+        row = c.fetchone()
+        fixed = int((row or {}).get("total", 0) or 0) if isinstance(row, dict) else int((row or [0])[0] or 0)
+        total = cash + fixed
+        return json_response({"total_cents": total, "frozen_cents": 0, "available_cents": cash, "fixed_cents": fixed})
     finally:
         try: c.close()
         except Exception: pass
@@ -506,8 +511,108 @@ async def handle_frozen(request):
     return json_response({"ok": True, "data": []})
 
 
+def _add_months(day, months):
+    month = day.month - 1 + int(months)
+    year = day.year + month // 12
+    month = month % 12 + 1
+    import calendar
+    last = calendar.monthrange(year, month)[1]
+    return date(year, month, min(day.day, last))
+
+
+def _fixed_rows(c, uid):
+    today = date.today()
+    c.execute("UPDATE finance_fixed_deposits SET status='matured' "
+              "WHERE user_id=%s AND status='active' AND matures_at<=%s", (uid, today.isoformat()))
+    c.execute("SELECT id,name,principal_cents,rate_bps,start_at,matures_at,status,account,note "
+              "FROM finance_fixed_deposits WHERE user_id=%s ORDER BY matures_at,id", (uid,))
+    rows = []
+    for r in c.fetchall() or []:
+        item = dict(r)
+        start = item.get("start_at")
+        mature = item.get("matures_at")
+        start_d = datetime.strptime(str(start)[:10], "%Y-%m-%d").date() if start else today
+        mature_d = datetime.strptime(str(mature)[:10], "%Y-%m-%d").date() if mature else today
+        days_left = (mature_d - today).days
+        days_total = max(1, (mature_d - start_d).days)
+        interest = int(round(int(item.get("principal_cents") or 0) * int(item.get("rate_bps") or 0) / 10000 * days_total / 365))
+        item.update({"days_left": days_left, "interest_cents": interest,
+                     "mature": days_left <= 0, "start_at": str(start)[:10], "matures_at": str(mature)[:10]})
+        rows.append(item)
+    return rows
+
+
 async def handle_fixed(request):
-    return json_response({"ok": True, "data": []})
+    uid = _uid(request)
+    from ..infra.conn import get_cursor
+    c = get_cursor()
+    try:
+        rows = _fixed_rows(c, uid)
+        try: c.connection.commit()
+        except Exception: pass
+        reminders = [x for x in rows if x["status"] in ("active", "matured") and x["days_left"] <= 7]
+        total = sum(int(x["principal_cents"] or 0) for x in rows if x["status"] in ("active", "matured"))
+        return json_response({"ok": True, "data": rows, "reminders": reminders, "total_cents": total})
+    finally:
+        try: c.close()
+        except Exception: pass
+
+
+async def handle_fixed_add(request):
+    uid = _uid(request)
+    try:
+        body = await request.json()
+    except Exception:
+        return json_response({"ok": False, "error": "invalid_json"}, 400)
+    name = str(body.get("name") or "定期存款").strip()[:80]
+    try:
+        amount = float(body.get("amount") or 0)
+        rate = float(body.get("rate") or 0)
+        months = int(body.get("months") or 0)
+    except (TypeError, ValueError):
+        return json_response({"ok": False, "error": "bad_values"}, 400)
+    if amount <= 0 or months <= 0 or months > 120 or rate < 0 or rate > 30:
+        return json_response({"ok": False, "error": "bad_values"}, 400)
+    start = date.today()
+    mature = _add_months(start, months)
+    from ..infra.conn import get_cursor
+    c = get_cursor()
+    try:
+        c.execute("INSERT INTO finance_fixed_deposits(user_id,name,principal_cents,rate_bps,start_at,matures_at,status,account,note) "
+                  "VALUES(%s,%s,%s,%s,%s,%s,'active',%s,%s)",
+                  (uid, name, int(round(amount * 100)), int(round(rate * 100)), start.isoformat(),
+                   mature.isoformat(), str(body.get("account") or "")[:64] or None, str(body.get("note") or "")[:120] or None))
+        try: c.connection.commit()
+        except Exception: pass
+        c.execute("SELECT id FROM finance_fixed_deposits WHERE user_id=%s ORDER BY id DESC LIMIT 1", (uid,))
+        row = c.fetchone()
+        return json_response({"ok": True, "id": row.get("id") if row else None,
+                              "matures_at": mature.isoformat(), "months": months})
+    finally:
+        try: c.close()
+        except Exception: pass
+
+
+async def handle_fixed_settle(request):
+    uid = _uid(request)
+    try:
+        item_id = int(request.match_info["id"])
+    except (KeyError, ValueError):
+        return json_response({"ok": False, "error": "bad_id"}, 400)
+    from ..infra.conn import get_cursor
+    c = get_cursor()
+    try:
+        c.execute("SELECT status FROM finance_fixed_deposits WHERE id=%s AND user_id=%s", (item_id, uid))
+        row = c.fetchone()
+        if not row:
+            return json_response({"ok": False, "error": "not_found"}, 404)
+        c.execute("UPDATE finance_fixed_deposits SET status='settled' WHERE id=%s AND user_id=%s", (item_id, uid))
+        try: c.connection.commit()
+        except Exception: pass
+        return json_response({"ok": True, "id": item_id, "status": "settled"})
+    finally:
+        try: c.close()
+        except Exception: pass
 
 
 async def handle_funds(request):

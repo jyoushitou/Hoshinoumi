@@ -257,6 +257,8 @@ async def handle_get_token(request):
             {"path": "/api/savings/entries", "method": "POST", "auth": True},
             {"path": "/api/savings/init", "method": "GET", "auth": True},
             {"path": "/api/savings/init", "method": "POST", "auth": True},
+            {"path": "/api/savings/fixed", "method": "GET", "auth": True},
+            {"path": "/api/savings/fixed", "method": "POST", "auth": True},
             {"path": "/api/savings/snapshots", "method": "GET", "auth": True},
             {"path": "/api/savings/snapshots", "method": "POST", "auth": True},
             {"path": "/api/savings/reconcile", "method": "GET", "auth": True},

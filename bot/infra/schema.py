@@ -628,6 +628,22 @@ PURE = {
             UNIQUE KEY uk_finance_account (user_id, account)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """,
+    "finance_fixed_deposits": """
+        CREATE TABLE IF NOT EXISTS finance_fixed_deposits (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            user_id VARCHAR(64) NOT NULL DEFAULT '__owner__',
+            name VARCHAR(80) NOT NULL,
+            principal_cents BIGINT NOT NULL,
+            rate_bps INT NOT NULL DEFAULT 0,
+            start_at DATE NOT NULL,
+            matures_at DATE NOT NULL,
+            status VARCHAR(16) NOT NULL DEFAULT 'active',
+            account VARCHAR(64) NULL,
+            note VARCHAR(120) NULL,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            KEY idx_fixed_due (user_id, status, matures_at)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
     "finance_snapshots": """
         CREATE TABLE IF NOT EXISTS finance_snapshots (
             id BIGINT AUTO_INCREMENT PRIMARY KEY,

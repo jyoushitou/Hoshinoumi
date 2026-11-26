@@ -11,6 +11,7 @@ interface Savings { total_cents: number; accounts: Account[]; entries: Entry[] }
 interface Overview { total_cents: number; frozen_cents: number; available_cents: number }
 interface Goal { id: number; name: string; target_cents: number; saved_cents: number; deadline?: string }
 interface Held { id: number; name: string; amount_cents?: number; code?: string; shares?: number; value_cents?: number; rate?: number; due?: string; matures_at?: string }
+interface FixedDeposit { id: number; name: string; principal_cents: number; rate_bps: number; start_at?: string; matures_at?: string; status?: string; account?: string; note?: string; days_left?: number; interest_cents?: number; mature?: boolean }
 interface MonthRow { month: string; income_cents: number; expense_cents: number }
 interface AuditRow { at: string; user: string; method: string; path: string; status: number }
 interface Snapshot { id: number; taken_at: string; total_cents: number; note?: string; accounts?: Account[] }
@@ -27,7 +28,16 @@ const data = ref<Savings | null>(null)
 const overview = ref<Overview | null>(null)
 const goals = ref<Goal[]>([])
 const frozen = ref<Held[]>([])
-const fixed = ref<Held[]>([])
+const fixed = ref<FixedDeposit[]>([])
+const fixedReminders = ref<FixedDeposit[]>([])
+const fixedFormOpen = ref(false)
+const fixedName = ref('定期存款')
+const fixedAmount = ref('')
+const fixedRate = ref('2.5')
+const fixedMonths = ref('12')
+const fixedAccount = ref('银行卡')
+const fixedBusy = ref(false)
+const fixedError = ref('')
 const funds = ref<Held[]>([])
 const monthly = ref<MonthRow[]>([])
 const audit = ref<AuditRow[]>([])
@@ -82,7 +92,7 @@ async function load() {
       http.get<Overview>('/api/savings/overview'),
       http.get<{ data?: Goal[] }>('/api/savings/goals'),
       http.get<{ data?: Held[] }>('/api/savings/frozen'),
-      http.get<{ data?: Held[] }>('/api/savings/fixed'),
+      http.get<{ data?: FixedDeposit[]; reminders?: FixedDeposit[] }>('/api/savings/fixed'),
       http.get<{ data?: Held[] }>('/api/savings/funds'),
       http.get<{ data?: MonthRow[] }>('/api/savings/monthly'),
       http.get<{ data?: AuditRow[] }>('/api/finance/audit'),
@@ -92,6 +102,7 @@ async function load() {
     goals.value = gl.status === 'fulfilled' ? gl.value.data || [] : []
     frozen.value = fz.status === 'fulfilled' ? fz.value.data || [] : []
     fixed.value = fx.status === 'fulfilled' ? fx.value.data || [] : []
+    fixedReminders.value = fx.status === 'fulfilled' ? fx.value.reminders || [] : []
     funds.value = fd.status === 'fulfilled' ? fd.value.data || [] : []
     monthly.value = mo.status === 'fulfilled' ? mo.value.data || [] : []
     audit.value = au.status === 'fulfilled' ? au.value.data || [] : []
@@ -168,6 +179,25 @@ async function addExercise() {
     await loadHealth()
   } finally { healthBusy.value = false }
 }
+async function addFixed() {
+  const amount = Number(fixedAmount.value); const rate = Number(fixedRate.value); const months = Number(fixedMonths.value)
+  if (!Number.isFinite(amount) || amount <= 0 || !Number.isFinite(rate) || rate < 0 || !Number.isFinite(months) || months <= 0) {
+    fixedError.value = '请填写本金、利率和期限'; return
+  }
+  fixedBusy.value = true; fixedError.value = ''
+  try {
+    await http.post('/api/savings/fixed', {
+      name: fixedName.value.trim() || '定期存款', amount, rate, months,
+      account: fixedAccount.value, note: '',
+    })
+    fixedAmount.value = ''; fixedFormOpen.value = false
+    await load()
+  } catch (e) { fixedError.value = e instanceof Error ? e.message : '存入定期失败' } finally { fixedBusy.value = false }
+}
+async function settleFixed(item: FixedDeposit) {
+  if (!confirm(`确认将「${item.name}」转回？`)) return
+  try { await http.post(`/api/savings/fixed/${item.id}/settle`, {}); await load() } catch (e) { fixedError.value = e instanceof Error ? e.message : '转回失败' }
+}
 async function recognizeFood(event: Event) {
   const file = (event.target as HTMLInputElement).files?.[0]
   if (!file) return
@@ -210,6 +240,7 @@ watch(isOwner, value => { if (value && !data.value) { void load(); void loadInit
     <div v-if="!isOwner" class="owner-lock">财务数据仅主人可见</div>
     <header class="head"><div><h1>存钱</h1><p>总余额 / 账户 / 流水</p></div><div class="head-actions"><button class="refresh" type="button" :disabled="!entries.length" @click="exportCsv">导出 CSV</button><button class="refresh" type="button" :disabled="loading" @click="load">{{ loading ? '刷新中…' : '刷新' }}</button></div></header>
     <div v-if="error" class="error">{{ error }}</div>
+    <div v-if="fixedReminders.length" class="due-banner">定期到期提醒：<b v-for="item in fixedReminders" :key="item.id">{{ item.name }} {{ item.matures_at }} · {{ fmt(item.principal_cents) }}</b></div>
     <div class="hero"><small>总余额</small><b>{{ fmt(overview?.total_cents ?? data?.total_cents ?? 0) }}</b><span>可用 {{ fmt(overview?.available_cents ?? data?.total_cents ?? 0) }} · 冻结 {{ fmt(overview?.frozen_cents || 0) }} · {{ accounts.length }} 个账户</span></div>
     <div class="accounts">
       <div v-for="item in accounts" :key="item.account" class="account"><b>{{ item.account }}</b><span>{{ fmt(item.balance_cents) }}</span></div>
@@ -221,7 +252,7 @@ watch(isOwner, value => { if (value && !data.value) { void load(); void loadInit
       <div v-else class="recon-empty">拍一张快照后，可对比各账户当前余额与快照差异。</div>
     </div>
     <div v-if="goals.length" class="panel"><div class="list-title">存钱目标<span>{{ goals.length }}</span></div><div v-for="goal in goals" :key="goal.id" class="goal"><div><b>{{ goal.name }}</b><small>{{ goal.deadline || '无期限' }}</small></div><em>{{ fmt(goal.saved_cents) }} / {{ fmt(goal.target_cents) }}</em><button type="button" @click="allocate(goal)">存入</button><i><span :style="{ width: Math.min(100, goal.saved_cents / Math.max(1, goal.target_cents) * 100) + '%' }" /></i></div></div>
-    <div v-if="frozen.length || fixed.length || funds.length" class="panel"><div class="list-title">资金位置<span>{{ frozen.length + fixed.length + funds.length }}</span></div><div v-for="item in frozen" :key="'f'+item.id" class="entry"><div><b>{{ item.name }}</b><small>冻结 · 到期 {{ item.due || '—' }}</small></div><em>{{ fmt(item.amount_cents || 0) }}</em><button class="mini" type="button" @click="unfreeze(item)">解冻</button></div><div v-for="item in fixed" :key="'d'+item.id" class="entry"><div><b>{{ item.name }}</b><small>定期 {{ item.rate || 0 }}% · {{ item.matures_at || '' }}</small></div><em>{{ fmt(item.amount_cents || 0) }}</em></div><div v-for="item in funds" :key="'u'+item.code" class="entry"><div><b>{{ item.name }}</b><small>基金 {{ item.code }} · {{ item.shares || 0 }} 份</small></div><em>{{ fmt(item.value_cents || 0) }}</em></div></div>
+    <div v-if="frozen.length || fixed.length || funds.length" class="panel"><div class="list-title">资金位置<span>{{ frozen.length + fixed.length + funds.length }}</span></div><div v-for="item in frozen" :key="'f'+item.id" class="entry"><div><b>{{ item.name }}</b><small>冻结 · 到期 {{ item.due || '—' }}</small></div><em>{{ fmt(item.amount_cents || 0) }}</em><button class="mini" type="button" @click="unfreeze(item)">解冻</button></div><div v-for="item in funds" :key="'u'+item.code" class="entry"><div><b>{{ item.name }}</b><small>基金 {{ item.code }} · {{ item.shares || 0 }} 份</small></div><em>{{ fmt(item.value_cents || 0) }}</em></div></div>
     <div v-if="dueBills.length" class="bill-note">缴费提醒：{{ dueBills.map(x => x.name + ' ' + fmt(x.amount_cents || 0) + ' · ' + x.due).join('；') }}</div>
     <div class="form">
       <div class="seg"><button type="button" :class="{ on: kind === 'expense' }" @click="kind = 'expense'">支出</button><button type="button" :class="{ on: kind === 'income' }" @click="kind = 'income'">收入</button></div>
@@ -238,6 +269,29 @@ watch(isOwner, value => { if (value && !data.value) { void load(); void loadInit
       <div v-for="(entry, index) in entries" :key="entry.id ?? index" class="entry">
         <div><b>{{ entry.note || entry.category || entry.kind }}</b><small>{{ entry.account }} · {{ String(entry.occurred_at || '').slice(0, 10) }}</small></div>
         <em :class="{ income: entry.amount_cents > 0 }">{{ entry.amount_cents > 0 ? '+' : '' }}{{ fmt(entry.amount_cents) }}</em>
+      </div>
+    </div>
+    <div class="panel fixed-panel">
+      <div class="list-title fixed-title">定期存款<span>{{ fixed.length }}</span>
+        <button type="button" class="fixed-add" @click="fixedFormOpen = !fixedFormOpen">{{ fixedFormOpen ? '取消' : '存入定期' }}</button>
+      </div>
+      <div v-if="fixedFormOpen" class="fixed-form">
+        <input v-model="fixedName" placeholder="名称">
+        <input v-model="fixedAmount" inputmode="decimal" placeholder="本金（元）">
+        <input v-model="fixedRate" inputmode="decimal" placeholder="年利率 %">
+        <input v-model="fixedMonths" inputmode="numeric" placeholder="期限（月）">
+        <select v-model="fixedAccount"><option v-for="name in accountOptions" :key="name" :value="name">{{ name }}</option></select>
+        <button type="button" :disabled="fixedBusy" @click="addFixed">{{ fixedBusy ? '保存中…' : '存入' }}</button>
+      </div>
+      <div v-if="fixedError" class="health-error">{{ fixedError }}</div>
+      <div v-if="!fixed.length" class="empty">暂无定期存款</div>
+      <div v-for="item in fixed" :key="item.id" class="entry fixed-entry">
+        <div>
+          <b>{{ item.name }}</b>
+          <small>{{ item.status === 'settled' ? '已转回' : item.status === 'matured' ? '已到期' : '存续中' }} · {{ item.rate_bps / 100 }}% · {{ item.matures_at }}<span v-if="item.days_left != null"> · {{ item.days_left > 0 ? item.days_left + ' 天后到期' : '已到期' }}</span></small>
+        </div>
+        <em>{{ fmt(item.principal_cents) }}<small class="interest">利息 {{ fmt(item.interest_cents || 0) }}</small></em>
+        <button v-if="item.status !== 'settled'" type="button" class="mini" @click="settleFixed(item)">转回</button>
       </div>
     </div>
     <div class="panel health-panel">
@@ -283,7 +337,7 @@ watch(isOwner, value => { if (value && !data.value) { void load(); void loadInit
 <style scoped>
 .savings.locked > *:not(.owner-lock):not(.head){display:none}.owner-lock{background:#fff;border:1px dashed #cfe0f7;border-radius:12px;padding:26px;text-align:center;color:#8a9bb0;font-size:10px}.savings{flex:1;min-height:0;overflow:auto;padding:18px 18px 24px;background:#f7faff;color:#17263b}.head{display:flex;align-items:flex-end;margin-bottom:12px}.head-actions{margin-left:auto;display:flex;gap:6px}.head h1{margin:0;font-size:24px;letter-spacing:-.03em}.head p{margin:3px 0 0;font-size:10px;color:#8a9bb0}.refresh{margin-left:auto;height:29px;border:1px solid #dbe8ff;border-radius:8px;background:#fff;color:#2563eb;font:10px inherit;padding:0 10px;cursor:pointer}
 .hero{background:linear-gradient(135deg,#2563eb,#3b82f6);border-radius:14px;padding:15px;color:#fff;margin-bottom:9px}.hero small{display:block;font-size:8px;opacity:.7;letter-spacing:.12em}.hero b{display:block;font-size:26px;letter-spacing:-.03em;margin-top:3px}.hero span{font-size:8px;opacity:.72}
-.health-panel{margin-top:10px}.health-title{display:flex;align-items:center}.health-toggle{margin-left:auto;border:0;background:none;color:#2563eb;font:8px inherit;cursor:pointer}.health-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:8px 0}.health-stats div{background:#f8fbff;border:1px solid #e3ebf7;border-radius:8px;padding:7px}.health-stats small{display:block;font-size:7px;color:#9aabc0}.health-stats b{display:block;font-size:10px;color:#1e3a5f;margin-top:2px}.health-meals{display:grid;gap:4px;margin:6px 0}.health-meal{display:flex;justify-content:space-between;font-size:8px;color:#526982;padding:4px 0;border-bottom:1px solid #f1f5fb}.health-meal em{font-style:normal;color:#9aabc0}.health-goal{font-size:8px;color:#8a9bb0;margin:6px 0}.health-form select{height:28px;border:1px solid #dbe8ff;border-radius:7px;background:#f8fbff;font:9px inherit;padding:0 6px;outline:0}.health-ghost{background:#eef4ff!important;color:#2563eb!important;border:1px solid #dbe8ff!important}.health-error{font-size:8px;color:#b23b52;margin:4px 0}.health-form{display:flex;gap:6px;margin-top:7px}.health-form input{flex:1;min-width:0;height:28px;border:1px solid #dbe8ff;border-radius:7px;background:#f8fbff;font:9px inherit;padding:0 7px;outline:0}.health-form button{height:28px;border:0;border-radius:7px;background:#2563eb;color:#fff;font:8px inherit;padding:0 10px;cursor:pointer}.account-select{height:32px;border:1px solid #dbe8ff;border-radius:8px;background:#f8fbff;color:#243b55;font:10px inherit;padding:0 7px;outline:0}.accounts{display:flex;gap:6px;overflow:auto;margin-bottom:9px}.account{flex:none;min-width:104px;background:#fff;border:1px solid #e3ebf7;border-radius:10px;padding:8px 9px}.account b{display:block;font-size:8px;color:#8a9bb0}.account span{display:block;font-size:12px;color:#1e3a5f;margin-top:3px}
+.due-banner{margin-bottom:9px;border:1px solid #f5d28a;background:#fff9e8;color:#8a5a00;border-radius:9px;padding:8px 10px;font-size:9px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}.due-banner b{font-weight:600}.fixed-title{display:flex;align-items:center}.fixed-add{margin-left:auto;border:0;background:none;color:#2563eb;font:8px inherit;cursor:pointer}.fixed-form{display:grid;grid-template-columns:1.2fr 1fr 0.8fr 0.7fr 0.9fr auto;gap:5px;margin:8px 0}.fixed-form input,.fixed-form select{height:28px;min-width:0;border:1px solid #dbe8ff;border-radius:7px;background:#f8fbff;font:9px inherit;padding:0 6px;outline:0}.fixed-form button{height:28px;border:0;border-radius:7px;background:#2563eb;color:#fff;font:8px inherit;padding:0 8px;cursor:pointer}.fixed-entry .interest{display:block;font-size:7px;color:#9aabc0;margin-top:2px}.fixed-entry .mini{border:1px solid #dbe8ff;border-radius:6px;background:#f4f9ff;color:#2563eb;font:8px inherit;padding:3px 7px;cursor:pointer}.health-panel{margin-top:10px}.health-title{display:flex;align-items:center}.health-toggle{margin-left:auto;border:0;background:none;color:#2563eb;font:8px inherit;cursor:pointer}.health-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:8px 0}.health-stats div{background:#f8fbff;border:1px solid #e3ebf7;border-radius:8px;padding:7px}.health-stats small{display:block;font-size:7px;color:#9aabc0}.health-stats b{display:block;font-size:10px;color:#1e3a5f;margin-top:2px}.health-meals{display:grid;gap:4px;margin:6px 0}.health-meal{display:flex;justify-content:space-between;font-size:8px;color:#526982;padding:4px 0;border-bottom:1px solid #f1f5fb}.health-meal em{font-style:normal;color:#9aabc0}.health-goal{font-size:8px;color:#8a9bb0;margin:6px 0}.health-form select{height:28px;border:1px solid #dbe8ff;border-radius:7px;background:#f8fbff;font:9px inherit;padding:0 6px;outline:0}.health-ghost{background:#eef4ff!important;color:#2563eb!important;border:1px solid #dbe8ff!important}.health-error{font-size:8px;color:#b23b52;margin:4px 0}.health-form{display:flex;gap:6px;margin-top:7px}.health-form input{flex:1;min-width:0;height:28px;border:1px solid #dbe8ff;border-radius:7px;background:#f8fbff;font:9px inherit;padding:0 7px;outline:0}.health-form button{height:28px;border:0;border-radius:7px;background:#2563eb;color:#fff;font:8px inherit;padding:0 10px;cursor:pointer}.account-select{height:32px;border:1px solid #dbe8ff;border-radius:8px;background:#f8fbff;color:#243b55;font:10px inherit;padding:0 7px;outline:0}.accounts{display:flex;gap:6px;overflow:auto;margin-bottom:9px}.account{flex:none;min-width:104px;background:#fff;border:1px solid #e3ebf7;border-radius:10px;padding:8px 9px}.account b{display:block;font-size:8px;color:#8a9bb0}.account span{display:block;font-size:12px;color:#1e3a5f;margin-top:3px}
 .form{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:#fff;border:1px solid #e3ebf7;border-radius:12px;padding:9px;margin-bottom:9px}.seg{grid-column:1/-1;display:flex;gap:4px}.seg button{flex:1;height:25px;border:1px solid #e3ebf7;border-radius:6px;background:#f8fbff;color:#6b7c95;font:9px inherit}.seg button.on{background:#eef4ff;color:#2563eb;border-color:#c7dcff}.form input{min-width:0;height:29px;border:1px solid #e3ebf7;border-radius:7px;background:#f8fbff;padding:0 8px;font:9.5px inherit;outline:0}.form .primary{grid-column:1/-1;height:30px;border:0;border-radius:7px;background:#2563eb;color:#fff;font:9.5px inherit;font-weight:700}.error{border:1px solid #fecaca;background:#fff5f5;color:#b91c1c;border-radius:8px;padding:7px 9px;font-size:9px;margin-bottom:8px}
 .entries{background:#fff;border:1px solid #e3ebf7;border-radius:12px;padding:9px}.list-title{display:flex;justify-content:space-between;font-size:9px;color:#52708f;font-weight:700;padding:2px 2px 7px}.list-title span{font-weight:400;color:#9aabc0}.entry{display:flex;align-items:center;justify-content:space-between;padding:7px 2px;border-bottom:1px solid #f1f5fb}.entry:last-child{border-bottom:0}.entry b{display:block;font-size:9.5px;color:#314a65}.entry small{display:block;font-size:7px;color:#9aabc0;margin-top:2px}.entry em{font-style:normal;font-size:10px;color:#c0264a}.entry em.income{color:#1f9d6b}.entry em.danger-text{color:#b91c1c;font-size:8px}.empty{text-align:center;color:#9aabc0;font-size:9px;padding:16px}
 .panel{background:#fff;border:1px solid #e3ebf7;border-radius:12px;padding:9px;margin-bottom:9px}.goal{display:grid;grid-template-columns:1fr auto;gap:3px;padding:6px 2px}.goal b{font-size:9.5px;color:#314a65}.goal small{display:block;font-size:7px;color:#9aabc0;margin-top:2px}.goal em{font-style:normal;font-size:8.5px;color:#2563eb}.goal button{grid-row:1/3;grid-column:2;align-self:center;border:1px solid #dbe8ff;background:#f4f9ff;color:#2563eb;border-radius:5px;font:7.5px inherit;padding:2px 6px;cursor:pointer}.entry .mini{margin-left:7px;border:1px solid #dbe8ff;background:#f4f9ff;color:#2563eb;border-radius:5px;font:7.5px inherit;padding:2px 6px;cursor:pointer}.bill-note{border:1px solid #f2d491;background:#fff8e6;color:#8a5a00;border-radius:8px;padding:7px 9px;font-size:8px;line-height:1.6;margin-bottom:8px}.goal i{grid-column:1/-1;height:4px;border-radius:3px;background:#eef4ff;overflow:hidden}.goal i span{display:block;height:100%;background:#2563eb;border-radius:3px}
