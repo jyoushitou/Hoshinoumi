@@ -472,6 +472,17 @@
   const searchBtn = top.querySelector('.tbtn');
   const chatMoreBtn = document.getElementById('chatMore');
   let chatMoreMenu = null;
+  function positionChatMore() {
+    if (!chatMoreMenu || !chatMoreBtn) return;
+    const r = chatMoreBtn.getBoundingClientRect();
+    const w = chatMoreMenu.offsetWidth || 150;
+    const h = chatMoreMenu.offsetHeight || 190;
+    const left = Math.max(10, Math.min(window.innerWidth - w - 10, r.right - w));
+    const top = Math.max(10, Math.min(window.innerHeight - h - 10, r.bottom + 6));
+    chatMoreMenu.style.left = left + 'px';
+    chatMoreMenu.style.top = top + 'px';
+    chatMoreMenu.style.right = 'auto';
+  }
   function toggleChatMore() {
     if (!chatMoreMenu) {
       chatMoreMenu = document.createElement('div');
@@ -489,8 +500,10 @@
       document.addEventListener('click', e => { if (!chatMoreMenu.contains(e.target) && e.target !== chatMoreBtn) chatMoreMenu.classList.remove('on'); });
     }
     chatMoreMenu.classList.toggle('on');
+    if (chatMoreMenu.classList.contains('on')) positionChatMore();
   }
   chatMoreBtn?.addEventListener('click', e => { e.stopPropagation(); toggleChatMore(); });
+  window.addEventListener('resize', () => { if (chatMoreMenu?.classList.contains('on')) positionChatMore(); });
   const searchBar = document.createElement('div');
   searchBar.className = 'chat-search';
   searchBar.innerHTML = '<span>⌕</span><input id="chatSearchInput" placeholder="搜索当前聊天"><span class="count" id="chatSearchCount"></span><button id="searchPrev" title="上一条">↑</button><button id="searchNext" title="下一条">↓</button><button id="searchClose" title="关闭">×</button>';
