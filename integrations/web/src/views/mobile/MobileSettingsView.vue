@@ -19,6 +19,12 @@ const downloadPercent = ref(0)
 let downloadTimer: ReturnType<typeof setInterval> | null = null
 const updateError = ref('')
 const updateUrl = computed(() => latest.value?.url ? new URL(latest.value.url, location.origin).href : '')
+const apkVersionOnly = computed(() => (apkVersion.value.match(/\d+\.\d+\.\d+\.\d+/) || [''])[0])
+const consistency = computed(() => {
+  if (!latest.value?.version) return '—'
+  if (!apkVersionOnly.value) return '浏览器预览'
+  return apkVersionOnly.value === latest.value.version ? '客户端与包一致' : '客户端待更新'
+})
 const { entries, quickKeys, toggleQuick, resetQuick } = useMobileNav()
 const { navHidden, navBall, hiddenPages, togglePage } = useUiSettings()
 const visibilityEntries = computed(() => entries.value.filter(entry => !['settings', 'chats'].includes(entry.key)))
@@ -136,6 +142,7 @@ function changeBackend() {
       <div class="row"><span>账号</span><small>{{ auth.qq || '—' }}</small></div>
       <div class="row"><span>手机 APK</span><small>{{ apkVersion }}</small></div>
       <div class="row"><span>后端版本</span><small>{{ backendVersion }}</small></div>
+      <div class="row"><span>版本一致性</span><small>{{ consistency }}</small></div>
       <button class="row backend-row" type="button" :disabled="updateState === 'checking' || updateState === 'downloading'" @click="checkUpdate"><span>检查更新</span><small>{{ updateState === 'checking' ? '检查中…' : updateState === 'downloading' ? '已提交下载' : '检查 ›' }}</small></button>
       <div v-if="updateState === 'latest'" class="update-note ok">已是最新版本</div>
       <div v-else-if="updateState === 'error'" class="update-note bad"><b>{{ updateError }}</b><button v-if="latest?.available" type="button" class="update-retry" @click="retryDownload">重新下载</button></div>
