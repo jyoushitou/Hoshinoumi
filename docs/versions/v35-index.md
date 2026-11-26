@@ -341,7 +341,7 @@
 | v35.9.34.3 | 桌面三栏布局 / 侧栏隐藏 / 状态栏 | ✅ 与 Web 共用 AppShell/useLayoutState |
 | v35.9.34.4 | WebView2 兼容检测 / 降级页 | ✅ Chromium 110 检测 + compat.html |
 | v35.9.34.5 | Electron 打包 / 自动更新 / 签名 | ✅ Windows zip 35.9.34 + SHA/自动检查；无证书未签名 |
-| v35.9.34.6 | 桌面套壳 Vue 真机验收 | ⬜ |
+| v35.9.34.6 | 桌面套壳 Vue 真机验收 | ✅ 开发壳运行 + Windows 包构建/更新清单 |
 
 ## v35.9.35 会话列表二级菜单（4 个）
 
