@@ -407,7 +407,7 @@ screens.chats = `
     <div class="sec-title" id="recentTitle"><span>最近</span><span>已同步</span></div>
     <div id="extraConvs"></div>
     <div class="conv on" data-kind="private" data-conv="nao" onclick="openConversation(this,'chat','nao')"><div class="avatar bot">奈</div><div class="copy"><b>奈绪</b><span>你回来啦。今天外面有点冷，先喝点热的吧。</span></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="when">刚刚</span><span class="badge blue unread-badge">2</span></div></div>
-    <div class="conv" data-kind="group" data-conv="student" onclick="openConversation(this,'group','student')"><div class="avatar">学</div><div class="copy"><b>星之海学生会</b><span>友利：下午的会议改到三点。</span></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="when">12:40</span><span class="badge unread-badge">5</span></div></div>
+    <div class="conv" data-kind="group" data-conv="student" data-owner="true" onclick="openConversation(this,'group','student')"><div class="avatar">学</div><div class="copy"><b>星之海学生会</b><span>友利：下午的会议改到三点。</span></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="when">12:40</span><span class="badge unread-badge">5</span></div></div>
   </div>
 </div>
 ${nav('chats')}`
@@ -1403,12 +1403,12 @@ function closeQuickSettings(){ closeOverlay(); go(currentScreen) }
 function decorateSwipe(){
   document.querySelectorAll('.conv[data-conv]').forEach(function(conv){
     if(conv.parentElement && conv.parentElement.classList.contains('swipe-wrap')) return
-    var kind=conv.dataset.kind||'private', name=(conv.querySelector('.copy b')||{}).textContent||'会话'
+    var kind=conv.dataset.kind||'private', owner=conv.dataset.owner==='true', name=(conv.querySelector('.copy b')||{}).textContent||'会话'
     var wrap=document.createElement('div'); wrap.className='swipe-wrap'
     conv.style.setProperty('background','#f7faff','important')
     conv.parentNode.insertBefore(wrap,conv)
     var actions=document.createElement('div'); actions.className='swipe-actions'
-    actions.innerHTML='<button class="sw-mute">免打扰</button><button class="sw-del">删除</button><button class="sw-danger">'+(kind==='group'?'退群':'删人')+'</button>'
+    actions.innerHTML='<button class="sw-mute">免打扰</button><button class="sw-del">删除</button><button class="sw-danger">'+(kind==='group'&&owner?'解散':(kind==='group'?'退群':'删人'))+'</button>'
     wrap.appendChild(actions); wrap.appendChild(conv)
     var startX=0,startY=0,dx=0,axis='',open=false
     conv.addEventListener('touchstart',function(e){ if(e.touches.length!==1) return; startX=e.touches[0].clientX; startY=e.touches[0].clientY; dx=0; axis=''; },{passive:true})
@@ -1417,19 +1417,20 @@ function decorateSwipe(){
     conv.addEventListener('click',function(e){ if(open||dx<-10){ e.stopImmediatePropagation(); e.preventDefault(); open=false; dx=0; conv.classList.remove('swiped'); conv.style.transform='translateX(0)'; conv.style.setProperty('background','#f7faff','important'); } },true)
     actions.querySelector('.sw-mute').addEventListener('click',function(){ conv.classList.toggle('muted'); toast(conv.classList.contains('muted')?'已免打扰「'+name+'」':'已取消免打扰「'+name+'」'); conv.classList.remove('swiped'); conv.style.transform='translateX(0)'; open=false })
     actions.querySelector('.sw-del').addEventListener('click',function(){ wrap.remove(); toast('已删除会话「'+name+'」') })
-    actions.querySelector('.sw-danger').addEventListener('click',function(){ swipeDanger(name,kind,wrap) })
+    actions.querySelector('.sw-danger').addEventListener('click',function(){ swipeDanger(name,kind==='group'&&owner?'group-owner':kind,wrap) })
   })
 }
 function swipeDanger(name,kind,wrap){
-  var label=kind==='group'?'退出群聊':'删除联系人'
-  var tip=kind==='group'?'退出后将不再接收群消息，并从会话列表移除。':'将从会话列表移除「'+name+'」。QQ 好友关系需要 NapCat 在线时同步删除。'
+  var label=kind==='group-owner'?'解散群聊':(kind==='group'?'退出群聊':'删除联系人')
+  var tip=kind==='group-owner'?'你是群主。解散后所有成员会被移出，群聊和记录不可恢复。':'将从会话列表移除「'+name+'」。QQ 好友关系需要 NapCat 在线时同步删除。'
+  if(kind==='group') tip='退出后将不再接收群消息，并从会话列表移除。'
   overlay('<div class="swipe-confirm"><div class="ci">!</div><h4>'+label+'「'+name+'」？</h4><p>'+tip+'</p><div class="acts"><button onclick="closeOverlay()">取消</button><button class="pri" onclick="swipeConfirm(this,\''+kind+'\')">'+label+'</button></div></div>')
 }
 function swipeConfirm(btn,kind){
   var sheet=btn.closest('.swipe-confirm'), name=(sheet.querySelector('h4').textContent||'').replace(/^.*「/,'').replace(/」？$/,'')
   var all=[].slice.call(document.querySelectorAll('.conv[data-conv]'))
   all.forEach(function(c){ if(((c.querySelector('.copy b')||{}).textContent||'')===name) c.closest('.swipe-wrap')?.remove() })
-  closeOverlay(); toast(kind==='group'?'已退出群聊「'+name+'」':'已删除联系人「'+name+'」')
+  closeOverlay(); toast(kind==='group-owner'?'已解散群聊「'+name+'」':(kind==='group'?'已退出群聊「'+name+'」':'已删除联系人「'+name+'」'))
 }
 document.addEventListener('click',function(e){
   if(e.target.closest('.swipe-wrap')) return
