@@ -41,6 +41,11 @@ async def handle_app_update(request):
     if not manifest:
         return json_response({"ok": False, "error": "apk_missing"}, 404)
     platform = str(request.query.get("platform") or "android")
+    if platform in ("windows", "win32"):
+        desktop = _desktop_manifest()
+        if not desktop:
+            return json_response({"ok": False, "error": "desktop_missing"}, 404)
+        return json_response({"ok": True, "data": desktop})
     if platform not in ("android", "all"):
         return json_response({"ok": False, "error": "platform_not_found"}, 404)
     return json_response({"ok": True, "data": manifest})

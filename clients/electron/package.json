@@ -1,6 +1,6 @@
 {
   "name": "hoshinoumi-desktop",
-  "version": "35.6.0",
+  "version": "35.9.34",
   "private": true,
   "description": "Hoshinoumi Electron desktop shell",
   "main": "main.js",

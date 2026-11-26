@@ -180,12 +180,10 @@ async function rollbackUpdate() {
   }
   await installUpdate(file)
 }
-async function checkUpdate() {
-  const url = String(shellSettings.updateUrl || '').trim()
-  if (!url) {
-    await dialog.showMessageBox({ type: 'info', title: '检查更新', message: '未配置更新源', detail: '在设置中填写更新源 URL 后再检查更新。' })
-    return
-  }
+async function checkUpdate(silent = false) {
+  const base = String(shellSettings.apiBase || 'http://127.0.0.1:27005').replace(/\/$/, '')
+  const url = String(shellSettings.updateUrl || '').trim() || (base + '/api/app/update?platform=windows')
+  if (!url) return
   try {
     const res = await fetch(url, { headers: { accept: 'application/json' } })
     if (!res.ok) throw new Error('HTTP ' + res.status)
@@ -193,7 +191,7 @@ async function checkUpdate() {
     const current = app.getVersion()
     if (!manifest.version) throw new Error('manifest.version 缺失')
     if (manifest.version === current) {
-      await dialog.showMessageBox({ type: 'info', title: '检查更新', message: '已是最新版本', detail: '当前 ' + current })
+      if (!silent) await dialog.showMessageBox({ type: 'info', title: '检查更新', message: '已是最新版本', detail: '当前 ' + current })
       return
     }
     const answer = await dialog.showMessageBox({
@@ -201,10 +199,11 @@ async function checkUpdate() {
       message: '当前 ' + current + ' → ' + manifest.version, detail: manifest.notes || '',
     })
     if (answer.response !== 0) return
+    if (manifest.url && !/^https?:/i.test(manifest.url)) manifest.url = base + (String(manifest.url).startsWith('/') ? '' : '/') + manifest.url
     const file = await downloadUpdate(manifest)
     await installUpdate(file)
   } catch (e) {
-    await dialog.showMessageBox({ type: 'error', title: '检查更新失败', message: String(e) })
+    if (!silent) await dialog.showMessageBox({ type: 'error', title: '检查更新失败', message: String(e) })
   }
 }
 
@@ -247,6 +246,7 @@ if (!app.requestSingleInstanceLock()) {
     applyMiniState()
     if (process.argv.includes('--mini')) toggleMini()
     if (process.argv.includes('--settings')) openSettings()
+    setTimeout(() => { void checkUpdate(true) }, 15000)
   })
   app.on('before-quit', () => { quitting = true })
   app.on('window-all-closed', () => { if (quitting && process.platform !== 'darwin') app.quit() })
