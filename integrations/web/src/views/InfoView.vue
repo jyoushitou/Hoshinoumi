@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { http } from '@/api/client'
 import type { InfoBalance, InfoStatus } from '@/lib/infoContract'
 import { useSessionStore } from '@/stores/session'
@@ -17,6 +17,8 @@ const shelf = ref<{ books?: ShelfBook[]; day?: string; chapters?: number } | nul
 const currentBook = computed(() => Array.isArray(shelf.value?.books) ? shelf.value!.books![0] : null)
 const balanceError = ref('')
 const cronCount = ref<number | null>(null)
+const napcatOffline = ref<boolean | null>(null)
+const napcatLabel = computed(() => napcatOffline.value === null ? '—' : napcatOffline.value ? '已掉线' : '正常')
 const balanceCurrency = computed(() => balance.value?.balance_infos?.[0]?.currency || 'CNY')
 const balanceTotal = computed(() => balance.value?.balance_infos?.[0]?.total_balance || '—')
 const balanceGranted = computed(() => balance.value?.balance_infos?.[0]?.granted_balance || '0.00')
@@ -27,7 +29,7 @@ async function copyDiagnostics() {
     `Hoshinoumi Web ${new Date().toISOString()}`,
     `status=${status.value?.status || '—'} schema=${status.value?.schema || '—'} web=${webVersion} backend=${status.value?.version || '—'}`,
     `master_qq=${status.value?.master_qq || '—'} latency=${session.statusLatencyMs ?? '—'}ms`,
-    `napcat=${status.value?.napcat?.connected ? 'connected' : 'offline'} ws=${status.value?.napcat?.ws_url || '—'} listening=${status.value?.napcat?.listening ?? '—'} qq=${status.value?.napcat?.self_qq || '—'}`,
+    `napcat=${napcatLabel.value}`,
     `db=${status.value?.db?.engine || '—'} tables=${status.value?.db?.tables ?? '—'} size=${status.value?.db?.size_mb ?? '—'}MB`,
     `backup=${status.value?.backup?.last_at || '—'} size=${status.value?.backup?.size_mb ?? '—'}MB kept=${status.value?.backup?.kept ?? '—'}`,
     `api_balance=${balance.value?.balance_infos?.[0]?.total_balance || '—'}`,
@@ -35,6 +37,7 @@ async function copyDiagnostics() {
   try { await navigator.clipboard.writeText(text); copied.value = true; setTimeout(() => { copied.value = false }, 1500) } catch { copied.value = false }
 }
 async function loadShelf() { try { const r = await http.get<{ data?: { books?: ShelfBook[]; day?: string; chapters?: number } }>('/api/shelf'); shelf.value = r.data || null } catch { shelf.value = null } }
+async function loadNapcat() { try { const r = await http.get<{ offline?: boolean }>('/api/napcat/status'); napcatOffline.value = Boolean(r.offline) } catch { napcatOffline.value = null } }
 async function loadCron() { try { const r = await http.get<{ data?: unknown[] }>('/api/cron'); cronCount.value = Array.isArray(r.data) ? r.data.length : 0 } catch { cronCount.value = null } }
 async function loadBalance() { try { balance.value = await http.get('/api/balance'); balanceError.value = '' } catch { balance.value = null; balanceError.value = 'API 余额不可用' } }
 interface Backup { manifest?: { created_at?: string; counts?: Record<string, number>; checksums?: Record<string, string> }; db?: unknown }
@@ -110,7 +113,17 @@ async function load() {
   try { status.value = await http.get('/api/status'); error.value = '' } catch { status.value = null; error.value = '无后端连接' }
 }
 const uptimeLabel = computed(() => { const seconds = Number(status.value?.uptime_seconds || 0); if (!seconds) return '—'; const days = Math.floor(seconds / 86400); const hours = Math.floor((seconds % 86400) / 3600); return days ? `${days} 天 ${hours} 小时` : `${hours} 小时` })
-onMounted(() => { void load(); void loadBalance(); void loadShelf(); void loadCron() })
+function onNapcatVisible() { if (document.visibilityState === 'visible') void loadNapcat() }
+function onNapcatFocus() { void loadNapcat() }
+onMounted(() => {
+  void load(); void loadBalance(); void loadShelf(); void loadCron(); void loadNapcat()
+  document.addEventListener('visibilitychange', onNapcatVisible)
+  window.addEventListener('focus', onNapcatFocus)
+})
+onBeforeUnmount(() => {
+  document.removeEventListener('visibilitychange', onNapcatVisible)
+  window.removeEventListener('focus', onNapcatFocus)
+})
 </script>
 
 <template>
@@ -125,7 +138,7 @@ onMounted(() => { void load(); void loadBalance(); void loadShelf(); void loadCr
     <div class="runtime-grid">
       <div class="runtime-card"><small>实例</small><b>Web v{{ webVersion }}</b><span>后端 {{ backendVersion }} · schema {{ status?.schema ?? '—' }} · {{ uptimeLabel }}</span></div>
       <div class="runtime-card"><small>存储</small><b>{{ status?.db?.engine || '—' }}</b><span>{{ status?.db?.tables ?? '—' }} 张表 · {{ status?.db?.size_mb ?? '—' }} MB</span></div>
-      <div class="runtime-card"><small>NapCat</small><b :class="status?.napcat?.connected ? 'on' : 'off'">{{ status?.napcat?.connected ? '已连接' : (status?.napcat?.mode === '未接入' ? '未接入' : '未连接') }}</b><span>WS {{ status?.napcat?.port ?? '—' }} · {{ status?.napcat?.listening ? '监听中' : '未监听' }}<br>QQ {{ status?.napcat?.self_qq || '未登录' }} · {{ status?.napcat?.mode || '—' }}</span></div>
+      <div class="runtime-card"><small>NapCat QQ</small><b :class="napcatOffline === false ? 'on' : 'off'">{{ napcatLabel }}</b><span>只读连接状态</span></div>
       <div class="runtime-card"><small>备份</small><b>{{ status?.backup?.last_at || (status?.backup?.kept ? '—' : '暂无备份') }}</b><span>{{ status?.backup?.size_mb ?? 0 }} MB · 保留 {{ status?.backup?.kept ?? 0 }} 份</span></div>
     </div>
     <div class="balance-card">
@@ -160,7 +173,7 @@ onMounted(() => { void load(); void loadBalance(); void loadShelf(); void loadCr
         <div v-else><span>当前阅读</span><b>暂无阅读记录</b></div>
         <RouterLink to="/books" class="books-link">打开书架 ›</RouterLink>
       </div>
-      <div v-else class="rows"><div><span>连接</span><b>{{ status ? '正常' : '离线' }}</b></div><div><span>NapCat WS</span><b>{{ status?.napcat?.ws_url || '—' }} · {{ status?.napcat?.listening ? '监听中' : '未监听' }}</b></div><div><span>NapCat QQ</span><b>{{ status?.napcat?.self_qq || '未登录' }}</b></div><div><span>路由</span><b>本机 / 局域网</b></div></div>
+      <div v-else class="rows"><div><span>连接</span><b>{{ status ? '正常' : '离线' }}</b></div><div><span>NapCat QQ</span><b>{{ napcatLabel }}</b></div><div><span>路由</span><b>本机 / 局域网</b></div></div>
     </div>
   </section>
 </template>
