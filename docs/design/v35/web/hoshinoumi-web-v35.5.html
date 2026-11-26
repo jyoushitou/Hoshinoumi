@@ -304,6 +304,31 @@ body.right-hidden #reopenRight{display:flex}
 .quote-banner{display:flex;align-items:center;gap:7px;border-left:2px solid #93b7fa;background:#f8fbff;border-radius:5px;padding:5px 8px;margin-bottom:7px;font-size:8.5px;color:#526982}.quote-banner span{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.quote-banner button{border:0;background:none;color:#8a9bb0;cursor:pointer;font-size:11px}
 .msg-confirm-mask{position:fixed;inset:0;z-index:160;background:rgba(15,23,42,.32);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:20px}.msg-confirm-mask.open{display:flex}
 .msg-confirm{width:340px;background:#fff;border:1px solid #dbe8ff;border-radius:14px;padding:18px;box-shadow:0 24px 64px rgba(15,23,42,.26)}.msg-confirm h3{margin:0 0 5px;font-size:16px;color:#17263b}.msg-confirm p{margin:0 0 14px;font-size:9px;line-height:1.7;color:#8a9bb0}.msg-confirm .acts{display:flex;gap:7px;justify-content:flex-end}.msg-confirm button{height:29px;border:1px solid #dbe8ff;border-radius:7px;background:#fff;color:#7d8ca3;font:9px inherit;padding:0 12px}.msg-confirm button.pri{background:#c0264a;border-color:#c0264a;color:#fff;font-weight:600}
+
+/* ===== v35.9.36 message forward / multi-select ===== */
+.msg{position:relative}
+.msg .multi-check{display:none;position:absolute;left:-23px;top:50%;transform:translateY(-50%);width:16px;height:16px;border:1.5px solid #b9cce5;border-radius:50%;background:#fff;color:#fff;font-size:10px;line-height:14px;text-align:center;z-index:5}
+.msg.me .multi-check{left:auto;right:-23px}
+.msgs.multi-mode .msg .multi-check{display:block;cursor:pointer}
+.msgs.multi-mode .msg{cursor:pointer;border-radius:10px}
+.msgs.multi-mode .msg.selected{background:#eef4ff}
+.msgs.multi-mode .msg.selected .multi-check{background:#2563eb;border-color:#2563eb}
+.msg.selected .bubble{outline:2px solid #93b7fa;outline-offset:2px}
+.multi-bar{position:fixed;left:50%;bottom:86px;transform:translateX(-50%) translateY(10px);z-index:145;display:none;align-items:center;gap:9px;background:#fff;border:1px solid #dbe8ff;border-radius:12px;box-shadow:0 14px 34px rgba(15,35,70,.18);padding:7px 9px;font-size:9px;color:#405872}
+.multi-bar.on{display:flex;animation:ctxpop .15s ease-out both}
+.multi-bar b{color:#2563eb;font-size:10px}.multi-bar .mcount{margin-right:2px}
+.multi-bar button{height:26px;border:1px solid #dbe8ff;border-radius:6px;background:#f8fbff;color:#2563eb;font:8.5px inherit;padding:0 9px;cursor:pointer}
+.multi-bar button:disabled{opacity:.4;cursor:not-allowed}.multi-bar button.danger{color:#b23b52;background:#fff;border-color:#f0d7dd}.multi-bar button.ghost{color:#7d8ca3;background:#fff}
+.forward-mask{position:fixed;inset:0;z-index:155;background:rgba(15,23,42,.32);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:20px}
+.forward-mask.open{display:flex}
+.forward-card{width:360px;background:#fff;border:1px solid #dbe8ff;border-radius:14px;padding:17px;box-shadow:0 24px 64px rgba(15,23,42,.26);animation:ctxpop .15s ease-out both}
+.forward-card h3{margin:0 0 4px;font-size:15px;color:#17263b}.forward-card .sub{font-size:8.5px;color:#8a9bb0;margin-bottom:11px}
+.forward-preview{background:#f8fbff;border:1px dashed #dbe8ff;border-radius:8px;padding:7px 8px;font-size:8.5px;color:#526982;line-height:1.6;margin-bottom:10px;max-height:48px;overflow:hidden}
+.forward-list{display:grid;gap:2px;max-height:180px;overflow:auto}
+.forward-row{display:flex;align-items:center;gap:8px;padding:7px 7px;border-radius:7px;font-size:9.5px;color:#405872;cursor:pointer}.forward-row:hover{background:#eef4ff}
+.forward-row input{width:13px;height:13px;accent-color:#2563eb}.forward-row .av{width:23px;height:23px;border-radius:7px;background:#eef4ff;color:#2563eb;display:grid;place-items:center;font-size:8px;font-weight:700}.forward-row .tag{margin-left:auto;font-size:7px;color:#9aabc0}
+.forward-acts{display:flex;gap:7px;justify-content:flex-end;margin-top:12px}.forward-acts button{height:29px;border:1px solid #dbe8ff;border-radius:7px;background:#fff;color:#7d8ca3;font:9px inherit;padding:0 12px}.forward-acts button.pri{background:#2563eb;border-color:#2563eb;color:#fff;font-weight:600}
+.forwarded-msg .forwarded-card{background:#f8fbff;border:1px solid #dbe8ff;border-radius:10px;padding:9px 11px;min-width:190px}.forwarded-card b{display:block;font-size:9.5px;color:#1e3a5f}.forwarded-card span{display:block;font-size:8px;color:#8a9bb0;margin-top:4px;line-height:1.5}
 </style>
 </head>
 <body>
@@ -676,6 +701,9 @@ body.right-hidden #reopenRight{display:flex}
   <div class="msg-confirm"><h3 id="msgConfirmTitle">确认操作</h3><p id="msgConfirmText"></p><div class="acts"><button type="button" id="msgConfirmCancel">取消</button><button type="button" class="pri" id="msgConfirmOk">确认</button></div></div>
 </div>
 
+<div id="multiBar" class="multi-bar"><span class="mcount">已选 <b id="multiCount">0</b> 条</span><button type="button" id="multiForward">转发</button><button type="button" class="danger" id="multiDelete">删除</button><button type="button" class="ghost" id="multiExit">取消</button></div>
+<div id="forwardMask" class="forward-mask"><div class="forward-card"><h3>转发消息</h3><div class="sub">选择要转发到的会话，可多选</div><div class="forward-preview" id="forwardPreview"></div><div class="forward-list"><label class="forward-row"><input type="checkbox" value="友利奈绪" checked><span class="av">奈</span>友利奈绪<span class="tag">当前会话</span></label><label class="forward-row"><input type="checkbox" value="星之海学园"><span class="av" style="background:#d1fae5;color:#047857">星</span>星之海学园<span class="tag">群聊</span></label><label class="forward-row"><input type="checkbox" value="学生会室"><span class="av" style="background:#ffedd5;color:#9a3412">学</span>学生会室<span class="tag">群聊</span></label><label class="forward-row"><input type="checkbox" value="摄影部"><span class="av" style="background:#ede9fe;color:#5b21b6">摄</span>摄影部<span class="tag">群聊</span></label></div><div class="forward-acts"><button type="button" id="forwardCancel">取消</button><button type="button" class="pri" id="forwardSend">发送</button></div></div></div>
+
 <script>
 (function(){
   var menu=document.getElementById('msgMenu');
@@ -683,6 +711,50 @@ body.right-hidden #reopenRight{display:flex}
   var target=null, pending=null;
   function closeMenu(){ menu.classList.remove('open'); if(target) target.classList.remove('menu-target'); target=null; }
   function showToast(text){ if(window.toast) window.toast(text); }
+  var msgs=document.querySelector('.msgs');
+  var multiBar=document.getElementById('multiBar');
+  var forwardMask=document.getElementById('forwardMask');
+  var multiMode=false, selected=new Set(), forwardTargets=[];
+  function syncMulti(){
+    var n=selected.size;
+    var count=document.getElementById('multiCount'); if(count) count.textContent=String(n);
+    document.getElementById('multiForward').disabled=n===0;
+    document.getElementById('multiDelete').disabled=n===0;
+    msgs.querySelectorAll('.msg').forEach(function(m){
+      m.classList.toggle('selected',selected.has(m));
+      var chk=m.querySelector('.multi-check'); if(chk) chk.textContent=selected.has(m)?'✓':'';
+    });
+  }
+  function enterMulti(start){
+    multiMode=true; msgs.classList.add('multi-mode'); multiBar.classList.add('on');
+    msgs.querySelectorAll('.msg').forEach(function(m){ if(!m.querySelector('.multi-check')){ var c=document.createElement('span'); c.className='multi-check'; c.onclick=function(e){ e.stopPropagation(); toggleMulti(m) }; m.insertBefore(c,m.firstChild) } });
+    if(start) selected.add(start); syncMulti();
+  }
+  function exitMulti(){
+    multiMode=false; selected.clear(); msgs.classList.remove('multi-mode'); multiBar.classList.remove('on');
+    msgs.querySelectorAll('.multi-check').forEach(function(c){c.remove()});
+    msgs.querySelectorAll('.msg.selected').forEach(function(m){m.classList.remove('selected')});
+  }
+  function toggleMulti(m){ if(selected.has(m)) selected.delete(m); else selected.add(m); syncMulti(); }
+  function openForward(list){
+    forwardTargets=list;
+    var preview=document.getElementById('forwardPreview');
+    if(list.length===1){ preview.textContent=(list[0].querySelector('.bubble')?.innerText||'消息').slice(0,100); }
+    else { preview.textContent='已选择 '+list.length+' 条消息，转发后合并为聊天记录'; }
+    forwardMask.classList.add('open');
+  }
+  document.getElementById('multiForward').addEventListener('click',function(){ if(selected.size) openForward(Array.from(selected)) });
+  document.getElementById('multiDelete').addEventListener('click',function(){ if(!selected.size) return; var list=Array.from(selected); ask('删除所选消息？','共 '+list.length+' 条，仅从当前会话删除。','删除',function(){ list.forEach(function(m){m.remove()}); exitMulti(); showToast('已删除 '+list.length+' 条消息') }) });
+  document.getElementById('multiExit').addEventListener('click',exitMulti);
+  document.getElementById('forwardCancel').addEventListener('click',function(){ forwardMask.classList.remove('open') });
+  document.getElementById('forwardSend').addEventListener('click',function(){
+    var names=Array.from(forwardMask.querySelectorAll('input:checked')).map(function(x){return x.value});
+    if(!names.length){ showToast('请选择转发目标'); return; }
+    var card=document.createElement('div'); card.className='msg forwarded-msg';
+    card.innerHTML='<div class="avatar">你</div><div><div class="forwarded-card"><b>转发的聊天记录</b><span>'+forwardTargets.length+' 条消息 · 转发给 '+names.join('、')+'</span></div><div class="meta">刚刚 · 已发送</div></div>';
+    msgs.appendChild(card); forwardMask.classList.remove('open'); exitMulti(); showToast('已转发给 '+names.join('、'));
+  });
+  msgs.addEventListener('click',function(e){ if(!multiMode) return; var m=e.target.closest('.msg'); if(!m) return; toggleMulti(m); });
   function ask(title,text,ok,cb){ document.getElementById('msgConfirmTitle').textContent=title; document.getElementById('msgConfirmText').textContent=text; document.getElementById('msgConfirmOk').textContent=ok; pending=cb; mask.classList.add('open') }
   function openMenu(msg,x,y){
     closeMenu(); target=msg;
@@ -703,9 +775,9 @@ body.right-hidden #reopenRight{display:flex}
     var btn=e.target.closest('button[data-act]'); if(!btn||!target) return;
     var act=btn.dataset.act, msg=target, text=(msg.querySelector('.bubble')?.innerText||'').trim();
     if(act==='copy'){ try{ navigator.clipboard?.writeText(text); }catch(err){} showToast('已复制消息'); closeMenu(); return; }
-    if(act==='forward'){ showToast('转发面板（设计演示）'); closeMenu(); return; }
+    if(act==='forward'){ openForward([msg]); closeMenu(); return; }
     if(act==='favorite'){ showToast('已收藏（设计演示）'); closeMenu(); return; }
-    if(act==='multi'){ msg.classList.toggle('selected'); showToast(msg.classList.contains('selected')?'已进入多选':'已取消多选'); closeMenu(); return; }
+    if(act==='multi'){ enterMulti(msg); closeMenu(); return; }
     if(act==='quote'){ var c=document.querySelector('.composer'); if(c){ var old=c.querySelector('.quote-banner'); if(old) old.remove(); var q=document.createElement('div'); q.className='quote-banner'; q.innerHTML='<span>引用：'+text.replace(/</g,'&lt;').slice(0,60)+'</span><button type="button">×</button>'; q.querySelector('button').onclick=function(){q.remove()}; c.insertBefore(q,c.firstChild); } showToast('已引用消息'); closeMenu(); return; }
     if(act==='essence'){ if(!msg.querySelector('.essence-badge')){ msg.classList.add('essence'); var badge=document.createElement('div'); badge.className='essence-badge'; badge.textContent='群精华'; var meta=msg.querySelector('.meta'); if(meta) meta.insertAdjacentElement('beforebegin',badge); } showToast('已设为群精华'); closeMenu(); return; }
     if(act==='recall'){ ask('撤回这条消息？','撤回后群成员会看到系统提示。设计演示不会影响真实数据。','撤回',function(){ msg.remove(); var n=document.createElement('div'); n.className='system-note'; n.textContent='管理员撤回了一条消息'; document.querySelector('.msgs')?.appendChild(n); showToast('已撤回消息'); }); closeMenu(); return; }
@@ -718,5 +790,6 @@ body.right-hidden #reopenRight{display:flex}
   mask.addEventListener('click',function(e){ if(e.target===mask){ mask.classList.remove('open'); pending=null } });
 })();
 </script>
+
 </body>
 </html>
