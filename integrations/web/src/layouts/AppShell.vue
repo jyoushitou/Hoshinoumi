@@ -3,9 +3,9 @@ import RailNav from '@/components/RailNav.vue'
 import ConversationList from '@/components/ConversationList.vue'
 import ContextPanel from '@/components/ContextPanel.vue'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { contextHandleY, contextHidden, railHidden, setContextHandleY, sideHidden } from '@/composables/useLayoutState'
 import { useAuthStore } from '@/stores/auth'
 import { useSessionStore } from '@/stores/session'
+import { contextHandleTop, contextHidden, railHidden, setContextHandleTop, sideHidden } from '@/composables/useLayoutState'
 const auth = useAuthStore(); const session = useSessionStore()
 const layoutStyle = computed(() => ({
   '--rail': railHidden.value ? '0px' : '64px',
@@ -13,23 +13,22 @@ const layoutStyle = computed(() => ({
   '--context': contextHidden.value ? '0px' : '304px',
 }))
 const draggingEdge = ref(false)
-let dragStartY = 0, dragStartPercent = 0, dragMoved = false
+let dragStartY = 0, dragStartTop = 0, dragMoved = false
 function startContextDrag(event: PointerEvent) {
+  if (event.button !== 0) return
   draggingEdge.value = true; dragMoved = false
-  dragStartY = event.clientY; dragStartPercent = contextHandleY.value
+  dragStartY = event.clientY; dragStartTop = contextHandleTop.value
   window.addEventListener('pointermove', moveContextDrag)
   window.addEventListener('pointerup', endContextDrag, { once: true })
 }
 function moveContextDrag(event: PointerEvent) {
   if (!draggingEdge.value) return
-  const delta = ((event.clientY - dragStartY) / Math.max(1, window.innerHeight)) * 100
   if (Math.abs(event.clientY - dragStartY) > 3) dragMoved = true
-  setContextHandleY(dragStartPercent + delta)
+  setContextHandleTop(dragStartTop + event.clientY - dragStartY)
 }
 function endContextDrag() {
   draggingEdge.value = false
   window.removeEventListener('pointermove', moveContextDrag)
-  if (!dragMoved) contextHidden.value = !contextHidden.value
 }
 function onFocus() { if (auth.loggedIn) void session.syncNow(true) }
 function onVisibility() { if (document.visibilityState === 'visible' && auth.loggedIn) void session.syncNow() }
@@ -42,25 +41,44 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener('focus', onFocus)
   document.removeEventListener('visibilitychange', onVisibility)
+  window.removeEventListener('pointermove', moveContextDrag)
   session.stopSync()
 })
 </script>
 <template>
-  <div class="shell" :style="layoutStyle">
-    <RailNav v-show="!railHidden" />
-    <ConversationList v-show="!sideHidden" />
+  <div
+    class="shell"
+    :class="{ 'rail-hidden': railHidden, 'left-hidden': sideHidden, 'right-hidden': contextHidden }"
+    :style="layoutStyle"
+  >
+    <RailNav />
+    <ConversationList />
     <main class="main">
       <RouterView />
     </main>
-    <ContextPanel v-show="!contextHidden" />
-    <button v-if="railHidden" class="edge rail-edge" type="button" title="展开导航" @click="railHidden = false">»</button>
-    <button v-if="sideHidden" class="edge side-edge" type="button" title="展开会话列表" @click="sideHidden = false">☰</button>
-    <button class="context-edge" :class="{ dragging: draggingEdge }" :style="{ top: contextHandleY + '%' }" type="button" :title="contextHidden ? '展开上下文' : '收起上下文'" @pointerdown.prevent="startContextDrag">{{ contextHidden ? '‹' : '›' }}</button>
+    <ContextPanel />
+    <button
+      v-if="contextHidden"
+      class="edge-handle right-edge"
+      :class="{ dragging: draggingEdge }"
+      :style="{ top: contextHandleTop + 'px' }"
+      type="button"
+      title="展开右侧栏，可上下拖动"
+      @pointerdown.prevent="startContextDrag"
+      @click="!dragMoved && (contextHidden = false)"
+    >‹</button>
   </div>
 </template>
 <style scoped>
-.shell{position:relative;display:grid;grid-template-columns:var(--rail,64px) var(--side,292px) minmax(0,1fr) var(--context,304px);height:100vh;height:100dvh;overflow:hidden;min-height:0;transition:grid-template-columns .22s ease}.edge{position:fixed;z-index:40;border:1px solid #dbe8ff;background:#fff;color:#2563eb;box-shadow:0 4px 14px rgba(37,99,235,.12);cursor:pointer}.rail-edge{left:8px;top:50%;width:24px;height:42px;border-radius:10px;font:12px inherit}.side-edge{left:12px;bottom:16px;width:38px;height:32px;border-radius:9px;font:14px inherit}.context-edge{position:fixed;right:0;z-index:45;width:14px;height:54px;transform:translateY(-50%);border:1px solid #dbe8ff;border-right:0;border-radius:9px 0 0 9px;background:#fff;color:#526982;font:12px inherit;cursor:ns-resize;box-shadow:-2px 0 10px rgba(24,58,110,.08);touch-action:none}.context-edge:hover,.context-edge.dragging{background:#eef4ff;color:#2563eb}
+.shell{position:relative;display:grid;grid-template-columns:var(--rail,64px) var(--side,292px) minmax(0,1fr) var(--context,304px);height:100vh;height:100dvh;overflow:hidden;min-height:0;transition:grid-template-columns .24s cubic-bezier(.22,1,.36,1)}
 .main{min-width:0;min-height:0;height:100%;display:flex;flex-direction:column;background:#fff;overflow:hidden}
-@media(max-width:1180px){.shell{grid-template-columns:var(--rail,64px) var(--side,292px) minmax(0,1fr)!important}:deep(.context){display:none}.context-edge{display:none}}
+.shell :deep(.rail),.shell :deep(.side),.shell :deep(.context){transition:opacity .2s,transform .28s,visibility 0s}
+.shell.rail-hidden :deep(.rail){opacity:0;pointer-events:none;overflow:hidden;min-width:0;transform:translateX(-8px);visibility:hidden;transition:opacity .2s,transform .28s,visibility 0s .28s}
+.shell.left-hidden :deep(.side){opacity:0;pointer-events:none;overflow:hidden;min-width:0;transform:translateX(-8px);visibility:hidden;transition:opacity .2s,transform .28s,visibility 0s .28s}
+.shell.right-hidden :deep(.context){opacity:0;pointer-events:none;overflow:hidden;min-width:0;transform:translateX(8px);visibility:hidden;transition:opacity .2s,transform .28s,visibility 0s .28s}
+.edge-handle{position:fixed;top:52px;z-index:30;width:26px;height:56px;border:1px solid #c7dcff;background:#eef4ff;color:#2563eb;font:16px inherit;font-weight:700;cursor:grab;align-items:center;justify-content:center;padding:0;box-shadow:0 4px 12px rgba(37,99,235,.12);display:flex}
+.edge-handle.right-edge{right:0;border-right:0;border-radius:8px 0 0 8px;touch-action:none;user-select:none}
+.edge-handle.dragging{background:#dbeafe;cursor:grabbing}
+@media(max-width:1180px){.shell{grid-template-columns:var(--rail,64px) var(--side,292px) minmax(0,1fr)!important}:deep(.context){display:none}.edge-handle{display:none}}
 @media(max-width:820px){.shell{grid-template-columns:54px minmax(0,1fr)}:deep(.side){display:none}}
 </style>

@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useSessionStore } from '@/stores/session'
 import { useIsOwner } from '@/composables/useIsOwner'
+import { contextHidden } from '@/composables/useLayoutState'
 const session = useSessionStore()
 const isOwner = useIsOwner()
 const relationProgress = computed(() => {
@@ -12,6 +13,7 @@ const relationProgress = computed(() => {
 </script>
 <template>
   <aside class="context">
+    <button class="panel-hide" type="button" title="隐藏右侧栏" @click="contextHidden = true">›</button>
     <div v-if="session.persona" class="pcard">
       <div class="biga">{{ String(session.persona.name || '?').slice(0,1) }}</div>
       <div><div class="name">{{ session.persona.name || '未命名人设' }}</div><div class="tag">{{ session.relation?.tier ? '关系 · ' + session.relation.tier : '人设已加载' }}</div></div>
@@ -52,7 +54,7 @@ const relationProgress = computed(() => {
   </aside>
 </template>
 <style scoped>
-.context{border-left:1px solid var(--line);background:#f8fbff;padding:16px 15px;overflow:auto}
+.context{position:relative;border-left:1px solid var(--line);background:#f8fbff;padding:46px 15px 16px;overflow:auto}.panel-hide{position:absolute;left:10px;top:12px;width:22px;height:22px;border:0;border-radius:6px;background:transparent;color:#9aabc0;font:13px/1 inherit;cursor:pointer;z-index:5;padding:0;display:grid;place-items:center;transition:background .18s,color .18s}.panel-hide:hover{background:#eef4ff;color:#2563eb}
 .pcard.empty-card{color:#8a9bb0;font-size:11px;justify-content:center}
 .pcard{border:1px solid #e3ebf7;border-radius:14px;background:#fff;padding:13px;display:flex;gap:11px;align-items:center}.biga{width:44px;height:44px;border-radius:14px;background:#dbeafe;color:#1d4ed8;display:grid;place-items:center;font-size:16px;font-weight:800}.name{font-size:13px;font-weight:650}.tag{font-size:9.5px;color:#6b7c95;margin-top:2px}.state{margin-left:auto;width:7px;height:7px;border-radius:50%;background:#1f9d6b}.state.off{background:#c0264a}
 .sec{font-size:9px;letter-spacing:.13em;color:#8a9bb0;text-transform:uppercase;margin:17px 2px 8px}.rel-head{display:flex;align-items:center;justify-content:space-between;font-size:10px;color:#6b7c95;margin-bottom:5px}.rel-head b{font-size:11px;color:#2563eb}.rel-head em{font-style:normal;font-size:9px;color:#1f9d6b;border:1px solid #cdeee0;background:#eefbf5;border-radius:4px;padding:1px 4px;margin-left:3px}
