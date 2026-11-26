@@ -12,6 +12,11 @@ const auth = useAuthStore()
 const isOwner = useIsOwner()
 const apkVersion = ref('Web 预览')
 const backendVersion = ref('—')
+interface UpdateManifest { version?: string; versionCode?: number; size?: number; sha256?: string; notes?: string; url?: string; available?: boolean }
+const latest = ref<UpdateManifest | null>(null)
+const updateState = ref<'idle' | 'checking' | 'available' | 'downloading' | 'latest' | 'error'>('idle')
+const updateError = ref('')
+const updateUrl = computed(() => latest.value?.url ? new URL(latest.value.url, location.origin).href : '')
 const { entries, quickKeys, toggleQuick, resetQuick } = useMobileNav()
 const { navHidden, navBall, hiddenPages, togglePage } = useUiSettings()
 const visibilityEntries = computed(() => entries.value.filter(entry => !['settings', 'chats'].includes(entry.key)))
@@ -32,6 +37,28 @@ onMounted(async () => {
     backendVersion.value = status.version || (status.schema ? `schema ${status.schema}` : '—')
   } catch { backendVersion.value = '未连接' }
 })
+function versionParts(value?: string) { return String(value || '').replace(/^v/i, '').split(/[.\-]/).map(part => Number(part) || 0) }
+function isNewer(remote?: string, current?: string) {
+  const a = versionParts(remote), b = versionParts(current)
+  for (let i = 0; i < Math.max(a.length, b.length); i++) if ((a[i] || 0) !== (b[i] || 0)) return (a[i] || 0) > (b[i] || 0)
+  return false
+}
+async function checkUpdate() {
+  updateState.value = 'checking'; updateError.value = ''
+  try {
+    const r = await http.get<{ data?: UpdateManifest }>('/api/app/update?platform=android')
+    latest.value = r.data || null
+    const bridge = (window as any).HoshinoumiConfig
+    const current = bridge?.getEnvironment ? JSON.parse(bridge.getEnvironment()).appVersion : (backendVersion.value === '—' ? apkVersion.value : backendVersion.value)
+    if (!latest.value?.available || !isNewer(latest.value.version, current)) { updateState.value = 'latest'; return }
+    if (bridge?.downloadApk) {
+      updateState.value = 'downloading'
+      bridge.downloadApk(updateUrl.value)
+    } else {
+      updateState.value = 'available'
+    }
+  } catch (e) { updateState.value = 'error'; updateError.value = e instanceof Error ? e.message : '检查更新失败' }
+}
 function toggle(key: string) { toggleQuick(key) }
 function logout() { auth.logout() }
 function openPermissions() { void router.push('/settings/permissions') }
@@ -89,6 +116,11 @@ function changeBackend() {
       <div class="row"><span>账号</span><small>{{ auth.qq || '—' }}</small></div>
       <div class="row"><span>手机 APK</span><small>{{ apkVersion }}</small></div>
       <div class="row"><span>后端版本</span><small>{{ backendVersion }}</small></div>
+      <button class="row backend-row" type="button" :disabled="updateState === 'checking' || updateState === 'downloading'" @click="checkUpdate"><span>检查更新</span><small>{{ updateState === 'checking' ? '检查中…' : updateState === 'downloading' ? '已提交下载' : '检查 ›' }}</small></button>
+      <div v-if="updateState === 'latest'" class="update-note ok">已是最新版本</div>
+      <div v-else-if="updateState === 'error'" class="update-note bad">{{ updateError }}</div>
+      <div v-else-if="latest && updateState === 'available'" class="update-note"><b>发现新版本 {{ latest.version }}</b><span>{{ latest.notes }}</span><a :href="updateUrl" :download="'hoshinoumi-' + latest.version + '.apk'">下载 APK</a></div>
+      <div v-else-if="updateState === 'downloading'" class="update-note"><b>正在下载 {{ latest?.version }}</b><span>下载完成后由系统安装；失败可在通知栏重试。</span></div>
     </div>
 
     <button class="logout" type="button" @click="logout">退出登录</button>
@@ -109,5 +141,5 @@ function changeBackend() {
 .reset{width:100%;margin-top:8px;height:30px;border:1px solid #dbe8ff;background:#fff;color:#2563eb;border-radius:8px;font:10px inherit;cursor:pointer}
 .row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #f0f5fd;font-size:10px;color:#3d5470}.row:last-child{border-bottom:0}.visibility-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.visibility-item{height:30px;border:1px solid #e3ebf7;border-radius:7px;background:#f8fbff;color:#8a9bb0;font:8px inherit;display:flex;align-items:center;justify-content:space-between;padding:0 7px;cursor:pointer}.visibility-item.on{background:#fff;color:#405872;border-color:#dbe8ff}.visibility-item em{font-style:normal;font-size:7px;color:#9aabc0}.visibility-item.on em{color:#168b63}.nav-switch{position:relative;width:38px;height:22px;border:0;border-radius:11px;background:#cbd5e1;cursor:pointer}.nav-switch.on{background:#2563eb}.nav-switch i{position:absolute;left:2px;top:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s}.nav-switch.on i{left:18px}.row small{font-size:9px;color:#9aabc0}.backend-row{width:100%;border:0;background:none;text-align:left;cursor:pointer}.backend-row small{color:#2563eb}
 .about-card{margin-top:12px;padding:13px;border:1px solid #e3ebf7;border-radius:13px;background:#fff;text-align:center}.about-card b{display:block;font-size:10px;color:#314a65}.about-card span{display:block;font-size:8px;color:#9aabc0;margin-top:3px}.about-card em{display:block;font:7px ui-monospace,monospace;letter-spacing:.12em;color:#a8b5c7;font-style:normal;margin-top:7px}.about-links{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-top:8px}.about-links a{font-size:8px;text-decoration:none;border-radius:6px;padding:2px 7px;color:#2563eb;border:1px solid #dbe8ff;background:#f4f9ff}.about-links a:last-child{color:#607795;border-color:#e3ebf7;background:#fff}
-.logout{width:100%;height:36px;border:1px solid #fecaca;background:#fff5f5;color:#b91c1c;border-radius:9px;font:10px inherit;cursor:pointer}
+.update-note{margin-top:7px;border:1px solid #dbe8ff;border-radius:8px;background:#f8fbff;padding:7px 8px;font-size:8px;color:#526982;line-height:1.5}.update-note.ok{color:#168b63;border-color:#cdeee0;background:#f0fdf7}.update-note.bad{color:#b91c1c;border-color:#fecaca;background:#fff5f5}.update-note b{display:block;font-size:9px;margin-bottom:2px}.update-note span{display:block;color:#8a9bb0}.update-note a{display:inline-block;margin-top:5px;color:#2563eb}.logout{width:100%;height:36px;border:1px solid #fecaca;background:#fff5f5;color:#b91c1c;border-radius:9px;font:10px inherit;cursor:pointer}
 </style>
