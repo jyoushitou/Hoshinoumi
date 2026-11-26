@@ -602,14 +602,31 @@ async def handle_fixed_settle(request):
     from ..infra.conn import get_cursor
     c = get_cursor()
     try:
-        c.execute("SELECT status FROM finance_fixed_deposits WHERE id=%s AND user_id=%s", (item_id, uid))
+        c.execute("SELECT id,name,principal_cents,rate_bps,start_at,matures_at,status,account "
+                  "FROM finance_fixed_deposits WHERE id=%s AND user_id=%s", (item_id, uid))
         row = c.fetchone()
         if not row:
             return json_response({"ok": False, "error": "not_found"}, 404)
+        if row.get("status") == "settled":
+            return json_response({"ok": True, "id": item_id, "status": "settled", "credited_cents": 0})
+        principal = int(row.get("principal_cents") or 0)
+        start_d = datetime.strptime(str(row.get("start_at"))[:10], "%Y-%m-%d").date()
+        mature_d = datetime.strptime(str(row.get("matures_at"))[:10], "%Y-%m-%d").date()
+        days_total = max(1, (mature_d - start_d).days)
+        interest = int(round(principal * int(row.get("rate_bps") or 0) / 10000 * days_total / 365))
+        credited = principal + interest
+        account = row.get("account") or "银行卡"
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        raw_hash = hashlib.sha256(f"fixed-settle:{uid}:{item_id}".encode()).hexdigest()
+        c.execute("INSERT INTO finance_entries(user_id,account,kind,amount_cents,category,note,occurred_at,raw_hash,source) "
+                  "VALUES(%s,%s,'income',%s,'定期转回',%s,%s,%s,'fixed')",
+                  (uid, account, credited, str(row.get("name") or "定期存款")[:60], now, raw_hash))
         c.execute("UPDATE finance_fixed_deposits SET status='settled' WHERE id=%s AND user_id=%s", (item_id, uid))
         try: c.connection.commit()
         except Exception: pass
-        return json_response({"ok": True, "id": item_id, "status": "settled"})
+        return json_response({"ok": True, "id": item_id, "status": "settled",
+                              "principal_cents": principal, "interest_cents": interest,
+                              "credited_cents": credited, "account": account})
     finally:
         try: c.close()
         except Exception: pass
