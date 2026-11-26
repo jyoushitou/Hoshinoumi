@@ -18,6 +18,7 @@ import HomeView from '@/views/HomeView.vue'
 import HealthView from '@/views/HealthView.vue'
 import BooksView from '@/views/BooksView.vue'
 import BookReaderView from '@/views/BookReaderView.vue'
+import FilesView from '@/views/FilesView.vue'
 import MobileLogsView from '@/views/mobile/MobileLogsView.vue'
 import { isNativeClient } from '@/lib/platform'
 import MobileWeeklyView from '@/views/mobile/MobileWeeklyView.vue'
@@ -57,7 +58,7 @@ function onFocusChange(event: FocusEvent) {
     if (!isEditableTarget(document.activeElement)) keyboardOpen.value = false
   }, 180)
 }
-const MAIN_ROUTES = new Set(['/chat', '/home', '/memory', '/relation', '/savings', '/weekly', '/books', '/info', '/persona', '/commands', '/cron', '/diary', '/logs', '/settings'])
+const MAIN_ROUTES = new Set(['/chat', '/home', '/memory', '/relation', '/savings', '/weekly', '/books', '/files', '/info', '/persona', '/commands', '/cron', '/diary', '/logs', '/settings'])
 const isMainRoute = computed(() => MAIN_ROUTES.has(route.path))
 
 function handleNativeBack(): string {
@@ -111,6 +112,7 @@ const pageView = computed(() => {
   if (route.name === 'chat') return MobileChatView
   if (route.name === 'books') return BooksView
   if (route.name === 'book-reader') return BookReaderView
+  if (route.name === 'files') return FilesView
   if (route.name === 'settings') return MobileSettingsView
   if (route.name === 'permissions') return MobilePermissionsView
   if (route.name === 'weekly') return MobileWeeklyView
