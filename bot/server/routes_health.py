@@ -169,7 +169,7 @@ async def handle_recognize(request):
         from ..ai.vision import describe_image
         prompt = ("识别这张图片里的食物。只输出两行：\n"
                   "食物：<食物名>\n热量：<估算 kcal 数字>\n不要输出其他内容。")
-        desc, _tags = await describe_image(raw, prompt=prompt, max_tokens=120)
+        desc, _tags = await describe_image(raw, prompt=prompt, max_tokens=700)
         if not desc:
             return json_response({"ok": False, "error": "vision_not_configured",
                                   "message": "视觉模型不可用或未配置，请手动填写"}, 501)

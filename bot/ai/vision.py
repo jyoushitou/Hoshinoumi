@@ -259,7 +259,8 @@ async def describe_image(img_bytes, prompt=None, max_tokens=200):
                 continue
 
             data = resp.json()
-            text = data["choices"][0]["message"]["content"]
+            message = (data.get("choices") or [{}])[0].get("message", {}) or {}
+            text = message.get("content") or message.get("reasoning_content") or ""
             desc, tags = parse_reply(text)
             if desc or tags:
                 log_api(f"[视觉] {prov['name']} 成功：{desc[:30]} | 标签 {tags}")

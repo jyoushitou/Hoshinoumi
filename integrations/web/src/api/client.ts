@@ -30,5 +30,6 @@ export class HttpClient {
   }
   get<T>(path: string, token?: string, signal?: AbortSignal) { return this.request<T>(path, { token, signal }) }
   post<T>(path: string, body: unknown, token?: string) { return this.request<T>(path, { method: 'POST', body, token }) }
+  delete<T>(path: string, token?: string) { return this.request<T>(path, { method: 'DELETE', token }) }
 }
 export const http = new HttpClient()

@@ -250,10 +250,10 @@
 | v35.9.6.1 | 信息补全动画 | ✅ Vue 动画 |
 | v35.9.6.2 | API 余额 | ✅ /api/balance GET |
 | v35.9.6.3 | 跨端数据契约/布局 | ✅ 契约/布局 |
-| v35.9.6.4 | 健康/热量 | 🟡 Vue + Mock；真实健康 API 缺 |
+| v35.9.6.4 | 健康/热量 | ✅ 真实 summary/init/meals/exercises；无本地假数据 |
 | v35.9.6.5 | 热量动画 | ✅ Vue 动画 |
-| v35.9.6.6 | 热量识图 | 🟡 Vue + Mock 识图；真实缺 |
-| v35.9.6.7 | 健康 / 热量 API | 🟡 summary/meals 真实；识图 501 |
+| v35.9.6.6 | 热量识图 | ✅ 真实识图；DeepSeek 视觉 fallback 可用 |
+| v35.9.6.7 | 健康 / 热量 API | ✅ summary/meals/exercises/recognize 真实 |
 | v35.9.7.0 | Android 启动优化 | ✅ Splash 2200→900ms |
 | v35.9.7.1 | Android 图片/WebView 缓存 | ✅ LOAD_DEFAULT + DOM/DB |
 | v35.9.7.2 | Android 包体优化 | ✅ R8，Release 0.94MB |
