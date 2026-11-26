@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hoshinoumi · 会话二级菜单设计稿</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;background:#eef4fb;color:#17263b;font-family:"Microsoft YaHei","Noto Sans SC",sans-serif;-webkit-font-smoothing:antialiased}
+body{width:1600px;height:1220px;overflow:hidden;padding:28px 30px 24px;background:
+  radial-gradient(800px 420px at 82% -8%,rgba(37,99,235,.10),transparent 60%),
+  radial-gradient(700px 460px at -5% 105%,rgba(37,99,235,.06),transparent 60%),#eef4fb}
+.top{display:flex;align-items:flex-end;gap:16px;margin-bottom:18px}
+.kicker{font:8px ui-monospace,monospace;letter-spacing:.2em;color:#6f86a4;margin-bottom:6px}
+h1{margin:0;font-size:27px;letter-spacing:-.035em;color:#13233a}
+.top p{margin:7px 0 0;font-size:10.5px;line-height:1.7;color:#71859d}
+.meta{margin-left:auto;display:flex;gap:6px;align-items:center;padding-bottom:3px}
+.pill{font-size:8px;color:#53709a;background:#fff;border:1px solid #dbe8f7;border-radius:20px;padding:4px 9px}
+.board{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+.art{position:relative;background:#f8fbff;border:1px solid #d8e6f7;border-radius:17px;padding:13px 14px 14px;box-shadow:0 14px 38px rgba(29,78,137,.08);min-height:492px;overflow:hidden}
+.art:before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.7),transparent 30%);pointer-events:none}
+.art-head{display:flex;align-items:center;gap:8px;margin-bottom:10px;position:relative;z-index:2}
+.num{width:21px;height:21px;border-radius:6px;background:#2563eb;color:#fff;font:8px ui-monospace,monospace;display:grid;place-items:center}
+.art-head b{font-size:11px;color:#243b55}.art-head span{font-size:8px;color:#9aabc0;letter-spacing:.1em}
+.art-head em{margin-left:auto;font-style:normal;font-size:7.5px;color:#8a9bb0;background:#fff;border:1px solid #e3ebf7;padding:3px 6px;border-radius:20px}
+.window{position:relative;z-index:2;display:flex;height:414px;border:1px solid #dbe8ff;border-radius:12px;overflow:hidden;background:#fff;box-shadow:0 8px 22px rgba(37,99,235,.06)}
+.rail{width:34px;background:#f4f8ff;border-right:1px solid #e7effa;display:flex;flex-direction:column;align-items:center;padding:9px 0;gap:7px}
+.logo{width:19px;height:19px;border-radius:6px;background:linear-gradient(135deg,#7dd3fc,#2563eb);margin-bottom:4px}
+.ricon{width:18px;height:18px;border-radius:5px;display:grid;place-items:center;color:#9aabc0;font-size:8px}
+.ricon.on{background:#e7f0ff;color:#2563eb}
+.side{width:196px;border-right:1px solid #eef3fa;background:#fbfdff;display:flex;flex-direction:column}
+.side-top{padding:10px 10px 7px;display:flex;align-items:center;justify-content:space-between}
+.side-top b{font-size:8px;letter-spacing:.14em;color:#253b56}.side-top span{font-size:6.5px;color:#9aabc0}
+.sbar{margin:0 9px 7px;height:23px;border:1px solid #e3ebf7;border-radius:6px;display:flex;align-items:center;padding:0 7px;font-size:7px;color:#9aabc0;background:#fff}
+.tabs{display:flex;gap:3px;padding:0 9px 6px}.tabs i{flex:1;height:17px;border:1px solid #e3ebf7;border-radius:5px;background:#fff;font:6.5px inherit;color:#8a9bb0;display:grid;place-items:center;font-style:normal}.tabs i.on{background:#eef4ff;border-color:#c7dcff;color:#2563eb}
+.list{padding:0 6px;display:flex;flex-direction:column;gap:1px}
+.item{display:flex;gap:6px;align-items:center;padding:7px 7px;border-radius:8px;position:relative;border:1px solid transparent}
+.item.on{background:#eaf2ff;border-color:#d3e3fb}
+.av{width:22px;height:22px;border-radius:7px;background:#e8f0ff;color:#2563eb;display:grid;place-items:center;font-size:7.5px;font-weight:800;flex:none}
+.item .nm{font-size:8px;font-weight:600;color:#1e3a5f}.item .last{font-size:6.5px;color:#9aabc0;margin-top:2px;max-width:112px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .tm{margin-left:auto;font-size:6px;color:#a8b6c8;align-self:flex-start;margin-top:2px}
+.mut{position:absolute;right:5px;bottom:5px;font-size:5.5px;color:#9aabc0;background:#f1f5fb;border-radius:4px;padding:1px 3px}
+.menu{position:absolute;z-index:9;width:128px;background:#fff;border:1px solid #dbe8ff;border-radius:9px;box-shadow:0 14px 30px rgba(18,40,80,.22);padding:4px}
+.menu-h{padding:5px 7px 4px;font-size:6px;color:#9aabc0;border-bottom:1px solid #f1f5fb;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.menu b{display:block;font-size:7.5px;font-weight:500;color:#405872;padding:5px 7px;border-radius:5px}.menu b:hover{background:#eef4ff}
+.menu b.d{color:#b23b52}.menu b.d:hover{background:#fff1f4}
+.menu .sep{height:1px;background:#f1f5fb;margin:3px 0}
+.chat{flex:1;min-width:0;display:flex;flex-direction:column;background:#fff}
+.chat-h{height:44px;border-bottom:1px solid #eef3fa;display:flex;align-items:center;padding:0 11px;gap:7px}.chat-h .av{width:24px;height:24px}.chat-h b{font-size:8.5px}.chat-h small{display:block;font-size:6px;color:#9aabc0;margin-top:1px}
+.chat-body{flex:1;padding:12px;display:flex;flex-direction:column;gap:8px;background:linear-gradient(180deg,#fbfdff,#fff)}
+.msg{max-width:76%;padding:7px 8px;border-radius:8px 8px 8px 2px;background:#f3f7fd;border:1px solid #e8f0fa;font-size:7.5px;line-height:1.55;color:#334e6d}
+.msg.me{align-self:flex-end;background:#2563eb;border-color:#2563eb;color:#fff;border-radius:8px 8px 2px 8px}
+.msg small{display:block;font-size:5.5px;color:#9aabc0;margin-top:3px}.msg.me small{color:#dbeafe}
+.composer{margin:0 10px 9px;height:28px;border:1px solid #dbe8ff;border-radius:8px;background:#f8fbff;display:flex;align-items:center;padding:0 8px;font-size:6.5px;color:#a2b2c6}.composer i{margin-left:auto;width:28px;height:17px;border-radius:5px;background:#2563eb;color:#fff;display:grid;place-items:center;font-style:normal;font-size:6px}
+.note{position:absolute;z-index:5;font-size:6.5px;color:#6f86a4;background:#fff;border:1px solid #dbe8ff;border-radius:5px;padding:3px 6px;box-shadow:0 4px 12px rgba(37,99,235,.06)}
+.phone-wrap{position:relative;z-index:2;display:flex;justify-content:center;height:414px}
+.phone{width:230px;height:410px;border:5px solid #1c2b3f;border-radius:24px;background:#f7faff;overflow:hidden;box-shadow:0 16px 30px rgba(18,40,80,.18);position:relative}
+.island{position:absolute;left:50%;top:5px;transform:translateX(-50%);width:54px;height:12px;background:#1c2b3f;border-radius:8px;z-index:9}
+.p-status{height:25px;display:flex;justify-content:space-between;padding:7px 12px 0;font-size:5.5px;color:#526982;font-weight:600}.p-status i{font-style:normal;letter-spacing:.08em}
+.p-head{padding:7px 12px 6px;display:flex;align-items:center;justify-content:space-between}.p-head b{font-size:12px}.p-head span{font-size:6px;color:#9aabc0}.p-head .dot{width:5px;height:5px;border-radius:50%;background:#22a06b;display:inline-block;margin-left:4px}
+.p-search{margin:0 10px 7px;height:22px;border:1px solid #e3ebf7;border-radius:7px;background:#fff;padding:0 8px;display:flex;align-items:center;font-size:6.5px;color:#a2b2c6}
+.p-list{padding:0 6px}
+.p-row{position:relative;overflow:hidden;border-radius:9px;margin-bottom:2px}
+.p-actions{position:absolute;right:0;top:0;bottom:0;width:132px;display:flex;gap:2px;padding:3px 3px 3px 0;background:#f7faff}
+.p-actions b{flex:1;border-radius:5px;color:#fff;font:5.5px inherit;display:grid;place-items:center;font-weight:500;white-space:nowrap;letter-spacing:-.2px}.pa-m{background:#2563eb}.pa-d{background:#64748b}.pa-x{background:#c0264a}
+.p-conv{position:relative;z-index:2;display:flex;align-items:center;gap:7px;padding:8px 7px;background:#f7faff;border:1px solid transparent;border-radius:9px}
+.p-conv.swipe{transform:translateX(-132px);box-shadow:0 3px 10px rgba(18,40,80,.08)}
+.p-conv .av{width:26px;height:26px;border-radius:8px}.p-conv .nm{font-size:8px;font-weight:600}.p-conv .last{font-size:6.5px;color:#9aabc0;margin-top:2px}.p-conv .tm{margin-left:auto;font-size:5.5px;color:#a8b6c8}
+.p-conv .mut{right:7px;bottom:6px}
+.p-tip{text-align:center;font-size:6px;color:#a2b2c6;margin-top:7px}
+.p-tip b{color:#2563eb;font-weight:500}
+.dialog{position:absolute;z-index:8;left:50%;top:50%;transform:translate(-50%,-50%);width:268px;background:#fff;border:1px solid #dbe8ff;border-radius:13px;padding:14px;box-shadow:0 24px 60px rgba(18,40,80,.26)}
+.dialog .di{width:26px;height:26px;border-radius:8px;background:#fff1f4;color:#c0264a;display:grid;place-items:center;font-size:12px;margin-bottom:8px}
+.dialog h3{margin:0 0 4px;font-size:12px}.dialog p{margin:0 0 12px;font-size:7.5px;line-height:1.65;color:#8a9bb0}
+.dialog .acts{display:flex;gap:6px;justify-content:flex-end}.dialog button{height:25px;border-radius:6px;font:7px inherit;padding:0 11px;border:1px solid #dbe8ff;background:#fff;color:#7d8ca3}.dialog button.pri{background:#c0264a;border-color:#c0264a;color:#fff;font-weight:600}
+.dialog button.cancel{background:#f8fbff}
+.toast{position:absolute;z-index:10;left:50%;bottom:17px;transform:translateX(-50%);background:#17263b;color:#fff;font-size:7px;border-radius:20px;padding:5px 11px;box-shadow:0 6px 16px rgba(15,23,42,.2)}
+.confirm-pair{display:flex;flex-direction:column;gap:10px;align-items:center;position:relative;height:414px;justify-content:center}
+.confirm-pair .dialog{position:relative;left:auto;top:auto;transform:none;width:300px}
+.confirm-pair .dialog.soft .di{background:#eef4ff;color:#2563eb}
+.dialog .sub2{font-size:6.5px;color:#a2b2c6;margin-top:7px;line-height:1.5}
+.foot{display:flex;align-items:center;gap:12px;margin-top:13px;font-size:8px;color:#8a9bb0}
+.foot .k{color:#405872;font-weight:600}.foot .line{height:1px;flex:1;background:#dbe8f7}
+.tag{font-size:7px;color:#53709a;background:#fff;border:1px solid #dbe8f7;border-radius:20px;padding:3px 7px}
+</style>
+</head>
+<body>
+<header class="top">
+  <div>
+    <div class="kicker">HOSHINOUMI · v35.9.35 · DESIGN PREVIEW</div>
+    <h1>会话列表二级菜单</h1>
+    <p>桌面右键 · 手机左滑 · 免打扰 / 删除会话 / 删除联系人 / 退出群聊</p>
+  </div>
+  <div class="meta"><span class="pill">4 个交互稿</span><span class="pill">桌面 + 手机</span><span class="pill">设计稿 · 非最终实现</span></div>
+</header>
+
+<main class="board">
+  <section class="art">
+    <div class="art-head"><span class="num">01</span><b>桌面 · 私聊右键</b><span>DESKTOP / PRIVATE</span><em>右键会话行</em></div>
+    <div class="window">
+      <div class="rail">
+        <div class="logo"></div><div class="ricon">⌂</div><div class="ricon on">◉</div><div class="ricon">◈</div><div class="ricon">♡</div><div class="ricon">¥</div><div class="ricon">▦</div><div class="ricon">≡</div><div class="ricon">◇</div>
+      </div>
+      <div class="side">
+        <div class="side-top"><b>HOSHINOUMI</b><span>WEB v35.5</span></div>
+        <div class="sbar">⌕ 搜索会话 / 记忆 / 命令</div>
+        <div class="tabs"><i class="on">全部</i><i>私聊</i><i>群聊</i></div>
+        <div class="list">
+          <div class="item on"><span class="av">友</span><div><div class="nm">友利奈绪</div><div class="last">别磨蹭，早点睡。</div></div><span class="tm">21:56</span></div>
+          <div class="item"><span class="av">摄</span><div><div class="nm">摄影社</div><div class="last">周末外拍集合时间</div></div><span class="tm">20:41</span></div>
+          <div class="item"><span class="av">8</span><div><div class="nm">82289104</div><div class="last">在图书馆自习啊</div></div><span class="tm">19:20</span><span class="mut">静音</span></div>
+          <div class="item"><span class="av">周</span><div><div class="nm">周计划提醒</div><div class="last">第 48 周 · 0 门课</div></div><span class="tm">昨天</span></div>
+        </div>
+      </div>
+      <div class="chat">
+        <div class="chat-h"><span class="av">友</span><div><b>友利奈绪</b><small>私聊 · 已同步</small></div></div>
+        <div class="chat-body">
+          <div class="msg">别磨蹭，早点睡。<small>21:56</small></div>
+          <div class="msg me">回寝了<small>21:56</small></div>
+          <div class="msg">回来了。<small>21:56</small></div>
+        </div>
+        <div class="composer">说点什么…<i>发送</i></div>
+      </div>
+      <div class="menu" style="left:290px;top:155px">
+        <div class="menu-h">友利奈绪</div>
+        <b>免打扰</b>
+        <b>删除会话</b>
+        <div class="sep"></div>
+        <b class="d">删除联系人</b>
+      </div>
+      <div class="note" style="right:330px;top:327px">右键任意会话行</div>
+    </div>
+  </section>
+
+  <section class="art">
+    <div class="art-head"><span class="num">02</span><b>桌面 · 群聊右键</b><span>DESKTOP / GROUP</span><em>按类型变化</em></div>
+    <div class="window">
+      <div class="rail">
+        <div class="logo"></div><div class="ricon">⌂</div><div class="ricon on">◉</div><div class="ricon">◈</div><div class="ricon">♡</div><div class="ricon">¥</div><div class="ricon">▦</div><div class="ricon">≡</div><div class="ricon">◇</div>
+      </div>
+      <div class="side">
+        <div class="side-top"><b>HOSHINOUMI</b><span>WEB v35.5</span></div>
+        <div class="sbar">⌕ 搜索会话 / 记忆 / 命令</div>
+        <div class="tabs"><i class="on">全部</i><i>私聊</i><i>群聊</i></div>
+        <div class="list">
+          <div class="item"><span class="av">友</span><div><div class="nm">友利奈绪</div><div class="last">别磨蹭，早点睡。</div></div><span class="tm">21:56</span></div>
+          <div class="item on"><span class="av">摄</span><div><div class="nm">摄影社</div><div class="last">周末外拍集合时间</div></div><span class="tm">20:41</span><span class="mut" style="right:5px">群聊</span></div>
+          <div class="item"><span class="av">8</span><div><div class="nm">82289104</div><div class="last">在图书馆自习啊</div></div><span class="tm">19:20</span></div>
+          <div class="item"><span class="av">周</span><div><div class="nm">周计划提醒</div><div class="last">第 48 周 · 0 门课</div></div><span class="tm">昨天</span></div>
+        </div>
+      </div>
+      <div class="chat">
+        <div class="chat-h"><span class="av">摄</span><div><b>摄影社</b><small>群聊 · 12 人</small></div></div>
+        <div class="chat-body">
+          <div class="msg">这周六下午三点，老地方集合。<small>20:41</small></div>
+          <div class="msg">收到，我带长焦。<small>20:43</small></div>
+          <div class="msg me">好，我准时到。<small>20:44</small></div>
+        </div>
+        <div class="composer">说点什么…<i>发送</i></div>
+      </div>
+      <div class="menu" style="left:290px;top:185px">
+        <div class="menu-h">摄影社 · 群聊</div>
+        <b>免打扰</b>
+        <b>删除会话</b>
+        <div class="sep"></div>
+        <b class="d">退出群聊</b>
+      </div>
+      <div class="note" style="right:330px;top:330px">群聊只显示退出群聊</div>
+    </div>
+  </section>
+
+  <section class="art">
+    <div class="art-head"><span class="num">03</span><b>手机 · 左滑操作</b><span>MOBILE / SWIPE</span><em>390 × 844</em></div>
+    <div class="phone-wrap">
+      <div class="phone">
+        <div class="island"></div>
+        <div class="p-status"><span>22:00</span><i>5G ▮▮▮ 97%</i></div>
+        <div class="p-head"><div><b>聊天</b><div style="font-size:6px;color:#9aabc0;margin-top:2px">QQ 会话 · 3 个</div></div><span>在线<i class="dot"></i></span></div>
+        <div class="p-search">⌕ 搜索会话 / 记忆 / 命令</div>
+        <div class="p-list">
+          <div class="p-row">
+            <div class="p-actions"><b class="pa-m">免打扰</b><b class="pa-d">删除</b><b class="pa-x">删人</b></div>
+            <div class="p-conv swipe"><span class="av">友</span><div><div class="nm">友利奈绪</div><div class="last">别磨蹭，早点睡。</div></div><span class="tm">21:56</span></div>
+          </div>
+          <div class="p-row">
+            <div class="p-actions"><b class="pa-m">免打扰</b><b class="pa-d">删除</b><b class="pa-x">退群</b></div>
+            <div class="p-conv"><span class="av">摄</span><div><div class="nm">摄影社</div><div class="last">周末外拍集合时间</div></div><span class="tm">20:41</span></div>
+          </div>
+          <div class="p-row">
+            <div class="p-actions"><b class="pa-m">免打扰</b><b class="pa-d">删除</b></div>
+            <div class="p-conv"><span class="av">8</span><div><div class="nm">82289104</div><div class="last">在图书馆自习啊</div></div><span class="tm">19:20</span><span class="mut">静音</span></div>
+          </div>
+        </div>
+        <div class="p-tip">向左滑 <b>48px</b> 展开 · 再次点击关闭</div>
+        <div class="toast">已免打扰「友利奈绪」</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="art">
+    <div class="art-head"><span class="num">04</span><b>二次确认 / 状态反馈</b><span>CONFIRM / TOAST</span><em>不可撤销动作</em></div>
+    <div class="confirm-pair">
+      <div class="dialog soft">
+        <div class="di">♡</div>
+        <h3>删除联系人？</h3>
+        <p>将从会话列表移除「82289104」。QQ 好友关系需要 NapCat 在线时同步删除。</p>
+        <div class="acts"><button class="cancel">取消</button><button class="pri">删除</button></div>
+        <div class="sub2">删除后历史保留，可通过搜索找回。</div>
+      </div>
+      <div class="dialog">
+        <div class="di">!</div>
+        <h3>退出群聊「摄影社」？</h3>
+        <p>退出后将不再接收群消息，群聊从会话列表移除。此操作需要二次确认。</p>
+        <div class="acts"><button class="cancel">取消</button><button class="pri">退出</button></div>
+        <div class="sub2">群主 / 管理员身份请先在 QQ 侧处理。</div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <span class="k">交互规则</span>
+  <span>右键 / 左滑只改变会话入口</span><span class="tag">免打扰不删会话</span><span class="tag">删除会话保留历史</span><span class="tag">联系人 / 群聊二次确认</span>
+  <div class="line"></div><span>v35.9.35 · design board</span>
+</footer>
+</body>
+</html>

@@ -10,6 +10,8 @@
 docs/design/v35/
 ├─ common.css
 ├─ render.ps1
+├─ conversation-menu/
+│  └─ hoshinoumi-conversation-menu-v35.9.35.html / .png  会话右键 / 左滑设计稿
 ├─ mobile/
 │  └─ hoshinoumi-mobile-v35.7.html / .png  v35.7 手机 Vue 设计稿（六屏）
 │      hoshinoumi-mobile-v35.7-demo.html   可交互演示
