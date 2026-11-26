@@ -44,7 +44,13 @@ function createWindow() {
       additionalArguments: ['--hoshinoumi-config=' + encodeURIComponent(JSON.stringify({ apiBase: shellSettings.apiBase, apiPrefix: shellSettings.apiPrefix, startRoute: shellSettings.startRoute }))],
     },
   })
-  win.loadFile(FRONTEND, { hash: shellSettings.startRoute || '/chat' })
+  const chromeMajor = Number(String(process.versions.chrome || '0').split('.')[0])
+  if (chromeMajor > 0 && chromeMajor < 110) {
+    logTray('compat:low-chromium ' + process.versions.chrome)
+    win.loadFile(path.join(__dirname, 'compat.html'))
+  } else {
+    win.loadFile(FRONTEND, { hash: shellSettings.startRoute || '/chat' })
+  }
   win.once('ready-to-show', () => win.show())
   win.on('close', (e) => {
     if (!quitting) { e.preventDefault(); win.hide() }

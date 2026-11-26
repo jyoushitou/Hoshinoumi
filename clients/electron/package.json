@@ -24,6 +24,7 @@
       "settings.html",
       "mini.html",
       "fallback.html",
+      "compat.html",
       "assets/**"
     ],
     "win": {
