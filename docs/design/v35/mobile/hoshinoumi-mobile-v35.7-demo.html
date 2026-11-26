@@ -279,6 +279,27 @@ body.nav-hidden .bottom-nav{display:none!important}
 .recall-confirm .ci{background:#eef4ff;color:#2563eb}
 
 .admin-field{margin-top:10px}.admin-field label{display:block;font-size:8px;color:#6f8299;margin-bottom:4px}.admin-field input{width:100%;height:30px;border:1px solid #dbe8ff;border-radius:7px;background:#f8fbff;color:#2f4665;font:9px inherit;padding:0 8px;outline:0}.admin-field input:focus{border-color:#93b7fa;box-shadow:0 0 0 3px rgba(37,99,235,.08)}.admin-field small{display:block;font-size:7px;color:#a2b2c6;margin-top:3px;line-height:1.5}
+
+/* ===== v35.9.36 mobile message menu / forward / multi ===== */
+#msgs .msg{position:relative}
+.msg-check{display:none;position:absolute;left:-21px;top:50%;transform:translateY(-50%);width:16px;height:16px;border:1.5px solid #b9cce5;border-radius:50%;background:#fff;color:#fff;font-size:10px;line-height:14px;text-align:center;z-index:6}
+#msgs .msg.me .msg-check{left:auto;right:-21px}
+#msgs.multi-mode .msg-check{display:block}
+#msgs.multi-mode .msg{cursor:pointer;border-radius:9px}
+#msgs.multi-mode .msg.multi-selected{background:#eef4ff}
+#msgs .msg.multi-selected .msg-check{background:#2563eb;border-color:#2563eb}
+#msgs .msg.multi-selected .bubble{outline:2px solid #93b7fa;outline-offset:2px}
+.msg-multi-bar{position:absolute;left:12px;right:12px;bottom:64px;z-index:75;display:none;align-items:center;gap:6px;background:#fff;border:1px solid #dbe8ff;border-radius:11px;box-shadow:0 12px 28px rgba(15,35,70,.18);padding:6px 8px;font-size:8.5px;color:#405872}
+.msg-multi-bar.on{display:flex}.msg-multi-bar b{color:#2563eb}.msg-multi-bar button{height:24px;border:1px solid #dbe8ff;border-radius:6px;background:#f8fbff;color:#2563eb;font:8px inherit;padding:0 7px;cursor:pointer}.msg-multi-bar button:disabled{opacity:.4}.msg-multi-bar button.danger{color:#b23b52;background:#fff;border-color:#f0d7dd}.msg-multi-bar button.ghost{color:#7d8ca3;background:#fff}
+.msg-emoji{display:flex;gap:4px;padding:0 0 8px;border-bottom:1px solid #eef3fb;margin-bottom:8px}.msg-emoji button{flex:1;height:32px;border:0;border-radius:8px;background:#f8fbff;font-size:17px;cursor:pointer}.msg-emoji button:hover{background:#eef4ff}
+.msg-actions{display:grid;grid-template-columns:1fr 1fr;gap:4px}.msg-actions button{display:flex;align-items:center;gap:6px;border:0;background:none;border-radius:7px;padding:8px 7px;font:9px inherit;color:#405872;text-align:left;cursor:pointer}.msg-actions button:hover{background:#eef4ff;color:#2563eb}.msg-actions button.danger{color:#b23b52}.msg-actions button.danger:hover{background:#fff1f4}
+.reaction-chips{display:flex;gap:3px;margin-top:4px;flex-wrap:wrap}.reaction-chip{font-size:7.5px;color:#526982;background:#fff;border:1px solid #e3ebf7;border-radius:9px;padding:2px 5px}
+.system-note{text-align:center;font-size:8px;color:#93a3b8;margin:4px 0 10px}
+.forward-row{display:flex;align-items:center;gap:8px;padding:7px 5px;border-bottom:1px solid #eef3fb;font-size:9px;color:#405872}.forward-row:last-child{border-bottom:0}.forward-row input{width:14px;height:14px;accent-color:#2563eb}.forward-row .av{width:24px;height:24px;border-radius:8px;background:#eef4ff;color:#2563eb;display:grid;place-items:center;font-size:8px;font-weight:700}.forward-row .tag{margin-left:auto;font-size:7px;color:#9aabc0}
+.forward-preview{font-size:8px;color:#526982;background:#f8fbff;border:1px dashed #dbe8ff;border-radius:7px;padding:7px 8px;line-height:1.6;margin-bottom:7px;max-height:50px;overflow:hidden}
+.forward-send{width:100%;margin-top:8px;border:0;background:#2563eb;color:#fff;border-radius:8px;padding:9px;font:9px inherit;cursor:pointer}
+.quote-banner{display:flex;align-items:center;gap:6px;border-left:2px solid #93b7fa;background:#f8fbff;border-radius:5px;padding:4px 7px;margin-bottom:5px;font-size:8px;color:#526982}.quote-banner span{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.quote-banner button{border:0;background:none;color:#8a9bb0;cursor:pointer;font-size:10px}
+.msg.essence .bubble{box-shadow:inset 0 0 0 1px #f2d491}.essence-badge{display:inline-block;margin-top:4px;font-size:6.5px;color:#95610b;background:#fff4d8;border:1px solid #f2d491;border-radius:4px;padding:1px 4px}
 </style>
 <link rel="stylesheet" href="mobile-native.css">
 </head>
@@ -293,6 +314,7 @@ body.nav-hidden .bottom-nav{display:none!important}
       <div class="browser-progress"><i></i></div>
       <div class="screen-body d-view" id="view"></div>
       <div class="browser-bottom"><span class="b-nav" onclick="toast('浏览器后退演示')">‹</span><span class="b-tab" onclick="toast('标签页演示 · 16')">16</span><span class="b-ai" onclick="toast('浏览器 AI 演示')">Ai</span><span class="b-nav" onclick="toast('浏览器菜单演示')">≡</span><span class="b-home" onclick="toast('浏览器主页演示')"></span></div>
+      <div id="msgMultiBar" class="msg-multi-bar"><span>已选 <b id="msgMultiCount">0</b> 条</span><button type="button" id="msgMultiForward">转发</button><button type="button" class="danger" id="msgMultiDelete">删除</button><button type="button" class="ghost" id="msgMultiExit">取消</button></div>
       <div class="toast" id="toast"></div>
     </div></div>
     <div class="demo-caption">390 × 844 · 设计封版 · 非真实数据<span class="credit">· POWERED BY JYOUSHITOU</span></div>
@@ -1134,7 +1156,7 @@ function go(name){
   if(name==='downloads'){ void loadDownloads() }
   if(name==='plugins'){ renderPluginPage() }
   if(name==='diary'){ void loadDiary() }
-  if(name==='group'){ setTimeout(decorateAdminRecall,0) } if(name==='chats'){ renderExtraConversations(); document.querySelectorAll('.conv[data-conv]').forEach(c=>{ if(readConversations.has(c.dataset.conv)) c.querySelectorAll('.badge').forEach(b=>b.remove()) }); setTimeout(decorateSwipe,0) } if(name==='chat'){ const input=document.getElementById('input'); if(input) input.style.cssText='flex:1;height:35px;border-radius:10px;background:#f5f8fe;border:1px solid #e6eefb;padding:6px 10px;color:#4a6079;font-size:10px;overflow:auto'; setTimeout(()=>document.getElementById('msgs')?.scrollTo(0,9999),30) } }
+  if(name==='group'||name==='chat'){ setTimeout(function(){bindMessageMenu()},0) } if(name==='group'){ setTimeout(decorateAdminRecall,0) } if(name==='chats'){ renderExtraConversations(); document.querySelectorAll('.conv[data-conv]').forEach(c=>{ if(readConversations.has(c.dataset.conv)) c.querySelectorAll('.badge').forEach(b=>b.remove()) }); setTimeout(decorateSwipe,0) } if(name==='chat'){ const input=document.getElementById('input'); if(input) input.style.cssText='flex:1;height:35px;border-radius:10px;background:#f5f8fe;border:1px solid #e6eefb;padding:6px 10px;color:#4a6079;font-size:10px;overflow:auto'; setTimeout(()=>document.getElementById('msgs')?.scrollTo(0,9999),30) } }
 
 function openFirstLogin(){
   overlay(`<div class="cron-sheet" style="max-width:340px">
@@ -1505,6 +1527,77 @@ function confirmAdminRecall(){
   }
   closeOverlay()
 }
+var currentMsg=null, mobileMulti=false, mobileSelected=new Set(), mobileForwardMsgs=[], mobilePendingRecall=null
+function bindMessageMenu(){
+  document.querySelectorAll('#msgs .msg').forEach(function(m){
+    if(m.dataset.menuBound) return; m.dataset.menuBound='1'
+    var timer=null
+    m.addEventListener('touchstart',function(){ clearTimeout(timer); timer=setTimeout(function(){ openMessageMenu(m) },480) },{passive:true})
+    m.addEventListener('touchend',function(){ clearTimeout(timer) },{passive:true})
+    m.addEventListener('touchmove',function(){ clearTimeout(timer) },{passive:true})
+    m.addEventListener('contextmenu',function(e){ e.preventDefault(); openMessageMenu(m) })
+  })
+}
+function openMessageMenu(msg){
+  currentMsg=msg
+  var text=escapeRecallText((msg.querySelector('.bubble')||{}).textContent||'消息').slice(0,90)
+  overlay('<div class="sheet msg-sheet"><h4 style="margin-bottom:8px">消息操作</h4><div class="msg-emoji"><button onclick="msgEmoji(\'👍\')">👍</button><button onclick="msgEmoji(\'👌\')">👌</button><button onclick="msgEmoji(\'❤️\')">❤️</button><button onclick="msgEmoji(\'😆\')">😆</button><button onclick="msgEmoji(\'😮\')">😮</button><button onclick="msgEmoji(\'😢\')">😢</button><button onclick="toast(\'更多表情演示\')">＋</button></div><div class="msg-actions"><button onclick="doMsgAction(\'copy\')">⧉ 复制</button><button onclick="doMsgAction(\'forward\')">↪ 转发</button><button onclick="doMsgAction(\'favorite\')">☆ 收藏</button><button onclick="doMsgAction(\'multi\')">☑ 多选</button><button onclick="doMsgAction(\'quote\')">❝ 引用</button><button onclick="doMsgAction(\'essence\')">✦ 设为精华</button><button class="danger" onclick="doMsgAction(\'recall\')">↺ 撤回</button><button class="danger" onclick="doMsgAction(\'delete\')">⌫ 删除</button></div><button class="sheet-close" onclick="closeOverlay()">取消</button></div>')
+}
+function msgEmoji(emoji){
+  if(!currentMsg) return
+  var box=currentMsg.querySelector('.reaction-chips'); if(!box){ box=document.createElement('div'); box.className='reaction-chips'; var b=currentMsg.querySelector('.bubble'); if(b) b.insertAdjacentElement('afterend',box) }
+  var chip=document.createElement('span'); chip.className='reaction-chip'; chip.textContent=emoji+' 1'; box.appendChild(chip)
+  closeOverlay(); toast('已回应 '+emoji)
+}
+function doMsgAction(act){
+  var msg=currentMsg; if(!msg) return
+  var text=(msg.querySelector('.bubble')||{}).textContent||''
+  if(act==='copy'){ try{navigator.clipboard?.writeText(text)}catch(e){} closeOverlay(); toast('已复制消息'); return }
+  if(act==='favorite'){ closeOverlay(); toast('已收藏（设计演示）'); return }
+  if(act==='forward'){ closeOverlay(); openMobileForward([msg]); return }
+  if(act==='multi'){ closeOverlay(); startMobileMulti(msg); return }
+  if(act==='quote'){ var composer=document.querySelector('.composer'); if(composer){ var old=composer.querySelector('.quote-banner'); if(old) old.remove(); var q=document.createElement('div'); q.className='quote-banner'; q.innerHTML='<span>引用：'+escapeRecallText(text).slice(0,54)+'</span><button type="button">×</button>'; q.querySelector('button').onclick=function(){q.remove()}; composer.insertBefore(q,composer.firstChild) } closeOverlay(); toast('已引用消息'); return }
+  if(act==='essence'){ if(!msg.querySelector('.essence-badge')){ msg.classList.add('essence'); var badge=document.createElement('div'); badge.className='essence-badge'; badge.textContent='群精华'; var stamp=msg.querySelector('.stamp'); if(stamp) stamp.insertAdjacentElement('beforebegin',badge) } closeOverlay(); toast('已设为群精华'); return }
+  if(act==='recall'){ mobilePendingRecall=msg; closeOverlay(); overlay('<div class="swipe-confirm recall-confirm"><div class="ci">↺</div><h4>撤回这条消息？</h4><p>群成员会看到撤回提示。</p><div class="recall-preview">'+escapeRecallText(text).slice(0,70)+'</div><div class="acts" style="margin-top:13px"><button onclick="closeOverlay()">取消</button><button class="pri" onclick="confirmMobileRecall()">撤回</button></div></div>'); return }
+  if(act==='delete'){ mobilePendingRecall=msg; closeOverlay(); overlay('<div class="swipe-confirm"><div class="ci">!</div><h4>删除这条消息？</h4><p>仅从当前会话删除，不影响对方。</p><div class="acts" style="margin-top:13px"><button onclick="closeOverlay()">取消</button><button class="pri" onclick="confirmMobileDelete()">删除</button></div></div>'); }
+}
+function confirmMobileRecall(){
+  var msg=mobilePendingRecall; mobilePendingRecall=null
+  if(msg&&msg.parentNode){ msg.remove(); var n=document.createElement('div'); n.className='system-note'; n.textContent=(recallNotice||'').trim()||'管理员撤回了一条消息'; document.getElementById('msgs').appendChild(n); toast('已撤回一条消息') }
+  closeOverlay()
+}
+function confirmMobileDelete(){ var msg=mobilePendingRecall; mobilePendingRecall=null; if(msg) msg.remove(); closeOverlay(); toast('已删除消息') }
+function startMobileMulti(start){
+  mobileMulti=true; mobileSelected=new Set(); var box=document.getElementById('msgs'); if(!box) return
+  box.classList.add('multi-mode'); document.getElementById('msgMultiBar').classList.add('on')
+  box.querySelectorAll('.msg').forEach(function(m){ if(!m.querySelector('.msg-check')){ var c=document.createElement('span'); c.className='msg-check'; c.onclick=function(e){e.stopPropagation();toggleMobileMulti(m)}; m.insertBefore(c,m.firstChild) } })
+  if(start) mobileSelected.add(start); syncMobileMulti()
+}
+function syncMobileMulti(){
+  var n=mobileSelected.size; document.getElementById('msgMultiCount').textContent=n
+  document.getElementById('msgMultiForward').disabled=n===0; document.getElementById('msgMultiDelete').disabled=n===0
+  document.querySelectorAll('#msgs .msg').forEach(function(m){ m.classList.toggle('multi-selected',mobileSelected.has(m)); var c=m.querySelector('.msg-check'); if(c) c.textContent=mobileSelected.has(m)?'✓':'' })
+}
+function toggleMobileMulti(msg){ if(mobileSelected.has(msg)) mobileSelected.delete(msg); else mobileSelected.add(msg); syncMobileMulti() }
+function exitMobileMulti(){
+  mobileMulti=false; mobileSelected.clear(); var box=document.getElementById('msgs'); if(box){ box.classList.remove('multi-mode'); box.querySelectorAll('.msg-check').forEach(function(c){c.remove()}); box.querySelectorAll('.msg.multi-selected').forEach(function(m){m.classList.remove('multi-selected')}) }
+  document.getElementById('msgMultiBar').classList.remove('on')
+}
+function openMobileForward(list){
+  mobileForwardMsgs=list
+  var preview=list.length===1?((list[0].querySelector('.bubble')||{}).textContent||'').slice(0,80):('已选择 '+list.length+' 条消息')
+  overlay('<div class="sheet"><h4>转发消息</h4><div class="forward-preview">'+escapeRecallText(preview)+'</div><label class="forward-row"><input type="checkbox" value="友利奈绪" checked><span class="av">奈</span>友利奈绪<span class="tag">当前</span></label><label class="forward-row"><input type="checkbox" value="星之海学园"><span class="av" style="background:#d1fae5;color:#047857">星</span>星之海学园<span class="tag">群聊</span></label><label class="forward-row"><input type="checkbox" value="学生会室"><span class="av" style="background:#ffedd5;color:#9a3412">学</span>学生会室<span class="tag">群聊</span></label><button class="forward-send" onclick="sendMobileForward()">发送</button><button class="sheet-close" style="margin-top:6px" onclick="closeOverlay()">取消</button></div>')
+}
+function sendMobileForward(){
+  var names=[].slice.call(document.querySelectorAll('.demo-overlay input:checked')).map(function(x){return x.value})
+  if(!names.length){ toast('请选择转发目标'); return }
+  var box=document.getElementById('msgs'); if(box){ var card=document.createElement('div'); card.className='msg forwarded-msg'; card.innerHTML='<div class="avatar sm">你</div><div><div class="forwarded-card" style="background:#f8fbff;border:1px solid #dbe8ff;border-radius:9px;padding:8px 10px"><b style="display:block;font-size:9px">转发的聊天记录</b><span style="display:block;font-size:7px;color:#8a9bb0;margin-top:3px">'+mobileForwardMsgs.length+' 条 · 转发给 '+names.join('、')+'</span></div><div class="stamp">刚刚</div></div>'; box.appendChild(card) }
+  closeOverlay(); exitMobileMulti(); toast('已转发给 '+names.join('、'))
+}
+document.getElementById('msgMultiForward')?.addEventListener('click',function(){ if(mobileSelected.size) openMobileForward(Array.from(mobileSelected)) })
+document.getElementById('msgMultiDelete')?.addEventListener('click',function(){ if(!mobileSelected.size) return; var list=Array.from(mobileSelected); overlay('<div class="swipe-confirm"><div class="ci">!</div><h4>删除所选消息？</h4><p>共 '+list.length+' 条，仅从当前会话删除。</p><div class="acts" style="margin-top:13px"><button onclick="closeOverlay()">取消</button><button class="pri" onclick="deleteMobileSelected()">删除</button></div></div>'); window.__mobileDeleteList=list })
+document.getElementById('msgMultiExit')?.addEventListener('click',exitMobileMulti)
+function deleteMobileSelected(){ var list=window.__mobileDeleteList||[]; list.forEach(function(m){m.remove()}); window.__mobileDeleteList=[]; closeOverlay(); exitMobileMulti(); toast('已删除 '+list.length+' 条消息') }
 function clearDemoOverlays(){ document.querySelectorAll('.notice-popup,.demo-overlay').forEach(function(x){x.remove()}) }
 function demoSwipe(){
   clearDemoOverlays()
@@ -1540,6 +1633,11 @@ function demoDanger(){
     swipeDanger(name,kind,conv.parentElement)
   },180)
 }
+document.addEventListener('click',function(e){
+  if(!mobileMulti) return
+  var m=e.target.closest('#msgs .msg'); if(!m) return
+  e.stopPropagation(); toggleMobileMulti(m)
+},true)
 const initial = new URLSearchParams(location.search).get('screen')
 const fallback = window.innerWidth <= 860 ? 'chats' : 'login'
 syncNavHidden()
