@@ -1,11 +1,15 @@
 ﻿<script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import AppShell from '@/layouts/AppShell.vue'
 import MobileShell from '@/layouts/MobileShell.vue'
 import LoginModal from '@/components/LoginModal.vue'
 import { useAuthStore } from '@/stores/auth'
+import { useRoute } from 'vue-router'
+import FileShareView from '@/views/FileShareView.vue'
 import { cleanupStickerCache } from '@/lib/stickerCache'
 const auth = useAuthStore()
+const route = useRoute()
+const shareToken = computed(() => route.name === 'file-share' ? String(route.params.token || '') : '')
 const isMobile = ref(false)
 let media: MediaQueryList | null = null
 let viewportRaf = 0
@@ -48,7 +52,10 @@ onBeforeUnmount(() => {
 })
 </script>
 <template>
-  <LoginModal v-if="!auth.loggedIn" />
-  <MobileShell v-if="isMobile" />
-  <AppShell v-else />
+  <FileShareView v-if="shareToken" :token="shareToken" />
+  <template v-else>
+    <LoginModal v-if="!auth.loggedIn" />
+    <MobileShell v-if="isMobile" />
+    <AppShell v-else />
+  </template>
 </template>

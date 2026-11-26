@@ -11,6 +11,7 @@ import HealthView from '@/views/HealthView.vue'
 import BooksView from '@/views/BooksView.vue'
 import BookReaderView from '@/views/BookReaderView.vue'
 import FilesView from '@/views/FilesView.vue'
+import FileShareView from '@/views/FileShareView.vue'
 import WeeklyView from '@/views/WeeklyView.vue'
 import CronView from '@/views/CronView.vue'
 import LogsView from '@/views/LogsView.vue'
@@ -37,6 +38,7 @@ const router = createRouter({
     { path: '/books', name: 'books', component: BooksView, meta: meta('阅读', '书架 / 本地 TXT / EPUB') },
     { path: '/books/:id', name: 'book-reader', component: BookReaderView, meta: meta('阅读器', '目录 / 进度 / 排版') },
     { path: '/files', name: 'files', component: FilesView, meta: meta('文件', '上传 / 下载 / 分享') },
+    { path: '/files/share/:token', name: 'file-share', component: FileShareView, meta: meta('文件分享', '只读下载') },
 
     { path: '/persona', name: 'persona', component: PersonaView, meta: meta('人设', '导入 / 导出 / 激活') },
     { path: '/commands', name: 'commands', component: CommandView, meta: meta('命令', '51 个命令 / 参数 / 二级命令') },
