@@ -1,6 +1,7 @@
 # ===================== 对话类路由 =====================
 # POST /api/chat、POST /api/command
 # 迁移自 api_server.py（v5-R5），逻辑逐字未改
+import json
 
 from bot.core import state as cfg
 from ..ai.client import get_character_reply
@@ -225,14 +226,18 @@ async def handle_recall(request):
         row = repo_conversation.get_by_id(message_id, user_id=tenant.OWNER_ID)
     if not row:
         return json_response({"ok": False, "error": "message_not_found"}, status=404)
-    if str(row.get("role") or "") != "user":
+    from .routes_conversations import is_group_admin, recall_notice
+    target_id = str(row.get("target_id") or "")
+    admin = is_group_admin(target_id, uid)
+    if str(row.get("role") or "") != "user" and not admin:
         return json_response({"ok": False, "error": "not_own_message"}, status=403)
-    try:
-        created = datetime.strptime(str(row.get("created_at"))[:19], "%Y-%m-%d %H:%M:%S")
-        if (datetime.now() - created).total_seconds() > 120:
-            return json_response({"ok": False, "error": "recall_window_expired"}, status=403)
-    except ValueError:
-        pass
+    if not admin:
+        try:
+            created = datetime.strptime(str(row.get("created_at"))[:19], "%Y-%m-%d %H:%M:%S")
+            if (datetime.now() - created).total_seconds() > 120:
+                return json_response({"ok": False, "error": "recall_window_expired"}, status=403)
+        except ValueError:
+            pass
     try:
         meta = json.loads(row.get("meta") or "{}") if isinstance(row.get("meta"), str) else (row.get("meta") or {})
     except Exception:
@@ -241,6 +246,8 @@ async def handle_recall(request):
         meta = {}
     meta["recalled"] = True
     meta["recalled_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    meta["recall_notice"] = recall_notice(target_id)
+    meta["recalled_by"] = "admin" if admin and str(row.get("role") or "") != "user" else "self"
     repo_conversation.set_meta(message_id, row.get("user_id") or uid, meta)
     return json_response({"ok": True, "message_id": message_id, "target_id": row.get("target_id"), "recalled": True})
 
@@ -323,5 +330,14 @@ async def handle_history(request):
         item = dict(r)
         if item.get("created_at") is not None:
             item["created_at"] = str(item["created_at"])
+        raw_meta = item.get("meta")
+        if isinstance(raw_meta, str):
+            try:
+                meta = json.loads(raw_meta)
+                if isinstance(meta, dict):
+                    item.update(meta)
+                    item["meta"] = meta
+            except Exception:
+                pass
         data.append(item)
     return json_response({"ok": True, "data": data})

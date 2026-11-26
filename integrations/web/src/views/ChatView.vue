@@ -43,6 +43,7 @@ const toolBusy = ref(false)
 const topicStatus = ref('')
 const topicFollowup = ref('')
 const topicBusy = ref(false)
+const isGroupAdmin = ref(false)
 const searchOpen = ref(false)
 const searchQuery = ref('')
 const searchIndex = ref(0)
@@ -165,9 +166,19 @@ function toggleMotion() {
   localStorage.setItem('hsh_motion', motion.value ? '1' : '0')
 }
 function canRecall(m: { id?: number | string; role: string; created_at?: string; recalled?: boolean }) {
-  if (m.role !== 'user' || m.recalled || typeof m.id !== 'number') return false
+  if (m.recalled || typeof m.id !== 'number') return false
+  if (isGroupAdmin.value) return true
+  if (m.role !== 'user') return false
   const t = Date.parse(String(m.created_at || '').replace(' ', 'T'))
   return Number.isFinite(t) && Date.now() - t <= 120000
+}
+async function loadAdminRole() {
+  const target = String(session.activeTarget || '')
+  if (!target.startsWith('h_')) { isGroupAdmin.value = String(auth.qq) === String(session.status?.master_qq); return }
+  try {
+    const r = await http.get<{ owner?: string; admins?: string[] }>('/api/groups/' + encodeURIComponent(target) + '/admins')
+    isGroupAdmin.value = String(auth.qq) === String(r.owner) || (Array.isArray(r.admins) && r.admins.includes(String(auth.qq)))
+  } catch { isGroupAdmin.value = false }
 }
 async function recall(m: { id?: number | string }) {
   if (m.id === undefined) return
@@ -230,6 +241,7 @@ watch(() => session.messages.length, async () => {
   if (!pinnedOnce || stickBottom.value) await scrollToBottom('auto')
 })
 watch(() => session.activeTarget, async () => {
+  await loadAdminRole()
   searchOpen.value = false; searchQuery.value = ''; searchIndex.value = 0
   stickBottom.value = true
   pinnedOnce = false
@@ -272,7 +284,7 @@ watch(() => session.activeTarget, async () => {
       <template v-else>
         <div v-for="(m, i) in session.messages" :key="m.id || i" class="msg" :class="{ me: m.role === 'user', 'search-current': searchHits[searchIndex]?.i === i }">
           <QqAvatar v-if="m.role !== 'user'" class="avatar" :qq="botQq" :name="String(session.persona?.name || '?')" />
-          <div><div v-if="m.recalled" class="recalled">消息已撤回</div><template v-else><img v-if="m.image_url" :src="m.image_url" class="msg-img" :class="{ sticker: m.kind === 'sticker' }" alt="图片"><audio v-if="m.audio_url" :src="m.audio_url" controls class="msg-audio" /><div v-if="m.content && !((m.kind === 'voice' || m.kind === 'sticker') || (m.image_url && m.content === '[图片]'))" class="bubble" v-html="highlight(m.content)"></div></template><div class="meta"><span>{{ m.pending ? '发送中…' : String(m.created_at || '').slice(0, 16) }}</span><button v-if="canRecall(m)" type="button" class="recall-btn" @click="recall(m)">撤回</button></div></div>
+          <div><div v-if="m.recalled" class="recalled">{{ m.recall_notice || '消息已撤回' }}</div><template v-else><img v-if="m.image_url" :src="m.image_url" class="msg-img" :class="{ sticker: m.kind === 'sticker' }" alt="图片"><audio v-if="m.audio_url" :src="m.audio_url" controls class="msg-audio" /><div v-if="m.content && !((m.kind === 'voice' || m.kind === 'sticker') || (m.image_url && m.content === '[图片]'))" class="bubble" v-html="highlight(m.content)"></div></template><div class="meta"><span>{{ m.pending ? '发送中…' : String(m.created_at || '').slice(0, 16) }}</span><button v-if="canRecall(m)" type="button" class="recall-btn" @click="recall(m)">撤回</button></div></div>
           <QqAvatar v-if="m.role === 'user'" class="avatar mea" :qq="auth.qq" name="你" />
         </div>
       </template>

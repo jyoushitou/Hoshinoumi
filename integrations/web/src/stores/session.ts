@@ -20,6 +20,8 @@ export interface ChatMessage {
   audio_url?: string
   kind?: string
   recalled?: boolean
+  recall_notice?: string
+  recalled_by?: string
 }
 export interface HistoryResponse {
   ok?: boolean
@@ -224,6 +226,7 @@ export const useSessionStore = defineStore('session', () => {
       await http.post(`/api/messages/${encodeURIComponent(String(messageId))}/recall`, { message_id: messageId })
       const m = messages.value.find(x => String(x.id) === String(messageId))
       if (m) { m.recalled = true; m.content = ''; m.image_url = undefined; m.audio_url = undefined; m.kind = undefined }
+      await loadHistory(activeTarget.value)
       return true
     } catch (e) {
       sendError.value = e instanceof Error ? e.message : String(e)
@@ -240,6 +243,7 @@ export const useSessionStore = defineStore('session', () => {
         const fresh = map.get(String(m.id))
         if (fresh?.recalled && !m.recalled) {
           m.recalled = true; m.content = ''; m.image_url = undefined; m.audio_url = undefined; m.kind = undefined
+          m.recall_notice = fresh.recall_notice
         }
       }
     } catch { /* 静默，不能影响聊天 */ }
