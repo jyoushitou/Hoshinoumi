@@ -76,4 +76,7 @@ async def handle_clients(request):
     apk = _apk_manifest()
     if apk:
         clients.append(apk)
+    desktop = _desktop_manifest()
+    if desktop:
+        clients.append(desktop)
     return json_response({"ok": True, "data": clients})
