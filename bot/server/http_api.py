@@ -347,13 +347,40 @@ async def handle_internal_diary(request):
 
 
 async def handle_internal_shelf(request):
-    """GET /internal/shelf：书架 / 阅读进度"""
+    """GET /internal/shelf：书架 / 阅读进度（v35.9.26.0 正式契约）"""
     from ..core import state as cfg
     from ..life import reading as life_reading
 
     uid = _internal_uid(request)
     target = str(cfg.MASTER_QQ) if uid == "__owner__" else uid
-    return json_response({"ok": True, "data": life_reading.load(target, user_id=uid)})
+    data = life_reading.load(target, user_id=uid)
+    books = []
+    for book in data.get("books") or []:
+        if not isinstance(book, dict):
+            continue
+        title = str(book.get("title") or "").strip()
+        if not title:
+            continue
+        books.append({
+            "title": title,
+            "url": str(book.get("url") or ""),
+            "last_no": int(book.get("last_no") or 0),
+            "last_title": str(book.get("last_title") or ""),
+            "intro": str(book.get("intro") or ""),
+        })
+    active = books[0] if books else None
+    return json_response({
+        "ok": True,
+        "data": {
+            "books": books,
+            "book_count": len(books),
+            "active_book": active,
+            "day": str(data.get("day") or ""),
+            "chapters": int(data.get("chapters") or 0),
+            "daily_chapters": int(life_reading.DAILY_CHAPTERS),
+            "quota_left": int(life_reading.quota_left(data)),
+        },
+    })
 
 
 @web.middleware
