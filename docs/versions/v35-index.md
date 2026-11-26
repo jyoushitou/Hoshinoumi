@@ -310,7 +310,7 @@
 | v35.9.30.18 | 滑动边界回弹 / 路由同步 | ✅ 边界位移 + router.push |
 | v35.9.30.19 | 手势与竖向滚动冲突处理 / 真机验收 | ✅ 轴锁/排除输入与横滑组件 |
 | v35.9.31.0 | 网关保存 APK：data/apk/latest.apk + latest.json | ✅ 35.9.7.0 Release |
-| v35.9.31.1 | 后端核心：/api/app/update + /downloads/latest.apk（流式/Range/SHA-256） | 🟡 Mock only；真实更新接口缺 |
+| v35.9.31.1 | 后端核心：/api/app/update + /downloads/latest.apk（流式/Range/SHA-256） | ✅ 真实 manifest + Range 206 + SHA-256 |
 | v35.9.31.2 | App 检查更新请求当前后端，不写死下载地址 | ⬜ |
 | v35.9.31.3 | 下载进度/安装/失败回退 | ⬜ |
 | v35.9.31.4 | 前后端版本一致性真机验收 | ⬜ |

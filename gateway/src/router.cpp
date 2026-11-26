@@ -10,7 +10,11 @@
 
 #include <boost/json.hpp>
 
+#include <algorithm>
+#include <cctype>
 #include <chrono>
+#include <filesystem>
+#include <fstream>
 #include <stdexcept>
 #include <thread>
 #include <utility>
@@ -21,6 +25,152 @@ namespace Gateway
 
     namespace
     {
+        Net::Server::HttpServer::ResponseHeaders JsonHeaders(const std::string& requestId);
+
+        std::string LowerCopy(std::string value)
+        {
+            std::transform(value.begin(), value.end(), value.begin(),
+                           [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+            return value;
+        }
+
+        std::filesystem::path RepositoryRoot()
+        {
+            auto path = std::filesystem::current_path();
+            for (int i = 0; i < 6; ++i)
+            {
+                if (std::filesystem::exists(path / "data" / "apk" / "latest.apk"))
+                    return path;
+                if (!path.has_parent_path()) break;
+                path = path.parent_path();
+            }
+            return std::filesystem::current_path();
+        }
+
+        void ServeDownload(const std::shared_ptr<Net::Server::HttpServer::HttpSession>& session,
+                           const Net::Server::HttpServer::Url& url)
+        {
+            if (url.method != "GET")
+            {
+                session->httpReplay("{\"ok\":false,\"error\":\"method_not_allowed\"}",
+                                    boost::beast::http::status::method_not_allowed,
+                                    JsonHeaders("download"));
+                return;
+            }
+            std::string name;
+            std::filesystem::path file;
+            const std::string prefix = "/downloads/clients/";
+            if (url.target.rfind("/downloads/latest.apk", 0) == 0)
+            {
+                name = "latest.apk";
+                file = RepositoryRoot() / "data" / "apk" / "latest.apk";
+            }
+            else if (url.target.rfind(prefix, 0) == 0)
+            {
+                name = url.target.substr(prefix.size());
+                const auto query = name.find('?');
+                if (query != std::string::npos) name = name.substr(0, query);
+                if (name.empty() || name.find('/') != std::string::npos ||
+                    name.find('\\') != std::string::npos || name.find("..") != std::string::npos)
+                {
+                    session->httpReplay("{\"ok\":false,\"error\":\"bad_file\"}",
+                                        boost::beast::http::status::bad_request,
+                                        JsonHeaders("download"));
+                    return;
+                }
+                file = RepositoryRoot() / "clients" / "electron" / "dist" / name;
+                if (!std::filesystem::exists(file))
+                    file = RepositoryRoot() / "data" / "clients" / name;
+            }
+            else
+            {
+                session->httpReplay("{\"ok\":false,\"error\":\"not_found\"}",
+                                    boost::beast::http::status::not_found,
+                                    JsonHeaders("download"));
+                return;
+            }
+            std::error_code ec;
+            if (!std::filesystem::is_regular_file(file, ec))
+            {
+                session->httpReplay("{\"ok\":false,\"error\":\"not_found\"}",
+                                    boost::beast::http::status::not_found,
+                                    JsonHeaders("download"));
+                return;
+            }
+            const auto size = static_cast<unsigned long long>(std::filesystem::file_size(file, ec));
+            if (ec)
+            {
+                session->httpReplay("{\"ok\":false,\"error\":\"stat_failed\"}",
+                                    boost::beast::http::status::internal_server_error,
+                                    JsonHeaders("download"));
+                return;
+            }
+            unsigned long long begin = 0;
+            unsigned long long end = size == 0 ? 0 : size - 1;
+            bool partial = false;
+            const auto headersLower = LowerCopy(url.headers);
+            const auto rangeAt = headersLower.find("range:");
+            if (rangeAt != std::string::npos)
+            {
+                auto lineEnd = headersLower.find("\r\n", rangeAt);
+                auto value = headersLower.substr(rangeAt + 6, lineEnd == std::string::npos ? std::string::npos : lineEnd - rangeAt - 6);
+                const auto eq = value.find('=');
+                if (eq != std::string::npos)
+                {
+                    value = value.substr(eq + 1);
+                    const auto dash = value.find('-');
+                    if (dash != std::string::npos)
+                    {
+                        try
+                        {
+                            const auto left = value.substr(0, dash);
+                            const auto right = value.substr(dash + 1);
+                            if (!left.empty()) begin = std::stoull(left);
+                            if (!right.empty()) end = std::stoull(right);
+                            if (end >= size) end = size == 0 ? 0 : size - 1;
+                            if (begin > end || begin >= size)
+                            {
+                                auto bad = JsonHeaders("download");
+                                bad.emplace_back("Content-Range", "bytes */" + std::to_string(size));
+                                session->httpReplay("", boost::beast::http::status::range_not_satisfiable, bad);
+                                return;
+                            }
+                            partial = true;
+                        }
+                        catch (...)
+                        {
+                            partial = false;
+                        }
+                    }
+                }
+            }
+            const auto length = end >= begin ? end - begin + 1 : 0;
+            std::ifstream stream(file, std::ios::binary);
+            if (!stream)
+            {
+                session->httpReplay("{\"ok\":false,\"error\":\"open_failed\"}",
+                                    boost::beast::http::status::internal_server_error,
+                                    JsonHeaders("download"));
+                return;
+            }
+            stream.seekg(static_cast<std::streamoff>(begin));
+            std::string body(static_cast<std::size_t>(length), '\0');
+            if (length) stream.read(body.data(), static_cast<std::streamsize>(length));
+            body.resize(static_cast<std::size_t>(stream.gcount()));
+            auto headers = JsonHeaders("download");
+            headers.emplace_back("Content-Type", "application/octet-stream");
+            headers.emplace_back("Content-Disposition", "attachment; filename=\"" + name + "\"");
+            headers.emplace_back("Accept-Ranges", "bytes");
+            headers.emplace_back("Content-Length", std::to_string(body.size()));
+            headers.emplace_back("Cache-Control", "public, max-age=300");
+            if (partial)
+                headers.emplace_back("Content-Range", "bytes " + std::to_string(begin) + "-" +
+                                                          std::to_string(begin + body.size() - 1) + "/" + std::to_string(size));
+            session->httpReplay(body, partial ? boost::beast::http::status::partial_content
+                                              : boost::beast::http::status::ok,
+                                headers);
+        }
+
         Net::Server::HttpServer::ResponseHeaders JsonHeaders(const std::string& requestId)
         {
             return {
@@ -201,6 +351,16 @@ namespace Gateway
             return;
         }
 
+        if (url.target.rfind("/downloads/", 0) == 0)
+        {
+            ServeDownload(session, url);
+            return;
+        }
+        if (url.target.rfind("/api/app/update", 0) == 0)
+        {
+            Proxy(session, url, "/internal/app/update", "GET", "");
+            return;
+        }
         if (url.target.rfind("/api/files/share/", 0) == 0)
         {
             const auto query = url.target.find('?');

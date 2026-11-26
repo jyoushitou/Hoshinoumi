@@ -7,6 +7,7 @@ import re
 # (internal regex, allowed HTTP methods)
 _CONTRACTS = [
     (r"/internal/health", {"GET"}),
+    (r"/internal/app/update", {"GET"}),
     (r"/internal/napcat/status", {"GET"}),
     (r"/internal/status", {"GET"}),
     (r"/internal/avatar", {"GET"}),
