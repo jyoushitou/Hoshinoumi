@@ -22,6 +22,7 @@ contextBridge.exposeInMainWorld('desktopShell', {
   openMain: () => ipcRenderer.send('window:open-main'),
   closeMini: () => ipcRenderer.send('window:close-mini'),
   toggleMini: () => ipcRenderer.send('window:toggle-mini'),
+  notify: (title, body) => ipcRenderer.send('window:notify', { title, body }),
   retry: () => ipcRenderer.send('fallback:retry'),
   getSettings: () => ipcRenderer.invoke('settings:get'),
   setMiniEnabled: (enabled) => ipcRenderer.invoke('settings:set-mini', enabled),

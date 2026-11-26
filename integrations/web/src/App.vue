@@ -8,6 +8,10 @@ import { useRoute } from 'vue-router'
 import FileShareView from '@/views/FileShareView.vue'
 import { cleanupStickerCache } from '@/lib/stickerCache'
 const auth = useAuthStore()
+function onDesktopPush() {
+  const bridge = (window as any).desktopShell
+  if (bridge?.notify) bridge.notify('Hoshinoumi', '有新消息')
+}
 const route = useRoute()
 const shareToken = computed(() => route.name === 'file-share' ? String(route.params.token || '') : '')
 const isMobile = ref(false)

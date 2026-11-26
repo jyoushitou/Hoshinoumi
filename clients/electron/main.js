@@ -1,4 +1,4 @@
-const { app, BrowserWindow, shell, ipcMain, Tray, Menu, nativeImage, dialog } = require('electron')
+const { app, BrowserWindow, shell, ipcMain, Tray, Menu, nativeImage, dialog, globalShortcut, Notification } = require('electron')
 const fs = require('fs')
 const path = require('path')
 const crypto = require('crypto')
@@ -104,6 +104,7 @@ function refreshTrayMenu() {
   tray.setContextMenu(Menu.buildFromTemplate([
     { label: '打开主窗口', click: () => { if (win) { win.show(); win.focus() } } },
     { label: '迷你窗口', enabled: !!shellSettings.miniWindow, click: toggleMini },
+    { label: '发送测试通知', click: () => showNotification('Hoshinoumi', '桌面通知已接通') },
     { label: '插件管理', click: openPlugins },
     { label: '代码模式', click: openCodeMode },
     { label: '设置', click: openSettings },
@@ -113,11 +114,19 @@ function refreshTrayMenu() {
     { label: '退出', click: () => { quitting = true; app.quit() } },
   ]))
 }
+function showNotification(title, body) {
+  if (!Notification.isSupported()) return
+  const notice = new Notification({ title: String(title || 'Hoshinoumi'), body: String(body || ''), icon: ICON })
+  notice.show()
+  if (win && !win.isFocused()) win.flashFrame(true)
+}
 function applyMiniState() {
   refreshTrayMenu()
   try {
     if (shellSettings.miniWindow) globalShortcut.register('CommandOrControl+Shift+M', toggleMini)
     else { globalShortcut.unregister('CommandOrControl+Shift+M'); if (mini) mini.hide() }
+    globalShortcut.register('CommandOrControl+Shift+H', () => { if (win) { win.show(); win.focus() } })
+    globalShortcut.register('CommandOrControl+Shift+D', () => { if (win) { win.show(); win.focus(); win.webContents.executeJavaScript("location.hash='#/downloads'").catch(() => {}) } })
   } catch {}
 }
 function openPlugins() {
@@ -210,6 +219,7 @@ function createTray() {
 if (!app.requestSingleInstanceLock()) {
   app.quit()
 } else {
+  app.on('will-quit', () => globalShortcut.unregisterAll())
   app.on('second-instance', () => {
     if (win) { if (win.isMinimized()) win.restore(); win.focus() }
   })
@@ -220,6 +230,7 @@ if (!app.requestSingleInstanceLock()) {
     ipcMain.on('window:open-main', () => { if (win) { win.show(); win.focus() }; mini?.hide() })
     ipcMain.on('window:close-mini', () => mini?.hide())
     ipcMain.on('window:toggle-mini', toggleMini)
+    ipcMain.on('window:notify', (_event, payload) => showNotification(payload?.title, payload?.body))
     ipcMain.on('fallback:retry', () => { if (win) win.loadFile(FRONTEND, { hash: shellSettings.startRoute || '/chat' }) })
     ipcMain.handle('settings:get', () => shellSettings)
     ipcMain.handle('settings:set-mini', (_e, enabled) => { shellSettings.miniWindow = Boolean(enabled); saveSettings(); applyMiniState(); return shellSettings })
