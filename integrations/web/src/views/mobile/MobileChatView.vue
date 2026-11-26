@@ -38,6 +38,7 @@
       <div v-if="mediaError" class="media-error">{{ mediaError }}</div>
       <div v-if="imagePreview" class="preview"><img :src="imagePreview" alt="预览"><span>{{ imageName }}</span><button type="button" @click="clearImage">×</button></div>
       <div v-if="stickerOpen" class="stickers"><button v-for="sticker in stickerCatalog" :key="sticker.id" type="button" @click="sendSticker(sticker)"><img :src="sticker.url" :alt="sticker.name" loading="lazy"></button><span v-if="stickerLoading" class="sticker-tip">加载中…</span><span v-else-if="stickerError" class="sticker-tip">{{ stickerError }}</span><span v-else-if="!stickerCatalog.length" class="sticker-tip">暂无表情</span></div>
+      <ChatModeBar />
       <div class="composer">
         <input ref="fileInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden @change="onFile">
         <button type="button" class="tool" aria-label="图片" @click="pickImage">＋</button>
@@ -126,7 +127,12 @@ interface SearchHit { key: string; kind: 'conv' | 'msg' | 'memory' | 'command'; 
 const commands = ref<Array<{ name?: string; help?: string; group?: string }>>([])
 const listError = computed(() => auth.loggedIn ? (session.conversationsError || session.error) : '')
 const active = computed(() => session.conversations.find(row => row.target_id === session.activeTarget) || null)
-const activeName = computed(() => active.value?.name || String(session.persona?.name || '会话'))
+const activeName = computed(() => {
+  if (session.activeTarget === 'mode:code') return '代码模式'
+  if (session.activeTarget === 'mode:agent') return 'Agent 模式'
+  if (session.activeTarget === 'mode:shell') return 'Shell 模式'
+  return active.value?.name || String(session.persona?.name || '会话')
+})
 const activeGroup = computed(() => active.value?.type === 'group')
 const activeCount = computed(() => Number(active.value?.member_count || 0))
 const syncLabel = computed(() => session.syncState === 'syncing' ? '同步中' : session.syncState === 'offline' ? '同步中断' : session.syncState === 'online' ? '已同步' : '等待同步')

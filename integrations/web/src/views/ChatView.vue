@@ -4,6 +4,7 @@ import { cleanupStickerCache, getStickerDataUrl, type StickerMeta } from '@/lib/
 import { http } from '@/api/client'
 import EmptyState from '@/components/EmptyState.vue'
 import QqAvatar from '@/components/QqAvatar.vue'
+import ChatModeBar from '@/components/ChatModeBar.vue'
 import { useSessionStore } from '@/stores/session'
 import { railHidden, sideHidden } from '@/composables/useLayoutState'
 import { useAuthStore } from '@/stores/auth'
@@ -55,6 +56,12 @@ const searchHits = computed(() => {
   return session.messages.map((m, i) => ({ m, i })).filter(x => (x.m.content || '').toLowerCase().includes(q))
 })
 const activeConversation = computed(() => session.conversations.find(c => c.target_id === session.activeTarget) || null)
+const activeTitle = computed(() => {
+  if (session.activeTarget === 'mode:code') return '代码模式'
+  if (session.activeTarget === 'mode:agent') return 'Agent 模式'
+  if (session.activeTarget === 'mode:shell') return 'Shell 模式'
+  return activeConversation.value?.name || String(session.persona?.name || '未获取到人设')
+})
 const syncLabel = computed(() => session.syncState === 'syncing' ? '同步中…' : session.syncState === 'offline' ? '连接中断' : session.syncState === 'online' ? '已同步' : '等待同步')
 async function send() {
   if (!canSend.value) return
@@ -236,7 +243,7 @@ watch(() => session.activeTarget, async () => {
       <div class="who">
         <QqAvatar class="avatar" :group="activeConversation?.type === 'group' ? session.activeTarget : ''" :qq="activeConversation?.type === 'group' ? '' : botQq" :name="activeConversation?.name || String(session.persona?.name || '?')" /><div>
           <div class="nm">
-            {{ activeConversation?.name || session.persona?.name || '未获取到人设' }}
+            {{ activeTitle }}
           </div><div class="sub">
             <template v-if="activeConversation?.type === 'group'">群聊 · {{ activeConversation.member_count || 0 }} 人</template><template v-else>私聊 · 记忆同步</template> <span v-if="session.connected" class="pill">在线</span><span class="sync-pill" :class="session.syncState">{{ syncLabel }}</span>
           </div>
@@ -273,6 +280,7 @@ watch(() => session.activeTarget, async () => {
     </div>
     <Transition name="jump-fade"><button v-if="showJump" type="button" class="jump-bottom" @click="jumpToBottom">↓ 最新消息</button></Transition>
     <div class="composer">
+      <ChatModeBar />
       <div class="tools">
         <button type="button" class="tool" @click="pickImage">＋ 图片</button><button type="button" class="tool" :class="{ rec: recording }" @click="toggleVoice">{{ recording ? '■ 停止并发送' : '◌ 语音' }}</button><button type="button" class="tool" @click="toggleStickerPanel">◇ 表情</button><button type="button" class="tool" @click="toolOpen = !toolOpen">⌕ 搜图</button><button type="button" class="tool" :disabled="topicBusy" @click="checkTopic">{{ topicBusy ? '判断中…' : '✦ 话题' }}</button><span>✦ 记忆</span>
       </div>
