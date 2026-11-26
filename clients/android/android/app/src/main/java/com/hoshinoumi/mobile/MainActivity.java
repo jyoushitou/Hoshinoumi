@@ -172,6 +172,33 @@ public class MainActivity extends BridgeActivity {
             }
 
             @JavascriptInterface
+            public String getDownloadStatus() {
+                JSONObject o = new JSONObject();
+                try {
+                    o.put("status", updateDownloadId < 0 ? "none" : "downloading");
+                    if (updateDownloadId >= 0) {
+                        DownloadManager manager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
+                        if (manager != null) {
+                            try (android.database.Cursor c = manager.query(new DownloadManager.Query().setFilterById(updateDownloadId))) {
+                                if (c != null && c.moveToFirst()) {
+                                    int status = c.getInt(c.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS));
+                                    long done = c.getLong(c.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
+                                    long total = c.getLong(c.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES));
+                                    o.put("status", status == DownloadManager.STATUS_SUCCESSFUL ? "complete" : status == DownloadManager.STATUS_FAILED ? "failed" : "downloading");
+                                    o.put("downloaded", done);
+                                    o.put("total", total);
+                                    if (status == DownloadManager.STATUS_FAILED) o.put("reason", c.getInt(c.getColumnIndexOrThrow(DownloadManager.COLUMN_REASON)));
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    try { o.put("status", "failed"); o.put("reason", e.getMessage()); } catch (Exception ignored) { }
+                }
+                return o.toString();
+            }
+
+            @JavascriptInterface
             public String getEnvironment() {
                 JSONObject o = new JSONObject();
                 try {

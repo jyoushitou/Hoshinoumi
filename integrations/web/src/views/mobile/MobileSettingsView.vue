@@ -1,5 +1,5 @@
 ﻿<script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMobileNav } from '@/composables/useMobileNav'
 import { useAuthStore } from '@/stores/auth'
@@ -14,7 +14,9 @@ const apkVersion = ref('Web 预览')
 const backendVersion = ref('—')
 interface UpdateManifest { version?: string; versionCode?: number; size?: number; sha256?: string; notes?: string; url?: string; available?: boolean }
 const latest = ref<UpdateManifest | null>(null)
-const updateState = ref<'idle' | 'checking' | 'available' | 'downloading' | 'latest' | 'error'>('idle')
+const updateState = ref<'idle' | 'checking' | 'available' | 'downloading' | 'latest' | 'complete' | 'error'>('idle')
+const downloadPercent = ref(0)
+let downloadTimer: ReturnType<typeof setInterval> | null = null
 const updateError = ref('')
 const updateUrl = computed(() => latest.value?.url ? new URL(latest.value.url, location.origin).href : '')
 const { entries, quickKeys, toggleQuick, resetQuick } = useMobileNav()
@@ -54,11 +56,29 @@ async function checkUpdate() {
     if (bridge?.downloadApk) {
       updateState.value = 'downloading'
       bridge.downloadApk(updateUrl.value)
+      startProgress()
     } else {
       updateState.value = 'available'
     }
   } catch (e) { updateState.value = 'error'; updateError.value = e instanceof Error ? e.message : '检查更新失败' }
 }
+function stopProgress() { if (downloadTimer) { clearInterval(downloadTimer); downloadTimer = null } }
+function startProgress() {
+  stopProgress()
+  downloadTimer = setInterval(() => {
+    try {
+      const bridge = (window as any).HoshinoumiConfig
+      if (!bridge?.getDownloadStatus) return
+      const state = JSON.parse(bridge.getDownloadStatus())
+      const total = Number(state.total || 0), done = Number(state.downloaded || 0)
+      if (total > 0) downloadPercent.value = Math.max(1, Math.min(99, Math.round(done / total * 100)))
+      if (state.status === 'complete') { downloadPercent.value = 100; updateState.value = 'complete'; stopProgress() }
+      else if (state.status === 'failed') { updateState.value = 'error'; updateError.value = '下载失败，可重新下载'; stopProgress() }
+    } catch { /* bridge 不可用时只显示系统通知 */ }
+  }, 900)
+}
+function retryDownload() { if (updateUrl.value) { updateState.value = 'downloading'; downloadPercent.value = 0; (window as any).HoshinoumiConfig?.downloadApk?.(updateUrl.value); startProgress() } }
+onBeforeUnmount(stopProgress)
 function toggle(key: string) { toggleQuick(key) }
 function logout() { auth.logout() }
 function openPermissions() { void router.push('/settings/permissions') }
@@ -118,9 +138,10 @@ function changeBackend() {
       <div class="row"><span>后端版本</span><small>{{ backendVersion }}</small></div>
       <button class="row backend-row" type="button" :disabled="updateState === 'checking' || updateState === 'downloading'" @click="checkUpdate"><span>检查更新</span><small>{{ updateState === 'checking' ? '检查中…' : updateState === 'downloading' ? '已提交下载' : '检查 ›' }}</small></button>
       <div v-if="updateState === 'latest'" class="update-note ok">已是最新版本</div>
-      <div v-else-if="updateState === 'error'" class="update-note bad">{{ updateError }}</div>
+      <div v-else-if="updateState === 'error'" class="update-note bad"><b>{{ updateError }}</b><button v-if="latest?.available" type="button" class="update-retry" @click="retryDownload">重新下载</button></div>
       <div v-else-if="latest && updateState === 'available'" class="update-note"><b>发现新版本 {{ latest.version }}</b><span>{{ latest.notes }}</span><a :href="updateUrl" :download="'hoshinoumi-' + latest.version + '.apk'">下载 APK</a></div>
-      <div v-else-if="updateState === 'downloading'" class="update-note"><b>正在下载 {{ latest?.version }}</b><span>下载完成后由系统安装；失败可在通知栏重试。</span></div>
+      <div v-else-if="updateState === 'downloading'" class="update-note"><b>正在下载 {{ latest?.version }} · {{ downloadPercent }}%</b><span class="update-bar"><i :style="{ width: downloadPercent + '%' }" /></span><span>下载完成后由系统安装。</span></div>
+      <div v-else-if="updateState === 'complete'" class="update-note ok"><b>下载完成</b><span>系统安装器已启动；若未弹出请到通知栏点击安装。</span></div>
     </div>
 
     <button class="logout" type="button" @click="logout">退出登录</button>
@@ -141,5 +162,5 @@ function changeBackend() {
 .reset{width:100%;margin-top:8px;height:30px;border:1px solid #dbe8ff;background:#fff;color:#2563eb;border-radius:8px;font:10px inherit;cursor:pointer}
 .row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #f0f5fd;font-size:10px;color:#3d5470}.row:last-child{border-bottom:0}.visibility-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.visibility-item{height:30px;border:1px solid #e3ebf7;border-radius:7px;background:#f8fbff;color:#8a9bb0;font:8px inherit;display:flex;align-items:center;justify-content:space-between;padding:0 7px;cursor:pointer}.visibility-item.on{background:#fff;color:#405872;border-color:#dbe8ff}.visibility-item em{font-style:normal;font-size:7px;color:#9aabc0}.visibility-item.on em{color:#168b63}.nav-switch{position:relative;width:38px;height:22px;border:0;border-radius:11px;background:#cbd5e1;cursor:pointer}.nav-switch.on{background:#2563eb}.nav-switch i{position:absolute;left:2px;top:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s}.nav-switch.on i{left:18px}.row small{font-size:9px;color:#9aabc0}.backend-row{width:100%;border:0;background:none;text-align:left;cursor:pointer}.backend-row small{color:#2563eb}
 .about-card{margin-top:12px;padding:13px;border:1px solid #e3ebf7;border-radius:13px;background:#fff;text-align:center}.about-card b{display:block;font-size:10px;color:#314a65}.about-card span{display:block;font-size:8px;color:#9aabc0;margin-top:3px}.about-card em{display:block;font:7px ui-monospace,monospace;letter-spacing:.12em;color:#a8b5c7;font-style:normal;margin-top:7px}.about-links{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-top:8px}.about-links a{font-size:8px;text-decoration:none;border-radius:6px;padding:2px 7px;color:#2563eb;border:1px solid #dbe8ff;background:#f4f9ff}.about-links a:last-child{color:#607795;border-color:#e3ebf7;background:#fff}
-.update-note{margin-top:7px;border:1px solid #dbe8ff;border-radius:8px;background:#f8fbff;padding:7px 8px;font-size:8px;color:#526982;line-height:1.5}.update-note.ok{color:#168b63;border-color:#cdeee0;background:#f0fdf7}.update-note.bad{color:#b91c1c;border-color:#fecaca;background:#fff5f5}.update-note b{display:block;font-size:9px;margin-bottom:2px}.update-note span{display:block;color:#8a9bb0}.update-note a{display:inline-block;margin-top:5px;color:#2563eb}.logout{width:100%;height:36px;border:1px solid #fecaca;background:#fff5f5;color:#b91c1c;border-radius:9px;font:10px inherit;cursor:pointer}
+.update-note{margin-top:7px;border:1px solid #dbe8ff;border-radius:8px;background:#f8fbff;padding:7px 8px;font-size:8px;color:#526982;line-height:1.5}.update-note.ok{color:#168b63;border-color:#cdeee0;background:#f0fdf7}.update-note.bad{color:#b91c1c;border-color:#fecaca;background:#fff5f5}.update-note b{display:block;font-size:9px;margin-bottom:2px}.update-note span{display:block;color:#8a9bb0}.update-note a{display:inline-block;margin-top:5px;color:#2563eb}.update-bar{display:block;height:4px;border-radius:4px;background:#e8effa;margin:4px 0;overflow:hidden}.update-bar i{display:block;height:100%;background:#2563eb}.update-retry{margin-top:5px;border:1px solid #fecaca;border-radius:5px;background:#fff;color:#b91c1c;font:8px inherit;padding:2px 7px;cursor:pointer}.logout{width:100%;height:36px;border:1px solid #fecaca;background:#fff5f5;color:#b91c1c;border-radius:9px;font:10px inherit;cursor:pointer}
 </style>
