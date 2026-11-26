@@ -30,7 +30,8 @@ export class HttpClient {
   }
   get<T>(path: string, token?: string, signal?: AbortSignal) { return this.request<T>(path, { token, signal }) }
   post<T>(path: string, body: unknown, token?: string) { return this.request<T>(path, { method: 'POST', body, token }) }
-  delete<T>(path: string, token?: string) { return this.request<T>(path, { method: 'DELETE', token }) }
+  delete<T>(path: string, body?: unknown, token?: string) { return this.request<T>(path, { method: 'DELETE', body, token }) }
+  patch<T>(path: string, body: unknown, token?: string) { return this.request<T>(path, { method: 'PATCH', body, token }) }
   put<T>(path: string, body: unknown, token?: string) { return this.request<T>(path, { method: 'PUT', body, token }) }
 }
 export const http = new HttpClient()
