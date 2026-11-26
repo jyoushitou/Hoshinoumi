@@ -77,6 +77,11 @@ def _port_listening(port):
         return False
 
 
+async def handle_napcat_status(request):
+    from ..core import state as cfg
+    return json_response({"offline": not bool(getattr(cfg, "active_ws_qq", None))})
+
+
 async def handle_status(request):
     try:
         # v17.16：路由层不写 SQL

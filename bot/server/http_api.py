@@ -12,7 +12,7 @@ from ..log import log_system
 from . import config as apicfg
 from .common import json_response
 from .routes_meta import (
-    handle_health, handle_healthz, handle_readyz, handle_status, handle_usage,
+    handle_health, handle_healthz, handle_readyz, handle_status, handle_napcat_status, handle_usage,
     handle_memory, handle_logs, handle_get_token,
 )
 from .routes_chat import handle_chat, handle_command, handle_conversations, handle_history, handle_commands, handle_read, handle_read_state, handle_recall, handle_topic
@@ -438,6 +438,7 @@ async def start_api_server():
     app.router.add_get("/readyz", handle_readyz)
     app.router.add_get("/api/health", handle_health)
     app.router.add_get("/api/status", handle_status)
+    app.router.add_get("/api/napcat/status", handle_napcat_status)
     app.router.add_get("/api/avatar", handle_avatar)
     app.router.add_get("/api/usage", handle_usage)
     app.router.add_get("/api/memory", handle_memory)
