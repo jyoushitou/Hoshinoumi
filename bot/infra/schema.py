@@ -422,6 +422,33 @@ PURE = {
             KEY idx_files_token (share_token)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """,
+    "conversation_preferences": """
+        CREATE TABLE IF NOT EXISTS conversation_preferences (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            user_id VARCHAR(64) NOT NULL DEFAULT '__owner__',
+            target_id VARCHAR(120) NOT NULL,
+            muted TINYINT NOT NULL DEFAULT 0,
+            hidden TINYINT NOT NULL DEFAULT 0,
+            deleted_at DATETIME NULL,
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY uk_conv_pref (user_id, target_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
+    "group_admin_roles": """
+        CREATE TABLE IF NOT EXISTS group_admin_roles (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            group_id VARCHAR(120) NOT NULL,
+            qq VARCHAR(32) NOT NULL,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY uk_group_admin (group_id, qq)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
+    "group_settings": """
+        CREATE TABLE IF NOT EXISTS group_settings (
+            group_id VARCHAR(120) PRIMARY KEY,
+            recall_notice VARCHAR(200) NOT NULL DEFAULT '消息已撤回'
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
     "reading_progress": """
         CREATE TABLE IF NOT EXISTS reading_progress (
             target_id VARCHAR(64) NOT NULL,

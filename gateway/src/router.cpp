@@ -202,7 +202,7 @@ namespace Gateway
             {
                 static const char* kExact[] = {
                     "/api/health", "/api/status", "/api/napcat/status", "/api/avatar", "/api/usage", "/api/memory",
-                    "/api/logs", "/api/token", "/api/conversations", "/api/read-state",
+                    "/api/logs", "/api/token", "/api/conversations", "/api/conversations/preferences", "/api/read-state",
                     "/api/commands", "/api/groups", "/api/endpoints", "/api/tools",
                     "/api/persona", "/api/savings", "/api/savings/snapshots",
                     "/api/savings/reconcile", "/api/savings/events", "/api/balance",
@@ -225,7 +225,8 @@ namespace Gateway
                        StartsWith(path, "/api/endpoints/") ||
                        StartsWith(path, "/api/health/meals") || StartsWith(path, "/api/health/exercises") ||
                        StartsWith(path, "/api/books/") ||
-                       StartsWith(path, "/api/files/");
+                       StartsWith(path, "/api/files/") ||
+                       (StartsWith(path, "/api/groups/") && (EndsWith(path, "/admins") || EndsWith(path, "/settings")));
             }
             if (method == "POST")
             {
@@ -252,7 +253,8 @@ namespace Gateway
                        (StartsWith(path, "/api/savings/funds/") && EndsWith(path, "/redeem")) ||
                        (StartsWith(path, "/api/plugins/") &&
                         (EndsWith(path, "/toggle") || EndsWith(path, "/approve") || EndsWith(path, "/reject") || EndsWith(path, "/settle"))) ||
-                       (StartsWith(path, "/api/files/") && (EndsWith(path, "/complete") || EndsWith(path, "/share")));
+                       (StartsWith(path, "/api/files/") && (EndsWith(path, "/complete") || EndsWith(path, "/share"))) ||
+                       (StartsWith(path, "/api/groups/") && EndsWith(path, "/admins"));
             }
             if (method == "PUT")
             {
@@ -261,7 +263,9 @@ namespace Gateway
             }
             if (method == "PATCH")
             {
-                return path == "/api/push/preferences" || StartsWith(path, "/api/memory/items/");
+                return path == "/api/push/preferences" || StartsWith(path, "/api/memory/items/") ||
+                       StartsWith(path, "/api/conversations/") ||
+                       (StartsWith(path, "/api/groups/") && EndsWith(path, "/settings"));
             }
             if (method == "DELETE")
             {
@@ -270,6 +274,7 @@ namespace Gateway
                        StartsWith(path, "/api/push/devices/") ||
                        StartsWith(path, "/api/memory/items/") ||
                        StartsWith(path, "/api/files/") ||
+                       StartsWith(path, "/api/conversations/") ||
                        StartsWith(path, "/api/endpoints/");
             }
             return false;

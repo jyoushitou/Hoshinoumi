@@ -349,7 +349,7 @@
 
 | 版本 | 内容 | 状态 |
 |---|---|---|
-| v35.9.35.0 | 会话偏好 API / schema：muted / hidden / deleted_at | ⬜ |
+| v35.9.35.0 | 会话偏好 API / schema：muted / hidden / deleted_at | ✅ preferences + groups/admins/settings |
 | v35.9.35.1 | 桌面会话列表右键菜单 + 免打扰 / 删除 | ⬜ |
 | v35.9.35.2 | 手机从右侧向左滑二级操作栏 + 删除 / 退出群聊 | ⬜ |
 | v35.9.35.3 | 联系人删除 / 群聊退出；群主退出自动解散 API / 验收 | ⬜ |

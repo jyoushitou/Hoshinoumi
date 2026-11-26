@@ -15,6 +15,7 @@ from .routes_meta import (
     handle_health, handle_healthz, handle_readyz, handle_status, handle_napcat_status, handle_usage,
     handle_memory, handle_logs, handle_get_token,
 )
+from .routes_conversations import handle_prefs as handle_conv_prefs, handle_pref_update as handle_conv_pref_update, handle_conversation_delete, handle_group_admins, handle_group_settings, handle_group_settings_get
 from .routes_chat_mode import handle_chat_mode_get, handle_chat_mode_set, handle_chat_mode_approve
 from .routes_chat import handle_chat, handle_command, handle_conversations, handle_history, handle_commands, handle_read, handle_read_state, handle_recall, handle_topic
 from .routes_persona import handle_persona, handle_export as handle_persona_export, handle_import as handle_persona_import, handle_activate as handle_persona_activate
@@ -443,6 +444,13 @@ async def start_api_server():
     app.router.add_get("/api/napcat/status", handle_napcat_status)
     app.router.add_get("/api/app/update", handle_app_update)
     app.router.add_get("/api/clients", handle_clients)
+    app.router.add_get("/api/conversations/preferences", handle_conv_prefs)
+    app.router.add_patch("/api/conversations/{target}", handle_conv_pref_update)
+    app.router.add_delete("/api/conversations/{target}", handle_conversation_delete)
+    app.router.add_get("/api/groups/{id}/admins", handle_group_admins)
+    app.router.add_post("/api/groups/{id}/admins", handle_group_admins)
+    app.router.add_get("/api/groups/{id}/settings", handle_group_settings_get)
+    app.router.add_patch("/api/groups/{id}/settings", handle_group_settings)
     app.router.add_get("/api/chat/mode", handle_chat_mode_get)
     app.router.add_post("/api/chat/mode", handle_chat_mode_set)
     app.router.add_post("/api/chat/mode/approve", handle_chat_mode_approve)
