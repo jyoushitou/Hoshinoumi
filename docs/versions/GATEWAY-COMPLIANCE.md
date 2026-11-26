@@ -1,6 +1,6 @@
 # 网关架构合规审计
 
-日期：2026-11-25
+日期：2026-11-26
 
 ## 1. 传输层
 
@@ -20,7 +20,7 @@ ingress → worker internal.sock
 std::string backendProtocol = "tcp";
 ```
 
-`BackendClient::Request` 在 tcp 模式下编码 protobuf；HTTP/JSON 仅回滚模式。
+`BackendClient::Request` 只编码 protobuf；`backend.protocol` 配置校验只允许 `tcp`，HTTP/JSON 回退分支已删除。
 
 ## 2. 路由层
 
@@ -37,13 +37,14 @@ if (url.target.rfind("/api/", 0) == 0) Proxy(...)
 GET    状态 / 信息 / 会话 / 人设 / 存钱 / 周计划 / 插件 / 推送 / 群聊...
 POST   聊天 / 命令 / 人设写 / 存钱写 / 周计划写 / 插件写 / 推送 / 群聊...
 PATCH  仅 /api/push/preferences
-DELETE 仅 health meals / push devices / endpoints
+DELETE 仅 health meals/exercises / push devices / endpoints
 动态路由只允许：
   /api/messages/{id}/recall
   /api/tools/{name}/call
   /api/endpoints/{id}/ack
   /api/reminders/{id}/ack
   /api/cron/{id}/run
+  /api/savings/fixed/{id}/settle
   /api/plugins/{id}/toggle|approve|reject
 ```
 
