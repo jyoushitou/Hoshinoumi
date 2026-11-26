@@ -4,7 +4,7 @@ export class ApiError extends Error {
     super(message); this.name = 'ApiError'
   }
 }
-export interface RequestOptions { method?: 'GET' | 'POST' | 'PATCH' | 'DELETE'; body?: unknown; token?: string; signal?: AbortSignal }
+export interface RequestOptions { method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'; body?: unknown; token?: string; signal?: AbortSignal }
 export class HttpClient {
   private token = ''
   setToken(token: string) { this.token = token }
@@ -31,5 +31,6 @@ export class HttpClient {
   get<T>(path: string, token?: string, signal?: AbortSignal) { return this.request<T>(path, { token, signal }) }
   post<T>(path: string, body: unknown, token?: string) { return this.request<T>(path, { method: 'POST', body, token }) }
   delete<T>(path: string, token?: string) { return this.request<T>(path, { method: 'DELETE', token }) }
+  put<T>(path: string, body: unknown, token?: string) { return this.request<T>(path, { method: 'PUT', body, token }) }
 }
 export const http = new HttpClient()

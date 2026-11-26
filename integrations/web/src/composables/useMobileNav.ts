@@ -16,6 +16,7 @@ export const mobileEntries: MobileEntry[] = [
   { key: 'relation', path: '/relation', icon: '♡', label: '关系' },
   { key: 'savings', path: '/savings', icon: '¥', label: '存钱' },
   { key: 'weekly', path: '/weekly', icon: '▦', label: '周计划' },
+  { key: 'books', path: '/books', icon: '▤', label: '阅读' },
   { key: 'info', path: '/info', icon: '≡', label: '信息' },
   { key: 'persona', path: '/persona', icon: '◇', label: '人设' },
   { key: 'commands', path: '/commands', icon: '⌘', label: '命令' },

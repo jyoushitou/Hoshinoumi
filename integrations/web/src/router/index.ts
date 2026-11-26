@@ -8,6 +8,8 @@ import DiaryView from '@/views/DiaryView.vue'
 import InfoView from '@/views/InfoView.vue'
 import PersonaView from '@/views/PersonaView.vue'
 import HealthView from '@/views/HealthView.vue'
+import BooksView from '@/views/BooksView.vue'
+import BookReaderView from '@/views/BookReaderView.vue'
 import WeeklyView from '@/views/WeeklyView.vue'
 import CronView from '@/views/CronView.vue'
 import LogsView from '@/views/LogsView.vue'
@@ -31,6 +33,8 @@ const router = createRouter({
     { path: '/weekly', name: 'weekly', component: WeeklyView, meta: meta('周计划表', '按周配置节次与时间') },
     { path: '/info', name: 'info', component: InfoView, meta: meta('信息', '运行 / 配置 / 备份 / 账号 / 阅读 / 网关') },
     { path: '/health', name: 'health', component: HealthView, meta: meta('健康 / 热量', '摄入 / 目标 / 运动 / 体重') },
+    { path: '/books', name: 'books', component: BooksView, meta: meta('阅读', '书架 / 本地 TXT / EPUB') },
+    { path: '/books/:id', name: 'book-reader', component: BookReaderView, meta: meta('阅读器', '目录 / 进度 / 排版') },
     { path: '/persona', name: 'persona', component: PersonaView, meta: meta('人设', '导入 / 导出 / 激活') },
     { path: '/commands', name: 'commands', component: CommandView, meta: meta('命令', '51 个命令 / 参数 / 二级命令') },
     { path: '/cron', name: 'cron', component: CronView, meta: meta('定时任务', '新增 / 编辑 / 启停 / 删除') },

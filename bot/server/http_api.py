@@ -17,6 +17,7 @@ from .routes_meta import (
 )
 from .routes_chat import handle_chat, handle_command, handle_conversations, handle_history, handle_commands, handle_read, handle_read_state, handle_recall, handle_topic
 from .routes_persona import handle_persona, handle_export as handle_persona_export, handle_import as handle_persona_import, handle_activate as handle_persona_activate
+from .routes_books import handle_books, handle_book, handle_book_content, handle_book_progress_get, handle_book_progress_put, handle_books_refresh
 from .routes_savings import handle_savings, handle_savings_import, handle_savings_add, handle_savings_events, handle_snapshots_get, handle_snapshot_create, handle_reconcile, handle_overview, handle_monthly, handle_goals, handle_frozen, handle_fixed, handle_funds, handle_finance_audit, handle_savings_init_get, handle_savings_init_post, handle_fixed_add, handle_fixed_settle, handle_fund_buy, handle_fund_redeem
 from .routes_weekly_plan import handle_weekly_get, handle_weekly_put, handle_weekly_import, handle_weekly_weeks
 from .routes_reminders import handle_pending as handle_reminders_pending, handle_ack as handle_reminder_ack
@@ -539,6 +540,12 @@ async def start_api_server():
     app.router.add_post("/api/cron/{id}/run", handle_cron_run)
     app.router.add_get("/internal/cron", handle_internal_cron)
     app.router.add_get("/internal/diary", handle_internal_diary)
+    app.router.add_get("/api/books", handle_books)
+    app.router.add_post("/api/books/refresh", handle_books_refresh)
+    app.router.add_get("/api/books/{id}", handle_book)
+    app.router.add_get("/api/books/{id}/content", handle_book_content)
+    app.router.add_get("/api/books/{id}/progress", handle_book_progress_get)
+    app.router.add_put("/api/books/{id}/progress", handle_book_progress_put)
     app.router.add_get("/internal/shelf", handle_internal_shelf)
 
     async def _avatar_ctx(_app):

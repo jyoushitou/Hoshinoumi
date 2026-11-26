@@ -15,6 +15,7 @@ const baseNav = [
   { page: 'relation', icon: '♡', title: '关系' },
   { page: 'savings', icon: '¥', title: '存钱' },
   { page: 'weekly', icon: '▦', title: '周计划表' },
+  { page: 'books', icon: '▤', title: '阅读' },
   { page: 'info', icon: '≡', title: '信息' },
   { page: 'persona', icon: '◇', title: '人设' },
   { page: 'commands', icon: '⌘', title: '命令' },

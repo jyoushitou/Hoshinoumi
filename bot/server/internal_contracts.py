@@ -83,6 +83,11 @@ _CONTRACTS = [
     (r"/internal/recall", {"POST"}),
     (r"/internal/topic", {"POST"}),
     (r"/internal/diary", {"GET"}),
+    (r"/internal/books", {"GET"}),
+    (r"/internal/books/refresh", {"POST"}),
+    (r"/internal/books/[^/]+", {"GET"}),
+    (r"/internal/books/[^/]+/content", {"GET"}),
+    (r"/internal/books/[^/]+/progress", {"GET", "PUT"}),
     (r"/internal/shelf", {"GET"}),
     # 网关内部管理调用，不暴露 public /api
     (r"/internal/auth/verify", {"POST"}),

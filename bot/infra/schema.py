@@ -393,6 +393,17 @@ PURE = {
             PRIMARY KEY (target_id, phrase)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """,
+    "book_reading_progress": """
+        CREATE TABLE IF NOT EXISTS book_reading_progress (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            user_id VARCHAR(64) NOT NULL DEFAULT '__owner__',
+            book_id VARCHAR(32) NOT NULL,
+            chapter INT NOT NULL DEFAULT 0,
+            percent DOUBLE NOT NULL DEFAULT 0,
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY uk_book_progress (user_id, book_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
     "reading_progress": """
         CREATE TABLE IF NOT EXISTS reading_progress (
             target_id VARCHAR(64) NOT NULL,

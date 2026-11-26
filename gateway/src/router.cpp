@@ -29,7 +29,7 @@ namespace Gateway
                 {"X-Gateway", "hoshinoumi-gateway/26.4.0"},
                 {"Access-Control-Allow-Origin", "*"},
                 {"Access-Control-Allow-Headers", "authorization, content-type, accept"},
-                {"Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS"},
+                {"Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS"},
             };
         }
 
@@ -63,7 +63,7 @@ namespace Gateway
                     "/api/push/outbox", "/api/plugins", "/api/relation",
                     "/api/weekly-plan/weeks", "/api/weekly-plan", "/api/plan",
                     "/api/plan/export", "/api/presence", "/api/state", "/api/reminders",
-                    "/api/cron", "/api/diary", "/api/shelf", "/api/history",
+                    "/api/cron", "/api/diary", "/api/shelf", "/api/history", "/api/books",
                 };
                 for (const auto* item : kExact)
                 {
@@ -73,7 +73,8 @@ namespace Gateway
                        StartsWith(path, "/api/history") ||
                        StartsWith(path, "/api/diary/") ||
                        StartsWith(path, "/api/endpoints/") ||
-                       StartsWith(path, "/api/health/meals") || StartsWith(path, "/api/health/exercises");
+                       StartsWith(path, "/api/health/meals") || StartsWith(path, "/api/health/exercises") ||
+                       StartsWith(path, "/api/books/");
             }
             if (method == "POST")
             {
@@ -83,6 +84,7 @@ namespace Gateway
                     "/api/savings/init", "/api/savings/entries", "/api/savings/import", "/api/savings/fixed", "/api/savings/funds/buy", "/api/savings/snapshots",
                     "/api/weekly-plan", "/api/weekly-plan/import", "/api/plan", "/api/plan/import",
                     "/api/health/init", "/api/health/meals", "/api/health/exercises", "/api/health/recognize",
+                    "/api/books/refresh",
                     "/api/plugins/install", "/api/push/devices", "/api/push/test",
                     "/api/groups", "/api/endpoints", "/api/reminders",
                 };
@@ -99,6 +101,10 @@ namespace Gateway
                        (StartsWith(path, "/api/savings/funds/") && EndsWith(path, "/redeem")) ||
                        (StartsWith(path, "/api/plugins/") &&
                         (EndsWith(path, "/toggle") || EndsWith(path, "/approve") || EndsWith(path, "/reject") || EndsWith(path, "/settle")));
+            }
+            if (method == "PUT")
+            {
+                return StartsWith(path, "/api/books/") && EndsWith(path, "/progress");
             }
             if (method == "PATCH")
             {
