@@ -17,7 +17,7 @@ from .routes_meta import (
 )
 from .routes_chat import handle_chat, handle_command, handle_conversations, handle_history, handle_commands, handle_read, handle_read_state, handle_recall, handle_topic
 from .routes_persona import handle_persona, handle_export as handle_persona_export, handle_import as handle_persona_import, handle_activate as handle_persona_activate
-from .routes_app import handle_app_update
+from .routes_app import handle_app_update, handle_clients
 from .routes_files import handle_files, handle_init as handle_file_init, handle_chunk as handle_file_chunk, handle_complete as handle_file_complete, handle_download as handle_file_download, handle_delete as handle_file_delete, handle_share_create as handle_file_share_create, handle_share_info as handle_file_share_info, handle_share_download as handle_file_share_download, handle_upload_status as handle_file_upload_status
 from .routes_books import handle_books, handle_book, handle_book_content, handle_book_progress_get, handle_book_progress_put, handle_books_refresh
 from .routes_savings import handle_savings, handle_savings_import, handle_savings_add, handle_savings_events, handle_snapshots_get, handle_snapshot_create, handle_reconcile, handle_overview, handle_monthly, handle_goals, handle_frozen, handle_fixed, handle_funds, handle_finance_audit, handle_savings_init_get, handle_savings_init_post, handle_fixed_add, handle_fixed_settle, handle_fund_buy, handle_fund_redeem
@@ -389,7 +389,7 @@ async def handle_internal_shelf(request):
 @web.middleware
 async def auth_middleware(request, handler):
     """Bearer Token 鉴权；/healthz、/readyz、/api/health、/internal/* 免鉴权（只监听本机）"""
-    if request.path in ("/api/health", "/healthz", "/readyz", "/api/avatar") or request.path.startswith("/internal/") or request.path.startswith("/api/files/share/") or request.path.startswith("/api/app/update"):
+    if request.path in ("/api/health", "/healthz", "/readyz", "/api/avatar") or request.path.startswith("/internal/") or request.path.startswith("/api/files/share/") or request.path.startswith("/api/app/update") or request.path.startswith("/api/clients"):
         return await handler(request)
     # endpoint 用自己的 token 拉消息/ack；注册/列表/停用仍走 owner Bearer
     if request.path.startswith("/api/endpoints/") and (
@@ -441,6 +441,7 @@ async def start_api_server():
     app.router.add_get("/api/status", handle_status)
     app.router.add_get("/api/napcat/status", handle_napcat_status)
     app.router.add_get("/api/app/update", handle_app_update)
+    app.router.add_get("/api/clients", handle_clients)
     app.router.add_get("/api/avatar", handle_avatar)
     app.router.add_get("/api/usage", handle_usage)
     app.router.add_get("/api/memory", handle_memory)

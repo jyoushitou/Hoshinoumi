@@ -9,6 +9,7 @@ from .common import json_response
 
 ROOT = Path(__file__).resolve().parents[2]
 APK_DIR = ROOT / "data" / "apk"
+DESKTOP_DIST = ROOT / "clients" / "electron" / "dist"
 
 
 def _apk_manifest():
@@ -43,3 +44,36 @@ async def handle_app_update(request):
     if platform not in ("android", "all"):
         return json_response({"ok": False, "error": "platform_not_found"}, 404)
     return json_response({"ok": True, "data": manifest})
+
+
+def _desktop_manifest():
+    candidates = sorted(DESKTOP_DIST.glob("Hoshinoumi-*-win.zip"), key=lambda p: p.stat().st_mtime, reverse=True)
+    if not candidates:
+        return None
+    path = candidates[0]
+    raw_hash = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            raw_hash.update(chunk)
+    name = path.name
+    version = name.replace("Hoshinoumi-", "").replace("-win.zip", "")
+    return {
+        "platform": "windows",
+        "name": "Hoshinoumi Desktop",
+        "version": version,
+        "versionCode": 0,
+        "notes": "Windows 便携包（解压即用）",
+        "size": path.stat().st_size,
+        "sha256": raw_hash.hexdigest(),
+        "url": "/downloads/clients/" + name,
+        "file": name,
+        "available": True,
+    }
+
+
+async def handle_clients(request):
+    clients = []
+    apk = _apk_manifest()
+    if apk:
+        clients.append(apk)
+    return json_response({"ok": True, "data": clients})

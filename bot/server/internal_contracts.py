@@ -8,6 +8,7 @@ import re
 _CONTRACTS = [
     (r"/internal/health", {"GET"}),
     (r"/internal/app/update", {"GET"}),
+    (r"/internal/clients", {"GET"}),
     (r"/internal/napcat/status", {"GET"}),
     (r"/internal/status", {"GET"}),
     (r"/internal/avatar", {"GET"}),

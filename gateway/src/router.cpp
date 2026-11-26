@@ -356,6 +356,11 @@ namespace Gateway
             ServeDownload(session, url);
             return;
         }
+        if (url.target.rfind("/api/clients", 0) == 0)
+        {
+            Proxy(session, url, "/internal/clients", "GET", "");
+            return;
+        }
         if (url.target.rfind("/api/app/update", 0) == 0)
         {
             Proxy(session, url, "/internal/app/update", "GET", "");
