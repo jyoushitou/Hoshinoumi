@@ -93,3 +93,4 @@ data/*.log
 
 pip-*/
 jieba.cache
+data/chat_mode.json

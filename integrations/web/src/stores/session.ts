@@ -191,6 +191,7 @@ export const useSessionStore = defineStore('session', () => {
       const r = await http.post<{ success?: boolean; reply?: string; segments?: string[]; error?: string; message?: string }>('/api/chat', {
         message: text,
         target_id: activeTarget.value,
+        memory_target: activeTarget.value.startsWith('mode:') ? 'persona:nao' : activeTarget.value,
         client_message_id: clientId,
         ...(image ? { image } : {}),
         ...(sticker ? { sticker } : {}),
