@@ -73,7 +73,7 @@ onMounted(load)
 
 <template>
   <section class="persona-page">
-    <header class="head"><div><h1>人设</h1><p>v35.5 Web 演示 · MOCK 数据 · 导入 / 导出 / 激活</p></div><RouterLink to="/settings" class="head-link">设置</RouterLink></header>
+    <header class="head"><div><h1>人设</h1><p>本地人设卡 · 导入 / 导出 / 激活</p></div><RouterLink to="/settings" class="head-link">设置</RouterLink></header>
     <div class="toolbar">
       <label class="btn">导入人设卡 JSON<input ref="fileInput" type="file" accept=".hoshinoumi.persona,.json,application/json" @change="importFile"></label>
       <span class="hint">只读预览 · 仅 owner 可激活/导入</span>

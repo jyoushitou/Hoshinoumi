@@ -8,6 +8,7 @@ import MobileSettingsView from '@/views/mobile/MobileSettingsView.vue'
 import MobilePermissionsView from '@/views/mobile/MobilePermissionsView.vue'
 import CommandView from '@/views/CommandView.vue'
 import MemoryView from '@/views/MemoryView.vue'
+import RelationView from '@/views/RelationView.vue'
 import SavingsView from '@/views/SavingsView.vue'
 import DiaryView from '@/views/DiaryView.vue'
 import InfoView from '@/views/InfoView.vue'
@@ -30,7 +31,7 @@ import { useSessionStore } from '@/stores/session'
 import { useIsOwner } from '@/composables/useIsOwner'
 import { useUiSettings } from '@/composables/useUiSettings'
 
-const { navHidden, navBall } = useUiSettings()
+const { navHidden, navBall, isHidden } = useUiSettings()
 const { quickEntries } = useMobileNav()
 const navMenu = ref(false)
 const route = useRoute()
@@ -102,7 +103,7 @@ function syncViewportSoon() {
 const titles: Record<string, string> = {
   chat: '聊天', home: '主页', memory: '记忆', relation: '关系', savings: '存钱',
   weekly: '周计划', info: '信息', persona: '人设', commands: '命令', cron: '定时任务',
-  diary: '日记',
+  diary: '日记', books: '阅读', files: '文件', health: '健康', plugins: '插件',
   logs: '运行日志', settings: '设置',
 }
 const pageTransition = ref('page-left')
@@ -118,6 +119,7 @@ const pageView = computed(() => {
   if (route.name === 'weekly') return MobileWeeklyView
   if (route.name === 'commands') return CommandView
   if (route.name === 'memory') return MemoryView
+  if (route.name === 'relation') return RelationView
   if (route.name === 'savings') return SavingsView
   if (route.name === 'diary') return DiaryView
   if (route.name === 'info') return InfoView
