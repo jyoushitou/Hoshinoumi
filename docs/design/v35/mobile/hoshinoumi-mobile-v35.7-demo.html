@@ -342,7 +342,7 @@ body.nav-hidden .bottom-nav{display:none!important}
       <button onclick="go('settings')"><span>15</span>设置</button>
       <button onclick="openNotifications()"><span>16</span>提醒弹窗</button>
     </div>
-    <div class="demo-actions"><button class="primary" id="demoSwipeBtn" onclick="demoSwipe()">▶ 演示：右侧左滑</button><button onclick="demoDanger()">演示解散</button></div>
+    <div class="demo-actions"><button class="primary" id="demoSwipeBtn" onclick="demoSwipe()">▶ 演示：右侧左滑</button><button onclick="demoLongPress()">演示长按消息</button><button onclick="demoDanger()">演示解散</button></div>
     <button class="reset" onclick="go('login')">重置演示</button>
     <div class="demo-note"><b>演示内容：</b>登录 → 会话 → 聊天；聊天可发送一条演示消息并收到演示回复；底部导航切换记忆 / 关系 / 设置；设置开关可点击。</div>
   </aside>
@@ -1599,6 +1599,15 @@ document.getElementById('msgMultiDelete')?.addEventListener('click',function(){ 
 document.getElementById('msgMultiExit')?.addEventListener('click',exitMobileMulti)
 function deleteMobileSelected(){ var list=window.__mobileDeleteList||[]; list.forEach(function(m){m.remove()}); window.__mobileDeleteList=[]; closeOverlay(); exitMobileMulti(); toast('已删除 '+list.length+' 条消息') }
 function clearDemoOverlays(){ document.querySelectorAll('.notice-popup,.demo-overlay').forEach(function(x){x.remove()}) }
+function demoLongPress(){
+  clearDemoOverlays()
+  var targetScreen=currentScreen==='group'?'group':'chat'
+  if(currentScreen!==targetScreen){ go(targetScreen) }
+  setTimeout(function(){
+    var msg=document.querySelector('#msgs .msg'); if(!msg) return
+    openMessageMenu(msg)
+  },180)
+}
 function demoSwipe(){
   clearDemoOverlays()
   if(currentScreen!=='chats'){ go('chats') }
