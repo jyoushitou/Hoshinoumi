@@ -258,6 +258,33 @@ body.right-hidden #reopenRight{display:flex}
 .download-icon.web{background:#eefbf5;color:#1f9d6b}
 .download-icon .fallback{font:16px inherit}
 .download-head h3{margin:0}
+
+/* ===== v35.9.35 conversation context menu (design demo) ===== */
+.conv{cursor:context-menu}
+.conv.muted .nm{color:#9aabc0}
+.conv.muted .last{color:#aab8ca}
+.conv.muted .unread{display:none}
+.conv.muted:after{content:"静音";position:absolute;right:8px;bottom:8px;font-size:7px;color:#9aabc0;background:#f1f5fb;border-radius:4px;padding:1px 4px}
+.conv.menu-target{background:#eaf3ff;border-color:#cfe2fb}
+.ctxmenu{position:fixed;z-index:120;width:158px;background:#fff;border:1px solid #dbe8ff;border-radius:11px;box-shadow:0 18px 42px rgba(15,35,70,.22);padding:5px;display:none}
+.ctxmenu.open{display:block;animation:ctxpop .13s ease-out both}
+@keyframes ctxpop{from{opacity:0;transform:translateY(-3px) scale(.98)}to{opacity:1;transform:none}}
+.ctxmenu .mh{padding:6px 8px 5px;font-size:7.5px;color:#9aabc0;border-bottom:1px solid #f1f5fb;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ctxmenu button{display:flex;align-items:center;gap:7px;width:100%;text-align:left;padding:7px 8px;border-radius:6px;font-size:9.5px;color:#405872}
+.ctxmenu button:hover{background:#eef4ff;color:#1d4ed8}
+.ctxmenu button.danger{color:#b23b52}.ctxmenu button.danger:hover{background:#fff1f4;color:#c0264a}
+.ctxmenu .sep{height:1px;background:#f1f5fb;margin:3px 0}
+.confirm-mask{position:fixed;inset:0;z-index:130;background:rgba(15,23,42,.32);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:20px}
+.confirm-mask.open{display:flex}
+.confirm-card{width:374px;background:#fff;border:1px solid #dbe8ff;border-radius:15px;padding:19px;box-shadow:0 26px 70px rgba(15,23,42,.26);animation:ctxpop .16s ease-out both}
+.confirm-card .ci{width:31px;height:31px;border-radius:9px;background:#fff1f4;color:#c0264a;display:grid;place-items:center;font-size:14px;font-weight:700;margin-bottom:10px}
+.confirm-card h3{margin:0 0 5px;font-size:17px;color:#17263b;letter-spacing:-.02em}
+.confirm-card p{margin:0 0 15px;font-size:9px;line-height:1.75;color:#8a9bb0}
+.confirm-card .acts{display:flex;gap:7px;justify-content:flex-end}
+.confirm-card button{height:30px;border:1px solid #dbe8ff;border-radius:7px;background:#fff;color:#7d8ca3;font-size:9px;padding:0 13px}
+.confirm-card button.pri{background:#c0264a;border-color:#c0264a;color:#fff;font-weight:600}
+.design-toast{position:fixed;z-index:140;left:50%;bottom:34px;transform:translateX(-50%) translateY(8px);background:#17263b;color:#fff;font-size:9px;border-radius:20px;padding:6px 12px;opacity:0;pointer-events:none;transition:opacity .18s,transform .18s}
+.design-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
 </head>
 <body>
@@ -305,7 +332,7 @@ body.right-hidden #reopenRight{display:flex}
     </div>
     <div class="slabel">QQ 会话 <button id="newWebConv" title="新建会话" style="float:right;border:1px solid #dbe8ff;background:#fff;color:#2563eb;border-radius:6px;width:20px;height:18px;line-height:14px;font-size:12px;padding:0;cursor:pointer">＋</button><span style="float:right;color:#52d6a0;letter-spacing:0;margin-right:8px">同步中</span></div>
     <div class="convs">
-      <div class="conv on">
+      <div class="conv on" data-type="private" data-name="友利奈绪">
         <div class="avatar">奈</div>
         <div style="min-width:0">
           <div class="nm">友利奈绪</div>
@@ -314,7 +341,7 @@ body.right-hidden #reopenRight{display:flex}
         <div class="tm">21:04</div>
         <div class="unread">2</div>
       </div>
-      <div class="conv">
+      <div class="conv" data-type="group" data-name="星之海学园">
         <div class="avatar g">星</div>
         <div style="min-width:0">
           <div class="nm">星之海学园</div>
@@ -322,7 +349,7 @@ body.right-hidden #reopenRight{display:flex}
         </div>
         <div class="tm">20:41</div>
       </div>
-      <div class="conv">
+      <div class="conv" data-type="group" data-name="学生会室">
         <div class="avatar o">学</div>
         <div style="min-width:0">
           <div class="nm">学生会室</div>
@@ -331,7 +358,7 @@ body.right-hidden #reopenRight{display:flex}
         <div class="tm">19:58</div>
         <div class="unread">5</div>
       </div>
-      <div class="conv">
+      <div class="conv" data-type="group" data-name="摄影部">
         <div class="avatar v">摄</div>
         <div style="min-width:0">
           <div class="nm">摄影部</div>
@@ -339,7 +366,7 @@ body.right-hidden #reopenRight{display:flex}
         </div>
         <div class="tm">昨天</div>
       </div>
-      <div class="conv">
+      <div class="conv" data-type="group" data-name="NapCat 测试群">
         <div class="avatar p">测</div>
         <div style="min-width:0">
           <div class="nm">NapCat 测试群</div>
@@ -539,6 +566,72 @@ body.right-hidden #reopenRight{display:flex}
     if(moved>5){ e.stopImmediatePropagation(); e.preventDefault(); moved=0; }
   },true);
   window.addEventListener('resize',function(){ setTop(handle.getBoundingClientRect().top,false); });
+})();
+</script>
+
+<div id="convMenu" class="ctxmenu" role="menu">
+  <div class="mh" id="convMenuTitle">会话</div>
+  <button type="button" data-act="mute">◐ <span id="muteLabel">免打扰</span></button>
+  <button type="button" data-act="delete">⌫ 删除会话</button>
+  <div class="sep" id="convMenuSep"></div>
+  <button type="button" class="danger only-private" data-act="contact">♡ 删除联系人</button>
+  <button type="button" class="danger only-group" data-act="leave">⇥ 退出群聊</button>
+</div>
+<div id="confirmMask" class="confirm-mask">
+  <div class="confirm-card">
+    <div class="ci" id="confirmIcon">!</div>
+    <h3 id="confirmTitle">确认操作</h3>
+    <p id="confirmText"></p>
+    <div class="acts"><button type="button" id="confirmCancel">取消</button><button type="button" class="pri" id="confirmOk">确认</button></div>
+  </div>
+</div>
+<div id="designToast" class="design-toast"></div>
+
+<script>
+(function(){
+  var menu=document.getElementById('convMenu');
+  var mask=document.getElementById('confirmMask');
+  var toast=document.getElementById('designToast');
+  var target=null, pending=null;
+  function toastShow(text){ toast.textContent=text; toast.classList.add('show'); clearTimeout(toast._t); toast._t=setTimeout(function(){toast.classList.remove('show')},1600); }
+  function closeMenu(){ menu.classList.remove('open'); if(target) target.classList.remove('menu-target'); target=null; }
+  function openMenu(row,x,y){
+    closeMenu(); target=row;
+    var name=row.getAttribute('data-name')||row.querySelector('.nm').textContent;
+    var type=row.getAttribute('data-type')||'private';
+    document.getElementById('convMenuTitle').textContent=name+(type==='group'?' · 群聊':' · 私聊');
+    menu.querySelectorAll('.only-private').forEach(function(el){el.style.display=type==='group'?'none':'flex'});
+    menu.querySelectorAll('.only-group').forEach(function(el){el.style.display=type==='group'?'flex':'none'});
+    document.getElementById('muteLabel').textContent=row.classList.contains('muted')?'取消免打扰':'免打扰';
+    row.classList.add('menu-target');
+    menu.classList.add('open');
+    var w=menu.offsetWidth||158,h=menu.offsetHeight||150;
+    menu.style.left=Math.min(x,window.innerWidth-w-10)+'px';
+    menu.style.top=Math.min(y,window.innerHeight-h-10)+'px';
+  }
+  function confirmAction(title,text,okText,cb){
+    document.getElementById('confirmTitle').textContent=title;
+    document.getElementById('confirmText').innerHTML=text;
+    document.getElementById('confirmOk').textContent=okText;
+    pending=cb; mask.classList.add('open');
+  }
+  document.querySelectorAll('.convs .conv').forEach(function(row){
+    row.addEventListener('contextmenu',function(e){ e.preventDefault(); openMenu(row,e.clientX,e.clientY); });
+  });
+  menu.addEventListener('click',function(e){
+    e.stopPropagation();
+    var btn=e.target.closest('button[data-act]'); if(!btn||!target) return;
+    var act=btn.getAttribute('data-act'), row=target, name=row.getAttribute('data-name')||'该会话';
+    if(act==='mute'){ row.classList.toggle('muted'); toastShow(row.classList.contains('muted')?'已免打扰「'+name+'」':'已取消免打扰「'+name+'」'); closeMenu(); return; }
+    if(act==='delete'){ confirmAction('删除会话？','仅从会话列表隐藏「'+name+'」，QQ 关系和历史记录保留。','删除',function(){ row.remove(); closeMenu(); toastShow('已删除会话'); }); closeMenu(); return; }
+    if(act==='contact'){ confirmAction('删除联系人？','将从会话列表移除「'+name+'」。QQ 好友关系需要 NapCat 在线时同步删除。','删除',function(){ row.remove(); closeMenu(); toastShow('已删除联系人'); }); closeMenu(); return; }
+    if(act==='leave'){ confirmAction('退出群聊「'+name+'」？','退出后将不再接收群消息，并从会话列表移除。群主 / 管理员身份请先在 QQ 侧处理。','退出群聊',function(){ row.remove(); closeMenu(); toastShow('已退出群聊'); }); closeMenu(); }
+  });
+  document.addEventListener('click',function(e){ if(!menu.contains(e.target)) closeMenu(); });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape'){ closeMenu(); mask.classList.remove('open'); } });
+  document.getElementById('confirmCancel').addEventListener('click',function(){ mask.classList.remove('open'); pending=null; });
+  document.getElementById('confirmOk').addEventListener('click',function(){ var cb=pending; pending=null; mask.classList.remove('open'); if(cb) cb(); });
+  mask.addEventListener('click',function(e){ if(e.target===mask){ mask.classList.remove('open'); pending=null; } });
 })();
 </script>
 </body>
