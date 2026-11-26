@@ -404,6 +404,24 @@ PURE = {
             UNIQUE KEY uk_book_progress (user_id, book_id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """,
+    "shared_files": """
+        CREATE TABLE IF NOT EXISTS shared_files (
+            id VARCHAR(32) PRIMARY KEY,
+            user_id VARCHAR(64) NOT NULL DEFAULT '__owner__',
+            name VARCHAR(160) NOT NULL,
+            mime VARCHAR(100) NOT NULL DEFAULT 'application/octet-stream',
+            size BIGINT NOT NULL DEFAULT 0,
+            sha256 VARCHAR(64) NOT NULL DEFAULT '',
+            path VARCHAR(255) NOT NULL,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            downloads INT NOT NULL DEFAULT 0,
+            max_downloads INT NOT NULL DEFAULT 0,
+            share_token VARCHAR(64) NULL,
+            share_expires_at DATETIME NULL,
+            KEY idx_files_user (user_id, created_at),
+            KEY idx_files_token (share_token)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
     "reading_progress": """
         CREATE TABLE IF NOT EXISTS reading_progress (
             target_id VARCHAR(64) NOT NULL,

@@ -34,7 +34,7 @@ namespace Gateway
         if (Starts(path, "/api/cron")) return nao::v1::API_CRON;
         if (Starts(path, "/api/tools")) return nao::v1::API_TOOL;
         if (Starts(path, "/api/endpoints")) return nao::v1::API_ENDPOINT;
-        if (Starts(path, "/api/diary") || Starts(path, "/api/shelf") || Starts(path, "/api/books") ||
+        if (Starts(path, "/api/diary") || Starts(path, "/api/shelf") || Starts(path, "/api/books") || Starts(path, "/api/files") ||
             path == "/api/commands" || path == "/api/conversations" ||
             path == "/api/logs" || path == "/api/memory" || path == "/api/usage" ||
             path == "/api/status" || path == "/api/avatar" || path == "/api/token" ||

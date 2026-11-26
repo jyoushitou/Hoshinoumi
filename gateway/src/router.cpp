@@ -63,7 +63,7 @@ namespace Gateway
                     "/api/push/outbox", "/api/plugins", "/api/relation",
                     "/api/weekly-plan/weeks", "/api/weekly-plan", "/api/plan",
                     "/api/plan/export", "/api/presence", "/api/state", "/api/reminders",
-                    "/api/cron", "/api/diary", "/api/shelf", "/api/history", "/api/books",
+                    "/api/cron", "/api/diary", "/api/shelf", "/api/history", "/api/books", "/api/files",
                 };
                 for (const auto* item : kExact)
                 {
@@ -74,7 +74,8 @@ namespace Gateway
                        StartsWith(path, "/api/diary/") ||
                        StartsWith(path, "/api/endpoints/") ||
                        StartsWith(path, "/api/health/meals") || StartsWith(path, "/api/health/exercises") ||
-                       StartsWith(path, "/api/books/");
+                       StartsWith(path, "/api/books/") ||
+                       StartsWith(path, "/api/files/");
             }
             if (method == "POST")
             {
@@ -84,7 +85,7 @@ namespace Gateway
                     "/api/savings/init", "/api/savings/entries", "/api/savings/import", "/api/savings/fixed", "/api/savings/funds/buy", "/api/savings/snapshots",
                     "/api/weekly-plan", "/api/weekly-plan/import", "/api/plan", "/api/plan/import",
                     "/api/health/init", "/api/health/meals", "/api/health/exercises", "/api/health/recognize",
-                    "/api/books/refresh",
+                    "/api/books/refresh", "/api/files/init",
                     "/api/plugins/install", "/api/push/devices", "/api/push/test",
                     "/api/groups", "/api/endpoints", "/api/reminders",
                 };
@@ -100,11 +101,13 @@ namespace Gateway
                        (StartsWith(path, "/api/savings/fixed/") && EndsWith(path, "/settle")) ||
                        (StartsWith(path, "/api/savings/funds/") && EndsWith(path, "/redeem")) ||
                        (StartsWith(path, "/api/plugins/") &&
-                        (EndsWith(path, "/toggle") || EndsWith(path, "/approve") || EndsWith(path, "/reject") || EndsWith(path, "/settle")));
+                        (EndsWith(path, "/toggle") || EndsWith(path, "/approve") || EndsWith(path, "/reject") || EndsWith(path, "/settle"))) ||
+                       (StartsWith(path, "/api/files/") && (EndsWith(path, "/complete") || EndsWith(path, "/share")));
             }
             if (method == "PUT")
             {
-                return StartsWith(path, "/api/books/") && EndsWith(path, "/progress");
+                return (StartsWith(path, "/api/books/") && EndsWith(path, "/progress")) ||
+                       (StartsWith(path, "/api/files/") && EndsWith(path, "/chunk"));
             }
             if (method == "PATCH")
             {
@@ -116,6 +119,7 @@ namespace Gateway
                        StartsWith(path, "/api/health/exercises/") ||
                        StartsWith(path, "/api/push/devices/") ||
                        StartsWith(path, "/api/memory/items/") ||
+                       StartsWith(path, "/api/files/") ||
                        StartsWith(path, "/api/endpoints/");
             }
             return false;
@@ -194,6 +198,14 @@ namespace Gateway
         if (url.target == "/api/refresh")
         {
             Refresh(session, url);
+            return;
+        }
+
+        if (url.target.rfind("/api/files/share/", 0) == 0)
+        {
+            const auto query = url.target.find('?');
+            const std::string pathOnly = query == std::string::npos ? url.target : url.target.substr(0, query);
+            Proxy(session, url, pathOnly, "GET", "");
             return;
         }
 
