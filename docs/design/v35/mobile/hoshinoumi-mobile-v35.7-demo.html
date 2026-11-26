@@ -259,6 +259,12 @@ body.nav-hidden .bottom-nav{display:none!important}
 .swipe-confirm .ci{width:30px;height:30px;border-radius:9px;background:#fff1f4;color:#c0264a;display:grid;place-items:center;font-size:14px;font-weight:700;margin-bottom:9px}
 .swipe-confirm h4{margin:0 0 5px;font-size:15px;color:#17263b}.swipe-confirm p{margin:0 0 13px;font-size:8.5px;line-height:1.7;color:#8a9bb0}
 .swipe-confirm .acts{display:flex;gap:6px;justify-content:flex-end}.swipe-confirm button{height:29px;border:1px solid #dbe8ff;border-radius:7px;background:#fff;color:#7d8ca3;font:8.5px inherit;padding:0 12px}.swipe-confirm button.pri{background:#c0264a;border-color:#c0264a;color:#fff;font-weight:600}
+
+.demo-actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 2px;max-width:360px}
+.demo-actions button{flex:0 0 auto;border:1px solid #dbe8ff;background:#fff;color:#2563eb;border-radius:9px;padding:8px 12px;font:10px inherit;cursor:pointer;box-shadow:0 4px 12px rgba(37,99,235,.06)}
+.demo-actions button:hover{background:#eef4ff;border-color:#bcd4f7}
+.demo-actions button.primary{background:#2563eb;color:#fff;border-color:#2563eb;font-weight:600}
+.demo-finger{position:fixed;z-index:999;width:24px;height:24px;border-radius:50%;background:rgba(37,99,235,.18);border:2px solid #2563eb;box-shadow:0 0 0 7px rgba(37,99,235,.08);pointer-events:none;transition:transform .38s cubic-bezier(.22,1,.36,1),opacity .3s;opacity:.9}.demo-finger:after{content:"";position:absolute;left:50%;top:50%;width:6px;height:6px;border-radius:50%;background:#2563eb;transform:translate(-50%,-50%)}
 </style>
 <link rel="stylesheet" href="mobile-native.css">
 </head>
@@ -300,6 +306,7 @@ body.nav-hidden .bottom-nav{display:none!important}
       <button onclick="go('settings')"><span>15</span>设置</button>
       <button onclick="openNotifications()"><span>16</span>提醒弹窗</button>
     </div>
+    <div class="demo-actions"><button class="primary" id="demoSwipeBtn" onclick="demoSwipe()">▶ 演示：右侧左滑</button><button onclick="demoDanger()">演示解散</button></div>
     <button class="reset" onclick="go('login')">重置演示</button>
     <div class="demo-note"><b>演示内容：</b>登录 → 会话 → 聊天；聊天可发送一条演示消息并收到演示回复；底部导航切换记忆 / 关系 / 设置；设置开关可点击。</div>
   </aside>
@@ -1436,6 +1443,41 @@ document.addEventListener('click',function(e){
   if(e.target.closest('.swipe-wrap')) return
   document.querySelectorAll('.conv.swiped').forEach(function(c){ c.classList.remove('swiped'); c.style.transform='translateX(0)' })
 })
+function clearDemoOverlays(){ document.querySelectorAll('.notice-popup,.demo-overlay').forEach(function(x){x.remove()}) }
+function demoSwipe(){
+  clearDemoOverlays()
+  if(currentScreen!=='chats'){ go('chats') }
+  setTimeout(function(){
+    var conv=document.querySelector('.conv[data-conv]')
+    if(!conv) return
+    if(!conv.parentElement.classList.contains('swipe-wrap')) decorateSwipe()
+    var wrap=conv.parentElement
+    var open=conv.classList.contains('swiped')
+    conv.style.transition='transform .3s cubic-bezier(.22,1,.36,1)'
+    if(open){ conv.classList.remove('swiped'); conv.style.transform='translateX(0)'; conv.style.setProperty('background','#f7faff','important') }
+    else { conv.classList.add('swiped'); conv.style.transform='translateX(-156px)'; conv.style.setProperty('background','#fff','important');
+      try {
+        var r=conv.getBoundingClientRect(); var dot=document.createElement('div'); dot.className='demo-finger';
+        dot.style.left=(r.right-18)+'px'; dot.style.top=(r.top+r.height/2-12)+'px'; document.body.appendChild(dot);
+        requestAnimationFrame(function(){ dot.style.transform='translateX(-168px)'; });
+        setTimeout(function(){ dot.style.opacity='0'; setTimeout(function(){dot.remove()},320) }, 420);
+      } catch(e) {}
+    }
+    var btn=document.getElementById('demoSwipeBtn'); if(btn) btn.textContent=open?'▶ 演示：右侧左滑':'◀ 收回操作栏'
+  },180)
+}
+function demoDanger(){
+  clearDemoOverlays()
+  if(currentScreen!=='chats'){ go('chats') }
+  setTimeout(function(){
+    var conv=document.querySelector('.conv[data-conv][data-owner="true"]')||document.querySelector('.conv[data-conv]')
+    if(!conv) return
+    if(!conv.parentElement.classList.contains('swipe-wrap')) decorateSwipe()
+    var name=(conv.querySelector('.copy b')||{}).textContent||'群聊'
+    var kind=conv.dataset.kind==='group'?'group-owner':'private'
+    swipeDanger(name,kind,conv.parentElement)
+  },180)
+}
 const initial = new URLSearchParams(location.search).get('screen')
 const fallback = window.innerWidth <= 860 ? 'chats' : 'login'
 syncNavHidden()
