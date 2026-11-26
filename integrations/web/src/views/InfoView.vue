@@ -16,6 +16,7 @@ interface ShelfBook { title?: string; last_no?: number; last_title?: string; int
 const shelf = ref<{ books?: ShelfBook[]; day?: string; chapters?: number } | null>(null)
 const currentBook = computed(() => Array.isArray(shelf.value?.books) ? shelf.value!.books![0] : null)
 const balanceError = ref('')
+const cronCount = ref<number | null>(null)
 const balanceCurrency = computed(() => balance.value?.balance_infos?.[0]?.currency || 'CNY')
 const balanceTotal = computed(() => balance.value?.balance_infos?.[0]?.total_balance || '—')
 const balanceGranted = computed(() => balance.value?.balance_infos?.[0]?.granted_balance || '0.00')
@@ -34,6 +35,7 @@ async function copyDiagnostics() {
   try { await navigator.clipboard.writeText(text); copied.value = true; setTimeout(() => { copied.value = false }, 1500) } catch { copied.value = false }
 }
 async function loadShelf() { try { const r = await http.get<{ data?: { books?: ShelfBook[]; day?: string; chapters?: number } }>('/api/shelf'); shelf.value = r.data || null } catch { shelf.value = null } }
+async function loadCron() { try { const r = await http.get<{ data?: unknown[] }>('/api/cron'); cronCount.value = Array.isArray(r.data) ? r.data.length : 0 } catch { cronCount.value = null } }
 async function loadBalance() { try { balance.value = await http.get('/api/balance'); balanceError.value = '' } catch { balance.value = null; balanceError.value = 'API 余额不可用' } }
 interface Backup { manifest?: { created_at?: string; counts?: Record<string, number>; checksums?: Record<string, string> }; db?: unknown }
 const backup = ref<Backup | null>(null)
@@ -108,7 +110,7 @@ async function load() {
   try { status.value = await http.get('/api/status'); error.value = '' } catch { status.value = null; error.value = '无后端连接' }
 }
 const uptimeLabel = computed(() => { const seconds = Number(status.value?.uptime_seconds || 0); if (!seconds) return '—'; const days = Math.floor(seconds / 86400); const hours = Math.floor((seconds % 86400) / 3600); return days ? `${days} 天 ${hours} 小时` : `${hours} 小时` })
-onMounted(() => { void load(); void loadBalance(); void loadShelf() })
+onMounted(() => { void load(); void loadBalance(); void loadShelf(); void loadCron() })
 </script>
 
 <template>
@@ -147,7 +149,7 @@ onMounted(() => { void load(); void loadBalance(); void loadShelf() })
         <button type="button" class="primary" :disabled="backupBusy" @click="exportBackup">{{ backupBusy ? '导出中…' : '导出实例' }}</button>
         <div class="import-box"><div class="import-title">导入备份（JSON）</div><label class="file-pick">选择备份文件<input type="file" accept=".json,application/json" @change="onImportFile"></label><textarea v-model="importText" placeholder="或粘贴导出的 JSON"></textarea><div class="import-actions"><button type="button" :disabled="importBusy || !importText.trim()" @click="importBackup(true)">校验</button><button type="button" class="danger" :disabled="importBusy || !importText.trim()" @click="importBackup(false)">恢复</button><button type="button" :disabled="importBusy" @click="rollbackBackup">回滚</button></div><div v-if="importState" class="import-state">{{ importState }}</div></div>
       </div>
-      <div v-else-if="section === 'plan'" class="rows"><div><span>周计划</span><b>ISO 年周</b></div><div><span>定时任务</span><b>3 个</b></div></div>
+      <div v-else-if="section === 'plan'" class="rows"><div><span>周计划</span><b>ISO 年周</b></div><div><span>定时任务</span><b>{{ cronCount === null ? '—' : cronCount + ' 个' }}</b></div></div>
       <div v-else-if="section === 'account'" class="rows"><div><span>主人</span><b>{{ status?.master_qq || '—' }}</b></div><div><span>成员</span><b>按 target 隔离</b></div></div>
       <div v-else-if="section === 'reading'" class="rows">
         <template v-if="currentBook">
