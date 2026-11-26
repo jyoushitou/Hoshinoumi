@@ -245,12 +245,14 @@ body.nav-hidden .bottom-nav{display:none!important}
 .d-scroll .persona-card{animation:personaIn .28s cubic-bezier(.22,1,.36,1) both}.d-scroll .persona-card:nth-child(2){animation-delay:.04s}.d-scroll .persona-card:nth-child(3){animation-delay:.08s}@keyframes personaIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
 
 /* v35.9.35 conversation swipe actions */
-.swipe-wrap{position:relative;overflow:hidden;border-radius:13px;margin-bottom:1px}
-.swipe-actions{position:absolute;right:0;top:0;bottom:0;width:150px;display:flex;gap:2px;padding:3px 3px 3px 0;background:#f7faff}
-.swipe-actions button{flex:1;border:0;border-radius:7px;color:#fff;font:7.5px inherit;padding:0 2px;white-space:nowrap;cursor:pointer}
+.swipe-wrap{position:relative;overflow:hidden;border-radius:13px;margin-bottom:1px;background:#f7faff}
+.swipe-actions{position:absolute;z-index:0;right:0;top:0;bottom:0;width:156px;display:flex;gap:1px;padding:0;background:#f7faff;box-sizing:border-box;border-radius:0 13px 13px 0;overflow:hidden}
+.swipe-actions button{flex:1;border:0;border-radius:0;color:#fff;font:8px inherit;font-weight:600;padding:0 2px;white-space:nowrap;cursor:pointer;box-shadow:0 1px 3px rgba(15,23,42,.08)}
 .swipe-actions .sw-mute{background:#2563eb}.swipe-actions .sw-del{background:#64748b}.swipe-actions .sw-danger{background:#c0264a}
-.swipe-wrap .conv{position:relative;z-index:2;background:#f7faff;transition:transform .18s ease;touch-action:pan-y;margin:0}
+.swipe-wrap .conv{position:relative;z-index:2;width:100%;box-sizing:border-box;overflow:hidden;background:#f7faff;transition:transform .24s cubic-bezier(.22,1,.36,1);touch-action:pan-y;margin:0}
 .swipe-wrap .conv.swiped{background:#fff;box-shadow:0 5px 14px rgba(29,78,137,.1)}
+.swipe-wrap .conv .copy{overflow:hidden}
+.swipe-wrap .conv.swiped .badge{display:none}
 .conv.muted .copy b{color:#9aabc0}.conv.muted .copy span{color:#aab8ca}.conv.muted .badge{display:none}
 .conv.muted:after{content:"静音";position:absolute;right:8px;bottom:8px;font-size:7px;color:#9aabc0;background:#f1f5fb;border-radius:4px;padding:1px 4px}
 .swipe-confirm{width:310px;background:#fff;border:1px solid #dbe8ff;border-radius:15px;padding:18px;box-shadow:0 26px 70px rgba(15,23,42,.26);position:relative;z-index:2}
@@ -1409,8 +1411,8 @@ function decorateSwipe(){
     wrap.appendChild(actions); wrap.appendChild(conv)
     var startX=0,startY=0,dx=0,axis='',open=false
     conv.addEventListener('touchstart',function(e){ if(e.touches.length!==1) return; startX=e.touches[0].clientX; startY=e.touches[0].clientY; dx=0; axis=''; },{passive:true})
-    conv.addEventListener('touchmove',function(e){ if(e.touches.length!==1) return; var x=e.touches[0].clientX-startX, y=e.touches[0].clientY-startY; if(!axis&&(Math.abs(x)>6||Math.abs(y)>6)) axis=Math.abs(x)>Math.abs(y)?'x':'y'; if(axis!=='x') return; dx=Math.max(-150,Math.min(0,x+(open?-150:0))); conv.style.transition='none'; conv.style.transform='translateX('+dx+'px)'; },{passive:true})
-    conv.addEventListener('touchend',function(){ if(axis!=='x') return; open=dx<-56; conv.style.transition=''; conv.style.transform='translateX('+(open?-150:0)+'px)'; conv.classList.toggle('swiped',open); })
+    conv.addEventListener('touchmove',function(e){ if(e.touches.length!==1) return; var x=e.touches[0].clientX-startX, y=e.touches[0].clientY-startY; if(!axis&&(Math.abs(x)>6||Math.abs(y)>6)) axis=Math.abs(x)>Math.abs(y)?'x':'y'; if(axis!=='x') return; dx=Math.max(-156,Math.min(0,x+(open?-156:0))); conv.style.transition='none'; conv.style.transform='translateX('+dx+'px)'; },{passive:true})
+    conv.addEventListener('touchend',function(){ if(axis!=='x') return; open=dx<-56; conv.style.transition=''; conv.style.transform='translateX('+(open?-156:0)+'px)'; conv.classList.toggle('swiped',open); })
     conv.addEventListener('click',function(e){ if(open||dx<-10){ e.stopImmediatePropagation(); e.preventDefault(); open=false; dx=0; conv.classList.remove('swiped'); conv.style.transform='translateX(0)'; } },true)
     actions.querySelector('.sw-mute').addEventListener('click',function(){ conv.classList.toggle('muted'); toast(conv.classList.contains('muted')?'已免打扰「'+name+'」':'已取消免打扰「'+name+'」'); conv.classList.remove('swiped'); conv.style.transform='translateX(0)'; open=false })
     actions.querySelector('.sw-del').addEventListener('click',function(){ wrap.remove(); toast('已删除会话「'+name+'」') })
@@ -1428,6 +1430,10 @@ function swipeConfirm(btn,kind){
   all.forEach(function(c){ if(((c.querySelector('.copy b')||{}).textContent||'')===name) c.closest('.swipe-wrap')?.remove() })
   closeOverlay(); toast(kind==='group'?'已退出群聊「'+name+'」':'已删除联系人「'+name+'」')
 }
+document.addEventListener('click',function(e){
+  if(e.target.closest('.swipe-wrap')) return
+  document.querySelectorAll('.conv.swiped').forEach(function(c){ c.classList.remove('swiped'); c.style.transform='translateX(0)' })
+})
 const initial = new URLSearchParams(location.search).get('screen')
 const fallback = window.innerWidth <= 860 ? 'chats' : 'login'
 syncNavHidden()
