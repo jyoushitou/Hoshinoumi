@@ -387,6 +387,16 @@ namespace Gateway
         }
         const std::string owner = claims.sub;
 
+        if (url.target.rfind("/api/chat/mode", 0) == 0)
+        {
+            if (url.target.find("/approve") != std::string::npos)
+            {
+                Proxy(session, url, "/internal/chat/mode/approve", "POST", owner);
+                return;
+            }
+            Proxy(session, url, "/internal/chat/mode", url.method == "GET" ? "GET" : "POST", owner);
+            return;
+        }
         if (url.target.rfind("/api/chat", 0) == 0)
         {
             Proxy(session, url, "/internal/chat", "POST", owner);

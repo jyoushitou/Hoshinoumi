@@ -15,6 +15,7 @@ from .routes_meta import (
     handle_health, handle_healthz, handle_readyz, handle_status, handle_napcat_status, handle_usage,
     handle_memory, handle_logs, handle_get_token,
 )
+from .routes_chat_mode import handle_chat_mode_get, handle_chat_mode_set, handle_chat_mode_approve
 from .routes_chat import handle_chat, handle_command, handle_conversations, handle_history, handle_commands, handle_read, handle_read_state, handle_recall, handle_topic
 from .routes_persona import handle_persona, handle_export as handle_persona_export, handle_import as handle_persona_import, handle_activate as handle_persona_activate
 from .routes_app import handle_app_update, handle_clients
@@ -442,6 +443,9 @@ async def start_api_server():
     app.router.add_get("/api/napcat/status", handle_napcat_status)
     app.router.add_get("/api/app/update", handle_app_update)
     app.router.add_get("/api/clients", handle_clients)
+    app.router.add_get("/api/chat/mode", handle_chat_mode_get)
+    app.router.add_post("/api/chat/mode", handle_chat_mode_set)
+    app.router.add_post("/api/chat/mode/approve", handle_chat_mode_approve)
     app.router.add_get("/api/avatar", handle_avatar)
     app.router.add_get("/api/usage", handle_usage)
     app.router.add_get("/api/memory", handle_memory)

@@ -78,6 +78,8 @@ _CONTRACTS = [
     (r"/internal/cron", {"GET", "POST"}),
     (r"/internal/cron/[^/]+", {"PATCH", "DELETE"}),
     (r"/internal/cron/[^/]+/run", {"POST"}),
+    (r"/internal/chat/mode", {"GET", "POST"}),
+    (r"/internal/chat/mode/approve", {"POST"}),
     (r"/internal/chat", {"POST"}),
     (r"/internal/command", {"POST"}),
     (r"/internal/history", {"GET"}),
