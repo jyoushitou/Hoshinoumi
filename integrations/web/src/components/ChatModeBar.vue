@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { http } from '@/api/client'
 import { useSessionStore } from '@/stores/session'
@@ -21,6 +21,7 @@ const busy = ref(false)
 const error = ref('')
 const shellCommand = ref('')
 const remaining = ref(0)
+const toolsCount = ref<number | null>(null)
 let timer: ReturnType<typeof setInterval> | null = null
 const modes = computed(() => state.value?.modes || [])
 const mode = computed(() => state.value?.mode || 'chat')
@@ -29,6 +30,9 @@ const codeLabel = computed(() => {
   const m = Math.floor(remaining.value / 60), s = remaining.value % 60
   return `${m}:${String(s).padStart(2, '0')}`
 })
+async function loadAgentTools() {
+  try { const r = await http.get<{ tools?: unknown[] }>('/api/tools'); toolsCount.value = Array.isArray(r.tools) ? r.tools.length : 0 } catch { toolsCount.value = null }
+}
 function targetFor(value: string) { return value === 'chat' ? 'persona:nao' : 'mode:' + value }
 async function load() {
   if (!isOwner.value) return
@@ -66,7 +70,8 @@ function startClock() {
     if (remaining.value === 0) { void select('chat') }
   }, 1000)
 }
-onMounted(() => { void load(); startClock() })
+watch(mode, value => { if (value === 'agent') void loadAgentTools() })
+onMounted(() => { void load().then(() => { if (mode.value === 'agent') void loadAgentTools() }); startClock() })
 onBeforeUnmount(() => { if (timer) clearInterval(timer) })
 </script>
 
@@ -74,7 +79,7 @@ onBeforeUnmount(() => { if (timer) clearInterval(timer) })
   <div v-if="isOwner" class="mode-bar">
     <div class="mode-head"><span>模式</span><b>{{ state?.label || 'Chat' }}</b><em v-if="mode === 'code'">{{ codeLabel }}</em><span v-if="error" class="err">{{ error }}</span></div>
     <div class="mode-tabs"><button v-for="item in modes" :key="item.id" type="button" :class="{ on: item.id === mode }" :disabled="busy" :title="item.description" @click="select(item.id)">{{ item.label }}</button></div>
-    <div v-if="mode === 'agent'" class="mode-note">Agent · {{ state?.agent_task || '等待任务 / 工具执行状态' }}</div>
+    <div v-if="mode === 'agent'" class="mode-note">Agent · 工具 {{ toolsCount ?? '—' }} 个 · {{ state?.agent_task || '等待任务' }}</div>
     <div v-if="mode === 'shell'" class="shell-box">
       <div class="shell-row"><input v-model="shellCommand" placeholder="输入危险命令，提交审批"><button type="button" @click="approve(false)">请求</button></div>
       <div v-if="state?.approval" class="approval" :class="{ ok: state.approval.approved }"><b>{{ state.approval.approved ? '已批准' : '已拒绝' }}</b><code>{{ state.approval.command }}</code><small>{{ state.approval.at }}</small></div>
