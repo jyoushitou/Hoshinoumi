@@ -27,6 +27,7 @@ function logTray(msg) { try { fs.appendFileSync(path.join(__dirname, '.electron-
 function createWindow() {
   win = new BrowserWindow({
     icon: ICON,
+    title: 'Hoshinoumi',
     width: 1440,
     height: 900,
     minWidth: 1180,
@@ -201,6 +202,7 @@ function createTray() {
     tray.setToolTip('Hoshinoumi')
     refreshTrayMenu()
     tray.on('click', () => { if (win) { win.isVisible() ? win.hide() : win.show(); if (win.isVisible()) win.focus() } })
+    tray.on('double-click', () => { if (win) { win.show(); win.focus() } })
     logTray('tray:create ok')
   } catch (e) { logTray('tray:error ' + String(e)) }
 }
