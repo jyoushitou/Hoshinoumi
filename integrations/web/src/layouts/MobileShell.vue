@@ -20,6 +20,7 @@ import HealthView from '@/views/HealthView.vue'
 import BooksView from '@/views/BooksView.vue'
 import BookReaderView from '@/views/BookReaderView.vue'
 import FilesView from '@/views/FilesView.vue'
+import DownloadsView from '@/views/DownloadsView.vue'
 import MobileLogsView from '@/views/mobile/MobileLogsView.vue'
 import { isNativeClient } from '@/lib/platform'
 import MobileWeeklyView from '@/views/mobile/MobileWeeklyView.vue'
@@ -62,7 +63,7 @@ function onFocusChange(event: FocusEvent) {
     if (!isEditableTarget(document.activeElement)) keyboardOpen.value = false
   }, 180)
 }
-const MAIN_ROUTES = new Set(['/chat', '/home', '/memory', '/relation', '/savings', '/weekly', '/books', '/files', '/info', '/persona', '/commands', '/cron', '/diary', '/logs', '/settings'])
+const MAIN_ROUTES = new Set(['/chat', '/home', '/memory', '/relation', '/savings', '/weekly', '/books', '/files', '/downloads', '/info', '/persona', '/commands', '/cron', '/diary', '/logs', '/settings'])
 const isMainRoute = computed(() => MAIN_ROUTES.has(route.path))
 
 function handleNativeBack(): string {
@@ -106,7 +107,7 @@ function syncViewportSoon() {
 const titles: Record<string, string> = {
   chat: '聊天', home: '主页', memory: '记忆', relation: '关系', savings: '存钱',
   weekly: '周计划', info: '信息', persona: '人设', commands: '命令', cron: '定时任务',
-  diary: '日记', books: '阅读', files: '文件', health: '健康', plugins: '插件',
+  diary: '日记', books: '阅读', files: '文件', downloads: '下载', health: '健康', plugins: '插件',
   logs: '运行日志', settings: '设置',
 }
 const pageTransition = ref('page-left')
@@ -117,6 +118,7 @@ const pageView = computed(() => {
   if (route.name === 'books') return BooksView
   if (route.name === 'book-reader') return BookReaderView
   if (route.name === 'files') return FilesView
+  if (route.name === 'downloads') return DownloadsView
   if (route.name === 'settings') return MobileSettingsView
   if (route.name === 'permissions') return MobilePermissionsView
   if (route.name === 'weekly') return MobileWeeklyView

@@ -18,6 +18,7 @@ export const mobileEntries: MobileEntry[] = [
   { key: 'weekly', path: '/weekly', icon: '▦', label: '周计划' },
   { key: 'books', path: '/books', icon: '▤', label: '阅读' },
   { key: 'files', path: '/files', icon: '◫', label: '文件' },
+  { key: 'downloads', path: '/downloads', icon: '⇩', label: '下载' },
   { key: 'info', path: '/info', icon: '≡', label: '信息' },
   { key: 'persona', path: '/persona', icon: '◇', label: '人设' },
   { key: 'commands', path: '/commands', icon: '⌘', label: '命令' },
@@ -52,7 +53,7 @@ function persist() {
 
 export function useMobileNav() {
   const { hiddenPages } = useUiSettings()
-  const visibleMobileEntries = computed(() => (isNativeClient() ? mobileEntries.filter(entry => entry.key !== 'logs') : mobileEntries).filter(entry => !hiddenPages.value.includes(entry.key)))
+  const visibleMobileEntries = computed(() => (isNativeClient() ? mobileEntries.filter(entry => entry.key !== 'logs' && entry.key !== 'downloads') : mobileEntries).filter(entry => !hiddenPages.value.includes(entry.key)))
   const quickEntries = computed(() => visibleMobileEntries.value.filter(entry => quickKeys.value.includes(entry.key)))
 
   function toggleQuick(key: string) {

@@ -14,6 +14,7 @@ const modules = [
   { path: '/weekly', icon: '▦', label: '周计划', desc: '节次 / 时间' },
   { path: '/books', icon: '▤', label: '阅读', desc: '书架 / 本地书' },
   { path: '/files', icon: '◫', label: '文件', desc: '上传 / 分享' },
+  { path: '/downloads', icon: '⇩', label: '下载', desc: 'Android / Windows' },
   { path: '/info', icon: '≡', label: '信息', desc: '运行 / 配置' },
   { path: '/persona', icon: '◇', label: '人设', desc: '导入 / 激活' },
   { path: '/commands', icon: '⌘', label: '命令', desc: '浏览 / 执行' },
