@@ -274,6 +274,9 @@ body.nav-hidden .bottom-nav{display:none!important}
 .admin-row button{border:1px solid #dbe8ff;background:#f8fbff;color:#2563eb;border-radius:5px;padding:3px 6px;font:7.5px inherit;cursor:pointer;flex:none}
 .admin-note{font-size:7.5px;color:#8a9bb0;line-height:1.6;background:#f8fbff;border:1px dashed #dbe8ff;border-radius:7px;padding:7px 8px;margin-top:8px}
 .admin-recall{margin-left:6px;border:1px solid #f0d7dd;background:#fff;color:#b23b52;border-radius:4px;padding:1px 4px;font:7px inherit;cursor:pointer;vertical-align:middle}
+
+.recall-preview{margin-top:7px;padding:7px 8px;border:1px dashed #dbe8ff;border-radius:7px;background:#f8fbff;color:#526982;font-size:8.5px;line-height:1.6;max-height:54px;overflow:hidden}
+.recall-confirm .ci{background:#eef4ff;color:#2563eb}
 </style>
 <link rel="stylesheet" href="mobile-native.css">
 </head>
@@ -1473,9 +1476,29 @@ function decorateAdminRecall(){
   document.querySelectorAll('#msgs .msg').forEach(function(m){
     if(m.querySelector('.admin-recall')) return
     var stamp=m.querySelector('.stamp'); if(!stamp) return
-    var b=document.createElement('button'); b.className='admin-recall'; b.textContent='撤回'; b.onclick=function(e){ e.stopPropagation(); m.remove(); var n=document.createElement('div'); n.className='system-note'; n.textContent='管理员撤回了一条消息'; document.getElementById('msgs').appendChild(n); toast('已撤回群内消息') }
+    var b=document.createElement('button'); b.className='admin-recall'; b.textContent='撤回'; b.onclick=function(e){ e.stopPropagation(); recallAdminMessage(m) }
     stamp.appendChild(b)
   })
+}
+var pendingRecallMsg = null
+function escapeRecallText(text){
+  return String(text||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+}
+function recallAdminMessage(msg){
+  pendingRecallMsg=msg
+  var bubble=msg.querySelector('.bubble'), who=(msg.querySelector('.avatar')||{}).textContent||'成员'
+  var preview=escapeRecallText(bubble?bubble.textContent:'这条消息')
+  overlay('<div class="swipe-confirm recall-confirm"><div class="ci">↺</div><h4>撤回这条消息？</h4><p>管理员可撤回群内任意成员的消息；撤回后群成员会看到提示。</p><div class="recall-preview">'+who+'：'+preview+'</div><div class="acts" style="margin-top:13px"><button onclick="closeOverlay()">取消</button><button class="pri" onclick="confirmAdminRecall()">撤回</button></div></div>')
+}
+function confirmAdminRecall(){
+  var msg=pendingRecallMsg; pendingRecallMsg=null
+  if(msg && msg.parentNode){
+    msg.remove()
+    var n=document.createElement('div'); n.className='system-note'; n.textContent='管理员撤回了一条消息'
+    var box=document.getElementById('msgs'); if(box) box.appendChild(n)
+    toast('已撤回一条消息')
+  }
+  closeOverlay()
 }
 function clearDemoOverlays(){ document.querySelectorAll('.notice-popup,.demo-overlay').forEach(function(x){x.remove()}) }
 function demoSwipe(){
