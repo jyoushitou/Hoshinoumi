@@ -67,6 +67,16 @@ def _backup_status():
         return {"last_at": "", "size_mb": 0.0, "kept": 0, "latest": ""}
 
 
+def _port_listening(port):
+    import socket
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.settimeout(0.2)
+            return sock.connect_ex(("127.0.0.1", int(port))) == 0
+    except Exception:
+        return False
+
+
 async def handle_status(request):
     try:
         # v17.16：路由层不写 SQL
@@ -122,6 +132,9 @@ async def handle_status(request):
             "connected": bool(getattr(cfg, "active_ws_qq", None)),
             "port": int(LISTEN_PORT_QQ or 0),
             "mode": "NapCat WS" if getattr(cfg, "active_ws_qq", None) else "未接入",
+            "self_qq": str(getattr(cfg, "self_qq", "") or ""),
+            "ws_url": "ws://127.0.0.1:" + str(int(LISTEN_PORT_QQ or 0)),
+            "listening": _port_listening(LISTEN_PORT_QQ),
         },
     })
 

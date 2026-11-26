@@ -5,7 +5,7 @@ export interface InfoStatus {
   schema?: number | string
   version?: string
   uptime_seconds?: number
-  napcat?: { connected?: boolean; port?: number; mode?: string }
+  napcat?: { connected?: boolean; port?: number; mode?: string; self_qq?: string; ws_url?: string; listening?: boolean }
   db?: { engine?: string; tables?: number; size_mb?: number }
   backup?: { last_at?: string; size_mb?: number; kept?: number; checksum?: string }
   stats?: Record<string, number>
