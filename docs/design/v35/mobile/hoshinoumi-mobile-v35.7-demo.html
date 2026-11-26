@@ -277,6 +277,8 @@ body.nav-hidden .bottom-nav{display:none!important}
 
 .recall-preview{margin-top:7px;padding:7px 8px;border:1px dashed #dbe8ff;border-radius:7px;background:#f8fbff;color:#526982;font-size:8.5px;line-height:1.6;max-height:54px;overflow:hidden}
 .recall-confirm .ci{background:#eef4ff;color:#2563eb}
+
+.admin-field{margin-top:10px}.admin-field label{display:block;font-size:8px;color:#6f8299;margin-bottom:4px}.admin-field input{width:100%;height:30px;border:1px solid #dbe8ff;border-radius:7px;background:#f8fbff;color:#2f4665;font:9px inherit;padding:0 8px;outline:0}.admin-field input:focus{border-color:#93b7fa;box-shadow:0 0 0 3px rgba(37,99,235,.08)}.admin-field small{display:block;font-size:7px;color:#a2b2c6;margin-top:3px;line-height:1.5}
 </style>
 <link rel="stylesheet" href="mobile-native.css">
 </head>
@@ -1455,13 +1457,16 @@ document.addEventListener('click',function(e){
   if(e.target.closest('.swipe-wrap')) return
   document.querySelectorAll('.conv.swiped').forEach(function(c){ c.classList.remove('swiped'); c.style.transform='translateX(0)' })
 })
+var recallNotice = '管理员撤回了一条消息'
 function openGroupAdmin(){
   overlay(`<div class="sheet admin-sheet"><div class="admin-head"><h4>群管理</h4><small>星之海学生会 · 3 人</small></div>
   <div class="admin-row"><span class="av" style="background:#fff4d8;color:#95610b">你</span><div class="who"><b>你</b><small>群主</small></div><span class="admin-role owner">群主</span><span style="font-size:7px;color:#9aabc0">不可变更</span></div>
   <div class="admin-row"><span class="av">友</span><div class="who"><b>友利</b><small>管理员 · 可撤回群内任意消息</small></div><span class="admin-role">管理员</span><button onclick="toggleAdmin(this)">取消管理员</button></div>
   <div class="admin-row"><span class="av">奈</span><div class="who"><b>奈绪</b><small>成员</small></div><span class="admin-role" style="background:#f1f5fb;color:#8a9bb0">成员</span><button onclick="toggleAdmin(this)">设为管理员</button></div>
+  <div class="admin-field"><label>撤回消息提示</label><input id="recallNoticeInput" maxlength="40" value="管理员撤回了一条消息" oninput="recallNotice=this.value"><small>自定义后，群成员看到的撤回提示会使用这段文案</small></div>
   <div class="admin-note">管理员可撤回群聊内所有成员的消息；群主退群会自动解散群聊。</div>
   <button class="sheet-close" onclick="closeOverlay()">完成</button></div>`)
+  var input=document.getElementById('recallNoticeInput'); if(input) input.value=recallNotice
 }
 function toggleAdmin(btn){
   var row=btn.closest('.admin-row'), role=row.querySelector('.admin-role')
@@ -1494,7 +1499,7 @@ function confirmAdminRecall(){
   var msg=pendingRecallMsg; pendingRecallMsg=null
   if(msg && msg.parentNode){
     msg.remove()
-    var n=document.createElement('div'); n.className='system-note'; n.textContent='管理员撤回了一条消息'
+    var n=document.createElement('div'); n.className='system-note'; n.textContent=(recallNotice||'').trim()||'管理员撤回了一条消息'
     var box=document.getElementById('msgs'); if(box) box.appendChild(n)
     toast('已撤回一条消息')
   }
