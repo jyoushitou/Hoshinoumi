@@ -25,6 +25,31 @@ PENDING_FILE = ROOT / "data" / "plugins" / "pending.json"
 WEB_ROOT = ROOT / "data" / "plugins" / "web"
 WEB_REGISTRY = WEB_ROOT / "registry.json"
 _LOCK = threading.Lock()
+_ALLOWED_PERMISSIONS = {"read-only", "network", "filesystem", "db", "notifications", "finance"}
+
+
+class PluginDuplicate(ValueError):
+    pass
+
+
+def _validate_manifest(manifest):
+    if not isinstance(manifest, dict):
+        raise ValueError("manifest 必须是对象")
+    for field in ("id", "name", "version", "apiVersion", "entry"):
+        if not manifest.get(field):
+            raise ValueError("manifest 缺少字段：" + field)
+    api_version = manifest.get("apiVersion")
+    if isinstance(api_version, bool) or not isinstance(api_version, (int, float)) or int(api_version) != api_version or api_version > 1:
+        raise ValueError("apiVersion 不支持")
+    manifest = {**manifest, "apiVersion": int(api_version)}
+    permissions = manifest.get("permissions", ["read-only"])
+    if not isinstance(permissions, list) or any(p not in _ALLOWED_PERMISSIONS for p in permissions):
+        raise ValueError("包含未知权限")
+    entry = str(manifest["entry"])
+    if entry.startswith("/") or ".." in entry.split("/"):
+        raise ValueError("entry 路径非法")
+    return {**manifest, "permissions": permissions}
+
 
 
 def _load_json(path, fallback):
@@ -121,18 +146,18 @@ def _inspect_web_package(raw):
 
 
 def _install_web(raw, manifest):
+    manifest = _validate_manifest(manifest)
     plugin_id = str(manifest.get("id") or "").strip()
-    if not plugin_id:
-        raise ValueError("插件缺少 id")
     with _LOCK:
         registry = _load_web()
         if any(x.get("id") == plugin_id for x in registry):
-            raise ValueError("插件已安装：" + plugin_id)
+            raise PluginDuplicate("插件已安装：" + plugin_id)
         target = WEB_ROOT / plugin_id
         if target.exists():
             shutil.rmtree(target)
         target.mkdir(parents=True, exist_ok=True)
-        (target / "package.hoshinoumi").write_bytes(raw)
+        if raw:
+            (target / "package.hoshinoumi").write_bytes(raw)
         (target / "plugin.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         pending = "finance" in (manifest.get("permissions") or [])
         item = {"id": plugin_id, "name": str(manifest.get("name") or plugin_id), "version": str(manifest.get("version") or "0.1.0"),
@@ -160,9 +185,13 @@ async def handle_install(request):
         body = await request.json()
     except Exception:
         return json_response({"ok": False, "error": "invalid_json"}, 400)
+    source = str(body.get("source") or "")
     raw = None
+    manifest = None
     try:
-        if body.get("source") == "url":
+        if source == "manifest":
+            manifest = _validate_manifest(body.get("manifest"))
+        elif source == "url":
             url = str(body.get("url") or "").strip()
             if not url.startswith(("http://", "https://")):
                 return json_response({"ok": False, "error": "bad_url"}, 400)
@@ -170,19 +199,37 @@ async def handle_install(request):
                 raw = response.read(20 * 1024 * 1024 + 1)
             if len(raw) > 20 * 1024 * 1024:
                 return json_response({"ok": False, "error": "package_too_large"}, 413)
-        elif body.get("package_base64") or body.get("data_base64"):
-            raw = base64.b64decode(str(body.get("package_base64") or body.get("data_base64")), validate=True)
+            if str(body.get("filename") or "").lower().endswith(".json") or url.lower().split("?", 1)[0].endswith(".json"):
+                try:
+                    manifest = _validate_manifest(json.loads(raw.decode("utf-8")))
+                    raw = None
+                except Exception as exc:
+                    return json_response({"ok": False, "error": "bad_manifest", "message": str(exc)}, 400)
+        elif source in ("file", "manual") or body.get("data_base64") or body.get("package_base64"):
+            raw = base64.b64decode(str(body.get("package_base64") or body.get("data_base64") or ""), validate=True)
             if len(raw) > 20 * 1024 * 1024:
                 return json_response({"ok": False, "error": "package_too_large"}, 413)
+            filename = str(body.get("filename") or "").lower()
+            if filename.endswith(".json"):
+                try:
+                    manifest = _validate_manifest(json.loads(raw.decode("utf-8")))
+                    raw = None
+                except Exception as exc:
+                    return json_response({"ok": False, "error": "bad_manifest", "message": str(exc)}, 400)
         else:
-            return json_response({"ok": False, "error": "unsupported_source", "message": "只支持 .hoshinoumi/.zip 包"}, 400)
+            return json_response({"ok": False, "error": "unsupported_source", "message": "支持文件 / 网址 / manifest"}, 400)
 
-        # 先按 Web 插件规范解析；不匹配再按核心 Python 插件安装
+        if manifest is not None:
+            item = _install_web(raw, manifest)
+            return json_response({"ok": True, "data": item, "source": "web", "mock": False})
+
         try:
             manifest = _inspect_web_package(raw)
             item = _install_web(raw, manifest)
             return json_response({"ok": True, "data": item, "source": "web", "mock": False})
-        except Exception as web_exc:
+        except PluginDuplicate:
+            return json_response({"ok": False, "error": "plugin_exists", "message": "插件已安装"}, 409)
+        except Exception:
             tmp = _extract_package(raw)
             try:
                 manifest = loader.read_manifest(tmp)
@@ -195,9 +242,10 @@ async def handle_install(request):
                 return json_response({"ok": True, "data": _row(rec, pending=True), "source": "core", "mock": False})
             finally:
                 shutil.rmtree(tmp, ignore_errors=True)
+    except PluginDuplicate:
+        return json_response({"ok": False, "error": "plugin_exists", "message": "插件已安装"}, 409)
     except Exception as exc:
         return json_response({"ok": False, "error": "install_failed", "message": str(exc)}, 400)
-
 
 def _find_web(plugin_id):
     return next((x for x in _load_web() if x.get("id") == plugin_id), None)

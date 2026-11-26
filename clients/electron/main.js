@@ -103,6 +103,7 @@ function refreshTrayMenu() {
   tray.setContextMenu(Menu.buildFromTemplate([
     { label: '打开主窗口', click: () => { if (win) { win.show(); win.focus() } } },
     { label: '迷你窗口', enabled: !!shellSettings.miniWindow, click: toggleMini },
+    { label: '插件管理', click: openPlugins },
     { label: '设置', click: openSettings },
     { label: '检查更新', click: checkUpdate },
     { label: '回退上一版本', click: rollbackUpdate },
@@ -116,6 +117,11 @@ function applyMiniState() {
     if (shellSettings.miniWindow) globalShortcut.register('CommandOrControl+Shift+M', toggleMini)
     else { globalShortcut.unregister('CommandOrControl+Shift+M'); if (mini) mini.hide() }
   } catch {}
+}
+function openPlugins() {
+  if (!win) return
+  win.show(); win.focus()
+  win.webContents.executeJavaScript("location.hash='#/plugins'").catch(() => {})
 }
 function openSettings() {
   if (settingsWin) { settingsWin.show(); settingsWin.focus(); return }
