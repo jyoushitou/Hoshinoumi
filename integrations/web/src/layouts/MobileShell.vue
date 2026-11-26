@@ -42,6 +42,9 @@ const isOwner = useIsOwner()
 const viewportHeight = ref(0)
 const chatDetail = ref(false)
 const keyboardOpen = ref(false)
+const mainRef = ref<HTMLElement | null>(null)
+const swipeEntries = computed(() => mobileEntries.filter(entry => !isHidden(entry.key) && (isOwner.value || (entry.key !== 'relation' && entry.key !== 'savings'))))
+let swipeStartX = 0, swipeStartY = 0, swipeDx = 0, swipeAxis: '' | 'x' | 'y' = '', swipeActive = false
 let focusOutTimer: ReturnType<typeof setTimeout> | null = null
 function isEditableTarget(target: EventTarget | null) {
   const el = target as HTMLElement | null
@@ -157,6 +160,39 @@ watchEffect(() => {
   if (session.status && !isOwner.value) void router.replace('/chat')
 })
 
+function swipeStart(event: TouchEvent) {
+  if (event.touches.length !== 1) return
+  const target = event.target as HTMLElement | null
+  if (!target || target.closest('input,textarea,select,button,[contenteditable="true"],.mc,.toc,.books,.reader,.files,.accounts,.chart,.conv')) return
+  swipeStartX = event.touches[0].clientX; swipeStartY = event.touches[0].clientY
+  swipeDx = 0; swipeAxis = ''; swipeActive = true
+}
+function swipeMove(event: TouchEvent) {
+  if (!swipeActive || event.touches.length !== 1) return
+  const dx = event.touches[0].clientX - swipeStartX
+  const dy = event.touches[0].clientY - swipeStartY
+  if (!swipeAxis && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) swipeAxis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y'
+  if (swipeAxis !== 'x') return
+  swipeDx = dx
+  if (event.cancelable) event.preventDefault()
+  const index = swipeEntries.value.findIndex(entry => entry.path === route.path)
+  const atEdge = (dx > 0 && index <= 0) || (dx < 0 && (index < 0 || index >= swipeEntries.value.length - 1))
+  if (atEdge && mainRef.value) mainRef.value.style.transform = 'translateX(' + (dx * 0.18) + 'px)'
+}
+function swipeEnd() {
+  if (!swipeActive) return
+  swipeActive = false
+  const index = swipeEntries.value.findIndex(entry => entry.path === route.path)
+  if (mainRef.value) {
+    mainRef.value.style.transition = 'transform .22s cubic-bezier(.22,1,.36,1)'
+    mainRef.value.style.transform = ''
+    setTimeout(() => { if (mainRef.value) mainRef.value.style.transition = '' }, 240)
+  }
+  if (swipeAxis !== 'x' || Math.abs(swipeDx) < 64 || index < 0) return
+  const next = swipeDx < 0 ? index + 1 : index - 1
+  if (next < 0 || next >= swipeEntries.value.length) return
+  void router.push(swipeEntries.value[next].path)
+}
 onMounted(() => {
   visualViewport = window.visualViewport
   syncViewport()
@@ -172,6 +208,9 @@ onMounted(() => {
   const keyboard = (window as any).Capacitor?.Plugins?.Keyboard
   keyboard?.addListener?.('keyboardWillShow', () => { keyboardOpen.value = true })
   keyboard?.addListener?.('keyboardWillHide', () => { keyboardOpen.value = false })
+  mainRef.value?.addEventListener('touchstart', swipeStart, { passive: true })
+  mainRef.value?.addEventListener('touchmove', swipeMove, { passive: false })
+  mainRef.value?.addEventListener('touchend', swipeEnd, { passive: true })
   if (auth.loggedIn) { void session.refresh(); session.startSync() }
 })
 onBeforeUnmount(() => {
@@ -187,6 +226,9 @@ onBeforeUnmount(() => {
   window.removeEventListener('focusout', syncViewportSoon)
   window.removeEventListener('hoshinoumi:push', onPushRefresh)
   delete (window as any).__hoshinoumiBack
+  mainRef.value?.removeEventListener('touchstart', swipeStart)
+  mainRef.value?.removeEventListener('touchmove', swipeMove)
+  mainRef.value?.removeEventListener('touchend', swipeEnd)
   session.stopSync()
 })
 </script>
@@ -198,7 +240,7 @@ onBeforeUnmount(() => {
       <span class="brand">HOSHINOUMI<small>{{ title }}</small></span>
       <span class="conn" :class="{ off: !session.connected }">{{ session.connected ? '在线' : '离线' }}</span>
     </header>
-    <main class="mobile-main">
+    <main ref="mainRef" class="mobile-main">
       <Transition :name="pageTransition" mode="out-in">
         <component :is="pageView" :key="route.path" @detail-change="chatDetail = $event" />
       </Transition>
@@ -221,7 +263,7 @@ onBeforeUnmount(() => {
 .brand small{display:block;font-size:7px;letter-spacing:.22em;color:#8a9bb0;font-weight:600;margin-top:2px}
 .conn{margin-left:auto;font-size:8px;color:#1f9d6b;border:1px solid #cdeee0;background:#eefbf5;border-radius:10px;padding:3px 7px}
 .conn.off{color:#8a9bb0;border-color:#e1e8f1;background:#f8fafc}
-.mobile-main{position:relative;flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y}
+.mobile-main{position:relative;will-change:transform;flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y}
 .mobile-shell.keyboard-open :deep(.mc){padding-bottom:0}
 .mobile-shell.keyboard-open :deep(.composer){padding-bottom:0}
 .page-left-enter-active,.page-left-leave-active,.page-right-enter-active,.page-right-leave-active{transition:opacity .2s ease,transform .28s cubic-bezier(.22,1,.36,1)}
