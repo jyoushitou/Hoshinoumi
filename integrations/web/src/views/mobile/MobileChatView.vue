@@ -5,11 +5,14 @@
       <button type="button" class="search" @click="openSearch"><span class="search-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m16.5 16.5 4 4"></path></svg></span>搜索会话 / 记忆 / 命令</button>
       <div v-if="listError" class="notice error">{{ listError }}</div>
       <div v-else-if="!session.conversations.length" class="notice">{{ session.loading ? '正在同步会话…' : '暂无会话。后端有 QQ 消息后会出现在这里。' }}</div>
-      <button v-for="row in session.conversations" :key="row.target_id" class="conv" type="button" @click="open(row.target_id)">
-        <span class="avatar">{{ (row.name || '?').slice(0, 1) }}</span>
-        <span class="copy"><b>{{ row.name || row.target_id }}</b><small>{{ row.last_message || '暂无消息' }}</small></span>
-        <span class="meta"><small>{{ timeOf(row.updated_at) }}</small><em v-if="row.unread">{{ row.unread > 99 ? '99+' : row.unread }}</em></span>
-      </button>
+      <div v-for="row in visibleConversations" :key="row.target_id" class="swipe-wrap" @touchstart.passive="swipeStart($event, row)" @touchmove.passive="swipeMove" @touchend.passive="swipeEnd">
+        <div class="swipe-actions"><button type="button" @click="toggleMute(row)">{{ prefs[row.target_id]?.muted ? '取消免打扰' : '免打扰' }}</button><button type="button" class="danger" @click="removeRow(row)">{{ row.type === 'group' ? '退出群聊' : '删除' }}</button></div>
+        <button class="conv" type="button" :class="{ muted: prefs[row.target_id]?.muted }" :style="{ transform: swipeTarget === row.target_id ? 'translateX(' + swipeDx + 'px)' : '' }" @click="open(row.target_id)">
+          <span class="avatar">{{ (row.name || '?').slice(0, 1) }}</span>
+          <span class="copy"><b>{{ row.name || row.target_id }}</b><small>{{ row.last_message || '暂无消息' }}</small></span>
+          <span class="meta"><small>{{ timeOf(row.updated_at) }}</small><em v-if="row.unread">{{ row.unread > 99 ? '99+' : row.unread }}</em></span>
+        </button>
+      </div>
     </template>
 
     <template v-else>
@@ -126,6 +129,39 @@ const searchInput = ref<HTMLInputElement | null>(null)
 interface SearchHit { key: string; kind: 'conv' | 'msg' | 'memory' | 'command'; title: string; text: string; target?: string; index?: number }
 const commands = ref<Array<{ name?: string; help?: string; group?: string }>>([])
 const listError = computed(() => auth.loggedIn ? (session.conversationsError || session.error) : '')
+interface ConvPref { muted?: boolean; hidden?: boolean; deleted_at?: string | null }
+const prefs = ref<Record<string, ConvPref>>({})
+const swipeTarget = ref('')
+const swipeDx = ref(0)
+let swipeStartX = 0, swipeStartY = 0, swipeAxis: '' | 'x' | 'y' = '', swipeOpen = false
+const visibleConversations = computed(() => session.conversations.filter(row => { const p = prefs.value[row.target_id]; return !p?.hidden && !p?.deleted_at }))
+async function loadPrefs() { try { const r = await http.get<{ data?: Record<string, ConvPref> }>('/api/conversations/preferences'); prefs.value = r.data || {} } catch { prefs.value = {} } }
+function swipeStart(event: TouchEvent, row: any) {
+  if (event.touches.length !== 1) return
+  if (swipeTarget.value && swipeTarget.value !== row.target_id) { swipeTarget.value = ''; swipeDx.value = 0 }
+  swipeStartX = event.touches[0].clientX; swipeStartY = event.touches[0].clientY
+  swipeAxis = ''; swipeOpen = swipeTarget.value === row.target_id; swipeTarget.value = row.target_id
+}
+function swipeMove(event: TouchEvent) {
+  if (!swipeTarget.value || event.touches.length !== 1) return
+  const dx = event.touches[0].clientX - swipeStartX, dy = event.touches[0].clientY - swipeStartY
+  if (!swipeAxis && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) swipeAxis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y'
+  if (swipeAxis !== 'x') return
+  swipeDx.value = Math.max(-92, Math.min(0, dx + (swipeOpen ? -92 : 0)))
+}
+function swipeEnd() { if (swipeAxis === 'x') swipeDx.value = swipeDx.value < -42 ? -92 : 0 }
+function resetSwipe() { swipeTarget.value = ''; swipeDx.value = 0 }
+async function toggleMute(row: any) {
+  const next = !prefs.value[row.target_id]?.muted
+  try { await http.patch('/api/conversations/' + encodeURIComponent(row.target_id), { muted: next }); prefs.value[row.target_id] = { ...(prefs.value[row.target_id] || {}), muted: next } } catch { /* ignore */ }
+  resetSwipe()
+}
+async function removeRow(row: any) {
+  const dissolve = row.type === 'group' && String(row.target_id).startsWith('h_')
+  if (!window.confirm(dissolve ? '你是群主，退出会解散该群。确定？' : row.type === 'group' ? '退出这个群聊？' : '删除联系人？')) return
+  try { await http.delete('/api/conversations/' + encodeURIComponent(row.target_id), { dissolve }); prefs.value[row.target_id] = { ...(prefs.value[row.target_id] || {}), hidden: true, deleted_at: 'now' } } catch { /* ignore */ }
+  resetSwipe()
+}
 const active = computed(() => session.conversations.find(row => row.target_id === session.activeTarget) || null)
 const activeName = computed(() => {
   if (session.activeTarget === 'mode:code') return '代码模式'
@@ -165,6 +201,7 @@ onMounted(() => {
   void cleanupStickerCache()
   window.addEventListener('hoshinoumi:back-detail', onNativeBackDetail)
   if (auth.loggedIn && !session.conversations.length) void session.refresh()
+  if (auth.loggedIn) void loadPrefs()
   if (deepTarget.value) void open(deepTarget.value)
   viewportHandler = () => { if (pane.value === 'chat') setTimeout(scrollBottom, 80) }
   window.visualViewport?.addEventListener('resize', viewportHandler)
@@ -294,7 +331,7 @@ async function sendSticker(sticker: StickerMeta) {
 .head{display:flex;align-items:flex-end;justify-content:space-between;padding:14px 2px 9px}.new-group{width:30px;height:30px;border:1px solid #dbe8ff;border-radius:8px;background:#fff;color:#2563eb;font-size:17px;margin-left:auto;margin-right:7px;line-height:1}h1{margin:0;font-size:24px;letter-spacing:-.03em}p{margin:3px 0 0;color:#8a9bb0;font-size:10px}.dot{width:8px;height:8px;border-radius:50%;background:#1f9d6b;box-shadow:0 0 0 3px rgba(31,157,107,.1)}.dot.off{background:#cbd5e1;box-shadow:none}
 .search{height:36px;border:1px solid #e3ebf7;border-radius:11px;background:#fff;color:#9aabc0;display:flex;align-items:center;padding:0 11px;font-size:10px;margin-bottom:10px}
 .notice{border:1px dashed #d7e6ff;background:#f4f9ff;color:#7a8fa8;border-radius:11px;padding:12px;font-size:10px;line-height:1.6;margin:6px 0}.notice.error{border-color:#fecaca;background:#fff5f5;color:#b91c1c}
-.conv{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:1px solid transparent;background:transparent;padding:10px 8px;border-radius:12px;cursor:pointer}.conv:active{background:#fff;border-color:#e7efff}.avatar{width:38px;height:38px;border-radius:12px;background:#eef4ff;color:#2563eb;display:grid;place-items:center;font-weight:800;font-size:13px;flex:none}.copy{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}.copy b{font-size:12px;color:#253b56;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.copy small{font-size:9.5px;color:#8b9bb0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.meta{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex:none}.meta small{font-size:8px;color:#a2b2c6}.meta em{min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:#2563eb;color:#fff;font-size:8px;font-style:normal;display:grid;place-items:center}
+.swipe-wrap{position:relative;overflow:hidden;border-radius:12px;margin-bottom:2px}.swipe-actions{position:absolute;right:0;top:0;bottom:0;display:flex;align-items:stretch}.swipe-actions button{width:78px;border:0;background:#eef4ff;color:#2563eb;font:9px inherit;cursor:pointer}.swipe-actions button.danger{background:#fff1f2;color:#b91c1c}.conv{position:relative;z-index:1;background:#f7faff;transition:transform .18s ease;display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:1px solid transparent;background:transparent;padding:10px 8px;border-radius:12px;cursor:pointer}.conv:active{background:#fff;border-color:#e7efff}.conv.muted{opacity:.7}.conv .meta em{background:#2563eb}.avatar{width:38px;height:38px;border-radius:12px;background:#eef4ff;color:#2563eb;display:grid;place-items:center;font-weight:800;font-size:13px;flex:none}.copy{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}.copy b{font-size:12px;color:#253b56;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.copy small{font-size:9.5px;color:#8b9bb0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.meta{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex:none}.meta small{font-size:8px;color:#a2b2c6}.meta em{min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:#2563eb;color:#fff;font-size:8px;font-style:normal;display:grid;place-items:center}
 .chat-head{display:flex;align-items:center;gap:9px;padding:10px 0 9px;border-bottom:1px solid #e7effa;flex:none}.back{width:30px;height:32px;border:0;background:none;color:#52708f;font-size:20px;flex:none}.who{flex:1;min-width:0}.who b{display:block;font-size:13px;color:#213954;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.who small{display:block;color:#1f9d6b;font-size:8px;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.gap{flex:none;font-size:8px;color:#8a5a00;border:1px solid #f2d491;background:#fff8e6;border-radius:7px;padding:4px 6px}
 .messages{flex:1;min-height:180px;overflow-y:auto;padding:12px 0;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none}.messages::-webkit-scrollbar{display:none}.row{display:flex;align-items:flex-end;gap:5px;margin-bottom:10px}.row.me{justify-content:flex-end}.box{max-width:82%;display:flex;flex-direction:column;align-items:flex-start}.row.me .box{align-items:flex-end}.mini{width:22px;height:22px;border-radius:7px;background:#eef4ff;color:#2563eb;display:grid;place-items:center;font-size:8px;font-weight:800;flex:none}.mini.mea{background:#2563eb;color:#fff}
 .bubble{padding:8px 11px;border-radius:12px 12px 12px 4px;background:#fff;border:1px solid #e3ebf7;color:#344b64;font-size:12px;line-height:1.65;white-space:pre-wrap;word-break:break-word}.row.me .bubble{background:#2563eb;border-color:#2563eb;color:#fff;border-radius:12px 12px 4px 12px}.recalled{font-size:9px;color:#93a3b8;border:1px dashed #dbe8ff;border-radius:8px;padding:5px 9px;background:#f8fbff}.stamp{font-size:7px;color:#a2b2c6;margin-top:3px}.row.me .stamp{text-align:right}.msg-img{max-width:180px;max-height:180px;border-radius:10px;display:block;margin-bottom:2px;object-fit:cover}.msg-img.sticker{width:96px;height:96px;object-fit:contain;background:transparent;border:0}.msg-audio{width:190px;max-width:100%;height:34px;display:block;margin-bottom:2px}
