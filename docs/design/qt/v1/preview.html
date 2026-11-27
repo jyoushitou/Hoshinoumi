@@ -1,0 +1,602 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hoshinoumi · Qt Desktop Motion Mock</title>
+<style>
+:root{
+  --bg:#f2f7fd; --panel:#f8fbff; --white:#fff; --line:#e3ebf7; --line2:#dbe8ff;
+  --ink:#1e3a5f; --ink2:#314a65; --muted:#8a9bb0; --dim:#a2b2c6;
+  --blue:#2563eb; --blue2:#1d4ed8; --cyan:#60a5fa; --pale:#eef4ff; --pale2:#dbeafe;
+  --green:#1f9d6b; --green-bg:#f0fdf7; --green-line:#cdeee0;
+  --warn:#b7791f; --warn-bg:#fff8e6; --warn-line:#f2d491;
+  --violet:#6d4fd6; --violet-bg:#f3efff; --violet-line:#e4dcff;
+  --red:#b91c1c; --red-bg:#fff5f5; --red-line:#fecaca;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;display:grid;place-items:center;background:#dfe9f7;overflow:hidden;
+  font:13px/1.45 "Microsoft YaHei UI","Microsoft YaHei",-apple-system,"Segoe UI",sans-serif;
+  color:var(--ink);overflow:auto;
+}
+button,input{font:inherit}
+button{cursor:pointer}
+.window{
+  position:absolute;left:50%;top:12px;
+  width:1440px;height:900px;background:var(--white);position:relative;overflow:hidden;
+  box-shadow:0 30px 80px rgba(22,55,100,.24);border-radius:2px;
+  animation:window-in .5s cubic-bezier(.2,.8,.2,1) both;
+}
+@keyframes window-in{from{opacity:0}to{opacity:1}}
+
+/* titlebar */
+.titlebar{height:34px;display:flex;align-items:center;gap:8px;padding:0 0 0 14px;border-bottom:1px solid var(--line);background:#fff;position:relative;z-index:8}
+.tb-logo{width:18px;height:18px;border-radius:5px;background:var(--pale);border:1px solid var(--line2);display:grid;place-items:center;color:var(--blue);font-size:10px;font-weight:800}
+.tb-word{font-size:10px;font-weight:800;letter-spacing:1.5px}
+.tb-sep{width:1px;height:12px;background:var(--line)}
+.tb-sub{font-size:8px;letter-spacing:1.2px;color:var(--muted)}
+.tb-space{flex:1}
+.tb-live{height:20px;padding:0 7px;border:1px solid var(--green-line);background:var(--green-bg);border-radius:10px;display:flex;align-items:center;gap:4px;color:var(--green);font-size:8px}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--green);flex:none}
+.pulse{animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(31,157,107,.22)}50%{box-shadow:0 0 0 4px rgba(31,157,107,0)}}
+.tb-host{font:8px Consolas,monospace;color:var(--dim)}
+.win-ctrls{display:flex;height:34px;margin-left:8px}
+.win-ctrls button{width:30px;border:0;background:transparent;color:#6b7c95;font-size:11px}
+.win-ctrls button:hover{background:var(--pale)}
+.win-ctrls button:last-child:hover{background:#fee2e2;color:var(--red)}
+
+/* app grid */
+.app{height:866px;display:grid;grid-template-columns:64px 292px minmax(0,1fr) 304px;overflow:hidden;background:var(--bg)}
+.rail{background:#fff;border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding:13px 0 11px;gap:8px;overflow:hidden}
+.logo{width:38px;height:38px;border-radius:12px;background:var(--pale);border:1px solid var(--line2);display:grid;place-items:center;color:var(--blue2);font-size:17px;font-weight:800;margin-bottom:8px}
+.rnav{width:40px;height:40px;border-radius:9px;border:0;background:transparent;color:#7d8ca3;position:relative;display:grid;place-items:center;font-size:11px;font-weight:800;transition:background .18s,color .18s,transform .18s}
+.rnav:hover{background:#f4f9ff;color:var(--blue)}
+.rnav.on{background:var(--pale);color:var(--blue2)}
+.rnav.on::before{content:"";position:absolute;left:-12px;width:3px;height:18px;border-radius:3px;background:var(--blue);animation:railbar .3s ease both}
+@keyframes railbar{from{height:0;opacity:0}to{height:18px;opacity:1}}
+.rail .flex{flex:1}
+.rail .small{width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--muted);font-size:11px;display:grid;place-items:center}
+.schema{height:22px;min-width:31px;border-radius:6px;background:var(--green-bg);color:var(--green);font:8px Consolas,monospace;display:flex;align-items:center;gap:3px;padding:0 5px}
+
+/* conversation */
+.side{background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;overflow:hidden}
+.side-head{height:62px;padding:12px 12px 8px 16px;display:flex;align-items:center}
+.side-head h1{margin:0;font-size:11px;letter-spacing:1.8px}
+.side-head small{display:block;color:var(--muted);font-size:7px;letter-spacing:1.2px;margin-top:1px}
+.qt-pill{margin-left:auto;border:1px solid var(--line2);background:#fff;border-radius:9px;padding:2px 8px;color:#526982;font-size:7px}
+.search{margin:0 12px 12px;height:32px;border:1px solid var(--line);border-radius:9px;background:#fff;display:flex;align-items:center;gap:7px;padding:0 9px;color:var(--dim);font-size:9px}
+.search span:first-child{font-size:11px;color:#9aabc0}
+.search kbd{margin-left:auto;font:7px Consolas,monospace;border:1px solid var(--line);border-radius:4px;padding:1px 4px;color:#9aabc0}
+.sec{padding:0 16px;margin-bottom:5px;display:flex;align-items:center;color:#9aabc0;font-size:8px;letter-spacing:1.2px}
+.sec .count{margin-left:auto;background:var(--pale);color:var(--blue);border-radius:7px;min-width:16px;height:14px;display:grid;place-items:center;font-size:7px}
+.run-card{margin:0 8px 9px;height:48px;border-radius:10px;border:1px solid #c7dcff;background:#e7f0ff;display:flex;align-items:center;gap:8px;padding:7px;position:relative;overflow:hidden}
+.run-card::after{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--blue);opacity:.8}
+.run-card .avatar{width:30px;height:30px;border-radius:9px;background:var(--pale2);color:var(--blue2);display:grid;place-items:center;font-size:12px;font-weight:800}
+.run-card b{display:block;font-size:10px}
+.run-card small{display:block;font-size:8px;color:#7d8ca3;margin-top:1px}
+.run-state{margin-left:auto;color:var(--green);font-size:7px;font-weight:700;animation:blink 1.8s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+.conv{height:45px;margin:0 8px 1px;border-radius:9px;display:flex;align-items:center;gap:8px;padding:7px;border:1px solid transparent;transition:background .18s,border-color .18s,transform .18s;cursor:pointer}
+.conv:hover{background:var(--pale);transform:translateX(1px)}
+.conv.active{background:var(--pale);border-color:var(--line2)}
+.conv .av{width:30px;height:30px;border-radius:9px;background:var(--pale);color:var(--blue2);display:grid;place-items:center;font-size:11px;font-weight:800;flex:none}
+.conv:nth-of-type(2) .av{background:var(--pale2)}
+.conv .copy{min-width:0;flex:1}
+.conv .nm{font-size:10px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.conv .last{font-size:8px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.conv .meta{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex:none}
+.conv .time{font-size:7px;color:#9aabc0}
+.unread{min-width:15px;height:14px;border-radius:7px;background:var(--blue);color:#fff;font-size:7px;font-weight:700;display:grid;place-items:center;padding:0 3px}
+.side-foot{margin:auto 12px 9px;height:46px;border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px;display:flex;flex-direction:column;gap:1px;justify-content:center}
+.side-foot .line{display:flex;align-items:center;gap:4px;color:var(--green);font-size:8px}
+.side-foot .line .right{margin-left:auto;color:#9aabc0;font:7px Consolas,monospace}
+.side-foot .host{color:#9aabc0;font:7px Consolas,monospace}
+
+/* main */
+.main{min-width:0;min-height:0;background:#fff;display:flex;flex-direction:column;overflow:hidden;position:relative}
+.top{height:66px;flex:none;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:9px;padding:0 16px 0 18px;background:#fff;overflow:hidden}
+.big-av{width:34px;height:34px;border-radius:10px;background:var(--pale2);color:var(--blue2);display:grid;place-items:center;font-size:13px;font-weight:800;flex:none}
+.who{min-width:0}
+.who b{display:block;font-size:13px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.who small{display:block;color:var(--muted);font-size:8px;margin-top:2px}
+.online{display:inline-flex;align-items:center;gap:3px;color:var(--green);background:var(--green-bg);border-radius:7px;padding:1px 5px;font-size:7px;margin-left:3px}
+.header-space{flex:1}
+.mode-pill{height:27px;border:1px solid var(--line);border-radius:8px;background:var(--panel);display:flex;align-items:center;padding:0 7px;gap:4px;color:#607795;font-size:8px}
+.mode-pill b{color:var(--blue);font-weight:700}
+.tbtn{height:27px;border:1px solid var(--line);border-radius:8px;background:#fff;color:#607795;font-size:8px;padding:0 9px;transition:background .18s,border-color .18s}
+.tbtn:hover{background:var(--pale);border-color:var(--line2)}
+.more{border:0;background:none;color:#8a9bb0;font-size:13px;padding:0 2px}
+
+.view{position:absolute;inset:67px 0 99px;display:flex;flex-direction:column;transition:opacity .3s ease,transform .35s cubic-bezier(.2,.8,.2,1)}
+.view.hidden{opacity:0;pointer-events:none;transform:translateY(8px) scale(.997);z-index:-1}
+.chat-view{background:#fff}
+.msgs{flex:1;min-height:0;overflow:auto;padding:12px 18px 14px;scrollbar-width:thin;scrollbar-color:#dbe8ff transparent}
+.day{text-align:center;color:#a2b2c6;font-size:8px;margin:2px 0 12px}
+.msg{display:flex;gap:7px;margin-bottom:13px;max-width:100%;animation:rise .35s cubic-bezier(.2,.8,.2,1) both}
+.msg:nth-child(2){animation-delay:.04s}.msg:nth-child(3){animation-delay:.08s}.msg:nth-child(4){animation-delay:.12s}.msg:nth-child(5){animation-delay:.16s}
+@keyframes rise{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+.msg .mini{width:24px;height:24px;border-radius:7px;background:var(--pale);color:var(--blue2);display:grid;place-items:center;font-size:8px;font-weight:800;flex:none;align-self:flex-end}
+.msg.me{justify-content:flex-end}
+.msg.me .mini{background:var(--blue);color:#fff;order:-1}
+.msg .stack{max-width:min(480px,62%);display:flex;flex-direction:column;gap:3px}
+.msg.me .stack{align-items:flex-end}
+.bubble{padding:8px 11px;border-radius:10px 10px 10px 4px;background:var(--pale);border:1px solid var(--line);color:var(--ink2);font-size:10px;line-height:1.65;word-break:break-word}
+.msg.me .bubble{background:var(--blue);border-color:var(--blue);color:#fff;border-radius:10px 10px 4px 10px}
+.mem{font-size:7px;color:var(--violet);background:var(--violet-bg);border:1px solid var(--violet-line);border-radius:5px;padding:2px 6px}
+.time{font-size:7px;color:#a2b2c6}
+.typing{display:none;gap:4px;align-items:center;padding:0 18px 10px;height:24px;color:#9aabc0;font-size:8px}
+.typing.on{display:flex;animation:rise .2s ease both}
+.typing i{width:4px;height:4px;border-radius:50%;background:#93b7fa;animation:bounce 1s infinite}
+.typing i:nth-child(2){animation-delay:.12s}.typing i:nth-child(3){animation-delay:.24s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-3px);opacity:1}}
+
+/* composer */
+.composer{position:absolute;left:0;right:0;bottom:0;z-index:6;border-top:1px solid var(--line);padding:9px 14px 10px;background:#fff}
+.mode-row{display:flex;align-items:center;gap:5px;margin-bottom:7px}
+.mode-btn{border:0;background:none;color:#8a9bb0;font-size:8px;padding:3px 5px;border-radius:5px;transition:background .18s,color .18s}
+.mode-btn:hover{background:var(--pale);color:var(--blue)}
+.mode-btn.on{color:var(--blue);font-weight:700;background:var(--pale)}
+.mode-row .hint{margin-left:auto;color:#a2b2c6;font-size:7px}
+.input{height:44px;border:1px solid var(--line2);border-radius:11px;background:var(--panel);display:flex;align-items:center;gap:8px;padding:0 7px 0 12px;transition:border-color .18s,box-shadow .18s}
+.input:focus-within{border-color:#93b7fa;box-shadow:0 0 0 3px rgba(37,99,235,.07)}
+.input input{flex:1;min-width:0;border:0;outline:0;background:transparent;color:var(--ink2);font-size:10px;padding:0}
+.input input::placeholder{color:#a2b2c6}
+.send{width:48px;height:30px;border:0;border-radius:8px;background:var(--blue);color:#fff;font-size:9px;font-weight:700;transition:transform .15s,background .18s}
+.send:hover{background:var(--blue2);transform:translateY(-1px)}
+.send:active{transform:scale(.97)}
+.tools{display:flex;gap:10px;align-items:center;margin-top:6px;color:#8a9bb0;font-size:8px}
+.tools .draft{margin-left:auto;color:#c0ccda;font-size:7px;letter-spacing:1px}
+
+/* agent view */
+.agent-view{padding:14px;background:#fff;overflow:auto;scrollbar-width:thin}
+.agent-summary{height:64px;border:1px solid var(--line2);background:#fff;border-radius:10px;display:flex;align-items:center;gap:10px;padding:10px;flex:none;box-shadow:0 4px 14px rgba(37,99,235,.04)}
+.agent-summary .big-av{background:var(--pale)}
+.agent-title{min-width:0;flex:1}
+.agent-title .line{display:flex;align-items:center;gap:6px}
+.agent-title b{font-size:12px}
+.agent-title small{display:block;font-size:8px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.state-pill{border:1px solid var(--green-line);background:var(--green-bg);color:var(--green);border-radius:8px;padding:1px 6px;font-size:7px;white-space:nowrap}
+.agent-stats{text-align:right;flex:none}
+.agent-stats b{display:block;color:var(--blue);font:8px Consolas,monospace}
+.agent-stats small{display:block;color:#9aabc0;font:7px Consolas,monospace;margin-top:2px}
+.agent-body{margin-top:10px;border:1px solid var(--line);background:#fff;border-radius:10px;padding:14px;flex:none}
+.label{color:#9aabc0;font-size:7px;letter-spacing:1.1px;margin-bottom:6px}
+.command{height:34px;border:1px solid var(--line2);border-radius:8px;background:var(--pale);color:var(--ink2);font-size:9px;display:flex;align-items:center;padding:0 8px;margin-bottom:12px}
+.timeline{position:relative;padding-left:2px}
+.step{position:relative;padding-left:22px;min-height:48px;overflow:hidden}
+.step::before{content:"";position:absolute;left:7px;top:14px;bottom:-2px;width:2px;background:var(--line);transition:background .3s}
+.step:last-child::before{display:none}
+.step.done::before{background:#b7e4cc}
+.step .dot{position:absolute;left:2px;top:3px;width:12px;height:12px;border-radius:50%;border:1px solid #cbd5e1;background:#fff;z-index:1;display:grid;place-items:center;font-size:7px;color:#fff;transition:background .25s,border-color .25s,transform .25s}
+.step.done .dot{background:var(--green);border-color:var(--green);transform:scale(1)}
+.step.running .dot{background:var(--blue);border-color:var(--blue);animation:dot-pulse 1.4s infinite}
+@keyframes dot-pulse{0%,100%{box-shadow:0 0 0 0 rgba(37,99,235,.28)}50%{box-shadow:0 0 0 5px rgba(37,99,235,0)}}
+.step-title{font-size:9px;color:var(--ink2);display:flex;align-items:center;gap:5px}
+.step.done .step-title::after{content:"OK";font:7px Consolas,monospace;color:var(--green);background:var(--green-bg);border:1px solid var(--green-line);border-radius:4px;padding:0 3px}
+.step.running .step-title::after{content:"RUN";font:7px Consolas,monospace;color:var(--blue);background:var(--pale);border:1px solid var(--line2);border-radius:4px;padding:0 3px}
+.step.pending .step-title{color:#a2b2c6}
+.step-tool{font-family:Consolas,monospace;font-size:8px;color:var(--ink2);margin-top:1px}
+.step-detail{font-size:8px;color:var(--muted);margin-top:1px}
+.tool-result{margin-top:4px;border:1px solid var(--green-line);background:var(--green-bg);border-radius:5px;padding:3px 6px;font:7px Consolas,monospace;color:var(--green);opacity:0;transform:translateY(3px);transition:opacity .3s,transform .3s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.step.done .tool-result{opacity:1;transform:none}
+.tool-result.running{border-color:var(--line2);background:var(--pale);color:var(--blue);opacity:1;transform:none}
+.plan-box{margin-top:8px;border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:8px;opacity:0;transform:translateY(5px);transition:opacity .4s,transform .4s}
+.plan-box.show{opacity:1;transform:none}
+.plan-box b{display:block;color:var(--blue);font-size:7px;letter-spacing:1px;margin-bottom:3px}
+.plan-box p{margin:0;color:#526982;font-size:8px;line-height:1.7}
+.approval{border:1px solid var(--warn-line);background:var(--warn-bg);border-radius:8px;padding:8px;margin-top:8px;display:none;align-items:center;gap:7px;animation:rise .3s ease both}
+.approval.show{display:flex}
+.approval .icon{width:20px;height:20px;border-radius:50%;background:#fff;border:1px solid var(--warn-line);color:var(--warn);display:grid;place-items:center;font-size:10px;flex:none}
+.approval .copy{flex:1;min-width:0}
+.approval b{display:block;font-size:8px;color:#8a5a00}
+.approval code{display:block;font:7px Consolas,monospace;color:#8a5a00;overflow:hidden;text-overflow:ellipsis}
+.approval button{height:20px;border-radius:5px;border:1px solid var(--warn-line);background:#fff;color:#8a5a00;font-size:7px;padding:0 7px}
+.approval button.ok{background:var(--blue);border-color:var(--blue);color:#fff}
+
+/* context */
+.context{background:var(--panel);border-left:1px solid var(--line);padding:14px;overflow:hidden;display:flex;flex-direction:column;gap:8px}
+.ctx-card{border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px;flex:none}
+.ctx-head{display:flex;align-items:center;gap:5px;color:var(--green);font-size:7px;letter-spacing:1.1px;font-weight:700}
+.ctx-head .right{margin-left:auto;color:var(--blue);font:8px Consolas,monospace}
+.ctx-title{font-size:11px;font-weight:700;margin-top:5px}
+.ctx-sub{font-size:7px;color:#9aabc0;margin-top:1px}
+.bar{height:4px;border-radius:2px;background:#e8effa;overflow:hidden;margin-top:3px}
+.bar i{display:block;height:100%;background:var(--blue);border-radius:2px;width:0;transition:width .7s cubic-bezier(.2,.8,.2,1)}
+.meter-row{display:flex;justify-content:space-between;font-size:7px;color:#9aabc0;margin-bottom:3px}
+.meter-row span:last-child{font:7px Consolas,monospace;color:#526982}
+.tool{border:1px solid var(--line);background:#fff;border-radius:7px;height:31px;display:flex;align-items:center;gap:6px;padding:0 7px;flex:none;transition:border-color .3s,background .3s}
+.tool.done{border-color:var(--green-line)}
+.tool.running{border-color:var(--line2);background:var(--pale)}
+.tool.warn{border-color:var(--warn-line)}
+.tool .mark{font:8px Consolas,monospace;font-weight:700;width:12px;color:#9aabc0}
+.tool.done .mark{color:var(--green)}
+.tool.running .mark{color:var(--blue)}
+.tool.warn .mark{color:var(--warn)}
+.tool .copy{min-width:0;flex:1}
+.tool b{display:block;font:8px Consolas,monospace;color:var(--ink2)}
+.tool small{display:block;font-size:7px;color:#9aabc0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.approve-box{border:1px solid var(--warn-line);background:var(--warn-bg);border-radius:8px;padding:8px;display:none;flex:none}
+.approve-box.show{display:block;animation:rise .3s ease both}
+.approve-box .top{display:flex;align-items:center;gap:4px;color:#8a5a00;font-size:8px;font-weight:700}
+.approve-box .top span{margin-left:auto;font-size:7px;color:var(--warn)}
+.approve-box code{display:block;font:8px Consolas,monospace;color:#8a5a00;margin:3px 0 5px}
+.approve-box .buttons{display:flex;gap:5px}
+.approve-box button{height:18px;border:1px solid var(--warn-line);background:#fff;border-radius:5px;color:#8a5a00;font-size:7px;padding:0 7px}
+.approve-box button.ok{background:var(--blue);border-color:var(--blue);color:#fff}
+.quick-row{display:flex;gap:5px}
+.quick{flex:1;border:1px solid var(--line);background:#fff;border-radius:7px;padding:6px}
+.quick small{display:block;font-size:7px;color:#8a9bb0}
+.quick b{display:block;font-size:9px;color:var(--ink2);margin-top:1px}
+.ctx-flex{flex:1}
+.runtime{border:1px solid var(--line2);background:var(--pale);border-radius:8px;padding:8px;flex:none}
+.runtime b{display:block;color:var(--blue);font-size:7px;letter-spacing:1.1px}
+.runtime span{display:block;color:#526982;font-size:7px;margin-top:2px}
+.runtime code{display:block;color:#9aabc0;font:7px Consolas,monospace;margin-top:2px}
+.chat-ctx{display:none;flex-direction:column;gap:8px}
+.agent-ctx{display:flex;flex-direction:column;gap:8px;height:100%}
+body.mode-chat .chat-ctx{display:flex}
+body.mode-chat .agent-ctx{display:none}
+.persona-card{display:flex;align-items:center;gap:8px}
+.persona-card .av{width:34px;height:34px;border-radius:10px;background:var(--pale2);color:var(--blue2);display:grid;place-items:center;font-size:12px;font-weight:800}
+.persona-card b{display:block;font-size:11px}
+.persona-card small{display:block;font-size:7px;color:#8a9bb0}
+.status-line{display:flex;justify-content:space-between;font-size:8px;color:#8a9bb0;margin-top:3px}
+.status-line b{color:#526982;font-weight:500}
+
+/* animation helpers */
+.replay{border:1px solid var(--line2);background:#fff;color:var(--blue);font-size:7px;border-radius:5px;padding:2px 6px;margin-left:auto}
+.flow-enter{animation:flow-in .3s cubic-bezier(.2,.8,.2,1) both}
+@keyframes flow-in{from{opacity:0;transform:translateX(-4px)}to{opacity:1;transform:none}}
+.shake{animation:shake .28s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}30%{transform:translateX(-3px)}70%{transform:translateX(3px)}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body class="mode-agent">
+<div class="window">
+  <div class="titlebar">
+    <div class="tb-logo">H</div><div class="tb-word">HOSHINOUMI</div>
+    <div class="tb-sep"></div><div class="tb-sub">AGENT DESKTOP</div>
+    <div class="tb-space"></div>
+    <div class="tb-live"><i class="dot pulse"></i>本地后端 · 24ms</div>
+    <div class="tb-host">127.0.0.1:27005</div>
+    <div class="win-ctrls"><button title="最小化">-</button><button title="最大化">[]</button><button title="关闭">X</button></div>
+  </div>
+  <div class="app">
+    <aside class="rail">
+      <div class="logo">H</div>
+      <button class="rnav" data-mode="chat" title="会话">C</button>
+      <button class="rnav on" data-mode="agent" title="Agent">A</button>
+      <button class="rnav" title="任务">T</button>
+      <button class="rnav" title="记忆">M</button>
+      <button class="rnav" title="文件">F</button>
+      <button class="rnav" title="工具">G</button>
+      <div class="flex"></div>
+      <button class="small" title="设置">S</button>
+      <div class="schema"><i class="dot"></i>35</div>
+    </aside>
+
+    <aside class="side">
+      <div class="side-head"><div><h1>HOSHINOUMI</h1><small>AGENT CONSOLE</small></div><span class="qt-pill">QT 0.1</span></div>
+      <div class="search"><span>?</span><span>搜索会话 / 运行 / 工具</span><kbd>Ctrl K</kbd></div>
+      <div class="sec">运行中 <span class="count">1</span></div>
+      <div class="run-card">
+        <div class="avatar">A</div>
+        <div><b>Agent 运行 #128</b><small>第 <span id="sideStep">3</span> / 8 步 · <span id="sidePhase">检索工具</span></small></div>
+        <div class="run-state" id="runState">运行</div>
+      </div>
+      <div class="sec">最近会话 <button class="replay" id="replaySide" type="button">重播</button></div>
+      <div class="conv active"><div class="av">友</div><div class="copy"><div class="nm">友利奈绪</div><div class="last">先把 v35.9.35 的会话菜单接上</div></div><div class="meta"><span class="time">18:20</span><span class="unread">2</span></div></div>
+      <div class="conv"><div class="av">A</div><div class="copy"><div class="nm">代码模式</div><div class="last">独立会话 · 记忆共享</div></div><div class="meta"><span class="time">17:54</span></div></div>
+      <div class="conv"><div class="av">星</div><div class="copy"><div class="nm">星之海学园</div><div class="last">[图片] 晚上的教室</div></div><div class="meta"><span class="time">昨天</span><span class="unread">5</span></div></div>
+      <div class="conv"><div class="av">摄</div><div class="copy"><div class="nm">摄影部</div><div class="last">周末去海边拍吗</div></div><div class="meta"><span class="time">昨天</span></div></div>
+      <div class="conv"><div class="av">测</div><div class="copy"><div class="nm">NapCat 测试群</div><div class="last">消息同步测试</div></div><div class="meta"><span class="time">11/25</span></div></div>
+      <div class="side-foot"><div class="line"><i class="dot"></i>本地后端已连接<span class="right">24ms</span></div><div class="host">127.0.0.1:27005 · schema 35</div></div>
+    </aside>
+
+    <main class="main">
+      <header class="top">
+        <div class="big-av" id="headAvatar">A</div>
+        <div class="who"><b id="headTitle">Agent 运行 #128</b><small id="headSub">本地执行器 · 8 步上限 <span class="online">在线</span></small></div>
+        <div class="header-space"></div>
+        <div class="mode-pill" id="headMode"><b>Agent</b> · Chat</div>
+        <button class="tbtn" id="searchBtn" type="button">? 搜索当前</button>
+        <button class="more">...</button>
+      </header>
+
+      <section class="view chat-view" id="chatView">
+        <div class="msgs" id="msgs">
+          <div class="day">今天 · 18:20</div>
+          <div class="msg"><div class="mini">友</div><div class="stack"><div class="bubble">你回来啦。今天外面有点冷，先喝点热的吧。</div><div class="time">18:20</div></div></div>
+          <div class="msg me"><div class="mini">你</div><div class="stack"><div class="bubble">刚到家。今天那个方案终于过了。</div><div class="time">18:20 · 已读</div></div></div>
+          <div class="msg"><div class="mini">友</div><div class="stack"><div class="bubble">那很好啊。你上次说怕过不了，我还记着呢。</div><div class="mem">+ 关联记忆 · 方案汇报</div><div class="time">18:21</div></div></div>
+          <div class="msg"><div class="mini">友</div><div class="stack"><div class="bubble">先把 v35.9.35 的会话菜单接上吧，桌面右键和手机左滑都要走同一套偏好。</div><div class="time">18:22</div></div></div>
+          <div class="msg me"><div class="mini">你</div><div class="stack"><div class="bubble">好，顺便把管理员撤回提示也做了。</div><div class="time">18:23 · 已读</div></div></div>
+        </div>
+        <div class="typing" id="typing"><i></i><i></i><i></i><span>奈绪正在输入</span></div>
+      </section>
+
+      <section class="view agent-view" id="agentView">
+        <div class="agent-summary">
+          <div class="big-av">A</div>
+          <div class="agent-title">
+            <div class="line"><b>Agent 运行 #128</b><span class="state-pill" id="agentState">运行中</span></div>
+            <small>整理 v35.9.35 会话菜单实现，找出可复用接口</small>
+          </div>
+          <div class="agent-stats"><b id="stepLabel">STEP 3 / 8</b><small id="tokenLabel">12.4k tokens</small></div>
+        </div>
+        <div class="agent-body">
+          <div class="label">指令</div>
+          <div class="command">整理 v35.9.35 会话菜单实现，找出可复用接口</div>
+          <div class="label">执行轨迹</div>
+          <div class="timeline" id="timeline">
+            <div class="step" data-step="0"><div class="dot"></div><div class="step-title">理解目标</div><div class="step-detail">拆解为偏好 API、桌面菜单、移动滑动手势三个子任务</div></div>
+            <div class="step" data-step="1"><div class="dot"></div><div class="step-title">读取路由</div><div class="step-tool">read_file  bot/server/routes_chat.py</div><div class="step-detail">读取 412 行 · 找到 recall / conversations 路由</div><div class="tool-result">已读取 412 行，关键路由 3 个</div></div>
+            <div class="step" data-step="2"><div class="dot"></div><div class="step-title">检索记忆</div><div class="step-tool">search_memory  会话菜单设计</div><div class="step-detail">检索 v35.9.35 相关设计决策与历史实现</div><div class="tool-result running">正在检索…</div></div>
+            <div class="step" data-step="3"><div class="dot"></div><div class="step-title">生成变更方案</div><div class="step-detail">等待工具结果后生成计划</div></div>
+          </div>
+          <div class="plan-box" id="planBox"><b>下一步计划</b><p>1. 复用 conversation_preferences，补桌面右键与手机左滑<br>2. 管理员/撤回提示走 group_admin_roles + group_settings<br>3. 最后补 API 回归与三端截图</p></div>
+          <div class="approval" id="approval"><div class="icon">!</div><div class="copy"><b>Shell 待审批</b><code>rm -rf build/</code></div><button data-approve="no">拒绝</button><button class="ok" data-approve="yes">批准</button></div>
+        </div>
+      </section>
+
+      <div class="composer">
+        <div class="mode-row">
+          <button class="mode-btn" data-mode="chat" type="button">Chat</button>
+          <button class="mode-btn" data-mode="code" type="button">Code</button>
+          <button class="mode-btn on" data-mode="agent" type="button">Agent</button>
+          <button class="mode-btn" data-mode="shell" type="button">Shell</button>
+          <span class="hint">Ctrl+Enter 发送</span>
+        </div>
+        <div class="input"><input id="draft" placeholder="给 Agent 下指令，或 @工具…"><button class="send" id="sendBtn" type="button">发送</button></div>
+        <div class="tools"><span>+ 附件</span><span>语音</span><span>工具</span><span class="draft">DESIGN DRAFT · QT/QML</span></div>
+      </div>
+    </main>
+
+    <aside class="context">
+      <div class="agent-ctx" id="agentCtx">
+        <div class="ctx-card"><div class="ctx-head"><i class="dot pulse"></i>AGENT 运行中<span class="right" id="ctxStep">3 / 8</span></div><div class="ctx-title">整理会话菜单实现</div><div class="ctx-sub">本机工具 · 记忆已加载</div></div>
+        <div class="meter-row"><span>上下文占用</span><span id="ctxToken">12.4k / 32k</span></div><div class="bar"><i id="ctxBar" style="width:39%"></i></div>
+        <div class="label">工具</div>
+        <div class="tool done" data-tool="read"><span class="mark">OK</span><div class="copy"><b>read_file</b><small>只读 · 已调用 4 次</small></div></div>
+        <div class="tool running" data-tool="search"><span class="mark">.</span><div class="copy"><b>search_memory</b><small>只读 · 执行中</small></div></div>
+        <div class="tool warn" data-tool="shell"><span class="mark">!</span><div class="copy"><b>shell</b><small>需审批 · 1 条待批</small></div></div>
+        <div class="approve-box" id="ctxApprove"><div class="top">! Shell 待审批<span>高风险</span></div><code>rm -rf build/</code><div class="buttons"><button data-approve="no">拒绝</button><button class="ok" data-approve="yes">批准</button></div></div>
+        <div class="ctx-card"><div class="ctx-head" style="color:#6d4fd6">关系<span class="right" style="color:var(--blue)">查看 &gt;</span></div><div class="status-line"><span>关系 · 熟</span><b>最近：一起改方案</b></div></div>
+        <div class="ctx-flex"></div>
+        <div class="runtime"><b>LOCAL RUNTIME</b><span>Python worker · 4 工具 · 无远程</span><code>Ctrl+Shift+H 回到主窗口</code></div>
+      </div>
+
+      <div class="chat-ctx" id="chatCtx">
+        <div class="ctx-card persona-card"><div class="av">友</div><div><b>友利奈绪</b><small>关系 · 熟 · 记忆同步</small></div><i class="dot" style="margin-left:auto"></i></div>
+        <div class="ctx-card"><div class="ctx-head" style="color:#9aabc0">她的状态</div><div class="status-line"><span>心情</span><b>平静</b></div><div class="status-line"><span>精力</span><b>0.70</b></div><div class="status-line"><span>正在</span><b>整理方案</b></div></div>
+        <div class="quick-row"><div class="quick"><small>存钱</small><b>¥ 0.00</b></div><div class="quick"><small>记忆</small><b>最近 7 天</b></div></div>
+        <div class="ctx-card"><div class="ctx-head" style="color:#6d4fd6">关系<span class="right" style="color:var(--blue)">查看 &gt;</span></div><div class="status-line"><span>关系 · 熟</span><b>最近：一起改方案</b></div></div>
+        <div class="ctx-flex"></div>
+        <div class="runtime"><b>LOCAL RUNTIME</b><span>Python worker · 记忆已加载</span><code>Ctrl+Shift+H 回到主窗口</code></div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script>
+(() => {
+  const body = document.body;
+  const stage = document.querySelector('.window');
+  function fitStage() {
+    const scale = Math.min(1, (innerWidth - 24) / 1440, (innerHeight - 24) / 900);
+    stage.style.top = Math.max(12, (innerHeight - 900 * scale) / 2) + 'px';
+    stage.style.transform = 'translateX(-50%) scale(' + String(Math.max(0.55, scale)) + ')';
+    stage.style.transformOrigin = 'top center';
+  }
+  fitStage();
+  addEventListener('resize', fitStage);
+  const steps = [...document.querySelectorAll('#timeline .step')];
+  const chatView = document.getElementById('chatView');
+  const agentView = document.getElementById('agentView');
+  const timeline = document.getElementById('timeline');
+  const planBox = document.getElementById('planBox');
+  const approval = document.getElementById('approval');
+  const ctxApproval = document.getElementById('ctxApprove');
+  const agentState = document.getElementById('agentState');
+  const runState = document.getElementById('runState');
+  const stepLabel = document.getElementById('stepLabel');
+  const sideStep = document.getElementById('sideStep');
+  const sidePhase = document.getElementById('sidePhase');
+  const tokenLabel = document.getElementById('tokenLabel');
+  const ctxStep = document.getElementById('ctxStep');
+  const ctxToken = document.getElementById('ctxToken');
+  const ctxBar = document.getElementById('ctxBar');
+  const headTitle = document.getElementById('headTitle');
+  const headSub = document.getElementById('headSub');
+  const headAvatar = document.getElementById('headAvatar');
+  const headMode = document.getElementById('headMode');
+  const msgs = document.getElementById('msgs');
+  const typing = document.getElementById('typing');
+  let timers = [];
+  let currentMode = 'agent';
+  let step = 0;
+  let tokens = 12.4;
+
+  const wait = (ms) => new Promise(resolve => {
+    const id = setTimeout(resolve, ms);
+    timers.push(id);
+  });
+  function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+  function setText(id, text) { const e = document.getElementById(id); if (e) e.textContent = text; }
+
+  function setMode(mode) {
+    currentMode = mode;
+    body.classList.toggle('mode-chat', mode === 'chat');
+    body.classList.toggle('mode-agent', mode === 'agent');
+    document.querySelectorAll('.rnav[data-mode]').forEach(b => b.classList.toggle('on', b.dataset.mode === mode));
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('on', b.dataset.mode === mode));
+    chatView.classList.toggle('hidden', mode !== 'chat');
+    agentView.classList.toggle('hidden', mode !== 'agent');
+    if (mode === 'chat') {
+      headAvatar.textContent = '友'; headTitle.textContent = '友利奈绪';
+      headSub.innerHTML = '私聊 · 记忆同步 <span class="online">在线</span>';
+      headMode.innerHTML = '<b>Chat</b> · Agent';
+      document.getElementById('draft').placeholder = '和奈绪说点什么…';
+    } else {
+      headAvatar.textContent = 'A'; headTitle.textContent = 'Agent 运行 #128';
+      headSub.innerHTML = '本地执行器 · 8 步上限 <span class="online">在线</span>';
+      headMode.innerHTML = 'Chat · <b>Agent</b>';
+      document.getElementById('draft').placeholder = '给 Agent 下指令，或 @工具…';
+    }
+  }
+
+  function updateTool(name, state, text) {
+    const tool = document.querySelector('.tool[data-tool="' + name + '"]');
+    if (!tool) return;
+    tool.classList.remove('running', 'warn', 'done');
+    tool.classList.add(state);
+    tool.querySelector('.mark').textContent = state === 'done' ? 'OK' : state === 'running' ? '.' : '!';
+    if (text) tool.querySelector('small').textContent = text;
+  }
+
+  function resetRun() {
+    clearTimers();
+    step = 0; tokens = 12.4;
+    steps.forEach(s => s.className = 'step');
+    planBox.classList.remove('show');
+    approval.classList.remove('show');
+    ctxApproval.classList.remove('show');
+    agentState.textContent = '运行中';
+    runState.textContent = '运行';
+    setText('stepLabel', 'STEP 1 / 8');
+    setText('sideStep', '1');
+    setText('sidePhase', '理解目标');
+    setText('ctxStep', '1 / 8');
+    setText('tokenLabel', '12.4k tokens');
+    setText('ctxToken', '12.4k / 32k');
+    ctxBar.style.width = '39%';
+    updateTool('read', 'running', '只读 · 等待读取');
+    updateTool('search', 'warn', '只读 · 等待调用');
+    updateTool('shell', 'warn', '需审批 · 等待');
+  }
+
+  async function playRun() {
+    resetRun();
+    await wait(450);
+    step = 1;
+    steps[0].className = 'step done';
+    setText('stepLabel', 'STEP 1 / 8');
+    setText('sideStep', '1'); setText('sidePhase', '理解目标');
+    setText('ctxStep', '1 / 8');
+    await wait(800);
+    step = 2;
+    steps[1].className = 'step done';
+    steps[2].className = 'step running';
+    setText('stepLabel', 'STEP 2 / 8');
+    setText('sideStep', '2'); setText('sidePhase', '读取路由');
+    setText('ctxStep', '2 / 8');
+    updateTool('read', 'done', '只读 · 已调用 4 次');
+    updateTool('search', 'running', '只读 · 执行中');
+    await wait(1200);
+    step = 3;
+    steps[2].className = 'step done';
+    steps[2].querySelector('.tool-result').classList.remove('running');
+    steps[2].querySelector('.tool-result').textContent = '命中 3 条记忆 · 1 个文件';
+    setText('stepLabel', 'STEP 3 / 8');
+    setText('sideStep', '3'); setText('sidePhase', '检索工具');
+    setText('ctxStep', '3 / 8');
+    updateTool('search', 'done', '只读 · 命中 3 条记忆');
+    tokens = 14.8;
+    setText('tokenLabel', '14.8k tokens');
+    setText('ctxToken', '14.8k / 32k');
+    ctxBar.style.width = '46%';
+    await wait(1100);
+    step = 4;
+    steps[3].className = 'step running';
+    setText('stepLabel', 'STEP 4 / 8');
+    setText('sideStep', '4'); setText('sidePhase', '生成方案');
+    setText('ctxStep', '4 / 8');
+    await wait(900);
+    steps[3].className = 'step done';
+    planBox.classList.add('show');
+    agentState.textContent = '已完成';
+    runState.textContent = '完成';
+    setText('stepLabel', 'STEP 4 / 8');
+    setText('sidePhase', '已完成');
+    updateTool('shell', 'warn', '需审批 · 1 条待批');
+    await wait(350);
+    approval.classList.add('show');
+    ctxApproval.classList.add('show');
+  }
+
+  function setApproval(approved) {
+    if (!approved) {
+      approval.style.display = 'none';
+      ctxApproval.style.display = 'none';
+      const shell = document.querySelector('.tool[data-tool="shell"]');
+      shell.classList.remove('warn'); shell.classList.add('done');
+      shell.querySelector('.mark').textContent = 'NO';
+      shell.querySelector('small').textContent = '已拒绝 · 未执行';
+      return;
+    }
+    approval.style.borderColor = 'var(--green-line)';
+    approval.style.background = 'var(--green-bg)';
+    approval.querySelector('b').textContent = '已批准 · 不自动执行';
+    approval.querySelector('b').style.color = 'var(--green)';
+    approval.querySelector('code').style.color = 'var(--green)';
+    ctxApproval.style.display = 'none';
+    const shell = document.querySelector('.tool[data-tool="shell"]');
+    shell.classList.remove('warn'); shell.classList.add('done');
+    shell.querySelector('.mark').textContent = 'OK';
+    shell.querySelector('small').textContent = '已批准 · 等待人工执行';
+  }
+
+  async function sendChat() {
+    const input = document.getElementById('draft');
+    const text = input.value.trim();
+    if (!text) { input.focus(); return; }
+    input.value = '';
+    const row = document.createElement('div');
+    row.className = 'msg me';
+    row.innerHTML = '<div class="mini">你</div><div class="stack"><div class="bubble"></div><div class="time">刚刚 · 已读</div></div>';
+    row.querySelector('.bubble').textContent = text;
+    msgs.appendChild(row);
+    msgs.scrollTop = msgs.scrollHeight;
+    typing.classList.add('on');
+    await wait(900);
+    typing.classList.remove('on');
+    const reply = document.createElement('div');
+    reply.className = 'msg';
+    reply.innerHTML = '<div class="mini">友</div><div class="stack"><div class="bubble"></div><div class="time">刚刚</div></div>';
+    reply.querySelector('.bubble').textContent = '收到。我会先把偏好 API 和桌面右键接起来，手机左滑也走同一套数据。';
+    msgs.appendChild(reply);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  document.querySelectorAll('.rnav[data-mode]').forEach(btn => {
+    btn.addEventListener('click', () => setMode(btn.dataset.mode));
+  });
+  document.querySelectorAll('.mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (btn.dataset.mode === 'chat' || btn.dataset.mode === 'agent') setMode(btn.dataset.mode);
+      else setMode('agent');
+    });
+  });
+  document.getElementById('replaySide').addEventListener('click', playRun);
+  document.getElementById('sendBtn').addEventListener('click', sendChat);
+  document.getElementById('draft').addEventListener('keydown', e => { if (e.key === 'Enter') sendChat(); });
+  document.querySelectorAll('[data-approve]').forEach(btn => {
+    btn.addEventListener('click', () => setApproval(btn.dataset.approve === 'yes'));
+  });
+  document.getElementById('searchBtn').addEventListener('click', () => {
+    if (currentMode === 'chat') {
+      const msg = document.querySelector('.msg .bubble');
+      if (msg) { msg.classList.add('shake'); setTimeout(() => msg.classList.remove('shake'), 320); }
+    }
+  });
+
+  setMode('agent');
+  playRun();
+})();
+</script>
+</body>
+</html>

@@ -2,6 +2,27 @@
 
 参考 `docs/design/v35/web/hoshinoumi-web-v35.5.html` 的浅色三栏语言，重做为 Qt 原生桌面稿。
 
+## HTML 动效预览
+
+直接双击打开：
+
+```text
+docs/design/qt/v1/preview.html
+```
+
+这是可交互的 HTML 模拟稿，不是静态截图：
+
+```text
+Chat / Agent 模式切换
+Agent 执行时间线自动播放
+工具结果逐条出现
+Shell 审批 批准/拒绝
+重播 Agent 运行
+聊天输入 + 输入中 + 模拟回复
+窗口按屏幕大小自动缩放
+```
+
+
 ```text
 1440 x 900
 标题栏 34
@@ -10,6 +31,12 @@
 聊天主区 780
 右侧上下文 304
 ```
+
+![HTML Agent 预览](shots/preview-agent.png)
+
+![HTML Chat 预览](shots/preview-chat.png)
+
+QML 渲染稿：
 
 ![Agent 运行](shots/agent.png)
 
